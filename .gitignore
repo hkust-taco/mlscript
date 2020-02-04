@@ -1,0 +1,5 @@
+target/
+.bloop/
+.metals/
+project/Dependencies.scala
+project/metals.sbt
