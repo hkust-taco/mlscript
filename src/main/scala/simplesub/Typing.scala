@@ -192,7 +192,7 @@ class Typing {
     def children: List[TypeShape] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case FunctionType(l, r) => l :: r :: Nil
-      case RecordType(fs) => fs.flatMap(_._2.children)
+      case RecordType(fs) => fs.map(_._2)
       case TypeCtor(_) => Nil
     }
     def getVars: Set[TypeVariable] = {

@@ -8,7 +8,7 @@ import simplesub.Syntax._
 object Parser {
   
   val keywords = Set("let", "rec", "in", "fun", "if", "then", "else")
-  def kw[_: P](s: String) = s ~~ !(letter | digit | "_")
+  def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   def letter[_: P]     = P( lowercase | uppercase )
   def lowercase[_: P]  = P( CharIn("a-z") )
@@ -16,7 +16,7 @@ object Parser {
   def digit[_: P]      = P( CharIn("0-9") )
   def number[_: P]: P[Int] = P( CharIn("0-9").repX(1).!.map(_.toInt) )
   def ident[_: P]: P[String] =
-    P( (letter|"_") ~~ (letter | digit | "_" | "-" | "'").repX ).!.filter(!keywords(_))
+    P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
   def term[_: P]: P[Term] = P( let | fun | ite | apps )
   def const[_: P]: P[Term] = number.map(Lit)
