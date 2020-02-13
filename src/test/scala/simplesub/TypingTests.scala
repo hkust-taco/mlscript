@@ -6,6 +6,7 @@ import Parser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 
+@SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class TypingTests extends FunSuite {
   
   def doTest(str: String, expected: String = ""): Unit = {
@@ -25,7 +26,7 @@ class TypingTests extends FunSuite {
     
     val res2 = typing.expandPosType(tyv, true).show
     if (expected.nonEmpty)
-      assert(res2 =:= expected)
+      assert(res2 == expected)
     else {
       println(res2)
       println("---")
@@ -34,7 +35,7 @@ class TypingTests extends FunSuite {
     ()
   }
   def error(str: String, msg: String): Unit = {
-    assert(intercept[TypeError](doTest(str, "<none>")).msg =:= msg)
+    assert(intercept[TypeError](doTest(str, "<none>")).msg == msg)
     ()
   }
   

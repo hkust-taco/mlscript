@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
       "-Ywarn-value-discard",
     ),
     wartremoverWarnings ++= Warts.allBut(
-      Recursion, Throw, Nothing,
+      Recursion, Throw, Nothing, Return,
       Var, MutableDataStructures, NonUnitStatements,
       DefaultArguments, ImplicitParameter, StringPlusAny,
       JavaSerializable, Serializable, Product,

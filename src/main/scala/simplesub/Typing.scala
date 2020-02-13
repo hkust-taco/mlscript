@@ -83,8 +83,27 @@ class Typing {
   }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: TypeShape, rhs: TypeShape): Unit = if (!(lhs is rhs)) {
-    (lhs, rhs) match {
+  def constrain(lhs: TypeShape, rhs: TypeShape)
+      // we need a cache to remember the subtyping tests in process; we also make the cache remember
+      // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm)
+      (implicit cache: mutable.Set[(TypeShape, TypeShape)] = mutable.Set.empty)
+  : Unit = {
+    if (lhs is rhs) return
+    val lhs_rhs = lhs -> rhs
+    lhs_rhs match {
+      // There is no need to remember the subtyping tests performed that did not involve
+      // type variables, as type variables will necessary be part of any possible cycles.
+      // Since these types form regular trees, there will necessarily be a point where a
+      // variable part of a cycle will be matched against the same type periodically.
+      case (_: TypeVariable, _) | (_, _: TypeVariable) =>
+      // case (_: TypeVariable, _: TypeVariable) =>
+      //  ^ the tests pass with this version, but it feels wrong: I think it could loop indefinitely
+      //    if the two variables never meet because their cycle lengths are in phase but shifted
+        if (cache(lhs_rhs)) return
+        cache += lhs_rhs
+      case _ => ()
+    }
+    lhs_rhs match {
       case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
         constrain(l1, l0)
         constrain(r0, r1)
