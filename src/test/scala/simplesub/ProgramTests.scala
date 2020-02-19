@@ -42,7 +42,7 @@ class ProgramTests extends FunSuite {
       "('a ∨ 'b -> 'a ∧ 'c) -> 'b -> 'c",
       "{x: Int, y: 'a -> 'a}",
       "{x: Int, y: Bool}",
-      "Bool -> {x: Int, y: Bool ∨ 'a -> 'a}",
+      "Bool -> {x: Int, y: Bool ∨ ('a -> 'a)}",
       "'a -> {self: {self: b, thing: 'a} as b, thing: 'a}",
     )
   }

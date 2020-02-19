@@ -16,9 +16,10 @@ class TypingTests extends FunSuite {
     val typing = new Typing
     val tyv = typing.inferType(term)
     
-    // println("inferred: " + tyv)
-    // println(" where " + tyv.showBounds)
-    
+    if (expected.isEmpty) {
+      println("inferred: " + tyv)
+      println(" where " + tyv.showBounds)
+    }
     val ty = typing.expandType(tyv, true)
     if (expected.isEmpty) println("T " + ty.show)
     val res = ty.normalize.show
@@ -38,6 +39,9 @@ class TypingTests extends FunSuite {
     assert(intercept[TypeError](doTest(str, "<none>")).msg == msg)
     ()
   }
+  
+  // In the tests, leave the expected string empty so the inferred type is printed in the console
+  // and you can copy and paste it after making sure it is correct.
   
   test("basic") {
     doTest("42", "Int")
@@ -74,6 +78,8 @@ class TypingTests extends FunSuite {
     doTest("{ f = 42 }", "{f: Int}")
     doTest("{ f = 42 }.f", "Int")
     doTest("(fun x -> x.f) { f = 42 }", "Int")
+    doTest("fun f -> { x = f 42 }.x", "(Int -> 'a) -> 'a")
+    doTest("fun f -> { x = f 42; y = 123 }.y", "(Int -> ⊤) -> Int")
     doTest("if true then { a = 1; b = true } else { b = false; c = 42 }", "{b: Bool}")
     
     error("{ a = 123; b = true }.c",
@@ -84,9 +90,28 @@ class TypingTests extends FunSuite {
   
   test("self-app") {
     doTest("fun x -> x x", "(a -> 'b) as a -> 'b")
+    // ^ see the note in the App case: with an intermediate variable we get ('a ∧ ('a -> 'b)) -> 'b
+    
     doTest("fun x -> x x x", "(a -> a -> 'b) as a -> 'b")
     doTest("fun x -> fun y -> x y x", "('b -> a -> 'c) as a -> 'b -> 'c")
     doTest("fun x -> fun y -> x x y", "(a -> 'b -> 'c) as a -> 'b -> 'c")
+    doTest("(fun x -> x x) (fun x -> x x)", "⊥")
+    
+    doTest("fun x -> {l = x x; r = x }",
+      "(a -> 'b) as a -> {l: 'b, r: a}")
+    // ^ notice this case of a recursive alias that is mentioned later in the type
+    
+    // From https://github.com/stedolan/mlsub
+    // TODO simplify them more
+    // Y combinator:
+    doTest("(fun f -> (fun x -> f (x x)) (fun x -> f (x x)))",
+      "('a ∨ 'b -> 'a ∧ 'b ∧ 'c) -> 'c")
+    // Z combinator:
+    doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))",
+      "(('a ∧ 'b -> 'c ∨ 'd) -> 'e ∧ ('a ∨ 'b -> 'c ∧ 'd)) -> 'e")
+    // Function that takes arbitrarily many arguments:
+    doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)",
+      "⊤ -> ⊤ -> (⊤ -> (a ∨ (⊤ -> a ∨ b)) as b) as a")
   }
   
   test("let-poly") {
@@ -108,6 +133,10 @@ class TypingTests extends FunSuite {
     // from https://www.cl.cam.ac.uk/~sd601/mlsub/
     doTest("let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster",
       "'a -> {self: {self: b, thing: 'a} as b, thing: 'a}")
+    // ^ Note: with an intermediate variable in the App case, we get this weird (but seemingly correct) type:
+    //      "⊤ as a -> {self: {self: b, thing: a} as b, thing: a}";
+    //    This happens because we have ?a <: ?c and ?c <: ?a (where ?c does not appear anywhere else),
+    //    and the expansion algorithm does not detect that ?a is only spuriously recursive.
   }
   
 }

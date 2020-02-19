@@ -75,13 +75,13 @@ object Syntax {
       case Top => Nil
       case Inter(l, r) => l.conjuncts ::: r.conjuncts
       case ty: PlainType => ty :: Nil
-      case _ => throw new AssertionError("wrong mix of polarities")
+      case _ => throw new AssertionError(s"wrong mix of polarities: $this")
     }
     protected def disjuncts: List[PlainType] = this match {
       case Bot => Nil
       case Union(l, r) => l.disjuncts ::: r.disjuncts
       case ty: PlainType => ty :: Nil
-      case _ => throw new AssertionError("wrong mix of polarities")
+      case _ => throw new AssertionError(s"wrong mix of polarities: $this")
     }
     lazy val normalize: Type = {
       def merge(components: List[Type])(pol: Boolean): Type = {
@@ -90,8 +90,8 @@ object Syntax {
         val rcds = components.collect { case Record(fs) => fs }
         val recs = components.collect { case r @ Recursive(_, _) => r }
         val (extr: Type, mrg, grm) = if (pol) (Bot, Union, Inter) else (Top, Inter, Union)
-        val fun = funs.reduceOption[(Type, Type)] { case ((l0,r0), (l1,r1)) => (grm(l0,l1), mrg(l1,r1)) }
-        val rcd = rcds.reduceOption[List[(String, Type)]] { (fs0, fs1) =>
+        val fun = funs.reduceOption[(Type, Type)] { case ((l0,r0), (l1,r1)) => (grm(l0,l1), mrg(r0,r1)) }
+        val rcd = rcds.reduceOption { (fs0, fs1) =>
           if (pol) {
             val fs1m = fs1.toMap
             fs0.flatMap { case (k, v) => fs1m.get(k).map(k -> mrg(v, _)) }
@@ -101,7 +101,7 @@ object Syntax {
           atoms.distinct.sortBy(_.hash) :::
           fun.map(lr => Function(lr._1.normalize, lr._2.normalize)).toList :::
           rcd.map(fs => Record(fs.map(nt => nt._1 -> nt._2.normalize).sortBy(_._1))).toList :::
-          recs
+          recs.map(r => Recursive(r.uv, r.body.normalize)).sortBy(_.uv.hash)
         normalized.reduceOption(mrg).getOrElse(extr)
       }
       this match {
@@ -186,7 +186,9 @@ object Syntax {
         val fields = mergeOptions(lhs.fields, rhs.fields)(mergeFields)
         val fun = mergeOptions(lhs.fun, rhs.fun){
           case ((l0,r0), (l1,r1)) => (Negated.merge(l0, l1), merge(r0, r1)) }
-        Type(lhs.atoms ++ rhs.atoms, fields, fun, lhs.rec orElse rhs.rec)
+        val newRec = lhs.rec orElse rhs.rec
+        val newAtoms = (lhs.atoms ++ rhs.atoms).filterNot(newRec.contains[Atom]) // comply with invariant
+        Type(newAtoms, fields, fun, newRec)
       }
     
     case class Type(
@@ -195,15 +197,18 @@ object Syntax {
         fun: Option[(Negated.Type, Type)],
         rec: Option[TypeVar],
     ) {
-      require(rec.forall(r => !atoms(r)))
+      require(rec.forall(r => !atoms(r)), rec -> atoms)
       
-      def substVar(uv0: TypeVar, uv1: TypeVar): Type =
-        if (rec.contains(uv0)) this else Type(
-          atoms.map(v => if (v eq uv0) uv1 else v),
+      def substVar(uv0: TypeVar, uv1: TypeVar): Type = {
+        val newRec = if (rec.contains(uv0)) Some(uv1) else rec
+        Type(
+          atoms.map(v => if (v eq uv0) uv1 else v)
+            .filterNot(newRec.contains[Atom]), // to comply with the invariant
           fields.map(_.view.mapValues(_.substVar(uv0, uv1)).toMap),
           fun.map { case (l, r) => (l.substVar(uv0, uv1), r.substVar(uv0, uv1)) },
-          rec
+          newRec
         )
+      }
       
       lazy val freeVariables: Set[TypeVar] =
         atoms.collect { case uv: TypeVar => uv } ++
@@ -219,14 +224,17 @@ object Syntax {
           fun.iterator.flatMap(lr => lr._1.variableOccurrences ++ lr._2.variableOccurrences)
         
       def showIn(ctx: Map[TypeVar, String], outerPrec: Int): String = {
-        val components =
+        val firstComponents =
           (if (fields.forall(_.isEmpty)) Nil
            else sortedFields.iterator.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}")
                   .mkStringOr(", ", "{", "}") :: Nil
           ) ++ atoms.toList.sortBy(_.hash).map {
-            case uv: TypeVar => ctx(uv)
-            case Ctor(name) => name
-          } ++ fun.map(lr => lr._1.showIn(ctx, 2) + " -> " + lr._2.showIn(ctx, 1))
+                case uv: TypeVar => ctx(uv)
+                case Ctor(name) => name }
+        val funStr = fun.map { lr =>
+          val str = lr._1.showIn(ctx, 2) + " -> " + lr._2.showIn(ctx, 1)
+          if (firstComponents.nonEmpty) "(" + str + ")" else str }
+        val components = firstComponents ++ funStr
         val body = components.mkStringOr(mergeString,
           els = if (fields.isEmpty) extremumSymbol else Negated.extremumSymbol)
         val innerPrec = if (fun.nonEmpty) 1 else 2
@@ -241,7 +249,7 @@ object Syntax {
         val ctx = vars.zipWithIndex.map {
           case ((bound, tv), idx) =>
             def nme = {
-              assert(idx <= 'z' - 'a') // TODO handle case of not enough chars
+              assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
               ('a' + idx).toChar.toString
             }
             tv -> ((if (bound) "" else "'")+nme)
