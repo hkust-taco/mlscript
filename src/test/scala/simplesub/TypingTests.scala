@@ -89,16 +89,16 @@ class TypingTests extends FunSuite {
   }
   
   test("self-app") {
-    doTest("fun x -> x x", "(a -> 'b) as a -> 'b")
+    doTest("fun x -> x x", "('a -> 'b) as 'a -> 'b")
     // ^ see the note in the App case: with an intermediate variable we get ('a ∧ ('a -> 'b)) -> 'b
     
-    doTest("fun x -> x x x", "(a -> a -> 'b) as a -> 'b")
-    doTest("fun x -> fun y -> x y x", "('b -> a -> 'c) as a -> 'b -> 'c")
-    doTest("fun x -> fun y -> x x y", "(a -> 'b -> 'c) as a -> 'b -> 'c")
+    doTest("fun x -> x x x", "('a -> 'a -> 'b) as 'a -> 'b")
+    doTest("fun x -> fun y -> x y x", "('b -> 'a -> 'c) as 'a -> 'b -> 'c")
+    doTest("fun x -> fun y -> x x y", "('a -> 'b -> 'c) as 'a -> 'b -> 'c")
     doTest("(fun x -> x x) (fun x -> x x)", "⊥")
     
     doTest("fun x -> {l = x x; r = x }",
-      "(a -> 'b) as a -> {l: 'b, r: a}")
+      "('a -> 'b) as 'a -> {l: 'b, r: 'a}")
     // ^ notice this case of a recursive alias that is mentioned later in the type
     
     // From https://github.com/stedolan/mlsub
@@ -111,7 +111,7 @@ class TypingTests extends FunSuite {
       "(('a ∧ 'b -> 'c ∨ 'd) -> 'e ∧ ('a ∨ 'b -> 'c ∧ 'd)) -> 'e")
     // Function that takes arbitrarily many arguments:
     doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)",
-      "⊤ -> ⊤ -> (⊤ -> (a ∨ (⊤ -> a ∨ b)) as b) as a")
+      "⊤ -> ⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
   }
   
   test("let-poly") {
@@ -128,13 +128,13 @@ class TypingTests extends FunSuite {
   
   test("recursion") {
     doTest("let rec f = fun x -> f x.u in f",
-      "{u: a} as a -> ⊥")
+      "{u: 'a} as 'a -> ⊥")
     
     // from https://www.cl.cam.ac.uk/~sd601/mlsub/
     doTest("let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster",
-      "'a -> {self: {self: b, thing: 'a} as b, thing: 'a}")
+      "'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}")
     // ^ Note: with an intermediate variable in the App case, we get this weird (but seemingly correct) type:
-    //      "⊤ as a -> {self: {self: b, thing: a} as b, thing: a}";
+    //      "⊤ as 'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}";
     //    This happens because we have ?a <: ?c and ?c <: ?a (where ?c does not appear anywhere else),
     //    and the expansion algorithm does not detect that ?a is only spuriously recursive.
   }

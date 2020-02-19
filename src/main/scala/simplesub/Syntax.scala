@@ -212,16 +212,15 @@ object Syntax {
       
       lazy val freeVariables: Set[TypeVar] =
         atoms.collect { case uv: TypeVar => uv } ++
-          fields.iterator.flatMap(_.valuesIterator.flatMap(_.freeVariables)) ++ 
+          fields.iterator.flatMap(_.valuesIterator.flatMap(_.freeVariables)) ++
           fun.iterator.flatMap(lr => lr._1.freeVariables ++ lr._2.freeVariables) -- rec.toList
       
       private def sortedFields = fields.toList.flatMap(_.toList).sortBy(_._1)
       
-      def variableOccurrences: List[(Boolean, TypeVar)] =
-        rec.toList.map(true -> _) ++
-          atoms.iterator.collect { case uv: TypeVar => (false, uv) }.toList.sortBy(_._2.hash) ++
-          sortedFields.flatMap(_._2.variableOccurrences) ++ 
-          fun.iterator.flatMap(lr => lr._1.variableOccurrences ++ lr._2.variableOccurrences)
+      def variableOccurrences: List[TypeVar] = rec.toList ++
+        atoms.iterator.collect { case uv: TypeVar => uv }.toList.sortBy(_.hash) ++
+        sortedFields.flatMap(_._2.variableOccurrences) ++
+        fun.iterator.flatMap(lr => lr._1.variableOccurrences ++ lr._2.variableOccurrences)
         
       def showIn(ctx: Map[TypeVar, String], outerPrec: Int): String = {
         val firstComponents =
@@ -245,14 +244,14 @@ object Syntax {
       }
       
       def show: String = {
-        val vars = variableOccurrences.distinctBy(_._2)
+        val vars = variableOccurrences.distinct
         val ctx = vars.zipWithIndex.map {
-          case ((bound, tv), idx) =>
+          case (tv, idx) =>
             def nme = {
               assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
               ('a' + idx).toChar.toString
             }
-            tv -> ((if (bound) "" else "'")+nme)
+            tv -> ("'" + nme)
         }.toMap
         showIn(ctx, 0)
       }

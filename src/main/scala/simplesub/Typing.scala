@@ -67,7 +67,7 @@ class Typing {
         val a_ty = typeTerm(a)
         // ^ Note: Interesting things happen if we introduce an intermediate variable here,
         //    as in `val a_ty = freshVar; constrain(typeTerm(a), a_ty); ...`
-        //    e.g., (fun x -> x x) becomes typed as `('a ∧ ('a -> 'b)) -> 'b` instead of `(a -> 'b) as a -> 'b`
+        //    e.g., (fun x -> x x) becomes typed as `('a ∧ ('a -> 'b)) -> 'b` instead of `('a -> 'b) as 'a -> 'b`
         //    but thankfully I think these two types are equivalent.
         constrain(f_ty, FunctionType(a_ty, res))
         res
