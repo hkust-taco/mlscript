@@ -1,44 +1,12 @@
 package simplesub
 
-import org.scalatest._
 import fastparse._
 import Parser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class TypingTests extends FunSuite {
-  
-  def doTest(str: String, expected: String = ""): Unit = {
-    if (expected.isEmpty) println(s">>> $str")
-    val Success(term, index) = parse(str, expr(_), verboseFailures = true)
-    
-    val typing = new Typing
-    val tyv = typing.inferType(term)
-    
-    if (expected.isEmpty) {
-      println("inferred: " + tyv)
-      println(" where " + tyv.showBounds)
-    }
-    val ty = typing.expandType(tyv, true)
-    if (expected.isEmpty) println("T " + ty.show)
-    val res = ty.normalize.show
-    if (expected.isEmpty) println("N " + res)
-    
-    val res2 = typing.expandPosType(tyv, true).show
-    if (expected.nonEmpty)
-      assert(res2 == expected)
-    else {
-      println(res2)
-      println("---")
-    }
-    
-    ()
-  }
-  def error(str: String, msg: String): Unit = {
-    assert(intercept[TypeError](doTest(str, "<none>")).msg == msg)
-    ()
-  }
+class TypingTests extends TypingTester {
   
   // In the tests, leave the expected string empty so the inferred type is printed in the console
   // and you can copy and paste it after making sure it is correct.
