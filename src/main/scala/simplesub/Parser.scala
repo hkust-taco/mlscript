@@ -2,7 +2,6 @@ package simplesub
 
 import scala.util.chaining._
 import fastparse._, fastparse.ScalaWhitespace._
-import simplesub.Syntax._
 
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 object Parser {

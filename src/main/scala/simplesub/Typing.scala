@@ -3,7 +3,6 @@ package simplesub
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.util.chaining._
-import Syntax._
 import scala.annotation.tailrec
 
 final case class TypeError(msg: String) extends Exception(msg)
@@ -21,7 +20,7 @@ class Typing {
     case Nil => Nil
   }
   
-  def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): TypeShape = {
+  def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = {
     typeTerm(term)(ctx, lvl)
   }
   
@@ -54,7 +53,7 @@ class Typing {
   }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, lvl: Int): TypeShape = {
+  def typeTerm(term: Term)(implicit ctx: Ctx, lvl: Int): SimpleType = {
     lazy val res = freshVar
     term match {
       case Var(name) =>
@@ -86,10 +85,10 @@ class Typing {
   }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: TypeShape, rhs: TypeShape)
+  def constrain(lhs: SimpleType, rhs: SimpleType)
       // we need a cache to remember the subtyping tests in process; we also make the cache remember
       // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm)
-      (implicit cache: MutSet[(TypeShape, TypeShape)] = MutSet.empty)
+      (implicit cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty)
   : Unit = {
     if (lhs is rhs) return
     val lhs_rhs = lhs -> rhs
@@ -116,10 +115,10 @@ class Typing {
             err(s"missing field: $n1 in ${lhs.show}")
           ) { case (n0, t0) => constrain(t0, t1) }
         }
-      case (lhs: TypeVariable, rhs0) if rhs.level <= lhs.level =>
+      case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
         lhs.upperBounds ::= rhs
         lhs.lowerBounds.foreach(constrain(_, rhs))
-      case (lhs0, rhs: TypeVariable) if lhs.level <= rhs.level =>
+      case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
         rhs.lowerBounds ::= lhs
         rhs.upperBounds.foreach(constrain(lhs, _))
       case (_: TypeVariable, rhs0) =>
@@ -135,7 +134,7 @@ class Typing {
   }
   
   /** Copies a type up to its type variables of wrong level. */
-  def extrude(ty: TypeShape, lvl: Int): TypeShape = {
+  def extrude(ty: SimpleType, lvl: Int): SimpleType = {
     if (ty.level <= lvl) ty else ty match {
       case FunctionType(l, r) => FunctionType(extrude(l, lvl), extrude(r, lvl))
       case RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl)))
@@ -155,49 +154,49 @@ class Typing {
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
   sealed abstract class TypeScheme {
-    def instantiate(implicit lvl: Int): TypeShape
+    def instantiate(implicit lvl: Int): SimpleType
   }
   /** A type with universally quantified type variables
    *  (by convention, those variables of level greater than `level` are considered quantified). */
-  case class PolymorphicType(level: Int, body: TypeShape) extends TypeScheme {
+  case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
     def instantiate(implicit lvl: Int) = body.freshenAbove(level)
   }
   /** A type without universally quantified type variables. */
-  sealed abstract class TypeShape extends TypeScheme with TypeShapeImpl {
+  sealed abstract class SimpleType extends TypeScheme with TypeShapeImpl {
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
-  case class FunctionType(lhs: TypeShape, rhs: TypeShape) extends TypeShape {
+  case class FunctionType(lhs: SimpleType, rhs: SimpleType) extends SimpleType {
     lazy val level: Int = lhs.level max rhs.level
     override def toString = s"($lhs -> $rhs)"
   }
-  case class RecordType(fields: List[(String, TypeShape)]) extends TypeShape {
+  case class RecordType(fields: List[(String, SimpleType)]) extends SimpleType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
-  case class TypeCtor(name: String) extends TypeShape {
+  case class TypeCtor(name: String) extends SimpleType {
     def level: Int = 0
     override def toString = name
   }
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
-   *  Invariant: Types appearing in the bounds never have a level lower than this variable's `level`. */
+   *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
       val level: Int,
-      var lowerBounds: List[TypeShape],
-      var upperBounds: List[TypeShape],
-  ) extends TypeShape {
+      var lowerBounds: List[SimpleType],
+      var upperBounds: List[SimpleType],
+  ) extends SimpleType {
     private val uid: Int = { freshCount += 1; freshCount - 1 }
-    lazy val asUniqueVariable = new TypeVar("α", uid)
+    lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
   }
   
   
   // Helper methods
   
-  sealed trait TypeShapeImpl { self: TypeShape =>
-    def freshenAbove(lim: Int)(implicit lvl: Int): TypeShape = {
+  sealed trait TypeShapeImpl { self: SimpleType =>
+    def freshenAbove(lim: Int)(implicit lvl: Int): SimpleType = {
       val freshened = MutMap.empty[TypeVariable, TypeVariable]
-      def freshen(ty: TypeShape): TypeShape = ty match {
+      def freshen(ty: SimpleType): SimpleType = ty match {
         case tv: TypeVariable =>
           if (tv.level > lim) freshened.get(tv) match {
             case Some(tv) => tv
@@ -214,7 +213,7 @@ class Typing {
       }
       freshen(this)
     }
-    def children: List[TypeShape] = this match {
+    def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case FunctionType(l, r) => l :: r :: Nil
       case RecordType(fs) => fs.map(_._2)
@@ -222,7 +221,7 @@ class Typing {
     }
     def getVars: Set[TypeVariable] = {
       val res = MutSet.empty[TypeVariable]
-      @tailrec def rec(queue: List[TypeShape]): Unit = queue match {
+      @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
         case (tv: TypeVariable) :: tys =>
           if (res(tv)) rec(tys)
           else { res += tv; rec(tv.children ::: tys) }
@@ -244,11 +243,11 @@ class Typing {
   
   // Conversion into proper immutable type representations
   
-  def expandType(tv: TypeShape, simplify: Boolean): Type = {
+  def expandType(tv: SimpleType, simplify: Boolean): Type = {
     val polarities = MutMap.empty[TypeVar, Option[Boolean]]
-    def go(ts: TypeShape, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
+    def go(ts: SimpleType, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
       case tv: TypeVariable =>
-        val uv = tv.asUniqueVariable
+        val uv = tv.asTypeVar
         val newPol = Some(polarity)
         val oldPol = polarities.getOrElseUpdate(uv, newPol)
         if (oldPol =/= newPol) polarities(uv) = None
@@ -256,7 +255,7 @@ class Typing {
         else {
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
           val boundTypes = bounds.map(go(_, polarity)(inProcess + (tv -> polarity)))
-          val isRecursive = boundTypes.exists(_.freeVars(uv))
+          val isRecursive = boundTypes.exists(_.typeVars(uv))
           val v: Type = if (isRecursive) if (polarity) Bot else Top else uv
           val body = boundTypes.foldLeft(v)(if (polarity) Union else Inter)
           if (isRecursive) Recursive(uv, body) else body
@@ -277,7 +276,7 @@ class Typing {
     if (simplify) doSimplify(ty) else ty
   }
   
-  def expandPosType(tv: TypeShape, simplify: Boolean): Pos.Type = {
+  def expandPosType(tv: SimpleType, simplify: Boolean): Pos.Type = {
     
     // First, solidify the record types present in the upper bounds:
     //   e.g., transform {x: A}, {x: B; y: C} into {x: A ∧ B; y: C}
@@ -302,7 +301,7 @@ class Typing {
     
     val polarities = MutMap.empty[TypeVariable, Option[Polarity]]
     
-    def go(ts: TypeShape, pol: Polarity)(implicit inProcess: Map[(TypeShape, Polarity), () => TypeVar])
+    def go(ts: SimpleType, pol: Polarity)(implicit inProcess: Map[(SimpleType, Polarity), () => TypeVar])
         : Set[TypeVariable] => pol.Type
         = {
       import pol.empty.{copy => mk}
@@ -316,8 +315,8 @@ class Typing {
         isRecursive = true
         (ts match {
           case tv: TypeVariable => tv
-          case _ => new TypeVariable(0,Nil,Nil)
-        }).asUniqueVariable
+          case _ => new TypeVariable(0, Nil, Nil)
+        }).asTypeVar
       }
       inProcess + (ts -> pol -> (() => uv)) pipe { implicit inProcess =>
         ts match {
