@@ -247,16 +247,16 @@ class Typing {
   
   def expandType(tv: TypeShape, simplify: Boolean): Type = {
     val polarities = MutMap.empty[TypeVar, Option[Boolean]]
-    def go(ts: TypeShape, polarity: Boolean)(inProcess: Set[TypeVariable]): Type = ts match {
+    def go(ts: TypeShape, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
       case tv: TypeVariable =>
       val uv = tv.asUniqueVariable
         val newPol = Some(polarity)
         val oldPol = polarities.getOrElseUpdate(uv, newPol)
         if (oldPol =/= newPol) polarities(uv) = None
-        if (inProcess(tv)) uv
+        if (inProcess(tv -> polarity)) uv
         else {
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
-          val boundTypes = bounds.map(go(_, polarity)(inProcess + tv))
+          val boundTypes = bounds.map(go(_, polarity)(inProcess + (tv -> polarity)))
           val isRecursive = boundTypes.exists(_.freeVars(uv))
           val v: Type = if (isRecursive) if (polarity) Bot else Top else uv
           val body = boundTypes.foldLeft(v)(if (polarity) Union else Inter)
@@ -281,17 +281,17 @@ class Typing {
   def expandPosType(tv: TypeShape, simplify: Boolean): Pos.Type = {
     val polarities = MutMap.empty[TypeVariable, Option[Polarity]]
     def go(ts: TypeShape, pol: Polarity)
-          (implicit inProcess: Set[TypeVariable]): Set[TypeVariable] => pol.Type = {
+          (implicit inProcess: Set[(TypeVariable, Polarity)]): Set[TypeVariable] => pol.Type = {
       import pol.empty.{copy => mk}
       ts match {
         case tv: TypeVariable =>
           val newPol = Some(pol)
           val oldPol = polarities.getOrElseUpdate(tv, newPol)
           if (oldPol =/= newPol) polarities(tv) = None
-          if (inProcess(tv)) _ => mk(atoms = Set(tv.asUniqueVariable))
+          if (inProcess(tv -> pol)) _ => mk(atoms = Set(tv.asUniqueVariable))
           else {
             val bounds = if (pol === Pos) tv.lowerBounds else tv.upperBounds
-            val boundsRec = bounds.map(go(_, pol)(inProcess + tv))
+            val boundsRec = bounds.map(go(_, pol)(inProcess + (tv -> pol)))
             ctx => {
               val boundsRes = boundsRec.map(_(ctx))
               val uv = tv.asUniqueVariable

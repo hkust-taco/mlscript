@@ -22,6 +22,7 @@ lazy val root = (project in file("."))
       DefaultArguments, ImplicitParameter, StringPlusAny,
       JavaSerializable, Serializable, Product,
       LeakingSealed,
+      Option2Iterable,
     ),
     libraryDependencies += scalaTest % Test,
     libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.9",
