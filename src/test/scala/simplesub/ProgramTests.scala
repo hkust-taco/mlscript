@@ -5,18 +5,21 @@ import fastparse._
 import Parser.pgrm
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
+import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class ProgramTests extends FunSuite {
   
-  def doTest(str: String)(expected: String*): Unit = {
+  implicit class ExpectedStr(val str: String)(implicit val line: Line)
+  
+  def doTest(str: String)(expected: ExpectedStr*): Unit = {
     val Success(p, index) = parse(str, pgrm(_), verboseFailures = true)
     val typing = new Typing
     val tys = typing.inferTypes(p)
     (p.defs lazyZip tys lazyZip expected).foreach { (str, ty, exp) =>
-      if (exp.isEmpty) println(s">>> $str")
+      if (exp.str.isEmpty) println(s">>> $str")
       val res = typing.expandPosType(ty.instantiate(0), true).simplify.show
-      if (exp.nonEmpty) { assert(res == exp); () }
+      if (exp.str.nonEmpty) { assert(res == exp.str, "at line " + exp.line.value); () }
       else {
         println(res)
         println("---")
@@ -43,7 +46,7 @@ class ProgramTests extends FunSuite {
       "{x: Int, y: 'a -> 'a}",
       "{x: Int, y: Bool}",
       "Bool -> {x: Int, y: Bool ∨ ('a -> 'a)}",
-      "'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}",
+      "'a -> {self: 'b, thing: 'a} as 'b",
     )
   }
   
@@ -78,14 +81,13 @@ class ProgramTests extends FunSuite {
       // let rec consume2 = fun strm -> add strm.head (add strm.tail.head (consume2 strm.tail.tail))
       let res = consume2 codata2
     """)(
-      "Int -> {head: Int, tail: {head: Int, tail: 'a} as 'a}",
+      "Int -> {head: Int, tail: 'a} as 'a",
       "{head: Int, tail: 'a} as 'a -> Int",
-      "{head: Int, tail: {head: Int, tail: 'a} as 'a}",
+      "{head: Int, tail: 'a} as 'a",
       "Int",
-      "{head: Int, tail: {head: Int, tail: {head: Int, tail: {head: Int, tail: 'a}} as 'a}}",
+      "{head: Int, tail: {head: Int, tail: 'a}} as 'a",
       "Int",
-      "Bool -> {head: Int, tail: {head: Int, tail: {head: Int, tail: {head: Int, " +
-        "tail: {head: Int, tail: 'b}} ∨ 'a as 'b} as 'a}}",
+      "Bool -> {head: Int, tail: {head: Int, tail: {head: Int, tail: 'a} ∨ 'a} as 'a}",
       "Bool -> Int",
       "{head: Int, tail: {head: Int, tail: {head: Int, tail: 'a}} as 'a} -> Int",
       "Int",

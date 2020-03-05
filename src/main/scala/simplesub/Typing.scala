@@ -67,9 +67,8 @@ class Typing {
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         // ^ Note: Interesting things happen if we introduce an intermediate variable here,
-        //    as in `val a_ty = freshVar; constrain(typeTerm(a), a_ty); ...`
-        //    e.g., (fun x -> x x) becomes typed as `('a ∧ ('a -> 'b)) -> 'b` instead of `('a -> 'b) as 'a -> 'b`
-        //    but thankfully I think these two types are equivalent.
+        //      as in `val a_ty = freshVar; constrain(typeTerm(a), a_ty); ...`
+        //    See the note in the `recursion` test of TypingTests
         constrain(f_ty, FunctionType(a_ty, res))
         res
       case Lit(n) =>
@@ -249,7 +248,7 @@ class Typing {
     val polarities = MutMap.empty[TypeVar, Option[Boolean]]
     def go(ts: TypeShape, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
       case tv: TypeVariable =>
-      val uv = tv.asUniqueVariable
+        val uv = tv.asUniqueVariable
         val newPol = Some(polarity)
         val oldPol = polarities.getOrElseUpdate(uv, newPol)
         if (oldPol =/= newPol) polarities(uv) = None
@@ -279,42 +278,79 @@ class Typing {
   }
   
   def expandPosType(tv: TypeShape, simplify: Boolean): Pos.Type = {
+    
+    // First, solidify the record types present in the upper bounds:
+    //   e.g., transform {x: A}, {x: B; y: C} into {x: A ∧ B; y: C}
+    // This is merely done to generate cleaner recursive types in some cases;
+    //    without it, the term "let rec c = fun s -> add s.head (c s.tail)"
+    //    gets inferred type:
+    //      {head: Int, tail: {head: Int} ∧ 'a} as 'a -> Int
+    //    instead of the cleaner:
+    //      {head: Int, tail: 'a} as 'a -> Int
+    tv.getVars.foreach { v =>
+      val ubs = v.upperBounds
+      val (recs, rest) = ubs.partitionMap {
+        case RecordType(fields) => Left(fields)
+        case t => Right(t)
+      }
+      recs.reduceOption { (fs0, fs1) =>
+        mergeMaps(fs0.toMap, fs1.toMap)((t0, t1) => new TypeVariable(0, Nil, t0 :: t1 :: Nil)).toList
+      }.foreach { rec =>
+        v.upperBounds = RecordType(rec) :: rest
+      }
+    }
+    
     val polarities = MutMap.empty[TypeVariable, Option[Polarity]]
-    def go(ts: TypeShape, pol: Polarity)
-          (implicit inProcess: Set[(TypeVariable, Polarity)]): Set[TypeVariable] => pol.Type = {
+    
+    def go(ts: TypeShape, pol: Polarity)(implicit inProcess: Map[(TypeShape, Polarity), () => TypeVar])
+        : Set[TypeVariable] => pol.Type
+        = {
       import pol.empty.{copy => mk}
-      ts match {
-        case tv: TypeVariable =>
-          val newPol = Some(pol)
-          val oldPol = polarities.getOrElseUpdate(tv, newPol)
-          if (oldPol =/= newPol) polarities(tv) = None
-          if (inProcess(tv -> pol)) _ => mk(atoms = Set(tv.asUniqueVariable))
-          else {
+      
+      inProcess.get(ts -> pol) match {
+        case Some(t) => return _ => mk(atoms = Set(t()))
+        case None => ()
+      }
+      var isRecursive = false
+      lazy val uv = {
+        isRecursive = true
+        (ts match {
+          case tv: TypeVariable => tv
+          case _ => new TypeVariable(0,Nil,Nil)
+        }).asUniqueVariable
+      }
+      inProcess + (ts -> pol -> (() => uv)) pipe { implicit inProcess =>
+        ts match {
+          case tv: TypeVariable =>
+            val newPol = Some(pol)
+            val oldPol = polarities.getOrElseUpdate(tv, newPol)
+            if (oldPol =/= newPol) polarities(tv) = None
             val bounds = if (pol === Pos) tv.lowerBounds else tv.upperBounds
-            val boundsRec = bounds.map(go(_, pol)(inProcess + (tv -> pol)))
+            val boundsRec = bounds.map(go(_, pol))
             ctx => {
               val boundsRes = boundsRec.map(_(ctx))
-              val uv = tv.asUniqueVariable
-              val isRecursive = boundsRes.exists(_.freeVariables(uv))
               boundsRes.foldLeft(
                 if (isRecursive) mk(rec = Some(uv))
                 else if (ctx(tv)) mk(atoms = Set(uv)) else mk()
               )(pol.merge(_, _))
             }
-          }
-        case FunctionType(l, r) =>
-          val l2 = go(l, !pol)
-          val r2 = go(r, pol)
-          ctx => mk(fun = Some(l2(ctx) -> r2(ctx)))
-        case RecordType(fs) =>
-          val fs2 = fs.map(nt => nt._1 -> go(nt._2, pol))
-          ctx => mk(fields = Some(fs2.iterator.map(nt => nt._1 -> nt._2(ctx)).toMap))
-        case TypeCtor(n) => _ => mk(atoms = Set(Ctor(n)))
+          case FunctionType(l, r) =>
+            val l2 = go(l, !pol)
+            val r2 = go(r, pol)
+            ctx => mk(fun = Some(l2(ctx) -> r2(ctx)), rec = Option.when(isRecursive)(uv))
+          case RecordType(fs) =>
+            val fs2 = fs.map(nt => nt._1 -> go(nt._2, pol))
+            ctx => mk(fields = Some(fs2.iterator.map(nt => nt._1 -> nt._2(ctx)).toMap),
+                      rec = Option.when(isRecursive)(uv))
+          case TypeCtor(n) => _ => assert(!isRecursive); mk(atoms = Set(Ctor(n)))
+        }
       }
     }
-    go(tv, Pos)(Set.empty)(
+    go(tv, Pos)(Map.empty)(
       polarities.iterator.filter(!simplify || _._2.isEmpty).map(_._1).toSet)
   }
   
+  // Note: we do not do co-occurrence analysis here in type expansion, but later in the PosType,
+  //    since many co-occurrences appear only after we have normalized the type!
   
 }

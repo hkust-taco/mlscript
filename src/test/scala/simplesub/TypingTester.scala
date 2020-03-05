@@ -31,7 +31,7 @@ class TypingTester extends FunSuite {
     val res2 = sety.show
     // val res2 = typing.expandSimplifiedPosType(tyv, true).show
     if (expected.nonEmpty)
-      assert(res2 == expected, s"at line " + line.value)
+      assert(res2 == expected, "at line " + line.value)
     else {
       println("typed: " + ety.show)
       println("simpl: " + res2)

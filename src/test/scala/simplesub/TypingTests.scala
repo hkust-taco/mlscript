@@ -57,17 +57,15 @@ class TypingTests extends TypingTester {
   }
   
   test("self-app") {
-    doTest("fun x -> x x", "('a -> 'b) as 'a -> 'b")
-    // ^ see the note in the App case: with an intermediate variable we get ('a ∧ ('a -> 'b)) -> 'b
+    doTest("fun x -> x x", "('a ∧ ('a -> 'b)) -> 'b")
     
-    doTest("fun x -> x x x", "('a -> 'a -> 'b) as 'a -> 'b")
-    doTest("fun x -> fun y -> x y x", "('b -> 'a -> 'c) as 'a -> 'b -> 'c")
-    doTest("fun x -> fun y -> x x y", "('a -> 'b -> 'c) as 'a -> 'b -> 'c")
+    doTest("fun x -> x x x", "('a ∧ ('a -> 'a -> 'b)) -> 'b")
+    doTest("fun x -> fun y -> x y x", "('a ∧ ('b -> 'a -> 'c)) -> 'b -> 'c")
+    doTest("fun x -> fun y -> x x y", "('a ∧ ('a -> 'b -> 'c)) -> 'b -> 'c")
     doTest("(fun x -> x x) (fun x -> x x)", "⊥")
     
     doTest("fun x -> {l = x x; r = x }",
-      "('a -> 'b) as 'a -> {l: 'b, r: 'a}")
-    // ^ notice this case of a recursive alias that is mentioned later in the type
+      "('a ∧ ('a -> 'b)) -> {l: 'b, r: 'a}")
     
     // From https://github.com/stedolan/mlsub
     // Y combinator:
@@ -78,7 +76,15 @@ class TypingTests extends TypingTester {
       "(('a -> 'b) -> 'c ∧ ('a -> 'b)) -> 'c")
     // Function that takes arbitrarily many arguments:
     doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)",
-      "⊤ -> ⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
+      "⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
+    
+    doTest("let rec trutru = fun g -> trutru (g true) in trutru",
+      "(Bool -> 'a) as 'a -> ⊥")
+    doTest("fun i -> if ((i i) true) then true else true",
+      "('a ∧ ('a -> Bool -> Bool)) -> Bool")
+    // ^ for: λi. if ((i i) true) then true else true,
+    //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
+    //    which does seem equivalent, while syntactically quite different
   }
   
   test("let-poly") {
@@ -99,11 +105,14 @@ class TypingTests extends TypingTester {
     
     // from https://www.cl.cam.ac.uk/~sd601/mlsub/
     doTest("let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster",
-      "'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}")
+      "'a -> {self: 'b, thing: 'a} as 'b")
     // ^ Note: with an intermediate variable in the App case, we get this weird (but seemingly correct) type:
     //      "⊤ as 'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}";
     //    This happens because we have ?a <: ?c and ?c <: ?a (where ?c does not appear anywhere else),
     //    and the expansion algorithm does not detect that ?a is only spuriously recursive.
+    //    This is a case of a type alias that is mentioned later in the type,
+    //    as opposed to being used for describing a recursive type (I think it's fine)
+    
   }
   
 }
