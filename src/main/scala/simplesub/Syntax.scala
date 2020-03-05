@@ -60,6 +60,7 @@ object Syntax {
     override def toString: String = s"$nameHint:$hash"
     override def hashCode: Int = hash
   }
+  implicit val TypeVarOrdering: Ordering[TypeVar] = Ordering.by(_.hash)
   
   
   // Helper methods for simple types
@@ -152,6 +153,7 @@ object Syntax {
   // Type-safe normalized polar type representations
   
   case object Pos extends Polarity {
+    def asBoolean = true
     val Negated: Neg.type = Neg
     protected val mergeSymbol = "∨"
     protected val extremumSymbol = "⊥"
@@ -160,6 +162,7 @@ object Syntax {
   }
   
   case object Neg extends Polarity {
+    def asBoolean = false
     val Negated: Pos.type = Pos
     protected val mergeSymbol = "∧"
     protected val extremumSymbol = "⊤"
@@ -167,7 +170,10 @@ object Syntax {
       mergeMaps(lhs, rhs)(merge)
   }
   
+  implicit val PolarityOrdering: Ordering[Polarity] = Ordering.by(_.asBoolean)
+  
   sealed abstract class Polarity { pol =>
+    def asBoolean: Boolean
     
     val Negated: Polarity
     
@@ -274,7 +280,7 @@ object Syntax {
       //      However, this specific optim is already done in the type expansion algorithm.
       def trySimplify: Option[Type] = {
         val oc = coOccurrences
-        oc.foreach { case ((tv1, pol), atoms) =>
+        oc.toList.sortBy(_._1).foreach { case ((tv1, pol), atoms) =>
           atoms.foreach { case tv2: TypeVar if !(tv2 is tv1) =>
             if (oc(tv2 -> pol)(tv1)) return Some(substVar(tv2, tv1))
             else ()
