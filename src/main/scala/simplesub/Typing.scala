@@ -1,6 +1,7 @@
 package simplesub
 
 import scala.collection.mutable
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.util.chaining._
 import Syntax._
 import scala.annotation.tailrec
@@ -89,7 +90,7 @@ class Typing {
   def constrain(lhs: TypeShape, rhs: TypeShape)
       // we need a cache to remember the subtyping tests in process; we also make the cache remember
       // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm)
-      (implicit cache: mutable.Set[(TypeShape, TypeShape)] = mutable.Set.empty)
+      (implicit cache: MutSet[(TypeShape, TypeShape)] = MutSet.empty)
   : Unit = {
     if (lhs is rhs) return
     val lhs_rhs = lhs -> rhs
@@ -164,16 +165,20 @@ class Typing {
   }
   /** A type without universally quantified type variables. */
   sealed abstract class TypeShape extends TypeScheme with TypeShapeImpl {
+    def level: Int
     def instantiate(implicit lvl: Int) = this
   }
   case class FunctionType(lhs: TypeShape, rhs: TypeShape) extends TypeShape {
     lazy val level: Int = lhs.level max rhs.level
+    override def toString = s"($lhs -> $rhs)"
   }
   case class RecordType(fields: List[(String, TypeShape)]) extends TypeShape {
-    lazy val level: Int = fields.iterator.map(_._2.level).max
+    lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   case class TypeCtor(name: String) extends TypeShape {
     def level: Int = 0
+    override def toString = name
   }
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
    *  Invariant: Types appearing in the bounds never have a level lower than this variable's `level`. */
@@ -191,9 +196,8 @@ class Typing {
   // Helper methods
   
   sealed trait TypeShapeImpl { self: TypeShape =>
-    def level: Int
     def freshenAbove(lim: Int)(implicit lvl: Int): TypeShape = {
-      val freshened = mutable.Map.empty[TypeVariable, TypeVariable]
+      val freshened = MutMap.empty[TypeVariable, TypeVariable]
       def freshen(ty: TypeShape): TypeShape = ty match {
         case tv: TypeVariable =>
           if (tv.level > lim) freshened.get(tv) match {
@@ -218,7 +222,7 @@ class Typing {
       case TypeCtor(_) => Nil
     }
     def getVars: Set[TypeVariable] = {
-      val res = mutable.Set.empty[TypeVariable]
+      val res = MutSet.empty[TypeVariable]
       @tailrec def rec(queue: List[TypeShape]): Unit = queue match {
         case (tv: TypeVariable) :: tys =>
           if (res(tv)) rec(tys)
@@ -242,7 +246,7 @@ class Typing {
   // Conversion into proper immutable type representations
   
   def expandType(tv: TypeShape, simplify: Boolean): Type = {
-    val polarities = mutable.Map.empty[TypeVar, Option[Boolean]]
+    val polarities = MutMap.empty[TypeVar, Option[Boolean]]
     def go(ts: TypeShape, polarity: Boolean)(inProcess: Set[TypeVariable]): Type = ts match {
       case tv: TypeVariable =>
       val uv = tv.asUniqueVariable
@@ -275,7 +279,7 @@ class Typing {
   }
   
   def expandPosType(tv: TypeShape, simplify: Boolean): Pos.Type = {
-    val polarities = mutable.Map.empty[TypeVariable, Option[Polarity]]
+    val polarities = MutMap.empty[TypeVariable, Option[Polarity]]
     def go(ts: TypeShape, pol: Polarity)
           (implicit inProcess: Set[TypeVariable]): Set[TypeVariable] => pol.Type = {
       import pol.empty.{copy => mk}

@@ -17,12 +17,13 @@ lazy val root = (project in file("."))
       "-Ywarn-value-discard",
     ),
     wartremoverWarnings ++= Warts.allBut(
-      Recursion, Throw, Nothing, Return,
+      Recursion, Throw, Nothing, Return, While,
       Var, MutableDataStructures, NonUnitStatements,
       DefaultArguments, ImplicitParameter, StringPlusAny,
       JavaSerializable, Serializable, Product,
       LeakingSealed,
     ),
     libraryDependencies += scalaTest % Test,
+    libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.9",
     libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.2.2",
   )

@@ -3,3 +3,4 @@ target/
 .metals/
 project/Dependencies.scala
 project/metals.sbt
+**.worksheet.sc

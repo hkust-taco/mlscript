@@ -15,7 +15,7 @@ class ProgramTests extends FunSuite {
     val tys = typing.inferTypes(p)
     (p.defs lazyZip tys lazyZip expected).foreach { (str, ty, exp) =>
       if (exp.isEmpty) println(s">>> $str")
-      val res = typing.expandPosType(ty.instantiate(0), true).show
+      val res = typing.expandPosType(ty.instantiate(0), true).simplify.show
       if (exp.nonEmpty) { assert(res == exp); () }
       else {
         println(res)
@@ -39,7 +39,7 @@ class ProgramTests extends FunSuite {
           self = recursive_monster x }
     """)(
       "'a -> 'a",
-      "('a ∨ 'b -> 'a ∧ 'c) -> 'b -> 'c",
+      "('a ∨ 'b -> 'a) -> 'b -> 'a",
       "{x: Int, y: 'a -> 'a}",
       "{x: Int, y: Bool}",
       "Bool -> {x: Int, y: Bool ∨ ('a -> 'a)}",
@@ -78,7 +78,7 @@ class ProgramTests extends FunSuite {
       // let rec consume2 = fun strm -> add strm.head (add strm.tail.head (consume2 strm.tail.tail))
       let res = consume2 codata2
     """)(
-      "'a ∧ Int -> {head: 'a ∨ Int, tail: {head: 'a ∨ Int, tail: 'b} as 'b}",
+      "Int -> {head: Int, tail: {head: Int, tail: 'a} as 'a}",
       "{head: Int, tail: 'a} as 'a -> Int",
       "{head: Int, tail: {head: Int, tail: 'a} as 'a}",
       "Int",

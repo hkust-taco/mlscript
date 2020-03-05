@@ -17,7 +17,7 @@ class TypingTests extends TypingTester {
     doTest("fun x -> x", "'a -> 'a")
     doTest("fun x -> x 42", "(Int -> 'a) -> 'a")
     doTest("(fun x -> x) 42", "Int")
-    doTest("fun f -> fun x -> f (f x)  // twice", "('a ∨ 'b -> 'b ∧ 'c) -> 'a -> 'c")
+    doTest("fun f -> fun x -> f (f x)  // twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
   }
   
   test("booleans") {
@@ -70,13 +70,12 @@ class TypingTests extends TypingTester {
     // ^ notice this case of a recursive alias that is mentioned later in the type
     
     // From https://github.com/stedolan/mlsub
-    // TODO simplify them more
     // Y combinator:
     doTest("(fun f -> (fun x -> f (x x)) (fun x -> f (x x)))",
-      "('a ∨ 'b -> 'a ∧ 'b ∧ 'c) -> 'c")
+      "('a -> 'a) -> 'a")
     // Z combinator:
     doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))",
-      "(('a ∧ 'b -> 'c ∨ 'd) -> 'e ∧ ('a ∨ 'b -> 'c ∧ 'd)) -> 'e")
+      "(('a -> 'b) -> 'c ∧ ('a -> 'b)) -> 'c")
     // Function that takes arbitrarily many arguments:
     doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)",
       "⊤ -> ⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
@@ -87,7 +86,7 @@ class TypingTests extends TypingTester {
     doTest("fun y -> let f = fun x -> x in {a = f y; b = f true}",
       "'a -> {a: 'a, b: Bool}")
     doTest("fun y -> let f = fun x -> y x in {a = f 0; b = f true}",
-      "(Int ∨ Bool -> 'a ∧ 'b) -> {a: 'a, b: 'b}")
+      "(Int ∨ Bool -> 'a) -> {a: 'a, b: 'a}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> true)}",
       "'a -> {a: 'a, b: Bool}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> succ z)}",

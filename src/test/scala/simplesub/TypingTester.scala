@@ -5,11 +5,12 @@ import fastparse._
 import Parser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
+import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class TypingTester extends FunSuite {
   
-  def doTest(str: String, expected: String = ""): Unit = {
+  def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     if (expected.isEmpty) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
@@ -26,10 +27,11 @@ class TypingTester extends FunSuite {
     if (expected.isEmpty) println("N " + res)
     
     val ety = typing.expandPosType(tyv, true)
-    val res2 = ety.show
+    val sety = ety.simplify
+    val res2 = sety.show
     // val res2 = typing.expandSimplifiedPosType(tyv, true).show
     if (expected.nonEmpty)
-      assert(res2 == expected)
+      assert(res2 == expected, s"at line " + line.value)
     else {
       println("typed: " + ety.show)
       println("simpl: " + res2)

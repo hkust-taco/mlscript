@@ -1,6 +1,7 @@
 package simplesub
 
 import scala.util.chaining._
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 
 object Syntax {
   
@@ -56,7 +57,7 @@ object Syntax {
     def hash = name.hashCode
   }
   final class TypeVar(val nameHint: String, val hash: Int) extends Atom {
-    override def toString: String = s"$nameHint:$hash@${System.identityHashCode(this).toHexString}"
+    override def toString: String = s"$nameHint:$hash"
     override def hashCode: Int = hash
   }
   
@@ -150,7 +151,7 @@ object Syntax {
   
   // Type-safe normalized polar type representations
   
-  object Pos extends Polarity {
+  case object Pos extends Polarity {
     val Negated: Neg.type = Neg
     protected val mergeSymbol = "∨"
     protected val extremumSymbol = "⊥"
@@ -158,7 +159,7 @@ object Syntax {
       lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(v, _)) }
   }
   
-  object Neg extends Polarity {
+  case object Neg extends Polarity {
     val Negated: Pos.type = Pos
     protected val mergeSymbol = "∧"
     protected val extremumSymbol = "⊤"
@@ -166,7 +167,7 @@ object Syntax {
       mergeMaps(lhs, rhs)(merge)
   }
   
-  sealed abstract class Polarity {
+  sealed abstract class Polarity { pol =>
     
     val Negated: Polarity
     
@@ -209,6 +210,16 @@ object Syntax {
           newRec
         )
       }
+      def substAtom(uv0: TypeVar, uv1: Atom): Type =
+        if (rec.contains(uv0)) empty.copy(atoms = Set(uv1))
+        // ^ substituting an 'as' type replaces the whole thing!
+        else Type(
+          atoms.map(v => if (v eq uv0) uv1 else v)
+            .filterNot(rec.contains[Atom]), // to comply with the invariant
+          fields.map(_.view.mapValues(_.substAtom(uv0, uv1)).toMap),
+          fun.map { case (l, r) => (l.substAtom(uv0, uv1), r.substAtom(uv0, uv1)) },
+          rec
+        )
       
       lazy val freeVariables: Set[TypeVar] =
         atoms.collect { case uv: TypeVar => uv } ++
@@ -221,7 +232,62 @@ object Syntax {
         atoms.iterator.collect { case uv: TypeVar => uv }.toList.sortBy(_.hash) ++
         sortedFields.flatMap(_._2.variableOccurrences) ++
         fun.iterator.flatMap(lr => lr._1.variableOccurrences ++ lr._2.variableOccurrences)
-        
+      
+      /** Computes the set of polar co-occurrences for all variables present in this Type. */
+      def coOccurrences: collection.Map[(TypeVar, Polarity), Set[Atom]] = {
+        val allAtoms = atoms ++ rec.iterator
+        val base = allAtoms.iterator.collect { case tv: TypeVar => (tv -> pol) -> allAtoms }
+        val rest =
+          fields.iterator.flatMap(_.iterator).flatMap(nt => nt._2.coOccurrences.iterator) ++
+          fun.iterator.flatMap(pa => pa._1.coOccurrences.iterator ++ pa._2.coOccurrences.iterator)
+        val res = MutMap.empty[(TypeVar, Polarity), Set[Atom]]
+        (base ++ rest).foreach { case (k, v) =>
+          res(k) = res.get(k) match {
+            case Some(v2) => v & v2
+            case None => v
+          }
+        }
+        res
+      }
+      
+      // Idea: if a type var 'a always occurs positively (resp. neg) along with some 'b AND vice versa,
+      //      this means that the two are undistinguishable, and they can therefore be unified.
+      //    Ex: ('a & 'b) -> ('a, 'b) is the same as 'a -> ('a, 'a)
+      //    Ex: ('a & 'b) -> 'b -> ('a, 'b) is NOT the same as 'a -> 'a -> ('a, 'a)
+      //      there is no value of 'a that can make 'a -> 'a -> ('a, 'a) <: (a & b) -> b -> (a, b) work
+      //      we'd require 'a :> b | a & b <: a & b, which are NOT valid bounds!
+      //    Ex: 'a -> 'b -> 'a | 'b is the same as 'a -> 'a -> 'a
+      //    Justification: the other var 'b can always be taken to be 'a & 'b (resp. a | b)
+      //      without loss of gen. Indeed, on the pos side we'll have 'a <: 'a & 'b and 'b <: 'a & 'b
+      //      and on the neg side, we'll always have 'a and 'b together, i.e., 'a & 'b
+      // Additional idea: remove variables which always occur both positively AND negatively together
+      //      with some other type.
+      //    This would arise from constraints such as: 'a :> Int <: 'b and 'b <: Int
+      //      (contraints which basically say 'a =:= 'b =:= Int)
+      //    Ex: 'a ∧ Int -> 'a ∨ Int is the same as Int -> Int
+      //    Currently, we only do this for Ctor types.
+      //    In principle it could be done for functions and records, too.
+      //    Note: conceptually, this idea subsumes the simplification that removes variables occurring
+      //        exclusively in positive or negative positions.
+      //      Indeed, if 'a never occurs positively, it's like it always occurs both positively AND
+      //      negatively along with the type Bot, so we can replace it with Bot.
+      //      However, this specific optim is already done in the type expansion algorithm.
+      def trySimplify: Option[Type] = {
+        val oc = coOccurrences
+        oc.foreach { case ((tv1, pol), atoms) =>
+          atoms.foreach { case tv2: TypeVar if !(tv2 is tv1) =>
+            if (oc(tv2 -> pol)(tv1)) return Some(substVar(tv2, tv1))
+            else ()
+          case atom: Ctor if (oc.get(tv1, !pol).exists(_(atom))) =>
+            return Some(substAtom(tv1, atom))
+          case _ => ()
+          }
+        }
+        None
+      }
+      /** Simplifies a Type based on co-occurrence analysis. */
+      def simplify: Type = trySimplify.fold(this)(_.simplify)
+      
       def showIn(ctx: Map[TypeVar, String], outerPrec: Int): String = {
         val firstComponents =
           (if (fields.forall(_.isEmpty)) Nil
