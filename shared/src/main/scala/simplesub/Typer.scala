@@ -11,7 +11,7 @@ final case class TypeError(msg: String) extends Exception(msg)
  *  It uses its own internal representation of types and type variables, using mutable data structures.
  *  In order to turn the resulting TypeShape into a Type or a Pos.Type, use `expandType` and `expandPosType`.
  */
-class Typing {
+class Typer {
   
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[PolymorphicType] = pgrm.defs match {
     case (isrec, nme, rhs) :: defs =>
@@ -188,6 +188,7 @@ class Typing {
     private val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
+    override def hashCode: Int = uid
   }
   
   

@@ -1,12 +1,21 @@
 import Dependencies._
 import Wart._
 
+enablePlugins(ScalaJSPlugin)
+
 ThisBuild / scalaVersion     := "2.13.1"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
-lazy val root = (project in file("."))
+lazy val root = project.in(file("."))
+  .aggregate(simplesubJS, simplesubJVM)
+  .settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val simplesub = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
     name := "simple-algebraic-subtyping",
     scalacOptions ++= Seq(
@@ -25,6 +34,14 @@ lazy val root = (project in file("."))
       Option2Iterable,
     ),
     libraryDependencies += scalaTest % Test,
-    libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.9",
-    libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.2.2",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
   )
+  .jsSettings(
+    scalaJSUseMainModuleInitializer := true,
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.8",
+    libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "0.9.6",
+  )
+
+lazy val simplesubJVM = simplesub.jvm
+lazy val simplesubJS = simplesub.js

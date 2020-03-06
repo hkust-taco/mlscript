@@ -39,11 +39,11 @@ sealed trait PlainType extends Type
 case object Top extends NullaryType
 case object Bot extends NullaryType
 
-final case class Union(lhs: Type, rhs: Type)         extends Type
-final case class Inter(lhs: Type, rhs: Type)         extends Type
-final case class Function(lhs: Type, rhs: Type)      extends PlainType
+final case class Union(lhs: Type, rhs: Type)          extends Type
+final case class Inter(lhs: Type, rhs: Type)          extends Type
+final case class Function(lhs: Type, rhs: Type)       extends PlainType
 final case class Record(fields: List[(String, Type)]) extends PlainType
-final case class Recursive(uv: TypeVar, body: Type)  extends PlainType
+final case class Recursive(uv: TypeVar, body: Type)   extends PlainType
 
 sealed abstract class Atom extends NullaryType with PlainType {
   def hash: Int

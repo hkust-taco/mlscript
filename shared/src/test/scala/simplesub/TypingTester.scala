@@ -14,7 +14,7 @@ class TypingTester extends FunSuite {
     if (expected.isEmpty) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typing = new Typing
+    val typing = new Typer
     val tyv = typing.inferType(term)
     
     if (expected.isEmpty) {

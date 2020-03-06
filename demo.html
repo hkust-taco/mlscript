@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="demo.css">
+    <title>Simple-sub demonstration</title>
+  </head>
+  <body>
+  <h1>Simple-sub demonstration</h1>
+  <div id="content">
+    <div id="left">
+<textarea id="simple-sub-input">
+let id = fun x -> x
+let twice = fun f -> fun x -> f (f x)
+
+let object1 = { x = 42; y = id }
+let object2 = { x = 17; y = false }
+let pick_an_object = fun b ->
+  if b then object1 else object2
+
+let rec produce = fun arg ->
+  { head = arg; tail = produce (succ arg) }
+
+let rec consume = fun strm ->
+  add strm.head (consume strm.tail)
+
+let codata = produce 42
+let res = consume codata
+</textarea>
+<!-- let rec recursive_monster = fun x ->
+  { thing = x;
+    self = recursive_monster x } -->
+    </div>
+    <div id="right">
+      <div id="simple-sub-output"></div>
+    </div>
+  </div>
+  <script type="text/javascript" src="js/target/scala-2.13/simple-algebraic-subtyping-fastopt.js"></script>
+  <br/>
+  <p>The code is available <a href="https://github.com/LPTK/simple-algebraic-subtyping">on github</a>.</p>
+  <br/>
+  <p>Credit: the CSS style sheet of this page was shamelessly stolen from <a href="https://www.cl.cam.ac.uk/~sd601/mlsub/">the MLsub demo page</a>.</p>
+</html>
