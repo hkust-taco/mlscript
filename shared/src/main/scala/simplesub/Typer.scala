@@ -14,15 +14,42 @@ final case class TypeError(msg: String) extends Exception(msg)
  */
 class Typer {
   
+  
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
-  pgrm.defs match {
-    case (isrec, nme, rhs) :: defs =>
-      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, 0)) catch {
-        case err: TypeError => Left(err)
+    pgrm.defs match {
+      case (isrec, nme, rhs) :: defs =>
+        val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, 0)) catch {
+          case err: TypeError => Left(err)
+        }
+        ty_sch :: inferTypes(Pgrm(defs), ctx + (nme -> ty_sch.getOrElse(freshVar(0))))
+      case Nil => Nil
+    }
+  // ^ Saldy, the version above does not work in JavaScript as it raises a
+  //      "RangeError: Maximum call stack size exceeded"
+  
+  // So we have to go with this ugly one:
+  def inferTypesUgly(
+    pgrm: Pgrm,
+    ctx: Ctx = builtins,
+    stopAtFirstError: Boolean = true,
+  ): List[Either[TypeError, PolymorphicType]] = {
+    var defs = pgrm.defs
+    var curCtx = ctx
+    var res = collection.mutable.ListBuffer.empty[Either[TypeError, PolymorphicType]]
+    while (defs.nonEmpty) {
+      val (isrec, nme, rhs) = defs.head
+      defs = defs.tail
+      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, 0)) catch {
+        case err: TypeError =>
+          if (stopAtFirstError) defs = Nil
+          Left(err)
       }
-      ty_sch :: inferTypes(Pgrm(defs), ctx + (nme -> ty_sch.getOrElse(freshVar(0))))
-    case Nil => Nil
+      res += ty_sch
+      curCtx += (nme -> ty_sch.getOrElse(freshVar(0)))
+    }
+    res.toList
   }
+  
   
   def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = {
     typeTerm(term)(ctx, lvl)

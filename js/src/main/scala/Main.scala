@@ -40,7 +40,7 @@ object Main {
         case Success(p, index) =>
           // println(s"Parsed: $p")
           val typer = new simplesub.Typer
-          val tys = typer.inferTypes(p)
+          val tys = typer.inferTypesUgly(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>
               println(s"Typed `${d._2}` as: $ty")
