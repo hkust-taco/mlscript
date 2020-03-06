@@ -18,6 +18,7 @@ class TypingTests extends TypingTester {
     doTest("fun x -> x 42", "(Int -> 'a) -> 'a")
     doTest("(fun x -> x) 42", "Int")
     doTest("fun f -> fun x -> f (f x)  // twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
+    doTest("let twice = fun f -> fun x -> f (f x) in twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
   }
   
   test("booleans") {

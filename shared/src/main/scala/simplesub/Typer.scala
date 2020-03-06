@@ -2,6 +2,7 @@ package simplesub
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.immutable.SortedSet
 import scala.util.chaining._
 import scala.annotation.tailrec
 
@@ -185,7 +186,7 @@ class Typer {
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
   ) extends SimpleType {
-    private val uid: Int = { freshCount += 1; freshCount - 1 }
+    private[Typer] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid
@@ -204,8 +205,13 @@ class Typer {
             case None =>
               val v = freshVar
               freshened += tv -> v
-              v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
-              v.upperBounds = tv.upperBounds.mapConserve(freshen)
+              // v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
+              // v.upperBounds = tv.upperBounds.mapConserve(freshen)
+              //  ^ the above are more efficient, but they lead to a different order
+              //    of fresh variable creations, which leads to some types not being
+              //    simplified the same when put into the RHS of a let binding...
+              v.lowerBounds = tv.lowerBounds.reverse.map(freshen).reverse
+              v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
               v
           } else tv
         case FunctionType(l, r) => FunctionType(freshen(l), freshen(r))
@@ -230,7 +236,7 @@ class Typer {
         case Nil => ()
       }
       rec(this :: Nil)
-      res.toSet
+      SortedSet.from(res)(Ordering.by(_.uid))
     }
     def show: String = expandPosType(this, simplify = false).show
     def showBounds: String =

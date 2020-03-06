@@ -48,6 +48,9 @@ final case class Recursive(uv: TypeVar, body: Type)   extends PlainType
 sealed abstract class Atom extends NullaryType with PlainType {
   def hash: Int
 }
+object Atom {
+  implicit val TypeVarOrdering: Ordering[Atom] = Ordering.by(_.hash)
+}
 final case class Ctor(name: String) extends Atom {
   def hash = name.hashCode
 }

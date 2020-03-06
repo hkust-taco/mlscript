@@ -1,7 +1,8 @@
 package simplesub
 
 import scala.util.chaining._
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet}
+import scala.collection.immutable.SortedSet
 
 
 // Helper methods for simple types
@@ -145,13 +146,13 @@ abstract class PolarityImpl { pol: Polarity =>
       fun.iterator.flatMap(lr => lr._1.variableOccurrences ++ lr._2.variableOccurrences)
     
     /** Computes the set of polar co-occurrences for all variables present in this Type. */
-    def coOccurrences: collection.Map[(TypeVar, Polarity), Set[Atom]] = {
-      val allAtoms = atoms ++ rec.iterator
+    def coOccurrences: collection.Map[(TypeVar, Polarity), SortedSet[Atom]] = {
+      val allAtoms = SortedSet.from(atoms) ++ rec.iterator
       val base = allAtoms.iterator.collect { case tv: TypeVar => (tv -> pol) -> allAtoms }
       val rest =
         fields.iterator.flatMap(_.iterator).flatMap(nt => nt._2.coOccurrences.iterator) ++
         fun.iterator.flatMap(pa => pa._1.coOccurrences.iterator ++ pa._2.coOccurrences.iterator)
-      val res = MutMap.empty[(TypeVar, Polarity), Set[Atom]]
+      val res = SortedMutMap.empty[(TypeVar, Polarity), SortedSet[Atom]]
       (base ++ rest).foreach { case (k, v) =>
         res(k) = res.get(k) match {
           case Some(v2) => v & v2
@@ -185,8 +186,8 @@ abstract class PolarityImpl { pol: Polarity =>
     //      However, this specific optim is already done in the type expansion algorithm.
     def trySimplify: Option[Type] = {
       val oc = coOccurrences
-      oc.toList.sortBy(_._1).foreach { case ((tv1, pol), atoms) =>
-        atoms.foreach { case tv2: TypeVar if !(tv2 is tv1) =>
+      oc.toList.sortBy(_._1).foreach { case ((tv1, pol), as) =>
+        as.toList.sortBy(_.hash).foreach { case tv2: TypeVar if !(tv2 is tv1) =>
           if (oc(tv2 -> pol)(tv1)) return Some(substVar(tv2, tv1))
           else ()
         case atom: Ctor if (oc.get(tv1, !pol).exists(_(atom))) =>

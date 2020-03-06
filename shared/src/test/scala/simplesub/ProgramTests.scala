@@ -45,7 +45,7 @@ class ProgramTests extends FunSuite {
           self = recursive_monster x }
     """)(
       "'a -> 'a",
-      "('a ∨ 'b -> 'a) -> 'b -> 'a",
+      "('a -> 'a ∧ 'b) -> 'a -> 'b",
       "{x: Int, y: 'a -> 'a}",
       "{x: Int, y: Bool}",
       "Bool -> {x: Int, y: Bool ∨ ('a -> 'a)}",

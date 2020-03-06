@@ -10,6 +10,8 @@ class IsolatedTests extends TypingTester {
     
     // put your test here
     
+    // doTest("fun f -> fun x -> f (f x)")
+    
   }
   
 }
