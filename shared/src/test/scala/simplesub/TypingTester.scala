@@ -14,22 +14,22 @@ class TypingTester extends FunSuite {
     if (expected.isEmpty) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typing = new Typer
-    val tyv = typing.inferType(term)
+    val typer = new Typer
+    val tyv = typer.inferType(term)
     
     if (expected.isEmpty) {
       println("inferred: " + tyv)
       println(" where " + tyv.showBounds)
     }
-    val ty = typing.expandType(tyv, true)
+    val ty = typer.expandType(tyv, true)
     if (expected.isEmpty) println("T " + ty.show)
     val res = ty.normalize.show
     if (expected.isEmpty) println("N " + res)
     
-    val ety = typing.expandPosType(tyv, true)
+    val ety = typer.expandPosType(tyv, true)
     val sety = ety.simplify
     val res2 = sety.show
-    // val res2 = typing.expandSimplifiedPosType(tyv, true).show
+    // val res2 = typer.expandSimplifiedPosType(tyv, true).show
     if (expected.nonEmpty)
       assert(res2 == expected, "at line " + line.value)
     else {

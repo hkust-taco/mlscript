@@ -14,12 +14,12 @@ class ProgramTests extends FunSuite {
   
   def doTest(str: String)(expected: ExpectedStr*): Unit = {
     val Success(p, index) = parse(str, pgrm(_), verboseFailures = true)
-    val typing = new Typer
-    val tys = typing.inferTypes(p)
+    val typer = new Typer
+    val tys = typer.inferTypes(p)
     (p.defs lazyZip tys lazyZip expected).foreach { (str, ty, exp) =>
       if (exp.str.isEmpty) println(s">>> $str")
-      val tyv = ty.instantiate(0)
-      val res = typing.expandPosType(tyv, true).simplify.show
+      val tyv = ty.fold(err => throw err, _.instantiate(0))
+      val res = typer.expandPosType(tyv, true).simplify.show
       if (exp.str.nonEmpty) { assert(res == exp.str, "at line " + exp.line.value); () }
       else {
         println("inferred: " + tyv)

@@ -14,10 +14,13 @@ final case class TypeError(msg: String) extends Exception(msg)
  */
 class Typer {
   
-  def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[PolymorphicType] = pgrm.defs match {
+  def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
+  pgrm.defs match {
     case (isrec, nme, rhs) :: defs =>
-      val ty_sch = typeLetRhs(isrec, nme, rhs)(ctx, 0)
-      ty_sch :: inferTypes(Pgrm(defs), ctx + (nme -> ty_sch))
+      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, 0)) catch {
+        case err: TypeError => Left(err)
+      }
+      ty_sch :: inferTypes(Pgrm(defs), ctx + (nme -> ty_sch.getOrElse(freshVar(0))))
     case Nil => Nil
   }
   
