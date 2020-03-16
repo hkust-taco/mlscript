@@ -46,9 +46,9 @@ class ProgramTests extends FunSuite {
     """)(
       "'a -> 'a",
       "('a -> 'a ∧ 'b) -> 'a -> 'b",
-      "{x: Int, y: 'a -> 'a}",
-      "{x: Int, y: Bool}",
-      "Bool -> {x: Int, y: Bool ∨ ('a -> 'a)}",
+      "{x: int, y: 'a -> 'a}",
+      "{x: int, y: bool}",
+      "bool -> {x: int, y: bool ∨ ('a -> 'a)}",
       "'a -> {self: 'b, thing: 'a} as 'b",
     )
   }
@@ -59,7 +59,7 @@ class ProgramTests extends FunSuite {
       let ab = {u = id 0; v = id true}
     """)(
       "'a -> 'a",
-      "{u: Int, v: Bool}",
+      "{u: int, v: bool}",
     )
   }
   
@@ -84,16 +84,16 @@ class ProgramTests extends FunSuite {
       // let rec consume2 = fun strm -> add strm.head (add strm.tail.head (consume2 strm.tail.tail))
       let res = consume2 codata2
     """)(
-      "Int -> {head: Int, tail: 'a} as 'a",
-      "{head: Int, tail: 'a} as 'a -> Int",
-      "{head: Int, tail: 'a} as 'a",
-      "Int",
-      "{head: Int, tail: {head: Int, tail: 'a}} as 'a",
-      "Int",
-      "Bool -> {head: Int, tail: {head: Int, tail: {head: Int, tail: 'a} ∨ 'a} as 'a}",
-      "Bool -> Int",
-      "{head: Int, tail: {head: Int, tail: {head: Int, tail: 'a}} as 'a} -> Int",
-      "Int",
+      "int -> {head: int, tail: 'a} as 'a",
+      "{head: int, tail: 'a} as 'a -> int",
+      "{head: int, tail: 'a} as 'a",
+      "int",
+      "{head: int, tail: {head: int, tail: 'a}} as 'a",
+      "int",
+      "bool -> {head: int, tail: {head: int, tail: {head: int, tail: 'a} ∨ 'a} as 'a}",
+      "bool -> int",
+      "{head: int, tail: {head: int, tail: {head: int, tail: 'a}} as 'a} -> int",
+      "int",
     )
   }
   

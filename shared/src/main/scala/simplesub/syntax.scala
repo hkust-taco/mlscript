@@ -51,7 +51,7 @@ sealed abstract class Atom extends NullaryType with PlainType {
 object Atom {
   implicit val TypeVarOrdering: Ordering[Atom] = Ordering.by(_.hash)
 }
-final case class Ctor(name: String) extends Atom {
+final case class Primitive(name: String) extends Atom {
   def hash = name.hashCode
 }
 final class TypeVar(val nameHint: String, val hash: Int) extends Atom {
@@ -95,6 +95,8 @@ sealed abstract class Polarity extends PolarityImpl { pol =>
   def unary_! : Negated.type = Negated
   val empty: Type = Type(Set.empty, None, None, None)
   
+  // Note: there is a minor approximation in the type representation, for simplicity
+  //   — we merge recursive types with the surrounding type components
   case class Type(
       atoms: Set[Atom],
       fields: Option[Map[String, Type]],

@@ -10,7 +10,7 @@ final case class TypeError(msg: String) extends Exception(msg)
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
- *  In order to turn the resulting TypeShape into a Type or a Pos.Type, use `expandType` and `expandPosType`.
+ *  In order to turn the resulting SimpleType into a Type or a Pos.Type, use `expandType` and `expandPosType`.
  */
 class Typer {
   
@@ -57,8 +57,8 @@ class Typer {
   
   type Ctx = Map[String, TypeScheme]
   
-  val BoolType: TypeCtor = TypeCtor("Bool")
-  val IntType: TypeCtor = TypeCtor("Int")
+  val BoolType: PrimType = PrimType("bool")
+  val IntType: PrimType = PrimType("int")
   
   val builtins: Ctx = Map(
     "true" -> BoolType,
@@ -170,7 +170,7 @@ class Typer {
       case FunctionType(l, r) => FunctionType(extrude(l, lvl), extrude(r, lvl))
       case RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl)))
       case tv: TypeVariable => freshVar(lvl)
-      case TypeCtor(_) => ty
+      case PrimType(_) => ty
     }
   }
   
@@ -193,7 +193,7 @@ class Typer {
     def instantiate(implicit lvl: Int) = body.freshenAbove(level)
   }
   /** A type without universally quantified type variables. */
-  sealed abstract class SimpleType extends TypeScheme with TypeShapeImpl {
+  sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
@@ -205,7 +205,7 @@ class Typer {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
-  case class TypeCtor(name: String) extends SimpleType {
+  case class PrimType(name: String) extends SimpleType {
     def level: Int = 0
     override def toString = name
   }
@@ -225,7 +225,7 @@ class Typer {
   
   // Helper methods
   
-  sealed trait TypeShapeImpl { self: SimpleType =>
+  sealed trait SimpleTypeImpl { self: SimpleType =>
     def freshenAbove(lim: Int)(implicit lvl: Int): SimpleType = {
       val freshened = MutMap.empty[TypeVariable, TypeVariable]
       def freshen(ty: SimpleType): SimpleType = ty match {
@@ -246,7 +246,7 @@ class Typer {
           } else tv
         case FunctionType(l, r) => FunctionType(freshen(l), freshen(r))
         case RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))
-        case TypeCtor(_) => ty
+        case PrimType(_) => ty
       }
       freshen(this)
     }
@@ -254,7 +254,7 @@ class Typer {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case FunctionType(l, r) => l :: r :: Nil
       case RecordType(fs) => fs.map(_._2)
-      case TypeCtor(_) => Nil
+      case PrimType(_) => Nil
     }
     def getVars: Set[TypeVariable] = {
       val res = MutSet.empty[TypeVariable]
@@ -299,7 +299,7 @@ class Typer {
         }
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
-      case TypeCtor(n) => Ctor(n)
+      case PrimType(n) => Primitive(n)
     }
     val ty = go(tv, true)(Set.empty)
     def doSimplify(ty: Type): Type = ty match {
@@ -378,7 +378,7 @@ class Typer {
             val fs2 = fs.map(nt => nt._1 -> go(nt._2, pol))
             ctx => mk(fields = Some(fs2.iterator.map(nt => nt._1 -> nt._2(ctx)).toMap),
                       rec = Option.when(isRecursive)(uv))
-          case TypeCtor(n) => _ => assert(!isRecursive); mk(atoms = Set(Ctor(n)))
+          case PrimType(n) => _ => assert(!isRecursive); mk(atoms = Set(Primitive(n)))
         }
       }
     }

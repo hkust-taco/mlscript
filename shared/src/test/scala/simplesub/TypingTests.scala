@@ -12,47 +12,47 @@ class TypingTests extends TypingTester {
   // and you can copy and paste it after making sure it is correct.
   
   test("basic") {
-    doTest("42", "Int")
-    doTest("fun x -> 42", "⊤ -> Int")
+    doTest("42", "int")
+    doTest("fun x -> 42", "⊤ -> int")
     doTest("fun x -> x", "'a -> 'a")
-    doTest("fun x -> x 42", "(Int -> 'a) -> 'a")
-    doTest("(fun x -> x) 42", "Int")
+    doTest("fun x -> x 42", "(int -> 'a) -> 'a")
+    doTest("(fun x -> x) 42", "int")
     doTest("fun f -> fun x -> f (f x)  // twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
     doTest("let twice = fun f -> fun x -> f (f x) in twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
   }
   
   test("booleans") {
-    doTest("true", "Bool")
-    doTest("not true", "Bool")
-    doTest("fun x -> not x", "Bool -> Bool")
-    doTest("(fun x -> not x) true", "Bool")
+    doTest("true", "bool")
+    doTest("not true", "bool")
+    doTest("fun x -> not x", "bool -> bool")
+    doTest("(fun x -> not x) true", "bool")
     doTest("fun x -> fun y -> fun z -> if x then y else z",
-      "Bool -> 'a -> 'a -> 'a")
+      "bool -> 'a -> 'a -> 'a")
     doTest("fun x -> fun y -> if x then y else x",
-      "'a ∧ Bool -> 'a -> 'a")
+      "'a ∧ bool -> 'a -> 'a")
     
     error("succ true",
-      "cannot constrain Bool <: Int")
+      "cannot constrain bool <: int")
     error("fun x -> succ (not x)",
-      "cannot constrain Bool <: Int")
+      "cannot constrain bool <: int")
     error("(fun x -> not x.f) { f = 123 }",
-      "cannot constrain Int <: Bool")
+      "cannot constrain int <: bool")
     error("(fun f -> fun x -> not (f x.u)) false",
-      "cannot constrain Bool <: 'a -> 'b")
+      "cannot constrain bool <: 'a -> 'b")
   }
   
   test("records") {
     doTest("fun x -> x.f", "{f: 'a} -> 'a")
     doTest("{}", "⊤")
-    doTest("{ f = 42 }", "{f: Int}")
-    doTest("{ f = 42 }.f", "Int")
-    doTest("(fun x -> x.f) { f = 42 }", "Int")
-    doTest("fun f -> { x = f 42 }.x", "(Int -> 'a) -> 'a")
-    doTest("fun f -> { x = f 42; y = 123 }.y", "(Int -> ⊤) -> Int")
-    doTest("if true then { a = 1; b = true } else { b = false; c = 42 }", "{b: Bool}")
+    doTest("{ f = 42 }", "{f: int}")
+    doTest("{ f = 42 }.f", "int")
+    doTest("(fun x -> x.f) { f = 42 }", "int")
+    doTest("fun f -> { x = f 42 }.x", "(int -> 'a) -> 'a")
+    doTest("fun f -> { x = f 42; y = 123 }.y", "(int -> ⊤) -> int")
+    doTest("if true then { a = 1; b = true } else { b = false; c = 42 }", "{b: bool}")
     
     error("{ a = 123; b = true }.c",
-      "missing field: c in {a: Int, b: Bool}")
+      "missing field: c in {a: int, b: bool}")
     error("fun x -> { a = x }.b",
       "missing field: b in {a: 'a}")
   }
@@ -80,24 +80,24 @@ class TypingTests extends TypingTester {
       "⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
     
     doTest("let rec trutru = fun g -> trutru (g true) in trutru",
-      "(Bool -> 'a) as 'a -> ⊥")
+      "(bool -> 'a) as 'a -> ⊥")
     doTest("fun i -> if ((i i) true) then true else true",
-      "('a ∧ ('a -> Bool -> Bool)) -> Bool")
+      "('a ∧ ('a -> bool -> bool)) -> bool")
     // ^ for: λi. if ((i i) true) then true else true,
     //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
     //    which does seem equivalent, while syntactically quite different
   }
   
   test("let-poly") {
-    doTest("let f = fun x -> x in {a = f 0; b = f true}", "{a: Int, b: Bool}")
+    doTest("let f = fun x -> x in {a = f 0; b = f true}", "{a: int, b: bool}")
     doTest("fun y -> let f = fun x -> x in {a = f y; b = f true}",
-      "'a -> {a: 'a, b: Bool}")
+      "'a -> {a: 'a, b: bool}")
     doTest("fun y -> let f = fun x -> y x in {a = f 0; b = f true}",
-      "(Int ∨ Bool -> 'a) -> {a: 'a, b: 'a}")
+      "(int ∨ bool -> 'a) -> {a: 'a, b: 'a}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> true)}",
-      "'a -> {a: 'a, b: Bool}")
+      "'a -> {a: 'a, b: bool}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> succ z)}",
-      "'a ∧ Int -> {a: 'a, b: Int}")
+      "'a ∧ int -> {a: 'a, b: int}")
   }
   
   test("recursion") {

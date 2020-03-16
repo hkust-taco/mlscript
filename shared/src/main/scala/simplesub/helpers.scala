@@ -62,7 +62,7 @@ abstract class TypeImpl { self: Type =>
   def show: String = this match {
     case Top => "⊤"
     case Bot => "⊥"
-    case Ctor(name) => name
+    case Primitive(name) => name
     case uv: TypeVar => uv.nameHint + uv.hash
     case Recursive(n, b) => s"${b.show} as ${n.nameHint+n.hash}"
     case Function(l, r) => s"(${l.show} -> ${r.show})"
@@ -190,7 +190,7 @@ abstract class PolarityImpl { pol: Polarity =>
         as.toList.sortBy(_.hash).foreach { case tv2: TypeVar if !(tv2 is tv1) =>
           if (oc(tv2 -> pol)(tv1)) return Some(substVar(tv2, tv1))
           else ()
-        case atom: Ctor if (oc.get(tv1, !pol).exists(_(atom))) =>
+        case atom: Primitive if (oc.get(tv1, !pol).exists(_(atom))) =>
           return Some(substAtom(tv1, atom))
         case _ => ()
         }
@@ -207,7 +207,7 @@ abstract class PolarityImpl { pol: Polarity =>
                 .mkStringOr(", ", "{", "}") :: Nil
         ) ++ atoms.toList.sortBy(_.hash).map {
               case uv: TypeVar => ctx(uv)
-              case Ctor(name) => name }
+              case Primitive(name) => name }
       val funStr = fun.map { lr =>
         val str = lr._1.showIn(ctx, 2) + " -> " + lr._2.showIn(ctx, 1)
         if (firstComponents.nonEmpty) "(" + str + ")" else str }
