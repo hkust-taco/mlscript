@@ -1,4 +1,3 @@
-import Dependencies._
 import Wart._
 
 enablePlugins(ScalaJSPlugin)
@@ -33,7 +32,7 @@ lazy val simplesub = crossProject(JSPlatform, JVMPlatform).in(file("."))
       LeakingSealed,
       Option2Iterable, TraversableOps,
     ),
-    libraryDependencies += scalaTest % Test,
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
   )
