@@ -1,7 +1,7 @@
 package simplesub
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class IsolatedTests extends TypingTester {
+class IsolatedTests extends TypingTestHelpers {
   
   // This test class is for isolating single tests and running them alone
   // with sbt command `~testOnly simplesub.IsolatedTests`

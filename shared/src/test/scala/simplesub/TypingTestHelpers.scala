@@ -8,7 +8,7 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class TypingTester extends FunSuite {
+class TypingTestHelpers extends FunSuite {
   
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     val dbg = expected.isEmpty

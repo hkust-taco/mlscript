@@ -134,7 +134,6 @@ abstract class TyperHelpers { self: Typer =>
     CompactTypeScheme(go(ty, true, Set.empty)(Set.empty), recVars)
   }
   
-  
   // Idea: if a type var 'a always occurs positively (resp. neg) along with some 'b AND vice versa,
   //      this means that the two are undistinguishable, and they can therefore be unified.
   //    Ex: ('a & 'b) -> ('a, 'b) is the same as 'a -> ('a, 'a)
@@ -255,7 +254,6 @@ abstract class TyperHelpers { self: Typer =>
     
     CompactTypeScheme(gone(), recVars.view.mapValues(_()).toMap)
   }
-  
   
   /** Expands a CompactTypeScheme into a Type while performing hash-consing
    * to tie recursive type knots a bit tighter, when possible. */
