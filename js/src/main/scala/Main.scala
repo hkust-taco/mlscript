@@ -45,13 +45,15 @@ object Main {
             case ((d, i), Right(ty)) =>
               println(s"Typed `${d._2}` as: $ty")
               println(s" where: ${ty.instantiate(0).showBounds}")
-              val exp = typer.expandPosType(ty.instantiate(0), true)
-              println(s"Exanded type before simplification: ${exp.show}")
-              val sim = exp.simplify
+              val com = typer.compactType(ty.instantiate(0))
+              println(s"Compact type before simplification: ${com}")
+              val sim = typer.simplifyType(com)
+              println(s"Compact type after simplification: ${sim}")
+              val exp = typer.expandCompactType(sim)
               s"""<b>
                   <font color="#93a1a1">val </font>
                   <font color="LightGreen">${d._2}</font>: 
-                  <font color="LightBlue">${sim.show}</font>
+                  <font color="LightBlue">${exp.show}</font>
                   </b>"""
             case ((d, i), Left(TypeError(msg))) =>
               s"""<b><font color="Red">
