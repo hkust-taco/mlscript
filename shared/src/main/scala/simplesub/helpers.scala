@@ -50,13 +50,4 @@ abstract class TypeImpl { self: Type =>
     case Recursive(n, b) => b :: Nil
   }
   
-  def map(f: Type => Type): Type = this match {
-    case _: NullaryType => this
-    case Function(l, r) => Function(f(l), f(r))
-    case Record(fs) => Record(fs.map(nt => nt._1 -> f(nt._2)))
-    case Union(l, r) => Union(f(l), f(r))
-    case Inter(l, r) => Inter(f(l), f(r))
-    case Recursive(n, b) => Recursive(n, f(b))
-  }
-  
 }

@@ -54,7 +54,7 @@ abstract class TyperHelpers { self: Typer =>
       rec(this :: Nil)
       SortedSet.from(res)(Ordering.by(_.uid))
     }
-    def show: String = expandType(this, simplify = false).show
+    def show: String = expandType(this).show
     def showBounds: String =
       getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
         tv.toString
@@ -66,16 +66,11 @@ abstract class TyperHelpers { self: Typer =>
   
   // Conversion into proper immutable Type representations:
   
-  /** Convert an inferred SimpleType into the immutable Type representation,
-   * performing some very basic polarity-based simplification. */
-  def expandType(tv: SimpleType, simplify: Boolean): Type = {
-    val polarities = MutMap.empty[TypeVar, Option[Boolean]]
+  /** Convert an inferred SimpleType into the immutable Type representation. */
+  def expandType(sty: SimpleType): Type = {
     def go(ts: SimpleType, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
       case tv: TypeVariable =>
         val v = tv.asTypeVar
-        val newPol = Some(polarity)
-        val oldPol = polarities.getOrElseUpdate(v, newPol)
-        if (oldPol =/= newPol) polarities(v) = None
         if (inProcess(tv -> polarity)) v
         else {
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
@@ -90,16 +85,7 @@ abstract class TyperHelpers { self: Typer =>
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case PrimType(n) => Primitive(n)
     }
-    val ty = go(tv, true)(Set.empty)
-    def doSimplify(ty: Type): Type = ty match {
-      case tv: TypeVar => polarities.get(tv) match {
-        case Some(Some(true)) => Bot
-        case Some(Some(false)) => Top
-        case _ => ty
-      }
-      case _ => ty.map(doSimplify)
-    }
-    if (simplify) doSimplify(ty) else ty
+    go(sty, true)(Set.empty)
   }
   
   
