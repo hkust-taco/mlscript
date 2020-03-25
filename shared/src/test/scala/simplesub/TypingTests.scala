@@ -17,8 +17,8 @@ class TypingTests extends TypingTester {
     doTest("fun x -> x", "'a -> 'a")
     doTest("fun x -> x 42", "(int -> 'a) -> 'a")
     doTest("(fun x -> x) 42", "int")
-    doTest("fun f -> fun x -> f (f x)  // twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
-    doTest("let twice = fun f -> fun x -> f (f x) in twice", "('a -> 'a ∧ 'b) -> 'a -> 'b")
+    doTest("fun f -> fun x -> f (f x)  // twice", "('a ∨ 'b -> 'a) -> 'b -> 'a")
+    doTest("let twice = fun f -> fun x -> f (f x) in twice", "('a ∨ 'b -> 'a) -> 'b -> 'a")
   }
   
   test("booleans") {
@@ -43,7 +43,7 @@ class TypingTests extends TypingTester {
   
   test("records") {
     doTest("fun x -> x.f", "{f: 'a} -> 'a")
-    doTest("{}", "⊤")
+    doTest("{}", "{}") // note: MLsub returns "⊤" (equivalent)
     doTest("{ f = 42 }", "{f: int}")
     doTest("{ f = 42 }.f", "int")
     doTest("(fun x -> x.f) { f = 42 }", "int")
@@ -58,15 +58,15 @@ class TypingTests extends TypingTester {
   }
   
   test("self-app") {
-    doTest("fun x -> x x", "('a ∧ ('a -> 'b)) -> 'b")
+    doTest("fun x -> x x", "'a ∧ ('a -> 'b) -> 'b")
     
-    doTest("fun x -> x x x", "('a ∧ ('a -> 'a -> 'b)) -> 'b")
-    doTest("fun x -> fun y -> x y x", "('a ∧ ('b -> 'a -> 'c)) -> 'b -> 'c")
-    doTest("fun x -> fun y -> x x y", "('a ∧ ('a -> 'b -> 'c)) -> 'b -> 'c")
+    doTest("fun x -> x x x", "'a ∧ ('a -> 'a -> 'b) -> 'b")
+    doTest("fun x -> fun y -> x y x", "'a ∧ ('b -> 'a -> 'c) -> 'b -> 'c")
+    doTest("fun x -> fun y -> x x y", "'a ∧ ('a -> 'b -> 'c) -> 'b -> 'c")
     doTest("(fun x -> x x) (fun x -> x x)", "⊥")
     
     doTest("fun x -> {l = x x; r = x }",
-      "('a ∧ ('a -> 'b)) -> {l: 'b, r: 'a}")
+      "'a ∧ ('a -> 'b) -> {l: 'b, r: 'a}")
     
     // From https://github.com/stedolan/mlsub
     // Y combinator:
@@ -77,15 +77,15 @@ class TypingTests extends TypingTester {
       "(('a -> 'b) -> 'c ∧ ('a -> 'b)) -> 'c")
     // Function that takes arbitrarily many arguments:
     doTest("(fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)",
-      "⊤ -> (⊤ -> ('a ∨ (⊤ -> 'a ∨ 'b)) as 'b) as 'a")
+      "⊤ -> (⊤ -> 'a) as 'a")
     
     doTest("let rec trutru = fun g -> trutru (g true) in trutru",
       "(bool -> 'a) as 'a -> ⊥")
     doTest("fun i -> if ((i i) true) then true else true",
-      "('a ∧ ('a -> bool -> bool)) -> bool")
+      "'a ∧ ('a -> bool -> bool) -> bool")
     // ^ for: λi. if ((i i) true) then true else true,
     //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
-    //    which does seem equivalent, while syntactically quite different
+    //    which does seem equivalent, despite being quite syntactically different
   }
   
   test("let-poly") {
@@ -93,7 +93,7 @@ class TypingTests extends TypingTester {
     doTest("fun y -> let f = fun x -> x in {a = f y; b = f true}",
       "'a -> {a: 'a, b: bool}")
     doTest("fun y -> let f = fun x -> y x in {a = f 0; b = f true}",
-      "(int ∨ bool -> 'a) -> {a: 'a, b: 'a}")
+      "(bool ∨ int -> 'a) -> {a: 'a, b: 'a}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> true)}",
       "'a -> {a: 'a, b: bool}")
     doTest("fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> succ z)}",
@@ -107,13 +107,6 @@ class TypingTests extends TypingTester {
     // from https://www.cl.cam.ac.uk/~sd601/mlsub/
     doTest("let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster",
       "'a -> {self: 'b, thing: 'a} as 'b")
-    // ^ Note: with an intermediate variable in the App case, we get this weird (but seemingly correct) type:
-    //      "⊤ as 'a -> {self: {self: 'b, thing: 'a} as 'b, thing: 'a}";
-    //    This happens because we have ?a <: ?c and ?c <: ?a (where ?c does not appear anywhere else),
-    //    and the expansion algorithm does not detect that ?a is only spuriously recursive.
-    //    This is a case of a type alias that is mentioned later in the type,
-    //    as opposed to being used for describing a recursive type (I think it's fine)
-    
   }
   
 }

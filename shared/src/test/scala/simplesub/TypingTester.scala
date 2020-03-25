@@ -11,40 +11,38 @@ import sourcecode.Line
 class TypingTester extends FunSuite {
   
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
-    if (expected.isEmpty) println(s">>> $str")
+    val dbg = expected.isEmpty
+    
+    if (dbg) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typer = new Typer
+    val typer = new Typer(dbg)
     val tyv = typer.inferType(term)
     
-    if (expected.isEmpty) {
+    if (dbg) {
       println("inferred: " + tyv)
       println(" where " + tyv.showBounds)
     }
-    val ty = typer.expandType(tyv, true)
-    if (expected.isEmpty) println("T " + ty.show)
-    val res = ty.normalize.show
-    if (expected.isEmpty) println("N " + res)
-    
-    val ety = typer.expandPosType(tyv, true)
-    val sety = ety.simplify
-    val res2 = sety.show
-    // val res2 = typer.expandSimplifiedPosType(tyv, true).show
-    if (expected.nonEmpty)
-      assert(res2 == expected, "at line " + line.value)
-    else {
-      println("typed: " + ety.show)
-      println("simpl: " + res2)
-      // println("occ "+ety.occurrences)
-      // println("occ "+ety.simplify.show)
-      println("---")
+    val cty = typer.compactType(tyv)
+    if (dbg) println("compacted: " + cty)
+    val sty = typer.simplifyType(cty)
+    if (dbg) println("simplified: " + sty)
+    val ety = typer.expandCompactType(sty)
+    if (dbg) {
+      println("expanded raw: " + ety)
+      println("expanded: " + ety.show)
     }
     
-    ()
+    val res = ety.show
+    if (dbg) {
+      println("typed: " + res)
+      println("---")
+    } else {
+      assert(res == expected, "at line " + line.value); ()
+    }
   }
   def error(str: String, msg: String): Unit = {
-    assert(intercept[TypeError](doTest(str, "<none>")).msg == msg)
-    ()
+    assert(intercept[TypeError](doTest(str, "<none>")).msg == msg); ()
   }
   
 }

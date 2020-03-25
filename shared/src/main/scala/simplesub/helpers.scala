@@ -11,7 +11,7 @@ abstract class TypeImpl { self: Type =>
   
   lazy val typeVars: Set[TypeVar] = this match {
     case uv: TypeVar => Set(uv)
-    case Recursive(n, b) => b.typeVars - n
+    case Recursive(n, b) => b.typeVars + n
     case _ => children.iterator.flatMap(_.typeVars).toSet
   }
   
@@ -39,7 +39,7 @@ abstract class TypeImpl { self: Type =>
         if (pol) {
           val fs1m = fs1.toMap
           fs0.flatMap { case (k, v) => fs1m.get(k).map(k -> mrg(v, _)) }
-        } else mergeMaps(fs0.toMap, fs1.toMap)(mrg).toList
+        } else mergeMap(fs0.toMap, fs1.toMap)(mrg).toList
       }
       val normalized =
         atoms.distinct.sortBy(_.hash) :::
@@ -59,16 +59,29 @@ abstract class TypeImpl { self: Type =>
     }
   }
   
-  def show: String = this match {
+  def show: String = {
+    val vars = typeVars
+    val ctx = vars.zipWithIndex.map {
+      case (tv, idx) =>
+        def nme = {
+          assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
+          ('a' + idx).toChar.toString
+        }
+        tv -> ("'" + nme)
+    }.toMap
+    showIn(ctx, 0)
+  }
+  private def parensIf(str: String, cnd: Boolean): String = if (cnd) "(" + str + ")" else str
+  def showIn(ctx: Map[TypeVar, String], outerPrec: Int): String = this match {
     case Top => "⊤"
     case Bot => "⊥"
     case Primitive(name) => name
-    case uv: TypeVar => uv.nameHint + uv.hash
-    case Recursive(n, b) => s"${b.show} as ${n.nameHint+n.hash}"
-    case Function(l, r) => s"(${l.show} -> ${r.show})"
-    case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.show}").mkString("{", ", ", "}")
-    case Union(l, r) => s"(${l.show} ∨ ${r.show})"
-    case Inter(l, r) => s"(${l.show} ∧ ${r.show})"
+    case uv: TypeVar => ctx(uv)
+    case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx(n)}"
+    case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
+    case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
+    case Union(l, r) => parensIf(l.showIn(ctx, 20) + " ∨ " + r.showIn(ctx, 20), outerPrec > 20)
+    case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " ∧ " + r.showIn(ctx, 25), outerPrec > 25)
   }
   
   def children: List[Type] = this match {

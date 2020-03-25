@@ -13,23 +13,25 @@ class ProgramTests extends FunSuite {
   implicit class ExpectedStr(val str: String)(implicit val line: Line)
   
   def doTest(str: String)(expected: ExpectedStr*): Unit = {
+    val dbg = expected.exists(_.str.isEmpty)
     val Success(p, index) = parse(str, pgrm(_), verboseFailures = true)
-    val typer = new Typer
+    val typer = new Typer(dbg)
     val tys = typer.inferTypes(p)
-    (p.defs lazyZip tys lazyZip expected).foreach { (str, ty, exp) =>
+    (p.defs lazyZip tys lazyZip expected).foreach { (str, pty, exp) =>
       if (exp.str.isEmpty) println(s">>> $str")
-      val tyv = ty.fold(err => throw err, _.instantiate(0))
-      val res = typer.expandPosType(tyv, true).simplify.show
+      val ty = pty.fold(err => throw err, _.instantiate(0))
+      val cty = typer.compactType(ty)
+      val sty = typer.simplifyType(cty)
+      val res = typer.expandCompactType(sty).show
       if (exp.str.nonEmpty) { assert(res == exp.str, "at line " + exp.line.value); () }
       else {
-        println("inferred: " + tyv)
-        println(" where " + tyv.showBounds)
+        println("inferred: " + ty)
+        println(" where " + ty.showBounds)
         println(res)
         println("---")
       }
     }
-    assert(tys.size == expected.size)
-    ()
+    assert(tys.size == expected.size); ()
   }
   
   test("mlsub") { // from https://www.cl.cam.ac.uk/~sd601/mlsub/
@@ -45,7 +47,7 @@ class ProgramTests extends FunSuite {
           self = recursive_monster x }
     """)(
       "'a -> 'a",
-      "('a -> 'a ∧ 'b) -> 'a -> 'b",
+      "('a ∨ 'b -> 'a) -> 'b -> 'a",
       "{x: int, y: 'a -> 'a}",
       "{x: int, y: bool}",
       "bool -> {x: int, y: bool ∨ ('a -> 'a)}",
@@ -90,9 +92,12 @@ class ProgramTests extends FunSuite {
       "int",
       "{head: int, tail: {head: int, tail: 'a}} as 'a",
       "int",
-      "bool -> {head: int, tail: {head: int, tail: {head: int, tail: 'a} ∨ 'a} as 'a}",
+      "bool -> {head: int, tail: {head: int, tail: {head: int, tail: 'a} as 'a " +
+        "∨ {head: int, tail: {head: int, tail: {head: int, tail: 'b}} as 'b}}}",
+        // ^ simplifying this would probably require more advanced
+        // automata-based techniques such as the one proposed by Dolan
       "bool -> int",
-      "{head: int, tail: {head: int, tail: {head: int, tail: 'a}} as 'a} -> int",
+      "{head: int, tail: {head: int, tail: 'a}} as 'a -> int",
       "int",
     )
   }

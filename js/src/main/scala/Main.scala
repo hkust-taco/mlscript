@@ -39,7 +39,7 @@ object Main {
             s" at line $line:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          val typer = new simplesub.Typer
+          val typer = new simplesub.Typer(dbg = false)
           val tys = typer.inferTypesUgly(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>

@@ -2,7 +2,7 @@ package simplesub
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
-import scala.collection.immutable.SortedSet
+import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
 
@@ -10,10 +10,17 @@ final case class TypeError(msg: String) extends Exception(msg)
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
- *  In order to turn the resulting SimpleType into a Type or a Pos.Type, use `expandType` and `expandPosType`.
+ *  Inferred SimpleType values are then turned into CompactType values for simplification.
+ *  In order to turn the resulting CompactType into a simplesub.Type, we use `expandCompactType`.
  */
-class Typer extends TyperHelpers {
+class Typer(protected val dbg: Boolean) extends TyperHelpers {
   
+  // Shadow Predef functions with debugging-flag-enabled ones:
+  def println(msg: => Any): Unit = if (dbg) scala.Predef.println(msg)
+  def assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
+  
+  
+  // The main type inference functions:
   
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
     pgrm.defs match {
@@ -96,9 +103,6 @@ class Typer extends TyperHelpers {
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
-        // ^ Note: Interesting things happen if we introduce an intermediate variable here,
-        //      as in `val a_ty = freshVar; constrain(typeTerm(a), a_ty); ...`
-        //    See the note in the `recursion` test of TypingTests
         constrain(f_ty, FunctionType(a_ty, res))
         res
       case Lit(n) =>
@@ -180,7 +184,7 @@ class Typer extends TyperHelpers {
   def freshVar(implicit lvl: Int): TypeVariable = new TypeVariable(lvl, Nil, Nil)
   
   
-  // The main data types for type inference
+  // The main data types for type inference:
   
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
@@ -215,11 +219,48 @@ class Typer extends TyperHelpers {
       val level: Int,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
-  ) extends SimpleType {
+  ) extends SimpleType with CompactTypeOrVariable {
     private[simplesub] val uid: Int = { freshCount += 1; freshCount - 1 }
+    private[simplesub] var recursiveFlag = false // used temporarily by `compactType`
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid
   }
+  
+  
+  // Compact types representation, useful for simplification:
+  
+  sealed trait CompactTypeOrVariable
+  
+  /** Depending on whether it occurs in positive or negative position,
+   * this represents either a union or an intersection, respectively,
+   * of different type components.  */
+  case class CompactType(
+    vars: Set[TypeVariable],
+    prims: Set[PrimType],
+    rec: Option[SortedMap[String, CompactType]],
+    fun: Option[(CompactType, CompactType)])
+  extends CompactTypeOrVariable {
+    override def toString = (
+      vars.toList
+      ::: prims.toList
+      ::: rec.map(_.map(fs => fs._1 + ": " + fs._2).mkString("{",", ","}")).toList
+      ::: fun.map(lr => lr._1.toString + " -> " + lr._2).toList
+    ).mkString("‹", ", ", "›")
+  }
+  object CompactType {
+    val empty: CompactType = CompactType(Set.empty, Set.empty, None, None)
+    def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
+      val rec = mergeOptions(lhs.rec, rhs.rec) { (lhs, rhs) =>
+        if (pol) lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(pol)(v, _)) }
+        else mergeSortedMap(lhs, rhs)(merge(pol)) }
+      val fun = mergeOptions(lhs.fun, rhs.fun){
+        case ((l0,r0), (l1,r1)) => (merge(!pol)(l0, l1), merge(pol)(r0, r1)) }
+      CompactType(lhs.vars ++ rhs.vars, lhs.prims ++ rhs.prims, rec, fun)
+    }
+  }
+  
+  case class CompactTypeScheme(term: CompactType, recVars: Map[TypeVariable, CompactType])
+  
   
 }

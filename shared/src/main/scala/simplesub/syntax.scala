@@ -80,7 +80,7 @@ case object Neg extends Polarity {
   val mergeSymbol = "∧"
   val extremumSymbol = "⊤"
   def mergeFields(lhs: Map[String, Type], rhs: Map[String, Type]) =
-    mergeMaps(lhs, rhs)(merge)
+    mergeMap(lhs, rhs)(merge)
 }
 
 sealed abstract class Polarity extends PolarityImpl { pol =>
