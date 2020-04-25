@@ -15,7 +15,7 @@ class ProgramTests extends FunSuite {
   def doTest(str: String)(expected: ExpectedStr*): Unit = {
     val dbg = expected.exists(_.str.isEmpty)
     val Success(p, index) = parse(str, pgrm(_), verboseFailures = true)
-    val typer = new Typer(dbg)
+    val typer = new Typer(dbg) with TypeSimplifier
     val tys = typer.inferTypes(p)
     (p.defs lazyZip tys lazyZip expected).foreach { (str, pty, exp) =>
       if (exp.str.isEmpty) println(s">>> $str")
@@ -26,7 +26,7 @@ class ProgramTests extends FunSuite {
       if (exp.str.nonEmpty) { assert(res == exp.str, "at line " + exp.line.value); () }
       else {
         println("inferred: " + ty)
-        println(" where " + ty.showBounds)
+        // println(" where " + ty.showBounds)
         println(res)
         println("---")
       }

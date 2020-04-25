@@ -16,12 +16,12 @@ class TypingTestHelpers extends FunSuite {
     if (dbg) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typer = new Typer(dbg)
+    val typer = new Typer(dbg) with TypeSimplifier
     val tyv = typer.inferType(term)
     
     if (dbg) {
       println("inferred: " + tyv)
-      println(" where " + tyv.showBounds)
+      // println(" where " + tyv.showBounds)
     }
     val cty = typer.compactType(tyv)
     if (dbg) println("compacted: " + cty)

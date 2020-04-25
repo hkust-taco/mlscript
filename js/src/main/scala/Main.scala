@@ -39,12 +39,13 @@ object Main {
             s" at line $line:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          val typer = new simplesub.Typer(dbg = false)
-          val tys = typer.inferTypesUgly(p)
+          val typer = new simplesub.Typer(dbg = false) with simplesub.TypeSimplifier
+          // val tys = typer.inferTypesUgly(p)
+          val tys = typer.inferTypes(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>
               println(s"Typed `${d._2}` as: $ty")
-              println(s" where: ${ty.instantiate(0).showBounds}")
+              // println(s" where: ${ty.instantiate(0).showBounds}")
               val com = typer.compactType(ty.instantiate(0))
               println(s"Compact type before simplification: ${com}")
               val sim = typer.simplifyType(com)

@@ -3,6 +3,13 @@
 This repository shows the implementation of **simple-sub**,
 an alternative algorithm to MLsub for algebraic subtyping.
 
+
+## Running the tests
+
+Running the tests only requires the Scala Build Tool installed.
+In the terminal, run `sbt simplesubJVM/test`.
+
+
 ## Running the demo locally
 
 To run the demo on your computer, first change the line in `index.html` from:
