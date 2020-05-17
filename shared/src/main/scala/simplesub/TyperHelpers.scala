@@ -1,6 +1,8 @@
 package simplesub
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
+import scala.collection.immutable.{SortedMap, SortedSet}
+import scala.annotation.tailrec
 
 abstract class TyperHelpers { self: Typer =>
   
@@ -8,6 +10,7 @@ abstract class TyperHelpers { self: Typer =>
   // Helper methods:
   
   trait SimpleTypeImpl { self: SimpleType =>
+    
     def freshenAbove(lim: Int)(implicit lvl: Int): SimpleType = {
       val freshened = MutMap.empty[TypeVariable, TypeVariable]
       def freshen(ty: SimpleType): SimpleType = ty match {
@@ -33,7 +36,34 @@ abstract class TyperHelpers { self: Typer =>
       freshen(this)
     }
     
+    
+    // These methods are just for debugging:
+    
+    def children: List[SimpleType] = this match {
+      case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
+      case FunctionType(l, r) => l :: r :: Nil
+      case RecordType(fs) => fs.map(_._2)
+      case PrimType(_) => Nil
+    }
+    def getVars: Set[TypeVariable] = {
+      val res = MutSet.empty[TypeVariable]
+      @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
+        case (tv: TypeVariable) :: tys =>
+          if (res(tv)) rec(tys)
+          else { res += tv; rec(tv.children ::: tys) }
+        case ty :: tys => rec(ty.children ::: tys)
+        case Nil => ()
+      }
+      rec(this :: Nil)
+      SortedSet.from(res)(Ordering.by(_.uid))
+    }
     def show: String = expandType(this).show
+    def showBounds: String =
+      getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
+        tv.toString
+          + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
+          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
+      ).mkString(", ")
     
   }
   

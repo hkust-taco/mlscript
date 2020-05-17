@@ -12,8 +12,17 @@ trait TypeSimplifier { self: Typer =>
   /** Depending on whether it occurs in positive or negative position,
    * this represents either a union or an intersection, respectively,
    * of different type components.  */
-  case class CompactType(vars: Set[TypeVariable], prims: Set[PrimType], rec: Option[SortedMap[String, CompactType]],
-      fun: Option[(CompactType, CompactType)]) extends CompactTypeOrVariable
+  case class CompactType(
+    vars: Set[TypeVariable],
+    prims: Set[PrimType],
+    rec: Option[SortedMap[String, CompactType]],
+    fun: Option[(CompactType, CompactType)])
+  extends CompactTypeOrVariable {
+    override def toString = List(vars, prims,
+      rec.map(_.map(fs => fs._1 + ": " + fs._2).mkString("{",", ","}")),
+      fun.map(lr => lr._1.toString + " -> " + lr._2),
+    ).flatten.mkString("‹", ", ", "›")
+  }
   object CompactType {
     val empty: CompactType = CompactType(Set.empty, Set.empty, None, None)
     def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
@@ -39,7 +48,7 @@ trait TypeSimplifier { self: Typer =>
   def compactType(ty: SimpleType): CompactTypeScheme = {
     import CompactType.{empty, merge}, empty.{copy => ct}
     
-    // ty.getVars.foreach(_.recursiveFlag = false) // these are assumed false
+    ty.getVars.foreach(_.recursiveFlag = false) // Note: in practice, they should already be false
     
     var recVars = SortedMap.empty[TypeVariable, CompactType](Ordering by (_.uid))
     
@@ -70,7 +79,9 @@ trait TypeSimplifier { self: Typer =>
         }
       }
     
-    CompactTypeScheme(go(ty, true, Set.empty)(Set.empty), recVars) }
+    CompactTypeScheme(go(ty, true, Set.empty)(Set.empty), recVars)
+  }
+  
   
   // Idea: if a type var 'a always occurs positively (resp. neg) along with some 'b AND vice versa,
   //      this means that the two are undistinguishable, and they can therefore be unified.
@@ -139,21 +150,28 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     val gone = go(cty.term, true)
+    println(s"[occ] ${coOccurrences}")
+    println(s"[rec] ${recVars}")
     
     // Simplify away those non-recursive variables that only occur in positive or negative positions:
     allVars.foreach { case v0 => if (!recVars.contains(v0)) {
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
-        case (Some(_), None) | (None, Some(_)) => varSubst += v0 -> None; ()
+        case (Some(_), None) | (None, Some(_)) =>
+          println(s"[!] $v0")
+          varSubst += v0 -> None; ()
         case occ => assert(occ =/= (None, None))
       }
     }}
     // Unify equivalent variables based on polar co-occurrence analysis:
     val pols = true :: false :: Nil
     allVars.foreach { case v => if (!varSubst.contains(v)) {
+      println(s"[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
           case w: TypeVariable if !(w is v) && !varSubst.contains(w) =>
+            println(s"[w] $w ${coOccurrences.get(pol -> w)}")
             if (coOccurrences.get(pol -> w).forall(_(v))) {
+              println(s"[U] $w := $v") // we unify w into v
               varSubst += w -> Some(v)
               // Since w gets unified with v, we need to merge their bounds if they are recursive,
               // and otherwise merge the other co-occurrences of v and w from the other polarity (!pol).
@@ -175,11 +193,13 @@ trait TypeSimplifier { self: Typer =>
                   // ^ since `w` is not recursive but co-occurs with `v`, then `v` must not be recursive either!
               }
             }; ()
-          case atom: PrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) => varSubst += v -> None; ()
+          case atom: PrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
+            varSubst += v -> None; ()
           case _ =>
         }
       }
     }}
+    println(s"[sub] ${varSubst.map(k => k._1.toString + " -> " + k._2).mkString(", ")}")
     
     CompactTypeScheme(gone(), recVars.view.mapValues(_()).toMap)
   }
@@ -188,9 +208,12 @@ trait TypeSimplifier { self: Typer =>
    * to tie recursive type knots a bit tighter, when possible. */
   def expandCompactType(cty: CompactTypeScheme): Type = {
     def go(ty: CompactTypeOrVariable, pol: Boolean)
-        (implicit inProcess: Map[(CompactTypeOrVariable, Boolean), () => TypeVar]): Type = {
+          (implicit inProcess: Map[(CompactTypeOrVariable, Boolean), () => TypeVar]): Type = {
       inProcess.get(ty -> pol) match {
-        case Some(t) => val res = t(); return res
+        case Some(t) =>
+          val res = t()
+          println(s"REC[$pol] $ty -> $res")
+          return res
         case None => ()
       }
       var isRecursive = false
@@ -219,7 +242,8 @@ trait TypeSimplifier { self: Typer =>
       }
       if (isRecursive) Recursive(v, res) else res
     }
-    go(cty.term, true)(Map.empty) }
+    go(cty.term, true)(Map.empty)
+  }
   
   
 }

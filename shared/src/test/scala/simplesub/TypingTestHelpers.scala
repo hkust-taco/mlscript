@@ -21,7 +21,7 @@ class TypingTestHelpers extends FunSuite {
     
     if (dbg) {
       println("inferred: " + tyv)
-      // println(" where " + tyv.showBounds)
+      println(" where " + tyv.showBounds)
     }
     val cty = typer.compactType(tyv)
     if (dbg) println("compacted: " + cty)

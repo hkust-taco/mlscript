@@ -26,7 +26,7 @@ class ProgramTests extends FunSuite {
       if (exp.str.nonEmpty) { assert(res == exp.str, "at line " + exp.line.value); () }
       else {
         println("inferred: " + ty)
-        // println(" where " + ty.showBounds)
+        println(" where " + ty.showBounds)
         println(res)
         println("---")
       }
