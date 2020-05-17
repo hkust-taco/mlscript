@@ -13,15 +13,26 @@ final case class TypeError(msg: String) extends Exception(msg)
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
  *  In order to turn the resulting CompactType into a simplesub.Type, we use `expandCompactType`.
  */
-class Typer(protected val dbg: Boolean) extends TyperHelpers {
+class Typer(protected val dbg: Boolean) extends TyperDebugging {
   
-  // Shadow Predef functions with debugging-flag-enabled ones:
-  def println(msg: => Any): Unit = if (dbg) scala.Predef.println(msg)
-  def assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
+  type Ctx = Map[String, TypeScheme]
   
+  val BoolType: PrimType = PrimType("bool")
+  val IntType: PrimType = PrimType("int")
   
-  // The main type inference functions:
+  val builtins: Ctx = Map(
+    "true" -> BoolType,
+    "false" -> BoolType,
+    "not" -> FunctionType(BoolType, BoolType),
+    "succ" -> FunctionType(IntType, IntType),
+    "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
+    "if" -> {
+      val v = freshVar(1)
+      PolymorphicType(0, FunctionType(BoolType, FunctionType(v, FunctionType(v, v))))
+    }
+  )
   
+  /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
     pgrm.defs match {
       case (isrec, nme, rhs) :: defs =>
@@ -57,23 +68,6 @@ class Typer(protected val dbg: Boolean) extends TyperHelpers {
   }
   
   def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = typeTerm(term)(ctx, lvl)
-  
-  type Ctx = Map[String, TypeScheme]
-  
-  val BoolType: PrimType = PrimType("bool")
-  val IntType: PrimType = PrimType("int")
-  
-  val builtins: Ctx = Map(
-    "true" -> BoolType,
-    "false" -> BoolType,
-    "not" -> FunctionType(BoolType, BoolType),
-    "succ" -> FunctionType(IntType, IntType),
-    "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
-    "if" -> {
-      val v = freshVar(1)
-      PolymorphicType(0, FunctionType(BoolType, FunctionType(v, FunctionType(v, v))))
-    }
-  )
   
   /** Infer the type of a let binding right-hand side. */
   def typeLetRhs(isrec: Boolean, nme: String, rhs: Term)(implicit ctx: Ctx, lvl: Int): PolymorphicType = {
@@ -176,8 +170,33 @@ class Typer(protected val dbg: Boolean) extends TyperHelpers {
   private var freshCount = 0
   def freshVar(implicit lvl: Int): TypeVariable = new TypeVariable(lvl, Nil, Nil)
   
+  def freshenAbove(lim: Int, ty: SimpleType)(implicit lvl: Int): SimpleType = {
+    val freshened = MutMap.empty[TypeVariable, TypeVariable]
+    def freshen(ty: SimpleType): SimpleType = ty match {
+      case tv: TypeVariable =>
+        if (tv.level > lim) freshened.get(tv) match {
+          case Some(tv) => tv
+          case None =>
+            val v = freshVar
+            freshened += tv -> v
+            // v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
+            // v.upperBounds = tv.upperBounds.mapConserve(freshen)
+            //  ^ the above are more efficient, but they lead to a different order
+            //    of fresh variable creations, which leads to some types not being
+            //    simplified the same when put into the RHS of a let binding...
+            v.lowerBounds = tv.lowerBounds.reverse.map(freshen).reverse
+            v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
+            v
+        } else tv
+      case FunctionType(l, r) => FunctionType(freshen(l), freshen(r))
+      case RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))
+      case PrimType(_) => ty
+    }
+    freshen(ty)
+  }
   
-  // The main data types for type inference:
+  
+  // The data types used for type inference:
   
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
@@ -187,7 +206,7 @@ class Typer(protected val dbg: Boolean) extends TyperHelpers {
   /** A type with universally quantified type variables
    *  (by convention, those variables of level greater than `level` are considered quantified). */
   case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
-    def instantiate(implicit lvl: Int) = body.freshenAbove(level)
+    def instantiate(implicit lvl: Int) = freshenAbove(level, body)
   }
   /** A type without universally quantified type variables. */
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
@@ -221,6 +240,29 @@ class Typer(protected val dbg: Boolean) extends TyperHelpers {
   }
   
   trait CompactTypeOrVariable
+  
+  
+  /** Convert an inferred SimpleType into the immutable Type representation. */
+  def expandType(sty: SimpleType): Type = {
+    def go(ts: SimpleType, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
+      case tv: TypeVariable =>
+        val v = tv.asTypeVar
+        if (inProcess(tv -> polarity)) v
+        else {
+          val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
+          val boundTypes = bounds.map(go(_, polarity)(inProcess + (tv -> polarity)))
+          val isRecursive = boundTypes.exists(_.typeVars(v))
+          val mrg = if (polarity) Union else Inter
+          if (isRecursive) Recursive(v,
+            boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
+          else boundTypes.foldLeft[Type](v)(mrg)
+        }
+      case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
+      case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
+      case PrimType(n) => Primitive(n)
+    }
+    go(sty, true)(Set.empty)
+  }
   
   
 }
