@@ -75,7 +75,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       val e_ty = freshVar(lvl + 1)
       val ty = typeTerm(rhs)(ctx + (nme -> e_ty), lvl + 1)
       constrain(ty, e_ty)
-      ty
+      e_ty
     } else typeTerm(rhs)(ctx, lvl + 1)
     PolymorphicType(lvl, res)
   }
@@ -144,23 +144,30 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         rhs.lowerBounds ::= lhs
         rhs.upperBounds.foreach(constrain(lhs, _))
       case (_: TypeVariable, rhs0) =>
-        val rhs = extrude(rhs0, lhs.level)
-        constrain(rhs, rhs0)
+        val rhs = extrude(rhs0, lhs.level, false)
         constrain(lhs, rhs)
       case (lhs0, _: TypeVariable) =>
-        val lhs = extrude(lhs0, rhs.level)
-        constrain(lhs0, lhs)
+        val lhs = extrude(lhs0, rhs.level, true)
         constrain(lhs, rhs)
       case _ => err(s"cannot constrain ${lhs.show} <: ${rhs.show}")
     }
   }
   
-  /** Copies a type up to its type variables of wrong level. */
-  def extrude(ty: SimpleType, lvl: Int): SimpleType = {
+  /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
+  def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
+      (implicit cache: MutMap[TypeVariable, TypeVariable] = MutMap.empty): SimpleType = {
     if (ty.level <= lvl) ty else ty match {
-      case FunctionType(l, r) => FunctionType(extrude(l, lvl), extrude(r, lvl))
-      case RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl)))
-      case tv: TypeVariable => freshVar(lvl)
+      case FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))
+      case RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))
+      case tv: TypeVariable => cache.getOrElse(tv, {
+        val nv = freshVar(lvl)
+        cache += (tv -> nv)
+        if (pol) tv.upperBounds ::= nv
+        else tv.lowerBounds ::= nv
+        if (pol) nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol))
+        else nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
+        nv
+      })
       case PrimType(_) => ty
     }
   }

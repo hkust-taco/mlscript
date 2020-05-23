@@ -109,4 +109,9 @@ class TypingTests extends TypingTestHelpers {
       "'a -> {self: 'b, thing: 'a} as 'b")
   }
   
+  test("random") {
+    error("let rec x = (let rec y = {u = y; v = (x y)} in 0) in 0",
+      "cannot constrain int <: 'a -> 'b")
+  }
+  
 }
