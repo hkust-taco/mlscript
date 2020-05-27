@@ -155,22 +155,21 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
-      (implicit cache: MutMap[TypeVariable, TypeVariable] = MutMap.empty): SimpleType = {
+      (implicit cache: MutMap[TypeVariable, TypeVariable] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))
       case RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(lvl)
         cache += (tv -> nv)
-        if (pol) tv.upperBounds ::= nv
-        else tv.lowerBounds ::= nv
-        if (pol) nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol))
-        else nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
+        if (pol) { tv.upperBounds ::= nv
+          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol)) }
+        else { tv.lowerBounds ::= nv
+          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol)) }
         nv
       })
       case PrimType(_) => ty
     }
-  }
   
   def err(msg: String): Nothing = throw TypeError(msg)
   
