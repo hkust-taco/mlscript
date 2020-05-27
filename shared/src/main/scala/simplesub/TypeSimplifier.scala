@@ -48,13 +48,12 @@ trait TypeSimplifier { self: Typer =>
   def compactType(ty: SimpleType): CompactTypeScheme = {
     import CompactType.{empty, merge}, empty.{copy => ct}
     
-    ty.getVars.foreach(_.recursiveFlag = false) // Note: in practice, they should already be false
-    
+    val recursive = MutMap.empty[PolarVariable, TypeVariable]
     var recVars = SortedMap.empty[TypeVariable, CompactType](Ordering by (_.uid))
     
     // `parents` remembers the variables whose bounds are being compacted,
-    // so as to remove spurious cycles such as ?a <: ?b and ?b <: ?a,
-    // which do not correspond to actual recursive types.
+    //    so as to remove spurious cycles such as ?a <: ?b and ?b <: ?a,
+    //    which do not correspond to actual recursive types.
     def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
       case p: PrimType => ct(prims = Set(p))
@@ -64,18 +63,19 @@ trait TypeSimplifier { self: Typer =>
         ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
       case tv: TypeVariable =>
         val bounds = if (pol) tv.lowerBounds else tv.upperBounds
-        val res = ct(vars = Set(tv))
-        if (inProcess(tv -> pol))
+        val tv_pol = tv -> pol
+        if (inProcess.contains(tv_pol))
           if (parents(tv)) ct() // we have a spurious cycle: ignore the bound
-          else { tv.recursiveFlag = true; res }
+          else ct(vars = Set(recursive.getOrElseUpdate(tv_pol, freshVar(0))))
         else (inProcess + (tv -> pol)) pipe { implicit inProcess =>
-          if (tv.recursiveFlag) return res
           val bound = bounds.map(b => go(b, pol, parents + tv))
-            .reduceOption(merge(pol)).getOrElse(empty)
-          if (tv.recursiveFlag) {
-            if (!recVars.contains(tv)) recVars += tv -> bound
-            res
-          } else merge(pol)(bound, res)
+            .foldLeft[CompactType](ct(vars = Set(tv)))(merge(pol))
+          recursive.get(tv_pol) match {
+            case Some(v) =>
+              recVars += v -> bound
+              ct(vars = Set(v))
+            case None => bound
+          }
         }
       }
     

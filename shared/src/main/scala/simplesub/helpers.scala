@@ -9,14 +9,14 @@ import scala.collection.immutable.SortedSet
 
 abstract class TypeImpl { self: Type =>
   
-  lazy val typeVars: Set[TypeVar] = this match {
-    case uv: TypeVar => Set(uv)
-    case Recursive(n, b) => b.typeVars + n
-    case _ => children.iterator.flatMap(_.typeVars).toSet
+  lazy val typeVarsList: List[TypeVar] = this match {
+    case uv: TypeVar => uv :: Nil
+    case Recursive(n, b) => n :: b.typeVarsList
+    case _ => children.flatMap(_.typeVarsList)
   }
   
   def show: String = {
-    val vars = typeVars
+    val vars = typeVarsList.distinct
     val ctx = vars.zipWithIndex.map {
       case (tv, idx) =>
         def nme = {

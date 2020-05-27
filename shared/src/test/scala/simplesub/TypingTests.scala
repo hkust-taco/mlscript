@@ -110,8 +110,24 @@ class TypingTests extends TypingTestHelpers {
   }
   
   test("random") {
-    error("let rec x = (let rec y = {u = y; v = (x y)} in 0) in 0",
-      "cannot constrain int <: 'a -> 'b")
+    doTest("(let rec x = {a = x; b = x} in x)",                           "{a: 'a, b: 'a} as 'a")
+    doTest("(let rec x = fun v -> {a = x v; b = x v} in x)",              "⊤ -> {a: 'a, b: 'a} as 'a")
+    error("let rec x = (let rec y = {u = y; v = (x y)} in 0) in 0",       "cannot constrain int <: 'a -> 'b")
+    doTest("(fun x -> (let y = (x x) in 0))",                             "'a ∧ ('a -> ⊤) -> int")
+    doTest("(let rec x = (fun y -> (y (x x))) in x)",                     "('b -> 'b ∧ 'a) as 'a -> 'b")
+    doTest("fun next -> 0",                                               "⊤ -> int")
+    doTest("((fun x -> (x x)) (fun x -> x))",                             "('b ∨ ('b -> 'a)) as 'a")
+    doTest("(let rec x = (fun y -> (x (y y))) in x)",                     "('b ∧ ('b -> 'a)) as 'a -> ⊥")
+    doTest("fun x -> (fun y -> (x (y y)))",                               "('a -> 'b) -> 'c ∧ ('c -> 'a) -> 'b")
+    doTest("(let rec x = (let y = (x x) in (fun z -> z)) in x)",          "'a -> ('a ∨ ('a -> 'b)) as 'b")
+    doTest("(let rec x = (fun y -> (let z = (x x) in y)) in x)",          "'a -> ('a ∨ ('a -> 'b)) as 'b")
+    doTest("(let rec x = (fun y -> {u = y; v = (x x)}) in x)",
+      "'a -> {u: 'a ∨ ('a -> 'b), v: 'b} as 'b")
+    doTest("(let rec x = (fun y -> {u = (x x); v = y}) in x)",
+      "'a -> {u: 'b, v: 'a ∨ ('a -> 'b)} as 'b")
+    doTest("(let rec x = (fun y -> (let z = (y x) in y)) in x)",          "('b ∧ ('a -> ⊤) -> 'b) as 'a")
+    doTest("(fun x -> (let y = (x x.v) in 0))",                           "{v: 'a} ∧ ('a -> ⊤) -> int")
   }
+  
   
 }

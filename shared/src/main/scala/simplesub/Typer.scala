@@ -249,26 +249,28 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   trait CompactTypeOrVariable
   
   
+  type PolarVariable = (TypeVariable, Boolean)
+  
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(sty: SimpleType): Type = {
-    def go(ts: SimpleType, polarity: Boolean)(inProcess: Set[(TypeVariable, Boolean)]): Type = ts match {
+  def expandType(st: SimpleType): Type = {
+    val recursive = mutable.Map.empty[PolarVariable, TypeVar]
+    def go(st: SimpleType, polarity: Boolean)(inProcess: Set[PolarVariable]): Type = st match {
       case tv: TypeVariable =>
-        val v = tv.asTypeVar
-        if (inProcess(tv -> polarity)) v
+        val tv_pol = tv -> polarity
+        if (inProcess.contains(tv_pol))
+          recursive.getOrElseUpdate(tv_pol, freshVar(0).asTypeVar)
         else {
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
-          val boundTypes = bounds.map(go(_, polarity)(inProcess + (tv -> polarity)))
-          val isRecursive = boundTypes.exists(_.typeVars(v))
+          val boundTypes = bounds.map(go(_, polarity)(inProcess + tv_pol))
           val mrg = if (polarity) Union else Inter
-          if (isRecursive) Recursive(v,
-            boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
-          else boundTypes.foldLeft[Type](v)(mrg)
+          val res = boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
+          recursive.get(tv_pol).fold(res)(Recursive(_, res))
         }
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case PrimType(n) => Primitive(n)
     }
-    go(sty, true)(Set.empty)
+    go(st, true)(Set.empty)
   }
   
   
