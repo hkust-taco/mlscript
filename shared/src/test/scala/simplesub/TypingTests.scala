@@ -127,6 +127,8 @@ class TypingTests extends TypingTestHelpers {
       "'a -> {u: 'b, v: 'a ∨ ('a -> 'b)} as 'b")
     doTest("(let rec x = (fun y -> (let z = (y x) in y)) in x)",          "('b ∧ ('a -> ⊤) -> 'b) as 'a")
     doTest("(fun x -> (let y = (x x.v) in 0))",                           "{v: 'a} ∧ ('a -> ⊤) -> int")
+    doTest("let rec x = (let y = (x x) in (fun z -> z)) in (x (fun y -> y.u))", // [test:T1]
+      "('b ∨ ('b ∧ {u: 'c} -> 'a ∨ 'c)) as 'a")
   }
   
   

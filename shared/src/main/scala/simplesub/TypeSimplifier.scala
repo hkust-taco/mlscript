@@ -168,7 +168,9 @@ trait TypeSimplifier { self: Typer =>
       println(s"[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
-          case w: TypeVariable if !(w is v) && !varSubst.contains(w) =>
+          case w: TypeVariable if !(w is v) && !varSubst.contains(w) && (recVars.contains(v) === recVars.contains(w)) =>
+            // Note: We avoid merging rec and non-rec vars, because the non-rec one may not be strictly polar ^
+            //       As an example of this, see [test:T1].
             println(s"[w] $w ${coOccurrences.get(pol -> w)}")
             if (coOccurrences.get(pol -> w).forall(_(v))) {
               println(s"[U] $w := $v") // we unify w into v
@@ -180,17 +182,17 @@ trait TypeSimplifier { self: Typer =>
               //  we get `v -> v & x -> v -> x`
               //  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
               recVars.get(w) match {
-                case Some(b_w) => // `w` is a recursive type variable, with bound `b`
+                case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
                   assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
                   recVars -= w // w is merged into v, so we forget about it
-                  val b_v = recVars.get(v).getOrElse(() => CompactType.empty)
+                  val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
                   // and record the new recursive bound for v:
                   recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
                 case None => // `w` is NOT recursive
                   val wCoOcss = coOccurrences((!pol) -> w)
                   // ^ this must be defined otherwise we'd already have simplified away the non-rec variable
                   coOccurrences((!pol) -> v).filterInPlace(t => t === v || wCoOcss(t))
-                  // ^ since `w` is not recursive but co-occurs with `v`, then `v` must not be recursive either!
+                  // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
               }
             }; ()
           case atom: PrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
