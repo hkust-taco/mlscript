@@ -209,7 +209,7 @@ trait TypeSimplifier { self: Typer =>
   def expandCompactType(cty: CompactTypeScheme): Type = {
     def go(ty: CompactTypeOrVariable, pol: Boolean)
           (implicit inProcess: Map[(CompactTypeOrVariable, Boolean), () => TypeVar]): Type = {
-      inProcess.get(ty -> pol) match {
+      inProcess.get(ty -> pol) match { // Note: we use pat-mat instead of `foreach` to avoid non-local return
         case Some(t) =>
           val res = t()
           println(s"REC[$pol] $ty -> $res")
@@ -226,11 +226,7 @@ trait TypeSimplifier { self: Typer =>
       }
       val res = inProcess + (ty -> pol -> (() => v)) pipe { implicit inProcess =>
         ty match {
-          case tv: TypeVariable =>
-            cty.recVars.get(tv) match {
-              case Some(b) => go(b, pol)
-              case _ => tv.asTypeVar
-            }
+          case tv: TypeVariable => cty.recVars.get(tv).fold(tv.asTypeVar: Type)(go(_, pol))
           case CompactType(vars, prims, rec, fun) =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
