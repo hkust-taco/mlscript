@@ -8,15 +8,15 @@ ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
 lazy val root = project.in(file("."))
-  .aggregate(simplesubJS, simplesubJVM)
+  .aggregate(funtypesJS, funtypesJVM)
   .settings(
     publish := {},
     publishLocal := {}
   )
 
-lazy val simplesub = crossProject(JSPlatform, JVMPlatform).in(file("."))
+lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
-    name := "simple-algebraic-subtyping",
+    name := "funtypes",
     scalacOptions ++= Seq(
       "-deprecation",
       "-feature",
@@ -42,5 +42,5 @@ lazy val simplesub = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "0.9.6",
   )
 
-lazy val simplesubJVM = simplesub.jvm
-lazy val simplesubJS = simplesub.js
+lazy val funtypesJVM = funtypes.jvm
+lazy val funtypesJS = funtypes.js

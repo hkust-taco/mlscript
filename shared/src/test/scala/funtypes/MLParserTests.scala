@@ -1,12 +1,12 @@
-package simplesub
+package funtypes
 
 import org.scalatest._
 import fastparse._
-import Parser.expr
+import MLParser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 
-class ParserTests extends FunSuite {
+class MLParserTests extends FunSuite {
   
   def doTest(str: String): Unit = {
     parse(str, expr(_), verboseFailures = true) match {

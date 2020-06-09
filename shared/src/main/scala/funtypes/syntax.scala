@@ -1,4 +1,4 @@
-package simplesub
+package funtypes
 
 
 // Terms

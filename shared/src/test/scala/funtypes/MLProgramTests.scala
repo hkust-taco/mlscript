@@ -1,14 +1,14 @@
-package simplesub
+package funtypes
 
 import org.scalatest._
 import fastparse._
-import Parser.pgrm
+import MLParser.pgrm
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class ProgramTests extends FunSuite {
+class MLProgramTests extends FunSuite {
   
   implicit class ExpectedStr(val str: String)(implicit val line: Line)
   

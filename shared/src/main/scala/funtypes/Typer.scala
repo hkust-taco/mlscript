@@ -1,4 +1,4 @@
-package simplesub
+package funtypes
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
@@ -11,7 +11,7 @@ final case class TypeError(msg: String) extends Exception(msg)
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
- *  In order to turn the resulting CompactType into a simplesub.Type, we use `expandCompactType`.
+ *  In order to turn the resulting CompactType into a funtypes.Type, we use `expandCompactType`.
  */
 class Typer(protected val dbg: Boolean) extends TyperDebugging {
   
@@ -238,8 +238,8 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
   ) extends SimpleType with CompactTypeOrVariable {
-    private[simplesub] val uid: Int = { freshCount += 1; freshCount - 1 }
-    private[simplesub] var recursiveFlag = false // used temporarily by `compactType`
+    private[funtypes] val uid: Int = { freshCount += 1; freshCount - 1 }
+    private[funtypes] var recursiveFlag = false // used temporarily by `compactType`
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid

@@ -1,14 +1,14 @@
-package simplesub
+package funtypes
 
 import org.scalatest._
 import fastparse._
-import Parser.expr
+import MLParser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class TypingTestHelpers extends FunSuite {
+class MLTypingTestHelpers extends FunSuite {
   
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     val dbg = expected.isEmpty

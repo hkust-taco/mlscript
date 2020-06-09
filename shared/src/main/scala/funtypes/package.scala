@@ -1,4 +1,4 @@
-package object simplesub {
+package object funtypes {
 
   import scala.collection.mutable
   import scala.collection.immutable.SortedMap

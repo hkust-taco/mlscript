@@ -6,7 +6,7 @@ import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val source = document.querySelector("#simple-sub-input")
+    val source = document.querySelector("#funtypes-input")
     update(source.textContent)
     source.addEventListener("input", typecheck)
   }
@@ -19,12 +19,12 @@ object Main {
   }
   def update(str: String): Unit = {
     // println(s"Input: $str")
-    val target = document.querySelector("#simple-sub-output")
+    val target = document.querySelector("#funtypes-output")
     target.innerHTML = Try {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
-      import simplesub.Parser.pgrm
-      import simplesub.TypeError
+      import funtypes.MLParser.pgrm
+      import funtypes.TypeError
       parse(str, pgrm(_), verboseFailures = false) match {
         case Failure(err, index, extra) =>
           // this line-parsing logic was copied from fastparse internals:
@@ -39,7 +39,7 @@ object Main {
             s" at line $line:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          val typer = new simplesub.Typer(dbg = false) with simplesub.TypeSimplifier
+          val typer = new funtypes.Typer(dbg = false) with funtypes.TypeSimplifier
           val tys = typer.inferTypesJS(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>

@@ -38,7 +38,7 @@ h1, p{
     float: right;
 }
 
-#simple-sub-input, #simple-sub-output {
+#funtypes-input, #funtypes-output {
     width: 100%;
     height: 100%;
     box-sizing: border-box;
@@ -50,12 +50,12 @@ h1, p{
     color: #efefef;
     font-size: 14px;
 }
-#simple-sub-input {
+#funtypes-input {
     resize: none;
     outline: none;
 }
 
-#simple-sub-output {
+#funtypes-output {
     border: 1px solid black;
 }
 

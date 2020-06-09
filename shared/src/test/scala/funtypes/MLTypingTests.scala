@@ -1,12 +1,11 @@
-package simplesub
+package funtypes
 
 import fastparse._
-import Parser.expr
-import fastparse.Parsed.Failure
-import fastparse.Parsed.Success
+import MLParser.expr
+import fastparse.Parsed.{Success, Failure}
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class TypingTests extends TypingTestHelpers {
+class MLTypingTests extends MLTypingTestHelpers {
   
   // In the tests, leave the expected string empty so the inferred type is printed in the console
   // and you can copy and paste it after making sure it is correct.

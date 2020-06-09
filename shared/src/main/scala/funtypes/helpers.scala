@@ -1,4 +1,4 @@
-package simplesub
+package funtypes
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet}
