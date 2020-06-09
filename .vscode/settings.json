@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.fun": "typescript"
+    },
+    "typescript.validate.enable": false,
+}
