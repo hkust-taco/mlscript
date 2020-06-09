@@ -27,16 +27,9 @@ object Main {
       import funtypes.TypeError
       parse(str, pgrm(_), verboseFailures = false) match {
         case Failure(err, index, extra) =>
-          // this line-parsing logic was copied from fastparse internals:
-          val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(str)
-          val line = lineNumberLookup.indexWhere(_ > index) match {
-            case -1 => lineNumberLookup.length - 1
-            case n => math.max(0, n - 1)
-          }
-          val lines = str.split('\n')
-          val lineStr = lines(line min lines.length - 1)
+          val (lineNum, lineStr) = funtypes.FastParseHelpers.getLineAt(str, index)
           "Parse error: " + extra.trace().msg +
-            s" at line $line:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
+            s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
           val typer = new funtypes.Typer(dbg = false) with funtypes.TypeSimplifier

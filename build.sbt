@@ -11,7 +11,7 @@ lazy val root = project.in(file("."))
   .aggregate(funtypesJS, funtypesJVM)
   .settings(
     publish := {},
-    publishLocal := {}
+    publishLocal := {},
   )
 
 lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
@@ -35,6 +35,11 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
+    libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.7",
+    libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.1.4",
+    // 
+    watchSources += WatchSource(
+      sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter)
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
