@@ -5,7 +5,7 @@ import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set =
 import scala.collection.immutable.SortedSet
 
 
-// Helper methods for types
+// Auxiliary definitions for types
 
 abstract class TypeImpl { self: Type =>
   
@@ -50,4 +50,37 @@ abstract class TypeImpl { self: Type =>
     case Recursive(n, b) => b :: Nil
   }
   
+}
+
+
+// Auxiliary definitions for terms
+
+abstract class TermImpl { self: Term =>
+  var spanStart: Int = -1
+  var spanEnd: Int = -1
+  
+  override def toString: String = this match {
+    // case Blk(stmts) => s"(${stmts.mkString("; ")})"
+    case Blk(stmts) => s"{${stmts.mkString("; ")}}"
+    case IntLit(value) => value.toString
+    case DecLit(value) => value.toString
+    case StrLit(value) => '"'.toString + value + '"'
+    case Var(name) => name
+    case Lam(name, rhs) => s"(fun $name -> $rhs)"
+    case App(lhs, rhs) => s"($lhs $rhs)"
+    case Rcd(fields) =>
+      fields.iterator.map(nv => nv._1 + " = " + nv._2).mkString("{", "; ", "}")
+    case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
+    case Let(isRec, name, rhs, body) =>
+      s"(let${if (isRec) " rec" else ""} $name = $rhs in $body)"
+    case Tup(xs) => xs.mkString("(", ", ", ")")
+  }
+  
+}
+
+trait StatementImpl {
+  override def toString: String = this match {
+    case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
+    case _: Term => super.toString
+  }
 }

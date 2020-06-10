@@ -5,6 +5,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
+import funtypes.utils._, shorthands._
 
 final case class TypeError(msg: String) extends Exception(msg)
 
@@ -13,30 +14,40 @@ final case class TypeError(msg: String) extends Exception(msg)
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
  *  In order to turn the resulting CompactType into a funtypes.Type, we use `expandCompactType`.
  */
-class Typer(protected val dbg: Boolean) extends TyperDebugging {
+class Typer(var dbg: Boolean) extends TyperDebugging {
   
   type Ctx = Map[String, TypeScheme]
+  type Raise = TypeError => Unit
   
+  val UnitType: PrimType = PrimType("unit")
   val BoolType: PrimType = PrimType("bool")
   val IntType: PrimType = PrimType("int")
+  val DecType: PrimType = PrimType("number")
+  val StrType: PrimType = PrimType("string")
   
   val builtins: Ctx = Map(
     "true" -> BoolType,
     "false" -> BoolType,
     "not" -> FunctionType(BoolType, BoolType),
     "succ" -> FunctionType(IntType, IntType),
+    "println" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
     "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
+    "+" -> FunctionType(IntType, FunctionType(IntType, IntType)),
+    "id" -> {
+      val v = freshVar(1)
+      PolymorphicType(0, FunctionType(v, v))
+    },
     "if" -> {
       val v = freshVar(1)
       PolymorphicType(0, FunctionType(BoolType, FunctionType(v, FunctionType(v, v))))
-    }
+    },
   )
   
   /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
     pgrm.defs match {
       case (isrec, nme, rhs) :: defs =>
-        val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, 0)) catch {
+        val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, 0, throw _)) catch {
           case err: TypeError => Left(err) }
         ty_sch :: inferTypes(Pgrm(defs), ctx + (nme -> ty_sch.getOrElse(freshVar(0))))
       case Nil => Nil
@@ -56,7 +67,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     while (defs.nonEmpty) {
       val (isrec, nme, rhs) = defs.head
       defs = defs.tail
-      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, 0)) catch {
+      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, 0, throw _)) catch {
         case err: TypeError =>
           if (stopAtFirstError) defs = Nil
           Left(err)
@@ -67,36 +78,53 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     res.toList
   }
   
-  def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = typeTerm(term)(ctx, lvl)
+  def typeBlk(blk: Blk, ctx: Ctx = builtins): List[List[TypeError] -> PolymorphicType] = blk.stmts match {
+    case s :: stmts =>
+      val errs = mutable.ListBuffer.empty[TypeError]
+      val (newCtx, ty) = typeStatement(s)(ctx, 0, errs += _)
+      errs.toList -> ty :: typeBlk(Blk(stmts), newCtx)
+    case Nil => Nil
+  }
+  def typeStatement(s: Statement)(implicit ctx: Ctx, lvl: Int, raise: Raise): Ctx -> PolymorphicType = s match {
+    case LetS(isrec, Var(nme), rhs) =>
+      val ty_sch = typeLetRhs(isrec, nme, rhs)
+      (ctx + (nme -> ty_sch)) -> ty_sch
+    case LetS(isrec, _, rhs) => ??? // TODO
+    case t: Term => ctx -> PolymorphicType(0, typeTerm(t))
+  }
+  
+  def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = typeTerm(term)(ctx, lvl, throw _)
   
   /** Infer the type of a let binding right-hand side. */
-  def typeLetRhs(isrec: Boolean, nme: String, rhs: Term)(implicit ctx: Ctx, lvl: Int): PolymorphicType = {
+  def typeLetRhs(isrec: Boolean, nme: String, rhs: Term)(implicit ctx: Ctx, lvl: Int, raise: Raise): PolymorphicType = {
     val res = if (isrec) {
       val e_ty = freshVar(lvl + 1)
-      val ty = typeTerm(rhs)(ctx + (nme -> e_ty), lvl + 1)
+      val ty = typeTerm(rhs)(ctx + (nme -> e_ty), lvl + 1, raise)
       constrain(ty, e_ty)
       e_ty
-    } else typeTerm(rhs)(ctx, lvl + 1)
+    } else typeTerm(rhs)(ctx, lvl + 1, raise)
     PolymorphicType(lvl, res)
   }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, lvl: Int): SimpleType = {
+  def typeTerm(term: Term)(implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType = trace(s"$lvl. Typing $term") {
     lazy val res = freshVar
     term match {
       case Var(name) =>
-        ctx.getOrElse(name, err("identifier not found: " + name)).instantiate
-      case Lam(name, body) =>
+        ctx.getOrElse(name, { err("identifier not found: " + name); res}).instantiate
+      case Lam(Var(name), body) =>
         val param = freshVar
-        val body_ty = typeTerm(body)(ctx + (name -> param), lvl)
+        val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
         FunctionType(param, body_ty)
+      case Lam(lhs, rhs) => ???
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         constrain(f_ty, FunctionType(a_ty, res))
         res
-      case Lit(n) =>
-        IntType
+      case IntLit(n) => IntType
+      case DecLit(n) => DecType
+      case StrLit(n) => StrType
       case Sel(obj, name) =>
         val obj_ty = typeTerm(obj)
         constrain(obj_ty, RecordType((name, res) :: Nil))
@@ -105,15 +133,21 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         RecordType(fs.map { case (n, t) => (n, typeTerm(t)) })
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
-        typeTerm(bod)(ctx + (nme -> n_ty), lvl)
+        typeTerm(bod)(ctx + (nme -> n_ty), lvl, raise)
+      case Tup(_) => ???
+      case Blk((s: Term) :: Nil) => typeTerm(s)
+      case Blk(Nil) => UnitType
+      case Blk(s :: stmts) =>
+        val (newCtx, ty) = typeStatement(s)
+        typeTerm(Blk(stmts))(newCtx, lvl, raise)
     }
-  }
+  }(r => s"$lvl. : ${r}")
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)
       // we need a cache to remember the subtyping tests in process; we also make the cache remember
       // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm)
-      (implicit cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty)
+      (implicit cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty, raise: Raise)
   : Unit = {
     if (lhs is rhs) return
     val lhs_rhs = lhs -> rhs
@@ -171,10 +205,13 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       case PrimType(_) => ty
     }
   
-  def err(msg: String): Nothing = throw TypeError(msg)
+  def err(msg: String)(implicit raise: Raise): Unit = raise(TypeError(msg))
   
   private var freshCount = 0
   def freshVar(implicit lvl: Int): TypeVariable = new TypeVariable(lvl, Nil, Nil)
+  def resetState(): Unit = {
+    freshCount = 0
+  }
   
   def freshenAbove(lim: Int, ty: SimpleType)(implicit lvl: Int): SimpleType = {
     val freshened = MutMap.empty[TypeVariable, TypeVariable]

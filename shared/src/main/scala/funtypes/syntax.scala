@@ -5,14 +5,23 @@ package funtypes
 
 final case class Pgrm(defs: List[(Boolean, String, Term)])
 
-sealed abstract class Term
-final case class Lit(value: Int)                                          extends Term
+sealed abstract class Term                                                extends TermImpl with Statement
+sealed abstract class Lit                                                 extends Term
 final case class Var(name: String)                                        extends Term
-final case class Lam(name: String, rhs: Term)                             extends Term
+final case class Lam(lhs: Term, rhs: Term)                                extends Term
 final case class App(lhs: Term, rhs: Term)                                extends Term
+final case class Tup(fields: List[(String, Term)])                        extends Term
 final case class Rcd(fields: List[(String, Term)])                        extends Term
 final case class Sel(receiver: Term, fieldName: String)                   extends Term
 final case class Let(isRec: Boolean, name: String, rhs: Term, body: Term) extends Term
+final case class Blk(stmts: List[Statement]) extends Term
+
+final case class IntLit(value: BigInt)     extends Lit
+final case class DecLit(value: BigDecimal) extends Lit
+final case class StrLit(value: String)     extends Lit
+
+sealed trait Statement extends StatementImpl
+final case class LetS(isRec: Boolean, pat: Term, rhs: Term) extends Statement
 
 
 // Types

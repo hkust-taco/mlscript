@@ -6,8 +6,8 @@ object FastParseHelpers {
     // this line-parsing logic was copied from fastparse internals:
     val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(str)
     val lineNum = lineNumberLookup.indexWhere(_ > index) match {
-      case -1 => lineNumberLookup.length - 1
-      case n => math.max(0, n - 1)
+      case -1 => lineNumberLookup.length
+      case n => math.max(1, n)
     }
     val lines = str.split('\n')
     val lineStr = lines(lineNum min lines.length - 1)

@@ -27,9 +27,9 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     wartremoverWarnings ++= Warts.allBut(
       Recursion, Throw, Nothing, Return, While,
       Var, MutableDataStructures, NonUnitStatements,
-      DefaultArguments, ImplicitParameter, StringPlusAny,
+      DefaultArguments, ImplicitParameter, StringPlusAny, Any,
       JavaSerializable, Serializable, Product,
-      LeakingSealed,
+      LeakingSealed, Overloading,
       Option2Iterable, TraversableOps,
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test,

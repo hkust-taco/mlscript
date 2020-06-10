@@ -3,6 +3,7 @@ package funtypes
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
+import funtypes.utils._
 
 trait TypeSimplifier { self: Typer =>
   
@@ -159,7 +160,7 @@ trait TypeSimplifier { self: Typer =>
         case (Some(_), None) | (None, Some(_)) =>
           println(s"[!] $v0")
           varSubst += v0 -> None; ()
-        case occ => assert(occ =/= (None, None))
+        case occ => dbg_assert(occ =/= (None, None))
       }
     }}
     // Unify equivalent variables based on polar co-occurrence analysis:
@@ -183,7 +184,7 @@ trait TypeSimplifier { self: Typer =>
               //  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
               recVars.get(w) match {
                 case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
-                  assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
+                  dbg_assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
                   recVars -= w // w is merged into v, so we forget about it
                   val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
                   // and record the new recursive bound for v:

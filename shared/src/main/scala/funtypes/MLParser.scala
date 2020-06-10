@@ -19,7 +19,7 @@ object MLParser {
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
   def term[_: P]: P[Term] = P( let | fun | ite | apps )
-  def const[_: P]: P[Term] = number.map(Lit)
+  def const[_: P]: P[Term] = number.map(x => IntLit(BigInt(x)))
   def variable[_: P]: P[Term] = ident.map(Var)
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
   def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
@@ -27,7 +27,7 @@ object MLParser {
     case (st, sels) => sels.foldLeft(st)(Sel) }
   def record[_: P]: P[Term] =
     P( "{" ~/ (ident ~ "=" ~ term).rep(sep = ";") ~ "}" ).map(_.toList pipe Rcd)
-  def fun[_: P]: P[Term] = P( kw("fun") ~/ ident ~ "->" ~ term ).map(Lam.tupled)
+  def fun[_: P]: P[Term] = P( kw("fun") ~/ ident ~ "->" ~ term ).map(nb => Lam(Var(nb._1), nb._2))
   def let[_: P]: P[Term] =
     P( kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term ~ kw("in") ~ term )
     .map(Let.tupled)
