@@ -1,15 +1,17 @@
 package funtypes
 
-import funtypes.utils._, shorthands._
-import scala.language.implicitConversions
+import scala.annotation.nowarn
 import scala.util.chaining._
-import Lexer._
+import scala.language.implicitConversions
 import fastparse._
+import funtypes.utils._, shorthands._
+import funtypes.Lexer._
 
 /** Inspired by and adapted from:
   *   scalaparse: https://github.com/lihaoyi/fastparse/tree/master/scalaparse
   *   pythonparse: https://github.com/lihaoyi/fastparse/tree/master/pythonparse
   */
+@nowarn("cat=other") // "comparing a fresh object using `ne` will always yield true" in macrco-generated code
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class Parser(indent: Int = 0, recordLocations: Bool = true) {
   //implicit def whitespace(cfg: P[_]): P[Unit] = Lexical.wscomment(cfg)
@@ -55,12 +57,12 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (s, ss1, S(Blk(ss2))) => Blk(s :: ss1.toList ::: ss2.toList)
   }
   
-  def lams[_: P]: P[Term] = P( commas ~ (("/".! | "=>".!) ~/ (lams | suite) | "".! ~ suite).? ).map {
+  def lams[_: P]: P[Term] = P( commas ~ (("/".! | "=>".!) ~/ (lams | suite) | "".! ~ suite).? ).map(checkless {
     case (trm, N) => trm
     case (trm, S(("", rest))) => App(trm, rest)
     case (trm, S(("/", rest))) => App(trm, rest)
     case (trm, S(("=>", rest))) => Lam(trm, rest)
-  }.opaque("applied expressions")
+  }).opaque("applied expressions")
   
   def commas[_: P]: P[Term] = P( binops ~/ (Index ~~ "," ~~ Index ~/ commas).? ).map {
     case (lhs, N) => lhs
