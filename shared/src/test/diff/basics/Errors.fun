@@ -83,6 +83,30 @@ println / false + 1
 /// res: unit
 
 :e
+succ succ
+  1
+(
+  succ
+) false
+/// /!\ Type error: cannot constrain int -> int <: int
+/// l.86: 	succ succ
+///       	^^^^^^^^^
+/// /!\ Type error: cannot constrain int <: int -> 'a
+/// l.86: 	succ succ
+///       	^^^^^^^^^
+/// l.87: 	  1
+///       	^^^
+/// /!\ Type error: cannot constrain bool <: int
+/// l.88: 	(
+///       	^
+/// l.89: 	  succ
+///       	^^^^^^
+/// l.90: 	) false
+///       	^^^^^^^
+/// res: ⊥
+/// res: int
+
+:e
 println
   1
     2
@@ -92,15 +116,15 @@ println
   1
   2
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.87: 	  1
-///       	  ^
-/// l.88: 	    2
-///       	^^^^^
+/// l.111: 	  1
+///        	  ^
+/// l.112: 	    2
+///        	^^^^^
 /// /!\ Type error: cannot constrain unit <: int -> 'a
-/// l.89: 	println 1
-///       	^^^^^^^^^
-/// l.90: 	  2
-///       	^^^
+/// l.113: 	println 1
+///        	^^^^^^^^^
+/// l.114: 	  2
+///        	^^^
 /// res: unit
 /// res: ⊥
 /// res: unit
@@ -118,28 +142,28 @@ println
 succ {a: 1}
 {a: 1} succ
 /// /!\ Type error: cannot constrain int <: {u: 'a}
-/// l.112: 	1.u
-///        	  ^
+/// l.136: 	1.u
+///        	 ^^
 /// /!\ Type error: missing field: u in {}
-/// l.113: 	{}.u
-///        	   ^
+/// l.137: 	{}.u
+///        	  ^^
 /// /!\ Type error: missing field: u in {a: int}
-/// l.114: 	{a: 1}.u
-///        	       ^
+/// l.138: 	{a: 1}.u
+///        	      ^^
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.115: 	{a: 1}.a 1
-///        	       ^^^
+/// l.139: 	{a: 1}.a 1
+///        	      ^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.116: 	1 + {a: true}.a
+/// l.140: 	1 + {a: true}.a
 ///        	^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.117: 	{a: true}.a + 1
-///        	          ^^^
+/// l.141: 	{a: true}.a + 1
+///        	         ^^^^
 /// /!\ Type error: cannot constrain {a: int} <: int
-/// l.118: 	succ {a: 1}
+/// l.142: 	succ {a: 1}
 ///        	^^^^^^^^^^^
 /// /!\ Type error: cannot constrain {a: int} <: (int -> int) -> 'a
-/// l.119: 	{a: 1} succ
+/// l.143: 	{a: 1} succ
 ///        	^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -150,3 +174,11 @@ succ {a: 1}
 /// res: int
 /// res: ⊥
 
+
+// parse error
+
+:pe
+foo
+ba)r
+baz
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at line 182: ba)r

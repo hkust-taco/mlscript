@@ -60,11 +60,70 @@ id id /
 /// Parsed: {((id id) {((id id) {(id id)})})}
 /// res: 'a -> 'a
 
-// FIXME last line not applied
 :p
 id id
     id id
   id id
-/// Parsed: {((id id) {(id id)}); (id id)}
+/// Parsed: {(((id id) {(id id)}) {(id id)})}
 /// res: 'a -> 'a
-/// res: 'a -> 'a
+
+let foo =
+  println 1
+  println 2
+/// foo: unit
+
+let foo =
+  println 1
+  
+  println 2
+/// foo: unit
+
+let foo =
+ 
+  println 1
+   
+  println 2
+/// foo: unit
+
+// TODO report pure exprs in statements pos; there are some here!
+succ (
+  succ
+  1
+)
+succ (
+  succ
+  1)
+succ (succ
+  1)
+succ (succ
+1)
+succ (succ
+  1
+)
+succ (succ
+  succ 1)
+succ (succ
+succ 1)
+succ (succ
+succ
+  1)
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+
+:pe
+let a =
+    succ
+  1
+  "?"
+/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at line 121:     succ
+
+:pe
+  1
+/// /!\ Parse error: Expected (let binding | applied expressions):1:1, found "  1" at line 127:   1
+

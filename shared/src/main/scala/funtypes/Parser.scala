@@ -26,7 +26,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   def NEWLINE[_: P]: P0 = P( "\n" | End )
   def ENDMARKER[_: P]: P0 = P( End )//.opaque("unexpected token in this position")
   
-  def nl_indents[_: P] = P( "\n" ~ emptyLines ~~ " ".repX(indent) )
+  def nl_indents[_: P] = P( "\n" ~~ emptyLines ~~ " ".repX(indent, max = indent) )
   def emptyLines[_: P] = P( ("" ~ Lexer.comment.? ~ "\n").repX(0) )
   
   def spaces[_: P] = P( (Lexer.nonewlinewscomment.? ~~ "\n").repX(1) )
@@ -46,24 +46,23 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   def stmt[_: P]: P[Statement] = let | lams
   
   def let[_: P]: P[LetS] =
-    locate(P( kw("let") ~ kw("rec").!.? ~ commas ~ "=" ~ lams ).map {
+    locate(P( kw("let") ~ kw("rec").!.? ~ commas ~ "=" ~/ (lams | suite) ).map {
       case (r, p, e) => LetS(r.isDefined, p, e)
-    })
+    }).opaque("let binding")
   
   def multilineBlock[_: P]: P[Blk] = P( stmt ~ (";" ~ stmt).rep ~ (";".? ~ nl_indents ~~ multilineBlock).? ).map {
     case (s, ss1, N) => Blk(s :: ss1.toList)
     case (s, ss1, S(Blk(ss2))) => Blk(s :: ss1.toList ::: ss2.toList)
   }
   
-  def lams[_: P]: P[Term] = P( (commas ~ ("/".! | "=>".!)).rep ~ body ).map {
-    case (xs, a) => xs.foldRight(a) {
-      case ((x, "/"), acc) => App(x, acc)
-      case ((x, "=>"), acc) => Lam(x, acc)
-    }
-  }
-  def body[_: P]: P[Term] = P( commas | suite )
+  def lams[_: P]: P[Term] = P( commas ~ (("/".! | "=>".!) ~/ (lams | suite) | "".! ~ suite).? ).map {
+    case (trm, N) => trm
+    case (trm, S(("", rest))) => App(trm, rest)
+    case (trm, S(("/", rest))) => App(trm, rest)
+    case (trm, S(("=>", rest))) => Lam(trm, rest)
+  }.opaque("applied expressions")
   
-  def commas[_: P]: P[Term] = P( binops ~ (Index ~~ "," ~~ Index ~ commas).? ).map { // note: used to have `binops ~/`
+  def commas[_: P]: P[Term] = P( binops ~/ (Index ~~ "," ~~ Index ~/ commas).? ).map {
     case (lhs, N) => lhs
     case (lhs, S((i0,i1,rhs))) => App(App(Var(",").withLoc(i0,i1), lhs), rhs) // TODO
   }
@@ -88,8 +87,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   // Note: There are three right-associative operators, dealt with above, not here: `=>`, `/`, and `,`
   // Adapted from: https://github.com/databricks/sjsonnet/blob/master/sjsonnet/src/sjsonnet/Parser.scala#L136-L180
-  // def binops[_: P]: P[Pa] = P("" ~ apps ~ (Index ~~ operator.! ~~ Index ~/ apps).rep ~ "").map { case (pre, fs) =>
-  def binops[_: P]: P[Term] = P("" ~ apps ~ (Index ~~ operator.! ~~ Index ~ apps).rep ~ "").map { case (pre, fs) =>
+  def binops[_: P]: P[Term] = P(apps ~ (Index ~~ operator.! ~~ Index ~/ apps).rep ~ "").map { case (pre, fs) =>
     var remaining = fs
     def climb(minPrec: Int, current: Term): Term = {
       var result = current
@@ -116,7 +114,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (as, ao) => (as ++ ao.toList).reduceLeft(App(_, _))
   }
   
-  def atomOrSelect[_: P]: P[Term] = P(atom ~ ("." ~ (Index ~~ ident ~~ Index)).?).map {
+  def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ ident ~~ Index).?).map {
     case (lhs, Some((i0,str,i1))) => Sel(lhs, str).withLoc(i0, i1)
     case (lhs, None) => lhs
   }
@@ -131,7 +129,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   def suite[_: P]: P[Term] = {
     // TOOD ignore empty and comment lines
     def nextIndentP = " ".repX(indent + 1).!.map(_.length)
-    def indented = "\n" ~~ nextIndentP.flatMapX{ nextIndent =>
+    def indented = "\n" ~~ emptyLines ~~ nextIndentP.flatMapX{ nextIndent =>
       new Parser(nextIndent,recordLocations).multilineBlock
     }
     P( indented ).opaque("indented block")

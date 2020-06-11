@@ -101,7 +101,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     val res = if (isrec) {
       val e_ty = freshVar(lvl + 1)
       val ty = typeTerm(rhs)(ctx + (nme -> e_ty), lvl + 1, raise)
-      implicit val l = rhs.toLoc
+      implicit val l: Opt[Loc] = rhs.toLoc
       constrain(ty, e_ty)
       e_ty
     } else typeTerm(rhs)(ctx, lvl + 1, raise)
@@ -122,7 +122,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
-        implicit val l = term.toLoc
+        implicit val l: Opt[Loc] = term.toLoc
         constrain(f_ty, FunctionType(a_ty, res))
         res
       case IntLit(n) => IntType
@@ -130,7 +130,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case StrLit(n) => StrType
       case Sel(obj, name) =>
         val obj_ty = typeTerm(obj)
-        implicit val l = term.toLoc
+        implicit val l: Opt[Loc] = term.toLoc
         constrain(obj_ty, RecordType((name, res) :: Nil))
         res
       case Rcd(fs) =>

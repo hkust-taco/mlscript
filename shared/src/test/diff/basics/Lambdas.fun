@@ -4,6 +4,9 @@ let x = true
 /// a: int -> int
 /// x: bool
 
+x => add (a x)
+/// res: int -> int -> int
+
 x =>
   add (a x)
 /// res: int -> int -> int
@@ -22,6 +25,6 @@ f => f f
 f => id f id f id
 /// res: 'a ∧ (('b -> 'b) -> 'a -> ('c -> 'c) -> 'd) -> 'd
 
-:e
+:pe
 let oops = hu(h
-/// /!\ Parse error: Expected end-of-input:1:14, found "(h" at line 26: let oops = hu(h
+/// /!\ Parse error: Expected let binding:1:1, found "let oops =" at line 29: let oops = hu(h

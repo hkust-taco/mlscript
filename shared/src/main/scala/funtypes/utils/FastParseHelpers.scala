@@ -7,7 +7,7 @@ class FastParseHelpers private(val blockStr: Str, val lines: collection.Seq[Str]
   def this(blockStr: Str) = this(blockStr, blockStr.splitSane('\n'))
   
   // this line-parsing logic was copied from fastparse internals:
-  val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(blockStr)
+  val lineNumberLookup: Array[Int] = fastparse.internal.Util.lineNumberLookup(blockStr)
   def getLineColAt(index: Int): (Int, String, Int) = {
     val lineNum = lineNumberLookup.indexWhere(_ > index) match {
       case -1 => lineNumberLookup.length

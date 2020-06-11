@@ -12,17 +12,23 @@ let r = { u: 1,v: 2 }
 /// r: {u: int, v: int}
 
 r.u + r.v
+r . u + r . v
+r .u + r .v
+r. u + r. v
+/// res: int
+/// res: int
+/// res: int
 /// res: int
 
 :e
 empty.w
 r.w
 /// /!\ Type error: missing field: w in {}
-/// l.18: 	empty.w
-///       	      ^
+/// l.24: 	empty.w
+///       	     ^^
 /// /!\ Type error: missing field: w in {u: int, v: int}
-/// l.19: 	r.w
-///       	  ^
+/// l.25: 	r.w
+///       	 ^^
 /// res: ⊥
 /// res: ⊥
 
@@ -50,5 +56,5 @@ let r = {
   v:
     2
 }
-/// /!\ Parse error: Expected (Index ~ let | lams):1:1, found "let r = {\n" at line 39: let r = {
+/// /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at line 45: let r = {
 

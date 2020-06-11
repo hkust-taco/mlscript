@@ -29,15 +29,16 @@ class DiffTests extends FunSuite {
     var ctx: typer.Ctx = typer.builtins
     val failures = mutable.Buffer.empty[Int]
     
-    case class Mode(silenceErrors: Bool, fixme: Bool, showParse: Bool, dbg: Bool)
-    val defaultMode = Mode(false, false, false, false)
+    case class Mode(expectTypeErrors: Bool, expectParseErrors: Bool, fixme: Bool, showParse: Bool, dbg: Bool)
+    val defaultMode = Mode(false, false, false, false, false)
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
       case line :: ls if line.startsWith(":") =>
         out.println(line)
         val newMode = line.tail match {
-          case "e" => mode.copy(silenceErrors = true)
+          case "e" => mode.copy(expectTypeErrors = true)
+          case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case _ =>
@@ -62,17 +63,22 @@ class DiffTests extends FunSuite {
           case f @ Failure(lbl, index, extra) =>
             val (lineNum, lineStr, _) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
-            if (!mode.silenceErrors && !mode.fixme)
+            if (!mode.expectParseErrors && !mode.fixme)
               failures += globalLineNum
             outputMarker + "/!\\ Parse error: " + extra.trace().msg +
               s" at line $globalLineNum: $lineStr"
           case Success(p, index) =>
+            val blockLineNum = (allLines.size - lines.size) + 1
+            if (mode.expectParseErrors)
+              failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
             typer.dbg = mode.dbg
             val tys = try typer.typeBlk(p, ctx) finally typer.dbg = false
-            (p.stmts.zipWithIndex lazyZip tys).map {
+            var totalTypeErrors = 0
+            val res = (p.stmts.zipWithIndex lazyZip tys).map {
               case ((s, _), errs -> ty) =>
+                totalTypeErrors += errs.length
                 errs.foreach { case TypeError(msg, loco) =>
                   output(s"/!\\ Type error: $msg")
                   val globalStartLineNum = allLines.size - lines.size + 1
@@ -97,11 +103,11 @@ class DiffTests extends FunSuite {
                     }
                     startLineNum - 1
                   }
-                  if (!mode.silenceErrors && !mode.fixme)
+                  if (!mode.expectTypeErrors && !mode.fixme)
                     failures += globalLineNum
                   ()
                 }
-                if (errs.nonEmpty && !mode.silenceErrors) {
+                if (errs.nonEmpty && !mode.expectTypeErrors) {
                   // output(s"Statement was parsed as:\n$outputMarker\t$s")
                   if (!mode.dbg) {
                     output(s"Retyping with debug info...")
@@ -131,6 +137,9 @@ class DiffTests extends FunSuite {
                     s"res: ${exp.show}"
                 }
             }.map(outputMarker + _).mkString("\n")
+            if (mode.expectTypeErrors && totalTypeErrors =:= 0)
+              failures += blockLineNum
+            res
         } catch {
           case err: Throwable =>
             if (!mode.fixme)
@@ -152,7 +161,7 @@ class DiffTests extends FunSuite {
       write.over(file, result)
     }
     if (failures.nonEmpty)
-      fail(s"Unexpected error(s) at: " + failures.map("l."+_).mkString(", "))
+      fail(s"Unexpected error(s) or lack of error(s) at: " + failures.map("l."+_).mkString(", "))
     
   }}
   
