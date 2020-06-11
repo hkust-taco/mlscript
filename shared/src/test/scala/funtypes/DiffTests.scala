@@ -47,7 +47,7 @@ class DiffTests extends FunSuite {
             mode
         }
         rec(ls, newMode)
-      case line :: ls if line.startsWith("// FIXME") =>
+      case line :: ls if line.startsWith("// FIXME") || line.startsWith("// TODO") =>
         out.println(line)
         rec(ls, mode.copy(fixme = true))
       case line :: ls if line.startsWith(outputMarker) => rec(ls, defaultMode)
@@ -61,12 +61,12 @@ class DiffTests extends FunSuite {
         val blockStr = fph.blockStr
         val ans = try parse(blockStr, parser.pgrm(_), verboseFailures = true) match {
           case f @ Failure(lbl, index, extra) =>
-            val (lineNum, lineStr, _) = fph.getLineColAt(index)
+            val (lineNum, lineStr, col) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
             if (!mode.expectParseErrors && !mode.fixme)
               failures += globalLineNum
             outputMarker + "/!\\ Parse error: " + extra.trace().msg +
-              s" at line $globalLineNum: $lineStr"
+              s" at l.$globalLineNum:$col: $lineStr"
           case Success(p, index) =>
             val blockLineNum = (allLines.size - lines.size) + 1
             if (mode.expectParseErrors)

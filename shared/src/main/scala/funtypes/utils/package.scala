@@ -112,6 +112,6 @@ package object utils {
    * while clearly indicating the intent. */
   def spuriousWarning: Nothing = lastWords("Case was reached that was thought to be unreachable.")
   
-  def checkless[A,B](pf: PartialFunction[A,B]): A => B = pf
+  def checkless[A, B](pf: Paf[A, B]): A => B = pf
   
 }

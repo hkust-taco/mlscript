@@ -56,5 +56,5 @@ let r = {
   v:
     2
 }
-/// /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at line 45: let r = {
+/// /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.45:1: let r = {
 

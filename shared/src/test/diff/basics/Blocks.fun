@@ -99,6 +99,9 @@ succ (succ
 )
 succ (succ
   succ 1)
+succ (succ
+    let x = 1; x)
+/// res: int
 /// res: int
 /// res: int
 /// res: int
@@ -111,25 +114,25 @@ succ (
   1
 )
 /// /!\ Type error: Pure expression does nothing in statement position.
-/// l.110: 	  succ
+/// l.113: 	  succ
 ///        	  ^^^^
 /// res: int
 
 :pe
 succ (succ
 1)
-/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 119: succ (succ
+/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.122:1: succ (succ
 
 :pe
 succ (succ
 succ 1)
-/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 124: succ (succ
+/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.127:1: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 129: succ (succ
+/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.132:1: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -159,16 +162,16 @@ succ
     let x = 1
     x
 )
-/// /!\ Parse error: Expected applied expressions:1:1, found "succ\n  (\n " at line 157: succ
+/// /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.160:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at line 166:     succ
+/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at l.169:9:     succ
 
 :pe
   1
-/// /!\ Parse error: Expected (let binding | applied expressions):1:1, found "  1" at line 172:   1
+/// /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.175:1:   1
 

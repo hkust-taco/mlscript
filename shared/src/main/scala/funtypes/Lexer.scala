@@ -24,7 +24,7 @@ object Lexer {
   
   //def operator[_: P]: P[String] =
   //  P( ("_" | "-" | opchar).rep ).!.filter(!keywordList.contains(_))
-  def operator[_: P] = P(
+  def operator[_: P]: P[Unit] = P(
     !symbolicKeywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   ).opaque("operator")
   

@@ -27,4 +27,4 @@ f => id f id f id
 
 :pe
 let oops = hu(h
-/// /!\ Parse error: Expected let binding:1:1, found "let oops =" at line 29: let oops = hu(h
+/// /!\ Parse error: Expected let binding:1:1, found "let oops =" at l.29:1: let oops = hu(h
