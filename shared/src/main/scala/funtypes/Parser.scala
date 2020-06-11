@@ -124,10 +124,12 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     locate(P( "{" ~ (ident ~ ":" ~ (binops | suite)).rep(sep = ",") ~ "}" ).map(_.toList pipe Rcd))
   
   def atom[_: P]: P[Term] =
-    P(locate("(" ~ expr ~ ")") | STRING | NAME | NUMBER | record)
+    P(locate("(" ~ (suite | blockWithIndentedNextLines) ~ nl_indents.? ~ ")") | STRING | NAME | NUMBER | record)
+  
+  def blockWithIndentedNextLines[_: P] =
+    new Parser(indent + 1).multilineBlock
   
   def suite[_: P]: P[Term] = {
-    // TOOD ignore empty and comment lines
     def nextIndentP = " ".repX(indent + 1).!.map(_.length)
     def indented = "\n" ~~ emptyLines ~~ nextIndentP.flatMapX{ nextIndent =>
       new Parser(nextIndent,recordLocations).multilineBlock

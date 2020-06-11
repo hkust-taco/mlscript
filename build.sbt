@@ -25,7 +25,7 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
       "-Ywarn-value-discard",
     ),
     wartremoverWarnings ++= Warts.allBut(
-      Recursion, Throw, Nothing, Return, While,
+      Recursion, Throw, Nothing, Return, While, IsInstanceOf,
       Var, MutableDataStructures, NonUnitStatements,
       DefaultArguments, ImplicitParameter, StringPlusAny, Any,
       JavaSerializable, Serializable, Product,

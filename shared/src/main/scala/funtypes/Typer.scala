@@ -91,7 +91,9 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
     case LetS(isrec, _, rhs) => ??? // TODO
-    case t: Term => ctx -> PolymorphicType(0, typeTerm(t))
+    case t: Term =>
+      if (t.isInstanceOf[Var]) err("Pure expression does nothing in statement position.", t.toLoc)
+      ctx -> PolymorphicType(0, typeTerm(t))
   }
   
   def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = typeTerm(term)(ctx, lvl, throw _)

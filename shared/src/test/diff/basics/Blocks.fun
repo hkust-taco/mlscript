@@ -85,45 +85,90 @@ let foo =
   println 2
 /// foo: unit
 
-// TODO report pure exprs in statements pos; there are some here!
 succ (
-  succ
+  println 1
   1
 )
 succ (
-  succ
+  println 1
   1)
 succ (succ
   1)
-succ (succ
-1)
 succ (succ
   1
 )
 succ (succ
   succ 1)
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+/// res: int
+
+:e
+succ (
+  succ
+  1
+)
+/// /!\ Type error: Pure expression does nothing in statement position.
+/// l.110: 	  succ
+///        	  ^^^^
+/// res: int
+
+:pe
+succ (succ
+1)
+/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 119: succ (succ
+
+:pe
 succ (succ
 succ 1)
+/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 124: succ (succ
+
+:pe
 succ (succ
 succ
   1)
+/// /!\ Parse error: Expected applied expressions:1:1, found "succ (succ" at line 129: succ (succ
+
+(let x = 1)
+(let x = 1; x)
+(
+  let x = 1
+  x
+)
+succ(
+  let x = 1
+  x
+)
+/// res: unit
 /// res: int
 /// res: int
 /// res: int
+
+succ
+  (
+    let x = 1
+    x
+  )
 /// res: int
-/// res: int
-/// res: int
-/// res: int
-/// res: int
+
+:pe
+succ
+  (
+    let x = 1
+    x
+)
+/// /!\ Parse error: Expected applied expressions:1:1, found "succ\n  (\n " at line 157: succ
 
 :pe
 let a =
     succ
   1
   "?"
-/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at line 121:     succ
+/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at line 166:     succ
 
 :pe
   1
-/// /!\ Parse error: Expected (let binding | applied expressions):1:1, found "  1" at line 127:   1
+/// /!\ Parse error: Expected (let binding | applied expressions):1:1, found "  1" at line 172:   1
 
