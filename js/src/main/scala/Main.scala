@@ -27,7 +27,8 @@ object Main {
       import funtypes.TypeError
       parse(str, pgrm(_), verboseFailures = false) match {
         case Failure(err, index, extra) =>
-          val (lineNum, lineStr) = funtypes.FastParseHelpers.getLineAt(str, index)
+          val fph = new funtypes.FastParseHelpers(str)
+          val (lineNum, lineStr, _) = fph.getLineColAt(index)
           "Parse error: " + extra.trace().msg +
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
@@ -48,7 +49,7 @@ object Main {
                   <font color="LightGreen">${d._2}</font>: 
                   <font color="LightBlue">${exp.show}</font>
                   </b>"""
-            case ((d, i), Left(TypeError(msg))) =>
+            case ((d, i), Left(TypeError(msg, loc))) => // TODO use loc to display message
               s"""<b><font color="Red">
                   Type error in <font color="LightGreen">${d._2}</font>: $msg
                   </font></b>"""

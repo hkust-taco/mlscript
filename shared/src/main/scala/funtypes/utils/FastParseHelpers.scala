@@ -1,17 +1,22 @@
 package funtypes
 
-object FastParseHelpers {
+import funtypes.utils._, shorthands._
+
+class FastParseHelpers private(val blockStr: Str, val lines: collection.Seq[Str]) {
+  def this(lines: Seq[Str]) = this(lines.mkString("\n"), lines)
+  def this(blockStr: Str) = this(blockStr, blockStr.splitSane('\n'))
   
-  def getLineAt(str: String, index: Int): (Int, String) = {
-    // this line-parsing logic was copied from fastparse internals:
-    val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(str)
+  // this line-parsing logic was copied from fastparse internals:
+  val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(blockStr)
+  def getLineColAt(index: Int): (Int, String, Int) = {
     val lineNum = lineNumberLookup.indexWhere(_ > index) match {
       case -1 => lineNumberLookup.length
       case n => math.max(1, n)
     }
-    val lines = str.split('\n')
-    val lineStr = lines(lineNum min lines.length - 1)
-    (lineNum, lineStr)
+    val idx = lineNum.min(lines.length) - 1
+    val colNum = index - lineNumberLookup(idx) + 1
+    val lineStr = lines(idx)
+    (lineNum, lineStr, colNum)
   }
   
 }

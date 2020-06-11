@@ -21,10 +21,12 @@ x => succ / succ / x + 1
 
 :p
 foo / x => succ / succ / x
-/// Parsed: {(foo (fun x -> (succ (succ x))))}
+/// Parsed: {(foo (fun x => (succ (succ x))))}
 /// res: int
 
 :e
 foo / foo / x => succ / succ / x
-/// /!\ Type error at line 28: cannot constrain int <: int -> 'a
+/// /!\ Type error: cannot constrain int <: int -> 'a
+/// l.28: 	foo / foo / x => succ / succ / x
+///       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /// res: ⊥

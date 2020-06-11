@@ -17,8 +17,12 @@ r.u + r.v
 :e
 empty.w
 r.w
-/// /!\ Type error at line 19: missing field: w in {}
-/// /!\ Type error at line 19: missing field: w in {u: int, v: int}
+/// /!\ Type error: missing field: w in {}
+/// l.18: 	empty.w
+///       	      ^
+/// /!\ Type error: missing field: w in {u: int, v: int}
+/// l.19: 	r.w
+///       	  ^
 /// res: ⊥
 /// res: ⊥
 
@@ -46,5 +50,5 @@ let r = {
   v:
     2
 }
-/// /!\ Parse error: Expected (let | lams):1:1, found "let r = {\n" at line 35:   u: 1, v: 2 }
+/// /!\ Parse error: Expected (Index ~ let | lams):1:1, found "let r = {\n" at line 39: let r = {
 

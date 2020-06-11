@@ -54,12 +54,13 @@ class DiffTests extends FunSuite {
         out.println(line)
         rec(ls, defaultMode)
       case l :: ls =>
-        val block = l :: ls.takeWhile(l => l.nonEmpty && !l.startsWith(outputMarker))
+        val block = (l :: ls.takeWhile(l => l.nonEmpty && !l.startsWith(outputMarker))).toIndexedSeq
         block.foreach(out.println)
-        val blockStr = block.mkString("\n")
+        val fph = new FastParseHelpers(block)
+        val blockStr = fph.blockStr
         val ans = try parse(blockStr, parser.pgrm(_), verboseFailures = true) match {
           case f @ Failure(lbl, index, extra) =>
-            val (lineNum, lineStr) = FastParseHelpers.getLineAt(blockStr, index)
+            val (lineNum, lineStr, _) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
             if (!mode.silenceErrors && !mode.fixme)
               failures += globalLineNum
@@ -72,11 +73,30 @@ class DiffTests extends FunSuite {
             val tys = try typer.typeBlk(p, ctx) finally typer.dbg = false
             (p.stmts.zipWithIndex lazyZip tys).map {
               case ((s, _), errs -> ty) =>
-                // if (mode.showParse) output("Parsed: " + s)
-                errs.foreach { case TypeError(msg) =>
-                  val (lineNum, lineStr) = FastParseHelpers.getLineAt(blockStr, index)
-                  val globalLineNum = (allLines.size - lines.size) + lineNum
-                  output(s"/!\\ Type error at line ${globalLineNum}: $msg")
+                errs.foreach { case TypeError(msg, loco) =>
+                  output(s"/!\\ Type error: $msg")
+                  val globalStartLineNum = allLines.size - lines.size + 1
+                  val globalLineNum = globalStartLineNum + loco.fold(0) { loc =>
+                    val (startLineNum, startLineStr, startLineCol) =
+                      fph.getLineColAt(loc.spanStart)
+                    val (endLineNum, endLineStr, endLineCol) =
+                      fph.getLineColAt(loc.spanEnd)
+                    var l = startLineNum
+                    var c = startLineCol
+                    while (l <= endLineNum) {
+                      val globalLineNum = globalStartLineNum + l - 1
+                      val pre = s"l.$globalLineNum: "
+                      val curLine = block(l - 1)
+                      output(pre + "\t" + curLine)
+                      out.print(outputMarker + " " * pre.length + "\t" + " " * (c - 1))
+                      val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
+                      while (c < lastCol) { out.print('^'); c += 1 }
+                      out.println
+                      c = 1
+                      l += 1
+                    }
+                    startLineNum - 1
+                  }
                   if (!mode.silenceErrors && !mode.fixme)
                     failures += globalLineNum
                   ()

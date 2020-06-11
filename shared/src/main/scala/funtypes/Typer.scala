@@ -7,7 +7,8 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import funtypes.utils._, shorthands._
 
-final case class TypeError(msg: String) extends Exception(msg)
+final case class Loc(spanStart: Int, spanEnd: Int)
+final case class TypeError(msg: String, loco: Opt[Loc]) extends Exception(msg)
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -100,6 +101,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     val res = if (isrec) {
       val e_ty = freshVar(lvl + 1)
       val ty = typeTerm(rhs)(ctx + (nme -> e_ty), lvl + 1, raise)
+      implicit val l = rhs.toLoc
       constrain(ty, e_ty)
       e_ty
     } else typeTerm(rhs)(ctx, lvl + 1, raise)
@@ -111,7 +113,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     lazy val res = freshVar
     term match {
       case Var(name) =>
-        ctx.getOrElse(name, { err("identifier not found: " + name); res}).instantiate
+        ctx.getOrElse(name, { err("identifier not found: " + name, term.toLoc); res}).instantiate
       case Lam(Var(name), body) =>
         val param = freshVar
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
@@ -120,6 +122,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
+        implicit val l = term.toLoc
         constrain(f_ty, FunctionType(a_ty, res))
         res
       case IntLit(n) => IntType
@@ -127,6 +130,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case StrLit(n) => StrType
       case Sel(obj, name) =>
         val obj_ty = typeTerm(obj)
+        implicit val l = term.toLoc
         constrain(obj_ty, RecordType((name, res) :: Nil))
         res
       case Rcd(fs) =>
@@ -147,7 +151,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
   def constrain(lhs: SimpleType, rhs: SimpleType)
       // we need a cache to remember the subtyping tests in process; we also make the cache remember
       // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm)
-      (implicit cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty, raise: Raise)
+      (implicit cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty, raise: Raise, loco: Opt[Loc])
   : Unit = {
     if (lhs is rhs) return
     val lhs_rhs = lhs -> rhs
@@ -168,7 +172,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case (RecordType(fs0), RecordType(fs1)) =>
         fs1.foreach { case (n1, t1) =>
           fs0.find(_._1 === n1).fold(
-            err(s"missing field: $n1 in ${lhs.show}")
+            err(s"missing field: $n1 in ${lhs.show}", loco)
           ) { case (n0, t0) => constrain(t0, t1) }
         }
       case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -183,7 +187,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case (lhs0, _: TypeVariable) =>
         val lhs = extrude(lhs0, rhs.level, true)
         constrain(lhs, rhs)
-      case _ => err(s"cannot constrain ${lhs.show} <: ${rhs.show}")
+      case _ => err(s"cannot constrain ${lhs.show} <: ${rhs.show}", loco)
     }
   }
   
@@ -205,7 +209,8 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case PrimType(_) => ty
     }
   
-  def err(msg: String)(implicit raise: Raise): Unit = raise(TypeError(msg))
+  def err(msg: String, loco: Opt[Loc])(implicit raise: Raise): Unit =
+    raise(TypeError(msg, loco))
   
   private var freshCount = 0
   def freshVar(implicit lvl: Int): TypeVariable = new TypeVariable(lvl, Nil, Nil)

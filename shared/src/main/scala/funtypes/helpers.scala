@@ -4,6 +4,8 @@ import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet}
 import scala.collection.immutable.SortedSet
 
+import funtypes.utils._, shorthands._
+
 
 // Auxiliary definitions for types
 
@@ -56,20 +58,17 @@ abstract class TypeImpl { self: Type =>
 // Auxiliary definitions for terms
 
 abstract class TermImpl { self: Term =>
-  var spanStart: Int = -1
-  var spanEnd: Int = -1
   
   override def toString: String = this match {
-    // case Blk(stmts) => s"(${stmts.mkString("; ")})"
     case Blk(stmts) => s"{${stmts.mkString("; ")}}"
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case Var(name) => name
-    case Lam(name, rhs) => s"(fun $name -> $rhs)"
+    case Lam(name, rhs) => s"(fun $name => $rhs)"
     case App(lhs, rhs) => s"($lhs $rhs)"
     case Rcd(fields) =>
-      fields.iterator.map(nv => nv._1 + " = " + nv._2).mkString("{", "; ", "}")
+      fields.iterator.map(nv => nv._1 + ": " + nv._2).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs in $body)"
@@ -78,7 +77,43 @@ abstract class TermImpl { self: Term =>
   
 }
 
-trait StatementImpl {
+trait Located {
+  def children: List[Located]
+  
+  private var spanStart: Int = -1
+  private var spanEnd: Int = -1
+  
+  def withLoc(s: Int, e: Int): this.type = {
+    assert(spanStart < 0)
+    assert(spanEnd < 0)
+    spanStart = s
+    spanEnd = e
+    this
+  }
+  def toLoc: Opt[Loc] = {
+    def subLocs = children.iterator.flatMap(_.toLoc.iterator)
+    if (spanStart < 0) spanStart =
+      subLocs.map(_.spanStart).minOption.getOrElse(return N)
+    if (spanEnd < 0) spanEnd =
+      subLocs.map(_.spanEnd).maxOption.getOrElse(return N)
+    S(Loc(spanStart, spanEnd))
+  }
+}
+
+trait StatementImpl extends Located {
+  
+  def children: List[Statement] = this match {
+    case Var(name) => Nil
+    case Lam(lhs, rhs) => lhs :: rhs :: Nil
+    case App(lhs, rhs) => lhs :: rhs :: Nil
+    case Tup(fields) => fields.map(_._2)
+    case Rcd(fields) => fields.map(_._2)
+    case Sel(receiver, fieldName) => receiver :: Nil
+    case Let(isRec, name, rhs, body) => rhs :: body :: Nil
+    case Blk(stmts) => stmts
+    case IntLit(_) | DecLit(_) | StrLit(_) => Nil
+  }
+  
   override def toString: String = this match {
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case _: Term => super.toString

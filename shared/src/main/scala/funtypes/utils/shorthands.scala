@@ -17,7 +17,7 @@ object shorthands {
   
   type Str = String
   type FStr = fansi.Str
-  val FStr: fansi.Str.type = fansi.Str
+  // val FStr: fansi.Str.type = fansi.Str // do not include this in the JS!
   
   type Ite[+A] = Iterator[A]
   val Ite: Iterator.type = Iterator

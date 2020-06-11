@@ -38,3 +38,33 @@ foo
 foo / foo /
   foo 1
 /// res: int
+
+:p
+id id
+  id
+/// Parsed: {((id id) {id})}
+/// res: 'a -> 'a
+
+:p
+id id id
+  id id id
+    id id id
+      id id id
+/// Parsed: {(((id id) id) {(((id id) id) {(((id id) id) {((id id) id)})})})}
+/// res: 'a -> 'a
+
+:p
+id id /
+  id id /
+    id id
+/// Parsed: {((id id) {((id id) {(id id)})})}
+/// res: 'a -> 'a
+
+// FIXME last line not applied
+:p
+id id
+    id id
+  id id
+/// Parsed: {((id id) {(id id)}); (id id)}
+/// res: 'a -> 'a
+/// res: 'a -> 'a
