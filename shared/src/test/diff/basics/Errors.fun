@@ -53,29 +53,42 @@ d + 1
 // cannot constrain
 
 :e
+1 2 3
+a b c
 let oops = succ false
 false + 1
 1 + false
 true + false
 println / false + 1
+/// /!\ Type error: cannot constrain int <: int -> 'a
+/// l.56: 	1 2 3
+///       	^^^
+/// /!\ Type error: identifier not found: c
+/// l.57: 	a b c
+///       	    ^
+/// /!\ Type error: cannot constrain int <: 'a -> 'b
+/// l.57: 	a b c
+///       	^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.56: 	let oops = succ false
+/// l.58: 	let oops = succ false
 ///       	           ^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.57: 	false + 1
+/// l.59: 	false + 1
 ///       	^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.58: 	1 + false
+/// l.60: 	1 + false
 ///       	^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.59: 	true + false
+/// l.61: 	true + false
 ///       	^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.59: 	true + false
+/// l.61: 	true + false
 ///       	^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.60: 	println / false + 1
+/// l.62: 	println / false + 1
 ///       	          ^^^^^^^
+/// res: ⊥
+/// res: ⊥
 /// oops: int
 /// res: int
 /// res: int
@@ -89,20 +102,20 @@ succ succ
   succ
 ) false
 /// /!\ Type error: cannot constrain int -> int <: int
-/// l.86: 	succ succ
+/// l.99: 	succ succ
 ///       	^^^^^^^^^
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.86: 	succ succ
+/// l.99: 	succ succ
 ///       	^^^^^^^^^
-/// l.87: 	  1
-///       	^^^
+/// l.100: 	  1
+///        	^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.88: 	(
-///       	^
-/// l.89: 	  succ
-///       	^^^^^^
-/// l.90: 	) false
-///       	^^^^^^^
+/// l.101: 	(
+///        	^
+/// l.102: 	  succ
+///        	^^^^^^
+/// l.103: 	) false
+///        	^^^^^^^
 /// res: ⊥
 /// res: int
 
@@ -116,14 +129,14 @@ println
   1
   2
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.111: 	  1
+/// l.124: 	  1
 ///        	  ^
-/// l.112: 	    2
+/// l.125: 	    2
 ///        	^^^^^
 /// /!\ Type error: cannot constrain unit <: int -> 'a
-/// l.113: 	println 1
+/// l.126: 	println 1
 ///        	^^^^^^^^^
-/// l.114: 	  2
+/// l.127: 	  2
 ///        	^^^
 /// res: unit
 /// res: ⊥
@@ -142,28 +155,28 @@ println
 succ {a: 1}
 {a: 1} succ
 /// /!\ Type error: cannot constrain int <: {u: 'a}
-/// l.136: 	1.u
+/// l.149: 	1.u
 ///        	 ^^
 /// /!\ Type error: missing field: u in {}
-/// l.137: 	{}.u
+/// l.150: 	{}.u
 ///        	  ^^
 /// /!\ Type error: missing field: u in {a: int}
-/// l.138: 	{a: 1}.u
+/// l.151: 	{a: 1}.u
 ///        	      ^^
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.139: 	{a: 1}.a 1
+/// l.152: 	{a: 1}.a 1
 ///        	      ^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.140: 	1 + {a: true}.a
+/// l.153: 	1 + {a: true}.a
 ///        	^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.141: 	{a: true}.a + 1
+/// l.154: 	{a: true}.a + 1
 ///        	         ^^^^
 /// /!\ Type error: cannot constrain {a: int} <: int
-/// l.142: 	succ {a: 1}
+/// l.155: 	succ {a: 1}
 ///        	^^^^^^^^^^^
 /// /!\ Type error: cannot constrain {a: int} <: (int -> int) -> 'a
-/// l.143: 	{a: 1} succ
+/// l.156: 	{a: 1} succ
 ///        	^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -181,4 +194,4 @@ succ {a: 1}
 foo
 ba)r
 baz
-/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.182:3: ba)r
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.195:3: ba)r

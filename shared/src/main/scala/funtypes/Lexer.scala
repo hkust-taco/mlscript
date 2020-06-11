@@ -49,7 +49,7 @@ object Lexer {
   val keywordList = Set(
     "and",
     "or",
-    "not",
+    // "not",
     "is",
     "as",
     "with",

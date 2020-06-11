@@ -14,7 +14,7 @@ final case class Tup(fields: List[(String, Term)])                        extend
 final case class Rcd(fields: List[(String, Term)])                        extends Term
 final case class Sel(receiver: Term, fieldName: String)                   extends Term
 final case class Let(isRec: Boolean, name: String, rhs: Term, body: Term) extends Term
-final case class Blk(stmts: List[Statement]) extends Term
+final case class Blk(stmts: List[Statement]) extends Term with BlkImpl
 
 final case class IntLit(value: BigInt)     extends Lit
 final case class DecLit(value: BigDecimal) extends Lit

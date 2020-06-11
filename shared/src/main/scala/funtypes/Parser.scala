@@ -28,7 +28,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   def space[_: P] = P( CharIn(" \n") )
   def NEWLINE[_: P]: P0 = P( "\n" | End )
-  def ENDMARKER[_: P]: P0 = P( End )//.opaque("unexpected token in this position")
+  def ENDMARKER[_: P]: P0 = P( End ).opaque("unexpected token in this position")
   
   def nl_indents[_: P] = P( "\n" ~~ emptyLines ~~ " ".repX(indent, max = indent) )
   def emptyLines[_: P] = P( ("" ~ Lexer.comment.? ~ "\n").repX(0) )
@@ -45,7 +45,13 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   )
   def STRING[_: P]: P[StrLit] = locate(Lexer.stringliteral.map(StrLit(_)))
   
-  def expr[_: P]: P[Term] = P( lams ~ operator_suite.? ).map {
+  def expr[_: P]: P[Term] = P( ite | basicExpr ).opaque("expression")
+  
+  def ite[_: P]: P[Term] = P( kw("if") ~/ expr ~ kw("then") ~ expr ~ kw("else") ~ expr ).map { ite =>
+    App(App(App(Var("if"), ite._1), ite._2), ite._3)
+  }
+  
+  def basicExpr[_: P]: P[Term] = P( lams ~ operator_suite.? ).map {
     case (lhs, N) => lhs
     case (lhs, S(ops)) => ops.foldLeft(lhs) {
       case (acc, (op, rhs)) => App(App(op, acc), rhs)
@@ -76,10 +82,12 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (trm, S(("=>", rest))) => Lam(trm, rest)
   }).opaque("applied expressions")
   
-  def commas[_: P]: P[Term] = P( binops ~/ (Index ~~ "," ~~ Index ~/ commas).? ).map {
-    case (lhs, N) => lhs
-    case (lhs, S((i0,i1,rhs))) => App(App(Var(",").withLoc(i0,i1), lhs), rhs) // TODO
-  }
+  // FIXME? (not sure I really want commas like this); this was causing problems with record literals
+  def commas[_: P]: P[Term] = P( binops )
+  // def commas[_: P]: P[Term] = P( binops ~/ (Index ~~ "," ~~ Index ~/ commas).? ).map {
+  //   case (lhs, N) => lhs
+  //   case (lhs, S((i0,i1,rhs))) => App(App(Var(",").withLoc(i0,i1), lhs), rhs) // TODO
+  // }
   
   /** Note that `,` implicitly has the lowest precedence, followed by the ones below. */
   private val prec: Map[Char,Int] = List(
@@ -132,14 +140,15 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (as, ao) => (as ++ ao.toList).reduceLeft(App(_, _))
   }
   
-  def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ ident ~~ Index).?).map {
-    case (lhs, Some((i0,str,i1))) => Sel(lhs, str).withLoc(i0, i1)
-    case (lhs, None) => lhs
+  def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ ident ~~ Index).rep).map {
+    case (lhs, sels) => sels.foldLeft(lhs) {
+      case (acc, (i0,str,i1)) => Sel(lhs, str).withLoc(i0, i1)
+    }
   }
   
   // TOOD support suite
   def record[_: P]: P[Term] =
-    locate(P( "{" ~ (ident ~ ":" ~ (binops | suite)).rep(sep = ",") ~ "}" ).map(_.toList pipe Rcd))
+    locate(P( "{" ~ (ident ~ ":" ~ ( expr | suite )).rep(sep = ",") ~ "}" ).map(_.toList pipe Rcd))
   
   def atom[_: P]: P[Term] =
     P(locate("(" ~ (suite | nextLevel.multilineBlock) ~ nl_indents.? ~ ")") | STRING | NAME | NUMBER | record)

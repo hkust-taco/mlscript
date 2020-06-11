@@ -74,7 +74,7 @@ class DiffTests extends FunSuite {
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
             typer.dbg = mode.dbg
-            val tys = try typer.typeBlk(p, ctx) finally typer.dbg = false
+            val tys = try typer.typeBlk(p, ctx, allowPure = true) finally typer.dbg = false
             var totalTypeErrors = 0
             val res = (p.stmts.zipWithIndex lazyZip tys).map {
               case ((s, _), errs -> ty) =>
@@ -113,7 +113,7 @@ class DiffTests extends FunSuite {
                     output(s"Retyping with debug info...")
                     typer.resetState()
                     typer.dbg = true
-                    try typer.typeStatement(s)(ctx, 0, throw _)
+                    try typer.typeStatement(s, allowPure = true)(ctx, 0, throw _)
                     catch { case err: TypeError =>
                       output(s"ERROR: " + err.msg)
                       if (!mode.fixme)

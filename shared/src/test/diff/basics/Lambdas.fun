@@ -27,4 +27,22 @@ f => id f id f id
 
 :pe
 let oops = hu(h
-/// /!\ Parse error: Expected let binding:1:1, found "let oops =" at l.29:1: let oops = hu(h
+/// /!\ Parse error: Expected end-of-input:1:14, found "(h" at l.29:14: let oops = hu(h
+
+x => x; y => y
+/// res: 'a -> 'a
+/// res: 'a -> 'a
+
+:pe
+x => let y = x; y
+/// /!\ Parse error: Expected expression:1:1, found "x => let y" at l.37:1: x => let y = x; y
+
+x => (let y = x; y)
+x =>
+  let y = x; y
+x =>
+  let y = x
+  y
+/// res: 'a -> 'a
+/// res: 'a -> 'a
+/// res: 'a -> 'a

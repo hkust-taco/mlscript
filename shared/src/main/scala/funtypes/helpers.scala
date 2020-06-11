@@ -119,3 +119,12 @@ trait StatementImpl extends Located {
     case _: Term => super.toString
   }
 }
+
+trait BlkImpl { self: Blk =>
+  
+  def flatten: Blk = Blk(stmts.flatMap {
+    case b: Blk => b.flatten.stmts
+    case t => t :: Nil
+  })
+  
+}

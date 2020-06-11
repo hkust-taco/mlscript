@@ -79,20 +79,24 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     res.toList
   }
   
-  def typeBlk(blk: Blk, ctx: Ctx = builtins): List[List[TypeError] -> PolymorphicType] = blk.stmts match {
+  def typeBlk(blk: Blk, ctx: Ctx = builtins, allowPure: Bool = false)
+        : List[List[TypeError] -> PolymorphicType]
+        = blk.stmts match {
     case s :: stmts =>
       val errs = mutable.ListBuffer.empty[TypeError]
-      val (newCtx, ty) = typeStatement(s)(ctx, 0, errs += _)
-      errs.toList -> ty :: typeBlk(Blk(stmts), newCtx)
+      val (newCtx, ty) = typeStatement(s, allowPure)(ctx, 0, errs += _)
+      errs.toList -> ty :: typeBlk(Blk(stmts), newCtx, allowPure)
     case Nil => Nil
   }
-  def typeStatement(s: Statement)(implicit ctx: Ctx, lvl: Int, raise: Raise): Ctx -> PolymorphicType = s match {
+  def typeStatement(s: Statement, allowPure: Bool = false)
+        (implicit ctx: Ctx, lvl: Int, raise: Raise): Ctx -> PolymorphicType = s match {
     case LetS(isrec, Var(nme), rhs) =>
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
     case LetS(isrec, _, rhs) => ??? // TODO
     case t: Term =>
-      if (t.isInstanceOf[Var]) err("Pure expression does nothing in statement position.", t.toLoc)
+      if (!allowPure && t.isInstanceOf[Var])
+        err("Pure expression does nothing in statement position.", t.toLoc)
       ctx -> PolymorphicType(0, typeTerm(t))
   }
   

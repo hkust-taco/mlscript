@@ -121,18 +121,18 @@ succ (
 :pe
 succ (succ
 1)
-/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.122:1: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.122:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.127:1: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.127:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-/// /!\ Parse error: Expected expression:1:1, found "succ (succ" at l.132:1: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.132:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
