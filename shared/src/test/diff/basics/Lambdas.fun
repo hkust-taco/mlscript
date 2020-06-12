@@ -66,7 +66,7 @@ let f (
   x
   y
 ) = x + 1
-/// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f {x; y})
+/// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f (x; y;))
 /// 	at: funtypes.utils.package$.lastWords(package.scala:109)
 /// 	at: funtypes.Typer.typeStatement(Typer.scala:96)
 /// 	at: funtypes.Typer.typeBlk(Typer.scala:87)

@@ -21,7 +21,7 @@ x => succ / succ / x + 1
 
 :p
 foo / x => succ / succ / x
-/// Parsed: {(foo (fun x => (succ (succ x))))}
+/// Parsed: (foo (x => (succ (succ x))));
 /// res: int
 
 :e

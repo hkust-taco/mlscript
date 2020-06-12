@@ -138,6 +138,9 @@ println
 ///        	^^^^^^^^^
 /// l.127: 	  2
 ///        	^^^
+/// /!\ Type error: Pure expression does nothing in statement position.
+/// l.129: 	  1
+///        	  ^
 /// res: unit
 /// res: ⊥
 /// res: unit
@@ -155,28 +158,28 @@ println
 succ {a: 1}
 {a: 1} succ
 /// /!\ Type error: cannot constrain int <: {u: 'a}
-/// l.149: 	1.u
+/// l.152: 	1.u
 ///        	 ^^
-/// /!\ Type error: cannot constrain unit <: {u: 'a}
-/// l.150: 	{}.u
+/// /!\ Type error: missing field: u in {}
+/// l.153: 	{}.u
 ///        	  ^^
 /// /!\ Type error: missing field: u in {a: int}
-/// l.151: 	{a: 1}.u
+/// l.154: 	{a: 1}.u
 ///        	      ^^
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.152: 	{a: 1}.a 1
+/// l.155: 	{a: 1}.a 1
 ///        	      ^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.153: 	1 + {a: true}.a
+/// l.156: 	1 + {a: true}.a
 ///        	^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.154: 	{a: true}.a + 1
+/// l.157: 	{a: true}.a + 1
 ///        	         ^^^^
 /// /!\ Type error: cannot constrain {a: int} <: int
-/// l.155: 	succ {a: 1}
+/// l.158: 	succ {a: 1}
 ///        	^^^^^^^^^^^
 /// /!\ Type error: cannot constrain {a: int} <: (int -> int) -> 'a
-/// l.156: 	{a: 1} succ
+/// l.159: 	{a: 1} succ
 ///        	^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -194,4 +197,4 @@ succ {a: 1}
 foo
 ba)r
 baz
-/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.195:3: ba)r
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.198:3: ba)r

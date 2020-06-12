@@ -14,7 +14,7 @@ a + b
 :p
 a +
   b
-/// Parsed: {((+ a) {b})}
+/// Parsed: ((+ a) b;);
 /// res: int
 
 :pe
@@ -27,14 +27,14 @@ a +
 succ a +
   b +
     c
-/// Parsed: {((+ (succ a)) {((+ b) {c})})}
+/// Parsed: ((+ (succ a)) ((+ b) c;););
 /// res: int
 
 :p
 succ / a +
   b +
     c
-/// Parsed: {(succ ((+ a) {((+ b) {c})}))}
+/// Parsed: (succ ((+ a) ((+ b) c;);));
 /// res: int
 
 :p
@@ -47,7 +47,7 @@ a
   + b
   + c
   + d
-/// Parsed: {((+ a) b); ((+ ((+ a) b)) c); ((+ ((+ ((+ a) b)) c)) d)}
+/// Parsed: ((+ a) b); ((+ ((+ a) b)) c); ((+ ((+ ((+ a) b)) c)) d);
 /// res: int
 /// res: int
 /// res: int
@@ -60,7 +60,7 @@ a
     + 2
       + 3
   + d
-/// Parsed: {((+ ((+ ((+ a) b)) ((+ ((+ c) 1)) ((+ 2) 3)))) d)}
+/// Parsed: ((+ ((+ ((+ a) b)) ((+ ((+ c) 1)) ((+ 2) 3)))) d);
 /// res: int
 
 :pe
@@ -96,7 +96,7 @@ succ / succ 1
 succ
     a + b
   + c
-/// Parsed: {((+ (succ {((+ a) b)})) c)}
+/// Parsed: ((+ (succ ((+ a) b);)) c);
 /// res: int
 
 // Maybe allow this as it lets us nicely align the operands?

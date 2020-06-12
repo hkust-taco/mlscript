@@ -94,9 +94,18 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
     case LetS(isrec, pat, rhs) => lastWords("Not yet supported: pattern " + pat)
+    case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
+      val thing = fs match {
+        case (S(_), _) :: Nil => "field"
+        case Nil => "empty tuple"
+        case _ => "tuple"
+      }
+      err(s"Useless $thing in statement position.", t.toLoc)
+      ctx -> PolymorphicType(0, typeTerm(t))
     case t: Term =>
-      if (!allowPure && t.isInstanceOf[Var])
+      if (!allowPure && (t.isInstanceOf[Var] || t.isInstanceOf[Lit]))
         err("Pure expression does nothing in statement position.", t.toLoc)
+      // TODO reject discarded non-units
       ctx -> PolymorphicType(0, typeTerm(t))
   }
   
@@ -144,18 +153,48 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         typeTerm(bod)(ctx + (nme -> n_ty), lvl, raise)
-      case Tup(ofs) =>
-        // TODO actually use a tuple type
-        val fs = ofs.zipWithIndex.map {
-          case ((N, t), i) => ("_" + (i + 1), t); case ((S(n), t), _) => (n, t) }
-        typeTerm(Rcd(fs))
+      case tup: Tup =>
+        typeTerms(tup :: Nil, false, Nil)
+      case Bra(false, trm: Blk) => typeTerm(trm)
+      case Bra(rcd, trm @ (_: Tup | _: Blk)) => typeTerms(trm :: Nil, rcd, Nil)
+      case Bra(_, trm) => typeTerm(trm)
       case Blk((s: Term) :: Nil) => typeTerm(s)
       case Blk(Nil) => UnitType
-      case Blk(s :: stmts) =>
-        val (newCtx, ty) = typeStatement(s)
-        typeTerm(Blk(stmts))(newCtx, lvl, raise)
+      // case Blk(s :: stmts) =>
+      //   val (newCtx, ty) = typeStatement(s)
+      //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
+      case Blk(stmts) => typeTerms(stmts, false, Nil)
     }
   }(r => s"$lvl. : ${r}")
+  
+  def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])
+        (implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType = term match {
+    case (trm @ Var(nme)) :: sts if rcd => // field punning
+      typeTerms(Tup(S(nme) -> trm :: Nil) :: sts, rcd, fields)
+    case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
+    case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
+    case Tup((no, trm) :: ofs) :: sts =>
+      val ty = if (ofs.isEmpty) typeTerm(Bra(rcd, trm)) else typeTerm(trm)
+      val newCtx = no.fold(ctx)(n => ctx + (n -> ty))
+      typeTerms(Tup(ofs) :: sts, rcd, (no, ty) :: fields)(newCtx, lvl, raise)
+    case (trm: Term) :: Nil =>
+      if (fields.nonEmpty)
+        err("Previous field definitions are discarded by this returned expression.", trm.toLoc)
+      typeTerm(trm)
+    // case (trm: Term) :: Nil =>
+    //   assert(!rcd)
+    //   val ty = typeTerm(trm)
+    //   typeBra(Nil, rcd, (N, ty) :: fields)
+    case s :: sts =>
+      val (newCtx, ty) = typeStatement(s)
+      typeTerms(sts, rcd, fields)(newCtx, lvl, raise)
+    case Nil =>
+      // TODO actually use a tuple type if !rcd
+      val fs = fields.reverseIterator.zipWithIndex.map {
+        case ((N, t), i) => ("_" + (i + 1), t); case ((S(n), t), _) => (n, t)
+      }.toList
+      RecordType(fs)
+  }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)

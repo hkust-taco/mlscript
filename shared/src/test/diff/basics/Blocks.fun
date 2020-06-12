@@ -42,7 +42,7 @@ foo / foo /
 :p
 id id
   id
-/// Parsed: {((id id) {id})}
+/// Parsed: ((id id) id;);
 /// res: 'a -> 'a
 
 :p
@@ -50,21 +50,21 @@ id id id
   id id id
     id id id
       id id id
-/// Parsed: {(((id id) id) {(((id id) id) {(((id id) id) {((id id) id)})})})}
+/// Parsed: (((id id) id) (((id id) id) (((id id) id) ((id id) id););););
 /// res: 'a -> 'a
 
 :p
 id id /
   id id /
     id id
-/// Parsed: {((id id) {((id id) {(id id)})})}
+/// Parsed: ((id id) ((id id) (id id);););
 /// res: 'a -> 'a
 
 :p
 id id
     id id
   id id
-/// Parsed: {(((id id) {(id id)}) {(id id)})}
+/// Parsed: (((id id) (id id);) (id id););
 /// res: 'a -> 'a
 
 let foo =
@@ -144,7 +144,7 @@ succ(
   let x = 1
   x
 )
-/// res: unit
+/// res: {}
 /// res: int
 /// res: int
 /// res: int

@@ -87,7 +87,7 @@ x => x.f
 
 // note: MLsub returns "⊤" (equivalent)
 {}
-/// res: unit
+/// res: {}
 
 { f: 42 }
 /// res: {f: int}

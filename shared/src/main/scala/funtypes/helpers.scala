@@ -60,12 +60,14 @@ abstract class TypeImpl { self: Type =>
 abstract class TermImpl { self: Term =>
   
   override def toString: String = this match {
-    case Blk(stmts) => s"{${stmts.mkString("; ")}}"
+    case Bra(true, trm) => s"{$trm}"
+    case Bra(false, trm) => s"($trm)"
+    case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case Var(name) => name
-    case Lam(name, rhs) => s"(fun $name => $rhs)"
+    case Lam(name, rhs) => s"($name => $rhs)"
     case App(lhs, rhs) => s"($lhs $rhs)"
     case Rcd(fields) =>
       fields.iterator.map(nv => nv._1 + ": " + nv._2).mkString("{", ", ", "}")
@@ -73,7 +75,7 @@ abstract class TermImpl { self: Term =>
     case Let(isRec, name, rhs, body) =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs in $body)"
     case Tup(xs) =>
-      xs.iterator.map { case (N, t) => t; case (S(n), t) => n + ": " + t }.mkString("(", ", ", ")")
+      xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
   }
   
 }

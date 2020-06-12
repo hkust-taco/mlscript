@@ -82,10 +82,12 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (trm, S(("=>", rest))) => Lam(trm, rest)
   }).opaque("applied expressions")
   
+  // TODO support spreads ""...xs""
   def commas[_: P]: P[Term] =
-    P((ident ~ ":" ~ (binops | suite) | binops.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.?).map {
-      case (("", x) :: Nil, N) => x
-      case (xs, _) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) })
+    P(Index ~~ (ident ~ ":" ~ (binops | suite) | binops.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index)
+    .map {
+      case (_, ("", x) :: Nil, N, _) => x
+      case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1)
     }
   
   /** Note that `,` implicitly has the lowest precedence, followed by the ones below. */
@@ -155,13 +157,15 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     }
   }
   
-  def record[_: P]: P[Term] =
-    locate(P( "{" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ "}" ).map(_.getOrElse(Blk(Nil))))
+  def recordBrackets[_: P]: P[Term] =
+    locate(P( "{" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ "}" )
+      .map(xo => Bra(true, xo.getOrElse(Tup(Nil)))))
   
-  def tuple[_: P]: P[Term] =
-    locate(P( "(" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ ")" ).map(_.getOrElse(Blk(Nil))))
+  def tupleBrackets[_: P]: P[Term] =
+    locate(P( "(" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ ")" )
+      .map(xo => Bra(false, xo.getOrElse(Tup(Nil)))))
   
-  def atom[_: P]: P[Term] = P(tuple | record | STRING | NAME | NUMBER)
+  def atom[_: P]: P[Term] = P(tupleBrackets | recordBrackets | STRING | NAME | NUMBER)
   
   def nextIndentP[_: P]: P[Int] = " ".repX(indent + 1).!.map(_.length)
   def indented[_: P, A](p: Parser => P[A]): P[A] = "\n" ~~ emptyLines ~~ nextIndentP.flatMapX { nextIndent =>

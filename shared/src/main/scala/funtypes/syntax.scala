@@ -16,11 +16,12 @@ final case class Tup(fields: Ls[Opt[Str] -> Term])                   extends Ter
 final case class Rcd(fields: Ls[Str -> Term])                        extends Term
 final case class Sel(receiver: Term, fieldName: Str)                 extends Term
 final case class Let(isRec: Bool, name: Str, rhs: Term, body: Term)  extends Term
-final case class Blk(stmts: Ls[Statement]) extends Term with BlkImpl
+final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
+final case class Bra(rcd: Bool, trm: Term)                           extends Term
 
-final case class IntLit(value: BigInt)     extends Lit
-final case class DecLit(value: BigDecimal) extends Lit
-final case class StrLit(value: Str)     extends Lit
+final case class IntLit(value: BigInt)      extends Lit
+final case class DecLit(value: BigDecimal)  extends Lit
+final case class StrLit(value: Str)         extends Lit
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
