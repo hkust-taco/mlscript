@@ -9,9 +9,9 @@ let b = a 1
 // identifier not found
 
 :e
-println 1
-println / c + 1
-println / abc + 1
+log 1
+log / c + 1
+log / abc + 1
 c + 1
 abc + 1
 1 + c
@@ -19,11 +19,11 @@ let d = c + 1
 let d = 1 + abc + 1 + 1
 d + 1
 /// /!\ Type error: identifier not found: c
-/// l.13: 	println / c + 1
-///       	          ^
+/// l.13: 	log / c + 1
+///       	      ^
 /// /!\ Type error: identifier not found: abc
-/// l.14: 	println / abc + 1
-///       	          ^^^
+/// l.14: 	log / abc + 1
+///       	      ^^^
 /// /!\ Type error: identifier not found: c
 /// l.15: 	c + 1
 ///       	^
@@ -59,7 +59,7 @@ let oops = succ false
 false + 1
 1 + false
 true + false
-println / false + 1
+log / false + 1
 /// /!\ Type error: cannot constrain int <: int -> 'a
 /// l.56: 	1 2 3
 ///       	^^^
@@ -85,8 +85,8 @@ println / false + 1
 /// l.61: 	true + false
 ///       	^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.62: 	println / false + 1
-///       	          ^^^^^^^
+/// l.62: 	log / false + 1
+///       	      ^^^^^^^
 /// res: ⊥
 /// res: ⊥
 /// oops: int
@@ -121,12 +121,12 @@ succ succ
 
 :e
 :w
-println
+log
   1
     2
-println 1
+log 1
   2
-println
+log
   1
   2
 /// /!\ Type error: cannot constrain int <: int -> 'a
@@ -135,8 +135,8 @@ println
 /// l.126: 	    2
 ///        	^^^^^
 /// /!\ Type error: cannot constrain unit <: int -> 'a
-/// l.127: 	println 1
-///        	^^^^^^^^^
+/// l.127: 	log 1
+///        	^^^^^
 /// l.128: 	  2
 ///        	^^^
 /// /!\ Warning: Pure expression does nothing in statement position.
@@ -191,6 +191,37 @@ succ {a: 1}
 /// res: int
 /// res: ⊥
 
+let f = x =>
+  log / succ x.prop
+  x.prop
+f { prop: 42 }
+/// f: {prop: 'a ∧ int} -> 'a
+/// res: int
+
+// FIXME 'prop' requirement is added twice
+:e
+f 42
+f { prap: false }
+f { prop: false }
+/// /!\ Type error: cannot constrain int <: {prop: 'a}
+/// l.203: 	f 42
+///        	^^^^
+/// /!\ Type error: cannot constrain int <: {prop: 'a}
+/// l.203: 	f 42
+///        	^^^^
+/// /!\ Type error: missing field: prop in {prap: bool}
+/// l.204: 	f { prap: false }
+///        	^^^^^^^^^^^^^^^^^
+/// /!\ Type error: missing field: prop in {prap: bool}
+/// l.204: 	f { prap: false }
+///        	^^^^^^^^^^^^^^^^^
+/// /!\ Type error: cannot constrain bool <: int
+/// l.205: 	f { prop: false }
+///        	^^^^^^^^^^^^^^^^^
+/// res: ⊥
+/// res: ⊥
+/// res: bool
+
 
 // parse error
 
@@ -198,4 +229,4 @@ succ {a: 1}
 foo
 ba)r
 baz
-/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.199:3: ba)r
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.230:3: ba)r

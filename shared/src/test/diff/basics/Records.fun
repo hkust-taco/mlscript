@@ -120,10 +120,10 @@ let r = {
 }
 let r = {
   u:
-    println "ok"
+    log "ok"
     1
   v:
-    println "ko"
+    log "ko"
     2
 }
 let r = {
@@ -277,13 +277,13 @@ a: {
 
 let r =
   x: 1
-  println x
+  log x
   y: 2
 let r =
   x: 1
-  println x
+  log x
   y: 2
-  let _ = println y
+  let _ = log y
 /// r: {x: int, y: int}
 /// r: {x: int, y: int}
 
@@ -291,10 +291,10 @@ let r =
 :w
 let r =
   x: 1
-  println x
+  log x
   y: 2
-  println y
+  log y
 /// /!\ Warning: Previous field definitions are discarded by this returned expression.
-/// l.296: 	  println y
-///        	  ^^^^^^^^^
+/// l.296: 	  log y
+///        	  ^^^^^
 /// r: unit

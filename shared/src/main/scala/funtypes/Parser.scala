@@ -179,6 +179,6 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   // def repl_input[_: P]: P[Term] = P( (expr | P("").map(_ => UnitLit)) ~ ENDMARKER )
   
-  def pgrm[_: P]: P[Blk] = P( multilineBlock ~ End )
+  def pgrm[_: P]: P[Blk] = P( multilineBlock ~  emptyLines ~ End )
   
 }

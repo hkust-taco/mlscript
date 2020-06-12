@@ -6,16 +6,16 @@ let foo = x =>
 /// foo: int -> int
 
 let foo = x =>
-  println x
+  log x
   let u = x + 1
-  println true
+  log true
   u + 1
 /// foo: int -> int
 
 let foo = x =>
-  println x;
+  log x;
   let u = x + 1;
-  println true;
+  log true;
   u + 1
 /// foo: int -> int
 
@@ -93,29 +93,30 @@ id id
 /// res: 'a -> 'a
 
 let foo =
-  println 1
-  println 2
+  log 1
+  log 2
 /// foo: unit
 
 let foo =
-  println 1
+  log 1
   
-  println 2
+  log 2
 /// foo: unit
 
 let foo =
  
-  println 1
+  log 1
    
-  println 2
+  log 2
+  
 /// foo: unit
 
 succ (
-  println 1
+  log 1
   1
 )
 succ (
-  println 1
+  log 1
   1)
 succ (succ
   1)
@@ -139,25 +140,25 @@ succ (
   1
 )
 /// /!\ Warning: Pure expression does nothing in statement position.
-/// l.138: 	  succ
+/// l.139: 	  succ
 ///        	  ^^^^
 /// res: int
 
 :pe
 succ (succ
 1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.147:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.148:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.152:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.153:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.157:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.158:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -187,16 +188,16 @@ succ
     let x = 1
     x
 )
-/// /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.185:1: succ
+/// /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.186:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at l.194:9:     succ
+/// /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.196:3:   1
 
 :pe
   1
-/// /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.200:1:   1
+/// /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.201:1:   1
 

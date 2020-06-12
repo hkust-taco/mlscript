@@ -66,12 +66,12 @@ a
 :pe
 a
 + b
-/// /!\ Parse error: Expected end-of-input:1:2, found "\n+ b" at l.67:2: a
+/// /!\ Parse error: Expected end-of-input:2:1, found "+ b" at l.68:1: + b
 
 :pe
 let x = 1
 + 2
-/// /!\ Parse error: Expected end-of-input:1:10, found "\n+ 2" at l.72:10: let x = 1
+/// /!\ Parse error: Expected end-of-input:2:1, found "+ 2" at l.73:1: + 2
 
 let x = 1
   + 2
@@ -81,7 +81,7 @@ let x = 1
 let x =
   1
   + 2
-/// /!\ Parse error: Expected end-of-input:2:4, found "\n  + 2" at l.82:4:   1
+/// /!\ Parse error: Expected end-of-input:3:3, found "+ 2" at l.83:3:   + 2
 
 let x =
   1
@@ -105,4 +105,4 @@ let test =
     a
   + b
   + c
-/// /!\ Parse error: Expected end-of-input:2:6, found "\n  + b\n  +" at l.105:6:     a
+/// /!\ Parse error: Expected end-of-input:3:3, found "+ b\n  + c" at l.106:3:   + b

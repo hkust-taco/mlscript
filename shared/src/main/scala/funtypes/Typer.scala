@@ -36,7 +36,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     "false" -> BoolType,
     "not" -> FunctionType(BoolType, BoolType),
     "succ" -> FunctionType(IntType, IntType),
-    "println" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
+    "log" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
     "discard" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
     "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
     "+" -> FunctionType(IntType, FunctionType(IntType, IntType)),
@@ -137,7 +137,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     lazy val res = freshVar
     term match {
       case Var(name) =>
-        ctx.getOrElse(name, { err("identifier not found: " + name, term.toLoc); res}).instantiate
+        ctx.getOrElse(name, { err("identifier not found: " + name, term.toLoc); res }).instantiate
       case Lam(Var(name), body) =>
         val param = freshVar
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
