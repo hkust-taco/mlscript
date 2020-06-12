@@ -120,6 +120,7 @@ succ succ
 /// res: int
 
 :e
+:w
 println
   1
     2
@@ -129,17 +130,17 @@ println
   1
   2
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.124: 	  1
+/// l.125: 	  1
 ///        	  ^
-/// l.125: 	    2
+/// l.126: 	    2
 ///        	^^^^^
 /// /!\ Type error: cannot constrain unit <: int -> 'a
-/// l.126: 	println 1
+/// l.127: 	println 1
 ///        	^^^^^^^^^
-/// l.127: 	  2
+/// l.128: 	  2
 ///        	^^^
-/// /!\ Type error: Pure expression does nothing in statement position.
-/// l.129: 	  1
+/// /!\ Warning: Pure expression does nothing in statement position.
+/// l.130: 	  1
 ///        	  ^
 /// res: unit
 /// res: ⊥
@@ -158,28 +159,28 @@ println
 succ {a: 1}
 {a: 1} succ
 /// /!\ Type error: cannot constrain int <: {u: 'a}
-/// l.152: 	1.u
+/// l.153: 	1.u
 ///        	 ^^
 /// /!\ Type error: missing field: u in {}
-/// l.153: 	{}.u
+/// l.154: 	{}.u
 ///        	  ^^
 /// /!\ Type error: missing field: u in {a: int}
-/// l.154: 	{a: 1}.u
+/// l.155: 	{a: 1}.u
 ///        	      ^^
 /// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.155: 	{a: 1}.a 1
+/// l.156: 	{a: 1}.a 1
 ///        	      ^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.156: 	1 + {a: true}.a
+/// l.157: 	1 + {a: true}.a
 ///        	^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.157: 	{a: true}.a + 1
+/// l.158: 	{a: true}.a + 1
 ///        	         ^^^^
 /// /!\ Type error: cannot constrain {a: int} <: int
-/// l.158: 	succ {a: 1}
+/// l.159: 	succ {a: 1}
 ///        	^^^^^^^^^^^
 /// /!\ Type error: cannot constrain {a: int} <: (int -> int) -> 'a
-/// l.159: 	{a: 1} succ
+/// l.160: 	{a: 1} succ
 ///        	^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -197,4 +198,4 @@ succ {a: 1}
 foo
 ba)r
 baz
-/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.198:3: ba)r
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.199:3: ba)r

@@ -133,12 +133,12 @@ succ (succ
 /// res: int
 /// res: int
 
-:e
+:w
 succ (
   succ
   1
 )
-/// /!\ Type error: Pure expression does nothing in statement position.
+/// /!\ Warning: Pure expression does nothing in statement position.
 /// l.138: 	  succ
 ///        	  ^^^^
 /// res: int

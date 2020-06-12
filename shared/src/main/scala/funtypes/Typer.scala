@@ -8,7 +8,12 @@ import scala.annotation.tailrec
 import funtypes.utils._, shorthands._
 
 final case class Loc(spanStart: Int, spanEnd: Int)
-final case class TypeError(msg: String, loco: Opt[Loc]) extends Exception(msg)
+sealed abstract class Diagnostic(theMsg: String) extends Exception(theMsg) {
+  val msg: String
+  val loco: Opt[Loc]
+}
+final case class TypeError(msg: String, loco: Opt[Loc]) extends Diagnostic(msg)
+final case class Warning(msg: String, loco: Opt[Loc]) extends Diagnostic(msg)
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
@@ -18,7 +23,7 @@ final case class TypeError(msg: String, loco: Opt[Loc]) extends Exception(msg)
 class Typer(var dbg: Boolean) extends TyperDebugging {
   
   type Ctx = Map[String, TypeScheme]
-  type Raise = TypeError => Unit
+  type Raise = Diagnostic => Unit
   
   val UnitType: PrimType = PrimType("unit")
   val BoolType: PrimType = PrimType("bool")
@@ -81,12 +86,12 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
   }
   
   def typeBlk(blk: Blk, ctx: Ctx = builtins, allowPure: Bool = false)
-        : List[List[TypeError] -> PolymorphicType]
+        : List[List[Diagnostic] -> PolymorphicType]
         = blk.stmts match {
     case s :: stmts =>
-      val errs = mutable.ListBuffer.empty[TypeError]
-      val (newCtx, ty) = typeStatement(s, allowPure)(ctx, 0, errs += _)
-      errs.toList -> ty :: typeBlk(Blk(stmts), newCtx, allowPure)
+      val diags = mutable.ListBuffer.empty[Diagnostic]
+      val (newCtx, ty) = typeStatement(s, allowPure)(ctx, 0, diags += _)
+      diags.toList -> ty :: typeBlk(Blk(stmts), newCtx, allowPure)
     case Nil => Nil
   }
   def typeStatement(s: Statement, allowPure: Bool = false)
@@ -101,13 +106,13 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
         case Nil => "empty tuple"
         case _ => "tuple"
       }
-      err(s"Useless $thing in statement position.", t.toLoc)
+      warn(s"Useless $thing in statement position.", t.toLoc)
       ctx -> PolymorphicType(0, typeTerm(t))
     case t: Term =>
       val ty = typeTerm(t)
       if (!allowPure) {
         if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
-          err("Pure expression does nothing in statement position.", t.toLoc)
+          warn("Pure expression does nothing in statement position.", t.toLoc)
         else constrain(ty, UnitType)(raise = raise, loco = t.toLoc)
       }
       ctx -> PolymorphicType(0, ty)
@@ -183,7 +188,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       typeTerms(Tup(ofs) :: sts, rcd, (no, ty) :: fields)(newCtx, lvl, raise)
     case (trm: Term) :: Nil =>
       if (fields.nonEmpty)
-        err("Previous field definitions are discarded by this returned expression.", trm.toLoc)
+        warn("Previous field definitions are discarded by this returned expression.", trm.toLoc)
       typeTerm(trm)
     // case (trm: Term) :: Nil =>
     //   assert(!rcd)
@@ -264,6 +269,9 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
   
   def err(msg: String, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(TypeError(msg, loco))
+  
+  def warn(msg: String, loco: Opt[Loc])(implicit raise: Raise): Unit =
+    raise(Warning(msg, loco))
   
   private var freshCount = 0
   def freshVar(implicit lvl: Int): TypeVariable = new TypeVariable(lvl, Nil, Nil)

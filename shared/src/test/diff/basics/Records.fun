@@ -256,7 +256,7 @@ a:
   d: 2
 /// res: {a: {b: {c: int}, d: int}}
 
-:e
+:w
 a:
   b: 1
   c: 2
@@ -266,10 +266,10 @@ a: {
   c: 2
   3
 }
-/// /!\ Type error: Previous field definitions are discarded by this returned expression.
+/// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.263: 	  3
 ///        	  ^
-/// /!\ Type error: Previous field definitions are discarded by this returned expression.
+/// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.267: 	  3
 ///        	  ^
 /// res: {a: int}
@@ -288,13 +288,13 @@ let r =
 /// r: {x: int, y: int}
 
 // FIXME ignore unit expressions
-:e
+:w
 let r =
   x: 1
   println x
   y: 2
   println y
-/// /!\ Type error: Previous field definitions are discarded by this returned expression.
+/// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.296: 	  println y
 ///        	  ^^^^^^^^^
 /// r: unit

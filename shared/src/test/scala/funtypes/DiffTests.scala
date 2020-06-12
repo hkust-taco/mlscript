@@ -29,8 +29,10 @@ class DiffTests extends FunSuite {
     var ctx: typer.Ctx = typer.builtins
     val failures = mutable.Buffer.empty[Int]
     
-    case class Mode(expectTypeErrors: Bool, expectParseErrors: Bool, fixme: Bool, showParse: Bool, dbg: Bool)
-    val defaultMode = Mode(false, false, false, false, false)
+    case class Mode(
+      expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
+      fixme: Bool, showParse: Bool, dbg: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false)
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
@@ -38,6 +40,7 @@ class DiffTests extends FunSuite {
         out.println(line)
         val newMode = line.tail.takeWhile(!_.isWhitespace) match {
           case "e" => mode.copy(expectTypeErrors = true)
+          case "w" => mode.copy(expectWarnings = true)
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
@@ -76,13 +79,21 @@ class DiffTests extends FunSuite {
             typer.dbg = mode.dbg
             val tys = try typer.typeBlk(p, ctx, allowPure = true) finally typer.dbg = false
             var totalTypeErrors = 0
+            var totalWarnings = 0
             val res = (p.stmts.zipWithIndex lazyZip tys).map {
-              case ((s, _), errs -> ty) =>
-                totalTypeErrors += errs.length
-                errs.foreach { case TypeError(msg, loco) =>
-                  output(s"/!\\ Type error: $msg")
+              case ((s, _), diags -> ty) =>
+                // totalTypeErrors += diags.length
+                diags.foreach { diag =>
+                  diag match {
+                    case TypeError(msg, loco) =>
+                      totalTypeErrors += 1
+                      output(s"/!\\ Type error: $msg")
+                    case Warning(msg, loco) =>
+                      totalWarnings += 1
+                      output(s"/!\\ Warning: $msg")
+                  }
                   val globalStartLineNum = allLines.size - lines.size + 1
-                  val globalLineNum = globalStartLineNum + loco.fold(0) { loc =>
+                  val globalLineNum = globalStartLineNum + diag.loco.fold(0) { loc =>
                     val (startLineNum, startLineStr, startLineCol) =
                       fph.getLineColAt(loc.spanStart)
                     val (endLineNum, endLineStr, endLineCol) =
@@ -103,11 +114,13 @@ class DiffTests extends FunSuite {
                     }
                     startLineNum - 1
                   }
-                  if (!mode.expectTypeErrors && !mode.fixme)
-                    failures += globalLineNum
+                  if (!mode.fixme && (
+                      !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
+                   || !mode.expectWarnings && diag.isInstanceOf[Warning]
+                  )) failures += globalLineNum
                   ()
                 }
-                if (errs.nonEmpty && !mode.expectTypeErrors) {
+                if (diags.exists(_.isInstanceOf[TypeError]) && !mode.expectTypeErrors) {
                   // output(s"Statement was parsed as:\n$outputMarker\t$s")
                   if (!mode.dbg) {
                     output(s"Retyping with debug info...")
@@ -121,6 +134,8 @@ class DiffTests extends FunSuite {
                     } finally typer.dbg = false
                   }
                 }
+                // if (diags.exists(_.isInstanceOf[Warning]) && !mode.expectTypeErrors) {
+                // }
                 if (mode.dbg) output(s"Typed as: $ty")
                 if (mode.dbg) output(s" where: ${ty.instantiate(0).showBounds}")
                 val com = typer.compactType(ty.instantiate(0))
@@ -138,6 +153,8 @@ class DiffTests extends FunSuite {
                 }
             }.map(outputMarker + _).mkString("\n")
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
+              failures += blockLineNum
+            if (mode.expectWarnings && totalWarnings =:= 0)
               failures += blockLineNum
             res
         } catch {
@@ -161,7 +178,7 @@ class DiffTests extends FunSuite {
       write.over(file, result)
     }
     if (failures.nonEmpty)
-      fail(s"Unexpected error(s) or lack of error(s) at: " + failures.map("l."+_).mkString(", "))
+      fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
   

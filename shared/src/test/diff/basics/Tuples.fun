@@ -27,32 +27,32 @@ let t = x: 1, y: 2, z: 3
 ///       	^^^^^^^^^^^^^^^^^^
 /// res: ⊥
 
-:e
+:w
 let not-tup = (
   1
   2
 )
-/// /!\ Type error: Pure expression does nothing in statement position.
+/// /!\ Warning: Pure expression does nothing in statement position.
 /// l.32: 	  1
 ///       	  ^
 /// not-tup: int
 
-:e
+:w
 let tup = (
   1,
   2
 )
-/// /!\ Type error: Previous field definitions are discarded by this returned expression.
+/// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.43: 	  2
 ///       	  ^
 /// tup: int
 
-:e
+:w
 let tup =
   1,
   2,
   3
-/// /!\ Type error: Previous field definitions are discarded by this returned expression.
+/// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.54: 	  3
 ///       	  ^
 /// tup: int
