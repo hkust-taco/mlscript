@@ -36,7 +36,7 @@ class DiffTests extends FunSuite {
       case "" :: Nil =>
       case line :: ls if line.startsWith(":") =>
         out.println(line)
-        val newMode = line.tail match {
+        val newMode = line.tail.takeWhile(!_.isWhitespace) match {
           case "e" => mode.copy(expectTypeErrors = true)
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)

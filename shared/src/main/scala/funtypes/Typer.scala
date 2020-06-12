@@ -32,6 +32,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     "not" -> FunctionType(BoolType, BoolType),
     "succ" -> FunctionType(IntType, IntType),
     "println" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
+    "discard" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
     "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
     "+" -> FunctionType(IntType, FunctionType(IntType, IntType)),
     "id" -> {
@@ -103,10 +104,13 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       err(s"Useless $thing in statement position.", t.toLoc)
       ctx -> PolymorphicType(0, typeTerm(t))
     case t: Term =>
-      if (!allowPure && (t.isInstanceOf[Var] || t.isInstanceOf[Lit]))
-        err("Pure expression does nothing in statement position.", t.toLoc)
-      // TODO reject discarded non-units
-      ctx -> PolymorphicType(0, typeTerm(t))
+      val ty = typeTerm(t)
+      if (!allowPure) {
+        if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
+          err("Pure expression does nothing in statement position.", t.toLoc)
+        else constrain(ty, UnitType)(raise = raise, loco = t.toLoc)
+      }
+      ctx -> PolymorphicType(0, ty)
   }
   
   def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType = typeTerm(term)(ctx, lvl, throw _)

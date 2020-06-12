@@ -51,8 +51,8 @@ x =>
 let f x = x + 1
 /// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f x)
 /// 	at: funtypes.utils.package$.lastWords(package.scala:109)
-/// 	at: funtypes.Typer.typeStatement(Typer.scala:96)
-/// 	at: funtypes.Typer.typeBlk(Typer.scala:87)
+/// 	at: funtypes.Typer.typeStatement(Typer.scala:97)
+/// 	at: funtypes.Typer.typeBlk(Typer.scala:88)
 /// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:77)
 /// 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:155)
 /// 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -68,8 +68,8 @@ let f (
 ) = x + 1
 /// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f (x; y;))
 /// 	at: funtypes.utils.package$.lastWords(package.scala:109)
-/// 	at: funtypes.Typer.typeStatement(Typer.scala:96)
-/// 	at: funtypes.Typer.typeBlk(Typer.scala:87)
+/// 	at: funtypes.Typer.typeStatement(Typer.scala:97)
+/// 	at: funtypes.Typer.typeBlk(Typer.scala:88)
 /// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:77)
 /// 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:155)
 /// 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)

@@ -30,13 +30,38 @@ foo
     1
 /// res: int
 foo
-  foo
+  discard / foo
     1
   foo
     1
 /// res: int
 foo / foo /
   foo 1
+/// res: int
+
+:p
+discard / foo
+    1
+/// Parsed: (discard (foo 1;));
+/// res: unit
+
+:e
+discard foo
+  1
+/// /!\ Type error: cannot constrain unit <: int -> 'a
+/// l.49: 	discard foo
+///       	^^^^^^^^^^^
+/// l.50: 	  1
+///       	^^^
+/// res: ⊥
+
+:e // TODO better error: discarded non-unit value
+foo
+  foo 1
+  foo 2
+/// /!\ Type error: cannot constrain int <: unit
+/// l.60: 	  foo 1
+///       	  ^^^^^
 /// res: int
 
 :p
@@ -114,25 +139,25 @@ succ (
   1
 )
 /// /!\ Type error: Pure expression does nothing in statement position.
-/// l.113: 	  succ
+/// l.138: 	  succ
 ///        	  ^^^^
 /// res: int
 
 :pe
 succ (succ
 1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.122:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.147:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.127:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.152:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.132:6: succ (succ
+/// /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.157:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -162,16 +187,16 @@ succ
     let x = 1
     x
 )
-/// /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.160:1: succ
+/// /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.185:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at l.169:9:     succ
+/// /!\ Parse error: Expected end-of-input:2:9, found "\n  1\n  \"?\"" at l.194:9:     succ
 
 :pe
   1
-/// /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.175:1:   1
+/// /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.200:1:   1
 
