@@ -232,11 +232,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
             err(s"missing field: $n1 in ${lhs.show}", loco)
           ) { case (n0, t0) => constrain(t0, t1) }
         }
-      case
-        (PrimType(_: IntLit), IntType)
-      | (PrimType(_: StrLit), StrType)
-      | (PrimType(_: DecLit), DecType)
-      => ()
+      case (prim: PrimType, _) if rhs === prim.widen => ()
       case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
         lhs.upperBounds ::= rhs
         lhs.lowerBounds.foreach(constrain(_, rhs))
@@ -335,6 +331,12 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   case class PrimType(id: SimpleTerm) extends SimpleType {
+    def widen: PrimType = id match {
+      case _: IntLit => IntType
+      case _: StrLit => StrType
+      case _: DecLit => DecType
+      case _ => this
+    }
     def level: Int = 0
     override def toString = id.idStr
   }

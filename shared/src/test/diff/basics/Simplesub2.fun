@@ -48,7 +48,7 @@ let rec consume = strm => add strm.head (consume strm.tail)
 
 let codata = produce 42
 let res = consume codata
-/// codata: {head: 42 ∨ int, tail: 'a} as 'a
+/// codata: {head: int, tail: 'a} as 'a
 /// res: int
 
 let rec codata2 = { head: 0, tail: { head: 1, tail: codata2 } }
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-/// produce3: bool -> {head: 123, tail: {head: 42 ∨ int ∨ 0, tail: {head: 42 ∨ int, tail: 'a} as 'a ∨ {head: 1, tail: {head: 0, tail: {head: 1, tail: 'b}} as 'b}}}
+/// produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a} as 'a ∨ {head: 1, tail: {head: 0, tail: {head: 1, tail: 'b}} as 'b}}}
 /// res: bool -> int
 
 let consume2 =

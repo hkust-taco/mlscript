@@ -23,5 +23,5 @@ let rec f = n =>
 // TODO simplify 0 ∨ 1 ∨ int
 let g = n =>
   if pred n then 0 else if not (pred n) then 1 else f n
-/// g: int -> 0 ∨ 1 ∨ int
+/// g: int -> int
 

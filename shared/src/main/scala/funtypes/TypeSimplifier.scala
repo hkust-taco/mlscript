@@ -15,17 +15,17 @@ trait TypeSimplifier { self: Typer =>
    * of different type components.  */
   case class CompactType(
     vars: Set[TypeVariable],
-    prims: Set[PrimType],
+    prims: PrimSet,
     rec: Option[SortedMap[String, CompactType]],
     fun: Option[(CompactType, CompactType)])
   extends CompactTypeOrVariable {
-    override def toString = List(vars, prims,
+    override def toString = List(vars, prims.underlying,
       rec.map(_.map(fs => fs._1 + ": " + fs._2).mkString("{",", ","}")),
       fun.map(lr => lr._1.toString + " -> " + lr._2),
     ).flatten.mkString("‹", ", ", "›")
   }
   object CompactType {
-    val empty: CompactType = CompactType(Set.empty, Set.empty, None, None)
+    val empty: CompactType = CompactType(Set.empty, PrimSet.empty, None, None)
     def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
       val rec = mergeOptions(lhs.rec, rhs.rec) { (lhs, rhs) =>
         if (pol) lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(pol)(v, _)) }
@@ -34,6 +34,29 @@ trait TypeSimplifier { self: Typer =>
         case ((l0,r0), (l1,r1)) => (merge(!pol)(l0, l1), merge(pol)(r0, r1)) }
       CompactType(lhs.vars ++ rhs.vars, lhs.prims ++ rhs.prims, rec, fun)
     }
+  }
+  
+  class PrimSet private(val underlying: Set[PrimType]) {
+    def ++ (that: PrimSet): PrimSet = {
+      var cur = underlying
+      that.underlying.foreach {
+        case prim @ PrimType(_: Lit) =>
+          if (!cur.contains(prim.widen)) cur += prim
+        case prim @ PrimType(_: Var) =>
+          cur = cur.filterNot(_.widen === prim) + prim
+      }
+      new PrimSet(cur)
+    }
+    override def equals(that: Any): Boolean = that match {
+      case ps: PrimSet => ps.underlying === underlying
+      case _ => false
+    }
+    override def hashCode: Int = underlying.hashCode
+  }
+  object PrimSet {
+    val empty: PrimSet = new PrimSet(Set.empty)
+    def single(prim: PrimType): PrimSet = new PrimSet(Set.single(prim))
+    def apply(prims: PrimType*): PrimSet = empty ++ new PrimSet(Set.from(prims))
   }
   
   case class CompactTypeScheme(term: CompactType, recVars: Map[TypeVariable, CompactType])
@@ -57,7 +80,7 @@ trait TypeSimplifier { self: Typer =>
     //    which do not correspond to actual recursive types.
     def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
-      case p: PrimType => ct(prims = Set(p))
+      case p: PrimType => ct(prims = PrimSet(p))
       case FunctionType(l, r) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
       case RecordType(fs) =>
@@ -122,7 +145,7 @@ trait TypeSimplifier { self: Typer =>
     def go(ty: CompactType, pol: Boolean): () => CompactType = {
       ty.vars.foreach { tv =>
         allVars += tv
-        val newOccs = LinkedHashSet.from(ty.vars.iterator ++ ty.prims)
+        val newOccs = LinkedHashSet.from(ty.vars.iterator ++ ty.prims.underlying)
         coOccurrences.get(pol -> tv) match {
           case Some(os) => os.filterInPlace(newOccs) // computes the intersection
           case None => coOccurrences(pol -> tv) = newOccs
@@ -233,7 +256,7 @@ trait TypeSimplifier { self: Typer =>
           case CompactType(vars, prims, rec, fun) =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
-              ::: prims.iterator.map(p => Primitive(p.id.idStr)).toList
+              ::: prims.underlying.iterator.map(p => Primitive(p.id.idStr)).toList
               ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
               ::: fun.map(lr => Function(go(lr._1, !pol), go(lr._2, pol))).toList
             ).reduceOption(mrg).getOrElse(extr)

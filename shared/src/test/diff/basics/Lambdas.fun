@@ -50,7 +50,7 @@ x =>
 // TODO
 let f x = x + 1
 /// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f x)
-/// 	at: funtypes.utils.package$.lastWords(package.scala:109)
+/// 	at: funtypes.utils.package$.lastWords(package.scala:113)
 /// 	at: funtypes.Typer.typeStatement(Typer.scala:103)
 /// 	at: funtypes.Typer.typeBlk(Typer.scala:94)
 /// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:80)
@@ -67,7 +67,7 @@ let f (
   y
 ) = x + 1
 /// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f (x; y;))
-/// 	at: funtypes.utils.package$.lastWords(package.scala:109)
+/// 	at: funtypes.utils.package$.lastWords(package.scala:113)
 /// 	at: funtypes.Typer.typeStatement(Typer.scala:103)
 /// 	at: funtypes.Typer.typeBlk(Typer.scala:94)
 /// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:80)
