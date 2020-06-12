@@ -157,7 +157,7 @@ succ {a: 1}
 /// /!\ Type error: cannot constrain int <: {u: 'a}
 /// l.149: 	1.u
 ///        	 ^^
-/// /!\ Type error: missing field: u in {}
+/// /!\ Type error: cannot constrain unit <: {u: 'a}
 /// l.150: 	{}.u
 ///        	  ^^
 /// /!\ Type error: missing field: u in {a: int}

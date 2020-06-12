@@ -82,12 +82,11 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     case (trm, S(("=>", rest))) => Lam(trm, rest)
   }).opaque("applied expressions")
   
-  // FIXME? (not sure I really want commas like this); this was causing problems with record literals
-  def commas[_: P]: P[Term] = P( binops )
-  // def commas[_: P]: P[Term] = P( binops ~/ (Index ~~ "," ~~ Index ~/ commas).? ).map {
-  //   case (lhs, N) => lhs
-  //   case (lhs, S((i0,i1,rhs))) => App(App(Var(",").withLoc(i0,i1), lhs), rhs) // TODO
-  // }
+  def commas[_: P]: P[Term] =
+    P((ident ~ ":" ~ (binops | suite) | binops.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.?).map {
+      case (("", x) :: Nil, N) => x
+      case (xs, _) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) })
+    }
   
   /** Note that `,` implicitly has the lowest precedence, followed by the ones below. */
   private val prec: Map[Char,Int] = List(
@@ -109,7 +108,17 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   // Note: There are three right-associative operators, dealt with above, not here: `=>`, `/`, and `,`
   // Adapted from: https://github.com/databricks/sjsonnet/blob/master/sjsonnet/src/sjsonnet/Parser.scala#L136-L180
-  def binops[_: P]: P[Term] = P(apps ~ (Index ~~ operator.! ~~ Index ~/ (apps | suite)).rep ~ "").map { case (pre, fs) =>
+  def binops[_: P]: P[Term] =
+    P(apps ~ (Index ~~ operator.! ~~ Index ~/ (apps | suite)).rep ~ "")
+  // Note: interestingly, the ~/ cut above prevents:  
+  //    a +
+  //      b +
+  //      c
+  // from being parsed as:
+  //    (a +
+  //      b) +
+  //      c
+  .map { case (pre, fs) =>
     var remaining = fs
     def climb(minPrec: Int, current: Term): Term = {
       var result = current
@@ -146,12 +155,13 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     }
   }
   
-  // TOOD support suite
   def record[_: P]: P[Term] =
-    locate(P( "{" ~ (ident ~ ":" ~ ( expr | suite )).rep(sep = ",") ~ "}" ).map(_.toList pipe Rcd))
+    locate(P( "{" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ "}" ).map(_.getOrElse(Blk(Nil))))
   
-  def atom[_: P]: P[Term] =
-    P(locate("(" ~ (suite | nextLevel.multilineBlock) ~ nl_indents.? ~ ")") | STRING | NAME | NUMBER | record)
+  def tuple[_: P]: P[Term] =
+    locate(P( "(" ~ (suite | nextLevel.multilineBlock).? ~ nl_indents.? ~ ")" ).map(_.getOrElse(Blk(Nil))))
+  
+  def atom[_: P]: P[Term] = P(tuple | record | STRING | NAME | NUMBER)
   
   def nextIndentP[_: P]: P[Int] = " ".repX(indent + 1).!.map(_.length)
   def indented[_: P, A](p: Parser => P[A]): P[A] = "\n" ~~ emptyLines ~~ nextIndentP.flatMapX { nextIndent =>

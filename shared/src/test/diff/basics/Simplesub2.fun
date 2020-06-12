@@ -56,7 +56,12 @@ let res = consume codata2
 /// codata2: {head: int, tail: {head: int, tail: 'a}} as 'a
 /// res: int
 
+// TODO better parser error
+:pe
 let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
+/// /!\ Parse error: Expected let binding:1:1, found "let rec pr" at l.61:1: let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
+
+let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
 /// produce3: bool -> {head: int, tail: {head: int, tail: {head: int, tail: 'a} as 'a ∨ {head: int, tail: {head: int, tail: {head: int, tail: 'b}} as 'b}}}
 /// res: bool -> int

@@ -46,3 +46,34 @@ x =>
 /// res: 'a -> 'a
 /// res: 'a -> 'a
 /// res: 'a -> 'a
+
+// TODO
+let f x = x + 1
+/// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f x)
+/// 	at: funtypes.utils.package$.lastWords(package.scala:109)
+/// 	at: funtypes.Typer.typeStatement(Typer.scala:96)
+/// 	at: funtypes.Typer.typeBlk(Typer.scala:87)
+/// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:77)
+/// 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:155)
+/// 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+/// 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+/// 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+/// 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
+/// 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+
+// TODO
+let f (
+  x
+  y
+) = x + 1
+/// /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f {x; y})
+/// 	at: funtypes.utils.package$.lastWords(package.scala:109)
+/// 	at: funtypes.Typer.typeStatement(Typer.scala:96)
+/// 	at: funtypes.Typer.typeBlk(Typer.scala:87)
+/// 	at: funtypes.DiffTests.rec$1(DiffTests.scala:77)
+/// 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:155)
+/// 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+/// 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+/// 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+/// 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
+/// 	at: org.scalatest.Transformer.apply(Transformer.scala:20)

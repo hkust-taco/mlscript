@@ -93,7 +93,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     case LetS(isrec, Var(nme), rhs) =>
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
-    case LetS(isrec, _, rhs) => ??? // TODO
+    case LetS(isrec, pat, rhs) => lastWords("Not yet supported: pattern " + pat)
     case t: Term =>
       if (!allowPure && t.isInstanceOf[Var])
         err("Pure expression does nothing in statement position.", t.toLoc)
@@ -144,7 +144,11 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         typeTerm(bod)(ctx + (nme -> n_ty), lvl, raise)
-      case Tup(_) => ???
+      case Tup(ofs) =>
+        // TODO actually use a tuple type
+        val fs = ofs.zipWithIndex.map {
+          case ((N, t), i) => ("_" + (i + 1), t); case ((S(n), t), _) => (n, t) }
+        typeTerm(Rcd(fs))
       case Blk((s: Term) :: Nil) => typeTerm(s)
       case Blk(Nil) => UnitType
       case Blk(s :: stmts) =>

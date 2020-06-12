@@ -72,7 +72,8 @@ abstract class TermImpl { self: Term =>
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs in $body)"
-    case Tup(xs) => xs.mkString("(", ", ", ")")
+    case Tup(xs) =>
+      xs.iterator.map { case (N, t) => t; case (S(n), t) => n + ": " + t }.mkString("(", ", ", ")")
   }
   
 }
