@@ -48,7 +48,7 @@ discard / foo
 :e
 discard foo
   1
-/// /!\ Type error: cannot constrain unit <: int -> 'a
+/// /!\ Type error: cannot constrain unit <: 1 -> 'a
 /// l.49: 	discard foo
 ///       	^^^^^^^^^^^
 /// l.50: 	  1
@@ -171,8 +171,8 @@ succ(
   x
 )
 /// res: {}
-/// res: int
-/// res: int
+/// res: 1
+/// res: 1
 /// res: int
 
 succ

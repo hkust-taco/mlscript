@@ -233,7 +233,7 @@ trait TypeSimplifier { self: Typer =>
           case CompactType(vars, prims, rec, fun) =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
-              ::: prims.iterator.map(p => Primitive(p.name)).toList
+              ::: prims.iterator.map(p => Primitive(p.id.idStr)).toList
               ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
               ::: fun.map(lr => Function(go(lr._1, !pol), go(lr._2, pol))).toList
             ).reduceOption(mrg).getOrElse(extr)

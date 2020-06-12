@@ -6,19 +6,19 @@
 
 
 42
-/// res: int
+/// res: 42
 
 x => 42
-/// res: ⊤ -> int
+/// res: ⊤ -> 42
 
 x => x
 /// res: 'a -> 'a
 
 x => x 42
-/// res: (int -> 'a) -> 'a
+/// res: (42 -> 'a) -> 'a
 
 (x => x) 42
-/// res: int
+/// res: 42
 
 f => x => f (f x)  // twice
 /// res: ('a ∨ 'b -> 'a) -> 'b -> 'a
@@ -65,7 +65,7 @@ x => succ (not x)
 
 :e
 (x => not x.f) { f: 123 }
-/// /!\ Type error: cannot constrain int <: bool
+/// /!\ Type error: cannot constrain 123 <: bool
 /// l.67: 	(x => not x.f) { f: 123 }
 ///       	^^^^^^^^^^^^^^^^^^^^^^^^^
 /// res: bool
@@ -90,26 +90,26 @@ x => x.f
 /// res: {}
 
 { f: 42 }
-/// res: {f: int}
+/// res: {f: 42}
 
 { f: 42 }.f
-/// res: int
+/// res: 42
 
 (x => x.f) { f: 42 }
-/// res: int
+/// res: 42
 
 f => { x: f 42 }.x
-/// res: (int -> 'a) -> 'a
+/// res: (42 -> 'a) -> 'a
 
 f => { x: f 42, y: 123 }.y
-/// res: (int -> ⊤) -> int
+/// res: (42 -> ⊤) -> 123
 
 if true then { a: 1, b: true } else { b: false, c: 42 }
 /// res: {b: bool}
 
 :e
 { a: 123, b: true }.c
-/// /!\ Type error: missing field: c in {a: int, b: bool}
+/// /!\ Type error: missing field: c in {a: 123, b: bool}
 /// l.111: 	{ a: 123, b: true }.c
 ///        	                   ^^
 /// res: ⊥
@@ -176,13 +176,13 @@ i => if ((i i) true) then true else true
 
 let f = x => x; {a: f 0, b: f true}
 /// f: 'a -> 'a
-/// res: {a: int, b: bool}
+/// res: {a: 0, b: bool}
 
 y => (let f = x => x; {a: f y, b: f true})
 /// res: 'a -> {a: 'a, b: bool}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-/// res: (bool ∨ int -> 'a) -> {a: 'a, b: 'a}
+/// res: (bool ∨ 0 -> 'a) -> {a: 'a, b: 'a}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 /// res: 'a -> {a: 'a, b: bool}
@@ -216,20 +216,20 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-/// /!\ Type error: cannot constrain int <: 'a -> 'b
+/// /!\ Type error: cannot constrain 0 <: 'a -> 'b
 /// l.218: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 ///        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/// x: int
-/// res: int
+/// x: 0
+/// res: 0
 
 (x => (let y = (x x); 0))
-/// res: 'a ∧ ('a -> ⊤) -> int
+/// res: 'a ∧ ('a -> ⊤) -> 0
 
 (let rec x = (y => (y (x x))); x)
 /// res: ('b -> 'b ∧ 'a) as 'a -> 'b
 
 next => 0
-/// res: ⊤ -> int
+/// res: ⊤ -> 0
 
 ((x => (x x)) (x => x))
 /// res: ('b ∨ ('b -> 'a)) as 'a
@@ -256,7 +256,7 @@ x => (y => (x (y y)))
 /// res: ('b ∧ ('a -> ⊤) -> 'b) as 'a
 
 (x => (let y = (x x.v); 0))
-/// res: {v: 'a} ∧ ('a -> ⊤) -> int
+/// res: {v: 'a} ∧ ('a -> ⊤) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
 /// x: 'a -> ('a ∨ ('a -> 'b)) as 'b

@@ -3,10 +3,10 @@ let a = 1
 let b = 2
 let c = 3
 let d = 4
-/// a: int
-/// b: int
-/// c: int
-/// d: int
+/// a: 1
+/// b: 2
+/// c: 3
+/// d: 4
 
 a + b
 /// res: int

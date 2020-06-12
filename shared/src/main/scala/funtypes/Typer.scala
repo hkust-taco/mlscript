@@ -25,11 +25,11 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
   type Ctx = Map[String, TypeScheme]
   type Raise = Diagnostic => Unit
   
-  val UnitType: PrimType = PrimType("unit")
-  val BoolType: PrimType = PrimType("bool")
-  val IntType: PrimType = PrimType("int")
-  val DecType: PrimType = PrimType("number")
-  val StrType: PrimType = PrimType("string")
+  val UnitType: PrimType = PrimType(Var("unit"))
+  val BoolType: PrimType = PrimType(Var("bool"))
+  val IntType: PrimType = PrimType(Var("int"))
+  val DecType: PrimType = PrimType(Var("number"))
+  val StrType: PrimType = PrimType(Var("string"))
   
   val builtins: Ctx = Map(
     "true" -> BoolType,
@@ -40,6 +40,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     "discard" -> PolymorphicType(0, FunctionType(freshVar(1), UnitType)), // Q: level?
     "add" -> FunctionType(IntType, FunctionType(IntType, IntType)),
     "+" -> FunctionType(IntType, FunctionType(IntType, IntType)),
+    "<" -> FunctionType(IntType, FunctionType(IntType, BoolType)),
     "id" -> {
       val v = freshVar(1)
       PolymorphicType(0, FunctionType(v, v))
@@ -149,9 +150,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
         implicit val l: Opt[Loc] = term.toLoc
         constrain(f_ty, FunctionType(a_ty, res))
         res
-      case IntLit(n) => IntType
-      case DecLit(n) => DecType
-      case StrLit(n) => StrType
+      case lit: Lit => PrimType(lit)
       case Sel(obj, name) =>
         val obj_ty = typeTerm(obj)
         implicit val l: Opt[Loc] = term.toLoc
@@ -233,6 +232,11 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
             err(s"missing field: $n1 in ${lhs.show}", loco)
           ) { case (n0, t0) => constrain(t0, t1) }
         }
+      case
+        (PrimType(_: IntLit), IntType)
+      | (PrimType(_: StrLit), StrType)
+      | (PrimType(_: DecLit), DecType)
+      => ()
       case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
         lhs.upperBounds ::= rhs
         lhs.lowerBounds.foreach(constrain(_, rhs))
@@ -330,9 +334,9 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
-  case class PrimType(name: String) extends SimpleType {
+  case class PrimType(id: SimpleTerm) extends SimpleType {
     def level: Int = 0
-    override def toString = name
+    override def toString = id.idStr
   }
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
    *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
@@ -370,7 +374,7 @@ class Typer(var dbg: Boolean) extends TyperDebugging {
         }
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
-      case PrimType(n) => Primitive(n)
+      case PrimType(n) => Primitive(n.idStr)
     }
     go(st, true)(Set.empty)
   }

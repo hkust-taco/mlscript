@@ -60,7 +60,7 @@ false + 1
 1 + false
 true + false
 log / false + 1
-/// /!\ Type error: cannot constrain int <: int -> 'a
+/// /!\ Type error: cannot constrain 1 <: 2 -> 'a
 /// l.56: 	1 2 3
 ///       	^^^
 /// /!\ Type error: identifier not found: c
@@ -104,7 +104,7 @@ succ succ
 /// /!\ Type error: cannot constrain int -> int <: int
 /// l.99: 	succ succ
 ///       	^^^^^^^^^
-/// /!\ Type error: cannot constrain int <: int -> 'a
+/// /!\ Type error: cannot constrain int <: 1 -> 'a
 /// l.99: 	succ succ
 ///       	^^^^^^^^^
 /// l.100: 	  1
@@ -129,12 +129,12 @@ log 1
 log
   1
   2
-/// /!\ Type error: cannot constrain int <: int -> 'a
+/// /!\ Type error: cannot constrain 1 <: 2 -> 'a
 /// l.125: 	  1
 ///        	  ^
 /// l.126: 	    2
 ///        	^^^^^
-/// /!\ Type error: cannot constrain unit <: int -> 'a
+/// /!\ Type error: cannot constrain unit <: 2 -> 'a
 /// l.127: 	log 1
 ///        	^^^^^
 /// l.128: 	  2
@@ -145,6 +145,16 @@ log
 /// res: unit
 /// res: ⊥
 /// res: unit
+
+:e // TODO better error
+let rec f = n => if n then 0 else f (miss + 1)
+/// /!\ Type error: identifier not found: miss
+/// l.150: 	let rec f = n => if n then 0 else f (miss + 1)
+///        	                                     ^^^^
+/// /!\ Type error: cannot constrain int <: bool
+/// l.150: 	let rec f = n => if n then 0 else f (miss + 1)
+///        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/// f: bool -> 0
 
 
 // missing field, cannot constrain
@@ -158,29 +168,29 @@ log
 {a: true}.a + 1
 succ {a: 1}
 {a: 1} succ
-/// /!\ Type error: cannot constrain int <: {u: 'a}
-/// l.153: 	1.u
+/// /!\ Type error: cannot constrain 1 <: {u: 'a}
+/// l.163: 	1.u
 ///        	 ^^
 /// /!\ Type error: missing field: u in {}
-/// l.154: 	{}.u
+/// l.164: 	{}.u
 ///        	  ^^
-/// /!\ Type error: missing field: u in {a: int}
-/// l.155: 	{a: 1}.u
+/// /!\ Type error: missing field: u in {a: 1}
+/// l.165: 	{a: 1}.u
 ///        	      ^^
-/// /!\ Type error: cannot constrain int <: int -> 'a
-/// l.156: 	{a: 1}.a 1
+/// /!\ Type error: cannot constrain 1 <: 1 -> 'a
+/// l.166: 	{a: 1}.a 1
 ///        	      ^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.157: 	1 + {a: true}.a
+/// l.167: 	1 + {a: true}.a
 ///        	^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.158: 	{a: true}.a + 1
+/// l.168: 	{a: true}.a + 1
 ///        	         ^^^^
-/// /!\ Type error: cannot constrain {a: int} <: int
-/// l.159: 	succ {a: 1}
+/// /!\ Type error: cannot constrain {a: 1} <: int
+/// l.169: 	succ {a: 1}
 ///        	^^^^^^^^^^^
-/// /!\ Type error: cannot constrain {a: int} <: (int -> int) -> 'a
-/// l.160: 	{a: 1} succ
+/// /!\ Type error: cannot constrain {a: 1} <: (int -> int) -> 'a
+/// l.170: 	{a: 1} succ
 ///        	^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -196,27 +206,27 @@ let f = x =>
   x.prop
 f { prop: 42 }
 /// f: {prop: 'a ∧ int} -> 'a
-/// res: int
+/// res: 42
 
 // FIXME 'prop' requirement is added twice
 :e
 f 42
 f { prap: false }
 f { prop: false }
-/// /!\ Type error: cannot constrain int <: {prop: 'a}
-/// l.203: 	f 42
+/// /!\ Type error: cannot constrain 42 <: {prop: 'a}
+/// l.213: 	f 42
 ///        	^^^^
-/// /!\ Type error: cannot constrain int <: {prop: 'a}
-/// l.203: 	f 42
+/// /!\ Type error: cannot constrain 42 <: {prop: 'a}
+/// l.213: 	f 42
 ///        	^^^^
 /// /!\ Type error: missing field: prop in {prap: bool}
-/// l.204: 	f { prap: false }
+/// l.214: 	f { prap: false }
 ///        	^^^^^^^^^^^^^^^^^
 /// /!\ Type error: missing field: prop in {prap: bool}
-/// l.204: 	f { prap: false }
+/// l.214: 	f { prap: false }
 ///        	^^^^^^^^^^^^^^^^^
 /// /!\ Type error: cannot constrain bool <: int
-/// l.205: 	f { prop: false }
+/// l.215: 	f { prop: false }
 ///        	^^^^^^^^^^^^^^^^^
 /// res: ⊥
 /// res: ⊥
@@ -229,4 +239,4 @@ f { prop: false }
 foo
 ba)r
 baz
-/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.230:3: ba)r
+/// /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.240:3: ba)r

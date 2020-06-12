@@ -5,10 +5,10 @@ succ / succ / 1
 /// res: int
 
 let foo = f => f 1
-/// foo: (int -> 'a) -> 'a
+/// foo: (1 -> 'a) -> 'a
 
 foo / x => x
-/// res: int
+/// res: 1
 
 foo / x => succ x
 /// res: int
@@ -26,7 +26,7 @@ foo / x => succ / succ / x
 
 :e
 foo / foo / x => succ / succ / x
-/// /!\ Type error: cannot constrain int <: int -> 'a
+/// /!\ Type error: cannot constrain int <: 1 -> 'a
 /// l.28: 	foo / foo / x => succ / succ / x
 ///       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 /// res: ⊥

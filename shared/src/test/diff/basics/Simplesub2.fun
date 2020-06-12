@@ -12,14 +12,14 @@ let twice = f => x => f (f x)
 /// twice: ('a ∨ 'b -> 'a) -> 'b -> 'a
 
 let object1 = { x: 42, y: id }
-/// object1: {x: int, y: 'a -> 'a}
+/// object1: {x: 42, y: 'a -> 'a}
 
 let object2 = { x: 17, y: false }
-/// object2: {x: int, y: bool}
+/// object2: {x: 17, y: bool}
 
 let pick_an_object = b =>
   if b then object1 else object2
-/// pick_an_object: bool -> {x: int, y: bool ∨ ('a -> 'a)}
+/// pick_an_object: bool -> {x: 42 ∨ 17, y: bool ∨ ('a -> 'a)}
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
@@ -34,7 +34,7 @@ let id = x => x
 /// id: 'a -> 'a
 
 let ab = {u: id 0, v: id true}
-/// ab: {u: int, v: bool}
+/// ab: {u: 0, v: bool}
 
 
 
@@ -48,12 +48,12 @@ let rec consume = strm => add strm.head (consume strm.tail)
 
 let codata = produce 42
 let res = consume codata
-/// codata: {head: int, tail: 'a} as 'a
+/// codata: {head: 42 ∨ int, tail: 'a} as 'a
 /// res: int
 
 let rec codata2 = { head: 0, tail: { head: 1, tail: codata2 } }
 let res = consume codata2
-/// codata2: {head: int, tail: {head: int, tail: 'a}} as 'a
+/// codata2: {head: 0, tail: {head: 1, tail: 'a}} as 'a
 /// res: int
 
 // TODO better parser error
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-/// produce3: bool -> {head: int, tail: {head: int, tail: {head: int, tail: 'a} as 'a ∨ {head: int, tail: {head: int, tail: {head: int, tail: 'b}} as 'b}}}
+/// produce3: bool -> {head: 123, tail: {head: 42 ∨ int ∨ 0, tail: {head: 42 ∨ int, tail: 'a} as 'a ∨ {head: 1, tail: {head: 0, tail: {head: 1, tail: 'b}} as 'b}}}
 /// res: bool -> int
 
 let consume2 =

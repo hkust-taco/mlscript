@@ -8,30 +8,30 @@ let empty = {}
 {1}
 {{1}}
 {(1)}
-/// res: int
-/// res: int
-/// res: int
-/// res: int
-/// res: int
-/// res: int
+/// res: 1
+/// res: 1
+/// res: 1
+/// res: 1
+/// res: 1
+/// res: 1
 
 x : 1
 x: 1
 {x: 1}
 x: 1, y: 2
-/// res: {x: int}
-/// res: {x: int}
-/// res: {x: int}
-/// res: {x: int, y: int}
+/// res: {x: 1}
+/// res: {x: 1}
+/// res: {x: 1}
+/// res: {x: 1, y: 2}
 
 x : 1, 2, 3
 x: 1, 2, z: 3
 1, y: 2, z: 3
 x: 1, y: 2, z: 3
-/// res: {_2: int, _3: int, x: int}
-/// res: {_2: int, x: int, z: int}
-/// res: {_1: int, y: int, z: int}
-/// res: {x: int, y: int, z: int}
+/// res: {_2: 2, _3: 3, x: 1}
+/// res: {_2: 2, x: 1, z: 3}
+/// res: {_1: 1, y: 2, z: 3}
+/// res: {x: 1, y: 2, z: 3}
 
 let r = {u:1,v:2}
 let r = { u:1 , v:2 }
@@ -39,12 +39,12 @@ let r = { u :1 , v :2 }
 let r = {u: 1, v: 2}
 let r = { u: 1, v: 2 }
 let r = { u: 1,v: 2 }
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
 
 r.u + r.v
 r . u + r . v
@@ -61,7 +61,7 @@ r.w
 /// /!\ Type error: missing field: w in {}
 /// l.59: 	empty.w
 ///       	     ^^
-/// /!\ Type error: missing field: w in {u: int, v: int}
+/// /!\ Type error: missing field: w in {u: 1, v: 2}
 /// l.60: 	r.w
 ///       	 ^^
 /// res: ⊥
@@ -71,7 +71,7 @@ let rec sumHeads = x => x.head + sumHeads x.tail
 /// sumHeads: {head: int, tail: 'a} as 'a -> int
 
 let rec ouroboros = {head: 0, tail: ouroboros, eyes: {l: 1, r: 2}}
-/// ouroboros: {eyes: {l: int, r: int}, head: int, tail: 'a} as 'a
+/// ouroboros: {eyes: {l: 1, r: 2}, head: 0, tail: 'a} as 'a
 
 sumHeads ouroboros
 /// res: int
@@ -98,12 +98,12 @@ let r = {
   u: 1
   v: u + 1
 }
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: int}
 
 :pe
 let r = {
@@ -134,9 +134,9 @@ let r = {
     let y = 2
     y
 }
-/// r: {u: int, v: int}
-/// r: {u: int, v: int}
-/// r: {u: {x: int}, v: {y: int}}
+/// r: {u: 1, v: 2}
+/// r: {u: 1, v: 2}
+/// r: {u: {x: 1}, v: {y: 2}}
 // ^ FIXME? field punning...
 
 // TODO
@@ -148,12 +148,12 @@ let r = {
     x: 3
     y: 4
 }
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
 
 // TODO disallow or warn about this?
 let r = { u:
   1, v: 2 }
-/// r: {u: {_1: int, v: int}}
+/// r: {u: {_1: 1, v: 2}}
 
 // :e // used to raise: useless fields in statement position
 let r =
@@ -180,9 +180,9 @@ let r = (
     x: 3
     y: 4
 )
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
 
 let r = (
   u: (
@@ -203,8 +203,8 @@ let r = (
     y: 4,
   ),
 )
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
 
 let r = (
   u:
@@ -214,7 +214,7 @@ let r = (
     x: 3,
     y: 4,
 )
-/// r: {u: {x: int, y: int}, v: {x: int, y: int}}
+/// r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
 
 :pe
 let r = (
@@ -244,9 +244,9 @@ a:
       1
   }
   d: 2
-/// res: {a: {b: {c: int}}}
-/// res: {a: {b: {c: int}, d: int}}
-/// res: {a: {b: {c: int}, d: int}}
+/// res: {a: {b: {c: 1}}}
+/// res: {a: {b: {c: 1}, d: 2}}
+/// res: {a: {b: {c: 1}, d: 2}}
 
 // :e // used to raise: useless fields in statement position
 a:
@@ -254,7 +254,7 @@ a:
     c:
       1
   d: 2
-/// res: {a: {b: {c: int}, d: int}}
+/// res: {a: {b: {c: 1}, d: 2}}
 
 :w
 a:
@@ -272,8 +272,8 @@ a: {
 /// /!\ Warning: Previous field definitions are discarded by this returned expression.
 /// l.267: 	  3
 ///        	  ^
-/// res: {a: int}
-/// res: {a: int}
+/// res: {a: 3}
+/// res: {a: 3}
 
 let r =
   x: 1
@@ -284,8 +284,8 @@ let r =
   log x
   y: 2
   let _ = log y
-/// r: {x: int, y: int}
-/// r: {x: int, y: int}
+/// r: {x: 1, y: 2}
+/// r: {x: 1, y: 2}
 
 // FIXME ignore unit expressions
 :w

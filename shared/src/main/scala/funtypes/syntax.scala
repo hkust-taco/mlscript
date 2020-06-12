@@ -8,8 +8,8 @@ import funtypes.utils._, shorthands._
 final case class Pgrm(defs: Ls[(Bool, Str, Term)])
 
 sealed abstract class Term                                           extends TermImpl with Statement
-sealed abstract class Lit                                            extends Term
-final case class Var(name: Str)                                      extends Term
+sealed abstract class Lit                                            extends SimpleTerm
+final case class Var(name: Str)                                      extends SimpleTerm
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
 final case class Tup(fields: Ls[Opt[Str] -> Term])                   extends Term
@@ -22,6 +22,13 @@ final case class Bra(rcd: Bool, trm: Term)                           extends Ter
 final case class IntLit(value: BigInt)      extends Lit
 final case class DecLit(value: BigDecimal)  extends Lit
 final case class StrLit(value: Str)         extends Lit
+
+sealed abstract class SimpleTerm extends Term {
+  val idStr: Str = this match {
+    case Var(name) => name
+    case lit: Lit => lit.toString
+  }
+}
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
