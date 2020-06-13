@@ -16,7 +16,9 @@ class DiffTests extends FunSuite {
   
   files.foreach { file => test(file.baseName) {
     
-    val outputMarker = "/// "
+    val outputMarker = "//│ "
+    // val oldOutputMarker = "/// "
+    
     val fileContents = read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
@@ -53,12 +55,16 @@ class DiffTests extends FunSuite {
       case line :: ls if line.startsWith("// FIXME") || line.startsWith("// TODO") =>
         out.println(line)
         rec(ls, mode.copy(fixme = true))
-      case line :: ls if line.startsWith(outputMarker) => rec(ls, defaultMode)
+      case line :: ls if line.startsWith(outputMarker) //|| line.startsWith(oldOutputMarker)
+        => rec(ls, defaultMode)
       case line :: ls if line.isEmpty || line.startsWith("//") =>
         out.println(line)
         rec(ls, defaultMode)
       case l :: ls =>
-        val block = (l :: ls.takeWhile(l => l.nonEmpty && !l.startsWith(outputMarker))).toIndexedSeq
+        val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
+          l.startsWith(outputMarker)
+          // || l.startsWith(oldOutputMarker)
+        ))).toIndexedSeq
         block.foreach(out.println)
         val fph = new FastParseHelpers(block)
         val blockStr = fph.blockStr
