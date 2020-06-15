@@ -20,10 +20,10 @@ let id = v => v
 //│ id: 'a -> 'a
 
 f => f f
-//│ res: 'a ∧ ('a -> 'b) -> 'b
+//│ res: 'a & ('a -> 'b) -> 'b
 
 f => id f id f id
-//│ res: 'a ∧ (('b -> 'b) -> 'a -> ('c -> 'c) -> 'd) -> 'd
+//│ res: 'a & (('b -> 'b) -> 'a -> ('c -> 'c) -> 'd) -> 'd
 
 :pe
 let oops = hu(h
@@ -51,10 +51,10 @@ x =>
 let f x = x + 1
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f x)
 //│ 	at: funtypes.utils.package$.lastWords(package.scala:113)
-//│ 	at: funtypes.Typer.typeStatement(Typer.scala:103)
-//│ 	at: funtypes.Typer.typeBlk(Typer.scala:94)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:89)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:181)
+//│ 	at: funtypes.Typer.typeStatement(Typer.scala:130)
+//│ 	at: funtypes.Typer.typeBlk(Typer.scala:121)
+//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:94)
+//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:194)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -68,10 +68,10 @@ let f (
 ) = x + 1
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f (x; y;))
 //│ 	at: funtypes.utils.package$.lastWords(package.scala:113)
-//│ 	at: funtypes.Typer.typeStatement(Typer.scala:103)
-//│ 	at: funtypes.Typer.typeBlk(Typer.scala:94)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:89)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:181)
+//│ 	at: funtypes.Typer.typeStatement(Typer.scala:130)
+//│ 	at: funtypes.Typer.typeBlk(Typer.scala:121)
+//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:94)
+//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:194)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)

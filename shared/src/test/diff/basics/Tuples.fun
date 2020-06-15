@@ -22,19 +22,26 @@ let t = x: 1, y: 2, z: 3
 :e
 (1, true, "hey").2
 //│ Parsed: (((1, true, "hey",);) 0.2);
-//│ /!\ Type error: cannot constrain {_1: 1, _2: bool, _3: "hey"} <: 0.2 -> 'a
-//│ l.23: 	(1, true, "hey").2
-//│       	^^^^^^^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.23: 	(1, true, "hey").2
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{_1: 1, _2: bool, _3: "hey"}` is not a function
+//│ ║  l.23: 	(1, true, "hey").2
+//│ ║        	 ^^^^^^^^^^^^^^
+//│ ╟── but it flows into applied expression
+//│ ║  l.23: 	(1, true, "hey").2
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╙── which is not a function
+//│ res: nothing
 
 :w
 let not-tup = (
   1
   2
 )
-//│ /!\ Warning: Pure expression does nothing in statement position.
-//│ l.32: 	  1
-//│       	  ^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.39: 	  1
+//│ ╙──      	  ^
 //│ not-tup: 2
 
 :w
@@ -42,9 +49,9 @@ let tup = (
   1,
   2
 )
-//│ /!\ Warning: Previous field definitions are discarded by this returned expression.
-//│ l.43: 	  2
-//│       	  ^
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.50: 	  2
+//│ ╙──      	  ^
 //│ tup: 2
 
 :w
@@ -52,9 +59,9 @@ let tup =
   1,
   2,
   3
-//│ /!\ Warning: Previous field definitions are discarded by this returned expression.
-//│ l.54: 	  3
-//│       	  ^
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.61: 	  3
+//│ ╙──      	  ^
 //│ tup: 3
 
 let tup =

@@ -58,14 +58,28 @@ r. u + r. v
 :e
 empty.w
 r.w
-//│ /!\ Type error: missing field: w in {}
-//│ l.59: 	empty.w
-//│       	     ^^
-//│ /!\ Type error: missing field: w in {u: 1, v: 2}
-//│ l.60: 	r.w
-//│       	 ^^
-//│ res: ⊥
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.59: 	empty.w
+//│ ║        	     ^^
+//│ ╟── expression of type `{}` does not have field 'w'
+//│ ║  l.2: 	let empty = {}
+//│ ║       	            ^^
+//│ ╟── but it flows into variable reference
+//│ ║  l.59: 	empty.w
+//│ ║        	^^^^^
+//│ ╙── which does not match type `{w: ?a}`
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.60: 	r.w
+//│ ║        	 ^^
+//│ ╟── expression of type `{u: 1, v: 2}` does not have field 'w'
+//│ ║  l.41: 	let r = { u: 1,v: 2 }
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── but it flows into variable reference
+//│ ║  l.60: 	r.w
+//│ ║        	^
+//│ ╙── which does not match type `{w: ?a}`
+//│ res: nothing
+//│ res: nothing
 
 let rec sumHeads = x => x.head + sumHeads x.tail
 //│ sumHeads: {head: int, tail: 'a} as 'a -> int
@@ -110,7 +124,7 @@ let r = {
   u: 1;
   v: 2;
 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.109:1: let r = {
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.123:1: let r = {
 
 let r = {
   u:
@@ -226,7 +240,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.220:1: let r = (
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.234:1: let r = (
 
 a:
   b:
@@ -266,12 +280,12 @@ a: {
   c: 2
   3
 }
-//│ /!\ Warning: Previous field definitions are discarded by this returned expression.
-//│ l.263: 	  3
-//│        	  ^
-//│ /!\ Warning: Previous field definitions are discarded by this returned expression.
-//│ l.267: 	  3
-//│        	  ^
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.277: 	  3
+//│ ╙──       	  ^
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.281: 	  3
+//│ ╙──       	  ^
 //│ res: {a: 3}
 //│ res: {a: 3}
 
@@ -294,7 +308,19 @@ let r =
   log x
   y: 2
   log y
-//│ /!\ Warning: Previous field definitions are discarded by this returned expression.
-//│ l.296: 	  log y
-//│        	  ^^^^^
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.310: 	  log y
+//│ ╙──       	  ^^^^^
 //│ r: unit
+
+
+// Funnily, because of dependent record literals, one can do:
+:w
+let res =
+  arg: 0
+  arg + 1
+//│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
+//│ ║  l.321: 	  arg + 1
+//│ ╙──       	  ^^^^^^^
+//│ res: int
+

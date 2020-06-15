@@ -48,20 +48,30 @@ discard / foo
 :e
 discard foo
   1
-//│ /!\ Type error: cannot constrain unit <: 1 -> 'a
-//│ l.49: 	discard foo
-//│       	^^^^^^^^^^^
-//│ l.50: 	  1
-//│       	^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.49: 	discard foo
+//│ ║        	^^^^^^^^^^^
+//│ ║  l.50: 	  1
+//│ ║        	^^^
+//│ ╟── expression of type `unit` is not a function
+//│ ║  l.49: 	discard foo
+//│ ╙──      	^^^^^^^^^^^
+//│ res: nothing
 
 :e // TODO better error: discarded non-unit value
 foo
   foo 1
   foo 2
-//│ /!\ Type error: cannot constrain int <: unit
-//│ l.60: 	  foo 1
-//│       	  ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.63: 	  foo 1
+//│ ║        	  ^^^^^
+//│ ╟── expression of type `int` does not match type `unit`
+//│ ║  l.19: 	  u + 1
+//│ ║        	  ^^^^^
+//│ ╟── but it flows into function application
+//│ ║  l.63: 	  foo 1
+//│ ║        	  ^^^^^
+//│ ╙── which does not match type `unit`
 //│ res: int
 
 :p
@@ -139,26 +149,26 @@ succ (
   succ
   1
 )
-//│ /!\ Warning: Pure expression does nothing in statement position.
-//│ l.139: 	  succ
-//│        	  ^^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.149: 	  succ
+//│ ╙──       	  ^^^^
 //│ res: int
 
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.148:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.158:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.153:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.163:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.158:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.168:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -188,16 +198,16 @@ succ
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.186:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.196:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.196:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.206:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.201:1:   1
+//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.211:1:   1
 

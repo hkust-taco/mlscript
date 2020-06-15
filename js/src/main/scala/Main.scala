@@ -33,7 +33,7 @@ object Main {
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          val typer = new funtypes.Typer(dbg = false) with funtypes.TypeSimplifier
+          val typer = new funtypes.Typer(dbg = false, explainErrors = false) with funtypes.TypeSimplifier
           val tys = typer.inferTypesJS(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>

@@ -17,30 +17,22 @@ abstract class TypeImpl { self: Type =>
     case _ => children.flatMap(_.typeVarsList)
   }
   
-  def show: String = {
-    val vars = typeVarsList.distinct
-    val ctx = vars.zipWithIndex.map {
-      case (tv, idx) =>
-        def nme = {
-          assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
-          ('a' + idx).toChar.toString
-        }
-        tv -> ("'" + nme)
-    }.toMap
-    showIn(ctx, 0)
-  }
+  def show: String =
+    showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: String, cnd: Boolean): String = if (cnd) "(" + str + ")" else str
-  def showIn(ctx: Map[TypeVar, String], outerPrec: Int): String = this match {
-    case Top => "⊤"
-    case Bot => "⊥"
+  def showIn(ctx: ShowCtx, outerPrec: Int): String = this match {
+    case Top => "anything"
+    case Bot => "nothing"
     case Primitive(name) => name
-    case uv: TypeVar => ctx(uv)
-    case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx(n)}"
+    // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
+    // case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs.getOrElse(n, s"[??? $n ???]")}"
+    case uv: TypeVar => ctx.vs(uv)
+    case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs(n)}"
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
-    case Union(l, r) => parensIf(l.showIn(ctx, 20) + " ∨ " + r.showIn(ctx, 20), outerPrec > 20)
-    case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " ∧ " + r.showIn(ctx, 25), outerPrec > 25)
+    case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
+    case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
   }
   
   def children: List[Type] = this match {
@@ -54,10 +46,46 @@ abstract class TypeImpl { self: Type =>
   
 }
 
+final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
+object ShowCtx {
+  def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
+     val allVars = tys.iterator.toList.flatMap(_.typeVarsList).distinct
+     ShowCtx(allVars.zipWithIndex.map {
+        case (tv, idx) =>
+          def nme = {
+            assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
+            ('a' + idx).toChar.toString
+          }
+          tv -> (pre + nme)
+      }.toMap, debug)
+  }
+}
 
 // Auxiliary definitions for terms
 
 abstract class TermImpl { self: Term =>
+  
+  def describe: Str = this match {
+    case Bra(_, trm) => trm.describe
+    case Blk((trm: Term) :: Nil) => trm.describe
+    case Blk(_) => "block of statements"
+    case IntLit(value) => "integer literal"
+    case DecLit(value) => "decimal literal"
+    case StrLit(value) => "string literal"
+    case Var(name) => "variable reference"
+    case Lam(name, rhs) => "lambda expression"
+    case App(App(op, lhs), rhs)
+      if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
+      => "operator application"
+    case App(op, lhs)
+      if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
+      => "operator application"
+    case App(lhs, rhs) => "function application"
+    case Rcd(fields) => "record"
+    case Sel(receiver, fieldName) => "field selection"
+    case Let(isRec, name, rhs, body) => "let binding"
+    case Tup(xs) => "tuple expression"
+  }
   
   override def toString: String = this match {
     case Bra(true, trm) => s"{$trm}"
@@ -85,21 +113,40 @@ trait Located {
   
   private var spanStart: Int = -1
   private var spanEnd: Int = -1
+  private var origin: Opt[Origin] = N
   
-  def withLoc(s: Int, e: Int): this.type = {
+  // TODO just store the Loc directly...
+  def withLoc(s: Int, e: Int, ori: Origin): this.type = {
+    assert(origin.isEmpty)
+    origin = S(ori)
     assert(spanStart < 0)
     assert(spanEnd < 0)
     spanStart = s
     spanEnd = e
     this
   }
-  def toLoc: Opt[Loc] = {
+  lazy val toLoc: Opt[Loc] = getLoc
+  private def getLoc: Opt[Loc] = {
     def subLocs = children.iterator.flatMap(_.toLoc.iterator)
     if (spanStart < 0) spanStart =
       subLocs.map(_.spanStart).minOption.getOrElse(return N)
     if (spanEnd < 0) spanEnd =
       subLocs.map(_.spanEnd).maxOption.getOrElse(return N)
-    S(Loc(spanStart, spanEnd))
+    val origins = origin.fold(subLocs.map(_.origin).toList.distinct)(_ :: Nil)
+    assert(origins.size === 1)
+    S(Loc(spanStart, spanEnd, origins.head))
+  }
+  /** Like toLoc, but we make sure the span includes the spans of all subterms. */
+  def toCoveringLoc: Opt[Loc] = {
+    // TODO factor logic with above
+    def subLocs = (this :: children).iterator.flatMap(_.toLoc.iterator)
+    val spanStart =
+      subLocs.map(_.spanStart).minOption.getOrElse(return N)
+    val spanEnd =
+      subLocs.map(_.spanEnd).maxOption.getOrElse(return N)
+    val origins = origin.fold(subLocs.map(_.origin).toList.distinct)(_ :: Nil)
+    assert(origins.size === 1)
+    S(Loc(spanStart, spanEnd, origins.head))
   }
 }
 
@@ -132,7 +179,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil
     case Blk(stmts) => stmts
     case LetS(_, pat, rhs) => pat :: rhs :: Nil
-    case IntLit(_) | DecLit(_) | StrLit(_) => Nil
+    case _: Lit => Nil
   }
   
   def size: Int = children.iterator.map(_.size).sum + 1

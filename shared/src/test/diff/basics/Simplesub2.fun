@@ -9,7 +9,7 @@ let id = x => x
 //│ id: 'a -> 'a
 
 let twice = f => x => f (f x)
-//│ twice: ('a ∨ 'b -> 'a) -> 'b -> 'a
+//│ twice: ('a | 'b -> 'a) -> 'b -> 'a
 
 let object1 = { x: 42, y: id }
 //│ object1: {x: 42, y: 'a -> 'a}
@@ -19,7 +19,7 @@ let object2 = { x: 17, y: false }
 
 let pick_an_object = b =>
   if b then object1 else object2
-//│ pick_an_object: bool -> {x: 42 ∨ 17, y: bool ∨ ('a -> 'a)}
+//│ pick_an_object: bool -> {x: 42 | 17, y: bool | ('a -> 'a)}
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a} as 'a ∨ {head: 1, tail: {head: 0, tail: {head: 1, tail: 'b}} as 'b}}}
+//│ produce3: bool -> {head: 123, tail: {head: 0, tail: {head: 1, tail: 'a}} as 'a | {head: int, tail: {head: int, tail: 'b} as 'b}}
 //│ res: bool -> int
 
 let consume2 =
@@ -72,6 +72,6 @@ let consume2 =
   // go
 // let rec consume2 = strm => add strm.head (add strm.tail.head (consume2 strm.tail.tail))
 let res = consume2 codata2
-//│ consume2: {head: int, tail: 'a} as 'a -> int
+//│ consume2: {head: int, tail: {head: int, tail: 'a} as 'a} -> int
 //│ res: int
 

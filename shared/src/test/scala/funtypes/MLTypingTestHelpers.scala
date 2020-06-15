@@ -16,7 +16,7 @@ class MLTypingTestHelpers extends FunSuite {
     if (dbg) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typer = new Typer(dbg) with TypeSimplifier
+    val typer = new Typer(dbg, false) with TypeSimplifier
     val tyv = typer.inferType(term)
     
     if (dbg) {
@@ -42,7 +42,7 @@ class MLTypingTestHelpers extends FunSuite {
     }
   }
   def error(str: String, msg: String): Unit = {
-    assert(intercept[TypeError](doTest(str, "<none>")).msg == msg); ()
+    assert(intercept[TypeError](doTest(str, "<none>")).mainMsg == msg); ()
   }
   
 }

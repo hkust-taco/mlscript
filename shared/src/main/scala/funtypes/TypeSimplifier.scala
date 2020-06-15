@@ -3,7 +3,7 @@ package funtypes
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
-import funtypes.utils._
+import funtypes.utils._, shorthands._
 
 trait TypeSimplifier { self: Typer =>
   
@@ -40,9 +40,9 @@ trait TypeSimplifier { self: Typer =>
     def ++ (that: PrimSet): PrimSet = {
       var cur = underlying
       that.underlying.foreach {
-        case prim @ PrimType(_: Lit) =>
+        case prim @ PrimType(_: Lit, _) =>
           if (!cur.contains(prim.widen)) cur += prim
-        case prim @ PrimType(_: Var) =>
+        case prim @ PrimType(_: Var, _) =>
           cur = cur.filterNot(_.widen === prim) + prim
       }
       new PrimSet(cur)
@@ -69,7 +69,7 @@ trait TypeSimplifier { self: Typer =>
   // This will allow for more precise co-occurrence analysis and hash-consing down the line.
   
   /** Convert an inferred SimpleType into the CompactType representation for simplification. */
-  def compactType(ty: SimpleType): CompactTypeScheme = {
+  def compactType(ty: SimpleType, pol: Bool = true): CompactTypeScheme = {
     import CompactType.{empty, merge}, empty.{copy => ct}
     
     val recursive = MutMap.empty[PolarVariable, TypeVariable]
@@ -81,16 +81,17 @@ trait TypeSimplifier { self: Typer =>
     def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
       case p: PrimType => ct(prims = PrimSet(p))
-      case FunctionType(l, r) =>
+      case ProxyType(und) => go(und, pol, parents)
+      case FunctionType(l, r, _) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
-      case RecordType(fs) =>
+      case RecordType(fs, _) =>
         ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
       case tv: TypeVariable =>
         val bounds = if (pol) tv.lowerBounds else tv.upperBounds
         val tv_pol = tv -> pol
         if (inProcess.contains(tv_pol))
           if (parents(tv)) ct() // we have a spurious cycle: ignore the bound
-          else ct(vars = Set(recursive.getOrElseUpdate(tv_pol, freshVar(0))))
+          else ct(vars = Set(recursive.getOrElseUpdate(tv_pol, freshVar(tv.prov)(0))))
         else (inProcess + (tv -> pol)) pipe { implicit inProcess =>
           val bound = bounds.map(b => go(b, pol, parents + tv))
             .foldLeft[CompactType](ct(vars = Set(tv)))(merge(pol))
@@ -103,7 +104,7 @@ trait TypeSimplifier { self: Typer =>
         }
       }
     
-    CompactTypeScheme(go(ty, true, Set.empty)(Set.empty), recVars)
+    CompactTypeScheme(go(ty, pol, Set.empty)(Set.empty), recVars)
   }
   
   
@@ -131,7 +132,7 @@ trait TypeSimplifier { self: Typer =>
   //      negatively along with the type Bot, so we can replace it with Bot.
   
   /** Simplifies a CompactTypeScheme by performing a co-occurrence analysis on the type variables. */
-  def simplifyType(cty: CompactTypeScheme): CompactTypeScheme = {
+  def simplifyType(cty: CompactTypeScheme, pol: Bool = true, removePolarVars: Bool = true): CompactTypeScheme = {
     
     // State accumulated during the analysis phase:
     var allVars = SortedSet.from(cty.recVars.keysIterator)(Ordering by (-_.uid))
@@ -145,7 +146,7 @@ trait TypeSimplifier { self: Typer =>
     def go(ty: CompactType, pol: Boolean): () => CompactType = {
       ty.vars.foreach { tv =>
         allVars += tv
-        val newOccs = LinkedHashSet.from(ty.vars.iterator ++ ty.prims.underlying)
+        val newOccs = LinkedHashSet.from[SimpleType](ty.vars.iterator ++ ty.prims.underlying)
         coOccurrences.get(pol -> tv) match {
           case Some(os) => os.filterInPlace(newOccs) // computes the intersection
           case None => coOccurrences(pol -> tv) = newOccs
@@ -173,16 +174,22 @@ trait TypeSimplifier { self: Typer =>
           fun_.map(lr => lr._1() -> lr._2()))
       }
     }
-    val gone = go(cty.term, true)
+    val gone = go(cty.term, pol)
     println(s"[occ] ${coOccurrences}")
-    println(s"[rec] ${recVars}")
+    println(s"[rec] ${recVars.keySet}")
     
     // Simplify away those non-recursive variables that only occur in positive or negative positions:
     allVars.foreach { case v0 => if (!recVars.contains(v0)) {
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
         case (Some(_), None) | (None, Some(_)) =>
-          println(s"[!] $v0")
-          varSubst += v0 -> None; ()
+          if (removePolarVars) {
+            println(s"[!] $v0")
+            varSubst += v0 -> None; ()
+          } else {
+            // The rest of simplifyType expects all remaining non-rec variables to occur both positively and negatively
+            coOccurrences.getOrElseUpdate(true -> v0, MutSet(v0))
+            coOccurrences.getOrElseUpdate(false -> v0, MutSet(v0))
+          }
         case occ => dbg_assert(occ =/= (None, None))
       }
     }}
@@ -232,7 +239,7 @@ trait TypeSimplifier { self: Typer =>
   
   /** Expands a CompactTypeScheme into a Type while performing hash-consing
    * to tie recursive type knots a bit tighter, when possible. */
-  def expandCompactType(cty: CompactTypeScheme): Type = {
+  def expandCompactType(cty: CompactTypeScheme, pol: Bool = true): Type = {
     def go(ty: CompactTypeOrVariable, pol: Boolean)
           (implicit inProcess: Map[(CompactTypeOrVariable, Boolean), () => TypeVar]): Type = {
       inProcess.get(ty -> pol) match { // Note: we use pat-mat instead of `foreach` to avoid non-local return
@@ -247,7 +254,7 @@ trait TypeSimplifier { self: Typer =>
         isRecursive = true
         (ty match {
           case tv: TypeVariable => tv
-          case _ => new TypeVariable(0, Nil, Nil)
+          case _ => new TypeVariable(0, Nil, Nil)(primProv)
         }).asTypeVar
       }
       val res = inProcess + (ty -> pol -> (() => v)) pipe { implicit inProcess =>
@@ -264,7 +271,7 @@ trait TypeSimplifier { self: Typer =>
       }
       if (isRecursive) Recursive(v, res) else res
     }
-    go(cty.term, true)(Map.empty)
+    go(cty.term, pol)(Map.empty)
   }
   
   

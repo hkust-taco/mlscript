@@ -12,9 +12,11 @@ import funtypes.utils._, shorthands._
 
 class DiffTests extends FunSuite {
   
-  private val files = ls.rec(pwd/"shared"/"src"/"test"/"diff").filter(_.isFile)
+  private val dir = pwd/"shared"/"src"/"test"/"diff"
   
-  files.foreach { file => test(file.baseName) {
+  private val files = ls.rec(dir).filter(_.isFile)
+  
+  files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
@@ -24,8 +26,7 @@ class DiffTests extends FunSuite {
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
-    val parser = new Parser
-    val typer = new Typer(dbg = false) with TypeSimplifier {
+    val typer = new Typer(dbg = false, explainErrors = false) {
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.builtins
@@ -33,8 +34,8 @@ class DiffTests extends FunSuite {
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
-      fixme: Bool, showParse: Bool, dbg: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false)
+      fixme: Bool, showParse: Bool, explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     
@@ -48,6 +49,8 @@ class DiffTests extends FunSuite {
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
+          case "s" => mode.copy(fullExceptionStack = true)
+          case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case _ =>
             failures += allLines.size - lines.size
@@ -70,8 +73,9 @@ class DiffTests extends FunSuite {
         ))).toIndexedSeq
         block.foreach(out.println)
         val fph = new FastParseHelpers(block)
-        val blockStr = fph.blockStr
-        val ans = try parse(blockStr, parser.pgrm(_), verboseFailures = true) match {
+        val globalStartLineNum = allLines.size - lines.size + 1
+        val parser = new Parser(Origin(fileName, globalStartLineNum, fph))
+        val ans = try parse(fph.blockStr, parser.pgrm(_), verboseFailures = true) match {
           case f @ Failure(lbl, index, extra) =>
             val (lineNum, lineStr, col) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
@@ -86,43 +90,51 @@ class DiffTests extends FunSuite {
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
             typer.dbg = mode.dbg
-            val tys = try typer.typeBlk(p, ctx, allowPure = true) finally typer.dbg = false
+            typer.explainErrors = mode.explainErrors
+            val tys = typer.typeBlk(p, ctx, allowPure = true)
             var totalTypeErrors = 0
             var totalWarnings = 0
             val res = (p.stmts.zipWithIndex lazyZip tys).map {
               case ((s, _), diags -> ty) =>
-                // totalTypeErrors += diags.length
                 diags.foreach { diag =>
-                  diag match {
+                  val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+                  val headStr = diag match {
                     case TypeError(msg, loco) =>
                       totalTypeErrors += 1
-                      output(s"/!\\ Type error: $msg")
+                      s"╔══[ERROR] "
                     case Warning(msg, loco) =>
                       totalWarnings += 1
-                      output(s"/!\\ Warning: $msg")
+                      s"╔══[WARNING] "
                   }
-                  val globalStartLineNum = allLines.size - lines.size + 1
-                  val globalLineNum = globalStartLineNum + diag.loco.fold(0) { loc =>
-                    val (startLineNum, startLineStr, startLineCol) =
-                      fph.getLineColAt(loc.spanStart)
-                    val (endLineNum, endLineStr, endLineCol) =
-                      fph.getLineColAt(loc.spanEnd)
-                    var l = startLineNum
-                    var c = startLineCol
-                    while (l <= endLineNum) {
-                      val globalLineNum = globalStartLineNum + l - 1
-                      val pre = s"l.$globalLineNum: "
-                      val curLine = block(l - 1)
-                      output(pre + "\t" + curLine)
-                      out.print(outputMarker + " " * pre.length + "\t" + " " * (c - 1))
-                      val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-                      while (c < lastCol) { out.print('^'); c += 1 }
-                      out.println
-                      c = 1
-                      l += 1
+                  val lastMsgNum = diag.allMsgs.size - 1
+                  val globalLineNum = diag.allMsgs.zipWithIndex.map { case ((msg, loco), msgNum) =>
+                    val isLast = msgNum =:= lastMsgNum
+                    val msgStr = msg.showIn(sctx)
+                    if (msgNum =:= 0) output(headStr + msgStr)
+                    else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
+                    globalStartLineNum + loco.fold(0) { loc =>  // FIXME mixes origins...
+                      val (startLineNum, startLineStr, startLineCol) =
+                        loc.origin.fph.getLineColAt(loc.spanStart)
+                      val (endLineNum, endLineStr, endLineCol) =
+                        loc.origin.fph.getLineColAt(loc.spanEnd)
+                      var l = startLineNum
+                      var c = startLineCol
+                      while (l <= endLineNum) {
+                        val globalLineNum = loc.origin.startLineNum + l - 1
+                        val prepre = "║  "
+                        val pre = s"l.$globalLineNum: "
+                        val curLine = loc.origin.fph.lines(l - 1)
+                        output(prepre + pre + "\t" + curLine)
+                        out.print(outputMarker + (if (isLast) "╙──" else prepre) + " " * pre.length + "\t" + " " * (c - 1))
+                        val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
+                        while (c < lastCol) { out.print('^'); c += 1 }
+                        out.println
+                        c = 1
+                        l += 1
+                      }
+                      startLineNum - 1
                     }
-                    startLineNum - 1
-                  }
+                  }.head
                   if (!allowTypeErrors && !mode.fixme && (
                       !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
                    || !mode.expectWarnings && diag.isInstanceOf[Warning]
@@ -137,14 +149,12 @@ class DiffTests extends FunSuite {
                     typer.dbg = true
                     try typer.typeStatement(s, allowPure = true)(ctx, 0, throw _)
                     catch { case err: TypeError =>
-                      output(s"ERROR: " + err.msg)
+                      output(s"ERROR: " + err.mainMsg)
                       if (!mode.fixme)
                         err.getStackTrace().take(10).foreach(s => output("\tat: " + s))
                     } finally typer.dbg = false
                   }
                 }
-                // if (diags.exists(_.isInstanceOf[Warning]) && !mode.expectTypeErrors) {
-                // }
                 if (mode.dbg) output(s"Typed as: $ty")
                 if (mode.dbg) output(s" where: ${ty.instantiate(0).showBounds}")
                 val com = typer.compactType(ty.instantiate(0))
@@ -172,7 +182,10 @@ class DiffTests extends FunSuite {
               failures += allLines.size - lines.size
             // err.printStackTrace(out)
             outputMarker + "/!!!\\ Uncaught error: " + err +
-              err.getStackTrace().take(10).map("\n" + outputMarker + "\tat: " + _).mkString
+              err.getStackTrace().take(if (mode.fullExceptionStack) Int.MaxValue else 10)
+                .map("\n" + outputMarker + "\tat: " + _).mkString
+        } finally {
+          typer.dbg = false
         }
         out.println(ans)
         rec(lines.drop(block.size), mode)
@@ -190,5 +203,8 @@ class DiffTests extends FunSuite {
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
+  
+  try os.proc("git", "status", "--porcelain", dir).call().out.lines().foreach(l => println(" [git] " + l))
+  catch { case err: Throwable => System.err.println("git command failed with: " + err) }
   
 }

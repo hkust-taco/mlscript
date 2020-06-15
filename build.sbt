@@ -27,7 +27,8 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     wartremoverWarnings ++= Warts.allBut(
       Recursion, Throw, Nothing, Return, While, IsInstanceOf,
       Var, MutableDataStructures, NonUnitStatements,
-      DefaultArguments, ImplicitParameter, StringPlusAny, Any,
+      DefaultArguments, ImplicitParameter, ImplicitConversion,
+      StringPlusAny, Any,
       JavaSerializable, Serializable, Product,
       LeakingSealed, Overloading,
       Option2Iterable, TraversableOps,
@@ -36,6 +37,7 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
     libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.7",
+    // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?
     libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.1.4",
     // 
     watchSources += WatchSource(

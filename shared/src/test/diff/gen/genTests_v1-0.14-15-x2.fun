@@ -10,90 +10,135 @@ add
 //│ res: int -> int -> int
 
 (0 0)
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.12: 	(0 0)
-//│       	 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.12: 	(0 0)
+//│ ║        	 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.12: 	(0 0)
+//│ ╙──      	 ^
+//│ res: nothing
 
 (0 add)
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.18: 	(0 add)
-//│       	 ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.21: 	(0 add)
+//│ ║        	 ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.21: 	(0 add)
+//│ ╙──      	 ^
+//│ res: nothing
 
 (0 {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {u: 0} -> 'a
-//│ l.24: 	(0 {u: 0})
-//│       	 ^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.30: 	(0 {u: 0})
+//│ ║        	 ^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.30: 	(0 {u: 0})
+//│ ╙──      	 ^
+//│ res: nothing
 
 (0 {u: add})
-//│ /!\ Type error: cannot constrain 0 <: {u: int -> int -> int} -> 'a
-//│ l.30: 	(0 {u: add})
-//│       	 ^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.39: 	(0 {u: add})
+//│ ║        	 ^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.39: 	(0 {u: add})
+//│ ╙──      	 ^
+//│ res: nothing
 
 (add 0)
 //│ res: int -> int
 
 (add add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.39: 	(add add)
-//│       	 ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.51: 	(add add)
+//│ ║        	 ^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.51: 	(add add)
+//│ ╙──      	     ^^^
 //│ res: int -> int
 
 (add 0.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.45: 	(add 0.u)
-//│       	      ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.60: 	(add 0.u)
+//│ ║        	      ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.60: 	(add 0.u)
+//│ ╙──      	     ^
 //│ res: int -> int
 
 (add add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.51: 	(add add.u)
-//│       	        ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.69: 	(add add.u)
+//│ ║        	        ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.69: 	(add add.u)
+//│ ╙──      	     ^^^
 //│ res: int -> int
 
 (add 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.57: 	(add 0.v)
-//│       	      ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.78: 	(add 0.v)
+//│ ║        	      ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.78: 	(add 0.v)
+//│ ╙──      	     ^
 //│ res: int -> int
 
 (add add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.63: 	(add add.v)
-//│       	        ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.87: 	(add add.v)
+//│ ║        	        ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.87: 	(add add.v)
+//│ ╙──      	     ^^^
 //│ res: int -> int
 
 (add {v: 0})
-//│ /!\ Type error: cannot constrain {v: 0} <: int
-//│ l.69: 	(add {v: 0})
-//│       	 ^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.96: 	(add {v: 0})
+//│ ║        	 ^^^^^^^^^^
+//│ ╟── expression of type `{v: 0}` does not match type `int`
+//│ ║  l.96: 	(add {v: 0})
+//│ ╙──      	     ^^^^^^
 //│ res: int -> int
 
 (add {v: add})
-//│ /!\ Type error: cannot constrain {v: int -> int -> int} <: int
-//│ l.75: 	(add {v: add})
-//│       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.105: 	(add {v: add})
+//│ ║         	 ^^^^^^^^^^^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
+//│ ║  l.105: 	(add {v: add})
+//│ ╙──       	     ^^^^^^^^
 //│ res: int -> int
 
 (add {v: 0.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.81: 	(add {v: 0.v})
-//│       	          ^^
-//│ /!\ Type error: cannot constrain {v: 'a} <: int
-//│ l.81: 	(add {v: 0.v})
-//│       	 ^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.114: 	(add {v: 0.v})
+//│ ║         	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.114: 	(add {v: 0.v})
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.114: 	(add {v: 0.v})
+//│ ║         	 ^^^^^^^^^^^^
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
+//│ ║  l.114: 	(add {v: 0.v})
+//│ ╙──       	     ^^^^^^^^
 //│ res: int -> int
 
 (add {v: add.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.90: 	(add {v: add.v})
-//│       	            ^^
-//│ /!\ Type error: cannot constrain {v: 'a} <: int
-//│ l.90: 	(add {v: add.v})
-//│       	 ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.129: 	(add {v: add.v})
+//│ ║         	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.129: 	(add {v: add.v})
+//│ ╙──       	         ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.129: 	(add {v: add.v})
+//│ ║         	 ^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
+//│ ║  l.129: 	(add {v: add.v})
+//│ ╙──       	     ^^^^^^^^^^
 //│ res: int -> int
 
 ((x => 0) 0)
@@ -121,15 +166,21 @@ add
 //│ res: int -> int -> int
 
 ((x => add) 0.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.123: 	((x => add) 0.u)
-//│        	             ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.168: 	((x => add) 0.u)
+//│ ║         	             ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.168: 	((x => add) 0.u)
+//│ ╙──       	            ^
 //│ res: int -> int -> int
 
 ((x => add) add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.129: 	((x => add) add.u)
-//│        	               ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.177: 	((x => add) add.u)
+//│ ║         	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.177: 	((x => add) add.u)
+//│ ╙──       	            ^^^
 //│ res: int -> int -> int
 
 ((x => add) {u: 0})
@@ -145,54 +196,82 @@ add
 //│ res: int -> int -> int
 
 ((x => add) {u: 0.u})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.147: 	((x => add) {u: 0.u})
-//│        	                 ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.198: 	((x => add) {u: 0.u})
+//│ ║         	                 ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.198: 	((x => add) {u: 0.u})
+//│ ╙──       	                ^
 //│ res: int -> int -> int
 
 ((x => add) {u: add.u})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.153: 	((x => add) {u: add.u})
-//│        	                   ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.207: 	((x => add) {u: add.u})
+//│ ║         	                   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.207: 	((x => add) {u: add.u})
+//│ ╙──       	                ^^^
 //│ res: int -> int -> int
 
 ((x => add) 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.159: 	((x => add) 0.v)
-//│        	             ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.216: 	((x => add) 0.v)
+//│ ║         	             ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.216: 	((x => add) 0.v)
+//│ ╙──       	            ^
 //│ res: int -> int -> int
 
 ((x => add) add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.165: 	((x => add) add.v)
-//│        	               ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.225: 	((x => add) add.v)
+//│ ║         	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.225: 	((x => add) add.v)
+//│ ╙──       	            ^^^
 //│ res: int -> int -> int
 
 ((let x = 0; add) 0)
 //│ res: int -> int
 
 ((let x = 0; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.174: 	((let x = 0; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.237: 	((let x = 0; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.237: 	((let x = 0; add) add)
+//│ ╙──       	                  ^^^
 //│ res: int -> int
 
 ((let x = 0; add) (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.180: 	((let x = 0; add) (0 0))
-//│        	                   ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.246: 	((let x = 0; add) (0 0))
+//│ ║         	                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.246: 	((let x = 0; add) (0 0))
+//│ ╙──       	                   ^
 //│ res: int -> int
 
 ((let x = 0; add) (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.186: 	((let x = 0; add) (0 add))
-//│        	                   ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.255: 	((let x = 0; add) (0 add))
+//│ ║         	                   ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.255: 	((let x = 0; add) (0 add))
+//│ ╙──       	                   ^
 //│ res: int -> int
 
 ((let x = 0; add) (x => 0))
-//│ /!\ Type error: cannot constrain 'a -> 0 <: int
-//│ l.192: 	((let x = 0; add) (x => 0))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.264: 	((let x = 0; add) (x => 0))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> 0` does not match type `int`
+//│ ║  l.264: 	((let x = 0; add) (x => 0))
+//│ ║         	                   ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.264: 	((let x = 0; add) (x => 0))
+//│ ║         	                  ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = 0; add) (let x = 0; 0))
@@ -205,129 +284,202 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) (let x = 0.u; 0))
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.207: 	((let x = 0; add) (let x = 0.u; 0))
-//│        	                            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.286: 	((let x = 0; add) (let x = 0.u; 0))
+//│ ║         	                            ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.286: 	((let x = 0; add) (let x = 0.u; 0))
+//│ ╙──       	                           ^
 //│ res: int -> int
 
 ((let x = 0; add) (let x = add.u; 0))
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.213: 	((let x = 0; add) (let x = add.u; 0))
-//│        	                              ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.295: 	((let x = 0; add) (let x = add.u; 0))
+//│ ║         	                              ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.295: 	((let x = 0; add) (let x = add.u; 0))
+//│ ╙──       	                           ^^^
 //│ res: int -> int
 
 ((let x = 0; add) (let rec x = x.u; 0))
 //│ res: int -> int
 
 ((let x = 0; add) (x => add))
-//│ /!\ Type error: cannot constrain 'a -> int -> int -> int <: int
-//│ l.222: 	((let x = 0; add) (x => add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.307: 	((let x = 0; add) (x => add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
+//│ ║  l.307: 	((let x = 0; add) (x => add))
+//│ ║         	                   ^^^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.307: 	((let x = 0; add) (x => add))
+//│ ║         	                  ^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = 0; add) (x => x))
-//│ /!\ Type error: cannot constrain 'a -> 'a <: int
-//│ l.228: 	((let x = 0; add) (x => x))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.320: 	((let x = 0; add) (x => x))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> ?a` does not match type `int`
+//│ ║  l.320: 	((let x = 0; add) (x => x))
+//│ ║         	                   ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.320: 	((let x = 0; add) (x => x))
+//│ ║         	                  ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = 0; add) (let x = 0; x))
 //│ res: int -> int
 
 ((let x = 0; add) (let x = add; x))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.237: 	((let x = 0; add) (let x = add; x))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.336: 	((let x = 0; add) (let x = add; x))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.336: 	((let x = 0; add) (let x = add; x))
+//│ ║         	                           ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.336: 	((let x = 0; add) (let x = add; x))
+//│ ║         	                  ^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = 0; add) (let rec x = x; x))
 //│ res: int -> int
 
 ((let x = 0; add) 0.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.246: 	((let x = 0; add) 0.u)
-//│        	                   ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.352: 	((let x = 0; add) 0.u)
+//│ ║         	                   ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.352: 	((let x = 0; add) 0.u)
+//│ ╙──       	                  ^
 //│ res: int -> int
 
 ((let x = 0; add) add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.252: 	((let x = 0; add) add.u)
-//│        	                     ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.361: 	((let x = 0; add) add.u)
+//│ ║         	                     ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.361: 	((let x = 0; add) add.u)
+//│ ╙──       	                  ^^^
 //│ res: int -> int
 
 ((let x = 0; add) {u: 0})
-//│ /!\ Type error: cannot constrain {u: 0} <: int
-//│ l.258: 	((let x = 0; add) {u: 0})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.370: 	((let x = 0; add) {u: 0})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{u: 0}` does not match type `int`
+//│ ║  l.370: 	((let x = 0; add) {u: 0})
+//│ ╙──       	                  ^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) {u: add})
-//│ /!\ Type error: cannot constrain {u: int -> int -> int} <: int
-//│ l.264: 	((let x = 0; add) {u: add})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.379: 	((let x = 0; add) {u: add})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{u: int -> int -> int}` does not match type `int`
+//│ ║  l.379: 	((let x = 0; add) {u: add})
+//│ ╙──       	                  ^^^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) {v: 0})
-//│ /!\ Type error: cannot constrain {v: 0} <: int
-//│ l.270: 	((let x = 0; add) {v: 0})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.388: 	((let x = 0; add) {v: 0})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: 0}` does not match type `int`
+//│ ║  l.388: 	((let x = 0; add) {v: 0})
+//│ ╙──       	                  ^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) {v: add})
-//│ /!\ Type error: cannot constrain {v: int -> int -> int} <: int
-//│ l.276: 	((let x = 0; add) {v: add})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.397: 	((let x = 0; add) {v: add})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
+//│ ║  l.397: 	((let x = 0; add) {v: add})
+//│ ╙──       	                  ^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) 0)
 //│ res: int -> int
 
 ((let x = add; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.285: 	((let x = add; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.409: 	((let x = add; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.409: 	((let x = add; add) add)
+//│ ╙──       	                    ^^^
 //│ res: int -> int
 
 ((let x = add; add) (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.291: 	((let x = add; add) (0 0))
-//│        	                     ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.418: 	((let x = add; add) (0 0))
+//│ ║         	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.418: 	((let x = add; add) (0 0))
+//│ ╙──       	                     ^
 //│ res: int -> int
 
 ((let x = add; add) (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.297: 	((let x = add; add) (0 add))
-//│        	                     ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.427: 	((let x = add; add) (0 add))
+//│ ║         	                     ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.427: 	((let x = add; add) (0 add))
+//│ ╙──       	                     ^
 //│ res: int -> int
 
 ((let x = add; add) (0 {u: 0}))
-//│ /!\ Type error: cannot constrain 0 <: {u: 0} -> 'a
-//│ l.303: 	((let x = add; add) (0 {u: 0}))
-//│        	                     ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.436: 	((let x = add; add) (0 {u: 0}))
+//│ ║         	                     ^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.436: 	((let x = add; add) (0 {u: 0}))
+//│ ╙──       	                     ^
 //│ res: int -> int
 
 ((let x = add; add) (0 {u: add}))
-//│ /!\ Type error: cannot constrain 0 <: {u: int -> int -> int} -> 'a
-//│ l.309: 	((let x = add; add) (0 {u: add}))
-//│        	                     ^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.445: 	((let x = add; add) (0 {u: add}))
+//│ ║         	                     ^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.445: 	((let x = add; add) (0 {u: add}))
+//│ ╙──       	                     ^
 //│ res: int -> int
 
 ((let x = add; add) ((0 add) 0))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.315: 	((let x = add; add) ((0 add) 0))
-//│        	                      ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.454: 	((let x = add; add) ((0 add) 0))
+//│ ║         	                      ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.454: 	((let x = add; add) ((0 add) 0))
+//│ ╙──       	                      ^
 //│ res: int -> int
 
 ((let x = add; add) ((0 add) add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.321: 	((let x = add; add) ((0 add) add))
-//│        	                      ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.463: 	((let x = add; add) ((0 add) add))
+//│ ║         	                      ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.463: 	((let x = add; add) ((0 add) add))
+//│ ╙──       	                      ^
 //│ res: int -> int
 
 ((let x = add; add) (x => 0))
-//│ /!\ Type error: cannot constrain 'a -> 0 <: int
-//│ l.327: 	((let x = add; add) (x => 0))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.472: 	((let x = add; add) (x => 0))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> 0` does not match type `int`
+//│ ║  l.472: 	((let x = add; add) (x => 0))
+//│ ║         	                     ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.472: 	((let x = add; add) (x => 0))
+//│ ║         	                    ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = add; add) (let x = 0; 0))
@@ -340,123 +492,219 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (x => add))
-//│ /!\ Type error: cannot constrain 'a -> int -> int -> int <: int
-//│ l.342: 	((let x = add; add) (x => add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.494: 	((let x = add; add) (x => add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
+//│ ║  l.494: 	((let x = add; add) (x => add))
+//│ ║         	                     ^^^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.494: 	((let x = add; add) (x => add))
+//│ ║         	                    ^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = add; add) (let x = 0; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.348: 	((let x = add; add) (let x = 0; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.507: 	((let x = add; add) (let x = 0; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.507: 	((let x = add; add) (let x = 0; add))
+//│ ║         	                                ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.507: 	((let x = add; add) (let x = 0; add))
+//│ ║         	                    ^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = add; add) (let x = add; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.354: 	((let x = add; add) (let x = add; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.520: 	((let x = add; add) (let x = add; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.520: 	((let x = add; add) (let x = add; add))
+//│ ║         	                                  ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.520: 	((let x = add; add) (let x = add; add))
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = add; add) (let rec x = x; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.360: 	((let x = add; add) (let rec x = x; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.533: 	((let x = add; add) (let rec x = x; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.533: 	((let x = add; add) (let rec x = x; add))
+//│ ║         	                                    ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.533: 	((let x = add; add) (let rec x = x; add))
+//│ ║         	                    ^^^^^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = add; add) (x => x))
-//│ /!\ Type error: cannot constrain 'a -> 'a <: int
-//│ l.366: 	((let x = add; add) (x => x))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.546: 	((let x = add; add) (x => x))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> ?a` does not match type `int`
+//│ ║  l.546: 	((let x = add; add) (x => x))
+//│ ║         	                     ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.546: 	((let x = add; add) (x => x))
+//│ ║         	                    ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let rec x = x; add) 0)
 //│ res: int -> int
 
 ((let rec x = x; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.375: 	((let rec x = x; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.562: 	((let rec x = x; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.562: 	((let rec x = x; add) add)
+//│ ╙──       	                      ^^^
 //│ res: int -> int
 
 ((let rec x = x; add) 0.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.381: 	((let rec x = x; add) 0.u)
-//│        	                       ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.571: 	((let rec x = x; add) 0.u)
+//│ ║         	                       ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.571: 	((let rec x = x; add) 0.u)
+//│ ╙──       	                      ^
 //│ res: int -> int
 
 ((let rec x = x; add) add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.387: 	((let rec x = x; add) add.u)
-//│        	                         ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.580: 	((let rec x = x; add) add.u)
+//│ ║         	                         ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.580: 	((let rec x = x; add) add.u)
+//│ ╙──       	                      ^^^
 //│ res: int -> int
 
 ((let rec x = x; add) {u: 0}.u)
 //│ res: int -> int
 
 ((let rec x = x; add) {u: add}.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.396: 	((let rec x = x; add) {u: add}.u)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.592: 	((let rec x = x; add) {u: add}.u)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.592: 	((let rec x = x; add) {u: add}.u)
+//│ ║         	                          ^^^
+//│ ╟── but it flows into field selection
+//│ ║  l.592: 	((let rec x = x; add) {u: add}.u)
+//│ ║         	                              ^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let rec x = x; add) {v: 0})
-//│ /!\ Type error: cannot constrain {v: 0} <: int
-//│ l.402: 	((let rec x = x; add) {v: 0})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.605: 	((let rec x = x; add) {v: 0})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: 0}` does not match type `int`
+//│ ║  l.605: 	((let rec x = x; add) {v: 0})
+//│ ╙──       	                      ^^^^^^
 //│ res: int -> int
 
 ((let rec x = x; add) {v: add})
-//│ /!\ Type error: cannot constrain {v: int -> int -> int} <: int
-//│ l.408: 	((let rec x = x; add) {v: add})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.614: 	((let rec x = x; add) {v: add})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
+//│ ║  l.614: 	((let rec x = x; add) {v: add})
+//│ ╙──       	                      ^^^^^^^^
 //│ res: int -> int
 
 ((let rec x = x; add) {v: 0.u})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.414: 	((let rec x = x; add) {v: 0.u})
-//│        	                           ^^
-//│ /!\ Type error: cannot constrain {v: 'a} <: int
-//│ l.414: 	((let rec x = x; add) {v: 0.u})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.623: 	((let rec x = x; add) {v: 0.u})
+//│ ║         	                           ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.623: 	((let rec x = x; add) {v: 0.u})
+//│ ╙──       	                          ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.623: 	((let rec x = x; add) {v: 0.u})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
+//│ ║  l.623: 	((let rec x = x; add) {v: 0.u})
+//│ ╙──       	                      ^^^^^^^^
 //│ res: int -> int
 
 ((let rec x = x; add) {v: add.u})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.423: 	((let rec x = x; add) {v: add.u})
-//│        	                             ^^
-//│ /!\ Type error: cannot constrain {v: 'a} <: int
-//│ l.423: 	((let rec x = x; add) {v: add.u})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.638: 	((let rec x = x; add) {v: add.u})
+//│ ║         	                             ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.638: 	((let rec x = x; add) {v: add.u})
+//│ ╙──       	                          ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.638: 	((let rec x = x; add) {v: add.u})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
+//│ ║  l.638: 	((let rec x = x; add) {v: add.u})
+//│ ╙──       	                      ^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) 0)
 //│ res: int -> int
 
 ((let x = {v: 0}; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.435: 	((let x = {v: 0}; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.656: 	((let x = {v: 0}; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.656: 	((let x = {v: 0}; add) add)
+//│ ╙──       	                       ^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (add 0))
-//│ /!\ Type error: cannot constrain int -> int <: int
-//│ l.441: 	((let x = {v: 0}; add) (add 0))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.665: 	((let x = {v: 0}; add) (add 0))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ║  l.665: 	((let x = {v: 0}; add) (add 0))
+//│ ║         	                        ^^^^^
+//│ ╟── but it flows into argument of type `?a | (int -> int)`
+//│ ║  l.665: 	((let x = {v: 0}; add) (add 0))
+//│ ║         	                       ^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (add add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.447: 	((let x = {v: 0}; add) (add add))
-//│        	                        ^^^^^^^
-//│ /!\ Type error: cannot constrain int -> int <: int
-//│ l.447: 	((let x = {v: 0}; add) (add add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.678: 	((let x = {v: 0}; add) (add add))
+//│ ║         	                        ^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.678: 	((let x = {v: 0}; add) (add add))
+//│ ╙──       	                            ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.678: 	((let x = {v: 0}; add) (add add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ║  l.678: 	((let x = {v: 0}; add) (add add))
+//│ ║         	                        ^^^^^^^
+//│ ╟── but it flows into argument of type `?a | (int -> int)`
+//│ ║  l.678: 	((let x = {v: 0}; add) (add add))
+//│ ║         	                       ^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => 0))
-//│ /!\ Type error: cannot constrain 'a -> 0 <: int
-//│ l.456: 	((let x = {v: 0}; add) (x => 0))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.697: 	((let x = {v: 0}; add) (x => 0))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> 0` does not match type `int`
+//│ ║  l.697: 	((let x = {v: 0}; add) (x => 0))
+//│ ║         	                        ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.697: 	((let x = {v: 0}; add) (x => 0))
+//│ ║         	                       ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = 0; 0))
@@ -469,93 +717,167 @@ add
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => add))
-//│ /!\ Type error: cannot constrain 'a -> int -> int -> int <: int
-//│ l.471: 	((let x = {v: 0}; add) (x => add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.719: 	((let x = {v: 0}; add) (x => add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
+//│ ║  l.719: 	((let x = {v: 0}; add) (x => add))
+//│ ║         	                        ^^^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.719: 	((let x = {v: 0}; add) (x => add))
+//│ ║         	                       ^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = 0; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.477: 	((let x = {v: 0}; add) (let x = 0; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.732: 	((let x = {v: 0}; add) (let x = 0; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.732: 	((let x = {v: 0}; add) (let x = 0; add))
+//│ ║         	                                   ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.732: 	((let x = {v: 0}; add) (let x = 0; add))
+//│ ║         	                       ^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = add; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.483: 	((let x = {v: 0}; add) (let x = add; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.745: 	((let x = {v: 0}; add) (let x = add; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.745: 	((let x = {v: 0}; add) (let x = add; add))
+//│ ║         	                                     ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.745: 	((let x = {v: 0}; add) (let x = add; add))
+//│ ║         	                       ^^^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let rec x = x; add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.489: 	((let x = {v: 0}; add) (let rec x = x; add))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.758: 	((let x = {v: 0}; add) (let rec x = x; add))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.758: 	((let x = {v: 0}; add) (let rec x = x; add))
+//│ ║         	                                       ^^^
+//│ ╟── but it flows into argument
+//│ ║  l.758: 	((let x = {v: 0}; add) (let rec x = x; add))
+//│ ║         	                       ^^^^^^^^^^^^^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => x))
-//│ /!\ Type error: cannot constrain 'a -> 'a <: int
-//│ l.495: 	((let x = {v: 0}; add) (x => x))
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.771: 	((let x = {v: 0}; add) (x => x))
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `?a -> ?a` does not match type `int`
+//│ ║  l.771: 	((let x = {v: 0}; add) (x => x))
+//│ ║         	                        ^^^^^^
+//│ ╟── but it flows into argument
+//│ ║  l.771: 	((let x = {v: 0}; add) (x => x))
+//│ ║         	                       ^^^^^^^^
+//│ ╙── which does not match type `int`
 //│ res: int -> int
 
 ((let x = {v: 0}; add) 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.501: 	((let x = {v: 0}; add) 0.v)
-//│        	                        ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.784: 	((let x = {v: 0}; add) 0.v)
+//│ ║         	                        ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.784: 	((let x = {v: 0}; add) 0.v)
+//│ ╙──       	                       ^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.507: 	((let x = {v: 0}; add) add.v)
-//│        	                          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.793: 	((let x = {v: 0}; add) add.v)
+//│ ║         	                          ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.793: 	((let x = {v: 0}; add) add.v)
+//│ ╙──       	                       ^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => 0).v)
-//│ /!\ Type error: cannot constrain 'a -> 0 <: {v: 'a}
-//│ l.513: 	((let x = {v: 0}; add) (x => 0).v)
-//│        	                               ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.802: 	((let x = {v: 0}; add) (x => 0).v)
+//│ ║         	                               ^^
+//│ ╟── expression of type `?a -> 0` does not have field 'v'
+//│ ║  l.802: 	((let x = {v: 0}; add) (x => 0).v)
+//│ ║         	                        ^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.802: 	((let x = {v: 0}; add) (x => 0).v)
+//│ ║         	                       ^^^^^^^^
+//│ ╙── which does not have field 'v'
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => add).v)
-//│ /!\ Type error: cannot constrain 'a -> int -> int -> int <: {v: 'a}
-//│ l.519: 	((let x = {v: 0}; add) (x => add).v)
-//│        	                                 ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.815: 	((let x = {v: 0}; add) (x => add).v)
+//│ ║         	                                 ^^
+//│ ╟── expression of type `?a -> int -> int -> int` does not have field 'v'
+//│ ║  l.815: 	((let x = {v: 0}; add) (x => add).v)
+//│ ║         	                        ^^^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.815: 	((let x = {v: 0}; add) (x => add).v)
+//│ ║         	                       ^^^^^^^^^^
+//│ ╙── which does not have field 'v'
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => x).v)
-//│ /!\ Type error: cannot constrain 'a -> 'a <: {v: 'a}
-//│ l.525: 	((let x = {v: 0}; add) (x => x).v)
-//│        	                               ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.828: 	((let x = {v: 0}; add) (x => x).v)
+//│ ║         	                               ^^
+//│ ╟── expression of type `?a -> ?a` does not have field 'v'
+//│ ║  l.828: 	((let x = {v: 0}; add) (x => x).v)
+//│ ║         	                        ^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.828: 	((let x = {v: 0}; add) (x => x).v)
+//│ ║         	                       ^^^^^^^^
+//│ ╙── which does not have field 'v'
 //│ res: int -> int
 
 ((let x = {v: add}; add) 0)
 //│ res: int -> int
 
 ((let x = {v: add}; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.534: 	((let x = {v: add}; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.844: 	((let x = {v: add}; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.844: 	((let x = {v: add}; add) add)
+//│ ╙──       	                         ^^^
 //│ res: int -> int
 
 ((let x = {v: add}; add) {v: 0})
-//│ /!\ Type error: cannot constrain {v: 0} <: int
-//│ l.540: 	((let x = {v: add}; add) {v: 0})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.853: 	((let x = {v: add}; add) {v: 0})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: 0}` does not match type `int`
+//│ ║  l.853: 	((let x = {v: add}; add) {v: 0})
+//│ ╙──       	                         ^^^^^^
 //│ res: int -> int
 
 ((let x = {v: add}; add) {v: add})
-//│ /!\ Type error: cannot constrain {v: int -> int -> int} <: int
-//│ l.546: 	((let x = {v: add}; add) {v: add})
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.862: 	((let x = {v: add}; add) {v: add})
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
+//│ ║  l.862: 	((let x = {v: add}; add) {v: add})
+//│ ╙──       	                         ^^^^^^^^
 //│ res: int -> int
 
 ((let rec x = {v: x}; add) 0)
 //│ res: int -> int
 
 ((let rec x = {v: x}; add) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.555: 	((let rec x = {v: x}; add) add)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.874: 	((let rec x = {v: x}; add) add)
+//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.874: 	((let rec x = {v: x}; add) add)
+//│ ╙──       	                           ^^^
 //│ res: int -> int
 
 ((x => x) 0)
@@ -565,34 +887,49 @@ add
 //│ res: int -> int -> int
 
 ((x => x) (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.567: 	((x => x) (0 0))
-//│        	           ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.889: 	((x => x) (0 0))
+//│ ║         	           ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.889: 	((x => x) (0 0))
+//│ ╙──       	           ^
+//│ res: nothing
 
 ((x => x) (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.573: 	((x => x) (0 add))
-//│        	           ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.898: 	((x => x) (0 add))
+//│ ║         	           ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.898: 	((x => x) (0 add))
+//│ ╙──       	           ^
+//│ res: nothing
 
 ((x => x) (0 (x => 0)))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> 0) -> 'b
-//│ l.579: 	((x => x) (0 (x => 0)))
-//│        	           ^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.907: 	((x => x) (0 (x => 0)))
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.907: 	((x => x) (0 (x => 0)))
+//│ ╙──       	           ^
+//│ res: nothing
 
 ((x => x) (0 (x => add)))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> int -> int -> int) -> 'b
-//│ l.585: 	((x => x) (0 (x => add)))
-//│        	           ^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.916: 	((x => x) (0 (x => add)))
+//│ ║         	           ^^^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.916: 	((x => x) (0 (x => add)))
+//│ ╙──       	           ^
+//│ res: nothing
 
 ((x => x) (0 (x => x)))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> 'a) -> 'b
-//│ l.591: 	((x => x) (0 (x => x)))
-//│        	           ^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.925: 	((x => x) (0 (x => x)))
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.925: 	((x => x) (0 (x => x)))
+//│ ╙──       	           ^
+//│ res: nothing
 
 ((x => x) {v: 0})
 //│ res: {v: 0}
@@ -601,85 +938,135 @@ add
 //│ res: {v: int -> int -> int}
 
 ((x => 0.u) 0)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.603: 	((x => 0.u) 0)
-//│        	        ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.940: 	((x => 0.u) 0)
+//│ ║         	        ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.940: 	((x => 0.u) 0)
+//│ ╙──       	       ^
+//│ res: nothing
 
 ((x => 0.u) add)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.609: 	((x => 0.u) add)
-//│        	        ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.949: 	((x => 0.u) add)
+//│ ║         	        ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.949: 	((x => 0.u) add)
+//│ ╙──       	       ^
+//│ res: nothing
 
 ((x => add.u) 0)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.615: 	((x => add.u) 0)
-//│        	          ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.958: 	((x => add.u) 0)
+//│ ║         	          ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.958: 	((x => add.u) 0)
+//│ ╙──       	       ^^^
+//│ res: nothing
 
 ((x => add.u) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.621: 	((x => add.u) add)
-//│        	          ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.967: 	((x => add.u) add)
+//│ ║         	          ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.967: 	((x => add.u) add)
+//│ ╙──       	       ^^^
+//│ res: nothing
 
 ((x => add.u) 0.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.627: 	((x => add.u) 0.u)
-//│        	          ^^
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.627: 	((x => add.u) 0.u)
-//│        	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.976: 	((x => add.u) 0.u)
+//│ ║         	          ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.976: 	((x => add.u) 0.u)
+//│ ╙──       	       ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.976: 	((x => add.u) 0.u)
+//│ ║         	               ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.976: 	((x => add.u) 0.u)
+//│ ╙──       	              ^
+//│ res: nothing
 
 ((x => add.u) add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.636: 	((x => add.u) add.u)
-//│        	          ^^
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.636: 	((x => add.u) add.u)
-//│        	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.991: 	((x => add.u) add.u)
+//│ ║         	          ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.991: 	((x => add.u) add.u)
+//│ ╙──       	       ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.991: 	((x => add.u) add.u)
+//│ ║         	                 ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.991: 	((x => add.u) add.u)
+//│ ╙──       	              ^^^
+//│ res: nothing
 
 ((x => x.u) 0)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.645: 	((x => x.u) 0)
-//│        	 ^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1006: 	((x => x.u) 0)
+//│ ║          	 ^^^^^^^^^^^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.1006: 	((x => x.u) 0)
+//│ ╙──        	            ^
+//│ res: nothing
 
 ((x => x.u) add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.651: 	((x => x.u) add)
-//│        	 ^^^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1015: 	((x => x.u) add)
+//│ ║          	 ^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.1015: 	((x => x.u) add)
+//│ ╙──        	            ^^^
+//│ res: nothing
 
 ((x => x.u) 0.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.657: 	((x => x.u) 0.u)
-//│        	             ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1024: 	((x => x.u) 0.u)
+//│ ║          	             ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.1024: 	((x => x.u) 0.u)
+//│ ╙──        	            ^
+//│ res: nothing
 
 ((x => x.u) add.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.663: 	((x => x.u) add.u)
-//│        	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1033: 	((x => x.u) add.u)
+//│ ║          	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.1033: 	((x => x.u) add.u)
+//│ ╙──        	            ^^^
+//│ res: nothing
 
 ((x => x.u) {u: 0}.u)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.669: 	((x => x.u) {u: 0}.u)
-//│        	 ^^^^^^^^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1042: 	((x => x.u) {u: 0}.u)
+//│ ║          	 ^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.1042: 	((x => x.u) {u: 0}.u)
+//│ ║          	                ^
+//│ ╟── but it flows into field selection
+//│ ║  l.1042: 	((x => x.u) {u: 0}.u)
+//│ ║          	                  ^^
+//│ ╙── which does not match type `{u: ?a}`
+//│ res: nothing
 
 ((x => x.u) {u: add}.u)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.675: 	((x => x.u) {u: add}.u)
-//│        	 ^^^^^^^^^^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1055: 	((x => x.u) {u: add}.u)
+//│ ║          	 ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.1055: 	((x => x.u) {u: add}.u)
+//│ ║          	                ^^^
+//│ ╟── but it flows into field selection
+//│ ║  l.1055: 	((x => x.u) {u: add}.u)
+//│ ║          	                    ^^
+//│ ╙── which does not match type `{u: ?a}`
+//│ res: nothing
 
 (x => 0)
-//│ res: ⊤ -> 0
+//│ res: anything -> 0
 
 (let x = 0; 0)
 //│ res: 0
@@ -691,22 +1078,28 @@ add
 //│ res: 0
 
 (let x = 0.u; 0)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.693: 	(let x = 0.u; 0)
-//│        	          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1080: 	(let x = 0.u; 0)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.1080: 	(let x = 0.u; 0)
+//│ ╙──        	         ^
 //│ res: 0
 
 (let x = add.u; 0)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.699: 	(let x = add.u; 0)
-//│        	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1089: 	(let x = add.u; 0)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.1089: 	(let x = add.u; 0)
+//│ ╙──        	         ^^^
 //│ res: 0
 
 (let rec x = x.u; 0)
 //│ res: 0
 
 (x => add)
-//│ res: ⊤ -> int -> int -> int
+//│ res: anything -> int -> int -> int
 
 (let x = 0; add)
 //│ res: int -> int -> int
@@ -718,15 +1111,21 @@ add
 //│ res: int -> int -> int
 
 (let x = 0.v; add)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.720: 	(let x = 0.v; add)
-//│        	          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1113: 	(let x = 0.v; add)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.1113: 	(let x = 0.v; add)
+//│ ╙──        	         ^
 //│ res: int -> int -> int
 
 (let x = add.v; add)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.726: 	(let x = add.v; add)
-//│        	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1122: 	(let x = add.v; add)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.1122: 	(let x = add.v; add)
+//│ ╙──        	         ^^^
 //│ res: int -> int -> int
 
 (let rec x = x.v; add)
@@ -742,58 +1141,82 @@ add
 //│ res: int -> int -> int
 
 (let rec x = x; x)
-//│ res: ⊥
+//│ res: nothing
 
 (let x = (0 0); x)
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.747: 	(let x = (0 0); x)
-//│        	          ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1146: 	(let x = (0 0); x)
+//│ ║          	          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1146: 	(let x = (0 0); x)
+//│ ╙──        	          ^
+//│ res: nothing
 
 (let x = (0 add); x)
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.753: 	(let x = (0 add); x)
-//│        	          ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1155: 	(let x = (0 add); x)
+//│ ║          	          ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1155: 	(let x = (0 add); x)
+//│ ╙──        	          ^
+//│ res: nothing
 
 (let rec x = (0 x); x)
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.759: 	(let rec x = (0 x); x)
-//│        	              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1164: 	(let rec x = (0 x); x)
+//│ ║          	              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1164: 	(let rec x = (0 x); x)
+//│ ╙──        	              ^
+//│ res: nothing
 
 (let x = 0.u; x)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.765: 	(let x = 0.u; x)
-//│        	          ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1173: 	(let x = 0.u; x)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.1173: 	(let x = 0.u; x)
+//│ ╙──        	         ^
+//│ res: nothing
 
 (let x = add.u; x)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.771: 	(let x = add.u; x)
-//│        	            ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1182: 	(let x = add.u; x)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.1182: 	(let x = add.u; x)
+//│ ╙──        	         ^^^
+//│ res: nothing
 
 (let rec x = x.u; x)
-//│ res: ⊥
+//│ res: nothing
 
 (let x = {v: 0}.u; x)
-//│ /!\ Type error: missing field: u in {v: 0}
-//│ l.780: 	(let x = {v: 0}.u; x)
-//│        	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1194: 	(let x = {v: 0}.u; x)
+//│ ║          	               ^^
+//│ ╟── expression of type `{v: 0}` does not have field 'u'
+//│ ║  l.1194: 	(let x = {v: 0}.u; x)
+//│ ╙──        	         ^^^^^^
+//│ res: nothing
 
 (let x = {v: add}.u; x)
-//│ /!\ Type error: missing field: u in {v: int -> int -> int}
-//│ l.786: 	(let x = {v: add}.u; x)
-//│        	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1203: 	(let x = {v: add}.u; x)
+//│ ║          	                 ^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not have field 'u'
+//│ ║  l.1203: 	(let x = {v: add}.u; x)
+//│ ╙──        	         ^^^^^^^^
+//│ res: nothing
 
 (let rec x = {v: x}.u; x)
-//│ /!\ Type error: missing field: u in {v: 'a}
-//│ l.792: 	(let rec x = {v: x}.u; x)
-//│        	                   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1212: 	(let rec x = {v: x}.u; x)
+//│ ║          	                   ^^
+//│ ╟── expression of type `{v: ?a}` does not have field 'u'
+//│ ║  l.1212: 	(let rec x = {v: x}.u; x)
+//│ ╙──        	             ^^^^^^
+//│ res: nothing
 
 (let x = {u: 0}; x)
 //│ res: {u: 0}
@@ -808,19 +1231,25 @@ add
 //│ res: {u: 0, v: 'a} as 'a
 
 (let x = {u: 0, v: 0.v}; x)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.810: 	(let x = {u: 0, v: 0.v}; x)
-//│        	                    ^^
-//│ res: {u: 0, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1233: 	(let x = {u: 0, v: 0.v}; x)
+//│ ║          	                    ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.1233: 	(let x = {u: 0, v: 0.v}; x)
+//│ ╙──        	                   ^
+//│ res: {u: 0, v: nothing}
 
 (let x = {u: 0, v: add.v}; x)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.816: 	(let x = {u: 0, v: add.v}; x)
-//│        	                      ^^
-//│ res: {u: 0, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1242: 	(let x = {u: 0, v: add.v}; x)
+//│ ║          	                      ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.1242: 	(let x = {u: 0, v: add.v}; x)
+//│ ╙──        	                   ^^^
+//│ res: {u: 0, v: nothing}
 
 (let rec x = {u: 0, v: x.v}; x)
-//│ res: {u: 0, v: ⊥}
+//│ res: {u: 0, v: nothing}
 
 (let x = {u: add}; x)
 //│ res: {u: int -> int -> int}
@@ -829,493 +1258,754 @@ add
 //│ res: {u: 'a} as 'a
 
 (x => (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.831: 	(x => (0 0))
-//│        	       ^^^
-//│ res: ⊤ -> ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1260: 	(x => (0 0))
+//│ ║          	       ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1260: 	(x => (0 0))
+//│ ╙──        	       ^
+//│ res: anything -> nothing
 
 (let x = 0; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.837: 	(let x = 0; (0 0))
-//│        	             ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1269: 	(let x = 0; (0 0))
+//│ ║          	             ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1269: 	(let x = 0; (0 0))
+//│ ╙──        	             ^
+//│ res: nothing
 
 (let x = add; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.843: 	(let x = add; (0 0))
-//│        	               ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1278: 	(let x = add; (0 0))
+//│ ║          	               ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1278: 	(let x = add; (0 0))
+//│ ╙──        	               ^
+//│ res: nothing
 
 (let rec x = x; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.849: 	(let rec x = x; (0 0))
-//│        	                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1287: 	(let rec x = x; (0 0))
+//│ ║          	                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1287: 	(let rec x = x; (0 0))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = (0 0); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.855: 	(let x = (0 0); (0 0))
-//│        	          ^^^
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.855: 	(let x = (0 0); (0 0))
-//│        	                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1296: 	(let x = (0 0); (0 0))
+//│ ║          	          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1296: 	(let x = (0 0); (0 0))
+//│ ╙──        	          ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1296: 	(let x = (0 0); (0 0))
+//│ ║          	                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1296: 	(let x = (0 0); (0 0))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = (0 add); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.864: 	(let x = (0 add); (0 0))
-//│        	          ^^^^^
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.864: 	(let x = (0 add); (0 0))
-//│        	                   ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1311: 	(let x = (0 add); (0 0))
+//│ ║          	          ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1311: 	(let x = (0 add); (0 0))
+//│ ╙──        	          ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1311: 	(let x = (0 add); (0 0))
+//│ ║          	                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1311: 	(let x = (0 add); (0 0))
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let rec x = (0 x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.873: 	(let rec x = (0 x); (0 0))
-//│        	              ^^^
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.873: 	(let rec x = (0 x); (0 0))
-//│        	                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1326: 	(let rec x = (0 x); (0 0))
+//│ ║          	              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1326: 	(let rec x = (0 x); (0 0))
+//│ ╙──        	              ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1326: 	(let rec x = (0 x); (0 0))
+//│ ║          	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1326: 	(let rec x = (0 x); (0 0))
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let x = (y => 0); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.882: 	(let x = (y => 0); (0 0))
-//│        	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1341: 	(let x = (y => 0); (0 0))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1341: 	(let x = (y => 0); (0 0))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let x = (y => add); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.888: 	(let x = (y => add); (0 0))
-//│        	                      ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1350: 	(let x = (y => add); (0 0))
+//│ ║          	                      ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1350: 	(let x = (y => add); (0 0))
+//│ ╙──        	                      ^
+//│ res: nothing
 
 (let x = (y => y); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.894: 	(let x = (y => y); (0 0))
-//│        	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1359: 	(let x = (y => y); (0 0))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1359: 	(let x = (y => y); (0 0))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let x = (let y = 0; y); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.900: 	(let x = (let y = 0; y); (0 0))
-//│        	                          ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1368: 	(let x = (let y = 0; y); (0 0))
+//│ ║          	                          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1368: 	(let x = (let y = 0; y); (0 0))
+//│ ╙──        	                          ^
+//│ res: nothing
 
 (let x = (let y = add; y); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.906: 	(let x = (let y = add; y); (0 0))
-//│        	                            ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1377: 	(let x = (let y = add; y); (0 0))
+//│ ║          	                            ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1377: 	(let x = (let y = add; y); (0 0))
+//│ ╙──        	                            ^
+//│ res: nothing
 
 (let x = (let rec y = y; y); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.912: 	(let x = (let rec y = y; y); (0 0))
-//│        	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1386: 	(let x = (let rec y = y; y); (0 0))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1386: 	(let x = (let rec y = y; y); (0 0))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let rec x = (let y = x; y); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.918: 	(let rec x = (let y = x; y); (0 0))
-//│        	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1395: 	(let rec x = (let y = x; y); (0 0))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1395: 	(let rec x = (let y = x; y); (0 0))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let rec x = (y => x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.924: 	(let rec x = (y => x); (0 0))
-//│        	                        ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1404: 	(let rec x = (y => x); (0 0))
+//│ ║          	                        ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1404: 	(let rec x = (y => x); (0 0))
+//│ ╙──        	                        ^
+//│ res: nothing
 
 (let rec x = (let y = 0; x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.930: 	(let rec x = (let y = 0; x); (0 0))
-//│        	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1413: 	(let rec x = (let y = 0; x); (0 0))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1413: 	(let rec x = (let y = 0; x); (0 0))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let rec x = (let y = add; x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.936: 	(let rec x = (let y = add; x); (0 0))
-//│        	                                ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1422: 	(let rec x = (let y = add; x); (0 0))
+//│ ║          	                                ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1422: 	(let rec x = (let y = add; x); (0 0))
+//│ ╙──        	                                ^
+//│ res: nothing
 
 (let rec x = (let rec y = y; x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.942: 	(let rec x = (let rec y = y; x); (0 0))
-//│        	                                  ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1431: 	(let rec x = (let rec y = y; x); (0 0))
+//│ ║          	                                  ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1431: 	(let rec x = (let rec y = y; x); (0 0))
+//│ ╙──        	                                  ^
+//│ res: nothing
 
 (let rec x = (let y = x; x); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.948: 	(let rec x = (let y = x; x); (0 0))
-//│        	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1440: 	(let rec x = (let y = x; x); (0 0))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1440: 	(let rec x = (let y = x; x); (0 0))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let x = (y => (z => 0)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.954: 	(let x = (y => (z => 0)); (0 0))
-//│        	                           ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1449: 	(let x = (y => (z => 0)); (0 0))
+//│ ║          	                           ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1449: 	(let x = (y => (z => 0)); (0 0))
+//│ ╙──        	                           ^
+//│ res: nothing
 
 (let x = (y => (z => add)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.960: 	(let x = (y => (z => add)); (0 0))
-//│        	                             ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1458: 	(let x = (y => (z => add)); (0 0))
+//│ ║          	                             ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1458: 	(let x = (y => (z => add)); (0 0))
+//│ ╙──        	                             ^
+//│ res: nothing
 
 (let x = (y => (z => z)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.966: 	(let x = (y => (z => z)); (0 0))
-//│        	                           ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1467: 	(let x = (y => (z => z)); (0 0))
+//│ ║          	                           ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1467: 	(let x = (y => (z => z)); (0 0))
+//│ ╙──        	                           ^
+//│ res: nothing
 
 (let x = (y => (z => y)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.972: 	(let x = (y => (z => y)); (0 0))
-//│        	                           ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1476: 	(let x = (y => (z => y)); (0 0))
+//│ ║          	                           ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1476: 	(let x = (y => (z => y)); (0 0))
+//│ ╙──        	                           ^
+//│ res: nothing
 
 (let x = (let y = 0; (z => y)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.978: 	(let x = (let y = 0; (z => y)); (0 0))
-//│        	                                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1485: 	(let x = (let y = 0; (z => y)); (0 0))
+//│ ║          	                                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1485: 	(let x = (let y = 0; (z => y)); (0 0))
+//│ ╙──        	                                 ^
+//│ res: nothing
 
 (let x = (let y = add; (z => y)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.984: 	(let x = (let y = add; (z => y)); (0 0))
-//│        	                                   ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1494: 	(let x = (let y = add; (z => y)); (0 0))
+//│ ║          	                                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1494: 	(let x = (let y = add; (z => y)); (0 0))
+//│ ╙──        	                                   ^
+//│ res: nothing
 
 (let x = (let rec y = y; (z => y)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.990: 	(let x = (let rec y = y; (z => y)); (0 0))
-//│        	                                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1503: 	(let x = (let rec y = y; (z => y)); (0 0))
+//│ ║          	                                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1503: 	(let x = (let rec y = y; (z => y)); (0 0))
+//│ ╙──        	                                     ^
+//│ res: nothing
 
 (let rec x = (let y = x; (z => y)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.996: 	(let rec x = (let y = x; (z => y)); (0 0))
-//│        	                                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1512: 	(let rec x = (let y = x; (z => y)); (0 0))
+//│ ║          	                                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1512: 	(let rec x = (let y = x; (z => y)); (0 0))
+//│ ╙──        	                                     ^
+//│ res: nothing
 
 (let rec x = (y => (z => x)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1002: 	(let rec x = (y => (z => x)); (0 0))
-//│         	                               ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1521: 	(let rec x = (y => (z => x)); (0 0))
+//│ ║          	                               ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1521: 	(let rec x = (y => (z => x)); (0 0))
+//│ ╙──        	                               ^
+//│ res: nothing
 
 (let rec x = (let y = 0; (z => x)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1008: 	(let rec x = (let y = 0; (z => x)); (0 0))
-//│         	                                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1530: 	(let rec x = (let y = 0; (z => x)); (0 0))
+//│ ║          	                                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1530: 	(let rec x = (let y = 0; (z => x)); (0 0))
+//│ ╙──        	                                     ^
+//│ res: nothing
 
 (let rec x = (let y = add; (z => x)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1014: 	(let rec x = (let y = add; (z => x)); (0 0))
-//│         	                                       ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1539: 	(let rec x = (let y = add; (z => x)); (0 0))
+//│ ║          	                                       ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1539: 	(let rec x = (let y = add; (z => x)); (0 0))
+//│ ╙──        	                                       ^
+//│ res: nothing
 
 (let rec x = (let rec y = y; (z => x)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1020: 	(let rec x = (let rec y = y; (z => x)); (0 0))
-//│         	                                         ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1548: 	(let rec x = (let rec y = y; (z => x)); (0 0))
+//│ ║          	                                         ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1548: 	(let rec x = (let rec y = y; (z => x)); (0 0))
+//│ ╙──        	                                         ^
+//│ res: nothing
 
 (let rec x = (let y = x; (z => x)); (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1026: 	(let rec x = (let y = x; (z => x)); (0 0))
-//│         	                                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1557: 	(let rec x = (let y = x; (z => x)); (0 0))
+//│ ║          	                                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1557: 	(let rec x = (let y = x; (z => x)); (0 0))
+//│ ╙──        	                                     ^
+//│ res: nothing
 
 (let x = {u: 0}; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1032: 	(let x = {u: 0}; (0 0))
-//│         	                  ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1566: 	(let x = {u: 0}; (0 0))
+//│ ║          	                  ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1566: 	(let x = {u: 0}; (0 0))
+//│ ╙──        	                  ^
+//│ res: nothing
 
 (let x = {u: add}; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1038: 	(let x = {u: add}; (0 0))
-//│         	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1575: 	(let x = {u: add}; (0 0))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1575: 	(let x = {u: add}; (0 0))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let rec x = {u: x}; (0 0))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1044: 	(let rec x = {u: x}; (0 0))
-//│         	                      ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1584: 	(let rec x = {u: x}; (0 0))
+//│ ║          	                      ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1584: 	(let rec x = {u: x}; (0 0))
+//│ ╙──        	                      ^
+//│ res: nothing
 
 (x => (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1050: 	(x => (0 add))
-//│         	       ^^^^^
-//│ res: ⊤ -> ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1593: 	(x => (0 add))
+//│ ║          	       ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1593: 	(x => (0 add))
+//│ ╙──        	       ^
+//│ res: anything -> nothing
 
 (let x = 0; (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1056: 	(let x = 0; (0 add))
-//│         	             ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1602: 	(let x = 0; (0 add))
+//│ ║          	             ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1602: 	(let x = 0; (0 add))
+//│ ╙──        	             ^
+//│ res: nothing
 
 (let x = add; (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1062: 	(let x = add; (0 add))
-//│         	               ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1611: 	(let x = add; (0 add))
+//│ ║          	               ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1611: 	(let x = add; (0 add))
+//│ ╙──        	               ^
+//│ res: nothing
 
 (let rec x = x; (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1068: 	(let rec x = x; (0 add))
-//│         	                 ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1620: 	(let rec x = x; (0 add))
+//│ ║          	                 ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1620: 	(let rec x = x; (0 add))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = 0.v; (0 add))
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1074: 	(let x = 0.v; (0 add))
-//│         	          ^^
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1074: 	(let x = 0.v; (0 add))
-//│         	               ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1629: 	(let x = 0.v; (0 add))
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.1629: 	(let x = 0.v; (0 add))
+//│ ╙──        	         ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1629: 	(let x = 0.v; (0 add))
+//│ ║          	               ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1629: 	(let x = 0.v; (0 add))
+//│ ╙──        	               ^
+//│ res: nothing
 
 (let x = add.v; (0 add))
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1083: 	(let x = add.v; (0 add))
-//│         	            ^^
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1083: 	(let x = add.v; (0 add))
-//│         	                 ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1644: 	(let x = add.v; (0 add))
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.1644: 	(let x = add.v; (0 add))
+//│ ╙──        	         ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1644: 	(let x = add.v; (0 add))
+//│ ║          	                 ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1644: 	(let x = add.v; (0 add))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let rec x = x.v; (0 add))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1092: 	(let rec x = x.v; (0 add))
-//│         	                   ^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1659: 	(let rec x = x.v; (0 add))
+//│ ║          	                   ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1659: 	(let rec x = x.v; (0 add))
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (x => (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1098: 	(x => (0 x))
-//│         	       ^^^
-//│ res: ⊤ -> ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1668: 	(x => (0 x))
+//│ ║          	       ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1668: 	(x => (0 x))
+//│ ╙──        	       ^
+//│ res: anything -> nothing
 
 (let x = 0; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1104: 	(let x = 0; (0 x))
-//│         	             ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1677: 	(let x = 0; (0 x))
+//│ ║          	             ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1677: 	(let x = 0; (0 x))
+//│ ╙──        	             ^
+//│ res: nothing
 
 (let x = add; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1110: 	(let x = add; (0 x))
-//│         	               ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1686: 	(let x = add; (0 x))
+//│ ║          	               ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1686: 	(let x = add; (0 x))
+//│ ╙──        	               ^
+//│ res: nothing
 
 (let rec x = x; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1116: 	(let rec x = x; (0 x))
-//│         	                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1695: 	(let rec x = x; (0 x))
+//│ ║          	                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1695: 	(let rec x = x; (0 x))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = (0 0); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1122: 	(let x = (0 0); (0 x))
-//│         	          ^^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1122: 	(let x = (0 0); (0 x))
-//│         	                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1704: 	(let x = (0 0); (0 x))
+//│ ║          	          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1704: 	(let x = (0 0); (0 x))
+//│ ╙──        	          ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1704: 	(let x = (0 0); (0 x))
+//│ ║          	                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1704: 	(let x = (0 0); (0 x))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = (0 add); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1131: 	(let x = (0 add); (0 x))
-//│         	          ^^^^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1131: 	(let x = (0 add); (0 x))
-//│         	                   ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1719: 	(let x = (0 add); (0 x))
+//│ ║          	          ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1719: 	(let x = (0 add); (0 x))
+//│ ╙──        	          ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1719: 	(let x = (0 add); (0 x))
+//│ ║          	                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1719: 	(let x = (0 add); (0 x))
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let rec x = (0 x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1140: 	(let rec x = (0 x); (0 x))
-//│         	              ^^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1140: 	(let rec x = (0 x); (0 x))
-//│         	                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1734: 	(let rec x = (0 x); (0 x))
+//│ ║          	              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1734: 	(let rec x = (0 x); (0 x))
+//│ ╙──        	              ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1734: 	(let rec x = (0 x); (0 x))
+//│ ║          	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1734: 	(let rec x = (0 x); (0 x))
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let x = (add 0); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1149: 	(let x = (add 0); (0 x))
-//│         	                   ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1749: 	(let x = (add 0); (0 x))
+//│ ║          	                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1749: 	(let x = (add 0); (0 x))
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let x = (add add); (0 x))
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.1155: 	(let x = (add add); (0 x))
-//│         	          ^^^^^^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1155: 	(let x = (add add); (0 x))
-//│         	                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1758: 	(let x = (add add); (0 x))
+//│ ║          	          ^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.1758: 	(let x = (add add); (0 x))
+//│ ╙──        	              ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1758: 	(let x = (add add); (0 x))
+//│ ║          	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1758: 	(let x = (add add); (0 x))
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let rec x = (add x); (0 x))
-//│ /!\ Type error: cannot constrain int -> int <: int
-//│ l.1164: 	(let rec x = (add x); (0 x))
-//│         	             ^^^^^^^
-//│ /!\ Type error: cannot constrain 0 <: 'a ∧ int -> 'b
-//│ l.1164: 	(let rec x = (add x); (0 x))
-//│         	                       ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in binding of function application:
+//│ ║  l.1773: 	(let rec x = (add x); (0 x))
+//│ ║          	             ^^^^^^^
+//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ║  l.1773: 	(let rec x = (add x); (0 x))
+//│ ╙──        	              ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1773: 	(let rec x = (add x); (0 x))
+//│ ║          	                       ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1773: 	(let rec x = (add x); (0 x))
+//│ ╙──        	                       ^
+//│ res: nothing
 
 (let rec x = (x 0); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('b ∧ (0 -> 'c ∧ 'a)) as 'a -> 'd
-//│ l.1173: 	(let rec x = (x 0); (0 x))
-//│         	                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1788: 	(let rec x = (x 0); (0 x))
+//│ ║          	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1788: 	(let rec x = (x 0); (0 x))
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let rec x = (x add); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('b ∧ ((int -> int -> int) -> 'c ∧ 'a)) as 'a -> 'd
-//│ l.1179: 	(let rec x = (x add); (0 x))
-//│         	                       ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1797: 	(let rec x = (x add); (0 x))
+//│ ║          	                       ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1797: 	(let rec x = (x add); (0 x))
+//│ ╙──        	                       ^
+//│ res: nothing
 
 (let rec x = (x x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('b ∧ ('b -> 'c ∧ 'a)) as 'a -> 'd
-//│ l.1185: 	(let rec x = (x x); (0 x))
-//│         	                     ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1806: 	(let rec x = (x x); (0 x))
+//│ ║          	                     ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1806: 	(let rec x = (x x); (0 x))
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let x = (y => 0); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> 0) -> 'b
-//│ l.1191: 	(let x = (y => 0); (0 x))
-//│         	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1815: 	(let x = (y => 0); (0 x))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1815: 	(let x = (y => 0); (0 x))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let x = (y => add); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> int -> int -> int) -> 'b
-//│ l.1197: 	(let x = (y => add); (0 x))
-//│         	                      ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1824: 	(let x = (y => add); (0 x))
+//│ ║          	                      ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1824: 	(let x = (y => add); (0 x))
+//│ ╙──        	                      ^
+//│ res: nothing
 
 (let x = (y => y); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('a -> 'a) -> 'b
-//│ l.1203: 	(let x = (y => y); (0 x))
-//│         	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1833: 	(let x = (y => y); (0 x))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1833: 	(let x = (y => y); (0 x))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let rec x = (y => x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1209: 	(let rec x = (y => x); (0 x))
-//│         	                        ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1842: 	(let rec x = (y => x); (0 x))
+//│ ║          	                        ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1842: 	(let rec x = (y => x); (0 x))
+//│ ╙──        	                        ^
+//│ res: nothing
 
 (let rec x = (let y = 0; x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1215: 	(let rec x = (let y = 0; x); (0 x))
-//│         	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1851: 	(let rec x = (let y = 0; x); (0 x))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1851: 	(let rec x = (let y = 0; x); (0 x))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let rec x = (let y = add; x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1221: 	(let rec x = (let y = add; x); (0 x))
-//│         	                                ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1860: 	(let rec x = (let y = add; x); (0 x))
+//│ ║          	                                ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1860: 	(let rec x = (let y = add; x); (0 x))
+//│ ╙──        	                                ^
+//│ res: nothing
 
 (let rec x = (let rec y = y; x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1227: 	(let rec x = (let rec y = y; x); (0 x))
-//│         	                                  ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1869: 	(let rec x = (let rec y = y; x); (0 x))
+//│ ║          	                                  ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1869: 	(let rec x = (let rec y = y; x); (0 x))
+//│ ╙──        	                                  ^
+//│ res: nothing
 
 (let rec x = (let y = x; x); (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1233: 	(let rec x = (let y = x; x); (0 x))
-//│         	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1878: 	(let rec x = (let y = x; x); (0 x))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1878: 	(let rec x = (let y = x; x); (0 x))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let x = {u: 0}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {u: 0} -> 'a
-//│ l.1239: 	(let x = {u: 0}; (0 x))
-//│         	                  ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1887: 	(let x = {u: 0}; (0 x))
+//│ ║          	                  ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1887: 	(let x = {u: 0}; (0 x))
+//│ ╙──        	                  ^
+//│ res: nothing
 
 (let x = {u: add}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {u: int -> int -> int} -> 'a
-//│ l.1245: 	(let x = {u: add}; (0 x))
-//│         	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1896: 	(let x = {u: add}; (0 x))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1896: 	(let x = {u: add}; (0 x))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let x = {u: add, v: 0}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {u: int -> int -> int, v: 0} -> 'a
-//│ l.1251: 	(let x = {u: add, v: 0}; (0 x))
-//│         	                          ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1905: 	(let x = {u: add, v: 0}; (0 x))
+//│ ║          	                          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1905: 	(let x = {u: add, v: 0}; (0 x))
+//│ ╙──        	                          ^
+//│ res: nothing
 
 (let x = {u: add, v: add}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {u: int -> int -> int, v: int -> int -> int} -> 'a
-//│ l.1257: 	(let x = {u: add, v: add}; (0 x))
-//│         	                            ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1914: 	(let x = {u: add, v: add}; (0 x))
+//│ ║          	                            ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1914: 	(let x = {u: add, v: add}; (0 x))
+//│ ╙──        	                            ^
+//│ res: nothing
 
 (let rec x = {u: add, v: x}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1263: 	(let rec x = {u: add, v: x}; (0 x))
-//│         	                              ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1923: 	(let rec x = {u: add, v: x}; (0 x))
+//│ ║          	                              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1923: 	(let rec x = {u: add, v: x}; (0 x))
+//│ ╙──        	                              ^
+//│ res: nothing
 
 (let rec x = {u: x}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1269: 	(let rec x = {u: x}; (0 x))
-//│         	                      ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1932: 	(let rec x = {u: x}; (0 x))
+//│ ║          	                      ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1932: 	(let rec x = {u: x}; (0 x))
+//│ ╙──        	                      ^
+//│ res: nothing
 
 (let x = 0.v; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1275: 	(let x = 0.v; (0 x))
-//│         	          ^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1275: 	(let x = 0.v; (0 x))
-//│         	               ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1941: 	(let x = 0.v; (0 x))
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.1941: 	(let x = 0.v; (0 x))
+//│ ╙──        	         ^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1941: 	(let x = 0.v; (0 x))
+//│ ║          	               ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1941: 	(let x = 0.v; (0 x))
+//│ ╙──        	               ^
+//│ res: nothing
 
 (let x = add.v; (0 x))
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1284: 	(let x = add.v; (0 x))
-//│         	            ^^
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1284: 	(let x = add.v; (0 x))
-//│         	                 ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.1956: 	(let x = add.v; (0 x))
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.1956: 	(let x = add.v; (0 x))
+//│ ╙──        	         ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1956: 	(let x = add.v; (0 x))
+//│ ║          	                 ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1956: 	(let x = add.v; (0 x))
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let rec x = x.v; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: ('b ∧ {v: 'c ∧ 'a}) as 'a -> 'd
-//│ l.1293: 	(let rec x = x.v; (0 x))
-//│         	                   ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1971: 	(let rec x = x.v; (0 x))
+//│ ║          	                   ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1971: 	(let rec x = x.v; (0 x))
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let x = {v: 0}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {v: 0} -> 'a
-//│ l.1299: 	(let x = {v: 0}; (0 x))
-//│         	                  ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1980: 	(let x = {v: 0}; (0 x))
+//│ ║          	                  ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1980: 	(let x = {v: 0}; (0 x))
+//│ ╙──        	                  ^
+//│ res: nothing
 
 (let x = {v: add}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: {v: int -> int -> int} -> 'a
-//│ l.1305: 	(let x = {v: add}; (0 x))
-//│         	                    ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1989: 	(let x = {v: add}; (0 x))
+//│ ║          	                    ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1989: 	(let x = {v: add}; (0 x))
+//│ ╙──        	                    ^
+//│ res: nothing
 
 (let rec x = {v: x}; (0 x))
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1311: 	(let rec x = {v: x}; (0 x))
-//│         	                      ^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.1998: 	(let rec x = {v: x}; (0 x))
+//│ ║          	                      ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.1998: 	(let rec x = {v: x}; (0 x))
+//│ ╙──        	                      ^
+//│ res: nothing
 
 (x => {u: 0})
-//│ res: ⊤ -> {u: 0}
+//│ res: anything -> {u: 0}
 
 (let x = 0; {u: 0})
 //│ res: {u: 0}
@@ -1327,73 +2017,103 @@ add
 //│ res: {u: 0}
 
 (let x = (0 0); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.1329: 	(let x = (0 0); {u: 0})
-//│         	          ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2019: 	(let x = (0 0); {u: 0})
+//│ ║          	          ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2019: 	(let x = (0 0); {u: 0})
+//│ ╙──        	          ^
 //│ res: {u: 0}
 
 (let x = (0 add); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.1335: 	(let x = (0 add); {u: 0})
-//│         	          ^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2028: 	(let x = (0 add); {u: 0})
+//│ ║          	          ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2028: 	(let x = (0 add); {u: 0})
+//│ ╙──        	          ^
 //│ res: {u: 0}
 
 (let rec x = (0 x); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: 'a -> 'b
-//│ l.1341: 	(let rec x = (0 x); {u: 0})
-//│         	              ^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2037: 	(let rec x = (0 x); {u: 0})
+//│ ║          	              ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2037: 	(let rec x = (0 x); {u: 0})
+//│ ╙──        	              ^
 //│ res: {u: 0}
 
 (let x = (0 {v: 0}); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {v: 0} -> 'a
-//│ l.1347: 	(let x = (0 {v: 0}); {u: 0})
-//│         	          ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2046: 	(let x = (0 {v: 0}); {u: 0})
+//│ ║          	          ^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2046: 	(let x = (0 {v: 0}); {u: 0})
+//│ ╙──        	          ^
 //│ res: {u: 0}
 
 (let x = (0 {v: add}); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {v: int -> int -> int} -> 'a
-//│ l.1353: 	(let x = (0 {v: add}); {u: 0})
-//│         	          ^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2055: 	(let x = (0 {v: add}); {u: 0})
+//│ ║          	          ^^^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2055: 	(let x = (0 {v: add}); {u: 0})
+//│ ╙──        	          ^
 //│ res: {u: 0}
 
 (let rec x = (0 {v: x}); {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a} -> 'b
-//│ l.1359: 	(let rec x = (0 {v: x}); {u: 0})
-//│         	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2064: 	(let rec x = (0 {v: x}); {u: 0})
+//│ ║          	              ^^^^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.2064: 	(let rec x = (0 {v: x}); {u: 0})
+//│ ╙──        	              ^
 //│ res: {u: 0}
 
 (let x = 0.u; {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1365: 	(let x = 0.u; {u: 0})
-//│         	          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2073: 	(let x = 0.u; {u: 0})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2073: 	(let x = 0.u; {u: 0})
+//│ ╙──        	         ^
 //│ res: {u: 0}
 
 (let x = add.u; {u: 0})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.1371: 	(let x = add.u; {u: 0})
-//│         	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2082: 	(let x = add.u; {u: 0})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2082: 	(let x = add.u; {u: 0})
+//│ ╙──        	         ^^^
 //│ res: {u: 0}
 
 (let rec x = x.u; {u: 0})
 //│ res: {u: 0}
 
 (let x = 0.u.u; {u: 0})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1380: 	(let x = 0.u.u; {u: 0})
-//│         	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2094: 	(let x = 0.u.u; {u: 0})
+//│ ║          	            ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2094: 	(let x = 0.u.u; {u: 0})
+//│ ╙──        	         ^
 //│ res: {u: 0}
 
 (let x = add.u.u; {u: 0})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.1386: 	(let x = add.u.u; {u: 0})
-//│         	              ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2103: 	(let x = add.u.u; {u: 0})
+//│ ║          	              ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2103: 	(let x = add.u.u; {u: 0})
+//│ ╙──        	         ^^^
 //│ res: {u: 0}
 
 (let rec x = x.u.u; {u: 0})
 //│ res: {u: 0}
 
 (x => {u: 0, v: 0})
-//│ res: ⊤ -> {u: 0, v: 0}
+//│ res: anything -> {u: 0, v: 0}
 
 (let x = 0; {u: 0, v: 0})
 //│ res: {u: 0, v: 0}
@@ -1408,34 +2128,46 @@ add
 //│ res: {u: 0, v: 0}
 
 (let x = (add add); {u: 0, v: 0})
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.1410: 	(let x = (add add); {u: 0, v: 0})
-//│         	          ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.2130: 	(let x = (add add); {u: 0, v: 0})
+//│ ║          	          ^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.2130: 	(let x = (add add); {u: 0, v: 0})
+//│ ╙──        	              ^^^
 //│ res: {u: 0, v: 0}
 
 (let rec x = (add x); {u: 0, v: 0})
-//│ /!\ Type error: cannot constrain int -> int <: int
-//│ l.1416: 	(let rec x = (add x); {u: 0, v: 0})
-//│         	             ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of function application:
+//│ ║  l.2139: 	(let rec x = (add x); {u: 0, v: 0})
+//│ ║          	             ^^^^^^^
+//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ║  l.2139: 	(let rec x = (add x); {u: 0, v: 0})
+//│ ╙──        	              ^^^^^
 //│ res: {u: 0, v: 0}
 
 (let x = 0.u; {u: 0, v: 0})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1422: 	(let x = 0.u; {u: 0, v: 0})
-//│         	          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2148: 	(let x = 0.u; {u: 0, v: 0})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2148: 	(let x = 0.u; {u: 0, v: 0})
+//│ ╙──        	         ^
 //│ res: {u: 0, v: 0}
 
 (let x = add.u; {u: 0, v: 0})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.1428: 	(let x = add.u; {u: 0, v: 0})
-//│         	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2157: 	(let x = add.u; {u: 0, v: 0})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2157: 	(let x = add.u; {u: 0, v: 0})
+//│ ╙──        	         ^^^
 //│ res: {u: 0, v: 0}
 
 (let rec x = x.u; {u: 0, v: 0})
 //│ res: {u: 0, v: 0}
 
 (x => {u: 0, v: add})
-//│ res: ⊤ -> {u: 0, v: int -> int -> int}
+//│ res: anything -> {u: 0, v: int -> int -> int}
 
 (let x = 0; {u: 0, v: add})
 //│ res: {u: 0, v: int -> int -> int}
@@ -1456,19 +2188,19 @@ add
 //│ res: {u: 0, v: int -> int -> int}
 
 (let rec x = x; {u: 0, v: x})
-//│ res: {u: 0, v: ⊥}
+//│ res: {u: 0, v: nothing}
 
 (let rec x = (x 0); {u: 0, v: x})
-//│ res: {u: 0, v: ⊥}
+//│ res: {u: 0, v: nothing}
 
 (let rec x = (x add); {u: 0, v: x})
-//│ res: {u: 0, v: ⊥}
+//│ res: {u: 0, v: nothing}
 
 (let rec x = (x x); {u: 0, v: x})
-//│ res: {u: 0, v: ⊥}
+//│ res: {u: 0, v: nothing}
 
 (x => {u: add})
-//│ res: ⊤ -> {u: int -> int -> int}
+//│ res: anything -> {u: int -> int -> int}
 
 (let x = 0; {u: add})
 //│ res: {u: int -> int -> int}
@@ -1504,15 +2236,21 @@ add
 //│ res: {u: int -> int -> int}
 
 (let x = 0.v; {u: add})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1506: 	(let x = 0.v; {u: add})
-//│         	          ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2238: 	(let x = 0.v; {u: add})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2238: 	(let x = 0.v; {u: add})
+//│ ╙──        	         ^
 //│ res: {u: int -> int -> int}
 
 (let x = add.v; {u: add})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1512: 	(let x = add.v; {u: add})
-//│         	            ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2247: 	(let x = add.v; {u: add})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2247: 	(let x = add.v; {u: add})
+//│ ╙──        	         ^^^
 //│ res: {u: int -> int -> int}
 
 (let rec x = x.v; {u: add})
@@ -1537,7 +2275,7 @@ add
 //│ res: {u: int -> int -> int}
 
 (let rec x = x; {u: x})
-//│ res: {u: ⊥}
+//│ res: {u: nothing}
 
 (let x = {v: 0}; {u: x})
 //│ res: {u: {v: 0}}
@@ -1558,22 +2296,28 @@ add
 //│ res: {u: int -> int -> int, v: 0}
 
 (let rec x = x; {u: x, v: 0})
-//│ res: {u: ⊥, v: 0}
+//│ res: {u: nothing, v: 0}
 
 (let x = 0.v; {u: x, v: 0})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1563: 	(let x = 0.v; {u: x, v: 0})
-//│         	          ^^
-//│ res: {u: ⊥, v: 0}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2301: 	(let x = 0.v; {u: x, v: 0})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2301: 	(let x = 0.v; {u: x, v: 0})
+//│ ╙──        	         ^
+//│ res: {u: nothing, v: 0}
 
 (let x = add.v; {u: x, v: 0})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1569: 	(let x = add.v; {u: x, v: 0})
-//│         	            ^^
-//│ res: {u: ⊥, v: 0}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2310: 	(let x = add.v; {u: x, v: 0})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2310: 	(let x = add.v; {u: x, v: 0})
+//│ ╙──        	         ^^^
+//│ res: {u: nothing, v: 0}
 
 (let rec x = x.v; {u: x, v: 0})
-//│ res: {u: ⊥, v: 0}
+//│ res: {u: nothing, v: 0}
 
 (x => {u: x, v: add})
 //│ res: 'a -> {u: 'a, v: int -> int -> int}
@@ -1585,37 +2329,49 @@ add
 //│ res: {u: int -> int -> int, v: int -> int -> int}
 
 (let rec x = x; {u: x, v: add})
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let x = 0.u; {u: x, v: add})
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1590: 	(let x = 0.u; {u: x, v: add})
-//│         	          ^^
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2334: 	(let x = 0.u; {u: x, v: add})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2334: 	(let x = 0.u; {u: x, v: add})
+//│ ╙──        	         ^
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let x = add.u; {u: x, v: add})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.1596: 	(let x = add.u; {u: x, v: add})
-//│         	            ^^
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2343: 	(let x = add.u; {u: x, v: add})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2343: 	(let x = add.u; {u: x, v: add})
+//│ ╙──        	         ^^^
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let rec x = x.u; {u: x, v: add})
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let x = 0.v; {u: x, v: add})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1605: 	(let x = 0.v; {u: x, v: add})
-//│         	          ^^
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2355: 	(let x = 0.v; {u: x, v: add})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2355: 	(let x = 0.v; {u: x, v: add})
+//│ ╙──        	         ^
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let x = add.v; {u: x, v: add})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1611: 	(let x = add.v; {u: x, v: add})
-//│         	            ^^
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2364: 	(let x = add.v; {u: x, v: add})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2364: 	(let x = add.v; {u: x, v: add})
+//│ ╙──        	         ^^^
+//│ res: {u: nothing, v: int -> int -> int}
 
 (let rec x = x.v; {u: x, v: add})
-//│ res: {u: ⊥, v: int -> int -> int}
+//│ res: {u: nothing, v: int -> int -> int}
 
 (x => {u: x, v: x})
 //│ res: 'a -> {u: 'a, v: 'a}
@@ -1627,7 +2383,7 @@ add
 //│ res: {u: int -> int -> int, v: int -> int -> int}
 
 (let rec x = x; {u: x, v: x})
-//│ res: {u: ⊥, v: ⊥}
+//│ res: {u: nothing, v: nothing}
 
 (let x = {u: 0}; {u: x, v: x})
 //│ res: {u: {u: 0}, v: {u: 0}}
@@ -1657,85 +2413,129 @@ add
 //│ res: {u: {v: 'a} as 'a, v: {v: 'b} as 'b}
 
 (x => {u: 0.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1659: 	(x => {u: 0.v})
-//│         	           ^^
-//│ res: ⊤ -> {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2415: 	(x => {u: 0.v})
+//│ ║          	           ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2415: 	(x => {u: 0.v})
+//│ ╙──        	          ^
+//│ res: anything -> {u: nothing}
 
 (let x = 0; {u: 0.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1665: 	(let x = 0; {u: 0.v})
-//│         	                 ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2424: 	(let x = 0; {u: 0.v})
+//│ ║          	                 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2424: 	(let x = 0; {u: 0.v})
+//│ ╙──        	                ^
+//│ res: {u: nothing}
 
 (let x = add; {u: 0.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1671: 	(let x = add; {u: 0.v})
-//│         	                   ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2433: 	(let x = add; {u: 0.v})
+//│ ║          	                   ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2433: 	(let x = add; {u: 0.v})
+//│ ╙──        	                  ^
+//│ res: {u: nothing}
 
 (let rec x = x; {u: 0.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1677: 	(let rec x = x; {u: 0.v})
-//│         	                     ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2442: 	(let rec x = x; {u: 0.v})
+//│ ║          	                     ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2442: 	(let rec x = x; {u: 0.v})
+//│ ╙──        	                    ^
+//│ res: {u: nothing}
 
 (x => {u: add.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1683: 	(x => {u: add.v})
-//│         	             ^^
-//│ res: ⊤ -> {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2451: 	(x => {u: add.v})
+//│ ║          	             ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2451: 	(x => {u: add.v})
+//│ ╙──        	          ^^^
+//│ res: anything -> {u: nothing}
 
 (let x = 0; {u: add.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1689: 	(let x = 0; {u: add.v})
-//│         	                   ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2460: 	(let x = 0; {u: add.v})
+//│ ║          	                   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2460: 	(let x = 0; {u: add.v})
+//│ ╙──        	                ^^^
+//│ res: {u: nothing}
 
 (let x = add; {u: add.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1695: 	(let x = add; {u: add.v})
-//│         	                     ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2469: 	(let x = add; {u: add.v})
+//│ ║          	                     ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2469: 	(let x = add; {u: add.v})
+//│ ╙──        	                  ^^^
+//│ res: {u: nothing}
 
 (let rec x = x; {u: add.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1701: 	(let rec x = x; {u: add.v})
-//│         	                       ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2478: 	(let rec x = x; {u: add.v})
+//│ ║          	                       ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2478: 	(let rec x = x; {u: add.v})
+//│ ╙──        	                    ^^^
+//│ res: {u: nothing}
 
 (x => {u: x.v})
 //│ res: {v: 'a} -> {u: 'a}
 
 (let x = 0; {u: x.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1710: 	(let x = 0; {u: x.v})
-//│         	                 ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2490: 	(let x = 0; {u: x.v})
+//│ ║          	                 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2490: 	(let x = 0; {u: x.v})
+//│ ║          	         ^
+//│ ╟── but it flows into variable reference
+//│ ║  l.2490: 	(let x = 0; {u: x.v})
+//│ ║          	                ^
+//│ ╙── which does not have field 'v'
+//│ res: {u: nothing}
 
 (let x = add; {u: x.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1716: 	(let x = add; {u: x.v})
-//│         	                   ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2503: 	(let x = add; {u: x.v})
+//│ ║          	                   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2503: 	(let x = add; {u: x.v})
+//│ ║          	         ^^^
+//│ ╟── but it flows into variable reference
+//│ ║  l.2503: 	(let x = add; {u: x.v})
+//│ ║          	                  ^
+//│ ╙── which does not have field 'v'
+//│ res: {u: nothing}
 
 (let rec x = x; {u: x.v})
-//│ res: {u: ⊥}
+//│ res: {u: nothing}
 
 (let x = 0.v; {u: x.v})
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1725: 	(let x = 0.v; {u: x.v})
-//│         	          ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2519: 	(let x = 0.v; {u: x.v})
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2519: 	(let x = 0.v; {u: x.v})
+//│ ╙──        	         ^
+//│ res: {u: nothing}
 
 (let x = add.v; {u: x.v})
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1731: 	(let x = add.v; {u: x.v})
-//│         	            ^^
-//│ res: {u: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2528: 	(let x = add.v; {u: x.v})
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2528: 	(let x = add.v; {u: x.v})
+//│ ╙──        	         ^^^
+//│ res: {u: nothing}
 
 (let rec x = x.v; {u: x.v})
-//│ res: {u: ⊥}
+//│ res: {u: nothing}
 
 (let x = {v: 0}; {u: x.v})
 //│ res: {u: 0}
@@ -1747,232 +2547,357 @@ add
 //│ res: {u: {v: 'a} as 'a}
 
 (let x = {v: (y => 0)}; {u: x.v})
-//│ res: {u: ⊤ -> 0}
+//│ res: {u: anything -> 0}
 
 (let x = {v: (y => add)}; {u: x.v})
-//│ res: {u: ⊤ -> int -> int -> int}
+//│ res: {u: anything -> int -> int -> int}
 
 (let x = {v: (y => y)}; {u: x.v})
 //│ res: {u: 'a -> 'a}
 
 (let rec x = {v: (y => x)}; {u: x.v})
-//│ res: {u: (⊤ -> {v: 'a}) as 'a}
+//│ res: {u: (anything -> {v: 'a}) as 'a}
 
 (x => 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1761: 	(x => 0.v)
-//│         	       ^^
-//│ res: ⊤ -> ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2561: 	(x => 0.v)
+//│ ║          	       ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2561: 	(x => 0.v)
+//│ ╙──        	      ^
+//│ res: anything -> nothing
 
 (let x = 0; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1767: 	(let x = 0; 0.v)
-//│         	             ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2570: 	(let x = 0; 0.v)
+//│ ║          	             ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2570: 	(let x = 0; 0.v)
+//│ ╙──        	            ^
+//│ res: nothing
 
 (let x = add; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1773: 	(let x = add; 0.v)
-//│         	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2579: 	(let x = add; 0.v)
+//│ ║          	               ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2579: 	(let x = add; 0.v)
+//│ ╙──        	              ^
+//│ res: nothing
 
 (let rec x = x; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1779: 	(let rec x = x; 0.v)
-//│         	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2588: 	(let rec x = x; 0.v)
+//│ ║          	                 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2588: 	(let rec x = x; 0.v)
+//│ ╙──        	                ^
+//│ res: nothing
 
 (let x = 0.u; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1785: 	(let x = 0.u; 0.v)
-//│         	          ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1785: 	(let x = 0.u; 0.v)
-//│         	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2597: 	(let x = 0.u; 0.v)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2597: 	(let x = 0.u; 0.v)
+//│ ╙──        	         ^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2597: 	(let x = 0.u; 0.v)
+//│ ║          	               ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2597: 	(let x = 0.u; 0.v)
+//│ ╙──        	              ^
+//│ res: nothing
 
 (let x = add.u; 0.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.1794: 	(let x = add.u; 0.v)
-//│         	            ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1794: 	(let x = add.u; 0.v)
-//│         	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2612: 	(let x = add.u; 0.v)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2612: 	(let x = add.u; 0.v)
+//│ ╙──        	         ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2612: 	(let x = add.u; 0.v)
+//│ ║          	                 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2612: 	(let x = add.u; 0.v)
+//│ ╙──        	                ^
+//│ res: nothing
 
 (let rec x = x.u; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1803: 	(let rec x = x.u; 0.v)
-//│         	                   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2627: 	(let rec x = x.u; 0.v)
+//│ ║          	                   ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2627: 	(let rec x = x.u; 0.v)
+//│ ╙──        	                  ^
+//│ res: nothing
 
 (let x = 0.v; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1809: 	(let x = 0.v; 0.v)
-//│         	          ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1809: 	(let x = 0.v; 0.v)
-//│         	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2636: 	(let x = 0.v; 0.v)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2636: 	(let x = 0.v; 0.v)
+//│ ╙──        	         ^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2636: 	(let x = 0.v; 0.v)
+//│ ║          	               ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2636: 	(let x = 0.v; 0.v)
+//│ ╙──        	              ^
+//│ res: nothing
 
 (let x = add.v; 0.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1818: 	(let x = add.v; 0.v)
-//│         	            ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1818: 	(let x = add.v; 0.v)
-//│         	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2651: 	(let x = add.v; 0.v)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2651: 	(let x = add.v; 0.v)
+//│ ╙──        	         ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2651: 	(let x = add.v; 0.v)
+//│ ║          	                 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2651: 	(let x = add.v; 0.v)
+//│ ╙──        	                ^
+//│ res: nothing
 
 (let rec x = x.v; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1827: 	(let rec x = x.v; 0.v)
-//│         	                   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2666: 	(let rec x = x.v; 0.v)
+//│ ║          	                   ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2666: 	(let rec x = x.v; 0.v)
+//│ ╙──        	                  ^
+//│ res: nothing
 
 (let x = {v: 0}; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1833: 	(let x = {v: 0}; 0.v)
-//│         	                  ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2675: 	(let x = {v: 0}; 0.v)
+//│ ║          	                  ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2675: 	(let x = {v: 0}; 0.v)
+//│ ╙──        	                 ^
+//│ res: nothing
 
 (let x = {v: add}; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1839: 	(let x = {v: add}; 0.v)
-//│         	                    ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2684: 	(let x = {v: add}; 0.v)
+//│ ║          	                    ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2684: 	(let x = {v: add}; 0.v)
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let rec x = {v: x}; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1845: 	(let rec x = {v: x}; 0.v)
-//│         	                      ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2693: 	(let rec x = {v: x}; 0.v)
+//│ ║          	                      ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2693: 	(let rec x = {v: x}; 0.v)
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let x = {v: 0.v}; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1851: 	(let x = {v: 0.v}; 0.v)
-//│         	              ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1851: 	(let x = {v: 0.v}; 0.v)
-//│         	                    ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2702: 	(let x = {v: 0.v}; 0.v)
+//│ ║          	              ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2702: 	(let x = {v: 0.v}; 0.v)
+//│ ╙──        	             ^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2702: 	(let x = {v: 0.v}; 0.v)
+//│ ║          	                    ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2702: 	(let x = {v: 0.v}; 0.v)
+//│ ╙──        	                   ^
+//│ res: nothing
 
 (let x = {v: add.v}; 0.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1860: 	(let x = {v: add.v}; 0.v)
-//│         	                ^^
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1860: 	(let x = {v: add.v}; 0.v)
-//│         	                      ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2717: 	(let x = {v: add.v}; 0.v)
+//│ ║          	                ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2717: 	(let x = {v: add.v}; 0.v)
+//│ ╙──        	             ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2717: 	(let x = {v: add.v}; 0.v)
+//│ ║          	                      ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2717: 	(let x = {v: add.v}; 0.v)
+//│ ╙──        	                     ^
+//│ res: nothing
 
 (let rec x = {v: x.v}; 0.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1869: 	(let rec x = {v: x.v}; 0.v)
-//│         	                        ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2732: 	(let rec x = {v: x.v}; 0.v)
+//│ ║          	                        ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2732: 	(let rec x = {v: x.v}; 0.v)
+//│ ╙──        	                       ^
+//│ res: nothing
 
 (x => add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1875: 	(x => add.v)
-//│         	         ^^
-//│ res: ⊤ -> ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2741: 	(x => add.v)
+//│ ║          	         ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2741: 	(x => add.v)
+//│ ╙──        	      ^^^
+//│ res: anything -> nothing
 
 (let x = 0; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1881: 	(let x = 0; add.v)
-//│         	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2750: 	(let x = 0; add.v)
+//│ ║          	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2750: 	(let x = 0; add.v)
+//│ ╙──        	            ^^^
+//│ res: nothing
 
 (let x = add; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1887: 	(let x = add; add.v)
-//│         	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2759: 	(let x = add; add.v)
+//│ ║          	                 ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2759: 	(let x = add; add.v)
+//│ ╙──        	              ^^^
+//│ res: nothing
 
 (let rec x = x; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1893: 	(let rec x = x; add.v)
-//│         	                   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2768: 	(let rec x = x; add.v)
+//│ ║          	                   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2768: 	(let rec x = x; add.v)
+//│ ╙──        	                ^^^
+//│ res: nothing
 
 (let x = {u: 0}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1899: 	(let x = {u: 0}; add.v)
-//│         	                    ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2777: 	(let x = {u: 0}; add.v)
+//│ ║          	                    ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2777: 	(let x = {u: 0}; add.v)
+//│ ╙──        	                 ^^^
+//│ res: nothing
 
 (let x = {u: add}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1905: 	(let x = {u: add}; add.v)
-//│         	                      ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2786: 	(let x = {u: add}; add.v)
+//│ ║          	                      ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2786: 	(let x = {u: add}; add.v)
+//│ ╙──        	                   ^^^
+//│ res: nothing
 
 (let rec x = {u: x}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1911: 	(let rec x = {u: x}; add.v)
-//│         	                        ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2795: 	(let rec x = {u: x}; add.v)
+//│ ║          	                        ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2795: 	(let rec x = {u: x}; add.v)
+//│ ╙──        	                     ^^^
+//│ res: nothing
 
 (let x = {u: {v: 0}}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1917: 	(let x = {u: {v: 0}}; add.v)
-//│         	                         ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2804: 	(let x = {u: {v: 0}}; add.v)
+//│ ║          	                         ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2804: 	(let x = {u: {v: 0}}; add.v)
+//│ ╙──        	                      ^^^
+//│ res: nothing
 
 (let x = {u: {v: add}}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1923: 	(let x = {u: {v: add}}; add.v)
-//│         	                           ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2813: 	(let x = {u: {v: add}}; add.v)
+//│ ║          	                           ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2813: 	(let x = {u: {v: add}}; add.v)
+//│ ╙──        	                        ^^^
+//│ res: nothing
 
 (let rec x = {u: {v: x}}; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1929: 	(let rec x = {u: {v: x}}; add.v)
-//│         	                             ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2822: 	(let rec x = {u: {v: x}}; add.v)
+//│ ║          	                             ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2822: 	(let rec x = {u: {v: x}}; add.v)
+//│ ╙──        	                          ^^^
+//│ res: nothing
 
 (let x = 0.v; add.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1935: 	(let x = 0.v; add.v)
-//│         	          ^^
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1935: 	(let x = 0.v; add.v)
-//│         	                 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2831: 	(let x = 0.v; add.v)
+//│ ║          	          ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2831: 	(let x = 0.v; add.v)
+//│ ╙──        	         ^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2831: 	(let x = 0.v; add.v)
+//│ ║          	                 ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2831: 	(let x = 0.v; add.v)
+//│ ╙──        	              ^^^
+//│ res: nothing
 
 (let x = add.v; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1944: 	(let x = add.v; add.v)
-//│         	            ^^
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1944: 	(let x = add.v; add.v)
-//│         	                   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2846: 	(let x = add.v; add.v)
+//│ ║          	            ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2846: 	(let x = add.v; add.v)
+//│ ╙──        	         ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2846: 	(let x = add.v; add.v)
+//│ ║          	                   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2846: 	(let x = add.v; add.v)
+//│ ╙──        	                ^^^
+//│ res: nothing
 
 (let rec x = x.v; add.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1953: 	(let rec x = x.v; add.v)
-//│         	                     ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2861: 	(let rec x = x.v; add.v)
+//│ ║          	                     ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2861: 	(let rec x = x.v; add.v)
+//│ ╙──        	                  ^^^
+//│ res: nothing
 
 (x => x.v)
 //│ res: {v: 'a} -> 'a
 
 (let x = 0; x.v)
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.1962: 	(let x = 0; x.v)
-//│         	             ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2873: 	(let x = 0; x.v)
+//│ ║          	             ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.2873: 	(let x = 0; x.v)
+//│ ║          	         ^
+//│ ╟── but it flows into variable reference
+//│ ║  l.2873: 	(let x = 0; x.v)
+//│ ║          	            ^
+//│ ╙── which does not have field 'v'
+//│ res: nothing
 
 (let x = add; x.v)
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.1968: 	(let x = add; x.v)
-//│         	               ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2886: 	(let x = add; x.v)
+//│ ║          	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.2886: 	(let x = add; x.v)
+//│ ║          	         ^^^
+//│ ╟── but it flows into variable reference
+//│ ║  l.2886: 	(let x = add; x.v)
+//│ ║          	              ^
+//│ ╙── which does not have field 'v'
+//│ res: nothing
 
 (let rec x = x; x.v)
-//│ res: ⊥
+//│ res: nothing
 
 (let x = {v: 0}; x.v)
 //│ res: 0
@@ -1993,40 +2918,58 @@ add
 //│ res: {v: {v: 'a}} as 'a
 
 0.u
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.1995: 	0.u
-//│         	 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2920: 	0.u
+//│ ║          	 ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2920: 	0.u
+//│ ╙──        	^
+//│ res: nothing
 
 add.u
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2001: 	add.u
-//│         	   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2929: 	add.u
+//│ ║          	   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2929: 	add.u
+//│ ╙──        	^^^
+//│ res: nothing
 
 0.v.u
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2007: 	0.v.u
-//│         	   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2938: 	0.v.u
+//│ ║          	   ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2938: 	0.v.u
+//│ ╙──        	^
+//│ res: nothing
 
 add.v.u
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2013: 	add.v.u
-//│         	     ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2947: 	add.v.u
+//│ ║          	     ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.2947: 	add.v.u
+//│ ╙──        	^^^
+//│ res: nothing
 
 {v: 0}.u
-//│ /!\ Type error: missing field: u in {v: 0}
-//│ l.2019: 	{v: 0}.u
-//│         	      ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2956: 	{v: 0}.u
+//│ ║          	      ^^
+//│ ╟── expression of type `{v: 0}` does not have field 'u'
+//│ ║  l.2956: 	{v: 0}.u
+//│ ╙──        	^^^^^^
+//│ res: nothing
 
 {v: add}.u
-//│ /!\ Type error: missing field: u in {v: int -> int -> int}
-//│ l.2025: 	{v: add}.u
-//│         	        ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2965: 	{v: add}.u
+//│ ║          	        ^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not have field 'u'
+//│ ║  l.2965: 	{v: add}.u
+//│ ╙──        	^^^^^^^^
+//│ res: nothing
 
 {u: 0}
 //│ res: {u: 0}
@@ -2038,7 +2981,7 @@ add.v.u
 //│ res: {u: 0, v: int -> int -> int}
 
 {u: 0, v: (x => 0)}
-//│ res: {u: 0, v: ⊤ -> 0}
+//│ res: {u: 0, v: anything -> 0}
 
 {u: 0, v: (let x = 0; 0)}
 //│ res: {u: 0, v: 0}
@@ -2050,22 +2993,28 @@ add.v.u
 //│ res: {u: 0, v: 0}
 
 {u: 0, v: (let x = 0.u; 0)}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2052: 	{u: 0, v: (let x = 0.u; 0)}
-//│         	                    ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.2995: 	{u: 0, v: (let x = 0.u; 0)}
+//│ ║          	                    ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.2995: 	{u: 0, v: (let x = 0.u; 0)}
+//│ ╙──        	                   ^
 //│ res: {u: 0, v: 0}
 
 {u: 0, v: (let x = add.u; 0)}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2058: 	{u: 0, v: (let x = add.u; 0)}
-//│         	                      ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3004: 	{u: 0, v: (let x = add.u; 0)}
+//│ ║          	                      ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.3004: 	{u: 0, v: (let x = add.u; 0)}
+//│ ╙──        	                   ^^^
 //│ res: {u: 0, v: 0}
 
 {u: 0, v: (let rec x = x.u; 0)}
 //│ res: {u: 0, v: 0}
 
 {u: 0, v: (x => add)}
-//│ res: {u: 0, v: ⊤ -> int -> int -> int}
+//│ res: {u: 0, v: anything -> int -> int -> int}
 
 {u: 0, v: (x => x)}
 //│ res: {u: 0, v: 'a -> 'a}
@@ -2110,16 +3059,16 @@ add.v.u
 //│ res: {u: int -> int -> int, v: {u: int -> int -> int, v: int -> int -> int}}
 
 {u: add, v: {u: (x => 0)}}
-//│ res: {u: int -> int -> int, v: {u: ⊤ -> 0}}
+//│ res: {u: int -> int -> int, v: {u: anything -> 0}}
 
 {u: add, v: {u: (x => add)}}
-//│ res: {u: int -> int -> int, v: {u: ⊤ -> int -> int -> int}}
+//│ res: {u: int -> int -> int, v: {u: anything -> int -> int -> int}}
 
 {u: add, v: {u: (x => add), v: 0}}
-//│ res: {u: int -> int -> int, v: {u: ⊤ -> int -> int -> int, v: 0}}
+//│ res: {u: int -> int -> int, v: {u: anything -> int -> int -> int, v: 0}}
 
 {u: add, v: {u: (x => add), v: add}}
-//│ res: {u: int -> int -> int, v: {u: ⊤ -> int -> int -> int, v: int -> int -> int}}
+//│ res: {u: int -> int -> int, v: {u: anything -> int -> int -> int, v: int -> int -> int}}
 
 {u: add, v: {u: (x => x)}}
 //│ res: {u: int -> int -> int, v: {u: 'a -> 'a}}
@@ -2131,46 +3080,79 @@ add.v.u
 //│ res: {u: int -> int -> int, v: {u: {v: int -> int -> int}}}
 
 {u: add, v: 0.v}
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.2133: 	{u: add, v: 0.v}
-//│         	             ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3082: 	{u: add, v: 0.v}
+//│ ║          	             ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.3082: 	{u: add, v: 0.v}
+//│ ╙──        	            ^
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: add.v}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.2139: 	{u: add, v: add.v}
-//│         	               ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3091: 	{u: add, v: add.v}
+//│ ║          	               ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.3091: 	{u: add, v: add.v}
+//│ ╙──        	            ^^^
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: (x => 0).v}
-//│ /!\ Type error: cannot constrain 'a -> 0 <: {v: 'a}
-//│ l.2145: 	{u: add, v: (x => 0).v}
-//│         	                    ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3100: 	{u: add, v: (x => 0).v}
+//│ ║          	                    ^^
+//│ ╟── expression of type `?a -> 0` does not have field 'v'
+//│ ║  l.3100: 	{u: add, v: (x => 0).v}
+//│ ║          	             ^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.3100: 	{u: add, v: (x => 0).v}
+//│ ║          	            ^^^^^^^^
+//│ ╙── which does not have field 'v'
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: (x => add).v}
-//│ /!\ Type error: cannot constrain 'a -> int -> int -> int <: {v: 'a}
-//│ l.2151: 	{u: add, v: (x => add).v}
-//│         	                      ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3113: 	{u: add, v: (x => add).v}
+//│ ║          	                      ^^
+//│ ╟── expression of type `?a -> int -> int -> int` does not have field 'v'
+//│ ║  l.3113: 	{u: add, v: (x => add).v}
+//│ ║          	             ^^^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.3113: 	{u: add, v: (x => add).v}
+//│ ║          	            ^^^^^^^^^^
+//│ ╙── which does not have field 'v'
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: (x => x).v}
-//│ /!\ Type error: cannot constrain 'a -> 'a <: {v: 'a}
-//│ l.2157: 	{u: add, v: (x => x).v}
-//│         	                    ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3126: 	{u: add, v: (x => x).v}
+//│ ║          	                    ^^
+//│ ╟── expression of type `?a -> ?a` does not have field 'v'
+//│ ║  l.3126: 	{u: add, v: (x => x).v}
+//│ ║          	             ^^^^^^
+//│ ╟── but it flows into receiver
+//│ ║  l.3126: 	{u: add, v: (x => x).v}
+//│ ║          	            ^^^^^^^^
+//│ ╙── which does not have field 'v'
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: {u: 0}.v}
-//│ /!\ Type error: missing field: v in {u: 0}
-//│ l.2163: 	{u: add, v: {u: 0}.v}
-//│         	                  ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3139: 	{u: add, v: {u: 0}.v}
+//│ ║          	                  ^^
+//│ ╟── expression of type `{u: 0}` does not have field 'v'
+//│ ║  l.3139: 	{u: add, v: {u: 0}.v}
+//│ ╙──        	            ^^^^^^
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: {u: add}.v}
-//│ /!\ Type error: missing field: v in {u: int -> int -> int}
-//│ l.2169: 	{u: add, v: {u: add}.v}
-//│         	                    ^^
-//│ res: {u: int -> int -> int, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3148: 	{u: add, v: {u: add}.v}
+//│ ║          	                    ^^
+//│ ╟── expression of type `{u: int -> int -> int}` does not have field 'v'
+//│ ║  l.3148: 	{u: add, v: {u: add}.v}
+//│ ╙──        	            ^^^^^^^^
+//│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: {v: 0}}
 //│ res: {u: int -> int -> int, v: {v: 0}}
@@ -2191,76 +3173,106 @@ add.v.u
 //│ res: {u: {u: 0}, v: int -> int}
 
 {u: {u: 0}, v: (add add)}
-//│ /!\ Type error: cannot constrain int -> int -> int <: int
-//│ l.2193: 	{u: {u: 0}, v: (add add)}
-//│         	                ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.3175: 	{u: {u: 0}, v: (add add)}
+//│ ║          	                ^^^^^^^
+//│ ╟── expression of type `int -> int -> int` does not match type `int`
+//│ ║  l.3175: 	{u: {u: 0}, v: (add add)}
+//│ ╙──        	                    ^^^
 //│ res: {u: {u: 0}, v: int -> int}
 
 {u: {u: 0}, v: (add {v: 0})}
-//│ /!\ Type error: cannot constrain {v: 0} <: int
-//│ l.2199: 	{u: {u: 0}, v: (add {v: 0})}
-//│         	                ^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.3184: 	{u: {u: 0}, v: (add {v: 0})}
+//│ ║          	                ^^^^^^^^^^
+//│ ╟── expression of type `{v: 0}` does not match type `int`
+//│ ║  l.3184: 	{u: {u: 0}, v: (add {v: 0})}
+//│ ╙──        	                    ^^^^^^
 //│ res: {u: {u: 0}, v: int -> int}
 
 {u: {u: 0}, v: (add {v: add})}
-//│ /!\ Type error: cannot constrain {v: int -> int -> int} <: int
-//│ l.2205: 	{u: {u: 0}, v: (add {v: add})}
-//│         	                ^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.3193: 	{u: {u: 0}, v: (add {v: add})}
+//│ ║          	                ^^^^^^^^^^^^
+//│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
+//│ ║  l.3193: 	{u: {u: 0}, v: (add {v: add})}
+//│ ╙──        	                    ^^^^^^^^
 //│ res: {u: {u: 0}, v: int -> int}
 
 {u: {u: 0}, v: (x => 0)}
-//│ res: {u: {u: 0}, v: ⊤ -> 0}
+//│ res: {u: {u: 0}, v: anything -> 0}
 
 {u: {u: 0}, v: (x => add)}
-//│ res: {u: {u: 0}, v: ⊤ -> int -> int -> int}
+//│ res: {u: {u: 0}, v: anything -> int -> int -> int}
 
 {u: {u: 0}, v: (x => x)}
 //│ res: {u: {u: 0}, v: 'a -> 'a}
 
 {u: {u: 0}, v: (x => 0.u)}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2220: 	{u: {u: 0}, v: (x => 0.u)}
-//│         	                      ^^
-//│ res: {u: {u: 0}, v: ⊤ -> ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3211: 	{u: {u: 0}, v: (x => 0.u)}
+//│ ║          	                      ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3211: 	{u: {u: 0}, v: (x => 0.u)}
+//│ ╙──        	                     ^
+//│ res: {u: {u: 0}, v: anything -> nothing}
 
 {u: {u: 0}, v: (let x = 0; 0.u)}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2226: 	{u: {u: 0}, v: (let x = 0; 0.u)}
-//│         	                            ^^
-//│ res: {u: {u: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3220: 	{u: {u: 0}, v: (let x = 0; 0.u)}
+//│ ║          	                            ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3220: 	{u: {u: 0}, v: (let x = 0; 0.u)}
+//│ ╙──        	                           ^
+//│ res: {u: {u: 0}, v: nothing}
 
 {u: {u: 0}, v: (let x = add; 0.u)}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2232: 	{u: {u: 0}, v: (let x = add; 0.u)}
-//│         	                              ^^
-//│ res: {u: {u: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3229: 	{u: {u: 0}, v: (let x = add; 0.u)}
+//│ ║          	                              ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3229: 	{u: {u: 0}, v: (let x = add; 0.u)}
+//│ ╙──        	                             ^
+//│ res: {u: {u: 0}, v: nothing}
 
 {u: {u: 0}, v: (let rec x = x; 0.u)}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2238: 	{u: {u: 0}, v: (let rec x = x; 0.u)}
-//│         	                                ^^
-//│ res: {u: {u: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3238: 	{u: {u: 0}, v: (let rec x = x; 0.u)}
+//│ ║          	                                ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3238: 	{u: {u: 0}, v: (let rec x = x; 0.u)}
+//│ ╙──        	                               ^
+//│ res: {u: {u: 0}, v: nothing}
 
 {u: {u: 0}, v: (x => add.u)}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2244: 	{u: {u: 0}, v: (x => add.u)}
-//│         	                        ^^
-//│ res: {u: {u: 0}, v: ⊤ -> ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3247: 	{u: {u: 0}, v: (x => add.u)}
+//│ ║          	                        ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.3247: 	{u: {u: 0}, v: (x => add.u)}
+//│ ╙──        	                     ^^^
+//│ res: {u: {u: 0}, v: anything -> nothing}
 
 {u: {u: 0}, v: (x => x.u)}
 //│ res: {u: {u: 0}, v: {u: 'a} -> 'a}
 
 {u: {u: 0}, v: 0.v}
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.2253: 	{u: {u: 0}, v: 0.v}
-//│         	                ^^
-//│ res: {u: {u: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3259: 	{u: {u: 0}, v: 0.v}
+//│ ║          	                ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.3259: 	{u: {u: 0}, v: 0.v}
+//│ ╙──        	               ^
+//│ res: {u: {u: 0}, v: nothing}
 
 {u: {u: 0}, v: add.v}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.2259: 	{u: {u: 0}, v: add.v}
-//│         	                  ^^
-//│ res: {u: {u: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3268: 	{u: {u: 0}, v: add.v}
+//│ ║          	                  ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.3268: 	{u: {u: 0}, v: add.v}
+//│ ╙──        	               ^^^
+//│ res: {u: {u: 0}, v: nothing}
 
 {u: {u: add}}
 //│ res: {u: {u: int -> int -> int}}
@@ -2272,10 +3284,10 @@ add.v.u
 //│ res: {u: {u: int -> int -> int}, v: int -> int -> int}
 
 {u: {u: add}, v: (x => 0)}
-//│ res: {u: {u: int -> int -> int}, v: ⊤ -> 0}
+//│ res: {u: {u: int -> int -> int}, v: anything -> 0}
 
 {u: {u: add}, v: (x => add)}
-//│ res: {u: {u: int -> int -> int}, v: ⊤ -> int -> int -> int}
+//│ res: {u: {u: int -> int -> int}, v: anything -> int -> int -> int}
 
 {u: {u: add}, v: (let x = 0; add)}
 //│ res: {u: {u: int -> int -> int}, v: int -> int -> int}
@@ -2299,19 +3311,25 @@ add.v.u
 //│ res: {u: {v: 0}, v: int -> int -> int}
 
 {u: {v: 0}, v: (0 0)}
-//│ /!\ Type error: cannot constrain 0 <: 0 -> 'a
-//│ l.2301: 	{u: {v: 0}, v: (0 0)}
-//│         	                ^^^
-//│ res: {u: {v: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.3313: 	{u: {v: 0}, v: (0 0)}
+//│ ║          	                ^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.3313: 	{u: {v: 0}, v: (0 0)}
+//│ ╙──        	                ^
+//│ res: {u: {v: 0}, v: nothing}
 
 {u: {v: 0}, v: (0 add)}
-//│ /!\ Type error: cannot constrain 0 <: (int -> int -> int) -> 'a
-//│ l.2307: 	{u: {v: 0}, v: (0 add)}
-//│         	                ^^^^^
-//│ res: {u: {v: 0}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.3322: 	{u: {v: 0}, v: (0 add)}
+//│ ║          	                ^^^^^
+//│ ╟── expression of type `0` is not a function
+//│ ║  l.3322: 	{u: {v: 0}, v: (0 add)}
+//│ ╙──        	                ^
+//│ res: {u: {v: 0}, v: nothing}
 
 {u: {v: 0}, v: (x => 0)}
-//│ res: {u: {v: 0}, v: ⊤ -> 0}
+//│ res: {u: {v: 0}, v: anything -> 0}
 
 {u: {v: 0}, v: (let x = 0; 0)}
 //│ res: {u: {v: 0}, v: 0}
@@ -2323,7 +3341,7 @@ add.v.u
 //│ res: {u: {v: 0}, v: 0}
 
 {u: {v: 0}, v: (x => add)}
-//│ res: {u: {v: 0}, v: ⊤ -> int -> int -> int}
+//│ res: {u: {v: 0}, v: anything -> int -> int -> int}
 
 {u: {v: 0}, v: (let x = 0; add)}
 //│ res: {u: {v: 0}, v: int -> int -> int}
@@ -2347,28 +3365,40 @@ add.v.u
 //│ res: {u: {v: int -> int -> int}, v: int -> int -> int}
 
 {u: {v: add}, v: 0.u}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2349: 	{u: {v: add}, v: 0.u}
-//│         	                  ^^
-//│ res: {u: {v: int -> int -> int}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3367: 	{u: {v: add}, v: 0.u}
+//│ ║          	                  ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3367: 	{u: {v: add}, v: 0.u}
+//│ ╙──        	                 ^
+//│ res: {u: {v: int -> int -> int}, v: nothing}
 
 {u: {v: add}, v: add.u}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2355: 	{u: {v: add}, v: add.u}
-//│         	                    ^^
-//│ res: {u: {v: int -> int -> int}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3376: 	{u: {v: add}, v: add.u}
+//│ ║          	                    ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.3376: 	{u: {v: add}, v: add.u}
+//│ ╙──        	                 ^^^
+//│ res: {u: {v: int -> int -> int}, v: nothing}
 
 {u: {v: add}, v: 0.v}
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.2361: 	{u: {v: add}, v: 0.v}
-//│         	                  ^^
-//│ res: {u: {v: int -> int -> int}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3385: 	{u: {v: add}, v: 0.v}
+//│ ║          	                  ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.3385: 	{u: {v: add}, v: 0.v}
+//│ ╙──        	                 ^
+//│ res: {u: {v: int -> int -> int}, v: nothing}
 
 {u: {v: add}, v: add.v}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.2367: 	{u: {v: add}, v: add.v}
-//│         	                    ^^
-//│ res: {u: {v: int -> int -> int}, v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3394: 	{u: {v: add}, v: add.v}
+//│ ║          	                    ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.3394: 	{u: {v: add}, v: add.v}
+//│ ╙──        	                 ^^^
+//│ res: {u: {v: int -> int -> int}, v: nothing}
 
 {u: {v: add}, v: {v: 0}}
 //│ res: {u: {v: int -> int -> int}, v: {v: 0}}
@@ -2377,16 +3407,22 @@ add.v.u
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 0.v
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.2379: 	0.v
-//│         	 ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3409: 	0.v
+//│ ║          	 ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.3409: 	0.v
+//│ ╙──        	^
+//│ res: nothing
 
 add.v
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.2385: 	add.v
-//│         	   ^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3418: 	add.v
+//│ ║          	   ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.3418: 	add.v
+//│ ╙──        	^^^
+//│ res: nothing
 
 {v: 0}
 //│ res: {v: 0}
@@ -2395,28 +3431,40 @@ add.v
 //│ res: {v: int -> int -> int}
 
 {v: 0.u}
-//│ /!\ Type error: cannot constrain 0 <: {u: 'a}
-//│ l.2397: 	{v: 0.u}
-//│         	     ^^
-//│ res: {v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3433: 	{v: 0.u}
+//│ ║          	     ^^
+//│ ╟── expression of type `0` does not have field 'u'
+//│ ║  l.3433: 	{v: 0.u}
+//│ ╙──        	    ^
+//│ res: {v: nothing}
 
 {v: add.u}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {u: 'a}
-//│ l.2403: 	{v: add.u}
-//│         	       ^^
-//│ res: {v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3442: 	{v: add.u}
+//│ ║          	       ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'u'
+//│ ║  l.3442: 	{v: add.u}
+//│ ╙──        	    ^^^
+//│ res: {v: nothing}
 
 {v: 0.v}
-//│ /!\ Type error: cannot constrain 0 <: {v: 'a}
-//│ l.2409: 	{v: 0.v}
-//│         	     ^^
-//│ res: {v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3451: 	{v: 0.v}
+//│ ║          	     ^^
+//│ ╟── expression of type `0` does not have field 'v'
+//│ ║  l.3451: 	{v: 0.v}
+//│ ╙──        	    ^
+//│ res: {v: nothing}
 
 {v: add.v}
-//│ /!\ Type error: cannot constrain int -> int -> int <: {v: 'a}
-//│ l.2415: 	{v: add.v}
-//│         	       ^^
-//│ res: {v: ⊥}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.3460: 	{v: add.v}
+//│ ║          	       ^^
+//│ ╟── expression of type `int -> int -> int` does not have field 'v'
+//│ ║  l.3460: 	{v: add.v}
+//│ ╙──        	    ^^^
+//│ res: {v: nothing}
 
 {v: {v: 0}}
 //│ res: {v: {v: 0}}

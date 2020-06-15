@@ -26,7 +26,26 @@ foo / x => succ / succ / x
 
 :e
 foo / foo / x => succ / succ / x
-//│ /!\ Type error: cannot constrain int <: 1 -> 'a
-//│ l.28: 	foo / foo / x => succ / succ / x
-//│       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: ⊥
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.28: 	foo / foo / x => succ / succ / x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int` is not a function
+//│ ║  l.28: 	foo / foo / x => succ / succ / x
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from function application:
+//│ ║  l.7: 	let foo = f => f 1
+//│ ╙──     	               ^^^
+//│ res: nothing
+
+:e
+foo / foo
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.41: 	foo / foo
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `1` is not a function
+//│ ║  l.7: 	let foo = f => f 1
+//│ ║       	                 ^
+//│ ╟── Note: constraint arises from function application:
+//│ ║  l.7: 	let foo = f => f 1
+//│ ╙──     	               ^^^
+//│ res: nothing

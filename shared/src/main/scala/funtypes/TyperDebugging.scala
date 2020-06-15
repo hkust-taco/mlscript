@@ -3,7 +3,7 @@ package funtypes
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.annotation.tailrec
-import funtypes.utils._
+import funtypes.utils._, shorthands._
 
 /** Inessential methods used to help debugging. */
 abstract class TyperDebugging { self: Typer =>
@@ -29,12 +29,19 @@ abstract class TyperDebugging { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    def unwrapProxies: SimpleType = this match {
+      case ProxyType(und) => und.unwrapProxies
+      case _ => this
+    }
+    
     def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
-      case FunctionType(l, r) => l :: r :: Nil
-      case RecordType(fs) => fs.map(_._2)
-      case PrimType(_) => Nil
+      case FunctionType(l, r, _) => l :: r :: Nil
+      case RecordType(fs, _) => fs.map(_._2)
+      case ProxyType(und) => und :: Nil
+      case PrimType(_, _) => Nil
     }
+    
     def getVars: Set[TypeVariable] = {
       val res = MutSet.empty[TypeVariable]
       @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
@@ -47,13 +54,24 @@ abstract class TyperDebugging { self: Typer =>
       rec(this :: Nil)
       SortedSet.from(res)(Ordering.by(_.uid))
     }
-    def show: String = expandType(this).show
+    
     def showBounds: String =
       getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
         tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
       ).mkString(", ")
+    
+    def expPos: Type = (this
+      |> (compactType(_, true))
+      |> (simplifyType(_, true, removePolarVars = false))
+      |> (expandCompactType(_, true))
+    )
+    def expNeg: Type = (this
+      |> (compactType(_, false))
+      |> (simplifyType(_, false, removePolarVars = false))
+      |> (expandCompactType(_, false))
+    )
     
   }
   

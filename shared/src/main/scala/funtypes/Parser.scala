@@ -13,17 +13,17 @@ import funtypes.Lexer._
   */
 @nowarn("cat=other") // "comparing a fresh object using `ne` will always yield true" in macrco-generated code
 @SuppressWarnings(Array("org.wartremover.warts.All"))
-class Parser(indent: Int = 0, recordLocations: Bool = true) {
+class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   //implicit def whitespace(cfg: P[_]): P[Unit] = Lexical.wscomment(cfg)
   implicit def whitespace(cfg: P[_]): P[Unit] = Lexer.nonewlinewscomment(cfg)
   
-  lazy val nextLevel = new Parser(indent + 1, recordLocations)
+  lazy val nextLevel = new Parser(origin: Origin, indent + 1, recordLocations)
   
   def UnitLit = Tup(Nil)
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
   def locate[_:P, L <: Located](tree: => P[L]) = (Index ~~ tree ~~ Index).map {
-    case (i0, n, i1) => n.withLoc(i0, i1)
+    case (i0, n, i1) => n.withLoc(i0, i1, origin)
   }
   
   def space[_: P] = P( CharIn(" \n") )
@@ -72,7 +72,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     }
   def operatorBlock[_: P]: P[Seq[(Var, Term)]] =
     P( Index ~~ operator.! ~~ Index ~ expr ~ (nl_indents ~~ operatorBlock).? ).map {
-      case (i0, op, i1, t, opts) => (Var(op).withLoc(i0, i1), t) +: opts.toList.flatten
+      case (i0, op, i1, t, opts) => (Var(op).withLoc(i0, i1, origin), t) +: opts.toList.flatten
     }
   
   def lams[_: P]: P[Term] = P( commas ~ (("/".! | "=>".!) ~/ (expr | suite) | "".! ~ suite).? ).map(checkless {
@@ -87,7 +87,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
     P(Index ~~ (ident ~ ":" ~ (binops | suite) | binops.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index)
     .map {
       case (_, ("", x) :: Nil, N, _) => x
-      case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1)
+      case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1, origin)
     }
   
   /** Note that `,` implicitly has the lowest precedence, followed by the ones below. */
@@ -133,7 +133,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
             else {
               remaining = remaining.tail
               val rhs = climb(prec + 1, next)
-              result = App(App(Var(op).withLoc(off0, off1), result), rhs)
+              result = App(App(Var(op).withLoc(off0, off1, origin), result), rhs)
               true
             }
         }
@@ -153,7 +153,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ ident ~~ Index).rep).map {
     case (lhs, sels) => sels.foldLeft(lhs) {
-      case (acc, (i0,str,i1)) => Sel(lhs, str).withLoc(i0, i1)
+      case (acc, (i0,str,i1)) => Sel(lhs, str).withLoc(i0, i1, origin)
     }
   }
   
@@ -169,7 +169,7 @@ class Parser(indent: Int = 0, recordLocations: Bool = true) {
   
   def nextIndentP[_: P]: P[Int] = " ".repX(indent + 1).!.map(_.length)
   def indented[_: P, A](p: Parser => P[A]): P[A] = "\n" ~~ emptyLines ~~ nextIndentP.flatMapX { nextIndent =>
-    p(new Parser(nextIndent, recordLocations))
+    p(new Parser(origin, nextIndent, recordLocations))
   }
   def suite[_: P]: P[Term] =
     P( indented(_.multilineBlock) ).opaque("indented block")
