@@ -1,5 +1,7 @@
 // Tests ported from Simplesub
 
+:ShowRelativeLineNums
+
 
 
 // --- basic --- //
@@ -52,23 +54,23 @@ x => y => if x then y else x
 :e
 succ true
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.53: 	succ true
+//│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.53: 	succ true
+//│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
 //│ res: int
 
 :e
 x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.63: 	x => succ (not x)
+//│ ║  l.+1: 	x => succ (not x)
 //│ ║        	     ^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.63: 	x => succ (not x)
+//│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
 //│ ╟── but it flows into argument of type `?a | bool`
-//│ ║  l.63: 	x => succ (not x)
+//│ ║  l.+1: 	x => succ (not x)
 //│ ║        	          ^^^^^^^
 //│ ╙── which does not match type `int`
 //│ res: bool -> int
@@ -76,13 +78,13 @@ x => succ (not x)
 :e // TODO why no constraint hint?
 (x => not x.f) { f: 123 }
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.77: 	(x => not x.f) { f: 123 }
+//│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `123` does not match type `bool`
-//│ ║  l.77: 	(x => not x.f) { f: 123 }
+//│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
 //│ ╟── but it flows into tuple expression of type `{f: 123}`
-//│ ║  l.77: 	(x => not x.f) { f: 123 }
+//│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
 //│ ╙── which does not match type `{f: ?a & bool}`
 //│ res: bool
@@ -90,10 +92,10 @@ x => succ (not x)
 :e // TODO why no constraint hint?
 (f => x => not (f x.u)) false
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.91: 	(f => x => not (f x.u)) false
+//│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` is not a function
-//│ ║  l.91: 	(f => x => not (f x.u)) false
+//│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                        ^^^^^
 //│ res: {u: anything} -> bool
 
@@ -130,21 +132,21 @@ if true then { a: 1, b: true } else { b: false, c: 42 }
 :e
 { a: 123, b: true }.c
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.131: 	{ a: 123, b: true }.c
-//│ ║         	                   ^^
+//│ ║  l.+1: 	{ a: 123, b: true }.c
+//│ ║        	                   ^^
 //│ ╟── expression of type `{a: 123, b: bool}` does not have field 'c'
-//│ ║  l.131: 	{ a: 123, b: true }.c
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	{ a: 123, b: true }.c
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
 
 :e
 x => { a: x }.b
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.141: 	x => { a: x }.b
-//│ ║         	             ^^
+//│ ║  l.+1: 	x => { a: x }.b
+//│ ║        	             ^^
 //│ ╟── expression of type `{a: ?a}` does not have field 'b'
-//│ ║  l.141: 	x => { a: x }.b
-//│ ╙──       	     ^^^^^^^^
+//│ ║  l.+1: 	x => { a: x }.b
+//│ ╙──      	     ^^^^^^^^
 //│ res: anything -> nothing
 
 
@@ -244,11 +246,11 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 :e // FIXME missing (x y) in error msg
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╔══[ERROR] Type mismatch in binding of block of statements:
-//│ ║  l.245: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
-//│ ║  l.245: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──       	                                           ^
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ╙──      	                                           ^
 //│ x: 0
 //│ res: 0
 

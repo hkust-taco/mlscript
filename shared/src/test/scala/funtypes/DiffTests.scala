@@ -38,6 +38,7 @@ class DiffTests extends FunSuite {
     val defaultMode = Mode(false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
+    var showRelativeLineNums = false
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
@@ -52,6 +53,7 @@ class DiffTests extends FunSuite {
           case "s" => mode.copy(fullExceptionStack = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -107,22 +109,28 @@ class DiffTests extends FunSuite {
                       s"╔══[WARNING] "
                   }
                   val lastMsgNum = diag.allMsgs.size - 1
-                  val globalLineNum = diag.allMsgs.zipWithIndex.map { case ((msg, loco), msgNum) =>
+                  var globalLineNum = 0  // solely used for reporting useful test failure messages
+                  diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
                     val isLast = msgNum =:= lastMsgNum
                     val msgStr = msg.showIn(sctx)
                     if (msgNum =:= 0) output(headStr + msgStr)
                     else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-                    globalStartLineNum + loco.fold(0) { loc =>  // FIXME mixes origins...
+                    loco.foreach { loc =>
                       val (startLineNum, startLineStr, startLineCol) =
                         loc.origin.fph.getLineColAt(loc.spanStart)
+                      if (globalLineNum =:= 0) globalLineNum = startLineNum - 1
                       val (endLineNum, endLineStr, endLineCol) =
                         loc.origin.fph.getLineColAt(loc.spanEnd)
                       var l = startLineNum
                       var c = startLineCol
                       while (l <= endLineNum) {
                         val globalLineNum = loc.origin.startLineNum + l - 1
+                        val relativeLineNum = globalLineNum - blockLineNum + 1
+                        val shownLineNum =
+                          if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
+                          else "l." + globalLineNum
                         val prepre = "║  "
-                        val pre = s"l.$globalLineNum: "
+                        val pre = s"$shownLineNum: "
                         val curLine = loc.origin.fph.lines(l - 1)
                         output(prepre + pre + "\t" + curLine)
                         out.print(outputMarker + (if (isLast) "╙──" else prepre) + " " * pre.length + "\t" + " " * (c - 1))
@@ -132,9 +140,8 @@ class DiffTests extends FunSuite {
                         c = 1
                         l += 1
                       }
-                      startLineNum - 1
                     }
-                  }.head
+                  }
                   if (!allowTypeErrors && !mode.fixme && (
                       !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
                    || !mode.expectWarnings && diag.isInstanceOf[Warning]
