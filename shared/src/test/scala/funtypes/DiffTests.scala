@@ -36,6 +36,8 @@ class DiffTests extends FunSuite {
       fixme: Bool, showParse: Bool, dbg: Bool)
     val defaultMode = Mode(false, false, false, false, false, false)
     
+    var allowTypeErrors = false
+    
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
       case line :: ls if line.startsWith(":") =>
@@ -46,6 +48,7 @@ class DiffTests extends FunSuite {
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
+          case "AllowTypeErrors" => allowTypeErrors = true; mode
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -120,13 +123,13 @@ class DiffTests extends FunSuite {
                     }
                     startLineNum - 1
                   }
-                  if (!mode.fixme && (
+                  if (!allowTypeErrors && !mode.fixme && (
                       !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
                    || !mode.expectWarnings && diag.isInstanceOf[Warning]
                   )) failures += globalLineNum
                   ()
                 }
-                if (diags.exists(_.isInstanceOf[TypeError]) && !mode.expectTypeErrors) {
+                if (diags.exists(_.isInstanceOf[TypeError]) && !mode.expectTypeErrors && !allowTypeErrors) {
                   // output(s"Statement was parsed as:\n$outputMarker\t$s")
                   if (!mode.dbg) {
                     output(s"Retyping with debug info...")

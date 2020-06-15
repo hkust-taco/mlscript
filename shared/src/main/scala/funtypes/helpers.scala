@@ -73,7 +73,7 @@ abstract class TermImpl { self: Term =>
       fields.iterator.map(nv => nv._1 + ": " + nv._2).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
-      s"(let${if (isRec) " rec" else ""} $name = $rhs in $body)"
+      s"(let${if (isRec) " rec" else ""} $name = $rhs; $body)"
     case Tup(xs) =>
       xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
   }
@@ -103,9 +103,26 @@ trait Located {
   }
 }
 
-trait StatementImpl extends Located {
+trait StatementImpl extends Located { self: Statement =>
+  
+  lazy val freeVars: Set[String] = this match {
+    case _: Lit => Set.empty
+    case Var(name) => Set.empty[String] + name
+    case Lam(pat, rhs) => rhs.freeVars -- pat.freeVars
+    case App(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+    case Rcd(fields) => fields.iterator.flatMap(_._2.freeVars).toSet
+    case Sel(receiver, fieldName) => receiver.freeVars
+    case Let(isRec, name, rhs, body) =>
+      (body.freeVars - name) ++ (if (isRec) rhs.freeVars - name else rhs.freeVars)
+    case Bra(_, trm) => trm.freeVars
+    case Blk(sts) => sts.iterator.flatMap(_.freeVars).toSet
+    case Tup(trms) => trms.iterator.flatMap(_._2.freeVars).toSet
+    case LetS(false, pat, rhs) => rhs.freeVars
+    case LetS(true, pat, rhs) => rhs.freeVars -- pat.freeVars
+  }
   
   def children: List[Statement] = this match {
+    case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
     case Lam(lhs, rhs) => lhs :: rhs :: Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
@@ -114,8 +131,11 @@ trait StatementImpl extends Located {
     case Sel(receiver, fieldName) => receiver :: Nil
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil
     case Blk(stmts) => stmts
+    case LetS(_, pat, rhs) => pat :: rhs :: Nil
     case IntLit(_) | DecLit(_) | StrLit(_) => Nil
   }
+  
+  def size: Int = children.iterator.map(_.size).sum + 1
   
   override def toString: String = this match {
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
