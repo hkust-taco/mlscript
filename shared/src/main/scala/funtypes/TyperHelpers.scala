@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import funtypes.utils._, shorthands._
 
 /** Inessential methods used to help debugging. */
-abstract class TyperDebugging { self: Typer =>
+abstract class TyperHelpers { self: Typer =>
   
   private val noPostTrace: Any => String = _ => ""
   
