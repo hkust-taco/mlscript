@@ -58,6 +58,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(lhs, rhs)
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
+          case (PrimType(ErrTypeId, _), _) => ()
           case _ =>
             def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
             def doesntHaveField(n: Str) = msg"does not have field '$n'"
@@ -197,19 +198,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case PrimType(_, _) => ty
     }
   
-  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
+  
+  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
     raise(TypeError((msg, loco) :: Nil))
+    errType
+  }
+  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId, prov)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(Warning((msg, loco) :: Nil))
-  
-  private var freshCount = 0
-  protected def nextCount = { freshCount += 1; freshCount - 1 }
-  def freshVar(p: TypeProvenance)(implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, Nil, Nil)(p)
-  def resetState(): Unit = {
-    freshCount = 0
-  }
   
   
   def freshenAbove(lim: Int, ty: SimpleType)(implicit lvl: Int): SimpleType = {

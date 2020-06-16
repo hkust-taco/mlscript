@@ -26,6 +26,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val DecType: PrimType = PrimType(Var("number"), primProv)
   val StrType: PrimType = PrimType(Var("string"), primProv)
   
+  val ErrTypeId: SimpleTerm = Var("error")
+  
   val builtins: Ctx = {
     val tv = freshVar(primProv)(1) // Q: level?
     import FunctionType.{ apply => fun }
@@ -158,7 +160,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val ty = ctx.getOrElse(name, {
           // TODO: delay type expansion to message display and show the expected type here!
           err("identifier not found: " + name, term.toLoc)
-          freshVar(tp(term.toLoc, "unknown variable"))
         }).instantiate
         mkProxy(ty, tp(term.toLoc, term.describe))
         // ^ TODO maybe use a description passed in param?

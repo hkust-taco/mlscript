@@ -71,11 +71,17 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable {
-    private[funtypes] val uid: Int = nextCount
+    private[funtypes] val uid: Int = { freshCount += 1; freshCount - 1 }
     private[funtypes] var recursiveFlag = false // used temporarily by `compactType`
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid
+  }
+  private var freshCount = 0
+  def freshVar(p: TypeProvenance)(implicit lvl: Int): TypeVariable =
+    new TypeVariable(lvl, Nil, Nil)(p)
+  def resetState(): Unit = {
+    freshCount = 0
   }
   trait CompactTypeOrVariable
   type PolarVariable = (TypeVariable, Boolean)
