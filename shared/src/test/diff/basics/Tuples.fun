@@ -31,7 +31,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── but it flows into applied expression of expected type `0.2 -> ?a`
 //│ ║  l.23: 	(1, true, "hey").2
 //│ ╙──      	^^^^^^^^^^^^^^^^
-//│ res: nothing
+//│ res: error
 
 :w
 let not-tup = (

@@ -123,11 +123,11 @@ log / false + 1
 //│ ║  l.+7: 	log / false + 1
 //│ ╙──      	      ^^^^^
 //│ res: nothing
-//│ res: nothing
-//│ oops: int
+//│ res: error
+//│ oops: int | error
 //│ res: int
-//│ res: int
-//│ res: int
+//│ res: int | error
+//│ res: int | error
 //│ res: unit
 
 :e
@@ -160,8 +160,8 @@ succ succ
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+5: 	) false
 //│ ╙──      	  ^^^^^
-//│ res: nothing
-//│ res: int
+//│ res: error
+//│ res: int | error
 
 :e
 :w
@@ -205,7 +205,7 @@ log
 //│ ║  l.+11: 	  f 2
 //│ ╙──       	  ^
 //│ res: unit
-//│ res: nothing
+//│ res: error
 //│ res: unit
 //│ res: unit
 
@@ -232,7 +232,7 @@ succ ((((false))))
 //│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	succ ((((false))))
 //│ ╙──      	     ^^^^^^^^^^^^^
-//│ res: int
+//│ res: int | error
 
 :e
 let rec f = n => if n then 0 else f (miss + 1)
@@ -322,14 +322,14 @@ succ {a: 1}
 //│ ╟── expression of type `{a: 1}` is not a function
 //│ ║  l.+8: 	{a: 1} succ
 //│ ╙──      	^^^^^^
-//│ res: nothing
-//│ res: nothing
-//│ res: nothing
-//│ res: nothing
+//│ res: error
+//│ res: error
+//│ res: error
+//│ res: error
+//│ res: int | error
 //│ res: int
-//│ res: int
-//│ res: int
-//│ res: nothing
+//│ res: int | error
+//│ res: error
 
 let f = x =>
   log / succ x.prop
@@ -352,15 +352,6 @@ f { prap: 1 }
 //│ ║  l.336: 	  x.prop
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+1: 	f 42
-//│ ║        	^^^^
-//│ ╟── expression of type `42` does not have field 'prop'
-//│ ║  l.+1: 	f 42
-//│ ║        	  ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.335: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+2: 	f { prap: 1 }
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── expression of type `{prap: 1}` does not have field 'prop'
@@ -369,17 +360,8 @@ f { prap: 1 }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.336: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+2: 	f { prap: 1 }
-//│ ║        	^^^^^^^^^^^^^
-//│ ╟── expression of type `{prap: 1}` does not have field 'prop'
-//│ ║  l.+2: 	f { prap: 1 }
-//│ ║        	  ^^^^^^^^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.335: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
-//│ res: nothing
-//│ res: nothing
+//│ res: error
+//│ res: error
 
 :e
 f { prop: false }
@@ -395,7 +377,7 @@ f { prop: false }
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.335: 	  log / succ x.prop
 //│ ╙──       	             ^^^^^^
-//│ res: bool
+//│ res: bool | error
 
 :e
 let arg = 0
@@ -412,20 +394,8 @@ f arg
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.336: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+2: 	f arg
-//│ ║        	^^^^^
-//│ ╟── expression of type `0` does not have field 'prop'
-//│ ║  l.+1: 	let arg = 0
-//│ ║        	          ^
-//│ ╟── but it flows into variable reference of expected type `{prop: ?a & int}`
-//│ ║  l.+2: 	f arg
-//│ ║        	  ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.335: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
 //│ arg: 0
-//│ res: nothing
+//│ res: error
 
 :e
 let arg = {prop: not true}
@@ -443,7 +413,7 @@ f arg
 //│ ║  l.335: 	  log / succ x.prop
 //│ ╙──       	             ^^^^^^
 //│ arg: {prop: bool}
-//│ res: bool
+//│ res: bool | error
 
 
 let g = y =>
@@ -463,7 +433,7 @@ g { fld: { oops: 1 } }
 //│ ║  l.+1: 	g 1
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.450: 	  f { prop: y.fld }
+//│ ║  l.420: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+2: 	g { fld: false }
@@ -478,7 +448,7 @@ g { fld: { oops: 1 } }
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.450: 	  f { prop: y.fld }
+//│ ║  l.420: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+3: 	g { fld: { oops: 1 } }
@@ -493,11 +463,11 @@ g { fld: { oops: 1 } }
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.450: 	  f { prop: y.fld }
+//│ ║  l.420: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ res: nothing
-//│ res: bool
-//│ res: {oops: 1}
+//│ res: error
+//│ res: bool | error
+//│ res: error | {oops: 1}
 
 :e
 let arg1 = {fld: not true}
@@ -517,18 +487,6 @@ f arg2
 //│ ║  l.336: 	  x.prop
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+3: 	f arg1
-//│ ║        	^^^^^^
-//│ ╟── expression of type `{fld: ?a | bool}` does not have field 'prop'
-//│ ║  l.+1: 	let arg1 = {fld: not true}
-//│ ║        	           ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{prop: ?b & int}`
-//│ ║  l.+3: 	f arg1
-//│ ║        	  ^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.335: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+4: 	f arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
@@ -540,22 +498,10 @@ f arg2
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.336: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+4: 	f arg2
-//│ ║        	^^^^^^
-//│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
-//│ ║  l.+2: 	let arg2 = {fld: arg}
-//│ ║        	           ^^^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{prop: ?b & int}`
-//│ ║  l.+4: 	f arg2
-//│ ║        	  ^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.335: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
 //│ arg1: {fld: bool}
 //│ arg2: {fld: {prop: bool}}
-//│ res: nothing
-//│ res: nothing
+//│ res: error
+//│ res: error
 
 let h = y =>
   succ / f y
@@ -572,7 +518,7 @@ x => h / succ x
 //│ ║  l.+1: 	h arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
-//│ ║  l.504: 	let arg2 = {fld: arg}
+//│ ║  l.474: 	let arg2 = {fld: arg}
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── but it flows into variable reference of expected type `{prop: ?b & int}`
 //│ ║  l.+1: 	h arg2
@@ -581,28 +527,13 @@ x => h / succ x
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	              ^^^^^
 //│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+1: 	h arg2
-//│ ║        	^^^^^^
-//│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
-//│ ║  l.504: 	let arg2 = {fld: arg}
-//│ ║         	           ^^^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{prop: ?b & int}`
-//│ ║  l.+1: 	h arg2
-//│ ║        	  ^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.336: 	  x.prop
-//│ ║         	   ^^^^^
-//│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
+//│ ║  l.507: 	  succ / f y
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+2: 	h arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.431: 	let arg = {prop: not true}
+//│ ║  l.401: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── but it flows into variable reference of expected type `{prop: ?a & int}`
 //│ ║  l.+2: 	h arg
@@ -611,23 +542,8 @@ x => h / succ x
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
+//│ ║  l.507: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+2: 	h arg
-//│ ║        	^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.431: 	let arg = {prop: not true}
-//│ ║         	                 ^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{prop: ?a & int}`
-//│ ║  l.+2: 	h arg
-//│ ║        	  ^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.561: 	  succ / f y
-//│ ║         	         ^^^
-//│ ╟── from field selection:
-//│ ║  l.336: 	  x.prop
-//│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+3: 	h / 42
 //│ ║        	^^^^^^
@@ -638,19 +554,7 @@ x => h / succ x
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	              ^^^^^
 //│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+3: 	h / 42
-//│ ║        	^^^^^^
-//│ ╟── expression of type `42` does not have field 'prop'
-//│ ║  l.+3: 	h / 42
-//│ ║        	    ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.336: 	  x.prop
-//│ ║         	   ^^^^^
-//│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
+//│ ║  l.507: 	  succ / f y
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+4: 	x => h / succ x
@@ -662,24 +566,12 @@ x => h / succ x
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	              ^^^^^
 //│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
+//│ ║  l.507: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+4: 	x => h / succ x
-//│ ║        	     ^^^^^^^^^^
-//│ ╟── expression of type `int` does not have field 'prop'
-//│ ║  l.+4: 	x => h / succ x
-//│ ║        	         ^^^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.336: 	  x.prop
-//│ ║         	   ^^^^^
-//│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
-//│ ╙──       	           ^
-//│ res: int
-//│ res: int
-//│ res: int
-//│ res: int -> int
+//│ res: int | error
+//│ res: int | error
+//│ res: int | error
+//│ res: int -> int | error
 
 :e
 let mkArg2 = a => {prop: succ a}
@@ -707,7 +599,7 @@ i arg
 //│ ║  l.+1: 	i arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.431: 	let arg = {prop: not true}
+//│ ║  l.401: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── but it flows into variable reference of expected type `{fld: ?a & {prop: ?b & int}}`
 //│ ║  l.+1: 	i arg2
@@ -716,40 +608,22 @@ i arg
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from argument:
-//│ ║  l.700: 	  succ / f y.fld
+//│ ║  l.592: 	  succ / f y.fld
 //│ ╙──       	           ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
-//│ ║  l.+1: 	i arg2
-//│ ║        	^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.431: 	let arg = {prop: not true}
-//│ ║         	                 ^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{fld: ?a & {prop: ?b & int}}`
-//│ ║  l.+1: 	i arg2
-//│ ║        	  ^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.700: 	  succ / f y.fld
-//│ ║         	         ^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.336: 	  x.prop
-//│ ║         	   ^^^^^
-//│ ╟── from receiver:
-//│ ║  l.700: 	  succ / f y.fld
-//│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+2: 	i arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `{prop: ?a | bool}` does not have field 'fld'
-//│ ║  l.431: 	let arg = {prop: not true}
+//│ ║  l.401: 	let arg = {prop: not true}
 //│ ║         	          ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into variable reference of expected type `{fld: ?b & {prop: ?c & int}}`
 //│ ║  l.+2: 	i arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.700: 	  succ / f y.fld
+//│ ║  l.592: 	  succ / f y.fld
 //│ ╙──       	            ^^^^
-//│ res: int
-//│ res: int
+//│ res: int | error
+//│ res: int | error
 
 
 let mkArg = a => {prop: a}
@@ -768,7 +642,7 @@ i / mkArg 1
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not match type `int`
-//│ ║  l.755: 	let mkArg = a => {prop: a}
+//│ ║  l.629: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into tuple expression of expected type `{fld: ?b & int}`
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
@@ -777,7 +651,7 @@ i / mkArg 1
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.450: 	  f { prop: y.fld }
+//│ ║  l.420: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+2: 	h / mkArg false
@@ -792,7 +666,7 @@ i / mkArg 1
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from argument:
-//│ ║  l.561: 	  succ / f y
+//│ ║  l.507: 	  succ / f y
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+3: 	i { fld: mkArg false }
@@ -807,24 +681,24 @@ i / mkArg 1
 //│ ║  l.335: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
 //│ ╟── from argument:
-//│ ║  l.700: 	  succ / f y.fld
+//│ ║  l.592: 	  succ / f y.fld
 //│ ╙──       	           ^^^^^
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not have field 'fld'
-//│ ║  l.755: 	let mkArg = a => {prop: a}
+//│ ║  l.629: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into function application of expected type `{fld: ?b & {prop: ?c & int}}`
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	    ^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.700: 	  succ / f y.fld
+//│ ║  l.592: 	  succ / f y.fld
 //│ ╙──       	            ^^^^
-//│ res: {prop: 1}
-//│ res: int
-//│ res: int
-//│ res: int
+//│ res: error | {prop: 1}
+//│ res: int | error
+//│ res: int | error
+//│ res: int | error
 
 
 
@@ -834,4 +708,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.835:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.709:3: ba)r

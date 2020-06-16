@@ -35,7 +35,7 @@ foo / foo / x => succ / succ / x
 //│ ╟── Note: constraint arises from function application:
 //│ ║  l.7: 	let foo = f => f 1
 //│ ╙──     	               ^^^
-//│ res: nothing
+//│ res: error
 
 :e
 foo / foo
@@ -48,4 +48,4 @@ foo / foo
 //│ ╟── Note: constraint arises from function application:
 //│ ║  l.7: 	let foo = f => f 1
 //│ ╙──     	               ^^^
-//│ res: nothing
+//│ res: error

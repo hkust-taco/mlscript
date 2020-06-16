@@ -76,8 +76,8 @@ r.w
 //│ ╟── but it flows into variable reference of expected type `{w: ?a}`
 //│ ║  l.60: 	r.w
 //│ ╙──      	^
-//│ res: nothing
-//│ res: nothing
+//│ res: error
+//│ res: error
 
 let rec sumHeads = x => x.head + sumHeads x.tail
 //│ sumHeads: {head: int, tail: 'a} as 'a -> int

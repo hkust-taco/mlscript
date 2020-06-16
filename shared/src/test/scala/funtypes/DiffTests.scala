@@ -156,7 +156,10 @@ class DiffTests extends FunSuite {
                     output(s"Retyping with debug info...")
                     typer.resetState()
                     typer.dbg = true
-                    try typer.typeStatement(s, allowPure = true)(ctx, 0, throw _)
+                    try typer.typeStatement(s, allowPure = true)(ctx, 0, {
+                      case err: TypeError => throw err
+                      case _: Warning => () // ignore warnings diagnostics for this debug run
+                    })
                     catch { case err: TypeError =>
                       output(s"ERROR: " + err.mainMsg)
                       if (!mode.fixme)

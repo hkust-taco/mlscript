@@ -56,7 +56,7 @@ discard foo
 //│ ╟── expression of type `unit` is not a function
 //│ ║  l.49: 	discard foo
 //│ ╙──      	^^^^^^^^^^^
-//│ res: nothing
+//│ res: error
 
 :w
 foo

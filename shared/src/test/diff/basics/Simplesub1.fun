@@ -59,7 +59,7 @@ succ true
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
-//│ res: int
+//│ res: int | error
 
 :e
 x => succ (not x)
@@ -72,7 +72,7 @@ x => succ (not x)
 //│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
-//│ res: bool -> int
+//│ res: bool -> int | error
 
 :e
 (x => not x.f) { f: 123 }
@@ -88,7 +88,7 @@ x => succ (not x)
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ╙──      	          ^^^
-//│ res: bool
+//│ res: bool | error
 
 :e
 (f => x => not (f x.u)) false
@@ -101,7 +101,7 @@ x => succ (not x)
 //│ ╟── Note: constraint arises from function application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^^^^^
-//│ res: {u: anything} -> bool
+//│ res: error | ({u: anything} -> bool)
 
 
 
@@ -141,7 +141,7 @@ if true then { a: 1, b: true } else { b: false, c: 42 }
 //│ ╟── expression of type `{a: 123, b: bool}` does not have field 'c'
 //│ ║  l.+1: 	{ a: 123, b: true }.c
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
-//│ res: nothing
+//│ res: error
 
 :e
 x => { a: x }.b
@@ -151,7 +151,7 @@ x => { a: x }.b
 //│ ╟── expression of type `{a: ?a}` does not have field 'b'
 //│ ║  l.+1: 	x => { a: x }.b
 //│ ╙──      	     ^^^^^^^^
-//│ res: anything -> nothing
+//│ res: anything -> error
 
 
 

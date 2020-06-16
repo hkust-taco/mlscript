@@ -155,6 +155,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         = trace(s"$lvl. Typing $term") {
     import TypeProvenance.{apply => tp}
     implicit val prov: TypeProvenance = TypeProvenance(term.toLoc, term.describe)
+    
+    def con(lhs: SimpleType, rhs: SimpleType, res: TypeVariable): SimpleType = {
+      var alreadyReportedAnError = false
+      constrain(lhs, rhs)({
+        case err: TypeError if alreadyReportedAnError => () // silence further errors from this location
+        case err: TypeError =>
+          alreadyReportedAnError = true
+          constrain(errType, res)
+          raise(err)
+        case diag => raise(diag)
+      }, prov)
+      res
+    }
     term match {
       case Var(name) =>
         val ty = ctx.getOrElse(name, {
@@ -176,15 +189,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val res = freshVar(prov)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
         val fun_ty = mkProxy(f_ty, tp(f.toCoveringLoc, "applied expression"))
-        constrain(fun_ty, FunctionType(arg_ty, res, prov))
-        res
+        con(fun_ty, FunctionType(arg_ty, res, prov), res)
       case lit: Lit => PrimType(lit, tp(term.toLoc, "constant literal"))
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
-        val obj_ty_ = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
-        constrain(obj_ty_, RecordType((name, res) :: Nil, prov))
-        res
+        val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
+        con(obj_ty, RecordType((name, res) :: Nil, prov), res)
       case Rcd(fs) => // TODO rm: no longer used?
         RecordType(fs.map { case (n, t) => (n, typeTerm(t)) }, tp(term.toLoc, "record literal"))
       case Let(isrec, nme, rhs, bod) =>
