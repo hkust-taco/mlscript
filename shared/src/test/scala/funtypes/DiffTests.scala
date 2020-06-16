@@ -111,7 +111,7 @@ class DiffTests extends FunSuite {
                       s"╔══[WARNING] "
                   }
                   val lastMsgNum = diag.allMsgs.size - 1
-                  var globalLineNum = 0  // solely used for reporting useful test failure messages
+                  var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
                   diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
                     val isLast = msgNum =:= lastMsgNum
                     val msgStr = msg.showIn(sctx)
@@ -120,7 +120,7 @@ class DiffTests extends FunSuite {
                     loco.foreach { loc =>
                       val (startLineNum, startLineStr, startLineCol) =
                         loc.origin.fph.getLineColAt(loc.spanStart)
-                      if (globalLineNum =:= 0) globalLineNum = startLineNum - 1
+                      if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
                       val (endLineNum, endLineStr, endLineCol) =
                         loc.origin.fph.getLineColAt(loc.spanEnd)
                       var l = startLineNum

@@ -58,11 +58,13 @@ discard foo
 //│ ╙──      	^^^^^^^^^^^
 //│ res: nothing
 
-:e // TODO better error: discarded non-unit value
+:w
 foo
   foo 1
   foo 2
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in function application:
 //│ ║  l.63: 	  foo 1
 //│ ║        	  ^^^^^
 //│ ╙── expression of type `int` does not match type `unit`
@@ -144,25 +146,25 @@ succ (
   1
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.143: 	  succ
+//│ ║  l.145: 	  succ
 //│ ╙──       	  ^^^^
 //│ res: int
 
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.152:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.154:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.157:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.159:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.162:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.164:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -192,16 +194,16 @@ succ
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.190:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.192:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.200:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.202:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.205:1:   1
+//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.207:1:   1
 

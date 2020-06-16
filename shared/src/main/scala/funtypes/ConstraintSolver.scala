@@ -200,8 +200,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(TypeError((msg, loco) :: Nil))
   
-  def warn(msg: String, loco: Opt[Loc])(implicit raise: Raise): Unit =
-    raise(Warning(msg, loco))
+  def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
+    raise(Warning((msg, loco) :: Nil))
   
   private var freshCount = 0
   protected def nextCount = { freshCount += 1; freshCount - 1 }

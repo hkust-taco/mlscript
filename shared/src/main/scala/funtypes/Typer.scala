@@ -116,8 +116,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         if (t.isInstanceOf[Var] || t.isInstanceOf[Lit])
           warn("Pure expression does nothing in statement position.", t.toLoc)
         else
-          constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")),
-            UnitType)(raise = raise, prov = TypeProvenance(t.toLoc, t.describe)) // TODO add explanation message
+          constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
+            raise = err => raise(Warning( // Demote constraint errors from this to warnings
+              msg"Expression in statement position should have type `unit`." -> N ::
+              msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+              err.allMsgs)),
+            prov = TypeProvenance(t.toLoc, t.describe))
       }
       ctx -> PolymorphicType(0, ty)
   }

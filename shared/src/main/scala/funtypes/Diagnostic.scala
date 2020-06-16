@@ -14,8 +14,10 @@ object TypeError {
     TypeError(msgs.head._1.show.plainText, msgs)
 }
 
-final case class Warning(msg: Message, loco: Opt[Loc]) extends Diagnostic(msg.show.plainText) {
-  val allMsgs: Ls[Message -> Opt[Loc]] = (msg, loco) :: Nil
+final case class Warning(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
+object Warning {
+  def apply(msgs: Ls[Message -> Opt[Loc]]): Warning =
+    Warning(msgs.head._1.show.plainText, msgs)
 }
 
 
