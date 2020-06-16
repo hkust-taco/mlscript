@@ -98,8 +98,8 @@ class DiffTests extends FunSuite {
             val tys = typer.typeBlk(p, ctx, allowPure = true)
             var totalTypeErrors = 0
             var totalWarnings = 0
-            val res = (p.stmts.zipWithIndex lazyZip tys).map {
-              case ((s, _), diags -> ty) =>
+            val res = (p.stmts.zipWithIndex lazyZip tys).flatMap {
+              case ((s, _), diags -> bindsOrTy) =>
                 diags.foreach { diag =>
                   val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
                   val headStr = diag match {
@@ -167,20 +167,27 @@ class DiffTests extends FunSuite {
                     } finally typer.dbg = false
                   }
                 }
-                if (mode.dbg) output(s"Typed as: $ty")
-                if (mode.dbg) output(s" where: ${ty.instantiate(0).showBounds}")
-                val com = typer.compactType(ty.instantiate(0))
-                if (mode.dbg) output(s"Compact type before simplification: ${com}")
-                val sim = typer.simplifyType(com)
-                if (mode.dbg) output(s"Compact type after simplification: ${sim}")
-                val exp = typer.expandCompactType(sim)
-                s match {
-                  case LetS(_, Var(n), _) =>
-                    ctx += n -> ty
-                    s"$n: ${exp.show}"
-                  case _ =>
-                    ctx += "res" -> ty
-                    s"res: ${exp.show}"
+                def getType(ty: typer.PolymorphicType): Type = {
+                  if (mode.dbg) output(s"Typed as: $ty")
+                  if (mode.dbg) output(s" where: ${ty.instantiate(0).showBounds}")
+                  val com = typer.compactType(ty.instantiate(0))
+                  if (mode.dbg) output(s"Compact type before simplification: ${com}")
+                  val sim = typer.simplifyType(com)
+                  if (mode.dbg) output(s"Compact type after simplification: ${sim}")
+                  val exp = typer.expandCompactType(sim)
+                  exp
+                }
+                bindsOrTy match {
+                  case R(binds) =>
+                    binds.map {
+                      case (nme, pty) =>
+                        ctx += nme -> pty
+                        ctx += "res" -> pty
+                        s"$nme: ${getType(pty).show}"
+                    }
+                  case L(pty) =>
+                    ctx += "res" -> pty
+                    s"res: ${getType(pty).show}" :: Nil
                 }
             }.map(outputMarker + _).mkString("\n")
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)

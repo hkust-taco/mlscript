@@ -125,6 +125,12 @@ trait Located {
     spanEnd = e
     this
   }
+  def withLocOf(that: Located): this.type = {
+    spanStart = that.spanStart
+    spanEnd = that.spanEnd
+    origin = that.origin
+    this
+  }
   lazy val toLoc: Opt[Loc] = getLoc
   private def getLoc: Opt[Loc] = {
     def subLocs = children.iterator.flatMap(_.toLoc.iterator)

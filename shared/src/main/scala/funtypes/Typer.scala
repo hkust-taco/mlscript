@@ -89,21 +89,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     res.toList
   }
   
+  type Binding = (Str, PolymorphicType)
+  
   def typeBlk(blk: Blk, ctx: Ctx = builtins, allowPure: Bool = false)
-        : List[List[Diagnostic] -> PolymorphicType]
+        : Ls[Ls[Diagnostic] -> (PolymorphicType \/ Ls[Binding])]
         = blk.stmts match {
     case s :: stmts =>
       val diags = mutable.ListBuffer.empty[Diagnostic]
-      val (newCtx, ty) = typeStatement(s, allowPure)(ctx, 0, diags += _)
-      diags.toList -> ty :: typeBlk(Blk(stmts), newCtx, allowPure)
+      val newBindings = typeStatement(s, allowPure)(ctx, 0, diags += _)
+      val newCtx = ctx ++ newBindings.getOrElse(Nil)
+      diags.toList -> newBindings :: typeBlk(Blk(stmts), newCtx, allowPure)
     case Nil => Nil
   }
   def typeStatement(s: Statement, allowPure: Bool = false)
-        (implicit ctx: Ctx, lvl: Int, raise: Raise): Ctx -> PolymorphicType = s match {
+        (implicit ctx: Ctx, lvl: Int, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
     case LetS(isrec, Var(nme), rhs) =>
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
-    case LetS(isrec, pat, rhs) => lastWords("Not yet supported: pattern " + pat)
+      R(nme -> ty_sch :: Nil)
+    case t @ LetS(isrec, App(dfn, pat), rhs) =>
+      typeStatement(LetS(isrec, dfn, Lam(pat, rhs)).withLocOf(t))
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -111,7 +116,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case _ => "tuple"
       }
       warn(s"Useless $thing in statement position.", t.toLoc)
-      ctx -> PolymorphicType(0, typeTerm(t))
+      L(PolymorphicType(0, typeTerm(t)))
     case t: Term =>
       val ty = typeTerm(t)
       if (!allowPure) {
@@ -125,7 +130,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               err.allMsgs)),
             prov = TypeProvenance(t.toLoc, t.describe))
       }
-      ctx -> PolymorphicType(0, ty)
+      L(PolymorphicType(0, ty))
   }
   
   def inferType(term: Term, ctx: Ctx = builtins, lvl: Int = 0): SimpleType =
@@ -182,7 +187,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val param = freshVar(tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "parameter"))
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
         FunctionType(param, body_ty)(tp(term.toLoc, "function"))
-      case Lam(lhs, rhs) => ???
+      case Lam(pat, rhs) => lastWords("Not yet supported: pattern " + pat)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -235,7 +240,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     //   val ty = typeTerm(trm)
     //   typeBra(Nil, rcd, (N, ty) :: fields)
     case s :: sts =>
-      val (newCtx, ty) = typeStatement(s)
+      val newBindings = typeStatement(s)
+      val newCtx = ctx ++ newBindings.getOrElse(Nil)
       typeTerms(sts, rcd, fields)(newCtx, lvl, raise, prov)
     case Nil =>
       // TODO actually use a tuple type if !rcd

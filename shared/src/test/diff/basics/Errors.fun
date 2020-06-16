@@ -625,6 +625,30 @@ i arg
 //│ res: int | error
 //│ res: int | error
 
+let test x y = if x.prop then i x else y
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> 'a | int
+
+:e
+test arg2
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.+1: 	test arg2
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `bool` does not match type `int`
+//│ ║  l.401: 	let arg = {prop: not true}
+//│ ║         	                 ^^^^^^^^
+//│ ╟── but it flows into variable reference of expected type `{fld: ?a & {prop: ?b & int}}`
+//│ ║  l.+1: 	test arg2
+//│ ║        	     ^^^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.335: 	  log / succ x.prop
+//│ ║         	             ^^^^^^
+//│ ╟── from argument:
+//│ ║  l.592: 	  succ / f y.fld
+//│ ║         	           ^^^^^
+//│ ╟── from argument:
+//│ ║  l.628: 	let test x y = if x.prop then i x else y
+//│ ╙──       	                                ^
+//│ res: error | ('a -> 'a | int)
 
 let mkArg = a => {prop: a}
 h / mkArg 1
@@ -642,7 +666,7 @@ i / mkArg 1
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not match type `int`
-//│ ║  l.629: 	let mkArg = a => {prop: a}
+//│ ║  l.653: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into tuple expression of expected type `{fld: ?b & int}`
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
@@ -687,7 +711,7 @@ i / mkArg 1
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not have field 'fld'
-//│ ║  l.629: 	let mkArg = a => {prop: a}
+//│ ║  l.653: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into function application of expected type `{fld: ?b & {prop: ?c & int}}`
 //│ ║  l.+4: 	i / mkArg 1
@@ -708,4 +732,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.709:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.733:3: ba)r

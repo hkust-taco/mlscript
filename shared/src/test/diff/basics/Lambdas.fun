@@ -47,33 +47,26 @@ x =>
 //│ res: 'a -> 'a
 //│ res: 'a -> 'a
 
-// TODO
 let f x = x + 1
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f x)
-//│ 	at: funtypes.utils.package$.lastWords(package.scala:129)
-//│ 	at: funtypes.Typer.typeStatement(Typer.scala:106)
-//│ 	at: funtypes.Typer.typeBlk(Typer.scala:97)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:98)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:207)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+let f x y = x + y
+let f x y z = if x then y else z
+let f x y z = { log x; if y < z then y else z }
+//│ f: int -> int
+//│ f: int -> int -> int
+//│ f: bool -> 'a -> 'a -> 'a
+//│ f: anything -> 'a & int -> 'a & int -> 'a
 
 // TODO
-let f (
-  x
-  y
-) = x + 1
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Not yet supported: pattern (f (x; y;))
-//│ 	at: funtypes.utils.package$.lastWords(package.scala:129)
-//│ 	at: funtypes.Typer.typeStatement(Typer.scala:106)
-//│ 	at: funtypes.Typer.typeBlk(Typer.scala:97)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:98)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:207)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+// let f (x: int) = x + 1
+
+// TODO
+:pe
+let f / x: int = x + 1
+let f / x: int, y: int = x + y
+//│ /!\ Parse error: Expected (let binding | expression):1:1, found "let f / x:" at l.64:1: let f / x: int = x + 1
+
+// TODO
+// let f (
+//   x
+//   y
+// ) = x + 1

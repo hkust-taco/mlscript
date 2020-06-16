@@ -56,3 +56,53 @@ h / mkArg false
 //│ ╙──      	 ^
 //│ res: int | error
 
+
+let f = x =>
+  log / succ x.prop
+  x.prop
+let arg = {prop: not true}
+let arg2 = {fld: arg}
+let i = y =>
+  succ / f y.fld
+let test = x => y => if x.prop then i x else y
+//│ f: {prop: 'a & int} -> 'a
+//│ arg: {prop: bool}
+//│ arg2: {fld: {prop: bool}}
+//│ i: {fld: {prop: int}} -> int
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> 'a | int
+
+:e
+:verbose
+test arg2
+//│ ╔══[ERROR] Type mismatch in function application:
+//│ ║  l.76: 	test arg2
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `bool` does not match type `int`
+//│ ║  l.63: 	let arg = {prop: not true}
+//│ ║        	                 ^^^^^^^^
+//│ ╟── but it flows into variable reference of expected type `{fld: ?a & {prop: ?b & int}}`
+//│ ║  l.76: 	test arg2
+//│ ║        	     ^^^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.61: 	  log / succ x.prop
+//│ ║        	             ^^^^^^
+//│ ╟── from field selection:
+//│ ║  l.61: 	  log / succ x.prop
+//│ ║        	              ^^^^^
+//│ ╟── from receiver:
+//│ ║  l.61: 	  log / succ x.prop
+//│ ║        	             ^
+//│ ╟── from argument:
+//│ ║  l.66: 	  succ / f y.fld
+//│ ║        	           ^^^^^
+//│ ╟── from field selection:
+//│ ║  l.66: 	  succ / f y.fld
+//│ ║        	            ^^^^
+//│ ╟── from receiver:
+//│ ║  l.66: 	  succ / f y.fld
+//│ ║        	           ^
+//│ ╟── from argument:
+//│ ║  l.67: 	let test = x => y => if x.prop then i x else y
+//│ ╙──      	                                      ^
+//│ res: error | ('a -> 'a | int)
+

@@ -188,22 +188,39 @@ succ
   )
 //│ res: int
 
+log 1; log 2; log 3
+//│ res: unit
+//│ res: unit
+//│ res: unit
+
+let a = 1; log a; let b = 2
+//│ a: 1
+//│ res: unit
+//│ b: 2
+
+(let a = 1; log a; let b = 2)
+//│ res: {}
+
+(let a = 1; log a; let b = 2; a + b)
+//│ res: int
+
+
 :pe
 succ
   (
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.192:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.209:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.202:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.219:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.207:1:   1
+//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.224:1:   1
 
