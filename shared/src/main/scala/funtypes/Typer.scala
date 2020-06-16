@@ -20,11 +20,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   val primProv: TypeProvenance = TypeProvenance(N, "expression")
   
-  val UnitType: PrimType = PrimType(Var("unit"), primProv)
-  val BoolType: PrimType = PrimType(Var("bool"), primProv)
-  val IntType: PrimType = PrimType(Var("int"), primProv)
-  val DecType: PrimType = PrimType(Var("number"), primProv)
-  val StrType: PrimType = PrimType(Var("string"), primProv)
+  val UnitType: PrimType = PrimType(Var("unit"))(primProv)
+  val BoolType: PrimType = PrimType(Var("bool"))(primProv)
+  val IntType: PrimType = PrimType(Var("int"))(primProv)
+  val DecType: PrimType = PrimType(Var("number"))(primProv)
+  val StrType: PrimType = PrimType(Var("string"))(primProv)
   
   val ErrTypeId: SimpleTerm = Var("error")
   
@@ -34,20 +34,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     Map(
       "true" -> BoolType,
       "false" -> BoolType,
-      "not" -> fun(BoolType, BoolType, primProv),
-      "succ" -> fun(IntType, IntType, primProv),
-      "log" -> PolymorphicType(0, fun(tv, UnitType, primProv)),
-      "discard" -> PolymorphicType(0, fun(tv, UnitType, primProv)),
-      "add" -> fun(IntType, fun(IntType, IntType, primProv), primProv),
-      "+" -> fun(IntType, fun(IntType, IntType, primProv), primProv),
-      "<" -> fun(IntType, fun(IntType, BoolType, primProv), primProv),
+      "not" -> fun(BoolType, BoolType)(primProv),
+      "succ" -> fun(IntType, IntType)(primProv),
+      "log" -> PolymorphicType(0, fun(tv, UnitType)(primProv)),
+      "discard" -> PolymorphicType(0, fun(tv, UnitType)(primProv)),
+      "add" -> fun(IntType, fun(IntType, IntType)(primProv))(primProv),
+      "+" -> fun(IntType, fun(IntType, IntType)(primProv))(primProv),
+      "<" -> fun(IntType, fun(IntType, BoolType)(primProv))(primProv),
       "id" -> {
         val v = freshVar(primProv)(1)
-        PolymorphicType(0, fun(v, v, primProv))
+        PolymorphicType(0, fun(v, v)(primProv))
       },
       "if" -> {
         val v = freshVar(primProv)(1)
-        PolymorphicType(0, fun(BoolType, fun(v, fun(v, v, primProv), primProv), primProv))
+        PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(primProv))(primProv))(primProv))
       },
     )
   }
@@ -181,7 +181,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Lam(v @ Var(name), body) =>
         val param = freshVar(tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "parameter"))
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
-        FunctionType(param, body_ty, tp(term.toLoc, "function"))
+        FunctionType(param, body_ty)(tp(term.toLoc, "function"))
       case Lam(lhs, rhs) => ???
       case App(f, a) =>
         val f_ty = typeTerm(f)
@@ -189,15 +189,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val res = freshVar(prov)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
         val fun_ty = mkProxy(f_ty, tp(f.toCoveringLoc, "applied expression"))
-        con(fun_ty, FunctionType(arg_ty, res, prov), res)
-      case lit: Lit => PrimType(lit, tp(term.toLoc, "constant literal"))
+        con(fun_ty, FunctionType(arg_ty, res)(prov), res)
+      case lit: Lit => PrimType(lit)(tp(term.toLoc, "constant literal"))
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
         val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType((name, res) :: Nil, prov), res)
+        con(obj_ty, RecordType((name, res) :: Nil)(prov), res)
       case Rcd(fs) => // TODO rm: no longer used?
-        RecordType(fs.map { case (n, t) => (n, typeTerm(t)) }, tp(term.toLoc, "record literal"))
+        RecordType(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         typeTerm(bod)(ctx + (nme -> n_ty), lvl, raise)
@@ -242,7 +242,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       val fs = fields.reverseIterator.zipWithIndex.map {
         case ((N, t), i) => ("_" + (i + 1), t); case ((S(n), t), _) => (n, t)
       }.toList
-      RecordType(fs, prov)
+      RecordType(fs)(prov)
   }
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
@@ -260,10 +260,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val res = boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
           recursive.get(tv_pol).fold(res)(Recursive(_, res))
         }
-      case FunctionType(l, r, _) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
-      case RecordType(fs, _) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
+      case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
+      case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case ProxyType(und) => go(und, polarity)(inProcess)
-      case PrimType(n, _) => Primitive(n.idStr)
+      case PrimType(n) => Primitive(n.idStr)
     }
     go(st, polarity)(Set.empty)
   }

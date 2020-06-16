@@ -36,10 +36,10 @@ abstract class TyperHelpers { self: Typer =>
     
     def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
-      case FunctionType(l, r, _) => l :: r :: Nil
-      case RecordType(fs, _) => fs.map(_._2)
+      case FunctionType(l, r) => l :: r :: Nil
+      case RecordType(fs) => fs.map(_._2)
       case ProxyType(und) => und :: Nil
-      case PrimType(_, _) => Nil
+      case PrimType(_) => Nil
     }
     
     def getVars: Set[TypeVariable] = {

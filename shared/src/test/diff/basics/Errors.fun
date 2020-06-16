@@ -122,10 +122,10 @@ log / false + 1
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+7: 	log / false + 1
 //│ ╙──      	      ^^^^^
-//│ res: nothing
+//│ res: error
 //│ res: error
 //│ oops: int | error
-//│ res: int
+//│ res: error | int
 //│ res: int | error
 //│ res: int | error
 //│ res: unit
@@ -327,7 +327,7 @@ succ {a: 1}
 //│ res: error
 //│ res: error
 //│ res: int | error
-//│ res: int
+//│ res: error | int
 //│ res: int | error
 //│ res: error
 

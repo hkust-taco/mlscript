@@ -34,11 +34,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
-  case class FunctionType(lhs: SimpleType, rhs: SimpleType, prov: TypeProvenance) extends SimpleType {
+  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     lazy val level: Int = lhs.level max rhs.level
     override def toString = s"($lhs -> $rhs)"
   }
-  case class RecordType(fields: List[(String, SimpleType)], prov: TypeProvenance) extends SimpleType {
+  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
@@ -54,7 +54,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = super.equals(that) || underlying.equals(that)
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
-  case class PrimType(id: SimpleTerm, prov: TypeProvenance) extends SimpleType {
+  case class PrimType(id: SimpleTerm)(val prov: TypeProvenance) extends SimpleType {
     def widen: PrimType = id match {
       case _: IntLit => IntType
       case _: StrLit => StrType

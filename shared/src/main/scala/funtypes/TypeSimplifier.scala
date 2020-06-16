@@ -40,9 +40,9 @@ trait TypeSimplifier { self: Typer =>
     def ++ (that: PrimSet): PrimSet = {
       var cur = underlying
       that.underlying.foreach {
-        case prim @ PrimType(_: Lit, _) =>
+        case prim @ PrimType(_: Lit) =>
           if (!cur.contains(prim.widen)) cur += prim
-        case prim @ PrimType(_: Var, _) =>
+        case prim @ PrimType(_: Var) =>
           cur = cur.filterNot(_.widen === prim) + prim
       }
       new PrimSet(cur)
@@ -82,9 +82,9 @@ trait TypeSimplifier { self: Typer =>
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
       case p: PrimType => ct(prims = PrimSet(p))
       case ProxyType(und) => go(und, pol, parents)
-      case FunctionType(l, r, _) =>
+      case FunctionType(l, r) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
-      case RecordType(fs, _) =>
+      case RecordType(fs) =>
         ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
       case tv: TypeVariable =>
         val bounds = if (pol) tv.lowerBounds else tv.upperBounds

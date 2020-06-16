@@ -1013,7 +1013,7 @@ add
 //│ ╟── expression of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) 0.u)
 //│ ╙──      	            ^
-//│ res: nothing
+//│ res: error
 
 ((x => x.u) add.u)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -1022,7 +1022,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) add.u)
 //│ ╙──      	            ^^^
-//│ res: nothing
+//│ res: error
 
 ((x => x.u) {u: 0}.u)
 //│ ╔══[ERROR] Type mismatch in function application:
@@ -2516,7 +2516,7 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0.v; {u: x.v})
 //│ ╙──      	         ^
-//│ res: {u: nothing}
+//│ res: {u: error}
 
 (let x = add.v; {u: x.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2525,7 +2525,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add.v; {u: x.v})
 //│ ╙──      	         ^^^
-//│ res: {u: nothing}
+//│ res: {u: error}
 
 (let rec x = x.v; {u: x.v})
 //│ res: {u: nothing}

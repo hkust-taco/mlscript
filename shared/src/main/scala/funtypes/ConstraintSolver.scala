@@ -18,7 +18,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)(implicit ctx: Ls[Ls[SimpleType -> SimpleType]]): Unit = trace(s"C $lhs <! $rhs") {
-      println(s"  where ${FunctionType(lhs, rhs, primProv).showBounds}")
+      println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       ((lhs -> rhs :: ctx.headOr(Nil)) :: ctx.tailOr(Nil)) |> { implicit ctx =>
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
@@ -33,7 +33,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case _ => ()
         }
         lhs_rhs match {
-          case (FunctionType(l0, r0, p0), FunctionType(l1, r1, p1)) =>
+          case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0)(Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
             rec(r0, r1)(Nil :: ctx)
@@ -58,12 +58,23 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(lhs, rhs)
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
-          case (PrimType(ErrTypeId, _), _) => ()
+          case (err @ PrimType(ErrTypeId), FunctionType(l1, r1)) =>
+            rec(l1, err)
+            rec(err, r1)
+          case (FunctionType(l0, r0), err @ PrimType(ErrTypeId)) =>
+            rec(err, l0)
+            rec(r0, err)
+          case (err @ PrimType(ErrTypeId), RecordType(fs1)) =>
+            fs1.foreach(f => rec(err, f._2))
+          case (RecordType(fs1), err @ PrimType(ErrTypeId)) =>
+            fs1.foreach(f => rec(f._2, err))
+          case (PrimType(ErrTypeId), _) => ()
+          case (_, PrimType(ErrTypeId)) => ()
           case _ =>
             def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
             def doesntHaveField(n: Str) = msg"does not have field '$n'"
             val failureOpt = lhs_rhs match {
-              case (RecordType(fs0, p0), RecordType(fs1, p1)) =>
+              case (RecordType(fs0), RecordType(fs1)) =>
                 var fieldErr: Opt[Message] = N
                 fs1.foreach { case (n1, t1) =>
                   fs0.find(_._1 === n1).fold {
@@ -71,8 +82,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                   } { case (n0, t0) => rec(t0, t1) }
                 }
                 fieldErr
-              case (_, FunctionType(_, _, _)) => S(msg"is not a function")
-              case (_, RecordType((n, _) :: Nil, _)) => S(doesntHaveField(n))
+              case (_, FunctionType(_, _)) => S(msg"is not a function")
+              case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n))
               case _ => S(doesntMatch(lhs_rhs._2))
             }
             failureOpt.foreach { failure =>
@@ -148,15 +159,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                   //  which was only an approximation, and considered things like `?a | int` not the same as `int`.
                   val lunw = l.unwrapProxies
                   lazy val fail = (l, r) match {
-                    case (RecordType(fs0, p0), RecordType(fs1, p1)) =>
+                    case (RecordType(fs0), RecordType(fs1)) =>
                       (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
                         doesntHaveField(n1)
                       }
-                    case (_, FunctionType(_, _, _))
+                    case (_, FunctionType(_, _))
                       if !lunw.isInstanceOf[FunctionType]
                       && !lunw.isInstanceOf[TypeVariable]
                       => msg"is not a function"
-                    case (_, RecordType((n, _) :: Nil, _))
+                    case (_, RecordType((n, _) :: Nil))
                       if !lunw.isInstanceOf[RecordType]
                       && !lunw.isInstanceOf[TypeVariable]
                       => doesntHaveField(n)
@@ -183,8 +194,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
       (implicit cache: MutMap[TypeVariable, TypeVariable] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
-      case FunctionType(l, r, p) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol), p)
-      case RecordType(fs, p) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)), p)
+      case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
+      case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov)(lvl)
         cache += (tv -> nv)
@@ -195,7 +206,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         nv
       })
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
-      case PrimType(_, _) => ty
+      case PrimType(_) => ty
     }
   
   
@@ -203,7 +214,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     raise(TypeError((msg, loco) :: Nil))
     errType
   }
-  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId, prov)
+  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId)(prov)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(Warning((msg, loco) :: Nil))
@@ -227,10 +238,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
             v
         } else tv
-      case FunctionType(l, r, p) => FunctionType(freshen(l), freshen(r), p)
-      case RecordType(fs, p) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)), p)
+      case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
+      case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
-      case PrimType(_, _) => ty
+      case PrimType(_) => ty
     }
     freshen(ty)
   }
