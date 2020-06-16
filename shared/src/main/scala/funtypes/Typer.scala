@@ -13,7 +13,7 @@ import funtypes.Message._
  *  Inferred SimpleType values are then turned into CompactType values for simplification.
  *  In order to turn the resulting CompactType into a funtypes.Type, we use `expandCompactType`.
  */
-class Typer(var dbg: Boolean, var explainErrors: Boolean) extends ConstraintSolver with TypeSimplifier {
+class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extends ConstraintSolver with TypeSimplifier {
   
   type Ctx = Map[String, TypeScheme]
   type Raise = Diagnostic => Unit
@@ -161,7 +161,7 @@ class Typer(var dbg: Boolean, var explainErrors: Boolean) extends ConstraintSolv
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
       case Lam(v @ Var(name), body) =>
-        val param = freshVar(tp(v.toLoc, "parameter"))
+        val param = freshVar(tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "parameter"))
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
         FunctionType(param, body_ty, tp(term.toLoc, "function"))
       case Lam(lhs, rhs) => ???

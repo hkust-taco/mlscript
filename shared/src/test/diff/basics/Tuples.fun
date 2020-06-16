@@ -28,7 +28,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── expression of type `{_1: 1, _2: bool, _3: "hey"}` is not a function
 //│ ║  l.23: 	(1, true, "hey").2
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression
+//│ ╟── but it flows into applied expression of type `{_1: 1, _2: bool, _3: "hey"}`
 //│ ║  l.23: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╙── which is not a function

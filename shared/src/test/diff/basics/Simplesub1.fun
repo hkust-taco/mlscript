@@ -75,7 +75,7 @@ x => succ (not x)
 //│ ╙── which does not match type `int`
 //│ res: bool -> int
 
-:e // TODO why no constraint hint?
+:e
 (x => not x.f) { f: 123 }
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
@@ -86,17 +86,23 @@ x => succ (not x)
 //│ ╟── but it flows into tuple expression of type `{f: 123}`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
-//│ ╙── which does not match type `{f: ?a & bool}`
+//│ ╟── which does not match type `{f: ?a & bool}`
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.+1: 	(x => not x.f) { f: 123 }
+//│ ╙──      	          ^^^
 //│ res: bool
 
-:e // TODO why no constraint hint?
+:e
 (f => x => not (f x.u)) false
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` is not a function
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
-//│ ╙──      	                        ^^^^^
+//│ ║        	                        ^^^^^
+//│ ╟── Note: constraint arises from function application:
+//│ ║  l.+1: 	(f => x => not (f x.u)) false
+//│ ╙──      	                ^^^^^
 //│ res: {u: anything} -> bool
 
 
@@ -242,15 +248,17 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 (let rec x = v => {a: x v, b: x v}; x)
 //│ res: anything -> {a: 'a, b: 'a} as 'a
 
-:s
-:e // FIXME missing (x y) in error msg
+:e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╔══[ERROR] Type mismatch in binding of block of statements:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                           ^
+//│ ║        	                                           ^
+//│ ╟── Note: constraint arises from function application:
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ╙──      	                                    ^^^
 //│ x: 0
 //│ res: 0
 

@@ -12,7 +12,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // The data types used for type inference:
   
-  case class TypeProvenance(loco: Opt[Loc], desc: Str)
+  case class TypeProvenance(loco: Opt[Loc], desc: Str) {
+    override def toString: Str = "‹"+loco.fold(desc)(desc+":"+_)+"›"
+  }
   
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
@@ -28,6 +30,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** A type without universally quantified type variables. */
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance
+    def ctxProv: Opt[TypeProvenance] = N
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
@@ -40,9 +43,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   /** The sole purpose of ProxyType is to store additional type provenance info. */
-  case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance) extends SimpleType {
+  case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance, override val ctxProv: Opt[TypeProvenance] = N)
+      extends SimpleType {
     def level: Int = underlying.level
+    
     override def toString = s"[$underlying]"
+    // override def toString = s"$underlying[${prov.desc.take(5)}]"
+    
     // TOOD override equals/hashCode? — could affect hash consing...
     // override def equals(that: Any): Bool = super.equals(that) || underlying.equals(that)
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)

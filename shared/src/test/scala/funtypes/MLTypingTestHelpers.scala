@@ -16,7 +16,7 @@ class MLTypingTestHelpers extends FunSuite {
     if (dbg) println(s">>> $str")
     val Success(term, index) = parse(str, expr(_), verboseFailures = true)
     
-    val typer = new Typer(dbg, false) with TypeSimplifier
+    val typer = new Typer(dbg, verbose = false, explainErrors = false) with TypeSimplifier
     val tyv = typer.inferType(term)
     
     if (dbg) {

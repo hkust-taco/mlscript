@@ -9,7 +9,7 @@ import funtypes.utils._, shorthands._
 import funtypes.Message._
 
 class ConstraintSolver extends TyperDatatypes { self: Typer =>
-  
+  def verboseConstraintProvenanceHints: Bool = verbose
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance): Unit = {
@@ -17,9 +17,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
     
-    def rec(lhs: SimpleType, rhs: SimpleType)(implicit ctx: Ls[SimpleType -> SimpleType]): Unit = trace(s"C $lhs <! $rhs") {
+    def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)(implicit ctx: Ls[Ls[SimpleType -> SimpleType]]): Unit = trace(s"C $lhs <! $rhs") {
       println(s"  where ${FunctionType(lhs, rhs, primProv).showBounds}")
-      (lhs -> rhs :: ctx) |> { implicit ctx =>
+      ((lhs -> rhs :: ctx.headOr(Nil)) :: ctx.tailOr(Nil)) |> { implicit ctx =>
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
@@ -35,14 +35,14 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         lhs_rhs match {
           case (FunctionType(l0, r0, p0), FunctionType(l1, r1, p1)) =>
             rec(l1, l0)(Nil)
-            // ^ disregard error context: we to keep them from reversing polarity (or the messages are confusing)
-            rec(r0, r1)
+            // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
+            rec(r0, r1)(Nil :: ctx)
           case (prim: PrimType, _) if rhs === prim.widen => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            lhs.upperBounds ::= ProxyType(rhs)(prov)
+            lhs.upperBounds ::= outerProv.fold(rhs)(ProxyType(rhs)(_, S(prov)))
             lhs.lowerBounds.foreach(rec(_, rhs))
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            rhs.lowerBounds ::= ProxyType(lhs)(prov)
+            rhs.lowerBounds ::= outerProv.fold(lhs)(ProxyType(lhs)(_, S(prov)))
             rhs.upperBounds.foreach(rec(lhs, _))
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
@@ -56,8 +56,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
-          case (ProxyType(und), _) => rec(und, rhs)
-          case (_, ProxyType(und)) => rec(lhs, und)
+          case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
+          case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
           case _ =>
             def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
             def doesntHaveField(n: Str) = msg"does not have field '$n'"
@@ -76,66 +76,97 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             }
             failureOpt.foreach { failure =>
               println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
+              println(s"CTX: ${ctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}]"))}")
+              
               val detailedContext = if (explainErrors)
                   msg"[info] Additional Explanations below:" -> N ::
-                  ctx.tail.reverseIterator.flatMap { case (l, r) =>
-                    msg"[info] While constraining ${l.prov.desc} of type ${l.expPos}" -> l.prov.loco ::
-                    msg"[info] to be a subtype of ${r.prov.desc} type ${r.expNeg}" -> r.prov.loco ::
-                    Nil
-                  }.toList
+                  ctx.reverseIterator.flatMap { case subCtx => if (subCtx.isEmpty) Nil else {
+                    val (lhss, rhss) = subCtx.unzip
+                    val prefixes = "" #:: LazyList.continually("i.e., ")
+                    msg"[info] While constraining..." -> N ::
+                    lhss.filter(_.prov =/= primProv).filterOutConsecutive(_.prov.loco === _.prov.loco).zip(prefixes).map {
+                      case (l, pre) => msg"[info]     ${pre}${l.prov.desc} of type ${l.expPos}" -> l.prov.loco
+                    } :::
+                    rhss.filter(_.prov =/= primProv).filterOutConsecutive(_.prov.loco === _.prov.loco).zip(prefixes).map {
+                      case (r, pre) => msg"[info]     ${pre}to match type ${r.expNeg} from ${r.prov.desc}" -> r.prov.loco
+                    }
+                  }}.toList
                 else Nil
               
-              var betterLhsProv = lhs.prov.optionIf(_.loco.isDefined)
-              ctx.tail.foreach { case (l, r) =>
-                if (betterLhsProv.isEmpty && l.prov.loco.isDefined && (l.unwrapProxies === lhs || r.unwrapProxies === rhs))
-                  betterLhsProv = S(l.prov)
-              }
-              val lhsProv = betterLhsProv.getOrElse(lhs.prov)
+              val lhsProv = ctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
               assert(lhsProv.loco.isDefined) // TODO use soft assert
               
-              lazy val tighestRelevantFailure = ctx.dropWhile(_._1 === lhs).collectFirst {
-                case (l, r) if l.prov.loco.exists(ll => prov.loco/* .exists */.forall(ll touches _)) => (l, r)
+              val relevantFailures = ctx.iterator.map { subCtx =>
+                subCtx.collectFirst {
+                  case (l, r)
+                    if l.prov.loco =/= lhsProv.loco
+                    && l.prov.loco.exists(ll => prov.loco/* .exists */.forall(ll touches _))
+                  => (l, r)
+                }
+              }.toList
+              val tighestRelevantFailure = relevantFailures.firstSome
+              // Don't seem to make a difference in the tests:
+              // val tighestRelevantFailure = relevantFailures.collect { case Some(v) => v }.reverse
+              // val tighestRelevantFailure = relevantFailures.reverse.firstSome // TODO try w/o rev
+              
+              var shownLocs = MutSet.empty[Loc]
+              
+              val tighestLocatedRHS = ctx.flatMap { subCtx =>
+                subCtx.flatMap { case (l, r) =>
+                  val considered = (true, r, r.prov) :: r.ctxProv.dlof((false, r, _) :: Nil)(Nil)
+                  considered.filter { case (isMainProv, _, p) =>
+                    p.loco =/= prov.loco && (p.loco match {
+                      case Some(loco) =>
+                        !shownLocs(loco) &&
+                        (verboseConstraintProvenanceHints && isMainProv || !shownLocs.exists(loco touches _)) && {
+                          shownLocs += loco
+                          true
+                        }
+                      case None => false
+                    })
+                  }
+                }
               }
               
-              // TODO use or rm:
-              // val tighestLocatedLHS = ctx.dropWhile(_._1 === lhs).collectFirst {
-              //   case (l, r) if l.prov.loco.isDefined => (l, r)
-              // }
-              
-              val tighestLocatedRHS = // TODO try to re-enable this one:
-              //   ctx.dropWhile(_._2.prov.loco.forall(rl => rhs.prov.loco.exists(_.touches(rl)))).collectFirst {
-              //     case lr @ (l, r) if r.prov.loco.isDefined => lr }
-                ctx.dropWhile(_._2.prov.loco.forall(rl => prov.loco.exists(_.touches(rl)))).collectFirst {
-                  case lr @ (l, r) if r.prov.loco.isDefined => lr }
+              var first = true
+              val constraintProvenanceHints = tighestLocatedRHS.map { case (isMainProv, r, p) =>
+                if (isMainProv) {
+                  val msgHead = if (first) msg"Note: constraint arises " else msg""
+                  first = false
+                  msg"${msgHead}from ${p.desc}:" -> p.loco
+                }
+                else msg"in the context of ${p.desc}" -> p.loco
+              }
               
               val msgs: Ls[Message -> Opt[Loc]] = List(
                 msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-                msg"expression of type `${lhs.expPos}` $failure" -> lhsProv.loco :: Nil,
-                tighestRelevantFailure.collect { case (l, r) if l.prov.loco.exists(ll => lhsProv.loco.forall(_ =/= ll)) =>
+                msg"expression of type `${lhs.expPos}` $failure" ->
+                  (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
+                tighestRelevantFailure.map { case (l, r) =>
+                  val lunw = l.unwrapProxies
                   val fail = (l, r) match {
                     case (RecordType(fs0, p0), RecordType(fs1, p1)) =>
-                      (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(msg"does not match type `${r.expNeg}`") { n1 =>
+                      (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
                         doesntHaveField(n1)
                       }
-                    case (fun, FunctionType(_, _, _))
-                      if !fun.unwrapProxies.isInstanceOf[FunctionType] => msg"is not a function"
-                    case (rec, RecordType((n, _) :: Nil, _))
-                      if !rec.unwrapProxies.isInstanceOf[RecordType] => doesntHaveField(n)
+                    case (_, FunctionType(_, _, _))
+                      if !lunw.isInstanceOf[FunctionType]
+                      && !lunw.isInstanceOf[TypeVariable]
+                      => msg"is not a function"
+                    case (_, RecordType((n, _) :: Nil, _))
+                      if !lunw.isInstanceOf[RecordType]
+                      && !lunw.isInstanceOf[TypeVariable]
+                      => doesntHaveField(n)
                     case _ => doesntMatch(r)
                   }
                   msg"but it flows into ${l.prov.desc}${
-                      if (l.unwrapProxies === lhs.unwrapProxies) msg"" else msg" of type `${l.expPos}`"
+                      // if (l.unwrapProxies === lhs.unwrapProxies) msg"" else 
+                      msg" of type `${l.expPos}`"
                     }" -> l.prov.loco ::
                   msg"which $fail" -> N ::
                   Nil
                 }.toList.flatten,
-                tighestLocatedRHS.collect { case (l, r) =>
-                  // Note: in principle, we could track the error recursively, arbitrarily deeply,
-                  // which could be useful — indeed, this hint will typically only show the function application
-                  // where the type variable registered its problematic constraint, but it does not show how
-                  // that constraint came to be registered!
-                  msg"Note: constraint arises from ${r.prov.desc}:" -> r.prov.loco :: Nil
-                }.toList.flatten,
+                constraintProvenanceHints,
                 detailedContext,
               ).flatten
               raise(TypeError(msgs))
@@ -143,7 +174,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         }
       }
     }()
-    rec(lhs, rhs)(Nil)
+    rec(lhs, rhs, N)(Nil)
   }
   
   

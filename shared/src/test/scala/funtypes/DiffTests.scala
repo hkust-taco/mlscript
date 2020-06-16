@@ -26,7 +26,7 @@ class DiffTests extends FunSuite {
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
-    val typer = new Typer(dbg = false, explainErrors = false) {
+    val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.builtins
@@ -34,8 +34,8 @@ class DiffTests extends FunSuite {
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
-      fixme: Bool, showParse: Bool, explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false)
+      fixme: Bool, showParse: Bool, verbose: Bool, explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -51,6 +51,7 @@ class DiffTests extends FunSuite {
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "s" => mode.copy(fullExceptionStack = true)
+          case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
@@ -92,6 +93,7 @@ class DiffTests extends FunSuite {
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
             typer.dbg = mode.dbg
+            typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             val tys = typer.typeBlk(p, ctx, allowPure = true)
             var totalTypeErrors = 0
@@ -193,6 +195,7 @@ class DiffTests extends FunSuite {
                 .map("\n" + outputMarker + "\tat: " + _).mkString
         } finally {
           typer.dbg = false
+          typer.verbose = false
         }
         out.println(ans)
         rec(lines.drop(block.size), mode)

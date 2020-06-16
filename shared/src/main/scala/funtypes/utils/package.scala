@@ -42,6 +42,10 @@ package object utils {
       sep: String = "", start: String = "", end: String = "", els: String = ""
     ): String =
       if (self.iterator.nonEmpty) self.iterator.mkString(start, sep, end) else els
+    def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
+  }
+  implicit class OptIterableOps[A](private val self: IterableOnce[Opt[A]]) extends AnyVal {
+    def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
   }
   
   def mergeOptions[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => A): Option[A] = (lhs, rhs) match {
@@ -103,6 +107,18 @@ package object utils {
     @inline def optionUnless(cond: Bool): Option[A] = if (!cond) Some(self) else None
     @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
     
+  }
+  
+  implicit final class ListHelpers[A](ls: Ls[A]) {
+    def filterOutConsecutive(f: (A, A) => Bool): Ls[A] =
+      ls.foldRight[List[A]](Nil) { case (x, xs) => if (xs.isEmpty || !f(xs.head, x)) x :: xs else xs }
+    def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
+    def headOr(els: => A): A = if (ls.isEmpty) els else ls.head
+    def tailOr(els: => Ls[A]): Ls[A] = if (ls.isEmpty) els else ls.tail
+  }
+  
+  implicit final class OptionHelpers[A](opt: Opt[A]) {
+    def dlof[B](f: A => B)(b: B): B = opt.fold(b)(f)
   }
   
   implicit class SetObjectHelpers(self: Set.type) {

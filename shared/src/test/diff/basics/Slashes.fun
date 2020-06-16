@@ -31,7 +31,7 @@ foo / foo / x => succ / succ / x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` is not a function
 //│ ║  l.28: 	foo / foo / x => succ / succ / x
-//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function application:
 //│ ║  l.7: 	let foo = f => f 1
 //│ ╙──     	               ^^^

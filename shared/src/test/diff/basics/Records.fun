@@ -64,7 +64,7 @@ r.w
 //│ ╟── expression of type `{}` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
-//│ ╟── but it flows into variable reference
+//│ ╟── but it flows into variable reference of type `{}`
 //│ ║  l.59: 	empty.w
 //│ ║        	^^^^^
 //│ ╙── which does not match type `{w: ?a}`
@@ -74,7 +74,7 @@ r.w
 //│ ╟── expression of type `{u: 1, v: 2}` does not have field 'w'
 //│ ║  l.41: 	let r = { u: 1,v: 2 }
 //│ ║        	        ^^^^^^^^^^^^^
-//│ ╟── but it flows into variable reference
+//│ ╟── but it flows into variable reference of type `{u: 1, v: 2}`
 //│ ║  l.60: 	r.w
 //│ ║        	^
 //│ ╙── which does not match type `{w: ?a}`
@@ -301,7 +301,7 @@ let r =
 //│ r: {x: 1, y: 2}
 //│ r: {x: 1, y: 2}
 
-// FIXME ignore unit expressions
+// TODO ignore return-position unit expressions?
 :w
 let r =
   x: 1

@@ -65,13 +65,7 @@ foo
 //│ ╔══[ERROR] Type mismatch in function application:
 //│ ║  l.63: 	  foo 1
 //│ ║        	  ^^^^^
-//│ ╟── expression of type `int` does not match type `unit`
-//│ ║  l.19: 	  u + 1
-//│ ║        	  ^^^^^
-//│ ╟── but it flows into function application
-//│ ║  l.63: 	  foo 1
-//│ ║        	  ^^^^^
-//│ ╙── which does not match type `unit`
+//│ ╙── expression of type `int` does not match type `unit`
 //│ res: int
 
 :p
@@ -150,25 +144,25 @@ succ (
   1
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.149: 	  succ
+//│ ║  l.143: 	  succ
 //│ ╙──       	  ^^^^
 //│ res: int
 
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.158:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.152:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.163:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.157:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.168:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.162:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -198,16 +192,16 @@ succ
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.196:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.190:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.206:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.200:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.211:1:   1
+//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.205:1:   1
 
