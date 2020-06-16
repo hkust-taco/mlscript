@@ -269,10 +269,9 @@ add
 //│ ╟── expression of type `?a -> 0` does not match type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
 //│ ║        	                   ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> 0`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
-//│ ║        	                  ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) (let x = 0; 0))
@@ -312,10 +311,9 @@ add
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => add))
 //│ ║        	                   ^^^^^^^^
-//│ ╟── but it flows into argument of type `?a -> int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => add))
-//│ ║        	                  ^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                  ^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) (x => x))
@@ -325,10 +323,9 @@ add
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
 //│ ║        	                   ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> ?a`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
-//│ ║        	                  ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) (let x = 0; x))
@@ -341,10 +338,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
 //│ ║        	                           ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
-//│ ║        	                  ^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                  ^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = 0; add) (let rec x = x; x))
@@ -477,10 +473,9 @@ add
 //│ ╟── expression of type `?a -> 0` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
 //│ ║        	                     ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> 0`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
-//│ ║        	                    ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) (let x = 0; 0))
@@ -499,10 +494,9 @@ add
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => add))
 //│ ║        	                     ^^^^^^^^
-//│ ╟── but it flows into argument of type `?a -> int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => add))
-//│ ║        	                    ^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) (let x = 0; add))
@@ -512,10 +506,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
 //│ ║        	                                ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
-//│ ║        	                    ^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) (let x = add; add))
@@ -525,10 +518,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = add; add))
 //│ ║        	                                  ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = add; add))
-//│ ║        	                    ^^^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) (let rec x = x; add))
@@ -538,10 +530,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
 //│ ║        	                                    ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
-//│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = add; add) (x => x))
@@ -551,10 +542,9 @@ add
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => x))
 //│ ║        	                     ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> ?a`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => x))
-//│ ║        	                    ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                    ^^^^^^^^
 //│ res: int -> int
 
 ((let rec x = x; add) 0)
@@ -597,10 +587,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
 //│ ║        	                          ^^^
-//│ ╟── but it flows into field selection of type `?a | (int -> int -> int)`
+//│ ╟── but it flows into field selection of expected type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
-//│ ║        	                              ^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                              ^^
 //│ res: int -> int
 
 ((let rec x = x; add) {v: 0})
@@ -670,10 +659,9 @@ add
 //│ ╟── expression of type `int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
 //│ ║        	                        ^^^^^
-//│ ╟── but it flows into argument of type `?a | (int -> int)`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
-//│ ║        	                       ^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (add add))
@@ -689,10 +677,9 @@ add
 //│ ╟── expression of type `int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	                        ^^^^^^^
-//│ ╟── but it flows into argument of type `?a | (int -> int)`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
-//│ ║        	                       ^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => 0))
@@ -702,10 +689,9 @@ add
 //│ ╟── expression of type `?a -> 0` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> 0`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
-//│ ║        	                       ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = 0; 0))
@@ -724,10 +710,9 @@ add
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add))
 //│ ║        	                        ^^^^^^^^
-//│ ╟── but it flows into argument of type `?a -> int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add))
-//│ ║        	                       ^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = 0; add))
@@ -737,10 +722,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
 //│ ║        	                                   ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
-//│ ║        	                       ^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let x = add; add))
@@ -750,10 +734,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = add; add))
 //│ ║        	                                     ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = add; add))
-//│ ║        	                       ^^^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (let rec x = x; add))
@@ -763,10 +746,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
 //│ ║        	                                       ^^^
-//│ ╟── but it flows into argument of type `int -> int -> int`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
-//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => x))
@@ -776,10 +758,9 @@ add
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x))
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into argument of type `?a -> ?a`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x))
-//│ ║        	                       ^^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) 0.v)
@@ -807,10 +788,9 @@ add
 //│ ╟── expression of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> 0`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
-//│ ║        	                       ^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => add).v)
@@ -820,10 +800,9 @@ add
 //│ ╟── expression of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ║        	                        ^^^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> int -> int -> int`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
-//│ ║        	                       ^^^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => x).v)
@@ -833,10 +812,9 @@ add
 //│ ╟── expression of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> ?a`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
-//│ ║        	                       ^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
 
 ((let x = {v: add}; add) 0)
@@ -1053,10 +1031,9 @@ add
 //│ ╟── expression of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                ^
-//│ ╟── but it flows into field selection of type `?a | 0`
+//│ ╟── but it flows into field selection of expected type `{u: ?a}`
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                  ^^
-//│ ╟── which does not match type `{u: ?b}`
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ╙──      	        ^^
@@ -1069,10 +1046,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                ^^^
-//│ ╟── but it flows into field selection of type `?a | (int -> int -> int)`
+//│ ╟── but it flows into field selection of expected type `{u: ?a}`
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                    ^^
-//│ ╟── which does not match type `{u: ?b}`
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ╙──      	        ^^
@@ -2513,10 +2489,9 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
 //│ ║        	         ^
-//│ ╟── but it flows into variable reference of type `0`
+//│ ╟── but it flows into variable reference of expected type `{v: ?a}`
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
-//│ ║        	                ^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	                ^
 //│ res: {u: nothing}
 
 (let x = add; {u: x.v})
@@ -2526,10 +2501,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ║        	         ^^^
-//│ ╟── but it flows into variable reference of type `int -> int -> int`
+//│ ╟── but it flows into variable reference of expected type `{v: ?a}`
 //│ ║  l.+1: 	(let x = add; {u: x.v})
-//│ ║        	                  ^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	                  ^
 //│ res: {u: nothing}
 
 (let rec x = x; {u: x.v})
@@ -2896,10 +2870,9 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; x.v)
 //│ ║        	         ^
-//│ ╟── but it flows into variable reference of type `0`
+//│ ╟── but it flows into variable reference of expected type `{v: ?a}`
 //│ ║  l.+1: 	(let x = 0; x.v)
-//│ ║        	            ^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	            ^
 //│ res: nothing
 
 (let x = add; x.v)
@@ -2909,10 +2882,9 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ║        	         ^^^
-//│ ╟── but it flows into variable reference of type `int -> int -> int`
+//│ ╟── but it flows into variable reference of expected type `{v: ?a}`
 //│ ║  l.+1: 	(let x = add; x.v)
-//│ ║        	              ^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	              ^
 //│ res: nothing
 
 (let rec x = x; x.v)
@@ -3123,10 +3095,9 @@ add.v.u
 //│ ╟── expression of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> 0`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
-//│ ║        	            ^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: (x => add).v}
@@ -3136,10 +3107,9 @@ add.v.u
 //│ ╟── expression of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ║        	             ^^^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> int -> int -> int`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
-//│ ║        	            ^^^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	            ^^^^^^^^^^
 //│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: (x => x).v}
@@ -3149,10 +3119,9 @@ add.v.u
 //│ ╟── expression of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver of type `?a -> ?a`
+//│ ╟── but it flows into receiver of expected type `{v: ?b}`
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
-//│ ║        	            ^^^^^^^^
-//│ ╙── which does not have field 'v'
+//│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: nothing}
 
 {u: add, v: {u: 0}.v}

@@ -28,10 +28,9 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── expression of type `{_1: 1, _2: bool, _3: "hey"}` is not a function
 //│ ║  l.23: 	(1, true, "hey").2
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression of type `{_1: 1, _2: bool, _3: "hey"}`
+//│ ╟── but it flows into applied expression of expected type `0.2 -> ?a`
 //│ ║  l.23: 	(1, true, "hey").2
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ╙── which is not a function
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: nothing
 
 :w
@@ -40,7 +39,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.39: 	  1
+//│ ║  l.38: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -50,7 +49,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.50: 	  2
+//│ ║  l.49: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -60,7 +59,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.61: 	  3
+//│ ║  l.60: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 

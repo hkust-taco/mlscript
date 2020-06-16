@@ -64,20 +64,18 @@ r.w
 //│ ╟── expression of type `{}` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
-//│ ╟── but it flows into variable reference of type `{}`
+//│ ╟── but it flows into variable reference of expected type `{w: ?a}`
 //│ ║  l.59: 	empty.w
-//│ ║        	^^^^^
-//│ ╙── which does not match type `{w: ?a}`
+//│ ╙──      	^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.60: 	r.w
 //│ ║        	 ^^
 //│ ╟── expression of type `{u: 1, v: 2}` does not have field 'w'
 //│ ║  l.41: 	let r = { u: 1,v: 2 }
 //│ ║        	        ^^^^^^^^^^^^^
-//│ ╟── but it flows into variable reference of type `{u: 1, v: 2}`
+//│ ╟── but it flows into variable reference of expected type `{w: ?a}`
 //│ ║  l.60: 	r.w
-//│ ║        	^
-//│ ╙── which does not match type `{w: ?a}`
+//│ ╙──      	^
 //│ res: nothing
 //│ res: nothing
 
@@ -124,7 +122,7 @@ let r = {
   u: 1;
   v: 2;
 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.123:1: let r = {
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.121:1: let r = {
 
 let r = {
   u:
@@ -240,7 +238,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.234:1: let r = (
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.232:1: let r = (
 
 a:
   b:
@@ -281,10 +279,10 @@ a: {
   3
 }
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.277: 	  3
+//│ ║  l.275: 	  3
 //│ ╙──       	  ^
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.281: 	  3
+//│ ║  l.279: 	  3
 //│ ╙──       	  ^
 //│ res: {a: 3}
 //│ res: {a: 3}
@@ -309,7 +307,7 @@ let r =
   y: 2
   log y
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.310: 	  log y
+//│ ║  l.308: 	  log y
 //│ ╙──       	  ^^^^^
 //│ r: unit
 
@@ -320,7 +318,7 @@ let res =
   arg: 0
   arg + 1
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.321: 	  arg + 1
+//│ ║  l.319: 	  arg + 1
 //│ ╙──       	  ^^^^^^^
 //│ res: int
 

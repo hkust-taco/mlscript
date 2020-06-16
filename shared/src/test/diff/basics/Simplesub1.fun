@@ -69,10 +69,9 @@ x => succ (not x)
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
-//│ ╟── but it flows into argument of type `?a | bool`
+//│ ╟── but it flows into argument of expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
-//│ ║        	          ^^^^^^^
-//│ ╙── which does not match type `int`
+//│ ╙──      	          ^^^^^^^
 //│ res: bool -> int
 
 :e
@@ -83,10 +82,9 @@ x => succ (not x)
 //│ ╟── expression of type `123` does not match type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
-//│ ╟── but it flows into tuple expression of type `{f: 123}`
+//│ ╟── but it flows into tuple expression of expected type `{f: ?a & bool}`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
-//│ ╟── which does not match type `{f: ?a & bool}`
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ╙──      	          ^^^

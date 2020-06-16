@@ -96,14 +96,14 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
               val lhsProv = ctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
               assert(lhsProv.loco.isDefined) // TODO use soft assert
               
-              val relevantFailures = ctx.iterator.map { subCtx =>
+              val relevantFailures = ctx.zipWithIndex.map { case (subCtx, i) =>
                 subCtx.collectFirst {
                   case (l, r)
                     if l.prov.loco =/= lhsProv.loco
                     && l.prov.loco.exists(ll => prov.loco/* .exists */.forall(ll touches _))
-                  => (l, r)
+                  => (l, r, i === 0)
                 }
-              }.toList
+              }
               val tighestRelevantFailure = relevantFailures.firstSome
               // Don't seem to make a difference in the tests:
               // val tighestRelevantFailure = relevantFailures.collect { case Some(v) => v }.reverse
@@ -142,9 +142,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
                 msg"expression of type `${lhs.expPos}` $failure" ->
                   (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
-                tighestRelevantFailure.map { case (l, r) =>
+                tighestRelevantFailure.map { case (l, r, isSameType) =>
+                  // Note: used to have `val isSameType = l.unwrapProxies === lhs.unwrapProxies`
+                  //  which was only an approximation, and considered things like `?a | int` not the same as `int`.
                   val lunw = l.unwrapProxies
-                  val fail = (l, r) match {
+                  lazy val fail = (l, r) match {
                     case (RecordType(fs0, p0), RecordType(fs1, p1)) =>
                       (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
                         doesntHaveField(n1)
@@ -160,11 +162,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                     case _ => doesntMatch(r)
                   }
                   msg"but it flows into ${l.prov.desc}${
-                      // if (l.unwrapProxies === lhs.unwrapProxies) msg"" else 
-                      msg" of type `${l.expPos}`"
+                      if (isSameType) msg" of expected type `${r.expNeg}`" else msg" of type `${l.expPos}`"
                     }" -> l.prov.loco ::
-                  msg"which $fail" -> N ::
-                  Nil
+                  (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
                 }.toList.flatten,
                 constraintProvenanceHints,
                 detailedContext,
