@@ -186,8 +186,11 @@ class DiffTests extends FunSuite {
                         s"$nme: ${getType(pty).show}"
                     }
                   case L(pty) =>
-                    ctx += "res" -> pty
-                    s"res: ${getType(pty).show}" :: Nil
+                    val exp = getType(pty)
+                    if (exp =:= Primitive("unit")) Nil else {
+                      ctx += "res" -> pty
+                      s"res: ${exp.show}" :: Nil
+                    }
                 }
             }.map(outputMarker + _).mkString("\n")
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
@@ -207,7 +210,7 @@ class DiffTests extends FunSuite {
           typer.dbg = false
           typer.verbose = false
         }
-        out.println(ans)
+        if (ans.nonEmpty) out.println(ans)
         rec(lines.drop(block.size), mode)
       case Nil =>
     }
