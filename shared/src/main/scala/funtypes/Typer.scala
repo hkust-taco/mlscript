@@ -49,8 +49,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val v = freshVar(primProv)(1)
         PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(primProv))(primProv))(primProv))
       },
-    )
+    ) ++ List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType)
   }
+  
+  import TypeProvenance.{apply => tp}
+  def ttp(trm: Term, desc: Str = ""): TypeProvenance =
+    TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   
   /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
@@ -102,13 +106,79 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case Nil => Nil
   }
   def typeStatement(s: Statement, allowPure: Bool = false)
+        (implicit ctx: Ctx, lvl: Int, raise: Raise): PolymorphicType \/ Ls[Binding] = {
+    val (diags, desug) = s.desugared
+    diags.foreach(raise)
+    typeStatement(desug, allowPure)
+  }
+  type PatCtx = mutable.Map[Str, TypeVariable]
+  def typePattern(pat: Term, newBindings: PatCtx)(implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType = pat match {
+    case (v @ ValidVar(nme)) =>
+      val prov = tp(v.toLoc, "pattern variable")
+      newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
+    case (tup @ Tup(fs)) =>
+      val params_ty = fs.map {
+        case (S(nme), t) =>
+          val prov = tp(t.toLoc, "parameter type")
+          // TODO in positive position, this should create a new VarType instead!
+          val tv = newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
+          val t_ty = t match {
+            case Bra(false, t) => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
+              typePattern(t, newBindings)
+            case _ => typeTerm(t)
+          }
+          constrain(tv, t_ty)(raise, prov)
+          S(nme) -> tv
+        case (N, t) =>
+          val t_ty = typePattern(t, newBindings)
+          N -> t_ty
+      }
+      TupleType(params_ty)(ttp(tup))
+    case Blk((t: Term) :: Nil) => typePattern(t, newBindings)
+    case Bra(false, t) => typePattern(t, newBindings)
+    case _ => // TODO
+      err(msg"Unsupported parameter shape:", pat.toLoc)(raise, ttp(pat))
+  }
+  def typeData(d: DataDesug)(implicit ctx: Ctx, lvl: Int, raise: Raise): VarType -> Ls[SimpleType] = {
+    val newBindings = mutable.Map.empty[Str, TypeVariable]
+    val params_ty = d.params.map(typePattern(_, newBindings))
+    val appProv = tp(d.original.toLoc, "data definition")
+    val refinedBase = RecordType(newBindings.toList.sortBy(_._1))(appProv) //, tv)(raise, appProv)
+    val ty = params_ty.foldRight(refinedBase: SimpleType)(_.abs(_)(appProv))
+    VarType(new VarIdentity(lvl - 1, d.head), ty, false)(tp(d.head.toLoc, "data symbol")) -> params_ty
+  }
+  def typeStatement(s: DesugaredStatement, allowPure: Bool)
         (implicit ctx: Ctx, lvl: Int, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
-    case LetS(isrec, Var(nme), rhs) =>
+    case LetDesug(isrec, v @ ValidVar(nme), rhs) =>
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       (ctx + (nme -> ty_sch)) -> ty_sch
       R(nme -> ty_sch :: Nil)
-    case t @ LetS(isrec, App(dfn, pat), rhs) =>
-      typeStatement(LetS(isrec, dfn, Lam(pat, rhs)).withLocOf(t))
+    case d @ DataDesug(v @ ValidVar(nme), params) =>
+      val (vt, params_ty) = typeData(d)(ctx, lvl + 1, raise)
+      val bind = nme -> PolymorphicType(lvl, vt)
+      R(bind :: Nil)
+    case d @ DatatypeDesug(v @ ValidVar(nme), params, cases) => (lvl + 1) |> { implicit lvl =>
+      val vProv = tp(v.toLoc, "data type symbol")
+      val appProv = tp(d.original.toLoc, "data type definition")
+      val base_tv = freshVar(vProv)
+      val newBindings = mutable.Map.empty[Str, TypeVariable]
+      val params_ty = params.map(typePattern(_, newBindings))
+      val baseBindings = newBindings.toList.sortBy(_._1)
+      val newCtx = ctx ++ baseBindings + (nme -> base_tv)
+      val caseBindings = mutable.ListBuffer.empty[Binding]
+      val cases_ty = cases.map { case c @ DataDesug(v @ ValidVar(nme), params) =>
+        val (vt, params_ty) = typeData(c)(newCtx, lvl + 1, raise)
+        caseBindings += nme -> PolymorphicType(lvl, vt) // FIXME is the quantification correct?
+        val applied_ty = params_ty.foldLeft(vt: SimpleType)(_.app(_)(appProv))
+        applied_ty
+      }
+      val ty = new TypeVariable(lvl, cases_ty, cases_ty)(appProv) // FIXME!!
+      val fty = params_ty.foldRight(ty: SimpleType)(_.abs(_)(appProv))
+      val vty = VarType(new VarIdentity(lvl, v), fty, true)(vProv)
+      constrain(fty, base_tv)(raise, appProv)
+      // constrain(base_tv, fty)(raise, appProv) // TODO what we need here is a union in negative position...
+      R(nme -> PolymorphicType(lvl, vty) :: caseBindings.toList)
+    }
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -154,11 +224,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     // ty
   }
   
+  val reservedNames: Set[Str] = Set("|", "&", ",")
+  
+  object ValidVar {
+    def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
+      if (reservedNames(v.name)) err("unexpected use of: " + v.name, v.toLoc)(raise, ttp(v))
+      v.name
+    }
+  }
+  
   /** Infer the type of a term. */
   def typeTerm(term: Term)
         (implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType
         = trace(s"$lvl. Typing $term") {
-    import TypeProvenance.{apply => tp}
     implicit val prov: TypeProvenance = TypeProvenance(term.toLoc, term.describe)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: TypeVariable): SimpleType = {
@@ -174,7 +252,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       res
     }
     term match {
-      case Var(name) =>
+      case v @ Var("_") => // TODO parse this differently... or handle consistently everywhere
+        freshVar(tp(v.toLoc, "wildcard"))
+      case ValidVar(name) =>
         val ty = ctx.getOrElse(name, {
           // TODO: delay type expansion to message display and show the expected type here!
           err("identifier not found: " + name, term.toLoc)
@@ -183,18 +263,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case Lam(v @ Var(name), body) =>
+      case Lam(v @ ValidVar(name), body) =>
         val param = freshVar(tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "parameter"))
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
         FunctionType(param, body_ty)(tp(term.toLoc, "function"))
-      case Lam(pat, rhs) => lastWords("Not yet supported: pattern " + pat)
+      case Lam(pat, body) =>
+        val newBindings = mutable.Map.empty[Str, TypeVariable]
+        val param_ty = typePattern(pat, newBindings)
+        val body_ty = typeTerm(body)(ctx ++ newBindings, lvl, raise)
+        FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
         val res = freshVar(prov)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
-        val fun_ty = mkProxy(f_ty, tp(f.toCoveringLoc, "applied expression"))
-        con(fun_ty, FunctionType(arg_ty, res)(prov), res)
+        val appProv = tp(f.toCoveringLoc, "applied expression")
+        val fun_ty = mkProxy(f_ty, appProv)
+        val resTy = con(fun_ty, FunctionType(arg_ty, res)(prov), res)
+        val raw_fun_ty = fun_ty.unwrapProxies
+        if (raw_fun_ty.isInstanceOf[VarType] || raw_fun_ty.isInstanceOf[AppType]) // TODO more principled
+          (fun_ty app arg_ty)(appProv)
+        else resTy
       case lit: Lit => PrimType(lit)(tp(term.toLoc, "constant literal"))
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
@@ -272,9 +361,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val res = boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
           recursive.get(tv_pol).fold(res)(Recursive(_, res))
         }
+      case vt: VarType => Primitive(vt.vi.v.name) // TODO disambiguate homonyms...
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
+      case AppType(fun, args) => args.map(go(_, polarity)(inProcess)).foldLeft(go(fun, polarity)(inProcess))(Applied(_, _))
+      case NegType(_) => ??? // TODO
       case ProxyType(und) => go(und, polarity)(inProcess)
       case PrimType(n) => Primitive(n.idStr)
     }

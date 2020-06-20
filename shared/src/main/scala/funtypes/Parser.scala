@@ -58,7 +58,19 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
   }.opaque("expression")
   
-  def stmt[_: P]: P[Statement] = let | expr
+  def stmt[_: P]: P[Statement] = defn | let | expr
+  
+  def datatypeDefn[_: P]: P[DatatypeDefn] = P(
+      kw("data") ~ kw("type") ~/ expr ~ emptyLines ~
+      ( kw("of") ~ (binops.rep(1, ",").map(es => Blk(es.toList)) | suite) ).?
+    ).map {
+      case (hd, N) => DatatypeDefn(hd, Blk(Nil))
+      case (hd, S(cs)) => DatatypeDefn(hd, cs)
+    }.opaque("data type definition")
+  
+  def dataDefn[_: P]: P[DataDefn] = P( kw("data") ~/ expr ).map(DataDefn(_)).opaque("data definition")
+  
+  def defn[_: P]: P[Statement] = datatypeDefn | dataDefn
   
   def let[_: P]: P[LetS] =
     locate(P( kw("let") ~ kw("rec").!.? ~ commas ~ "=" ~/ (expr | suite) ).map {

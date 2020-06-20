@@ -59,6 +59,7 @@ object Lexer {
     "yield",
     "import",
     "class",
+    "interface",
     "trait",
     "object",
     "let",
@@ -66,6 +67,7 @@ object Lexer {
     "in",
     "of",
     "val",
+    "data",
     "type",
   )
   

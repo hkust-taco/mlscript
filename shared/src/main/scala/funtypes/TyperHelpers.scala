@@ -29,6 +29,32 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
+      case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)
+      case FunctionType(lhs, rhs) =>
+        // Note: we assume that `lhs` has already been constrained to take `args` as arguments
+        rhs
+      case _ => AppType(this, that :: Nil)(prov)
+    }
+    def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
+      FunctionType(this, that)(prov)
+    
+    def widenVar: SimpleType = this match {
+      case vt: VarType => vt.sign
+      case _ => this
+    }
+    def widen: SimpleType = this match {
+      case vt: VarType => vt.sign
+      case pt: PrimType => pt.widenPrim
+      case _ => this
+    }
+    
+    def isInjective: Bool = this match {
+      case vt: VarType => true // TODO also support non-injective ones!
+      case ProxyType(und) => und.isInjective
+      case _ => false
+    }
+    
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
       case _ => this
@@ -36,9 +62,12 @@ abstract class TyperHelpers { self: Typer =>
     
     def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
+      case vt: VarType => vt.sign :: Nil
       case FunctionType(l, r) => l :: r :: Nil
+      case AppType(lhs, args) => lhs :: args
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)
+      case NegType(n) => n :: Nil
       case ProxyType(und) => und :: Nil
       case PrimType(_) => Nil
     }

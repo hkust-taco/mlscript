@@ -7,7 +7,7 @@ import funtypes.utils._, shorthands._
 
 final case class Pgrm(defs: Ls[(Bool, Str, Term)])
 
-sealed abstract class Term                                           extends TermImpl with Statement
+sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm
 final case class Var(name: Str)                                      extends SimpleTerm
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
@@ -32,6 +32,15 @@ sealed abstract class SimpleTerm extends Term {
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
+final case class DataDefn(body: Term) extends Statement
+final case class DatatypeDefn(head: Term, body: Term) extends Statement
+
+sealed trait DesugaredStatement extends DesugaredStatementImpl
+final case class LetDesug(isRec: Bool, v: Var, rhs: Term)(val original: LetS) extends DesugaredStatement
+final case class DatatypeDesug(head: Var, params: Ls[Term], cases: Ls[DataDesug])(val original: DatatypeDefn)
+  extends DesugaredStatement
+final case class DataDesug(head: Var, params: Ls[Term])(val original: Term)
+  extends DesugaredStatement
 
 
 // Types
@@ -41,6 +50,7 @@ sealed abstract class Type extends TypeImpl
 final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
+final case class Applied(lhs: Type, rhs: Type)           extends Type
 final case class Record(fields: Ls[Str -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Str] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type

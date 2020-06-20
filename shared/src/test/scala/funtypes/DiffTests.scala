@@ -170,7 +170,7 @@ class DiffTests extends FunSuite {
                   }
                 }
                 def getType(ty: typer.PolymorphicType): Type = {
-                  val wty = ty.instantiate(0)
+                  val wty = ty.instantiate(0).widenVar
                   if (mode.dbg) output(s"Typed as: $wty")
                   if (mode.dbg) output(s" where: ${wty.showBounds}")
                   if (mode.noSimplification) typer.expandType(wty)

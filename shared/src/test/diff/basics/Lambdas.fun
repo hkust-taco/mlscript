@@ -63,10 +63,51 @@ let f x y z = { log x; if y < z then y else z }
 :pe
 let f / x: int = x + 1
 let f / x: int, y: int = x + y
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "let f / x:" at l.64:1: let f / x: int = x + 1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "let f / x:" at l.64:1: let f / x: int = x + 1
 
 // TODO
 // let f (
 //   x
 //   y
 // ) = x + 1
+
+let f(x: int) = x + 1
+//│ f: (x: int,) -> int
+
+f 42
+//│ res: int
+
+f (x: 42)
+//│ res: int
+
+:e
+f (y: 42)
+//│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
+//│ ║  l.84: 	f (y: 42)
+//│ ╙──      	   ^^^^^
+//│ res: int | error
+
+:e
+f (x: 42, y: 43)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `(x: 42, y: 43,)` does not match type `int`
+//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║        	   ^^^^^^^^^^^^
+//│ ╟── but it flows into argument of expected type `(x: ?a & int,)`
+//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║        	  ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.74: 	let f(x: int) = x + 1
+//│ ║        	                ^
+//│ ╟── from parameter type:
+//│ ║  l.74: 	let f(x: int) = x + 1
+//│ ╙──      	         ^^^
+//│ res: int | error
+
+(a, b) => a + b
+//│ res: (int, int,) -> int
+res(1,2)
+//│ res: int
+

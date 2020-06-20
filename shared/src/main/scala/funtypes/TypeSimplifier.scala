@@ -15,18 +15,18 @@ trait TypeSimplifier { self: Typer =>
    * of different type components.  */
   case class CompactType(
     vars: Set[TypeVariable],
-    prims: PrimSet,
-    rec: Option[SortedMap[String, CompactType]],
+    prims: BaseTypes,
+    rec: Option[SortedMap[Str, CompactType]],
     tup: Option[List[Opt[Str] -> CompactType]],
     fun: Option[(CompactType, CompactType)])
-  extends CompactTypeOrVariable {
+  extends CompactTypeOrBaseType with CompactTypeOrVariable {
     override def toString = List(vars, prims.underlying,
       rec.map(_.map(fs => fs._1 + ": " + fs._2).mkString("{",", ","}")),
       fun.map(lr => lr._1.toString + " -> " + lr._2),
     ).flatten.mkString("‹", ", ", "›")
   }
   object CompactType {
-    val empty: CompactType = CompactType(Set.empty, PrimSet.empty, None, None, None)
+    val empty: CompactType = CompactType(Set.empty, BaseTypes.empty, None, None, None)
     def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
       val rec = mergeOptions(lhs.rec, rhs.rec) { (lhs, rhs) =>
         if (pol) lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(pol)(v, _)) }
@@ -39,31 +39,70 @@ trait TypeSimplifier { self: Typer =>
       }
       val fun = mergeOptions(lhs.fun, rhs.fun){
         case ((l0,r0), (l1,r1)) => (merge(!pol)(l0, l1), merge(pol)(r0, r1)) }
-      CompactType(lhs.vars ++ rhs.vars, lhs.prims ++ rhs.prims, rec, tup, fun)
+      CompactType(lhs.vars ++ rhs.vars, (lhs.prims ++ rhs.prims)(pol), rec, tup, fun)
     }
   }
   
-  class PrimSet private(val underlying: Set[PrimType]) {
-    def ++ (that: PrimSet): PrimSet = {
+  sealed abstract class CompactTypeOrBaseType
+  
+  sealed abstract class CompactBaseType extends CompactTypeOrBaseType with CompactTypeOrVariable {
+    def widen: CompactTypeOrBaseType
+  }
+  case class CompactVarType(vt: VarType, sign: CompactType) extends CompactBaseType {
+    def widen: CompactTypeOrBaseType = sign
+  }
+  case class CompactAppType(lhs: CompactType, args: Ls[CompactType]) extends CompactBaseType {
+    def widen: CompactTypeOrBaseType =
+      lhs.fun.fold(this: CompactTypeOrBaseType)(_._2) // Q: also try to retrieve it from rec bounds?
+  }
+  case class CompactPrimType(prim: PrimType) extends CompactBaseType {
+    lazy val widen: CompactPrimType = CompactPrimType(prim.widenPrim)
+  }
+  
+  class BaseTypes private(val underlying: Set[CompactBaseType]) {
+    def ++ (that: BaseTypes)(pol: Bool): BaseTypes = {
       var cur = underlying
-      that.underlying.foreach {
-        case prim @ PrimType(_: Lit) =>
+      // println(s"[$pol]++ $this $that")
+      if (pol) that.underlying.foreach {
+        case prim @ CompactPrimType(PrimType(_: Lit)) =>
           if (!cur.contains(prim.widen)) cur += prim
-        case prim @ PrimType(_: Var) =>
+        case prim @ CompactPrimType(PrimType(_: Var)) =>
           cur = cur.filterNot(_.widen === prim) + prim
+        case app @ CompactAppType(lhs, args) =>
+          cur = cur.filterNot(_.widen === app) + app // TODO what if widen returns a CompactType?!
+        case vt @ CompactVarType(_, sign) =>
+          cur = cur.filterNot(_.widen === vt) + vt // TODO what if widen returns a CompactType?!
+      } else that.underlying.foreach {
+        case prim @ CompactPrimType(PrimType(l0: Lit)) =>
+          if (cur.collectFirst {
+            case CompactPrimType(PrimType(l1: Lit)) if l1 =/= l0 =>
+          }.isDefined)
+            // return ... // TODO return Nothing, when we have a repr for it...
+            ()
+          if (cur.forall(_.widen =/= prim)) cur += prim
+        case prim @ CompactPrimType(PrimType(_: Var)) =>
+          if (cur.forall(_.widen =/= prim)) cur += prim
+        case app @ CompactAppType(lhs, args) =>
+          cur = cur.filterNot(app.widen === _) + app // TODO what if widen returns a CompactType?!
+        case vt @ CompactVarType(_, sign) =>
+          cur = cur.filterNot(vt.widen === _) + vt // TODO what if widen returns a CompactType?!
       }
-      new PrimSet(cur)
+      // println(s"== $cur")
+      new BaseTypes(cur)
     }
     override def equals(that: Any): Boolean = that match {
-      case ps: PrimSet => ps.underlying === underlying
+      case ps: BaseTypes => ps.underlying === underlying
       case _ => false
     }
     override def hashCode: Int = underlying.hashCode
+    override def toString: Str = underlying.mkString("{",",","}")
   }
-  object PrimSet {
-    val empty: PrimSet = new PrimSet(Set.empty)
-    def single(prim: PrimType): PrimSet = new PrimSet(Set.single(prim))
-    def apply(prims: PrimType*): PrimSet = empty ++ new PrimSet(Set.from(prims))
+  object BaseTypes {
+    val empty: BaseTypes = new BaseTypes(Set.empty)
+    def single(prim: PrimType): BaseTypes = new BaseTypes(Set.single(CompactPrimType(prim)))
+    def single(app: CompactAppType): BaseTypes = new BaseTypes(Set.single(app))
+    def single(vt: CompactVarType): BaseTypes = new BaseTypes(Set.single(vt))
+    def apply(pol: Bool)(prims: CompactBaseType*): BaseTypes = (empty ++ new BaseTypes(Set.from(prims)))(pol)
   }
   
   case class CompactTypeScheme(term: CompactType, recVars: Map[TypeVariable, CompactType])
@@ -87,10 +126,14 @@ trait TypeSimplifier { self: Typer =>
     //    which do not correspond to actual recursive types.
     def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
-      case p: PrimType => ct(prims = PrimSet(p))
+      case p: PrimType => ct(prims = BaseTypes.single(p))
+      case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
+      case NegType(ty) => ??? // TODO
       case ProxyType(und) => go(und, pol, parents)
       case FunctionType(l, r) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
+      case a @ AppType(lhs, args) =>
+        ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
       case RecordType(fs) =>
         ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
       case TupleType(fs) =>
@@ -146,7 +189,7 @@ trait TypeSimplifier { self: Typer =>
     // State accumulated during the analysis phase:
     var allVars = SortedSet.from(cty.recVars.keysIterator)(Ordering by (-_.uid))
     var recVars = SortedMap.empty[TypeVariable, () => CompactType](Ordering by (_.uid))
-    val coOccurrences: MutMap[(Boolean, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Boolean, TypeVariable), MutSet[CompactTypeOrVariable]] = LinkedHashMap.empty
     
     // This will be filled up after the analysis phase, to influence the reconstruction phase:
     val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
@@ -155,7 +198,7 @@ trait TypeSimplifier { self: Typer =>
     def go(ty: CompactType, pol: Boolean): () => CompactType = {
       ty.vars.foreach { tv =>
         allVars += tv
-        val newOccs = LinkedHashSet.from[SimpleType](ty.vars.iterator ++ ty.prims.underlying)
+        val newOccs = LinkedHashSet.from[CompactTypeOrVariable](ty.vars.iterator ++ ty.prims.underlying)
         coOccurrences.get(pol -> tv) match {
           case Some(os) => os.filterInPlace(newOccs) // computes the intersection
           case None => coOccurrences(pol -> tv) = newOccs
@@ -170,6 +213,16 @@ trait TypeSimplifier { self: Typer =>
           }; ()
         }
       }
+      val prims_ = ty.prims.underlying.iterator.map {
+        case cp: CompactPrimType => () => cp
+        case CompactVarType(vt, sign) =>
+          val sign_ = go(sign, pol)
+          () => CompactVarType(vt, sign_())
+        case CompactAppType(lhs, args) =>
+          val lhs_ = go(lhs, pol)
+          val args_ = args.map(go(_, pol))
+          () => CompactAppType(lhs_(), args_.map(_()))
+      }.toList
       val rec_ = ty.rec.map(_.map(f => f._1 -> go(f._2, pol)))
       val tup_ = ty.tup.map(_.map(f => f._1 -> go(f._2, pol)))
       val fun_ = ty.fun.map(lr => go(lr._1, !pol) -> go(lr._2, pol))
@@ -179,7 +232,7 @@ trait TypeSimplifier { self: Typer =>
           case Some(None) => Nil
           case None => tv :: Nil
         }}
-        CompactType(newVars, ty.prims,
+        CompactType(newVars, BaseTypes(pol)(prims_.map(_()): _*),
           rec_.map(r => r.map(f => f._1 -> f._2())),
           tup_.map(r => r.map(f => f._1 -> f._2())),
           fun_.map(lr => lr._1() -> lr._2()))
@@ -237,7 +290,7 @@ trait TypeSimplifier { self: Typer =>
                   // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
               }
             }; ()
-          case atom: PrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
+          case atom: CompactPrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
             varSubst += v -> None; ()
           case _ =>
         }
@@ -274,7 +327,11 @@ trait TypeSimplifier { self: Typer =>
           case CompactType(vars, prims, rec, tup, fun) =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
-              ::: prims.underlying.iterator.map(p => Primitive(p.id.idStr)).toList
+              ::: prims.underlying.iterator.map {
+                case CompactPrimType(PrimType(id)) => Primitive(id.idStr)
+                case CompactAppType(lhs, args) => args.map(go(_, pol)).foldLeft(go(lhs, pol))(Applied(_, _))
+                case CompactVarType(vt, sign) => Primitive(vt.vi.v.name) // FIXME do sthg else for higher levels?
+              }.toList
               ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
               ::: tup.map(fs => Tuple(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
               ::: fun.map(lr => Function(go(lr._1, !pol), go(lr._2, pol))).toList

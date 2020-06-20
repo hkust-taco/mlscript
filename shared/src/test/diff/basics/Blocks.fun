@@ -217,5 +217,5 @@ let a =
 
 :pe
   1
-//│ /!\ Parse error: Expected (let binding | expression):1:1, found "  1" at l.219:1:   1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1" at l.219:1:   1
 

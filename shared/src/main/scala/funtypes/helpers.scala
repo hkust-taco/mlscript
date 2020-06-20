@@ -30,6 +30,7 @@ abstract class TypeImpl { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs(n)}"
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
+    case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -39,6 +40,7 @@ abstract class TypeImpl { self: Type =>
   def children: List[Type] = this match {
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
+    case Applied(l, r) => l :: r :: Nil
     case Record(fs) => fs.map(_._2)
     case Tuple(fs) => fs.map(_._2)
     case Union(l, r) => l :: r :: Nil
@@ -65,7 +67,9 @@ object ShowCtx {
 
 // Auxiliary definitions for terms
 
-abstract class TermImpl { self: Term =>
+trait TermImpl extends StatementImpl { self: Term =>
+  val original: this.type = this
+  override def children: Ls[Statement] = super[StatementImpl].children
   
   def describe: Str = this match {
     case Bra(_, trm) => trm.describe
@@ -93,6 +97,7 @@ abstract class TermImpl { self: Term =>
     case Bra(true, trm) => s"{$trm}"
     case Bra(false, trm) => s"($trm)"
     case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
+    // case Blk(stmts) => stmts.map("" + _ + ";").mkString("‹", " ", "›") // for better legibility in debugging
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
@@ -158,9 +163,70 @@ trait Located {
   }
 }
 
+trait DesugaredStatementImpl extends Located { self: DesugaredStatement =>
+  val original: Statement
+  def children: List[Statement] = original.children
+  def getFreeVars: Set[Str] = this match {
+    case LetDesug(false, _, rhs) => rhs.freeVars
+    case LetDesug(true, Var(nme), rhs) => rhs.freeVars - nme
+    case DatatypeDesug(_, params, body) =>
+      // TODO deal with params properly... they can have free vars!
+      body.iterator.flatMap(_.getFreeVars).toSet -- params.iterator.flatMap(_.freeVars)
+    case DataDesug(_, params) => Set.empty // TODO
+    case t: Term => t.freeVars
+  }
+}
+
 trait StatementImpl extends Located { self: Statement =>
   
-  lazy val freeVars: Set[String] = this match {
+  lazy val desugared = doDesugar
+  private def doDesugar: Ls[Diagnostic] -> DesugaredStatement = this match {
+    case l @ LetS(isrec, pat, rhs) =>
+      val (diags, v, args) = desugDefnPattern(pat, Nil)
+      diags -> LetDesug(isrec, v, args.foldRight(rhs)(Lam(_, _)))(l)
+    case d @ DataDefn(body) =>
+      val (diags, dd :: Nil) = desugarCases(body :: Nil)
+      diags -> dd
+    case d @ DatatypeDefn(hd, bod) =>
+      val (diags, v, args) = desugDefnPattern(hd, Nil)
+      val (diags2, cs) = desugarCases(bod)
+      (diags ::: diags2) -> DatatypeDesug(v, args, cs)(d)
+    case t: Term => Nil -> t
+  }
+  import Message._
+  protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
+    case App(l, r) => desugDefnPattern(l, r :: args)
+    case v: Var => (Nil, v, args)
+    case _ => (TypeError(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
+  }
+  protected def desugarCases(bod: Term): (Ls[Diagnostic], Ls[DataDesug]) = bod match {
+    case Blk(stmts) => desugarCases(stmts)
+    case Tup(comps) =>
+      val stmts = comps.map {
+        case N -> d => d
+        case S(n) -> d => ???
+      }
+      desugarCases(stmts)
+    case _ => (TypeError(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
+  }
+  protected def desugarCases(stmts: Ls[Statement]): (Ls[Diagnostic], Ls[DataDesug]) = stmts match {
+    case stmt :: stmts =>
+      val (diags0, st) = stmt.desugared
+      lazy val (diags2, cs) = desugarCases(stmts)
+      st match {
+        case t: Term =>
+          val (diags1, v, args) = desugDefnPattern(t, Nil)
+          (diags0 ::: diags1 ::: diags2) -> (DataDesug(v, args)(t) :: cs)
+        case _ => ???
+      }
+    case Nil => Nil -> Nil
+  }
+  
+  // TODO This definition is not quite right;
+  // we should account for variables bound within tuples and statement blocks,
+  // removing them from the set of freeVars (and similarly for patterns).
+  // However, it's currently not really used (only in the expression generation routine!)
+  lazy val freeVars: Set[Str] = this match {
     case _: Lit => Set.empty
     case Var(name) => Set.empty[String] + name
     case Lam(pat, rhs) => rhs.freeVars -- pat.freeVars
@@ -172,8 +238,11 @@ trait StatementImpl extends Located { self: Statement =>
     case Bra(_, trm) => trm.freeVars
     case Blk(sts) => sts.iterator.flatMap(_.freeVars).toSet
     case Tup(trms) => trms.iterator.flatMap(_._2.freeVars).toSet
-    case LetS(false, pat, rhs) => rhs.freeVars
-    case LetS(true, pat, rhs) => rhs.freeVars -- pat.freeVars
+    case let: LetS =>
+      // Note: in `let f x = ...`, `f` is not a FV!
+      let.desugared._2.getFreeVars
+    case DatatypeDefn(head, body) => body.freeVars -- head.freeVars
+    case DataDefn(head) => Set.empty
   }
   
   def children: List[Statement] = this match {
@@ -187,6 +256,8 @@ trait StatementImpl extends Located { self: Statement =>
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil
     case Blk(stmts) => stmts
     case LetS(_, pat, rhs) => pat :: rhs :: Nil
+    case DatatypeDefn(head, body) => head :: body :: Nil
+    case DataDefn(body) => body :: Nil
     case _: Lit => Nil
   }
   
@@ -194,6 +265,8 @@ trait StatementImpl extends Located { self: Statement =>
   
   override def toString: String = this match {
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
+    case DatatypeDefn(head, body) => s"data type $head of $body"
+    case DataDefn(head) => s"data $head"
     case _: Term => super.toString
   }
 }

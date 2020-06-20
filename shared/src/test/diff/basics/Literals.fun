@@ -54,3 +54,16 @@ f false
 //│ ║  l.35: 	  if pred n then n else f (n + 1)
 //│ ╙──      	                           ^
 //│ res: bool | int | error
+
+let take0 (x: 0) = 0
+let take1 (x: 1) = 1
+//│ take0: (x: 0,) -> 0
+//│ take1: (x: 1,) -> 1
+
+// TODO should try to the coerce into tuple earlier... avoid inferring y <: (x: ...)
+let takeWhat y = if y < 0 then take0 y else take1 y
+//│ takeWhat: int & (x: 1 & 0,) -> 0 | 1
+
+let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
+//│ takeWhat: 1 & 0 -> 0 | 1
+
