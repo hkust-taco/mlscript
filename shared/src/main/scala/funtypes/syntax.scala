@@ -42,6 +42,7 @@ final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Str -> Type])         extends Type
+final case class Tuple(fields: Ls[Opt[Str] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 
 sealed abstract class NullaryType                        extends Type

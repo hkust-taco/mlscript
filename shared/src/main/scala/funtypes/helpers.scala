@@ -31,6 +31,7 @@ abstract class TypeImpl { self: Type =>
     case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs(n)}"
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
+    case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
   }
@@ -39,6 +40,7 @@ abstract class TypeImpl { self: Type =>
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
     case Record(fs) => fs.map(_._2)
+    case Tuple(fs) => fs.map(_._2)
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
@@ -80,7 +82,7 @@ abstract class TermImpl { self: Term =>
     case App(op, lhs)
       if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
       => "operator application"
-    case App(lhs, rhs) => "function application"
+    case App(lhs, rhs) => "application"
     case Rcd(fields) => "record"
     case Sel(receiver, fieldName) => "field selection"
     case Let(isRec, name, rhs, body) => "let binding"

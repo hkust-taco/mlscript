@@ -11,7 +11,7 @@ add
 //│ res: int -> int -> int
 
 (0 0)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 0)
 //│ ║        	 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -20,7 +20,7 @@ add
 //│ res: error
 
 (0 add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 add)
 //│ ║        	 ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -29,7 +29,7 @@ add
 //│ res: error
 
 (0 {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 {u: 0})
 //│ ║        	 ^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -38,7 +38,7 @@ add
 //│ res: error
 
 (0 {u: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(0 {u: add})
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -50,7 +50,7 @@ add
 //│ res: int -> int
 
 (add add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add add)
 //│ ║        	 ^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -95,7 +95,7 @@ add
 //│ res: int -> int
 
 (add {v: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0})
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── expression of type `{v: 0}` does not match type `int`
@@ -104,7 +104,7 @@ add
 //│ res: error | (int -> int)
 
 (add {v: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add})
 //│ ║        	 ^^^^^^^^^^^^
 //│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
@@ -119,7 +119,7 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ╙──      	         ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ║        	 ^^^^^^^^^^^^
 //│ ╟── expression of type `{v: ?a | error}` does not match type `int`
@@ -134,7 +134,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ╙──      	         ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: ?a | error}` does not match type `int`
@@ -236,7 +236,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -245,7 +245,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = 0; add) (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (0 0))
 //│ ║        	                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -254,7 +254,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (0 add))
 //│ ║        	                   ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -263,7 +263,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) (x => 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> 0` does not match type `int`
@@ -305,7 +305,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) (x => add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
@@ -317,7 +317,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = 0; add) (x => x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
@@ -332,7 +332,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) (let x = add; x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -365,7 +365,7 @@ add
 //│ res: int -> int
 
 ((let x = 0; add) {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {u: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{u: 0}` does not match type `int`
@@ -374,7 +374,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = 0; add) {u: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {u: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{u: int -> int -> int}` does not match type `int`
@@ -383,7 +383,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = 0; add) {v: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: 0}` does not match type `int`
@@ -392,7 +392,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = 0; add) {v: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
@@ -404,7 +404,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -413,7 +413,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = add; add) (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 0))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -422,7 +422,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 add))
 //│ ║        	                     ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -431,7 +431,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (0 {u: 0}))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 {u: 0}))
 //│ ║        	                     ^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -440,7 +440,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (0 {u: add}))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (0 {u: add}))
 //│ ║        	                     ^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -449,7 +449,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) ((0 add) 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) ((0 add) 0))
 //│ ║        	                      ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -458,7 +458,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) ((0 add) add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) ((0 add) add))
 //│ ║        	                      ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -467,7 +467,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (x => 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> 0` does not match type `int`
@@ -488,7 +488,7 @@ add
 //│ res: int -> int
 
 ((let x = add; add) (x => add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
@@ -500,7 +500,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = add; add) (let x = 0; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -512,7 +512,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = add; add) (let x = add; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let x = add; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -524,7 +524,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = add; add) (let rec x = x; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -536,7 +536,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = add; add) (x => x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
@@ -551,7 +551,7 @@ add
 //│ res: int -> int
 
 ((let rec x = x; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -581,7 +581,7 @@ add
 //│ res: int -> int
 
 ((let rec x = x; add) {u: add}.u)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -593,7 +593,7 @@ add
 //│ res: error | (int -> int)
 
 ((let rec x = x; add) {v: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: 0}` does not match type `int`
@@ -602,7 +602,7 @@ add
 //│ res: error | (int -> int)
 
 ((let rec x = x; add) {v: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
@@ -617,7 +617,7 @@ add
 //│ ╟── expression of type `0` does not have field 'u'
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ╙──      	                          ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: ?a | error}` does not match type `int`
@@ -632,7 +632,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ╙──      	                          ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: ?a | error}` does not match type `int`
@@ -644,7 +644,7 @@ add
 //│ res: int -> int
 
 ((let x = {v: 0}; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -653,7 +653,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (add 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
@@ -665,13 +665,13 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (add add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	                        ^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ╙──      	                            ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
@@ -683,7 +683,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (x => 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> 0` does not match type `int`
@@ -704,7 +704,7 @@ add
 //│ res: int -> int
 
 ((let x = {v: 0}; add) (x => add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> int -> int -> int` does not match type `int`
@@ -716,7 +716,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (let x = 0; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -728,7 +728,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (let x = add; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = add; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -740,7 +740,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (let rec x = x; add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -752,7 +752,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: 0}; add) (x => x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
@@ -821,7 +821,7 @@ add
 //│ res: int -> int
 
 ((let x = {v: add}; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -830,7 +830,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: add}; add) {v: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: 0}` does not match type `int`
@@ -839,7 +839,7 @@ add
 //│ res: error | (int -> int)
 
 ((let x = {v: add}; add) {v: add})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
@@ -851,7 +851,7 @@ add
 //│ res: int -> int
 
 ((let rec x = {v: x}; add) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = {v: x}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -866,7 +866,7 @@ add
 //│ res: int -> int -> int
 
 ((x => x) (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 0))
 //│ ║        	           ^^^
 //│ ╟── expression of type `0` is not a function
@@ -875,7 +875,7 @@ add
 //│ res: error
 
 ((x => x) (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 add))
 //│ ║        	           ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -884,7 +884,7 @@ add
 //│ res: error
 
 ((x => x) (0 (x => 0)))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 (x => 0)))
 //│ ║        	           ^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -893,7 +893,7 @@ add
 //│ res: error
 
 ((x => x) (0 (x => add)))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 (x => add)))
 //│ ║        	           ^^^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -902,7 +902,7 @@ add
 //│ res: error
 
 ((x => x) (0 (x => x)))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x) (0 (x => x)))
 //│ ║        	           ^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -983,7 +983,7 @@ add
 //│ res: error
 
 ((x => x.u) 0)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) 0)
 //│ ║        	 ^^^^^^^^^^^^
 //│ ╟── expression of type `0` does not have field 'u'
@@ -995,7 +995,7 @@ add
 //│ res: error
 
 ((x => x.u) add)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) add)
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
@@ -1025,7 +1025,7 @@ add
 //│ res: error
 
 ((x => x.u) {u: 0}.u)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `0` does not have field 'u'
@@ -1040,7 +1040,7 @@ add
 //│ res: error
 
 ((x => x.u) {u: add}.u)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
@@ -1133,7 +1133,7 @@ add
 //│ res: nothing
 
 (let x = (0 0); x)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); x)
 //│ ║        	          ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1142,7 +1142,7 @@ add
 //│ res: error
 
 (let x = (0 add); x)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); x)
 //│ ║        	          ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1151,7 +1151,7 @@ add
 //│ res: error
 
 (let rec x = (0 x); x)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); x)
 //│ ║        	              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1247,7 +1247,7 @@ add
 //│ res: {u: 'a} as 'a
 
 (x => (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => (0 0))
 //│ ║        	       ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1256,7 +1256,7 @@ add
 //│ res: anything -> error
 
 (let x = 0; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0; (0 0))
 //│ ║        	             ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1265,7 +1265,7 @@ add
 //│ res: error
 
 (let x = add; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add; (0 0))
 //│ ║        	               ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1274,7 +1274,7 @@ add
 //│ res: error
 
 (let rec x = x; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 0))
 //│ ║        	                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1283,13 +1283,13 @@ add
 //│ res: error
 
 (let x = (0 0); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); (0 0))
 //│ ║        	          ^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let x = (0 0); (0 0))
 //│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); (0 0))
 //│ ║        	                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1298,13 +1298,13 @@ add
 //│ res: error
 
 (let x = (0 add); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 0))
 //│ ║        	          ^^^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let x = (0 add); (0 0))
 //│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 0))
 //│ ║        	                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1313,13 +1313,13 @@ add
 //│ res: error
 
 (let rec x = (0 x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); (0 0))
 //│ ║        	              ^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let rec x = (0 x); (0 0))
 //│ ╙──      	              ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); (0 0))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1328,7 +1328,7 @@ add
 //│ res: error
 
 (let x = (y => 0); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => 0); (0 0))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1337,7 +1337,7 @@ add
 //│ res: error
 
 (let x = (y => add); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => add); (0 0))
 //│ ║        	                      ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1346,7 +1346,7 @@ add
 //│ res: error
 
 (let x = (y => y); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => y); (0 0))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1355,7 +1355,7 @@ add
 //│ res: error
 
 (let x = (let y = 0; y); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = 0; y); (0 0))
 //│ ║        	                          ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1364,7 +1364,7 @@ add
 //│ res: error
 
 (let x = (let y = add; y); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = add; y); (0 0))
 //│ ║        	                            ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1373,7 +1373,7 @@ add
 //│ res: error
 
 (let x = (let rec y = y; y); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let rec y = y; y); (0 0))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1382,7 +1382,7 @@ add
 //│ res: error
 
 (let rec x = (let y = x; y); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; y); (0 0))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1391,7 +1391,7 @@ add
 //│ res: error
 
 (let rec x = (y => x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (y => x); (0 0))
 //│ ║        	                        ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1400,7 +1400,7 @@ add
 //│ res: error
 
 (let rec x = (let y = 0; x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = 0; x); (0 0))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1409,7 +1409,7 @@ add
 //│ res: error
 
 (let rec x = (let y = add; x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = add; x); (0 0))
 //│ ║        	                                ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1418,7 +1418,7 @@ add
 //│ res: error
 
 (let rec x = (let rec y = y; x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let rec y = y; x); (0 0))
 //│ ║        	                                  ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1427,7 +1427,7 @@ add
 //│ res: error
 
 (let rec x = (let y = x; x); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; x); (0 0))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1436,7 +1436,7 @@ add
 //│ res: error
 
 (let x = (y => (z => 0)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => 0)); (0 0))
 //│ ║        	                           ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1445,7 +1445,7 @@ add
 //│ res: error
 
 (let x = (y => (z => add)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => add)); (0 0))
 //│ ║        	                             ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1454,7 +1454,7 @@ add
 //│ res: error
 
 (let x = (y => (z => z)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => z)); (0 0))
 //│ ║        	                           ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1463,7 +1463,7 @@ add
 //│ res: error
 
 (let x = (y => (z => y)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => (z => y)); (0 0))
 //│ ║        	                           ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1472,7 +1472,7 @@ add
 //│ res: error
 
 (let x = (let y = 0; (z => y)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = 0; (z => y)); (0 0))
 //│ ║        	                                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1481,7 +1481,7 @@ add
 //│ res: error
 
 (let x = (let y = add; (z => y)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let y = add; (z => y)); (0 0))
 //│ ║        	                                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1490,7 +1490,7 @@ add
 //│ res: error
 
 (let x = (let rec y = y; (z => y)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (let rec y = y; (z => y)); (0 0))
 //│ ║        	                                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1499,7 +1499,7 @@ add
 //│ res: error
 
 (let rec x = (let y = x; (z => y)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; (z => y)); (0 0))
 //│ ║        	                                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1508,7 +1508,7 @@ add
 //│ res: error
 
 (let rec x = (y => (z => x)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (y => (z => x)); (0 0))
 //│ ║        	                               ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1517,7 +1517,7 @@ add
 //│ res: error
 
 (let rec x = (let y = 0; (z => x)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = 0; (z => x)); (0 0))
 //│ ║        	                                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1526,7 +1526,7 @@ add
 //│ res: error
 
 (let rec x = (let y = add; (z => x)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = add; (z => x)); (0 0))
 //│ ║        	                                       ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1535,7 +1535,7 @@ add
 //│ res: error
 
 (let rec x = (let rec y = y; (z => x)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let rec y = y; (z => x)); (0 0))
 //│ ║        	                                         ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1544,7 +1544,7 @@ add
 //│ res: error
 
 (let rec x = (let y = x; (z => x)); (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; (z => x)); (0 0))
 //│ ║        	                                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1553,7 +1553,7 @@ add
 //│ res: error
 
 (let x = {u: 0}; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: 0}; (0 0))
 //│ ║        	                  ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1562,7 +1562,7 @@ add
 //│ res: error
 
 (let x = {u: add}; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add}; (0 0))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1571,7 +1571,7 @@ add
 //│ res: error
 
 (let rec x = {u: x}; (0 0))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {u: x}; (0 0))
 //│ ║        	                      ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1580,7 +1580,7 @@ add
 //│ res: error
 
 (x => (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => (0 add))
 //│ ║        	       ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1589,7 +1589,7 @@ add
 //│ res: anything -> error
 
 (let x = 0; (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0; (0 add))
 //│ ║        	             ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1598,7 +1598,7 @@ add
 //│ res: error
 
 (let x = add; (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add; (0 add))
 //│ ║        	               ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1607,7 +1607,7 @@ add
 //│ res: error
 
 (let rec x = x; (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 add))
 //│ ║        	                 ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1622,7 +1622,7 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0.v; (0 add))
 //│ ╙──      	         ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0.v; (0 add))
 //│ ║        	               ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1637,7 +1637,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add.v; (0 add))
 //│ ╙──      	         ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add.v; (0 add))
 //│ ║        	                 ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1646,7 +1646,7 @@ add
 //│ res: error
 
 (let rec x = x.v; (0 add))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x.v; (0 add))
 //│ ║        	                   ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -1655,7 +1655,7 @@ add
 //│ res: error
 
 (x => (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => (0 x))
 //│ ║        	       ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1664,7 +1664,7 @@ add
 //│ res: anything -> error
 
 (let x = 0; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0; (0 x))
 //│ ║        	             ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1673,7 +1673,7 @@ add
 //│ res: error
 
 (let x = add; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add; (0 x))
 //│ ║        	               ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1682,7 +1682,7 @@ add
 //│ res: error
 
 (let rec x = x; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x; (0 x))
 //│ ║        	                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1691,13 +1691,13 @@ add
 //│ res: error
 
 (let x = (0 0); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); (0 x))
 //│ ║        	          ^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let x = (0 0); (0 x))
 //│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); (0 x))
 //│ ║        	                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1706,13 +1706,13 @@ add
 //│ res: error
 
 (let x = (0 add); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 x))
 //│ ║        	          ^^^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let x = (0 add); (0 x))
 //│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); (0 x))
 //│ ║        	                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1721,13 +1721,13 @@ add
 //│ res: error
 
 (let rec x = (0 x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); (0 x))
 //│ ║        	              ^^^
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	(let rec x = (0 x); (0 x))
 //│ ╙──      	              ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); (0 x))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1736,7 +1736,7 @@ add
 //│ res: error
 
 (let x = (add 0); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add 0); (0 x))
 //│ ║        	                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1745,13 +1745,13 @@ add
 //│ res: error
 
 (let x = (add add); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ║        	          ^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ╙──      	              ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1760,7 +1760,7 @@ add
 //│ res: error
 
 (let rec x = (add x); (0 x))
-//│ ╔══[ERROR] Type mismatch in binding of function application:
+//│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ║        	             ^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
@@ -1769,7 +1769,7 @@ add
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ╙──      	                  ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ║        	                       ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1778,7 +1778,7 @@ add
 //│ res: error
 
 (let rec x = (x 0); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (x 0); (0 x))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1787,7 +1787,7 @@ add
 //│ res: error
 
 (let rec x = (x add); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (x add); (0 x))
 //│ ║        	                       ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1796,7 +1796,7 @@ add
 //│ res: error
 
 (let rec x = (x x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (x x); (0 x))
 //│ ║        	                     ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1805,7 +1805,7 @@ add
 //│ res: error
 
 (let x = (y => 0); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => 0); (0 x))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1814,7 +1814,7 @@ add
 //│ res: error
 
 (let x = (y => add); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => add); (0 x))
 //│ ║        	                      ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1823,7 +1823,7 @@ add
 //│ res: error
 
 (let x = (y => y); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (y => y); (0 x))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1832,7 +1832,7 @@ add
 //│ res: error
 
 (let rec x = (y => x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (y => x); (0 x))
 //│ ║        	                        ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1841,7 +1841,7 @@ add
 //│ res: error
 
 (let rec x = (let y = 0; x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = 0; x); (0 x))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1850,7 +1850,7 @@ add
 //│ res: error
 
 (let rec x = (let y = add; x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = add; x); (0 x))
 //│ ║        	                                ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1859,7 +1859,7 @@ add
 //│ res: error
 
 (let rec x = (let rec y = y; x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let rec y = y; x); (0 x))
 //│ ║        	                                  ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1868,7 +1868,7 @@ add
 //│ res: error
 
 (let rec x = (let y = x; x); (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (let y = x; x); (0 x))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1877,7 +1877,7 @@ add
 //│ res: error
 
 (let x = {u: 0}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: 0}; (0 x))
 //│ ║        	                  ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1886,7 +1886,7 @@ add
 //│ res: error
 
 (let x = {u: add}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add}; (0 x))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1895,7 +1895,7 @@ add
 //│ res: error
 
 (let x = {u: add, v: 0}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add, v: 0}; (0 x))
 //│ ║        	                          ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1904,7 +1904,7 @@ add
 //│ res: error
 
 (let x = {u: add, v: add}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {u: add, v: add}; (0 x))
 //│ ║        	                            ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1913,7 +1913,7 @@ add
 //│ res: error
 
 (let rec x = {u: add, v: x}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {u: add, v: x}; (0 x))
 //│ ║        	                              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1922,7 +1922,7 @@ add
 //│ res: error
 
 (let rec x = {u: x}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {u: x}; (0 x))
 //│ ║        	                      ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1937,7 +1937,7 @@ add
 //│ ╟── expression of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0.v; (0 x))
 //│ ╙──      	         ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = 0.v; (0 x))
 //│ ║        	               ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1952,7 +1952,7 @@ add
 //│ ╟── expression of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add.v; (0 x))
 //│ ╙──      	         ^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = add.v; (0 x))
 //│ ║        	                 ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1961,7 +1961,7 @@ add
 //│ res: error
 
 (let rec x = x.v; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = x.v; (0 x))
 //│ ║        	                   ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1970,7 +1970,7 @@ add
 //│ res: error
 
 (let x = {v: 0}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {v: 0}; (0 x))
 //│ ║        	                  ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1979,7 +1979,7 @@ add
 //│ res: error
 
 (let x = {v: add}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = {v: add}; (0 x))
 //│ ║        	                    ^^^
 //│ ╟── expression of type `0` is not a function
@@ -1988,7 +1988,7 @@ add
 //│ res: error
 
 (let rec x = {v: x}; (0 x))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = {v: x}; (0 x))
 //│ ║        	                      ^^^
 //│ ╟── expression of type `0` is not a function
@@ -2009,7 +2009,7 @@ add
 //│ res: {u: 0}
 
 (let x = (0 0); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 0); {u: 0})
 //│ ║        	          ^^^
 //│ ╟── expression of type `0` is not a function
@@ -2018,7 +2018,7 @@ add
 //│ res: {u: 0}
 
 (let x = (0 add); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 add); {u: 0})
 //│ ║        	          ^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -2027,7 +2027,7 @@ add
 //│ res: {u: 0}
 
 (let rec x = (0 x); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 x); {u: 0})
 //│ ║        	              ^^^
 //│ ╟── expression of type `0` is not a function
@@ -2036,7 +2036,7 @@ add
 //│ res: {u: 0}
 
 (let x = (0 {v: 0}); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 {v: 0}); {u: 0})
 //│ ║        	          ^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -2045,7 +2045,7 @@ add
 //│ res: {u: 0}
 
 (let x = (0 {v: add}); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (0 {v: add}); {u: 0})
 //│ ║        	          ^^^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -2054,7 +2054,7 @@ add
 //│ res: {u: 0}
 
 (let rec x = (0 {v: x}); {u: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (0 {v: x}); {u: 0})
 //│ ║        	              ^^^^^^^^
 //│ ╟── expression of type `0` is not a function
@@ -2120,7 +2120,7 @@ add
 //│ res: {u: 0, v: 0}
 
 (let x = (add add); {u: 0, v: 0})
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add add); {u: 0, v: 0})
 //│ ║        	          ^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -2129,7 +2129,7 @@ add
 //│ res: {u: 0, v: 0}
 
 (let rec x = (add x); {u: 0, v: 0})
-//│ ╔══[ERROR] Type mismatch in binding of function application:
+//│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
 //│ ║        	             ^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
@@ -3161,7 +3161,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: int -> int}
 
 {u: {u: 0}, v: (add add)}
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add add)}
 //│ ║        	                ^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
@@ -3170,7 +3170,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: error | (int -> int)}
 
 {u: {u: 0}, v: (add {v: 0})}
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: 0})}
 //│ ║        	                ^^^^^^^^^^
 //│ ╟── expression of type `{v: 0}` does not match type `int`
@@ -3179,7 +3179,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: error | (int -> int)}
 
 {u: {u: 0}, v: (add {v: add})}
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: add})}
 //│ ║        	                ^^^^^^^^^^^^
 //│ ╟── expression of type `{v: int -> int -> int}` does not match type `int`
@@ -3299,7 +3299,7 @@ add.v.u
 //│ res: {u: {v: 0}, v: int -> int -> int}
 
 {u: {v: 0}, v: (0 0)}
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {v: 0}, v: (0 0)}
 //│ ║        	                ^^^
 //│ ╟── expression of type `0` is not a function
@@ -3308,7 +3308,7 @@ add.v.u
 //│ res: {u: {v: 0}, v: error}
 
 {u: {v: 0}, v: (0 add)}
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {v: 0}, v: (0 add)}
 //│ ║        	                ^^^^^
 //│ ╟── expression of type `0` is not a function

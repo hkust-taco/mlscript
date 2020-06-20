@@ -47,7 +47,7 @@ discard / foo
 :e
 discard foo
   1
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.48: 	discard foo
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.49: 	  1
@@ -63,7 +63,7 @@ foo
   foo 2
 //│ ╔══[WARNING] Expression in statement position should have type `unit`.
 //│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
-//│ ╟── Type mismatch in function application:
+//│ ╟── Type mismatch in application:
 //│ ║  l.62: 	  foo 1
 //│ ║        	  ^^^^^
 //│ ╙── expression of type `int` does not match type `unit`
@@ -175,7 +175,7 @@ succ(
   let x = 1
   x
 )
-//│ res: {}
+//│ res: ()
 //│ res: 1
 //│ res: 1
 //│ res: int
@@ -194,7 +194,7 @@ let a = 1; log a; let b = 2
 //│ b: 2
 
 (let a = 1; log a; let b = 2)
-//│ res: {}
+//│ res: ()
 
 (let a = 1; log a; let b = 2; a + b)
 //│ res: int

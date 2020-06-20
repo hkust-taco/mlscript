@@ -19,19 +19,19 @@ x : 1
 x: 1
 {x: 1}
 x: 1, y: 2
+//│ res: (x: 1,)
+//│ res: (x: 1,)
 //│ res: {x: 1}
-//│ res: {x: 1}
-//│ res: {x: 1}
-//│ res: {x: 1, y: 2}
+//│ res: (x: 1, y: 2,)
 
 x : 1, 2, 3
 x: 1, 2, z: 3
 1, y: 2, z: 3
 x: 1, y: 2, z: 3
-//│ res: {_2: 2, _3: 3, x: 1}
-//│ res: {_2: 2, x: 1, z: 3}
-//│ res: {_1: 1, y: 2, z: 3}
-//│ res: {x: 1, y: 2, z: 3}
+//│ res: (x: 1, 2, 3,)
+//│ res: (x: 1, 2, z: 3,)
+//│ res: (1, y: 2, z: 3,)
+//│ res: (x: 1, y: 2, z: 3,)
 
 let r = {u:1,v:2}
 let r = { u:1 , v:2 }
@@ -162,9 +162,12 @@ let r = {
 }
 //│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
 
-// TODO disallow or warn about this?
+:w // Disallow or warn about this?
 let r = { u:
   1, v: 2 }
+//│ ╔══[WARNING] Missing name for record field
+//│ ║  l.167: 	  1, v: 2 }
+//│ ╙──       	  ^
 //│ r: {u: {_1: 1, v: 2}}
 
 // :e // used to raise: useless fields in statement position
@@ -192,9 +195,9 @@ let r = (
     x: 3
     y: 4
 )
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
 
 let r = (
   u: (
@@ -215,8 +218,8 @@ let r = (
     y: 4,
   ),
 )
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
 
 let r = (
   u:
@@ -226,7 +229,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ r: {u: {x: 1, y: 2}, v: {x: 3, y: 4}}
+//│ r: (u: (x: 1, y: 2,), v: (x: 3, y: 4,),)
 
 :pe
 let r = (
@@ -238,7 +241,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.232:1: let r = (
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.235:1: let r = (
 
 a:
   b:
@@ -256,9 +259,9 @@ a:
       1
   }
   d: 2
-//│ res: {a: {b: {c: 1}}}
-//│ res: {a: {b: {c: 1}, d: 2}}
-//│ res: {a: {b: {c: 1}, d: 2}}
+//│ res: (a: (b: (c: 1,),),)
+//│ res: (a: {b: {c: 1}, d: 2},)
+//│ res: (a: (b: {c: 1}, d: 2,),)
 
 // :e // used to raise: useless fields in statement position
 a:
@@ -266,7 +269,7 @@ a:
     c:
       1
   d: 2
-//│ res: {a: {b: {c: 1}, d: 2}}
+//│ res: (a: (b: (c: 1,), d: 2,),)
 
 :w
 a:
@@ -279,13 +282,13 @@ a: {
   3
 }
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.275: 	  3
+//│ ║  l.278: 	  3
 //│ ╙──       	  ^
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.279: 	  3
+//│ ║  l.282: 	  3
 //│ ╙──       	  ^
-//│ res: {a: 3}
-//│ res: {a: 3}
+//│ res: (a: 3,)
+//│ res: (a: 3,)
 
 let r =
   x: 1
@@ -296,8 +299,8 @@ let r =
   log x
   y: 2
   let _ = log y
-//│ r: {x: 1, y: 2}
-//│ r: {x: 1, y: 2}
+//│ r: (x: 1, y: 2,)
+//│ r: (x: 1, y: 2,)
 
 // TODO ignore return-position unit expressions?
 :w
@@ -307,7 +310,7 @@ let r =
   y: 2
   log y
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.308: 	  log y
+//│ ║  l.311: 	  log y
 //│ ╙──       	  ^^^^^
 //│ r: unit
 
@@ -318,7 +321,7 @@ let res =
   arg: 0
   arg + 1
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.319: 	  arg + 1
+//│ ║  l.322: 	  arg + 1
 //│ ╙──       	  ^^^^^^^
 //│ res: int
 

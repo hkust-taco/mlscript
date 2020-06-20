@@ -17,6 +17,7 @@ trait TypeSimplifier { self: Typer =>
     vars: Set[TypeVariable],
     prims: PrimSet,
     rec: Option[SortedMap[String, CompactType]],
+    tup: Option[List[Opt[Str] -> CompactType]],
     fun: Option[(CompactType, CompactType)])
   extends CompactTypeOrVariable {
     override def toString = List(vars, prims.underlying,
@@ -25,14 +26,20 @@ trait TypeSimplifier { self: Typer =>
     ).flatten.mkString("‹", ", ", "›")
   }
   object CompactType {
-    val empty: CompactType = CompactType(Set.empty, PrimSet.empty, None, None)
+    val empty: CompactType = CompactType(Set.empty, PrimSet.empty, None, None, None)
     def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
       val rec = mergeOptions(lhs.rec, rhs.rec) { (lhs, rhs) =>
         if (pol) lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(pol)(v, _)) }
         else mergeSortedMap(lhs, rhs)(merge(pol)) }
+      val tup = mergeOptionsFlat(lhs.tup, rhs.tup) { (lhs, rhs) =>
+        if (lhs.size =/= rhs.size) N
+        else S(lhs.zip(rhs).map { case ((n0, t0), (n1, t1)) =>
+          n0.orElse(n1) -> merge(pol)(t0, t1) // TODO return Nothing if the field names differ?
+        })
+      }
       val fun = mergeOptions(lhs.fun, rhs.fun){
         case ((l0,r0), (l1,r1)) => (merge(!pol)(l0, l1), merge(pol)(r0, r1)) }
-      CompactType(lhs.vars ++ rhs.vars, lhs.prims ++ rhs.prims, rec, fun)
+      CompactType(lhs.vars ++ rhs.vars, lhs.prims ++ rhs.prims, rec, tup, fun)
     }
   }
   
@@ -86,6 +93,8 @@ trait TypeSimplifier { self: Typer =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
       case RecordType(fs) =>
         ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
+      case TupleType(fs) =>
+        ct(tup = Some(fs.map(f => f._1 -> go(f._2, pol, Set.empty))))
       case tv: TypeVariable =>
         val bounds = if (pol) tv.lowerBounds else tv.upperBounds
         val tv_pol = tv -> pol
@@ -162,6 +171,7 @@ trait TypeSimplifier { self: Typer =>
         }
       }
       val rec_ = ty.rec.map(_.map(f => f._1 -> go(f._2, pol)))
+      val tup_ = ty.tup.map(_.map(f => f._1 -> go(f._2, pol)))
       val fun_ = ty.fun.map(lr => go(lr._1, !pol) -> go(lr._2, pol))
       () => {
         val newVars = ty.vars.flatMap { case tv => varSubst get tv match {
@@ -171,6 +181,7 @@ trait TypeSimplifier { self: Typer =>
         }}
         CompactType(newVars, ty.prims,
           rec_.map(r => r.map(f => f._1 -> f._2())),
+          tup_.map(r => r.map(f => f._1 -> f._2())),
           fun_.map(lr => lr._1() -> lr._2()))
       }
     }
@@ -260,11 +271,12 @@ trait TypeSimplifier { self: Typer =>
       val res = inProcess + (ty -> pol -> (() => v)) pipe { implicit inProcess =>
         ty match {
           case tv: TypeVariable => cty.recVars.get(tv).fold(tv.asTypeVar: Type)(go(_, pol))
-          case CompactType(vars, prims, rec, fun) =>
+          case CompactType(vars, prims, rec, tup, fun) =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
               ::: prims.underlying.iterator.map(p => Primitive(p.id.idStr)).toList
               ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
+              ::: tup.map(fs => Tuple(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
               ::: fun.map(lr => Function(go(lr._1, !pol), go(lr._2, pol))).toList
             ).reduceOption(mrg).getOrElse(extr)
         }

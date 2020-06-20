@@ -17,8 +17,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
     
+    println(s"CONSTRAIN $lhs <! $rhs")
+    println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
+    
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)(implicit ctx: Ls[Ls[SimpleType -> SimpleType]]): Unit = trace(s"C $lhs <! $rhs") {
-      println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
+      // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       ((lhs -> rhs :: ctx.headOr(Nil)) :: ctx.tailOr(Nil)) |> { implicit ctx =>
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
@@ -56,14 +59,25 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
+          case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize
+            fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
+              ln.foreach { ln => rn.foreach { rn =>
+                if (ln =/=rn) err(
+                  msg"Wrong tuple field name: found '${ln}' instead of '${rn}'", lhs.prov.loco) } } // TODO better loco
+              rec(l, r)
+            }
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
+          case (_, TupleType(f :: Nil)) =>
+            rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ PrimType(ErrTypeId), FunctionType(l1, r1)) =>
             rec(l1, err)
             rec(err, r1)
           case (FunctionType(l0, r0), err @ PrimType(ErrTypeId)) =>
             rec(err, l0)
             rec(r0, err)
+          case (tup: TupleType, _: RecordType) =>
+            rec(tup.toRecord, rhs)
           case (err @ PrimType(ErrTypeId), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2))
           case (RecordType(fs1), err @ PrimType(ErrTypeId)) =>
@@ -196,6 +210,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     if (ty.level <= lvl) ty else ty match {
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
+      case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov)(lvl)
         cache += (tv -> nv)
@@ -240,6 +255,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         } else tv
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
+      case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
       case PrimType(_) => ty
     }

@@ -34,8 +34,9 @@ class DiffTests extends FunSuite {
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
-      fixme: Bool, showParse: Bool, verbose: Bool, explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false)
+      fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -53,6 +54,7 @@ class DiffTests extends FunSuite {
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
+          case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case _ =>
@@ -168,14 +170,18 @@ class DiffTests extends FunSuite {
                   }
                 }
                 def getType(ty: typer.PolymorphicType): Type = {
-                  if (mode.dbg) output(s"Typed as: $ty")
-                  if (mode.dbg) output(s" where: ${ty.instantiate(0).showBounds}")
-                  val com = typer.compactType(ty.instantiate(0))
-                  if (mode.dbg) output(s"Compact type before simplification: ${com}")
-                  val sim = typer.simplifyType(com)
-                  if (mode.dbg) output(s"Compact type after simplification: ${sim}")
-                  val exp = typer.expandCompactType(sim)
-                  exp
+                  val wty = ty.instantiate(0)
+                  if (mode.dbg) output(s"Typed as: $wty")
+                  if (mode.dbg) output(s" where: ${wty.showBounds}")
+                  if (mode.noSimplification) typer.expandType(wty)
+                  else {
+                    val com = typer.compactType(wty)
+                    if (mode.dbg) output(s"Compact type before simplification: ${com}")
+                    val sim = typer.simplifyType(com)
+                    if (mode.dbg) output(s"Compact type after simplification: ${sim}")
+                    val exp = typer.expandCompactType(sim)
+                    exp
+                  }
                 }
                 bindsOrTy match {
                   case R(binds) =>

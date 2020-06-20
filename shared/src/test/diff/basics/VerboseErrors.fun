@@ -13,13 +13,13 @@ let mkArg = a => {prop: a}
 :v
 :e
 h / mkArg false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into function application of expected type `{prop: ?a & int}`
+//│ ╟── but it flows into application of expected type `{prop: ?a & int}`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -42,7 +42,7 @@ h / mkArg false
 :v
 :e
 (x => succ x) false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.44: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -74,7 +74,7 @@ let test = x => y => if x.prop then i x else y
 :e
 :verbose
 test arg2
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.76: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`

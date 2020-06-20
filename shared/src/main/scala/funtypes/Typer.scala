@@ -244,11 +244,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       val newCtx = ctx ++ newBindings.getOrElse(Nil)
       typeTerms(sts, rcd, fields)(newCtx, lvl, raise, prov)
     case Nil =>
-      // TODO actually use a tuple type if !rcd
-      val fs = fields.reverseIterator.zipWithIndex.map {
-        case ((N, t), i) => ("_" + (i + 1), t); case ((S(n), t), _) => (n, t)
-      }.toList
-      RecordType(fs)(prov)
+      if (rcd) {
+        val fs = fields.reverseIterator.zipWithIndex.map {
+          case ((S(n), t), i) =>
+            n -> t
+          case ((N, t), i) =>
+            // err("Missing name for record field", t.prov.loco)
+            warn("Missing name for record field", t.prov.loco)
+            ("_" + (i + 1), t)
+        }.toList
+        RecordType(fs)(prov)
+      } else TupleType(fields.reverse)(prov)
   }
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
@@ -268,6 +274,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
+      case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case ProxyType(und) => go(und, polarity)(inProcess)
       case PrimType(n) => Primitive(n.idStr)
     }

@@ -68,7 +68,7 @@ false + 1
 1 + false
 true + false
 log / false + 1
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	1 2 3
 //│ ║        	^^^
 //│ ╟── expression of type `1` is not a function
@@ -77,13 +77,13 @@ log / false + 1
 //│ ╔══[ERROR] identifier not found: c
 //│ ║  l.+2: 	a b c
 //│ ╙──      	    ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	a b c
 //│ ║        	^^^^^
 //│ ╟── expression of type `int` is not a function
 //│ ║  l.+2: 	a b c
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	let oops = succ false
 //│ ║        	           ^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -132,13 +132,13 @@ succ succ
 (
   succ
 ) false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ succ
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
 //│ ║  l.+1: 	succ succ
 //│ ╙──      	     ^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ succ
 //│ ║        	^^^^^^^^^
 //│ ║  l.+2: 	  1
@@ -146,7 +146,7 @@ succ succ
 //│ ╟── expression of type `int` is not a function
 //│ ║  l.+1: 	succ succ
 //│ ╙──      	^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	(
 //│ ║        	^
 //│ ║  l.+4: 	  succ
@@ -172,7 +172,7 @@ log
 log
   let f = 1
   f 2
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	  1
 //│ ║        	  ^
 //│ ║  l.+3: 	    2
@@ -180,7 +180,7 @@ log
 //│ ╟── expression of type `1` is not a function
 //│ ║  l.+2: 	  1
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	log 1
 //│ ║        	^^^^^
 //│ ║  l.+5: 	  2
@@ -191,7 +191,7 @@ log
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
 //│ ║  l.+7: 	  1
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+11: 	  f 2
 //│ ║         	  ^^^
 //│ ╟── expression of type `1` is not a function
@@ -208,14 +208,14 @@ log
   2
 //│ ╔══[WARNING] Expression in statement position should have type `unit`.
 //│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
-//│ ╟── Type mismatch in function application:
+//│ ╟── Type mismatch in application:
 //│ ║  l.+2: 	  succ 1
 //│ ║        	  ^^^^^^
 //│ ╙── expression of type `int` does not match type `unit`
 
 :e
 succ ((((false))))
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ ((((false))))
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -275,7 +275,7 @@ succ {a: 1}
 //│ ╟── expression of type `{a: 1}` does not have field 'u'
 //│ ║  l.+3: 	{a: 1}.u
 //│ ╙──      	^^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	{a: 1}.a 1
 //│ ║        	      ^^^^
 //│ ╟── expression of type `1` is not a function
@@ -302,13 +302,13 @@ succ {a: 1}
 //│ ╟── but it flows into field selection of expected type `int`
 //│ ║  l.+6: 	{a: true}.a + 1
 //│ ╙──      	         ^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+7: 	succ {a: 1}
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{a: 1}` does not match type `int`
 //│ ║  l.+7: 	succ {a: 1}
 //│ ╙──      	     ^^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+8: 	{a: 1} succ
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{a: 1}` is not a function
@@ -334,7 +334,7 @@ f { prop: 42 }
 :e
 f 42
 f { prap: 1 }
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	f 42
 //│ ║        	^^^^
 //│ ╟── expression of type `42` does not have field 'prop'
@@ -343,7 +343,7 @@ f { prap: 1 }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.328: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	f { prap: 1 }
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── expression of type `{prap: 1}` does not have field 'prop'
@@ -357,7 +357,7 @@ f { prap: 1 }
 
 :e
 f { prop: false }
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	f { prop: false }
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -374,7 +374,7 @@ f { prop: false }
 :e
 let arg = 0
 f arg
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	f arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `0` does not have field 'prop'
@@ -392,7 +392,7 @@ f arg
 :e
 let arg = {prop: not true}
 f arg
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	f arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -418,7 +418,7 @@ g { fld: 42 }
 g 1
 g { fld: false }
 g { fld: { oops: 1 } }
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	g 1
 //│ ║        	^^^
 //│ ╟── expression of type `1` does not have field 'fld'
@@ -427,7 +427,7 @@ g { fld: { oops: 1 } }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.412: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	g { fld: false }
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -442,7 +442,7 @@ g { fld: { oops: 1 } }
 //│ ╟── from field selection:
 //│ ║  l.412: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	g { fld: { oops: 1 } }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{oops: 1}` does not match type `int`
@@ -466,7 +466,7 @@ let arg1 = {fld: not true}
 let arg2 = {fld: arg}
 f arg1
 f arg2
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	f arg1
 //│ ║        	^^^^^^
 //│ ╟── expression of type `{fld: ?a | bool}` does not have field 'prop'
@@ -478,7 +478,7 @@ f arg2
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.328: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	f arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
@@ -506,7 +506,7 @@ h arg2
 h arg
 h / 42
 x => h / succ x
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	h arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `{fld: {prop: ?a | bool}}` does not have field 'prop'
@@ -521,7 +521,7 @@ x => h / succ x
 //│ ╟── from argument:
 //│ ║  l.499: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	h arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -536,7 +536,7 @@ x => h / succ x
 //│ ╟── from argument:
 //│ ║  l.499: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	h / 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `42` does not have field 'prop'
@@ -548,7 +548,7 @@ x => h / succ x
 //│ ╟── from argument:
 //│ ║  l.499: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	x => h / succ x
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'prop'
@@ -568,7 +568,7 @@ x => h / succ x
 :e
 let mkArg2 = a => {prop: succ a}
 h / mkArg2 false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	h / mkArg2 false
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -587,7 +587,7 @@ let i = y =>
 :e
 i arg2
 i arg
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	i arg2
 //│ ║        	^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -602,7 +602,7 @@ i arg
 //│ ╟── from argument:
 //│ ║  l.584: 	  succ / f y.fld
 //│ ╙──       	           ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	i arg
 //│ ║        	^^^^^
 //│ ╟── expression of type `{prop: ?a | bool}` does not have field 'fld'
@@ -622,7 +622,7 @@ let test x y = if x.prop then i x else y
 
 :e
 test arg2
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -654,7 +654,7 @@ g { fld: mkArg 1 } // TODO multi-step flow message?
 h / mkArg false
 i { fld: mkArg false }
 i / mkArg 1
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not match type `int`
@@ -669,13 +669,13 @@ i / mkArg 1
 //│ ╟── from field selection:
 //│ ║  l.412: 	  f { prop: y.fld }
 //│ ╙──       	             ^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into function application of expected type `{prop: ?a & int}`
+//│ ╟── but it flows into application of expected type `{prop: ?a & int}`
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -684,7 +684,7 @@ i / mkArg 1
 //│ ╟── from argument:
 //│ ║  l.499: 	  succ / f y
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	i { fld: mkArg false }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -699,13 +699,13 @@ i / mkArg 1
 //│ ╟── from argument:
 //│ ║  l.584: 	  succ / f y.fld
 //│ ╙──       	           ^^^^^
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a | 1}` does not have field 'fld'
 //│ ║  l.645: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
-//│ ╟── but it flows into function application of expected type `{fld: ?b & {prop: ?c & int}}`
+//│ ╟── but it flows into application of expected type `{fld: ?b & {prop: ?c & int}}`
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	    ^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

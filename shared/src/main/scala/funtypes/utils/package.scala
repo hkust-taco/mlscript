@@ -48,12 +48,14 @@ package object utils {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
   }
   
-  def mergeOptions[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => A): Option[A] = (lhs, rhs) match {
-    case (Some(l), Some(r)) => Some(f(l, r))
+  def mergeOptionsFlat[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => Opt[A]): Option[A] = (lhs, rhs) match {
+    case (Some(l), Some(r)) => f(l, r)
     case (lhs @ Some(_), _) => lhs
     case (_, rhs @ Some(_)) => rhs
     case (None, None) => None
   }
+  def mergeOptions[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => A): Option[A] =
+    mergeOptionsFlat(lhs, rhs)(f(_, _) |> some)
   
   def mergeMap[A, B](lhs: Iterable[(A, B)], rhs: Iterable[(A, B)])(f: (B, B) => B): Map[A,B] =
     new mutable.ArrayBuffer(lhs.knownSize + rhs.knownSize max 8)
@@ -118,7 +120,7 @@ package object utils {
   }
   
   implicit final class OptionHelpers[A](opt: Opt[A]) {
-    def dlof[B](f: A => B)(b: B): B = opt.fold(b)(f)
+    def dlof[B](f: A => B)(b: => B): B = opt.fold(b)(f)
   }
   
   implicit class SetObjectHelpers(self: Set.type) {

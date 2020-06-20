@@ -44,7 +44,7 @@ x => if pred x then x else f x
 
 :e
 f false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.46: 	f false
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`

@@ -42,6 +42,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
+  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends SimpleType {
+    lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    lazy val toRecord: RecordType =
+      RecordType(
+        fields.zipWithIndex.map { case ((_, t), i) => ("_"+(i+1), t) } ::: // TODO shadow dups?
+        fields.collect { case (S(n), t) => (n, t) }
+      )(prov)
+    override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2}").mkString(", ")})"
+  }
   /** The sole purpose of ProxyType is to store additional type provenance info. */
   case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance, override val ctxProv: Opt[TypeProvenance] = N)
       extends SimpleType {

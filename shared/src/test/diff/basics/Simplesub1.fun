@@ -53,7 +53,7 @@ x => y => if x then y else x
 
 :e
 succ true
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -63,7 +63,7 @@ succ true
 
 :e
 x => succ (not x)
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	     ^^^^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
@@ -76,7 +76,7 @@ x => succ (not x)
 
 :e
 (x => not x.f) { f: 123 }
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `123` does not match type `bool`
@@ -92,13 +92,13 @@ x => succ (not x)
 
 :e
 (f => x => not (f x.u)) false
-//│ ╔══[ERROR] Type mismatch in function application:
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `bool` is not a function
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	                        ^^^^^
-//│ ╟── Note: constraint arises from function application:
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^^^^^
 //│ res: error | ({u: anything} -> bool)
@@ -254,7 +254,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╟── expression of type `0` is not a function
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
-//│ ╟── Note: constraint arises from function application:
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╙──      	                                    ^^^
 //│ x: 0
