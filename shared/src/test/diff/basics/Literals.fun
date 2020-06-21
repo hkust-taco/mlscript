@@ -9,6 +9,64 @@
 true
 //│ res: bool
 
+1 as Int
+"hello" as String
+true as Bool
+//│ res: int
+//│ res: string
+//│ res: bool
+
+:w
+1 as int
+"hello" as string
+//│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
+//│ ║  l.20: 	1 as int
+//│ ╙──      	     ^^^
+//│ ╔══[WARNING] Variable name 'string' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.string`; if not, give your future readers a break and use another name :^)
+//│ ║  l.21: 	"hello" as string
+//│ ╙──      	           ^^^^^^
+//│ res: 1
+//│ res: "hello"
+
+1 as (_: int)
+"hello" as (_: string)
+//│ res: (_: 1,)
+//│ res: (_: "hello",)
+
+:e
+1 as true
+true as Int
+false as 1
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.37: 	1 as true
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `1` does not match type `bool`
+//│ ║  l.37: 	1 as true
+//│ ║        	^
+//│ ╟── Note: constraint arises from variable reference:
+//│ ║  l.37: 	1 as true
+//│ ╙──      	     ^^^^
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.38: 	true as Int
+//│ ║        	^^^^^^^^^^^
+//│ ╟── expression of type `bool` does not match type `int`
+//│ ║  l.38: 	true as Int
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from variable reference:
+//│ ║  l.38: 	true as Int
+//│ ╙──      	        ^^^
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.39: 	false as 1
+//│ ║        	^^^^^^^^^^
+//│ ╟── expression of type `bool` does not match type `1`
+//│ ║  l.39: 	false as 1
+//│ ║        	^^^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.39: 	false as 1
+//│ ╙──      	         ^
+//│ res: bool
+//│ res: int
+//│ res: 1
 
 let f = b => if b then 0 else 1
 //│ f: bool -> 0 | 1
@@ -45,13 +103,13 @@ x => if pred x then x else f x
 :e
 f false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	f false
-//│ ║        	^^^^^^^
+//│ ║  l.104: 	f false
+//│ ║         	^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.46: 	f false
-//│ ║        	  ^^^^^
+//│ ║  l.104: 	f false
+//│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.35: 	  if pred n then n else f (n + 1)
+//│ ║  l.93: 	  if pred n then n else f (n + 1)
 //│ ╙──      	                           ^
 //│ res: bool | int | error
 

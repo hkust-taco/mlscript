@@ -95,12 +95,19 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }).opaque("applied expressions")
   
   // TODO support spreads ""...xs""
-  def commas[_: P]: P[Term] =
-    P(Index ~~ (ident ~ ":" ~ (binops | suite) | binops.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index)
-    .map {
-      case (_, ("", x) :: Nil, N, _) => x
-      case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1, origin)
+  def commas[_: P]: P[Term] = P(
+    Index ~~ (ident ~ ":" ~ (noCommas | suite) | noCommas.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index
+  ).map {
+    case (_, ("", x) :: Nil, N, _) => x
+    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1, origin)
+  }
+  
+  def noCommas[_: P]: P[Term] = P(binops ~ ((kw("as") | kw("is")).! ~ binops).rep).map {
+    case (lhs, casts) => casts.foldLeft(lhs) {
+      case (acc, ("as", rhs)) => Bind(acc, rhs)
+      case (acc, ("is", rhs)) => Test(acc, rhs)
     }
+  }
   
   /** Note that `,` implicitly has the lowest precedence, followed by the ones below. */
   private val prec: Map[Char,Int] = List(

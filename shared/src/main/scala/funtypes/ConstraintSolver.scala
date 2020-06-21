@@ -68,6 +68,12 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                   msg"Wrong tuple field name: found '${ln}' instead of '${rn}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r)
             }
+          case (ComposedType(true, l, r), _) =>
+            rec(l, rhs, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
+            rec(r, rhs, outerProv.orElse(S(lhs.prov)))
+          case (_, ComposedType(false, l, r)) =>
+            rec(lhs, l, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
+            rec(lhs, r, outerProv.orElse(S(lhs.prov)))
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
           case (vt: VarType, _) => rec(vt.sign, rhs)
@@ -224,6 +230,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       (implicit cache: MutMap[Variable, Variable] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
+      case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
       case a @ AppType(f, as) => AppType(extrude(f, lvl, !pol), as.map(extrude(_, lvl, pol)))(a.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
@@ -277,6 +284,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         else vt.vi, freshen(vt.sign), vt.isAlias
       )(vt.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
+      case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case a @ AppType(lhs, args) => AppType(freshen(lhs), args.map(freshen))(a.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)

@@ -30,6 +30,8 @@ abstract class TypeImpl { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs(n)}"
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
+    case Applied(Applied(Primitive(op), l), r) if !op.head.isLetter =>
+      parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
     case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
@@ -91,6 +93,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Sel(receiver, fieldName) => "field selection"
     case Let(isRec, name, rhs, body) => "let binding"
     case Tup(xs) => "tuple expression"
+    case Bind(l, r) => "'as' binding"
+    case Test(l, r) => "'is' test"
   }
   
   override def toString: String = this match {
@@ -111,8 +115,15 @@ trait TermImpl extends StatementImpl { self: Term =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs; $body)"
     case Tup(xs) =>
       xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
+    case Bind(l, r) => s"($l as $r)"
+    case Test(l, r) => s"($l is $r)"
   }
   
+}
+
+trait VarImpl { self: Var =>
+  def isPatVar: Bool =
+    name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
 }
 
 trait Located {
@@ -243,6 +254,8 @@ trait StatementImpl extends Located { self: Statement =>
       let.desugared._2.getFreeVars
     case DatatypeDefn(head, body) => body.freeVars -- head.freeVars
     case DataDefn(head) => Set.empty
+    case Bind(l, r) => l.freeVars ++ r.freeVars
+    case Test(l, r) => l.freeVars ++ r.freeVars
   }
   
   def children: List[Statement] = this match {
@@ -259,6 +272,8 @@ trait StatementImpl extends Located { self: Statement =>
     case DatatypeDefn(head, body) => head :: body :: Nil
     case DataDefn(body) => body :: Nil
     case _: Lit => Nil
+    case Bind(l, r) => l :: r :: Nil
+    case Test(l, r) => l :: r :: Nil
   }
   
   def size: Int = children.iterator.map(_.size).sum + 1

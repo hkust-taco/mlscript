@@ -9,7 +9,7 @@ final case class Pgrm(defs: Ls[(Bool, Str, Term)])
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm
-final case class Var(name: Str)                                      extends SimpleTerm
+final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
 final case class Tup(fields: Ls[Opt[Str] -> Term])                   extends Term
@@ -18,6 +18,8 @@ final case class Sel(receiver: Term, fieldName: Str)                 extends Ter
 final case class Let(isRec: Bool, name: Str, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
+final case class Bind(lhs: Term, rhs: Term)                          extends Term
+final case class Test(trm: Term, ty: Term)                           extends Term
 
 final case class IntLit(value: BigInt)      extends Lit
 final case class DecLit(value: BigDecimal)  extends Lit

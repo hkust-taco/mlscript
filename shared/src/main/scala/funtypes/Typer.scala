@@ -28,6 +28,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   val ErrTypeId: SimpleTerm = Var("error")
   
+  private val primTypes =
+    List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType)
+  
   val builtins: Ctx = {
     val tv = freshVar(primProv)(1) // Q: level?
     import FunctionType.{ apply => fun }
@@ -49,7 +52,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val v = freshVar(primProv)(1)
         PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(primProv))(primProv))(primProv))
       },
-    ) ++ List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType)
+    ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
   import TypeProvenance.{apply => tp}
@@ -112,32 +115,43 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     typeStatement(desug, allowPure)
   }
   type PatCtx = mutable.Map[Str, TypeVariable]
-  def typePattern(pat: Term, newBindings: PatCtx)(implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType = pat match {
-    case (v @ ValidVar(nme)) =>
-      val prov = tp(v.toLoc, "pattern variable")
-      newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
-    case (tup @ Tup(fs)) =>
-      val params_ty = fs.map {
-        case (S(nme), t) =>
-          val prov = tp(t.toLoc, "parameter type")
-          // TODO in positive position, this should create a new VarType instead!
-          val tv = newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
-          val t_ty = t match {
-            case Bra(false, t) => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
-              typePattern(t, newBindings)
-            case _ => typeTerm(t)
-          }
-          constrain(tv, t_ty)(raise, prov)
-          S(nme) -> tv
-        case (N, t) =>
-          val t_ty = typePattern(t, newBindings)
-          N -> t_ty
-      }
-      TupleType(params_ty)(ttp(tup))
-    case Blk((t: Term) :: Nil) => typePattern(t, newBindings)
-    case Bra(false, t) => typePattern(t, newBindings)
-    case _ => // TODO
-      err(msg"Unsupported parameter shape:", pat.toLoc)(raise, ttp(pat))
+  def typePattern(pat: Term, newBindings: PatCtx)(implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType = {
+    implicit val prov: TypeProvenance = ttp(pat)
+    pat match {
+      case (v @ ValidPatVar(nme)) =>
+        val prov = tp(v.toLoc, "pattern variable")
+        newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
+      case lit: Lit => PrimType(lit)(prov)
+      case (tup @ Tup(fs)) =>
+        val params_ty = fs.map {
+          case (S(nme), t) =>
+            val prov = tp(t.toLoc, "parameter type")
+            // TODO in positive position, this should create a new VarType instead!
+            val tv = newBindings.getOrElseUpdate(nme, new TypeVariable(lvl, Nil, Nil)(prov))
+            val t_ty = t match {
+              case Bra(false, t) => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...
+                typePattern(t, newBindings)
+              case _ => typeTerm(t)
+            }
+            constrain(tv, t_ty)(raise, prov)
+            S(nme) -> tv
+            // constrain(t_ty, tv)(raise, prov)
+            // S(nme) -> t_ty
+          case (N, t) =>
+            val t_ty = typePattern(t, newBindings)
+            N -> t_ty
+        }
+        TupleType(params_ty)(ttp(tup))
+      case App(App(Var("|"), lhs), rhs) =>
+          ComposedType(true, typePattern(lhs, newBindings), typePattern(rhs, newBindings))(prov)
+      case App(App(Var("&"), lhs), rhs) =>
+        ComposedType(false, typePattern(lhs, newBindings), typePattern(rhs, newBindings))(prov)
+      case Blk((t: Term) :: Nil) => typePattern(t, newBindings)
+      case Bra(false, t) => typePattern(t, newBindings)
+      case _: Var => typeTerm(pat)
+      case _ => // TODO
+        err(msg"Unsupported pattern shape:", pat.toLoc)(raise, ttp(pat))
+    }
   }
   def typeData(d: DataDesug)(implicit ctx: Ctx, lvl: Int, raise: Raise): VarType -> Ls[SimpleType] = {
     val newBindings = mutable.Map.empty[Str, TypeVariable]
@@ -228,18 +242,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
-      if (reservedNames(v.name)) err("unexpected use of: " + v.name, v.toLoc)(raise, ttp(v))
+      if (reservedNames(v.name)) err("Illegal use of: " + v.name, v.toLoc)(raise, ttp(v))
       v.name
     }
+  }
+  object ValidPatVar {
+    def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
+      if (v.isPatVar) {
+        ctx.get(v.name).map(_.instantiate(0).unwrapProxies) |>? {
+          case S(_: VarType | PrimType(Var(v.name))) =>
+            warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
+              s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
+              s"if not, give your future readers a break and use another name :^)", v.toLoc)
+        }
+        ValidVar.unapply(v)
+      } else N
   }
   
   /** Infer the type of a term. */
   def typeTerm(term: Term)
         (implicit ctx: Ctx, lvl: Int, raise: Raise): SimpleType
         = trace(s"$lvl. Typing $term") {
-    implicit val prov: TypeProvenance = TypeProvenance(term.toLoc, term.describe)
+    implicit val prov: TypeProvenance = ttp(term)
     
-    def con(lhs: SimpleType, rhs: SimpleType, res: TypeVariable): SimpleType = {
+    def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
       var alreadyReportedAnError = false
       constrain(lhs, rhs)({
         case err: TypeError if alreadyReportedAnError => () // silence further errors from this location
@@ -259,11 +285,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           // TODO: delay type expansion to message display and show the expected type here!
           err("identifier not found: " + name, term.toLoc)
         }).instantiate
-        mkProxy(ty, tp(term.toLoc, term.describe))
+        mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case Lam(v @ ValidVar(name), body) =>
+      case Lam(v @ ValidPatVar(name), body) =>
         val param = freshVar(tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "parameter"))
         val body_ty = typeTerm(body)(ctx + (name -> param), lvl, raise)
         FunctionType(param, body_ty)(tp(term.toLoc, "function"))
@@ -272,6 +298,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val param_ty = typePattern(pat, newBindings)
         val body_ty = typeTerm(body)(ctx ++ newBindings, lvl, raise)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+      case App(App(Var("|"), lhs), rhs) =>
+        ComposedType(true, typeTerm(lhs), typeTerm(rhs))(prov)
+      case App(App(Var("&"), lhs), rhs) =>
+        ComposedType(false, typeTerm(lhs), typeTerm(rhs))(prov)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -284,7 +314,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         if (raw_fun_ty.isInstanceOf[VarType] || raw_fun_ty.isInstanceOf[AppType]) // TODO more principled
           (fun_ty app arg_ty)(appProv)
         else resTy
-      case lit: Lit => PrimType(lit)(tp(term.toLoc, "constant literal"))
+      case lit: Lit => PrimType(lit)(prov)
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
@@ -306,6 +336,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
       case Blk(stmts) => typeTerms(stmts, false, Nil)
+      case Test(l, r) =>
+        ??? // TODO
+      case Bind(l, r) => // TODO support bindings found in there flowing out
+        val l_ty = typeTerm(l)
+        val newBindings = mutable.Map.empty[Str, TypeVariable]
+        val r_ty = typePattern(r, newBindings)
+        con(l_ty, r_ty, r_ty)
     }
   }(r => s"$lvl. : ${r}")
   
@@ -363,6 +400,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
       case vt: VarType => Primitive(vt.vi.v.name) // TODO disambiguate homonyms...
       case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
+      case ComposedType(true, l, r) => Union(go(l, polarity)(inProcess), go(r, polarity)(inProcess))
+      case ComposedType(false, l, r) => Inter(go(l, polarity)(inProcess), go(r, polarity)(inProcess))
       case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case AppType(fun, args) => args.map(go(_, polarity)(inProcess)).foldLeft(go(fun, polarity)(inProcess))(Applied(_, _))

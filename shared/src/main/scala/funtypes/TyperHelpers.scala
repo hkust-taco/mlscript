@@ -64,6 +64,7 @@ abstract class TyperHelpers { self: Typer =>
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case vt: VarType => vt.sign :: Nil
       case FunctionType(l, r) => l :: r :: Nil
+      case ComposedType(_, l, r) => l :: r :: Nil
       case AppType(lhs, args) => lhs :: args
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)

@@ -71,6 +71,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Int = negated.level
     override def toString = s"(not ${negated})"
   }
+  /** Polarity `pol` being `true` means union; `false` means intersection. */
+  case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = lhs.level max rhs.level
+    override def toString = s"($lhs ${if (pol) "|" else "&"} $rhs)"
+  }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */
   case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance, override val ctxProv: Opt[TypeProvenance] = N)
@@ -106,7 +111,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
    *      and even if we supported impredicativity it would likely result in fewer variable instantiations
    *      down the line, while being just as general (at least, as long as we don't instantiate variables on reference).
   */
-  final class VarIdentity(val lvl: Int, val v: Var) //extends Variable
+  final class VarIdentity(val lvl: Int, val v: Var)
   case class VarType(vi: VarIdentity, sign: SimpleType, isAlias: Bool)(val prov: TypeProvenance)
       extends ConstructedType with Variable {
     def level: Int = vi.lvl max sign.level
