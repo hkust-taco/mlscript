@@ -69,6 +69,7 @@ abstract class TyperHelpers { self: Typer =>
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)
       case NegType(n) => n :: Nil
+      case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
       case PrimType(_) => Nil
     }

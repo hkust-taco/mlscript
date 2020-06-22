@@ -128,12 +128,16 @@ trait TypeSimplifier { self: Typer =>
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
       case p: PrimType => ct(prims = BaseTypes.single(p))
       case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
-      case NegType(ty) => ??? // TODO
+      case NegType(ty) => // FIXME tmp hack
+        val base = ct(prims = BaseTypes single PrimType(Var("neg"))(noProv))
+        ct(prims = BaseTypes single CompactAppType(base, go(ty, pol, Set.empty) :: Nil))
+      case ExtrType(pol) => // FIXME tmp hack
+        ct(prims = BaseTypes single PrimType(Var(if (pol) "nothing" else "anything"))(noProv))
       case ProxyType(und) => go(und, pol, parents)
       case FunctionType(l, r) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
       case ComposedType(p, l, r) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"))(primProv))
+        val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"))(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(l, pol, parents) :: go(r, pol, parents) :: Nil))
       case a @ AppType(lhs, args) =>
         ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
@@ -321,7 +325,7 @@ trait TypeSimplifier { self: Typer =>
         isRecursive = true
         (ty match {
           case tv: TypeVariable => tv
-          case _ => new TypeVariable(0, Nil, Nil)(primProv)
+          case _ => new TypeVariable(0, Nil, Nil)(noProv)
         }).asTypeVar
       }
       val res = inProcess + (ty -> pol -> (() => v)) pipe { implicit inProcess =>

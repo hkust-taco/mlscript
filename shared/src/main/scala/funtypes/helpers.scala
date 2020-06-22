@@ -69,6 +69,14 @@ object ShowCtx {
 
 // Auxiliary definitions for terms
 
+object OpApp {
+  def unapply(trm: Term): Opt[Term -> Term] = trm |>? {
+    case App(op, lhs)
+      if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
+      => (op, lhs)
+  }
+}
+
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
   override def children: Ls[Statement] = super[StatementImpl].children
@@ -82,12 +90,10 @@ trait TermImpl extends StatementImpl { self: Term =>
     case StrLit(value) => "string literal"
     case Var(name) => "variable reference"
     case Lam(name, rhs) => "lambda expression"
-    case App(App(op, lhs), rhs)
-      if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
-      => "operator application"
-    case App(op, lhs)
-      if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
-      => "operator application"
+    case App(OpApp(Var("|"), lhs), rhs) => "type union"
+    case App(OpApp(Var("&"), lhs), rhs) => "type intersection"
+    case App(OpApp(op, lhs), rhs) => "operator application"
+    case OpApp(op, lhs) => "operator application"
     case App(lhs, rhs) => "application"
     case Rcd(fields) => "record"
     case Sel(receiver, fieldName) => "field selection"

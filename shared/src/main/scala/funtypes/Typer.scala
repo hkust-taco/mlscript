@@ -18,13 +18,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   type Ctx = Map[String, TypeScheme]
   type Raise = Diagnostic => Unit
   
-  val primProv: TypeProvenance = TypeProvenance(N, "expression")
+  import TypeProvenance.{apply => tp}
+  def ttp(trm: Term, desc: Str = ""): TypeProvenance =
+    TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   
-  val UnitType: PrimType = PrimType(Var("unit"))(primProv)
-  val BoolType: PrimType = PrimType(Var("bool"))(primProv)
-  val IntType: PrimType = PrimType(Var("int"))(primProv)
-  val DecType: PrimType = PrimType(Var("number"))(primProv)
-  val StrType: PrimType = PrimType(Var("string"))(primProv)
+  val noProv: TypeProvenance = tp(N, "expression")
+  
+  val UnitType: PrimType = PrimType(Var("unit"))(noProv)
+  val BoolType: PrimType = PrimType(Var("bool"))(noProv)
+  val IntType: PrimType = PrimType(Var("int"))(noProv)
+  val DecType: PrimType = PrimType(Var("number"))(noProv)
+  val StrType: PrimType = PrimType(Var("string"))(noProv)
   
   val ErrTypeId: SimpleTerm = Var("error")
   
@@ -32,32 +36,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType)
   
   val builtins: Ctx = {
-    val tv = freshVar(primProv)(1) // Q: level?
+    val tv = freshVar(noProv)(1) // Q: level?
     import FunctionType.{ apply => fun }
     Map(
       "true" -> BoolType,
       "false" -> BoolType,
-      "not" -> fun(BoolType, BoolType)(primProv),
-      "succ" -> fun(IntType, IntType)(primProv),
-      "log" -> PolymorphicType(0, fun(tv, UnitType)(primProv)),
-      "discard" -> PolymorphicType(0, fun(tv, UnitType)(primProv)),
-      "add" -> fun(IntType, fun(IntType, IntType)(primProv))(primProv),
-      "+" -> fun(IntType, fun(IntType, IntType)(primProv))(primProv),
-      "<" -> fun(IntType, fun(IntType, BoolType)(primProv))(primProv),
+      "not" -> fun(BoolType, BoolType)(noProv),
+      "succ" -> fun(IntType, IntType)(noProv),
+      "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
+      "discard" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
+      "add" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "+" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "<" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
       "id" -> {
-        val v = freshVar(primProv)(1)
-        PolymorphicType(0, fun(v, v)(primProv))
+        val v = freshVar(noProv)(1)
+        PolymorphicType(0, fun(v, v)(noProv))
       },
       "if" -> {
-        val v = freshVar(primProv)(1)
-        PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(primProv))(primProv))(primProv))
+        val v = freshVar(noProv)(1)
+        PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(noProv))(noProv))(noProv))
       },
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
-  
-  import TypeProvenance.{apply => tp}
-  def ttp(trm: Term, desc: Str = ""): TypeProvenance =
-    TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   
   /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
@@ -238,11 +238,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     // ty
   }
   
-  val reservedNames: Set[Str] = Set("|", "&", ",")
+  // TODO also prevent rebinding of "not"
+  val reservedNames: Set[Str] = Set("|", "&", ",", "neg", "and", "or")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
-      if (reservedNames(v.name)) err("Illegal use of: " + v.name, v.toLoc)(raise, ttp(v))
+      if (reservedNames(v.name))
+        err(s"Illegal use of ${if (v.name.head.isLetter) "keyword" else "operator"}: " + v.name,
+          v.toLoc)(raise, ttp(v))
       v.name
     }
   }
@@ -298,6 +301,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val param_ty = typePattern(pat, newBindings)
         val body_ty = typeTerm(body)(ctx ++ newBindings, lvl, raise)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+      case App(Var("neg"), trm) => NegType(typeTerm(trm))(prov)
       case App(App(Var("|"), lhs), rhs) =>
         ComposedType(true, typeTerm(lhs), typeTerm(rhs))(prov)
       case App(App(Var("&"), lhs), rhs) =>
@@ -406,6 +410,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
       case AppType(fun, args) => args.map(go(_, polarity)(inProcess)).foldLeft(go(fun, polarity)(inProcess))(Applied(_, _))
       case NegType(_) => ??? // TODO
+      case ExtrType(_) => ??? // TODO
       case ProxyType(und) => go(und, polarity)(inProcess)
       case PrimType(n) => Primitive(n.idStr)
     }

@@ -7,7 +7,7 @@ data type Bool of True, False
 
 :e
 data type Bool of True & False
-//│ ╔══[ERROR] Illegal use of: &
+//│ ╔══[ERROR] Illegal use of operator: &
 //│ ║  l.9: 	data type Bool of True & False
 //│ ╙──     	                       ^
 //│ Bool: True & False

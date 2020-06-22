@@ -36,6 +36,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
+  type ST = SimpleType
   
   sealed abstract class ConstructedType extends SimpleType
   
@@ -67,14 +68,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2}").mkString(", ")})"
   }
   
-  case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = negated.level
-    override def toString = s"(not ${negated})"
+  /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
+  case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = 0
   }
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = lhs.level max rhs.level
     override def toString = s"($lhs ${if (pol) "|" else "&"} $rhs)"
+  }
+  case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = negated.level
+    override def toString = s"(not ${negated})"
   }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */
@@ -130,6 +135,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid
   }
+  type TV = TypeVariable
   private var freshCount = 0
   def freshVar(p: TypeProvenance)(implicit lvl: Int): TypeVariable =
     new TypeVariable(lvl, Nil, Nil)(p)
