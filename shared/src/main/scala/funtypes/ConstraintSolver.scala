@@ -208,12 +208,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(lhs, r, outerProv.orElse(S(lhs.prov)))
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
-          case (_, ComposedType(true, l, r)) =>
-            annoying(lhs :: Nil, Nil, l :: r :: Nil, Nil)
-          case (ComposedType(false, l, r), _) =>
-            annoying(l :: r :: Nil, Nil, rhs :: Nil, Nil)
-          case (_: NegType, _) | (_, _: NegType) =>
-            annoying(lhs :: Nil, Nil, rhs :: Nil, Nil)
           case (vt: VarType, _) => rec(vt.sign, rhs)
           case (_, TupleType(f :: Nil)) =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
@@ -243,6 +237,12 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             fs1.foreach(f => rec(f._2, err))
           case (PrimType(ErrTypeId), _) => ()
           case (_, PrimType(ErrTypeId)) => ()
+          case (_, ComposedType(true, l, r)) =>
+            annoying(lhs :: Nil, Nil, l :: r :: Nil, Nil)
+          case (ComposedType(false, l, r), _) =>
+            annoying(l :: r :: Nil, Nil, rhs :: Nil, Nil)
+          case (_: NegType, _) | (_, _: NegType) =>
+            annoying(lhs :: Nil, Nil, rhs :: Nil, Nil)
           case _ =>
             val failureOpt = lhs_rhs match {
               case (RecordType(fs0), RecordType(fs1)) =>

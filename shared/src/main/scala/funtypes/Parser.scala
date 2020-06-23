@@ -102,7 +102,9 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1, origin)
   }
   
-  def noCommas[_: P]: P[Term] = P(binops ~ ((kw("as") | kw("is")).! ~ binops).rep).map {
+  def booleans[_: P]: P[Term] = P(binops rep (1, kw("and")) rep (1, kw("or"))) // TODO locs
+    .map(_.map(_.reduce((l, r) => App(OpApp("and", l), r))).reduce((l, r) => App(OpApp("or", l), r)))
+  def noCommas[_: P]: P[Term] = P(booleans ~ ((kw("as") | kw("is")).! ~ booleans).rep).map {
     case (lhs, casts) => casts.foldLeft(lhs) {
       case (acc, ("as", rhs)) => Bind(acc, rhs)
       case (acc, ("is", rhs)) => Test(acc, rhs)

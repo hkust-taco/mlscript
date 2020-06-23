@@ -29,7 +29,7 @@ class DiffTests extends FunSuite {
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def emitDbg(str: String): Unit = output(str)
     }
-    var ctx: typer.Ctx = typer.builtins
+    var ctx: typer.Ctx = typer.Ctx.init
     val failures = mutable.Buffer.empty[Int]
     
     case class Mode(
@@ -160,7 +160,7 @@ class DiffTests extends FunSuite {
                     output(s"Retyping with debug info...")
                     typer.resetState()
                     typer.dbg = true
-                    try typer.typeStatement(s, allowPure = true)(ctx, 0, {
+                    try typer.typeStatement(s, allowPure = true)(ctx, {
                       case err: TypeError => throw err
                       case _: Warning => () // ignore warnings diagnostics for this debug run
                     })
@@ -171,7 +171,7 @@ class DiffTests extends FunSuite {
                     } finally typer.dbg = false
                   }
                 }
-                def getType(ty: typer.PolymorphicType): Type = {
+                def getType(ty: typer.TypeScheme): Type = {
                   val wty = ty.instantiate(0).widenVar
                   if (mode.dbg) output(s"Typed as: $wty")
                   if (mode.dbg) output(s" where: ${wty.showBounds}")
@@ -189,7 +189,7 @@ class DiffTests extends FunSuite {
                   case R(binds) =>
                     binds.map {
                       case (nme, pty) =>
-                        ctx += nme -> pty
+                        assert(ctx.contains(nme))
                         ctx += "res" -> pty
                         s"$nme: ${getType(pty).show}"
                     }

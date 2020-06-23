@@ -52,19 +52,13 @@ True as Bool
 //│ ╙──      	        ^^^^
 //│ res: Bool
 
-:e // TODO
+// TODO treat the ending curly-blocks as bodies (not params)?
 data type List of
   Nil { T: Nothing }
   Cons head tail { T: head | tail.T }
-//│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.57: 	  Nil { T: Nothing }
-//│ ╙──      	      ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.58: 	  Cons head tail { T: head | tail.T }
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^
-//│ List: Nil error | Cons 'a 'b error
-//│ Nil: error -> {}
-//│ Cons: 'a -> 'b -> error -> {head: 'a, tail: 'b}
+//│ List: Nil {T: 'a} | Cons 'b 'c {T: 'd}
+//│ Nil: {T: 'a & nothing} -> {T: 'a}
+//│ Cons: 'a -> 'b & {T: anything} -> {T: 'c & ('a | anything)} -> {T: 'c, head: 'a, tail: 'b}
 
 // TODO also try the one-line version:
 // data type List of Nil { T: Nothing }, Cons head tail { T: head | tail.T }
@@ -96,26 +90,26 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.109: 	not (Cons 42 Nil).head
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.109: 	not (Cons 42 Nil).head
-//│ ║         	          ^^
+//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ║        	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.109: 	not (Cons 42 Nil).head
-//│ ╙──       	                 ^^^^^
+//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ╙──      	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.122: 	(Cons 4).head
+//│ ║  l.104: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── expression of type `(tail: ?a,) -> {head: ?b | 4, tail: ?a}` does not have field 'head'
-//│ ║  l.87: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
+//│ ║  l.69: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied expression:
-//│ ║  l.122: 	(Cons 4).head
+//│ ║  l.104: 	(Cons 4).head
 //│ ╙──       	 ^^^^
 //│ res: error
 
@@ -127,7 +121,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.140: 	let List.head = () // ...
+//│ ║  l.122: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

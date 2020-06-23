@@ -34,7 +34,7 @@ h / mkArg false
 //│ ╟── from argument:
 //│ ║  l.7: 	  succ / f y
 //│ ║       	           ^
-//│ ╟── from parameter:
+//│ ╟── from variable:
 //│ ║  l.6: 	let h = y =>
 //│ ╙──     	        ^
 //│ res: int | error
@@ -51,7 +51,7 @@ h / mkArg false
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.44: 	(x => succ x) false
 //│ ║        	           ^
-//│ ╟── from parameter:
+//│ ╟── from variable:
 //│ ║  l.44: 	(x => succ x) false
 //│ ╙──      	 ^
 //│ res: int | error

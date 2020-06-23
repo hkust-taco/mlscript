@@ -200,22 +200,48 @@ let a = 1; log a; let b = 2
 //│ res: int
 
 
+:e
+let test =
+  let aaa =
+    let bbb = 42
+    bbb
+  bbb
+//│ ╔══[ERROR] identifier not found: bbb
+//│ ║  l.208: 	  bbb
+//│ ╙──       	  ^^^
+//│ test: error
+
+let test =
+  let aaa =
+    let bbb = 42
+    bbb
+  aaa
+//│ test: 42
+
+:e
+aaa
+//│ ╔══[ERROR] identifier not found: aaa
+//│ ║  l.222: 	aaa
+//│ ╙──       	^^^
+//│ res: error
+
+
 :pe
 succ
   (
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.204:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.230:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.214:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.240:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1" at l.219:1:   1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1" at l.245:1:   1
 

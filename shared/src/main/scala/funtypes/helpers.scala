@@ -70,6 +70,7 @@ object ShowCtx {
 // Auxiliary definitions for terms
 
 object OpApp {
+  def apply(op: Str, trm: Term): Term = App(Var(op), trm)
   def unapply(trm: Term): Opt[Term -> Term] = trm |>? {
     case App(op, lhs)
       if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))

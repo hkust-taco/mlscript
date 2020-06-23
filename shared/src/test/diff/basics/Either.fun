@@ -35,37 +35,25 @@ let e = if _ then l else r
 
 :e // TODO
 e as Either Int String
-//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.37: 	e as Either Int String
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `(L: ?a | int,)` does not match type `int`
+//│ ║  l.22: 	data type Either (L: _) (R: _) of
+//│ ║        	                  ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.37: 	e as Either Int String
+//│ ╙──      	            ^^^
+//│ res: Either int string
 
 // TODO
 // e as (_: Either Int String)
 // e as (_: Either (L: Int) (R: String))
 
-:e // FIXME dedup errors
+:e
 e as Either
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.48: 	e as Either
-//│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `?a -> error` does not match type `Left`
-//│ ║  l.23: 	  Left L
-//│ ║        	  ^^^^
-//│ ╟── Note: constraint arises from data symbol:
-//│ ║  l.23: 	  Left L
-//│ ╙──      	  ^^^^
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.48: 	e as Either
-//│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `?a -> error` does not match type `Right`
-//│ ║  l.24: 	  Right R
-//│ ║        	  ^^^^^
-//│ ╟── Note: constraint arises from data symbol:
-//│ ║  l.24: 	  Right R
-//│ ╙──      	  ^^^^^
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.48: 	e as Either
+//│ ║  l.54: 	e as Either
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{}` is not a function
 //│ ║  l.23: 	  Left L
