@@ -38,7 +38,7 @@ True as Bool
 //│ ╟── expression of type `{}` does not match type `False`
 //│ ║  l.23: 	  True
 //│ ║        	  ^^^^
-//│ ╟── but it flows into variable reference of expected type `Bool`
+//│ ╟── but it flows into reference with expected type `Bool`
 //│ ║  l.34: 	True as Bool
 //│ ║        	^^^^
 //│ ╟── Note: constraint arises from data symbol:
@@ -47,7 +47,7 @@ True as Bool
 //│ ╟── from data type symbol:
 //│ ║  l.22: 	data type Bool of
 //│ ║        	          ^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.34: 	True as Bool
 //│ ╙──      	        ^^^^
 //│ res: Bool
@@ -96,34 +96,38 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	not (Cons 42 Nil).head
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	not (Cons 42 Nil).head
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.97: 	not (Cons 42 Nil).head
-//│ ║        	          ^^
-//│ ╟── but it flows into field selection of expected type `bool`
-//│ ║  l.97: 	not (Cons 42 Nil).head
-//│ ╙──      	                 ^^^^^
+//│ ║  l.109: 	not (Cons 42 Nil).head
+//│ ║         	          ^^
+//│ ╟── but it flows into field selection with expected type `bool`
+//│ ║  l.109: 	not (Cons 42 Nil).head
+//│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.110: 	(Cons 4).head
+//│ ║  l.122: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── expression of type `(tail: ?a,) -> {head: ?b | 4, tail: ?a}` does not have field 'head'
-//│ ║  l.75: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
+//│ ║  l.87: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied expression:
-//│ ║  l.110: 	(Cons 4).head
+//│ ║  l.122: 	(Cons 4).head
 //│ ╙──       	 ^^^^
 //│ res: error
+
+// FIXME
+Cons 1 2
+//│ res: Cons 1 2
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.124: 	let List.head = () // ...
+//│ ║  l.140: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

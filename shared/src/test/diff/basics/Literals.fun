@@ -43,7 +43,7 @@ false as 1
 //│ ╟── expression of type `1` does not match type `bool`
 //│ ║  l.37: 	1 as true
 //│ ║        	^
-//│ ╟── Note: constraint arises from variable reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.37: 	1 as true
 //│ ╙──      	     ^^^^
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
@@ -52,7 +52,7 @@ false as 1
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^
-//│ ╟── Note: constraint arises from variable reference:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.38: 	true as Int
 //│ ╙──      	        ^^^
 //│ ╔══[ERROR] Type mismatch in 'as' binding:

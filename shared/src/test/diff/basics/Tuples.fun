@@ -28,7 +28,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── expression of type `{_1: 1, _2: bool, _3: "hey"}` does not have field '_4'
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into receiver of expected type `{_4: ?a}`
+//│ ╟── but it flows into receiver with expected type `{_4: ?a}`
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error
@@ -43,7 +43,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╟── expression of type `(1, bool, "hey",)` is not a function
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── but it flows into applied expression of expected type `0.2 -> ?a`
+//│ ╟── but it flows into applied expression with expected type `0.2 -> ?a`
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ res: error

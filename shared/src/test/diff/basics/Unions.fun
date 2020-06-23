@@ -31,7 +31,7 @@ f (0 as Int)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	           ^
 //│ ╟── from pattern variable:
@@ -52,13 +52,13 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument of expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	           ^
 //│ ╟── from pattern variable:
@@ -70,13 +70,13 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument of expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	           ^
 //│ ╟── from pattern variable:
@@ -97,13 +97,13 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	        ^
-//│ ╟── but it flows into argument of expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	           ^
 //│ ╟── from pattern variable:
@@ -115,13 +115,13 @@ f (0 as Int)
 //│ ╟── expression of type `int` does not match type `0 | 1`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	        ^^^
-//│ ╟── but it flows into argument of expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `0 | 1`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	  ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	           ^
 //│ ╟── from pattern variable:
@@ -171,7 +171,7 @@ bar(2, 2)
 //│ ╟── expression of type `(0, 1,)` does not match type `(0, 0,) | (1, 1,)`
 //│ ║  l.166: 	bar(0, 1)
 //│ ║         	    ^^^^
-//│ ╟── but it flows into argument of expected type `(r: ?a & ((0, 0,) | (1, 1,)) & {_1: ?b & int, _2: ?c},)`
+//│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | (1, 1,)) & {_1: ?b & int, _2: ?c},)`
 //│ ║  l.166: 	bar(0, 1)
 //│ ║         	   ^^^^^^
 //│ ╟── Note: constraint arises from type union:
@@ -183,7 +183,7 @@ bar(2, 2)
 //│ ╟── expression of type `(2, 2,)` does not match type `(0, 0,) | (1, 1,)`
 //│ ║  l.167: 	bar(2, 2)
 //│ ║         	    ^^^^
-//│ ╟── but it flows into argument of expected type `(r: ?a & ((0, 0,) | (1, 1,)) & {_1: ?b & int, _2: ?c},)`
+//│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | (1, 1,)) & {_1: ?b & int, _2: ?c},)`
 //│ ║  l.167: 	bar(2, 2)
 //│ ║         	   ^^^^^^
 //│ ╟── Note: constraint arises from type union:
@@ -217,7 +217,7 @@ bar(_, _)
 //│ ╟── expression of type `(?a, ?b,)` matches several possible instantiations
 //│ ║  l.212: 	bar(_, _)
 //│ ║         	    ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
 //│ ║  l.212: 	bar(_, _)
 //│ ║         	   ^^^^^^
 //│ ╟── A possible instantiation is:
@@ -236,7 +236,7 @@ bar(_, _)
 //│ ╟── expression of type `(?a, ?b,)` matches several possible instantiations
 //│ ║  l.213: 	(x, y) => bar(x, y)
 //│ ║         	              ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
 //│ ║  l.213: 	(x, y) => bar(x, y)
 //│ ║         	             ^^^^^^
 //│ ╟── A possible instantiation is:
@@ -257,33 +257,35 @@ bar(_, _)
 x => bar(bar(0, x), 0)
 x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
+x => bar(bar(x, x), 0)
 //│ res: 0 -> 0
 //│ res: 0 & (0 | 1) -> 0
 //│ res: 0 -> 0
+//│ res: 0 & (0 | 1) -> 0
 
 :e
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.265: 	x => bar(bar(x, 1), 0)
+//│ ║  l.267: 	x => bar(bar(x, 1), 0)
 //│ ║         	     ^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `(?a | 1, 0,)` does not match type `(0, 0,) | (1, 1,)`
-//│ ║  l.265: 	x => bar(bar(x, 1), 0)
+//│ ║  l.267: 	x => bar(bar(x, 1), 0)
 //│ ║         	         ^^^^^^^^^^^^
-//│ ╟── but it flows into argument of expected type `(r: ?b & ((0, 0,) | (1, 1,)) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.265: 	x => bar(bar(x, 1), 0)
+//│ ╟── but it flows into argument with expected type `(r: ?b & ((0, 0,) | (1, 1,)) & {_1: ?c & int, _2: ?d},)`
+//│ ║  l.267: 	x => bar(bar(x, 1), 0)
 //│ ║         	        ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.162: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Ambiguous constraint in application:
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	              ^^^^^^^^^
 //│ ╟── expression of type `(?a, ?b,)` matches several possible instantiations
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	                  ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	                 ^^^^^^
 //│ ╟── A possible instantiation is:
 //│ ╟──     ?a <: 0
@@ -296,32 +298,55 @@ x => bar(bar(x, 1), 0)
 //│ ║  l.162: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Ambiguous constraint in application:
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(?a | ?b | error, ?a,)` matches several possible instantiations
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ╟── expression of type `(?a | ?b | error, ?b,)` matches several possible instantiations
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	              ^^^^^^^^^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
-//│ ║  l.266: 	(x, y) => bar(bar(x, y), x)
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── A possible instantiation is:
-//│ ╟──     ?a <: 0
+//│ ╟──     ?b <: 0
 //│ ╟──     ?f <: 0
 //│ ╟──     ?g <: 0
 //│ ╟──     ?h <: 0
-//│ ╟──     ?b | error <: 0
+//│ ╟──     ?a | error <: 0
 //│ ╟── Another possible instantiation is:
-//│ ╟──     ?a <: 1
+//│ ╟──     ?b <: 1
 //│ ╟──     ?f <: 1
 //│ ╟──     ?g <: 1
 //│ ╟──     ?h <: 1
-//│ ╟──     ?b | error <: 1
+//│ ╟──     ?a | error <: 1
 //│ ╟── Use an explicit type annotation to fix the problem.
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.162: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: int & 1 -> 0 | 1 | error
 //│ res: ('a & int, 'a & int,) -> 'a | error
+
+:e // TODO delay tricky constraints for later (instead of eager) resolution:
+(x, y) => bar(bar(x, y), 0)
+//│ ╔══[ERROR] Ambiguous constraint in application:
+//│ ║  l.329: 	(x, y) => bar(bar(x, y), 0)
+//│ ║         	              ^^^^^^^^^
+//│ ╟── expression of type `(?a, ?b,)` matches several possible instantiations
+//│ ║  l.329: 	(x, y) => bar(bar(x, y), 0)
+//│ ║         	                  ^^^^
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, 1,)) & {_1: ?d & int, _2: ?e},)`
+//│ ║  l.329: 	(x, y) => bar(bar(x, y), 0)
+//│ ║         	                 ^^^^^^
+//│ ╟── A possible instantiation is:
+//│ ╟──     ?a <: 0
+//│ ╟──     ?b <: 0
+//│ ╟── Another possible instantiation is:
+//│ ╟──     ?a <: 1
+//│ ╟──     ?b <: 1
+//│ ╟── Use an explicit type annotation to fix the problem.
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.162: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
+//│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: ('a & 0, 0,) -> 'a | 0 | error
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
@@ -330,19 +355,19 @@ let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 :e
 baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.331: 	baz(0)
+//│ ║  l.356: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.331: 	baz(0)
+//│ ║  l.356: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument of expected type `(r: ?a & ((0, 0,) | ?b) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.331: 	baz(0)
+//│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | ?b) & {_1: ?c & int, _2: ?d},)`
+//│ ║  l.356: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.327: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.352: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                     ^^^
 //│ ╟── from parameter type:
-//│ ║  l.327: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.352: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^
 //│ res: error
 
@@ -370,31 +395,31 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.370: 	baz(0)
+//│ ║  l.395: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.370: 	baz(0)
+//│ ║  l.395: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument of expected type `(r: ?a & ((0, 0,) | (1, ?b,)) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.370: 	baz(0)
+//│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | (1, ?b,)) & {_1: ?c & int, _2: ?d},)`
+//│ ║  l.395: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                          ^^^
 //│ ╟── from parameter type:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.371: 	baz(0, 1)
+//│ ║  l.396: 	baz(0, 1)
 //│ ║         	^^^^^^^^^
 //│ ╟── expression of type `(0, 1,)` does not match type `(0, 0,) | (1, ?a,)`
-//│ ║  l.371: 	baz(0, 1)
+//│ ║  l.396: 	baz(0, 1)
 //│ ║         	    ^^^^
-//│ ╟── but it flows into argument of expected type `(r: ?b & ((0, 0,) | (1, ?a,)) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.371: 	baz(0, 1)
+//│ ╟── but it flows into argument with expected type `(r: ?b & ((0, 0,) | (1, ?a,)) & {_1: ?c & int, _2: ?d},)`
+//│ ║  l.396: 	baz(0, 1)
 //│ ║         	   ^^^^^^
 //│ ╟── Note: constraint arises from type union:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error
 //│ res: 1 | 0 | error
@@ -415,13 +440,13 @@ x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
 //│ ╔══[ERROR] Ambiguous constraint in application:
-//│ ║  l.414: 	x => baz(x, 0)
+//│ ║  l.439: 	x => baz(x, 0)
 //│ ║         	     ^^^^^^^^^
 //│ ╟── expression of type `(?a, 0,)` matches several possible instantiations
-//│ ║  l.414: 	x => baz(x, 0)
+//│ ║  l.439: 	x => baz(x, 0)
 //│ ║         	         ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?b & ((0, 0,) | (1, ?c,)) & {_1: ?d & int, _2: ?e},)`
-//│ ║  l.414: 	x => baz(x, 0)
+//│ ╟── where it is used in argument with expected type `(r: ?b & ((0, 0,) | (1, ?c,)) & {_1: ?d & int, _2: ?e},)`
+//│ ║  l.439: 	x => baz(x, 0)
 //│ ║         	        ^^^^^^
 //│ ╟── A possible instantiation is:
 //│ ╟──     ?a <: 0
@@ -430,16 +455,16 @@ x => baz(x, x)
 //│ ╟──     ?c :> 0
 //│ ╟── Use an explicit type annotation to fix the problem.
 //│ ╟── Note: constraint arises from type union:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Ambiguous constraint in application:
-//│ ║  l.415: 	x => baz(x, x)
+//│ ║  l.440: 	x => baz(x, x)
 //│ ║         	     ^^^^^^^^^
 //│ ╟── expression of type `(?a, ?a,)` matches several possible instantiations
-//│ ║  l.415: 	x => baz(x, x)
+//│ ║  l.440: 	x => baz(x, x)
 //│ ║         	         ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?b & ((0, 0,) | (1, ?c,)) & {_1: ?d & int, _2: ?e},)`
-//│ ║  l.415: 	x => baz(x, x)
+//│ ╟── where it is used in argument with expected type `(r: ?b & ((0, 0,) | (1, ?c,)) & {_1: ?d & int, _2: ?e},)`
+//│ ║  l.440: 	x => baz(x, x)
 //│ ║         	        ^^^^^^
 //│ ╟── A possible instantiation is:
 //│ ╟──     ?a <: 0
@@ -448,16 +473,16 @@ x => baz(x, x)
 //│ ╟──     ?c :> ?a
 //│ ╟── Use an explicit type annotation to fix the problem.
 //│ ╟── Note: constraint arises from type union:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Ambiguous constraint in application:
-//│ ║  l.416: 	(x, y) => baz(x, y)
+//│ ║  l.441: 	(x, y) => baz(x, y)
 //│ ║         	          ^^^^^^^^^
 //│ ╟── expression of type `(?a, ?b,)` matches several possible instantiations
-//│ ║  l.416: 	(x, y) => baz(x, y)
+//│ ║  l.441: 	(x, y) => baz(x, y)
 //│ ║         	              ^^^^
-//│ ╟── where it is used in argument of expected type `(r: ?c & ((0, 0,) | (1, ?d,)) & {_1: ?e & int, _2: ?f},)`
-//│ ║  l.416: 	(x, y) => baz(x, y)
+//│ ╟── where it is used in argument with expected type `(r: ?c & ((0, 0,) | (1, ?d,)) & {_1: ?e & int, _2: ?f},)`
+//│ ║  l.441: 	(x, y) => baz(x, y)
 //│ ║         	             ^^^^^^
 //│ ╟── A possible instantiation is:
 //│ ╟──     ?a <: 0
@@ -467,7 +492,7 @@ x => baz(x, x)
 //│ ╟──     ?d :> ?b
 //│ ╟── Use an explicit type annotation to fix the problem.
 //│ ╟── Note: constraint arises from type union:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.391: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ res: 'a & int -> 'a | error

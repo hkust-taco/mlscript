@@ -69,7 +69,7 @@ x => succ (not x)
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
-//│ ╟── but it flows into argument of expected type `int`
+//│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
 //│ res: bool -> int | error
@@ -82,7 +82,7 @@ x => succ (not x)
 //│ ╟── expression of type `123` does not match type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
-//│ ╟── but it flows into tuple expression of expected type `{f: ?a & bool}`
+//│ ╟── but it flows into record with expected type `{f: ?a & bool}`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:

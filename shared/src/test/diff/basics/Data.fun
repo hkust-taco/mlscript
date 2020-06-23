@@ -57,7 +57,7 @@ bar {age: 1} // TODO B/E
 //│ ╟── Note: constraint arises from data symbol:
 //│ ║  l.5: 	data Person(name: string, age: int)
 //│ ║       	     ^^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
 //│ res: error
@@ -78,7 +78,7 @@ bar fake-p
 //│ ╟── Note: constraint arises from data symbol:
 //│ ║  l.5: 	data Person(name: string, age: int)
 //│ ║       	     ^^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
 //│ res: 42 | error
@@ -97,13 +97,13 @@ bar (q: w)
 //│ ╟── expression of type `(name: ?a & string, age: ?b & int,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
 //│ ║  l.86: 	data Wine(name: string, age: int)
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
+//│ ╟── but it flows into reference with expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
 //│ ║  l.92: 	bar w
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from data symbol:
 //│ ║  l.5: 	data Person(name: string, age: int)
 //│ ║       	     ^^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
@@ -112,13 +112,13 @@ bar (q: w)
 //│ ╟── expression of type `(name: ?a & string, age: ?b & int,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
 //│ ║  l.86: 	data Wine(name: string, age: int)
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument of expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
+//│ ╟── but it flows into argument with expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
 //│ ║  l.93: 	bar (q: w)
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from data symbol:
 //│ ║  l.5: 	data Person(name: string, age: int)
 //│ ║       	     ^^^^^^
-//│ ╟── from variable reference:
+//│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
 //│ res: 3 | error

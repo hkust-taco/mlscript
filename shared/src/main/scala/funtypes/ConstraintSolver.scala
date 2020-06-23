@@ -342,7 +342,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         tighestRelevantFailure.map { case (l, r, isSameType) =>
           // Note: used to have `val isSameType = l.unwrapProxies === lhs.unwrapProxies`
           //  which was only an approximation, and considered things like `?a | int` not the same as `int`.
-          val expTyMsg = if (isSameType) msg" of expected type `${r.expNeg}`" else msg" of type `${l.expPos}`"
+          val expTyMsg =
+            if (isSameType) msg" with expected type `${r.expNeg}`"
+            // ^ This used to say "of expected type", but in fact we're describing a term with the wrong type;
+            //   the expected type is not its type so that was not a good formulation.
+            else msg" of type `${l.expPos}`"
           if (error.isLeft) {
             val lunw = l.unwrapProxies
             lazy val fail = (l, r) match {

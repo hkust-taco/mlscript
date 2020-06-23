@@ -13,7 +13,7 @@ let w = jesus(water: "Evian")
 //│ ╟── expression of type `"Evian"` does not match type `neg Wine`
 //│ ║  l.9: 	let w = jesus(water: "Evian")
 //│ ║       	                     ^^^^^^^
-//│ ╟── but it flows into argument of expected type `(water: ?a & neg Wine,)`
+//│ ╟── but it flows into argument with expected type `(water: ?a & neg Wine,)`
 //│ ║  l.9: 	let w = jesus(water: "Evian")
 //│ ║       	             ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -30,7 +30,7 @@ jesus(water: w)
 //│ ╟── expression of type `{}` does not match type `neg Wine`
 //│ ║  l.2: 	data Wine
 //│ ║       	     ^^^^
-//│ ╟── but it flows into variable reference of expected type `(water: ?a & neg Wine,)`
+//│ ╟── but it flows into reference with expected type `(water: ?a & neg Wine,)`
 //│ ║  l.25: 	jesus w
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from application:
@@ -42,7 +42,7 @@ jesus(water: w)
 //│ ╟── expression of type `Wine` does not match type `neg Wine`
 //│ ║  l.2: 	data Wine
 //│ ║       	     ^^^^
-//│ ╟── but it flows into argument of expected type `(water: ?a & neg Wine,)`
+//│ ╟── but it flows into argument with expected type `(water: ?a & neg Wine,)`
 //│ ║  l.26: 	jesus(water: w)
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:

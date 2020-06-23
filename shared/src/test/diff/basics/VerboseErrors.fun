@@ -19,7 +19,7 @@ h / mkArg false
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into application of expected type `{prop: ?a & int}`
+//│ ╟── but it flows into application with expected type `{prop: ?a & int}`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -80,7 +80,7 @@ test arg2
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.63: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
-//│ ╟── but it flows into variable reference of expected type `{fld: ?a & {prop: ?b & int}}`
+//│ ╟── but it flows into reference with expected type `{fld: ?a & {prop: ?b & int}}`
 //│ ║  l.76: 	test arg2
 //│ ║        	     ^^^^
 //│ ╟── Note: constraint arises from argument:

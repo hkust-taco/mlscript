@@ -42,8 +42,18 @@ not / foo(1)
 //│ ╟── expression of type `int` does not match type `bool`
 //│ ║  l.25: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	                  ^^^
-//│ ╟── but it flows into application of expected type `bool`
+//│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.38: 	not / foo(1)
 //│ ╙──      	      ^^^^^^
 //│ res: bool | error
+
+:e
+let oops = (&)
+//│ ╔══[ERROR] Illegal use of operator: &
+//│ ║  l.51: 	let oops = (&)
+//│ ╙──      	           ^^^
+//│ ╔══[ERROR] identifier not found: &
+//│ ║  l.51: 	let oops = (&)
+//│ ╙──      	           ^^^
+//│ oops: error
 

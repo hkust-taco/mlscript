@@ -119,6 +119,7 @@ class DiffTests extends FunSuite {
                     val msgStr = msg.showIn(sctx)
                     if (msgNum =:= 0) output(headStr + msgStr)
                     else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
+                    if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
                     loco.foreach { loc =>
                       val (startLineNum, startLineStr, startLineCol) =
                         loc.origin.fph.getLineColAt(loc.spanStart)
@@ -146,6 +147,7 @@ class DiffTests extends FunSuite {
                       }
                     }
                   }
+                  if (diag.allMsgs.isEmpty) output("╙──")
                   if (!allowTypeErrors && !mode.fixme && (
                       !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
                    || !mode.expectWarnings && diag.isInstanceOf[Warning]
