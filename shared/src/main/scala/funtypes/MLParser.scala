@@ -43,10 +43,26 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def expr[_: P]: P[Term] = P( term ~ End )
   
+  def name[_: P]: P[Primitive] = ident.map(Primitive)
+  def rcd[_: P]: P[Record] =
+    P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record)
+  
+  def ty[_: P]: P[Type] = P( name | rcd )
+  
   def defDecl[_: P]: P[Def] =
     P( kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term map Def.tupled )
+  def tyKind[_: P]: P[TypeDefKind] = (kw("class") | kw("trait") | kw("type")).! map {
+    case "class" => Cls
+    case "trait" => Trt
+    case "type"  => Als
+  }
+  def tyDecl[_: P]: P[TypeDef] =
+    P( (tyKind ~/ ident).flatMap {
+      case (k @ (Cls | Trt), id) => ":" ~ ty map (bod => TypeDef(k, id, Nil, bod))
+      case (k @ Als, id) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod))
+    } )
   def toplvl[_: P]: P[TopLevel] =
-    P( defDecl | term )
+    P( defDecl | tyDecl | term )
   def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ ";;".?).rep.map(_.toList) ~ End ).map(Pgrm)
   
 }
