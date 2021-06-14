@@ -3,4 +3,7 @@
         "*.fun": "typescript"
     },
     "typescript.validate.enable": false,
+    "files.watcherExclude": {
+        "**/target": true
+    },
 }

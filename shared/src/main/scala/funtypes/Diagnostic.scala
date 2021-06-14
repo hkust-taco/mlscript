@@ -11,13 +11,13 @@ sealed abstract class Diagnostic(theMsg: String) extends Exception(theMsg) {
 final case class TypeError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
 object TypeError {
   def apply(msgs: Ls[Message -> Opt[Loc]]): TypeError =
-    TypeError(msgs.head._1.show.plainText, msgs)
+    TypeError(msgs.head._1.show.toString, msgs)
 }
 
 final case class Warning(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
 object Warning {
   def apply(msgs: Ls[Message -> Opt[Loc]]): Warning =
-    Warning(msgs.head._1.show.plainText, msgs)
+    Warning(msgs.head._1.show.toString, msgs)
 }
 
 

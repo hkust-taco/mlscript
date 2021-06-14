@@ -26,7 +26,8 @@ object Main {
       import funtypes.MLParser.pgrm
       import funtypes.TypeError
       parse(str, pgrm(_), verboseFailures = false) match {
-        case Failure(err, index, extra) =>
+        case f: Failure =>
+          val Failure(err, index, extra) = f
           val fph = new funtypes.FastParseHelpers(str)
           val (lineNum, lineStr, _) = fph.getLineColAt(index)
           "Parse error: " + extra.trace().msg +

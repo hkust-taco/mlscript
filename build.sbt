@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-ThisBuild / scalaVersion     := "2.13.2"
+ThisBuild / scalaVersion     := "2.13.6"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
@@ -31,7 +31,7 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
       StringPlusAny, Any,
       JavaSerializable, Serializable, Product,
       LeakingSealed, Overloading,
-      Option2Iterable, TraversableOps,
+      Option2Iterable, TraversableOps, ListAppend
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test,
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",

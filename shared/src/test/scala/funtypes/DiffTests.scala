@@ -81,7 +81,8 @@ class DiffTests extends FunSuite {
         val globalStartLineNum = allLines.size - lines.size + 1
         val parser = new Parser(Origin(fileName, globalStartLineNum, fph))
         val ans = try parse(fph.blockStr, parser.pgrm(_), verboseFailures = true) match {
-          case f @ Failure(lbl, index, extra) =>
+          case f: Failure =>
+            val Failure(lbl, index, extra) = f
             val (lineNum, lineStr, col) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
             if (!mode.expectParseErrors && !mode.fixme)

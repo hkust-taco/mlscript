@@ -124,7 +124,7 @@ package object utils {
   }
   
   implicit class SetObjectHelpers(self: Set.type) {
-    def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result
+    def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }
   
   def die: Nothing = lastWords("Program reached and unexpected state.")
