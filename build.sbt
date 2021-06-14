@@ -33,20 +33,20 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
       LeakingSealed, Overloading,
       Option2Iterable, TraversableOps, ListAppend
     ),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % Test,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.1",
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.2.4",
-    libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.7",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % Test,
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.3",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.2",
+    libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.14",
     // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?
-    libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.1.4",
+    libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
     // 
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter)
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.8",
-    libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "0.9.6",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+    libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "1.0.0",
   )
 
 lazy val funtypesJVM = funtypes.jvm

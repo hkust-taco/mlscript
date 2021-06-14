@@ -1,6 +1,5 @@
 package funtypes
 
-import org.scalatest._
 import fastparse._
 import MLParser.expr
 import fastparse.Parsed.Failure
@@ -8,7 +7,7 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
-class MLTypingTestHelpers extends FunSuite {
+class MLTypingTestHelpers extends org.scalatest.funsuite.AnyFunSuite {
   
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     val dbg = expected.isEmpty

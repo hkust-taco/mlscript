@@ -1,6 +1,5 @@
 package funtypes
 
-import org.scalatest._
 import fastparse._
 import MLParser.pgrm
 import fastparse.Parsed.Failure
@@ -10,7 +9,7 @@ import ammonite.ops._
 import scala.collection.mutable
 import funtypes.utils._, shorthands._
 
-class DiffTests extends FunSuite {
+class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   private val dir = pwd/"shared"/"src"/"test"/"diff"
   
