@@ -36,9 +36,9 @@ object Main {
           // println(s"Parsed: $p")
           val typer = new funtypes.Typer(dbg = false, verbose = false, explainErrors = false)
           val tys = typer.inferTypesJS(p)
-          (p.defs.zipWithIndex lazyZip tys).map {
-            case ((d, i), Right(ty)) =>
-              println(s"Typed `${d._2}` as: $ty")
+          (p.decls.zipWithIndex lazyZip tys).map {
+            case ((d: funtypes.Def, i), Right(ty)) =>
+              println(s"Typed `${d.nme}` as: $ty")
               println(s" where: ${ty.instantiate(0).showBounds}")
               val com = typer.compactType(ty.instantiate(0))
               println(s"Compact type before simplification: ${com}")
@@ -47,13 +47,14 @@ object Main {
               val exp = typer.expandCompactType(sim)
               s"""<b>
                   <font color="#93a1a1">val </font>
-                  <font color="LightGreen">${d._2}</font>: 
+                  <font color="LightGreen">${d.nme}</font>: 
                   <font color="LightBlue">${exp.show}</font>
                   </b>"""
-            case ((d, i), Left(TypeError(msg, loc))) => // TODO use loc to display message
+            case ((d: funtypes.Def, i), Left(TypeError(msg, loc))) => // TODO use loc to display message
               s"""<b><font color="Red">
-                  Type error in <font color="LightGreen">${d._2}</font>: $msg
+                  Type error in <font color="LightGreen">${d.nme}</font>: $msg
                   </font></b>"""
+            case ((d, i), _) => // TODO other decls
           }.mkString("<br/>")
       }
     }.fold(err => s"""

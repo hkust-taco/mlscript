@@ -91,6 +91,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
     case Var(name) => "reference" // "variable reference"
+    case Asc(trm, ty) => "type ascription"
     case Lam(name, rhs) => "lambda expression"
     case App(OpApp(Var("|"), lhs), rhs) => "type union"
     case App(OpApp(Var("&"), lhs), rhs) => "type intersection"
@@ -105,6 +106,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(xs) => "tuple expression"
     case Bind(l, r) => "'as' binding"
     case Test(l, r) => "'is' test"
+    case With(t, n, v) =>  "`with` extension"
+    case CaseOf(scrut, cases) =>  "case of" 
   }
   
   override def toString: String = this match {
@@ -116,6 +119,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case Var(name) => name
+    case Asc(trm, ty) => s"$trm : $ty"
     case Lam(name, rhs) => s"($name => $rhs)"
     case App(lhs, rhs) => s"($lhs $rhs)"
     case Rcd(fields) =>
@@ -127,6 +131,8 @@ trait TermImpl extends StatementImpl { self: Term =>
       xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
     case Bind(l, r) => s"($l as $r)"
     case Test(l, r) => s"($l is $r)"
+    case With(t, n, v) =>  s"$t with {$n = $v}"
+    case CaseOf(s, c) => s"case $s of $c"
   }
   
 }
@@ -250,6 +256,7 @@ trait StatementImpl extends Located { self: Statement =>
   lazy val freeVars: Set[Str] = this match {
     case _: Lit => Set.empty
     case Var(name) => Set.empty[String] + name
+    case Asc(trm, ty) => trm.freeVars
     case Lam(pat, rhs) => rhs.freeVars -- pat.freeVars
     case App(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
     case Rcd(fields) => fields.iterator.flatMap(_._2.freeVars).toSet
@@ -266,11 +273,14 @@ trait StatementImpl extends Located { self: Statement =>
     case DataDefn(head) => Set.empty
     case Bind(l, r) => l.freeVars ++ r.freeVars
     case Test(l, r) => l.freeVars ++ r.freeVars
+    case With(t, n, v) => t.freeVars ++ v.freeVars
+    case CaseOf(s, c) => s.freeVars ++ c.iterator.flatMap(_.body.freeVars)
   }
   
   def children: List[Statement] = this match {
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
+    case Asc(trm, ty) => trm :: Nil
     case Lam(lhs, rhs) => lhs :: rhs :: Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case Tup(fields) => fields.map(_._2)
@@ -284,6 +294,8 @@ trait StatementImpl extends Located { self: Statement =>
     case _: Lit => Nil
     case Bind(l, r) => l :: r :: Nil
     case Test(l, r) => l :: r :: Nil
+    case With(t, n, v) => t :: v :: Nil
+    case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
   }
   
   def size: Int = children.iterator.map(_.size).sum + 1
@@ -302,5 +314,19 @@ trait BlkImpl { self: Blk =>
     case b: Blk => b.flatten.stmts
     case t => t :: Nil
   })
+  
+}
+
+trait CaseBranchesImpl { self: CaseBranches =>
+  
+  def iterator: Ite[Case] = this match {
+    case c: Case => Ite.single(c) ++ c.rest.iterator
+    case _ => Ite.empty
+  }
+  
+  lazy val toList: Ls[Case] = this match {
+    case c: Case => c :: c.rest.toList
+    case _ => Nil
+  }
   
 }

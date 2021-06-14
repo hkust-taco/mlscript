@@ -5,7 +5,12 @@ import funtypes.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(defs: Ls[(Bool, Str, Term)])
+final case class Pgrm(decls: Ls[Decl])
+
+sealed abstract class Decl
+final case class Def(rec: Bool, nme: Str, body: Term) extends Decl
+final case class ObjType(cls: Bool, nme: Str, tparams: List[Str], body: Term) extends Decl
+final case class AlsType(nme: Str, tparams: List[Str], body: Type) extends Decl
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm
@@ -18,8 +23,16 @@ final case class Sel(receiver: Term, fieldName: Str)                 extends Ter
 final case class Let(isRec: Bool, name: Str, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
+final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
+final case class With(trm: Term, fieldNme: Str, fieldVal: Term)      extends Term
+final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
+
+sealed abstract class CaseBranches extends CaseBranchesImpl
+final case class Case(clsNme: Str, body: Term, rest: CaseBranches) extends CaseBranches
+final case object NoCases extends CaseBranches
+final case object Wildcard extends CaseBranches
 
 final case class IntLit(value: BigInt)      extends Lit
 final case class DecLit(value: BigDecimal)  extends Lit

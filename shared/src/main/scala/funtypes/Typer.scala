@@ -82,13 +82,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = Ctx.init): List[Either[TypeError, PolymorphicType]] =
-    pgrm.defs match {
-      case (isrec, nme, rhs) :: defs =>
+    pgrm.decls match {
+      case Def(isrec, nme, rhs) :: decls =>
         val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, throw _)) catch {
           case err: TypeError => Left(err) }
         val errProv = TypeProvenance(rhs.toLoc, "let-bound value")
         ctx += nme -> ty_sch.getOrElse(freshVar(errProv)(0))
-        ty_sch :: inferTypes(Pgrm(defs), ctx)
+        ty_sch :: inferTypes(Pgrm(decls), ctx)
+      case _ :: decls => ??? // TODO
       case Nil => Nil
     }
   
@@ -100,15 +101,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ctx: Ctx = Ctx.init,
     stopAtFirstError: Boolean = true,
   ): List[Either[TypeError, PolymorphicType]] = {
-    var defs = pgrm.defs
+    var decls = pgrm.decls
     var curCtx = ctx
     var res = collection.mutable.ListBuffer.empty[Either[TypeError, PolymorphicType]]
-    while (defs.nonEmpty) {
-      val (isrec, nme, rhs) = defs.head
-      defs = defs.tail
+    while (decls.nonEmpty) {
+      val Def(isrec, nme, rhs) = decls.head // TODO other Decls
+      decls = decls.tail
       val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, throw _)) catch {
         case err: TypeError =>
-          if (stopAtFirstError) defs = Nil
+          if (stopAtFirstError) decls = Nil
           Left(err)
       }
       res += ty_sch
@@ -271,6 +272,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     term match {
       case v @ Var("_") => // TODO parse this differently... or handle consistently everywhere
         freshVar(tp(v.toLoc, "wildcard"))
+      case Asc(trm, ty) =>
+        ??? // TODO
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!
@@ -349,6 +352,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val r_ty = typePattern(r)(newCtx, raise) // TODO make these bindings flow
         con(l_ty, r_ty, TopType)
         BoolType
+      case With(t, n, v) => ??? // TODO
+      case CaseOf(s, cs) => ??? // TODO
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape:", pat.toLoc)(raise, ttp(pat))
     }

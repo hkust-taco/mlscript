@@ -7,7 +7,7 @@ import fastparse._, fastparse.ScalaWhitespace._
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 object MLParser {
   
-  val keywords = Set("let", "rec", "in", "fun", "if", "then", "else")
+  val keywords = Set("def", "class", "trait", "type", "let", "rec", "in", "fun", "if", "then", "else")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   def letter[_: P]     = P( lowercase | uppercase )
@@ -37,8 +37,10 @@ object MLParser {
   
   def expr[_: P]: P[Term] = P( term ~ End )
   
-  def toplvl[_: P]: P[(Boolean, String, Term)] =
-    P( kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term )
+  def defDecl[_: P]: P[Def] =
+    P( kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term map Def.tupled )
+  def toplvl[_: P]: P[Decl] =
+    P( defDecl )
   def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl).rep.map(_.toList) ~ End ).map(Pgrm)
   
 }
