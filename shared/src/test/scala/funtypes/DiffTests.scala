@@ -1,7 +1,6 @@
 package funtypes
 
 import fastparse._
-import MLParser.pgrm
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
@@ -78,8 +77,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
         block.foreach(out.println)
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
-        val parser = new Parser(Origin(fileName, globalStartLineNum, fph))
-        val ans = try parse(fph.blockStr, parser.pgrm(_), verboseFailures = true) match {
+        val ans = try parse(fph.blockStr,
+          p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
+            else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
+          verboseFailures = true)
+        match {
           case f: Failure =>
             val Failure(lbl, index, extra) = f
             val (lineNum, lineStr, col) = fph.getLineColAt(index)
@@ -97,10 +99,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
-            val tys = typer.typeBlk(p, ctx, allowPure = true)
+            val tys = typer.typePgrm(p, ctx, allowPure = true)
             var totalTypeErrors = 0
             var totalWarnings = 0
-            val res = (p.stmts.zipWithIndex lazyZip tys).flatMap {
+            val res = (p.decls.zipWithIndex lazyZip tys).flatMap {
               case ((s, _), diags -> bindsOrTy) =>
                 diags.foreach { diag =>
                   val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
@@ -160,7 +162,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     output(s"Retyping with debug info...")
                     typer.resetState()
                     typer.dbg = true
-                    try typer.typeStatement(s, allowPure = true)(ctx, {
+                    try typer.typeTopLevel(s, allowPure = true)(ctx, {
                       case err: TypeError => throw err
                       case _: Warning => () // ignore warnings diagnostics for this debug run
                     })

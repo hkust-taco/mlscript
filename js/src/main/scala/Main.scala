@@ -23,12 +23,12 @@ object Main {
     target.innerHTML = Try {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
-      import funtypes.MLParser.pgrm
-      import funtypes.TypeError
-      parse(str, pgrm(_), verboseFailures = false) match {
+      import funtypes.{MLParser, TypeError, Origin}
+      val fph = new funtypes.FastParseHelpers(str)
+      val parser = new MLParser(Origin("<input>", 0, fph))
+      parse(str, parser.pgrm(_), verboseFailures = false) match {
         case f: Failure =>
           val Failure(err, index, extra) = f
-          val fph = new funtypes.FastParseHelpers(str)
           val (lineNum, lineStr, _) = fph.getLineColAt(index)
           "Parse error: " + extra.trace().msg +
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"

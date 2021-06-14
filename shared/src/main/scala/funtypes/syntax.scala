@@ -5,12 +5,20 @@ import funtypes.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(decls: Ls[Decl])
+final case class Pgrm(decls: Ls[TopLevel]) {
+  override def toString = decls.map("" + _ + ";").mkString(" ")
+}
 
-sealed abstract class Decl
+sealed trait TopLevel
+
+sealed abstract class Decl extends TopLevel
 final case class Def(rec: Bool, nme: Str, body: Term) extends Decl
-final case class ObjType(cls: Bool, nme: Str, tparams: List[Str], body: Term) extends Decl
-final case class AlsType(nme: Str, tparams: List[Str], body: Type) extends Decl
+final case class TypeDef(kind: TypeDefKind, nme: Str, tparams: List[Str], body: Type) extends Decl
+
+sealed abstract class TypeDefKind
+case object Cls extends TypeDefKind
+case object Trt extends TypeDefKind
+case object Als extends TypeDefKind
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm
@@ -45,7 +53,7 @@ sealed abstract class SimpleTerm extends Term {
   }
 }
 
-sealed trait Statement extends StatementImpl
+sealed trait Statement extends StatementImpl with TopLevel
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term) extends Statement
 final case class DatatypeDefn(head: Term, body: Term) extends Statement

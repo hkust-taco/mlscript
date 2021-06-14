@@ -200,6 +200,6 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   // def repl_input[_: P]: P[Term] = P( (expr | P("").map(_ => UnitLit)) ~ ENDMARKER )
   
-  def pgrm[_: P]: P[Blk] = P( multilineBlock ~  emptyLines ~ End )
+  def pgrm[_: P]: P[Pgrm] = P( multilineBlock ~  emptyLines ~ End map (b => Pgrm(b.stmts)) )
   
 }

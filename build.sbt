@@ -41,7 +41,9 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
     // 
     watchSources += WatchSource(
-      sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter)
+      sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),
+    watchSources += WatchSource(
+      sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.ml", NothingFilter),
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,

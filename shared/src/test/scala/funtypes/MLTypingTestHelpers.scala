@@ -1,7 +1,6 @@
 package funtypes
 
 import fastparse._
-import MLParser.expr
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
@@ -12,8 +11,11 @@ class MLTypingTestHelpers extends org.scalatest.funsuite.AnyFunSuite {
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     val dbg = expected.isEmpty
     
+    val fph = new funtypes.FastParseHelpers(str)
+    val parser = new MLParser(Origin("<input>", 0, fph))
+    
     if (dbg) println(s">>> $str")
-    val Success(term, index) = parse(str, expr(_), verboseFailures = true)
+    val Success(term, index) = parse(str, parser.expr(_), verboseFailures = true)
     
     val typer = new Typer(dbg, verbose = false, explainErrors = false) with TypeSimplifier
     val tyv = typer.inferType(term)

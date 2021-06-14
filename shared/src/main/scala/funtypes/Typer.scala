@@ -80,22 +80,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
-  /** The main type inference function */
-  def inferTypes(pgrm: Pgrm, ctx: Ctx = Ctx.init): List[Either[TypeError, PolymorphicType]] =
-    pgrm.decls match {
-      case Def(isrec, nme, rhs) :: decls =>
-        val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(ctx, throw _)) catch {
-          case err: TypeError => Left(err) }
-        val errProv = TypeProvenance(rhs.toLoc, "let-bound value")
-        ctx += nme -> ty_sch.getOrElse(freshVar(errProv)(0))
-        ty_sch :: inferTypes(Pgrm(decls), ctx)
-      case _ :: decls => ??? // TODO
-      case Nil => Nil
-    }
-  
-  // Saldy, the version above does not work in JavaScript as it raises a
-  //    "RangeError: Maximum call stack size exceeded"
-  // So we have to go with this uglier one:
+  // TODO mv to js project
   def inferTypesJS(
     pgrm: Pgrm,
     ctx: Ctx = Ctx.init,
@@ -119,23 +104,29 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     res.toList
   }
   
-  def typeBlk(blk: Blk, ctx: Ctx = Ctx.init, allowPure: Bool = false)
+  def typePgrm(p: Pgrm, ctx: Ctx = Ctx.init, allowPure: Bool = false)
         : Ls[Ls[Diagnostic] -> (PolymorphicType \/ Ls[Binding])]
-        = blk.stmts match {
-    case s :: stmts =>
+        = p.decls match {
+    case t :: decls =>
       val diags = mutable.ListBuffer.empty[Diagnostic]
-      val newBindings = typeStatement(s, allowPure)(ctx, diags += _)
+      val newBindings = typeTopLevel(t, allowPure)(ctx, diags += _)
       ctx ++= newBindings.getOrElse(Nil)
       val newCtx = ctx
-      diags.toList -> newBindings :: typeBlk(Blk(stmts), newCtx, allowPure)
+      diags.toList -> newBindings :: typePgrm(Pgrm(decls), newCtx, allowPure)
     case Nil => Nil
   }
   
-  def typeStatement(s: Statement, allowPure: Bool = false)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = {
-    val (diags, desug) = s.desugared
-    diags.foreach(raise)
-    typeStatement(desug, allowPure)
+  def typeTopLevel(t: TopLevel, allowPure: Bool = false)
+        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = t match {
+    case s: Statement =>
+      val (diags, desug) = s.desugared
+      diags.foreach(raise)
+      typeStatement(desug, allowPure)
+    case Def(isrec, nme, rhs) =>
+      val ty_sch = typeLetRhs(isrec, nme, rhs)
+      ctx += nme -> ty_sch
+      R(nme -> ty_sch :: Nil)
+    case TypeDef(k, n, tps, b) => ???
   }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =
@@ -414,7 +405,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     //   val ty = typeTerm(trm)
     //   typeBra(Nil, rcd, (N, ty) :: fields)
     case s :: sts =>
-      val newBindings = typeStatement(s)
+      val newBindings = typeTopLevel(s)
       ctx ++= newBindings.getOrElse(Nil)
       typeTerms(sts, rcd, fields)
     case Nil =>
