@@ -34,7 +34,7 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
       Option2Iterable, TraversableOps, ListAppend
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % Test,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.3",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.7",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.2",
     libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.14",
     // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?

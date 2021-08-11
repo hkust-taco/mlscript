@@ -2,7 +2,7 @@ package funtypes
 
 import funtypes.utils._, shorthands._
 
-class FastParseHelpers private(val blockStr: Str, val lines: collection.IndexedSeq[Str]) {
+class FastParseHelpers(val blockStr: Str, val lines: collection.IndexedSeq[Str]) {
   def this(lines: IndexedSeq[Str]) = this(lines.mkString("\n"), lines)
   def this(blockStr: Str) = this(blockStr, blockStr.splitSane('\n'))
   

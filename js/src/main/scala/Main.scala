@@ -3,6 +3,7 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
+import funtypes.utils._
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -24,7 +25,8 @@ object Main {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
       import funtypes.{MLParser, TypeError, Origin}
-      val fph = new funtypes.FastParseHelpers(str)
+      val lines = str.splitSane('\n').toIndexedSeq
+      val fph = new funtypes.FastParseHelpers(str, MLParser.addTopLevelSeparators(lines))
       val parser = new MLParser(Origin("<input>", 0, fph))
       parse(str, parser.pgrm(_), verboseFailures = false) match {
         case f: Failure =>

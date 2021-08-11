@@ -75,9 +75,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           // || l.startsWith(oldOutputMarker)
         ))).toIndexedSeq
         block.foreach(out.println)
+        val processedBlock = if (file.ext =:= "fun") block else MLParser.addTopLevelSeparators(block)
+        val processedBlockStr = processedBlock.mkString("\n")
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
-        val ans = try parse(fph.blockStr,
+        val ans = try parse(processedBlockStr,
           p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
             else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
           verboseFailures = true)

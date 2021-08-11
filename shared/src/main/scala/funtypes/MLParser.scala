@@ -63,6 +63,20 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     } )
   def toplvl[_: P]: P[TopLevel] =
     P( defDecl | tyDecl | term )
-  def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ ";;".?).rep.map(_.toList) ~ End ).map(Pgrm)
+  def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
+  def topLevelSep[_: P]: P[Unit] = ";"
+  
+}
+object MLParser {
+  
+  def addTopLevelSeparators(lines: IndexedSeq[Str]): IndexedSeq[Str] = {
+    (lines.iterator ++ lines.lastOption).toList.sliding(2).map {
+      case l0 :: l1 :: Nil =>
+        if (l1.startsWith(" ") || l1.startsWith("\t")) l0 + "\n"
+        else l0 + ";"
+      case l :: Nil => l
+      case _ => die
+    }.toIndexedSeq
+  }
   
 }
