@@ -152,7 +152,7 @@ succ (
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)" at l.153:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)\n" at l.153:6: succ (succ
 
 :pe
 succ (succ
@@ -239,9 +239,9 @@ let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"" at l.240:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"\n" at l.240:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1" at l.245:1:   1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1\n" at l.245:1:   1
 

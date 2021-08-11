@@ -9,7 +9,7 @@ import funtypes.utils._, shorthands._
 
 // Auxiliary definitions for types
 
-abstract class TypeImpl { self: Type =>
+abstract class TypeImpl extends Located { self: Type =>
   
   lazy val typeVarsList: List[TypeVar] = this match {
     case uv: TypeVar => uv :: Nil
@@ -75,6 +75,22 @@ object OpApp {
     case App(op, lhs)
       if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
       => (op, lhs)
+  }
+}
+
+trait DeclImpl extends Located { self: Decl =>
+  val body: Located
+  def children: Ls[Located] = self match {
+    case Def(rec, nme, body) => body :: Nil
+    case TypeDef(kind, nme, tparams, body) => nme :: body :: Nil
+  }
+  def show: Str = showHead + (this match {
+    case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + body
+  def showHead: Str = this match {
+    case Def(true, n, b) => s"rec def $n"
+    case Def(false, n, b) => s"def $n"
+    case TypeDef(k, n, tps, b) =>
+      s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.mkString("[", ", ", "]")}"
   }
 }
 

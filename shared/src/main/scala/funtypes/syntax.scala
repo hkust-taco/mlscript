@@ -11,14 +11,14 @@ final case class Pgrm(decls: Ls[TopLevel]) {
 
 sealed trait TopLevel
 
-sealed abstract class Decl extends TopLevel
+sealed abstract class Decl extends TopLevel with DeclImpl
 final case class Def(rec: Bool, nme: Str, body: Term) extends Decl
-final case class TypeDef(kind: TypeDefKind, nme: Str, tparams: List[Str], body: Type) extends Decl
+final case class TypeDef(kind: TypeDefKind, nme: Primitive, tparams: List[Str], body: Type) extends Decl
 
-sealed abstract class TypeDefKind
-case object Cls extends TypeDefKind
-case object Trt extends TypeDefKind
-case object Als extends TypeDefKind
+sealed abstract class TypeDefKind(val str: Str)
+case object Cls extends TypeDefKind("class")
+case object Trt extends TypeDefKind("trait")
+case object Als extends TypeDefKind("type")
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm
@@ -84,7 +84,7 @@ case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
 
 final case class Primitive(name: Str)                      extends NullaryType
-final case class AppliedType(name: Str, targs: List[Type]) extends NullaryType
+final case class AppliedType(base: Primitive, targs: List[Type]) extends NullaryType
 final class TypeVar(val nameHint: Str, val hash: Int)      extends NullaryType {
   override def toString: Str = s"$nameHint:$hash"
 }

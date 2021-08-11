@@ -724,4 +724,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz" at l.725:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.725:3: ba)r

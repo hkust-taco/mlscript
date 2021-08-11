@@ -19,7 +19,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
-  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool) {
+  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
     def +=(b: Binding): Unit = env += b
     def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeScheme] = env.get(name) orElse parent.dlof(_.get(name))(N)
@@ -32,7 +32,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       parent = N,
       env = MutMap.from(builtinBindings),
       lvl = 0,
-      inPattern = false)
+      inPattern = false,
+      tyDefs = Map.empty)
   }
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
   
@@ -104,29 +105,49 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     res.toList
   }
   
-  def typePgrm(p: Pgrm, ctx: Ctx = Ctx.init, allowPure: Bool = false)
-        : Ls[Ls[Diagnostic] -> (PolymorphicType \/ Ls[Binding])]
-        = p.decls match {
+  def checkTypes(tyDecls: List[TypeDef], ctx: Ctx): (Ctx, Ls[Ls[Diagnostic] -> R[TypeDef]]) = {
+    var newDecls = ctx.tyDefs
+    val res = tyDecls.map { td =>
+      val n = td.nme
+      val diags = mutable.ListBuffer.empty[Diagnostic]
+      newDecls.get(n.name).foreach { other =>
+        err(msg"Type '$n' is already defined.", td.nme.toLoc)(diags += _, tp(td.toLoc, "data definition"))
+      }
+      newDecls += n.name -> td
+      diags.toList -> R(td)
+    }
+    (ctx.copy(tyDefs = newDecls), res)
+  }
+  
+  type Result = Ls[Diagnostic] -> (PolymorphicType \/ Ls[Binding] \/ TypeDef)
+  
+  def typePgrm(p: Pgrm, ctx: Ctx = Ctx.init): Ls[Result] = {
+    val tyDecls = p.decls.collect { case td: TypeDef => td }
+    val (newCtx, res) = checkTypes(tyDecls, ctx)
+    res ::: typePgrmRec(p, newCtx, true)
+  }
+  
+  private def typePgrmRec(p: Pgrm, ctx: Ctx, allowPure: Bool): Ls[Result] = p.decls match {
     case t :: decls =>
       val diags = mutable.ListBuffer.empty[Diagnostic]
       val newBindings = typeTopLevel(t, allowPure)(ctx, diags += _)
-      ctx ++= newBindings.getOrElse(Nil)
+      ctx ++= newBindings.fold(_.getOrElse(Nil), _ => Nil)
       val newCtx = ctx
-      diags.toList -> newBindings :: typePgrm(Pgrm(decls), newCtx, allowPure)
+      diags.toList -> newBindings :: typePgrmRec(Pgrm(decls), newCtx, allowPure)
     case Nil => Nil
   }
   
   def typeTopLevel(t: TopLevel, allowPure: Bool = false)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = t match {
+        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] \/ TypeDef = t match {
     case s: Statement =>
       val (diags, desug) = s.desugared
       diags.foreach(raise)
-      typeStatement(desug, allowPure)
+      L(typeStatement(desug, allowPure))
     case Def(isrec, nme, rhs) =>
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       ctx += nme -> ty_sch
-      R(nme -> ty_sch :: Nil)
-    case TypeDef(k, n, tps, b) => ???
+      L(R(nme -> ty_sch :: Nil))
+    case td: TypeDef => L(R(Nil))
   }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =
@@ -406,7 +427,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     //   typeBra(Nil, rcd, (N, ty) :: fields)
     case s :: sts =>
       val newBindings = typeTopLevel(s)
-      ctx ++= newBindings.getOrElse(Nil)
+      ctx ++= newBindings.fold(_.getOrElse(Nil), _ => Nil)
       typeTerms(sts, rcd, fields)
     case Nil =>
       if (rcd) {

@@ -75,8 +75,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           // || l.startsWith(oldOutputMarker)
         ))).toIndexedSeq
         block.foreach(out.println)
-        val processedBlock = if (file.ext =:= "fun") block else MLParser.addTopLevelSeparators(block)
-        val processedBlockStr = processedBlock.mkString("\n")
+        val processedBlock = if (file.ext =:= "fun") block.map(_ + "\n") else MLParser.addTopLevelSeparators(block)
+        val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
         val ans = try parse(processedBlockStr,
@@ -101,7 +101,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
-            val tys = typer.typePgrm(p, ctx, allowPure = true)
+            val tys = typer.typePgrm(p, ctx)
             var totalTypeErrors = 0
             var totalWarnings = 0
             val res = (p.decls.zipWithIndex lazyZip tys).flatMap {
@@ -190,19 +190,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                   }
                 }
                 bindsOrTy match {
-                  case R(binds) =>
+                  case L(R(binds)) =>
                     binds.map {
                       case (nme, pty) =>
                         assert(ctx.contains(nme))
                         ctx += "res" -> pty
                         s"$nme: ${getType(pty).show}"
                     }
-                  case L(pty) =>
+                  case L(L(pty)) =>
                     val exp = getType(pty)
                     if (exp =:= Primitive("unit")) Nil else {
                       ctx += "res" -> pty
                       s"res: ${exp.show}" :: Nil
                     }
+                  case R(td) =>
+                    ctx = ctx.copy(tyDefs = ctx.tyDefs + (td.nme.name -> td))
+                    td.showHead :: Nil
                 }
             }.map(outputMarker + _).mkString("\n")
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)

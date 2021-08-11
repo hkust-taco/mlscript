@@ -27,7 +27,7 @@ f => id f id f id
 
 :pe
 let oops = hu(h
-//│ /!\ Parse error: Expected end-of-input:1:14, found "(h" at l.29:14: let oops = hu(h
+//│ /!\ Parse error: Expected end-of-input:1:14, found "(h\n" at l.29:14: let oops = hu(h
 
 x => x; y => y
 //│ res: 'a -> 'a

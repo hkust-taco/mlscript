@@ -51,7 +51,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case "type"  => Als
   }
   def tyDecl[_: P]: P[TypeDef] =
-    P( (tyKind ~/ ident).flatMap {
+    P( (tyKind ~/ tyName).flatMap {
       case (k @ (Cls | Trt), id) => ":" ~ ty map (bod => TypeDef(k, id, Nil, bod))
       case (k @ Als, id) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod))
     } )
@@ -59,13 +59,13 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ty[_: P]: P[Type] = P( tyNoFun ~ ("->" ~ tyNoFun).rep ).map {
     case (t, ts) => ts.reverseIterator.foldLeft(t)(Function)
   }
+  def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
   def tyNoFun[_: P]: P[Type] = P( rcd | ctor | parTy )
-  def ctor[_: P]: P[Type] = P( ident ~ ("[" ~ ty.rep(0, ",") ~ "]").? ) map {
-    case (tname, None) => Primitive(tname)
-    case (tname, Some(targs)) => AppliedType(tname, targs.toList)
-  }
+  def ctor[_: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
+    case (tname, targs) => AppliedType(tname, targs.toList)
+  }) | tyName
   def rcd[_: P]: P[Record] =
-    P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record)
+    locate(P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
   
   def toplvl[_: P]: P[TopLevel] =

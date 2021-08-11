@@ -1,79 +1,80 @@
 
 // FIXME
-class Test: { x: Int }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: funtypes.Typer.typeTopLevel(Typer.scala:129)
-//│ 	at: funtypes.Typer.typePgrm(Typer.scala:112)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:104)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:229)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+class Test1: { x: Int }
+//│ class Test1
+
+:e
+type Test1 = { x: Int }
+//│ ╔══[ERROR] Type 'Test1' is already defined.
+//│ ║  l.7: 	type Test1 = { x: Int }
+//│ ╙──     	     ^^^^^
+//│ type Test1
 
 // FIXME
-type Test = { x: Int }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: funtypes.Typer.typeTopLevel(Typer.scala:129)
-//│ 	at: funtypes.Typer.typePgrm(Typer.scala:112)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:104)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:229)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+type Test2 = { x: Int }
+//│ type Test2
 
 :pe
 class Test = { x: Int }
-//│ /!\ Parse error: Expected ":":1:12, found "= { x: Int" at l.31:12: class Test = { x: Int }
+//│ /!\ Parse error: Expected ":":1:12, found "= { x: Int" at l.18:12: class Test = { x: Int }
 
 :pe
 type Test: { x: Int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: Int" at l.35:10: type Test: { x: Int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: Int" at l.22:10: type Test: { x: Int }
 
 // FIXME
-type Test = Int -> Int
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: funtypes.Typer.typeTopLevel(Typer.scala:129)
-//│ 	at: funtypes.Typer.typePgrm(Typer.scala:112)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:104)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:229)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+type Test3 = Int -> Int
+//│ type Test3
 
 // FIXME
-type Test = Int -> Int -> Int
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: funtypes.Typer.typeTopLevel(Typer.scala:129)
-//│ 	at: funtypes.Typer.typePgrm(Typer.scala:112)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:104)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:229)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+type Test4 = Int -> Int -> Int
+//│ type Test4
 
 // FIXME
-type Test = (Int -> Int) -> Int
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: funtypes.Typer.typeTopLevel(Typer.scala:129)
-//│ 	at: funtypes.Typer.typePgrm(Typer.scala:112)
-//│ 	at: funtypes.DiffTests.rec$1(DiffTests.scala:104)
-//│ 	at: funtypes.DiffTests.$anonfun$new$2(DiffTests.scala:229)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+type Test5 = (Int -> Int) -> Int
+//│ type Test5
+
+
+type T = Int
+//│ type T
+
+:e
+type T = Int
+type T = Int
+//│ ╔══[ERROR] Type 'T' is already defined.
+//│ ║  l.42: 	type T = Int
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Type 'T' is already defined.
+//│ ║  l.43: 	type T = Int
+//│ ╙──      	     ^
+//│ type T
+//│ type T
+
+// FIXME error is not shown
+:d
+type TypeA = TypeB
+foo 42
+//│ 0. Typing term (foo 42)
+//│  0. Typing term foo
+//│  0. : [error]
+//│  0. Typing term 42
+//│  0. : 42
+//│  CONSTRAIN [[error]] <! ([42] -> α0)
+//│    where 
+//│  C [[error]] <! ([42] -> α0)
+//│   C [error] <! ([42] -> α0)
+//│    C error <! ([42] -> α0)
+//│     C [42] <! error
+//│      C 42 <! error
+//│     C error <! α0
+//│ 0. : α0
+//│ type TypeA
+
+type TypeB = TypeB
+def foo = 1
+foo 42
+type TypeC = Int
+//│ type TypeB
+//│ type TypeC
+//│ foo: 1
 

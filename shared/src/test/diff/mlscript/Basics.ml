@@ -55,7 +55,7 @@ def z = add x y
 //│ ║  l.52: 	1
 //│ ║        	^
 //│ ║  l.53: 	 2
-//│ ║        	^^^
+//│ ║        	^^
 //│ ╟── expression of type `1` is not a function
 //│ ║  l.52: 	1
 //│ ╙──      	^
