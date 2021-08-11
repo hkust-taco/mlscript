@@ -57,6 +57,7 @@ jesus(water: w)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.26: 	let jesus = (water: neg Wine) => Wine
 //│ ╙──      	                    ^^^^^^^^
+//│ res: Wine | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.47: 	jesus(water: w)
 //│ ║        	^^^^^^^^^^^^^^^
@@ -69,7 +70,6 @@ jesus(water: w)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.26: 	let jesus = (water: neg Wine) => Wine
 //│ ╙──      	                    ^^^^^^^^
-//│ res: Wine | error
 //│ res: Wine | error
 
 
@@ -107,6 +107,7 @@ neg 0 as 1
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.99: 	neg 0 as 1
 //│ ╙──      	         ^
+//│ res: 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.100: 	1 as neg 0
 //│ ║         	^^^^^^^^^^
@@ -116,6 +117,5 @@ neg 0 as 1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.100: 	1 as neg 0
 //│ ╙──       	     ^^^^^
-//│ res: 1
 //│ res: neg 0
 

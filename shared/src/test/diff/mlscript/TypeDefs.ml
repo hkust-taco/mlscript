@@ -1,18 +1,18 @@
 
 // FIXME
 class Test1: { x: Int }
-//│ class Test1
+//│ Defined class Test1
 
 :e
 type Test1 = { x: Int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
 //│ ║  l.7: 	type Test1 = { x: Int }
 //│ ╙──     	     ^^^^^
-//│ type Test1
+//│ Defined type Test1
 
 // FIXME
 type Test2 = { x: Int }
-//│ type Test2
+//│ Defined type Test2
 
 :pe
 class Test = { x: Int }
@@ -24,19 +24,19 @@ type Test: { x: Int }
 
 // FIXME
 type Test3 = Int -> Int
-//│ type Test3
+//│ Defined type Test3
 
 // FIXME
 type Test4 = Int -> Int -> Int
-//│ type Test4
+//│ Defined type Test4
 
 // FIXME
 type Test5 = (Int -> Int) -> Int
-//│ type Test5
+//│ Defined type Test5
 
 
 type T = Int
-//│ type T
+//│ Defined type T
 
 :e
 type T = Int
@@ -47,34 +47,35 @@ type T = Int
 //│ ╔══[ERROR] Type 'T' is already defined.
 //│ ║  l.43: 	type T = Int
 //│ ╙──      	     ^
-//│ type T
-//│ type T
+//│ Defined type T
+//│ Defined type T
 
-// FIXME error is not shown
-:d
-type TypeA = TypeB
+:e
+type TypeA = Int
 foo 42
-//│ 0. Typing term (foo 42)
-//│  0. Typing term foo
-//│  0. : [error]
-//│  0. Typing term 42
-//│  0. : 42
-//│  CONSTRAIN [[error]] <! ([42] -> α0)
-//│    where 
-//│  C [[error]] <! ([42] -> α0)
-//│   C [error] <! ([42] -> α0)
-//│    C error <! ([42] -> α0)
-//│     C [42] <! error
-//│      C 42 <! error
-//│     C error <! α0
-//│ 0. : α0
-//│ type TypeA
-
-type TypeB = TypeB
 def foo = 1
 foo 42
-type TypeC = Int
-//│ type TypeB
-//│ type TypeC
+//│ Defined type TypeA
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.55: 	foo 42
+//│ ╙──      	^^^
+//│ res: error
 //│ foo: 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.57: 	foo 42
+//│ ║        	^^^^^^
+//│ ╟── expression of type `1` is not a function
+//│ ║  l.56: 	def foo = 1
+//│ ║        	          ^
+//│ ╟── but it flows into reference with expected type `42 -> ?a`
+//│ ║  l.57: 	foo 42
+//│ ╙──      	^^^
+//│ res: error
+
+type TypeB = TypeB
+def test = fun x -> x
+type TypeC = TypeA
+//│ Defined type TypeB
+//│ Defined type TypeC
+//│ test: 'a -> 'a
 

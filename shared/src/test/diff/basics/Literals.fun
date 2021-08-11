@@ -22,10 +22,10 @@ true as Bool
 //│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
 //│ ║  l.20: 	1 as int
 //│ ╙──      	     ^^^
+//│ res: 1
 //│ ╔══[WARNING] Variable name 'string' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.string`; if not, give your future readers a break and use another name :^)
 //│ ║  l.21: 	"hello" as string
 //│ ╙──      	           ^^^^^^
-//│ res: 1
 //│ res: "hello"
 
 1 as (_: int)
@@ -46,6 +46,7 @@ false as 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.37: 	1 as true
 //│ ╙──      	     ^^^^
+//│ res: bool
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^^^^^^^^
@@ -55,6 +56,7 @@ false as 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.38: 	true as Int
 //│ ╙──      	        ^^^
+//│ res: int
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.39: 	false as 1
 //│ ║        	^^^^^^^^^^
@@ -64,8 +66,6 @@ false as 1
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.39: 	false as 1
 //│ ╙──      	         ^
-//│ res: bool
-//│ res: int
 //│ res: 1
 
 let f = b => if b then 0 else 1

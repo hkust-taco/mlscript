@@ -67,6 +67,7 @@ r.w
 //│ ╟── but it flows into reference with expected type `{w: ?a}`
 //│ ║  l.59: 	empty.w
 //│ ╙──      	^^^^^
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.60: 	r.w
 //│ ║        	 ^^
@@ -76,7 +77,6 @@ r.w
 //│ ╟── but it flows into reference with expected type `{w: ?a}`
 //│ ║  l.60: 	r.w
 //│ ╙──      	^
-//│ res: error
 //│ res: error
 
 let rec sumHeads = x => x.head + sumHeads x.tail
@@ -284,10 +284,10 @@ a: {
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
 //│ ║  l.278: 	  3
 //│ ╙──       	  ^
+//│ res: (a: 3,)
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
 //│ ║  l.282: 	  3
 //│ ╙──       	  ^
-//│ res: (a: 3,)
 //│ res: (a: 3,)
 
 let r =

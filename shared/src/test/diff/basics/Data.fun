@@ -36,6 +36,7 @@ bar {age: 1} // TODO B/E
 //│ ╟── from parameter type:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^^^
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.25: 	bar {name: "Bob"}
 //│ ║        	^^^^^^^^^^^^^^^^^
@@ -48,6 +49,7 @@ bar {age: 1} // TODO B/E
 //│ ╟── from parameter type:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^^^
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	bar {age: 1} // TODO B/E
 //│ ║        	^^^^^^^^^^^^
@@ -60,8 +62,6 @@ bar {age: 1} // TODO B/E
 //│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
-//│ res: error
-//│ res: error
 //│ res: 1 | error
 
 let fake-p = { name: "Bob", age: 42 }
@@ -106,6 +106,7 @@ bar (q: w)
 //│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
+//│ res: 3 | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.93: 	bar (q: w)
 //│ ║        	^^^^^^^^^^
@@ -121,7 +122,6 @@ bar (q: w)
 //│ ╟── from reference:
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ╙──      	            ^^^^^^
-//│ res: 3 | error
 //│ res: 3 | error
 
 // TODO simplify: `{age: int}` is included in `Person _`!

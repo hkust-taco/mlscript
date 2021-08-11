@@ -34,6 +34,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
+//│ res: (0 | 1) | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	   ^^^^^^^^^^
@@ -58,6 +59,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
+//│ res: (0 | 1) | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	^^^^^^^^^^^^^^
@@ -73,6 +75,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
+//│ res: (0 | 1) | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	   ^^^^^^^^^^
@@ -97,6 +100,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
+//│ res: (0 | 1) | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	^^^^^^^^^^^^
@@ -112,10 +116,6 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: (0 | 1) | error
-//│ res: (0 | 1) | error
-//│ res: (0 | 1) | error
-//│ res: (0 | 1) | error
 //│ res: (0 | 1) | error
 
 let g(x: int) = succ x
@@ -162,6 +162,7 @@ bar(2, 2)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: 1 | 0 | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.152: 	bar(2, 2)
 //│ ║         	^^^^^^^^^
@@ -174,7 +175,6 @@ bar(2, 2)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
-//│ res: 1 | 0 | error
 //│ res: 2 | error
 
 bar(0, 0)
@@ -215,6 +215,7 @@ bar(_, _)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: error
 //│ ╔══[ERROR] Ambiguous constraint in application:
 //│ ║  l.198: 	(x, y) => bar(x, y)
 //│ ║         	          ^^^^^^^^^
@@ -234,7 +235,6 @@ bar(_, _)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
-//│ res: error
 //│ res: ('a & int, 'a,) -> 'a | error
 
 // ^ TODO allow explicit request for inferring an overloaded type in case of ambiguities
@@ -263,6 +263,7 @@ x => bar(bar(x, 1), 0)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: int & 1 -> 0 | 1 | error
 //│ ╔══[ERROR] Ambiguous constraint in application:
 //│ ║  l.253: 	(x, y) => bar(bar(x, y), x)
 //│ ║         	              ^^^^^^^^^
@@ -307,7 +308,6 @@ x => bar(bar(x, 1), 0)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.147: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
-//│ res: int & 1 -> 0 | 1 | error
 //│ res: ('a & int, 'a & int,) -> 'a | error
 
 :e // TODO delay tricky constraints for later (instead of eager) resolution:
@@ -394,6 +394,7 @@ baz(0, 1)
 //│ ╟── from parameter type:
 //│ ║  l.376: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.381: 	baz(0, 1)
 //│ ║         	^^^^^^^^^
@@ -406,7 +407,6 @@ baz(0, 1)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.376: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
-//│ res: error
 //│ res: 1 | 0 | error
 
 baz(0, 0)
@@ -442,6 +442,7 @@ x => baz(x, x)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.376: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] Ambiguous constraint in application:
 //│ ║  l.425: 	x => baz(x, x)
 //│ ║         	     ^^^^^^^^^
@@ -460,6 +461,7 @@ x => baz(x, x)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.376: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: 'a & int -> 'a | error
 //│ ╔══[ERROR] Ambiguous constraint in application:
 //│ ║  l.426: 	(x, y) => baz(x, y)
 //│ ║         	          ^^^^^^^^^
@@ -479,7 +481,5 @@ x => baz(x, x)
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.376: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
-//│ res: 'a & int -> 'a | 0 | error
-//│ res: 'a & int -> 'a | error
 //│ res: ('a & int, 'a,) -> 'a | error
 

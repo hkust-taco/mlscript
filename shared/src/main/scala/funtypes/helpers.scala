@@ -37,6 +37,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    case AppliedType(n, args) => s"$n[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
   }
   
   def children: List[Type] = this match {

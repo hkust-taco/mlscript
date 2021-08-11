@@ -38,7 +38,7 @@ object Main {
           // println(s"Parsed: $p")
           val typer = new funtypes.Typer(dbg = false, verbose = false, explainErrors = false)
           val tys = typer.inferTypesJS(p)
-          (p.decls.zipWithIndex lazyZip tys).map {
+          (p.tops.zipWithIndex lazyZip tys).map {
             case ((d: funtypes.Def, i), Right(ty)) =>
               println(s"Typed `${d.nme}` as: $ty")
               println(s" where: ${ty.instantiate(0).showBounds}")

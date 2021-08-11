@@ -18,7 +18,7 @@ class MLTypingTestHelpers extends org.scalatest.funsuite.AnyFunSuite {
     val Success(term, index) = parse(str, parser.expr(_), verboseFailures = true)
     
     val typer = new Typer(dbg, verbose = false, explainErrors = false) with TypeSimplifier
-    val tyv = typer.inferType(term)
+    val tyv = typer.typeTerm(term)(typer.Ctx.init, throw _)
     
     if (dbg) {
       println("inferred: " + tyv)
