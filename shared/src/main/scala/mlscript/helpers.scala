@@ -1,10 +1,10 @@
-package funtypes
+package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet}
 import scala.collection.immutable.SortedSet
 
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 
 // Auxiliary definitions for types

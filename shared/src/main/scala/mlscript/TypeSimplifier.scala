@@ -1,9 +1,9 @@
-package funtypes
+package mlscript
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 trait TypeSimplifier { self: Typer =>
   

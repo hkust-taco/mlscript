@@ -1,7 +1,7 @@
-package funtypes
+package mlscript
 
 import scala.util.chaining._
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 
 sealed abstract class Diagnostic(theMsg: String) extends Exception(theMsg) {

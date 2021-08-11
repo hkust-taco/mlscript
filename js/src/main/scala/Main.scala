@@ -3,11 +3,11 @@ import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
-import funtypes.utils._
+import mlscript.utils._
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val source = document.querySelector("#funtypes-input")
+    val source = document.querySelector("#mlscript-input")
     update(source.textContent)
     source.addEventListener("input", typecheck)
   }
@@ -20,13 +20,13 @@ object Main {
   }
   def update(str: String): Unit = {
     // println(s"Input: $str")
-    val target = document.querySelector("#funtypes-output")
+    val target = document.querySelector("#mlscript-output")
     target.innerHTML = Try {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
-      import funtypes.{MLParser, TypeError, Origin}
+      import mlscript.{MLParser, TypeError, Origin}
       val lines = str.splitSane('\n').toIndexedSeq
-      val fph = new funtypes.FastParseHelpers(str, MLParser.addTopLevelSeparators(lines))
+      val fph = new mlscript.FastParseHelpers(str, MLParser.addTopLevelSeparators(lines))
       val parser = new MLParser(Origin("<input>", 0, fph))
       parse(str, parser.pgrm(_), verboseFailures = false) match {
         case f: Failure =>
@@ -36,10 +36,10 @@ object Main {
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          val typer = new funtypes.Typer(dbg = false, verbose = false, explainErrors = false)
+          val typer = new mlscript.Typer(dbg = false, verbose = false, explainErrors = false)
           val tys = typer.inferTypesJS(p)
           (p.tops.zipWithIndex lazyZip tys).map {
-            case ((d: funtypes.Def, i), Right(ty)) =>
+            case ((d: mlscript.Def, i), Right(ty)) =>
               println(s"Typed `${d.nme}` as: $ty")
               println(s" where: ${ty.instantiate(0).showBounds}")
               val com = typer.compactType(ty.instantiate(0))
@@ -52,7 +52,7 @@ object Main {
                   <font color="LightGreen">${d.nme}</font>: 
                   <font color="LightBlue">${exp.show}</font>
                   </b>"""
-            case ((d: funtypes.Def, i), Left(TypeError(msg, loc))) => // TODO use loc to display message
+            case ((d: mlscript.Def, i), Left(TypeError(msg, loc))) => // TODO use loc to display message
               s"""<b><font color="Red">
                   Type error in <font color="LightGreen">${d.nme}</font>: $msg
                   </font></b>"""

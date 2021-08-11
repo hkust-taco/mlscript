@@ -1,12 +1,12 @@
-package funtypes
+package mlscript
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
-import funtypes.utils._, shorthands._
-import funtypes.Message._
+import mlscript.utils._, shorthands._
+import mlscript.Message._
 
 class ConstraintSolver extends TyperDatatypes { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose

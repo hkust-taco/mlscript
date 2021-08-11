@@ -1,4 +1,4 @@
-# Parsing in Funtypes
+# Advanced MLscript Parser
 
 ## Indentation
 

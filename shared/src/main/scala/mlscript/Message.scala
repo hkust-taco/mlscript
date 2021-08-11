@@ -1,8 +1,8 @@
-package funtypes
+package mlscript
 
 import fansi.{ Str => FStr }
 import scala.language.implicitConversions
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 final case class Message(bits: Ls[Message.Bit]) {
   def show: FStr = {

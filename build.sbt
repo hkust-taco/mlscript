@@ -8,15 +8,15 @@ ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
 
 lazy val root = project.in(file("."))
-  .aggregate(funtypesJS, funtypesJVM)
+  .aggregate(mlscriptJS, mlscriptJVM)
   .settings(
     publish := {},
     publishLocal := {},
   )
 
-lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
+lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
-    name := "funtypes",
+    name := "mlscript",
     scalacOptions ++= Seq(
       "-deprecation",
       "-feature",
@@ -51,5 +51,5 @@ lazy val funtypes = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "1.0.0",
   )
 
-lazy val funtypesJVM = funtypes.jvm
-lazy val funtypesJS = funtypes.js
+lazy val mlscriptJVM = mlscript.jvm
+lazy val mlscriptJS = mlscript.js

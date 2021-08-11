@@ -1,7 +1,7 @@
-package funtypes
+package mlscript
 
 import scala.util.Random
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 object EnumeratePrograms {
   private var className: Str = ""

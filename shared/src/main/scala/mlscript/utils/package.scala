@@ -1,4 +1,4 @@
-package funtypes
+package mlscript
 
 import utils.shorthands._
 import scala.collection.mutable

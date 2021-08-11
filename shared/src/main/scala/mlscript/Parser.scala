@@ -1,11 +1,11 @@
-package funtypes
+package mlscript
 
 import scala.annotation.nowarn
 import scala.util.chaining._
 import scala.language.implicitConversions
 import fastparse._
-import funtypes.utils._, shorthands._
-import funtypes.Lexer._
+import mlscript.utils._, shorthands._
+import mlscript.Lexer._
 
 /** Inspired by and adapted from:
   *   scalaparse: https://github.com/lihaoyi/fastparse/tree/master/scalaparse

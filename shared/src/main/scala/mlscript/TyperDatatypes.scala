@@ -1,12 +1,12 @@
-package funtypes
+package mlscript
 
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
-import funtypes.utils._, shorthands._
-import funtypes.Message._
+import mlscript.utils._, shorthands._
+import mlscript.Message._
 
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
@@ -130,7 +130,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
   )(val prov: TypeProvenance) extends SimpleType with Variable with CompactTypeOrVariable {
-    private[funtypes] val uid: Int = { freshCount += 1; freshCount - 1 }
+    private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level
     override def hashCode: Int = uid

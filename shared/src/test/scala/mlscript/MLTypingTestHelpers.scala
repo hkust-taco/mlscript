@@ -1,4 +1,4 @@
-package funtypes
+package mlscript
 
 import fastparse._
 import fastparse.Parsed.Failure
@@ -11,7 +11,7 @@ class MLTypingTestHelpers extends org.scalatest.funsuite.AnyFunSuite {
   def doTest(str: String, expected: String = "")(implicit line: Line): Unit = {
     val dbg = expected.isEmpty
     
-    val fph = new funtypes.FastParseHelpers(str)
+    val fph = new mlscript.FastParseHelpers(str)
     val parser = new MLParser(Origin("<input>", 0, fph))
     
     if (dbg) println(s">>> $str")

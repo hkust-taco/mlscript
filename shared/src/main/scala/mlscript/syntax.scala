@@ -1,6 +1,6 @@
-package funtypes
+package mlscript
 
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 
 // Terms

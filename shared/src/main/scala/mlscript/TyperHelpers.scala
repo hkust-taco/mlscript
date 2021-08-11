@@ -1,9 +1,9 @@
-package funtypes
+package mlscript
 
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, LinkedHashSet}
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.annotation.tailrec
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 /** Inessential methods used to help debugging. */
 abstract class TyperHelpers { self: Typer =>

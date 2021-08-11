@@ -1,4 +1,4 @@
-package funtypes
+package mlscript
 
 import fastparse._
 import fastparse.NoWhitespace._

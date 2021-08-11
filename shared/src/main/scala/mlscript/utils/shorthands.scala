@@ -1,4 +1,4 @@
-package funtypes.utils
+package mlscript.utils
 
 import scala.annotation.showAsInfix
 import scala.util.chaining._

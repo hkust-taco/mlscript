@@ -1,8 +1,8 @@
-package funtypes
+package mlscript
 
 import scala.util.chaining._
 import fastparse._, fastparse.ScalaWhitespace._
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 /** Parser for an ML-style input syntax, used in the legacy `ML*` tests. */
 @SuppressWarnings(Array("org.wartremover.warts.All"))

@@ -1,10 +1,10 @@
-package funtypes
+package mlscript
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class MLIsolatedTests extends MLTypingTestHelpers {
   
   // This test class is for isolating single tests and running them alone
-  // with sbt command `~testOnly funtypes.IsolatedTests`
+  // with sbt command `~testOnly mlscript.IsolatedTests`
   
   test("isolated") {
     

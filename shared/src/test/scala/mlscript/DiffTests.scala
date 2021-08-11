@@ -1,4 +1,4 @@
-package funtypes
+package mlscript
 
 import fastparse._
 import fastparse.Parsed.Failure
@@ -6,7 +6,7 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 import ammonite.ops._
 import scala.collection.mutable
-import funtypes.utils._, shorthands._
+import mlscript.utils._, shorthands._
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
