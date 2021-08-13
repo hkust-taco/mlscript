@@ -11,9 +11,6 @@ import mlscript.Message._
 class ConstraintSolver extends TyperDatatypes { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   
-  type ConstraintSet = MutSet[(TV, Bool, SimpleType)]
-  object DryRunFailure extends Throwable
-  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance): Unit = {
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -25,25 +22,84 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     
     type ConCtx = Ls[Ls[SimpleType -> SimpleType]]
     
+    
+    sealed abstract class LhsNf {
+      def toTypes: Ls[SimpleType] = toType :: Nil
+      def toType: SimpleType = this match {
+        case LhsRefined(N, r) => r
+        case LhsRefined(S(b), RecordType(Nil)) => b
+        case LhsRefined(S(b), r) => ComposedType(false, b, r)(noProv)
+        case LhsTop => ExtrType(false)(noProv)
+      }
+      def & (that: BaseType): Opt[LhsNf] = (this, that) match {
+        case (LhsTop, _) => S(LhsRefined(S(that), RecordType(Nil)(noProv)))
+        case (LhsRefined(b1, r1), _) =>
+          ((b1, that) match {
+            case (S(p @ PrimType(pt0)), PrimType(pt1)) => Option.when(pt0 === pt1)(p)
+            case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
+            case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
+            case (S(TupleType(fs0)), TupleType(fs1)) => ???
+            case (S(VarType(_, _, _)), VarType(_, _, _)) => ???
+            case (S(_), _) => N
+            case (N, _) => S(that)
+          }) map { b => LhsRefined(S(b), r1) }
+      }
+      def & (that: RecordType): LhsNf = this match {
+        case LhsTop => LhsRefined(N, that)
+        case LhsRefined(b1, r1) =>
+          LhsRefined(b1, RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/))
+      }
+    }
+    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf
+    case object LhsTop extends LhsNf
+    
+    sealed abstract class RhsNf {
+      def toTypes: Ls[SimpleType] = toType :: Nil
+      def toType: SimpleType = this match {
+        case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
+        case RhsBases(ps, b) => ps.foldLeft(b.getOrElse(TopType))(_ | _)
+        case RhsBot => ExtrType(true)(noProv)
+      }
+      def | (that: BaseType): Opt[RhsNf] = (this, that) match {
+        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N))
+        case (RhsBot, _) => S(RhsBases(Nil,S(that)))
+        case (RhsBases(ps, b), p: PrimType) =>
+          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b))
+        case (RhsBases(ps, N), _) => S(RhsBases(ps, S(that)))
+        case (RhsBases(_, S(TupleType(_))), TupleType(_)) =>
+          // ??? // TODO
+          err("TODO handle tuples", prov.loco)
+          N
+        case (RhsBases(_, _), _) => N
+        case (RhsField(_, _), _) => N
+      }
+      def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
+        case RhsBot => S(RhsField(that._1, that._2))
+        case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
+        case _ => N
+      }
+    }
+    case class RhsField(name: Str, ty: SimpleType) extends RhsNf
+    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType]) extends RhsNf {
+      assert(!bty.exists(_.isInstanceOf[PrimType]))
+    }
+    case object RhsBot extends RhsNf
+    
     /* Solve annoying constraints,
         which are those that involve either unions and intersections at the wrong polarities, or negations.
-        This works by constructing all pairs of "conjunctive-normal-form <: disjunctive-normal-form"
-        implied by the constraint, where each conjunct and disjunct is a ConstructedType
-          (i.e., has a proper type constructor, as opposed to "data flow" types like unions/intrsections,
-          top/bottom, negations, and type variables).
-        We then perform constraining dry runs between all possible "conjunct <: disjunct" sub-pairs of these,
-        and at the end we check that we're left with exactly one possible set of unambiguous constraints. */
-    def annoying(ls: Ls[SimpleType], done_ls: Ls[ConstructedType], rs: Ls[SimpleType], done_rs: Ls[ConstructedType])
-          (implicit ctx: ConCtx, outerDryRuns: Ls[ConstraintSet]): Unit = {
+        This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
+        "DNF <: CNF" form of the constraint. */
+    def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+          (implicit ctx: ConCtx): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) =>
-          def tys = (ls.iterator ++ done_ls.iterator).map(NegType(_)(noProv)) ++ rs.iterator ++ done_rs.iterator
+          def tys = (ls.iterator ++ done_ls.toTypes).map(NegType(_)(noProv)) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(ComposedType(true, _, _)(noProv)).getOrElse(ExtrType(true)(noProv))
           rec(tv, rhs)
         case (_, (tv: TypeVariable) :: rs) =>
-          def tys = ls.iterator ++ done_ls.iterator ++ (rs.iterator ++ done_rs.iterator).map(NegType(_)(noProv))
+          def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(NegType(_)(noProv))
           val lhs = tys.reduceOption(ComposedType(false, _, _)(noProv)).getOrElse(ExtrType(false)(noProv))
           rec(lhs, tv)
         case (ComposedType(true, ll, lr) :: ls, _) =>
@@ -65,75 +121,35 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ls, ExtrType(false) :: rs) => () // Top in the RHS union makes the constraint trivial
         case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
-        case ((l: ConstructedType) :: ls, rs) => annoying(ls, l :: done_ls, rs, done_rs)
-        case (ls, (r: ConstructedType) :: rs) => annoying(ls, done_ls, rs, r :: done_rs)
+          
+        case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse (return), rs, done_rs)
+        case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse (return))
+          
+        case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs)
+        case (ls, (r @ RecordType(Nil)) :: rs) => ()
+        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse (return))
+        case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
+          
         case (Nil, Nil) =>
-          // TODO what to do with VarTypes? When to widen them?
-          // TODO check whether the intersection is known to be empty (if so, we are done)
-          println(s"CN ${done_ls} <: ${done_rs}")
-          // First find all the ways this constraint could be solved
-          var successfulDryRuns: Ls[ConstraintSet -> Ls[Warning]] = Nil
-          for {
-            l <- done_ls
-            r <- done_rs
-          } {
-            // Do dry-runs of constraint solving
-            var warnings = mutable.ListBuffer.empty[Warning]
-            val dr: ConstraintSet = MutSet.empty
-            val dryRuns: Ls[ConstraintSet] = dr :: outerDryRuns
-            val raise: Raise = {
-              case _: TypeError => throw DryRunFailure // constraint fails!
-              case w: Warning => warnings += w; () // we'll only report the warning if the dry run succeeds
-            }
-            trace("DRY RUN") {
-              try {
-                rec(l, r)(raise, ctx, dryRuns)
-                println(s"SUCCESS: ${dr.toList}")
-                if (dr.isEmpty) // We have a clear winner! No need for bounds updates!
-                  return ()
-                successfulDryRuns ::= dr -> warnings.toList
-                // ^ Note: in principle, no need to propagate these bounds — it's already done in the `rec` function.
-              } catch { case DryRunFailure => }
-            }()
+          def fail = reportError(doesntMatch(ctx.head.head._2))
+          (done_ls, done_rs) match { // TODO missing cases
+            case (LhsTop, _) | (_, RhsBot) => fail
+            case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)))) => rec(f0, f1)
+            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
+              if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
+              else fail
+            case (LhsRefined(bo, r), RhsField(n, t2)) =>
+              r.fields.find(_._1 === n) match {
+                case S(nt1) => rec(nt1._2, t2)
+                case N => fail
+              }
           }
-          if (successfulDryRuns.isEmpty)
-            reportError(L(doesntMatch(ctx.head.head._2)))
-          else {
-            val successfulDryRunConstraints = successfulDryRuns.map(_._1)
-            mergeConstraintSets(successfulDryRunConstraints) match {
-              case S(c) =>
-                println(s"MERGED ${c}")
-                // Apply the resulting merged constraint set:
-                outerDryRuns.headOption match { // if we're already in an outer dry run, we need to update that dry run!
-                  case S(dr) => c.foreach(dr.+=)
-                  case N => // otherwise, we actually commit the bounds directly:
-                    c.foreach {
-                      case (tv, true, rhs) => tv.upperBounds ::= rhs
-                      case (tv, false, lhs) => tv.lowerBounds ::= lhs
-                    }
-                }
-                successfulDryRuns.foreach(_._2.foreach(raise)) // raise all the warnings found while constraining
-              case N =>
-                // Note: if dryRun.nonEmpty, this will actually throw a DryRunFailure to be handled upstream:
-                reportError(R(successfulDryRunConstraints))
-            }
-          }
+          
       }
-    }
-    def mergeConstraintSets(cs: Ls[ConstraintSet]): Opt[ConstraintSet] = cs.head optionIf (cs.size === 1) orElse S {
-      val res = MutMap.empty[TV -> Bool, SimpleType]
-      cs.foreach { c =>
-        c.foreach { case (tv, pol, ty) =>
-          // Give up merging if it involves more than one variable bound (we can probably do something better):
-          res.find(kv => kv._1._2 =/= pol || kv._1._1 =/= tv).foreach { _ => return N }
-          res(tv -> pol) = res.get(tv -> pol).fold(ty)(ComposedType(pol, _, ty)(noProv))
-        }
-      }
-      MutSet.from(res.iterator.map(kv => (kv._1._1, kv._1._2, kv._2)))
-    }
+    }()
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
-          (implicit raise: Raise, ctx: ConCtx, dryRuns: Ls[ConstraintSet]): Unit =
+          (implicit raise: Raise, ctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       ((lhs -> rhs :: ctx.headOr(Nil)) :: ctx.tailOr(Nil)) |> { implicit ctx =>
@@ -154,31 +170,18 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (_, ExtrType(false)) => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            rec(l1, l0)(raise, Nil, dryRuns)
+            rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
-            rec(r0, r1)(raise, Nil :: ctx, dryRuns)
+            rec(r0, r1)(raise, Nil :: ctx)
           case (prim: PrimType, _) if rhs === prim || rhs === prim.widen => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            // TODO should we directly constrain those variables created after the dry run began...?
             val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_, S(prov)))
-            dryRuns.headOption match {
-              case Some(dr) => dr += ((lhs, true, newBound)) // update the dry-run bound
-              case None => lhs.upperBounds ::= newBound // update the actual bound if not dry-running
-            }
-            dryRuns.foreach { dr => // propagate in all outer dry runs
-              dr.foreach { case (`lhs`, false, l) => rec(l, rhs); case _ => () }
-            }
-            lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the actual bound
+            lhs.upperBounds ::= newBound // update the bound
+            lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
             val newBound = outerProv.fold(lhs)(ProxyType(lhs)(_, S(prov)))
-            dryRuns.headOption match {
-              case Some(dr) => dr += ((rhs, false, newBound)) // update the bound
-              case None => rhs.lowerBounds ::= newBound // update the actual bound if not dry-running
-            }
-            dryRuns.foreach { dr => // propagate in all outer dry runs
-              dr.foreach { case (`rhs`, true, r) => rec(lhs, r); case _ => () }
-            }
-            rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the actual bound
+            rhs.lowerBounds ::= newBound // update the bound
+            rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
@@ -222,13 +225,13 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             if (args0.size =/= args1.size) ??? // TODO: compute baseType args, accounting for class inheritance
             else args0.lazyZip(args1).foreach(rec(_, _))
           case (_, a @ AppType(fun, arg :: Nil)) =>
-            rec(FunctionType(arg, lhs)(fun.prov), fun)(raise, Nil, dryRuns) // disregard error context?
+            rec(FunctionType(arg, lhs)(fun.prov), fun)(raise, Nil) // disregard error context?
             // TODO make reporting better... should forget about the function expansion if it doesn't work out!
           case (_, AppType(fun, args)) => lastWords(s"$rhs") // TODO
           case (AppType(fun, arg :: Nil), _) =>
-            rec(fun, FunctionType(arg, rhs)(lhs.prov))(raise, Nil, dryRuns) // disregard error context?
+            rec(fun, FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // disregard error context?
           case (AppType(fun, args :+ arg), _) =>
-            rec(AppType(fun, args)(lhs.prov), FunctionType(arg, rhs)(lhs.prov))(raise, Nil, dryRuns) // Q: disregard error context?
+            rec(AppType(fun, args)(lhs.prov), FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // Q: disregard error context?
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs)
           case (err @ PrimType(ErrTypeId), RecordType(fs1)) =>
@@ -238,11 +241,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (PrimType(ErrTypeId), _) => ()
           case (_, PrimType(ErrTypeId)) => ()
           case (_, ComposedType(true, l, r)) =>
-            annoying(lhs :: Nil, Nil, l :: r :: Nil, Nil)
+            annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
           case (ComposedType(false, l, r), _) =>
-            annoying(l :: r :: Nil, Nil, rhs :: Nil, Nil)
+            annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot)
           case (_: NegType, _) | (_, _: NegType) =>
-            annoying(lhs :: Nil, Nil, rhs :: Nil, Nil)
+            annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot)
           case _ =>
             val failureOpt = lhs_rhs match {
               case (RecordType(fs0), RecordType(fs1)) =>
@@ -257,22 +260,17 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
               case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n))
               case _ => S(doesntMatch(lhs_rhs._2))
             }
-            failureOpt.foreach(f => reportError(L(f)))
+            failureOpt.foreach(f => reportError(f))
       }
     }}()
     
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
-    def reportError(error: Message \/ Ls[ConstraintSet])(implicit ctx: ConCtx, dryRuns: Ls[ConstraintSet]): Unit = {
+    def reportError(error: Message)(implicit ctx: ConCtx): Unit = {
       val (lhs_rhs @ (lhs, rhs)) = ctx.head.head
-      val failure = error match {
-        case L(msg) => msg
-        case R(_) => msg"matches several possible instantiations"
-      }
+      val failure = error
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       println(s"CTX: ${ctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}]"))}")
-      
-      if (dryRuns.nonEmpty) throw DryRunFailure
       
       val detailedContext =
         if (explainErrors)
@@ -291,7 +289,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         else Nil
       
       val lhsProv = ctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
-      assert(lhsProv.loco.isDefined) // TODO use soft assert
+      
+      // TODO re-enable
+      // assert(lhsProv.loco.isDefined) // TODO use soft assert
       
       val relevantFailures = ctx.zipWithIndex.map { case (subCtx, i) =>
         subCtx.collectFirst {
@@ -336,7 +336,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       }
       
       val msgs: Ls[Message -> Opt[Loc]] = List(
-        msg"${if (error.isLeft) msg"Type mismatch" else "Ambiguous constraint"} in ${prov.desc}:" -> prov.loco :: Nil,
+        msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
         msg"expression of type `${lhs.expPos}` $failure" ->
           (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
         tighestRelevantFailure.map { case (l, r, isSameType) =>
@@ -347,60 +347,32 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             // ^ This used to say "of expected type", but in fact we're describing a term with the wrong type;
             //   the expected type is not its type so that was not a good formulation.
             else msg" of type `${l.expPos}`"
-          if (error.isLeft) {
-            val lunw = l.unwrapProxies
-            lazy val fail = (l, r) match {
-              case (RecordType(fs0), RecordType(fs1)) =>
-                (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
-                  doesntHaveField(n1)
-                }
-              case (_, FunctionType(_, _))
-                if !lunw.isInstanceOf[FunctionType]
-                && !lunw.isInstanceOf[TypeVariable]
-                => msg"is not a function"
-              case (_, RecordType((n, _) :: Nil))
-                if !lunw.isInstanceOf[RecordType]
-                && !lunw.isInstanceOf[TypeVariable]
-                => doesntHaveField(n)
-              case _ => doesntMatch(r)
-            }
-            msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco ::
-            (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
-          } else msg"where it is used in ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil
-        }.toList.flatten,
-        error match {
-          case L(_) => Nil
-          case R(cs) =>
-            val shownCs = cs.take(4)
-            assert(shownCs.size > 0)
-            val notShownNum = cs.size - shownCs.size
-            val notSownMsg =
-              if (notShownNum > 0)
-                msg"(And ${notShownNum.toString} more instantiations not shown.)" -> N :: Nil
-              else Nil
-            var isFirst = true
-            shownCs.flatMap { c =>
-              msg"${
-                if (isFirst) {
-                  isFirst = false
-                  msg"A"
-                } else msg"Another"
-              } possible instantiation is:" -> N ::
-              c.toList.sortBy(_._1.uid).map { // TODO limit the number of constraints shown here?
-                case (tv, true, ty) =>
-                  msg"    ${tv.expPos} <: ${ty.expNeg}" -> N
-                case (tv, false, ty) =>
-                  msg"    ${tv.expNeg} :> ${ty.expPos}" -> N
+          val lunw = l.unwrapProxies
+          lazy val fail = (l, r) match {
+            case (RecordType(fs0), RecordType(fs1)) =>
+              (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
+                doesntHaveField(n1)
               }
-            } ::: notSownMsg ::: msg"Use an explicit type annotation to fix the problem." -> N :: Nil
-        },
+            case (_, FunctionType(_, _))
+              if !lunw.isInstanceOf[FunctionType]
+              && !lunw.isInstanceOf[TypeVariable]
+              => msg"is not a function"
+            case (_, RecordType((n, _) :: Nil))
+              if !lunw.isInstanceOf[RecordType]
+              && !lunw.isInstanceOf[TypeVariable]
+              => doesntHaveField(n)
+            case _ => doesntMatch(r)
+          }
+          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco ::
+          (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
+        }.toList.flatten,
         constraintProvenanceHints,
         detailedContext,
       ).flatten
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, N)(raise, Nil, Nil)
+    rec(lhs, rhs, N)(raise, Nil)
   }
   
   

@@ -39,13 +39,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   type ST = SimpleType
   
   sealed abstract class ConstructedType extends SimpleType
+  sealed abstract class BaseType extends SimpleType
   
-  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends ConstructedType {
+  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends BaseType {
     lazy val level: Int = lhs.level max rhs.level
     override def toString = s"($lhs -> $rhs)"
   }
-  
-  sealed abstract class BaseType extends ConstructedType
   
   case class AppType(lhs: SimpleType, args: Ls[SimpleType])(val prov: TypeProvenance) extends BaseType {
     require(args.nonEmpty)
@@ -55,10 +54,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends ConstructedType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    def toInter: SimpleType =
+      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => ComposedType(false, l, r)(noProv)))
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   
-  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends ConstructedType {
+  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends BaseType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toRecord: RecordType =
       RecordType(
@@ -118,7 +119,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   */
   final class VarIdentity(val lvl: Int, val v: Var)
   case class VarType(vi: VarIdentity, sign: SimpleType, isAlias: Bool)(val prov: TypeProvenance)
-      extends ConstructedType with Variable {
+      extends BaseType with Variable {
     def level: Int = vi.lvl max sign.level
     override def toString = s"${vi.v}@${prov.loco.getOrElse(die).spanStart}"
   }

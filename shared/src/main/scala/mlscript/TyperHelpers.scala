@@ -29,6 +29,9 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    def | (that: SimpleType): SimpleType = ComposedType(true, this, that)(noProv)
+    def & (that: SimpleType): SimpleType = ComposedType(false, this, that)(noProv)
+    
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
       case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)
       case FunctionType(lhs, rhs) =>

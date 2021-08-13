@@ -28,7 +28,7 @@ Test1 { x = "oops" }
 def Test1 = fun x -> Test1 { x = x }
 //│ Test1: int -> Test1 & {x: int}
 
-// TODO syntax
+// TODO support this syntax
 :pe
 def Test1 x = Test1 { x }
 //│ /!\ Parse error: Expected "=":1:11, found "x = Test1 " at l.33:11: def Test1 x = Test1 { x }

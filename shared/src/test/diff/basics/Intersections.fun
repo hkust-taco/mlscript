@@ -20,40 +20,47 @@ foo(1)
 succ / foo(1)
 //│ res: int
 
-// Q: why does this one work without :ns and not the one above?
-// :ns
+// Intersection-based overloading is not actually supported... a value of this type is impossible to provide:
 let foo = (Int => Int) & (Bool => Bool)
 //│ foo: (int -> int) & (bool -> bool)
 
-foo(1)
+foo(1) // returns int & bool, equivalent to nothing
 succ / foo(1)
 foo(true)
 not / foo(true)
+//│ res: int & bool
 //│ res: int
-//│ res: int
-//│ res: bool
+//│ res: int & bool
 //│ res: bool
 
-:e
 not / foo(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	not / foo(1)
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `bool`
-//│ ║  l.25: 	let foo = (Int => Int) & (Bool => Bool)
-//│ ║        	                  ^^^
-//│ ╟── but it flows into application with expected type `bool`
-//│ ║  l.38: 	not / foo(1)
-//│ ╙──      	      ^^^^^^
-//│ res: bool | error
+foo(1) as Nothing
+//│ res: bool
+//│ res: nothing
+
+:e
+foo as Nothing
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.42: 	foo as Nothing
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `(int -> int) & (bool -> bool)` does not match type `nothing`
+//│ ║  l.24: 	let foo = (Int => Int) & (Bool => Bool)
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.42: 	foo as Nothing
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.42: 	foo as Nothing
+//│ ╙──      	       ^^^^^^^
+//│ res: nothing
 
 :e
 let oops = (&)
 //│ ╔══[ERROR] Illegal use of operator: &
-//│ ║  l.51: 	let oops = (&)
+//│ ║  l.58: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.51: 	let oops = (&)
+//│ ║  l.58: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ oops: error
 
