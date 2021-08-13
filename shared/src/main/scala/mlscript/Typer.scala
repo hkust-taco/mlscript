@@ -333,9 +333,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case With(t, n, v) => ??? // TODO
       case CaseOf(s, cs) =>
         val s_ty = typeTerm(s)
-        val (tys, cs_ty) = typeArms(cs)
+        val (tys, cs_ty) = typeArms(s |>? {
+          case v: Var => v
+          case Asc(v: Var, _) => v
+        }, cs)
         val req = tys.foldRight(BotType: SimpleType) {
-          case (a_ty, req) => ComposedType(true, a_ty,
+          case ((a_ty, tv), req) => ComposedType(true,
+            ComposedType(false, a_ty, tv)(noProv),
             ComposedType(false, req, NegType(a_ty)(noProv // FIXME
               ))(noProv))(noProv)
         }
@@ -345,21 +349,34 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     }
   }(r => s"$lvl. : ${r}")
   
-  def typeArms(arms: CaseBranches)(implicit ctx: Ctx, raise: Raise, lvl: Int)
-      : Ls[SimpleType] -> SimpleType = arms match {
+  def typeArms(scrutVar: Opt[Var], arms: CaseBranches)
+      (implicit ctx: Ctx, raise: Raise, lvl: Int)
+      : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
     case Wildcard(b) => (freshVar(noProv // FIXME
-      ) :: Nil) -> typeTerm(b)
+      ) -> TopType :: Nil) -> typeTerm(b)
     case Case(cls, bod, rest) =>
       val td = ctx.tyDefs.getOrElse(cls.name,
         err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/))
       // TODO check td is a class
-      val bod_ty = typeTerm(bod)
-      val (tys, rest_ty) = typeArms(rest)
-      (PrimType(Var(cls.name))(noProv // FIXME
-      // (NomTag(cls)(noProv // FIXME
-      // (AppliedType(cls, Nil)(noProv // FIXME
-      ) :: tys) -> ComposedType(true, bod_ty, rest_ty)(noProv)
+      val newCtx = ctx.nest
+      val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
+        case S(v) =>
+          val tv = freshVar(tp(v.toLoc, "refined scrutinee"))
+          newCtx += v.name -> tv
+          val bod_ty = typeTerm(bod)(newCtx, raise)
+          // (ComposedType(false, PrimType(Var(cls.name))(noProv // FIXME
+          // ), tv)(noProv), bod_ty, typeArms(scrutVar, rest))
+          (PrimType(Var(cls.name))(noProv // FIXME
+          ) -> tv, bod_ty, typeArms(scrutVar, rest))
+        case N =>
+          val bod_ty = typeTerm(bod)(newCtx, raise)
+          (PrimType(Var(cls.name))(noProv // FIXME
+          // (NomTag(cls)(noProv // FIXME
+          // (AppliedType(cls, Nil)(noProv // FIXME
+          ) -> TopType, bod_ty, typeArms(scrutVar, rest))
+      }
+      (req_ty :: tys) -> ComposedType(true, bod_ty, rest_ty)(noProv)
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])

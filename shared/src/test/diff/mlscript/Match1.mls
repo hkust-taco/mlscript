@@ -16,7 +16,7 @@ case 1 of { A -> 0 }
 //│ ╔══[ERROR] Type mismatch in case of:
 //│ ║  l.12: 	case 1 of { A -> 0 }
 //│ ║        	     ^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not match type `A | (nothing & neg A)`
+//│ ╟── expression of type `1` does not match type `(A & anything) | (nothing & neg A)`
 //│ ║  l.12: 	case 1 of { A -> 0 }
 //│ ╙──      	     ^
 //│ res: 0 | nothing
@@ -31,7 +31,7 @@ case 1 of { A -> 0 | B -> 1 }
 //│ ╔══[ERROR] Type mismatch in case of:
 //│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not match type `A | ((B | (nothing & neg B)) & neg A)`
+//│ ╟── expression of type `1` does not match type `(A & anything) | (((B & anything) | (nothing & neg B)) & neg A)`
 //│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	     ^
 //│ res: 0 | (1 | nothing)
@@ -43,7 +43,7 @@ def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╔══[ERROR] type identifier not found: Bar
 //│ ║  l.39: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                                        ^^^
-//│ f: (Foo | ((Bar | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
+//│ f: ((Foo & anything) | (((Bar & anything) | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
 
 def f = fun x -> case x of
   { Foo -> 0
@@ -55,4 +55,14 @@ def f = fun x -> case x of
 //│ ╔══[ERROR] type identifier not found: Bar
 //│ ║  l.50: 	  | Bar -> 1
 //│ ╙──      	    ^^^
-//│ f: (Foo | ((Bar | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
+//│ f: ((Foo & anything) | (((Bar & anything) | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
+
+def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ╔══[ERROR] type identifier not found: Foo
+//│ ║  l.60: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ╙──      	                             ^^^
+//│ ╔══[ERROR] type identifier not found: Bar
+//│ ║  l.60: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ╙──      	                                        ^^^
+//│ f: ((Foo & 'a) | (((Bar & 'b) | (nothing & neg Bar)) & neg Foo)) -> 'a | ('b | nothing)
+
