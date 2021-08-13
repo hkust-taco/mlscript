@@ -127,6 +127,10 @@ trait TypeSimplifier { self: Typer =>
     def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
           (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
       case p: PrimType => ct(prims = BaseTypes.single(p))
+      case TypeRef(td, targs) =>
+        ct(prims = BaseTypes single CompactAppType(
+          ct(prims = BaseTypes single PrimType(Var(td.nme.name))(noProv)),
+          targs.map(go(_, pol, Set.empty)))) // FIXME variance!
       case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
       case NegType(ty) => // FIXME tmp hack
         val base = ct(prims = BaseTypes single PrimType(Var("neg"))(noProv))

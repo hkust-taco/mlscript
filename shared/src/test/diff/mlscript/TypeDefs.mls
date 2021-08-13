@@ -20,7 +20,7 @@ Test1 { x = "oops" }
 //│ ╟── but it flows into record literal with expected type `{x: int}`
 //│ ║  l.13: 	Test1 { x = "oops" }
 //│ ║        	      ^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from TODO:
+//│ ╟── Note: constraint arises from type reference:
 //│ ║  l.3: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
 //│ res: (Test1 & {x: int}) | error
@@ -103,18 +103,9 @@ foo 42
 //│ ╙──      	^^^
 //│ res: error
 
-// FIXME
 42: TypeA
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.107: 	42: TypeA
-//│ ║         	^^
-//│ ╟── expression of type `42` does not match type `TypeA`
-//│ ╟── Note: constraint arises from TODO:
-//│ ║  l.107: 	42: TypeA
-//│ ╙──       	    ^^^^^
 //│ res: TypeA
 
-// FIXME
 type TypeOops = TypeOops
 type TypeB = TypeC
 def test = fun x -> (x: TypeB)
@@ -124,19 +115,8 @@ type TypeC = TypeA
 //│ Defined type TypeB
 //│ Defined type TypeC
 //│ test: TypeB -> TypeB
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	test 42
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `42` does not match type `TypeB`
-//│ ║  l.121: 	test 42
-//│ ║         	     ^^
-//│ ╟── Note: constraint arises from TODO:
-//│ ║  l.120: 	def test = fun x -> (x: TypeB)
-//│ ║         	                        ^^^^^
-//│ ╟── from reference:
-//│ ║  l.120: 	def test = fun x -> (x: TypeB)
-//│ ╙──       	                     ^
-//│ res: TypeB | error
+//│ res: TypeB
+
 
 // FIXME:
 def test = fun (x: TypeB) -> x

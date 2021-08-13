@@ -96,6 +96,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
   
+  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, ctx: Ctx) extends SimpleType {
+    assert(targs.size === defn.tparams.size)
+    def level: Int = 0
+    def expand(implicit raise: Raise): SimpleType = {
+      val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
+      if (defn.kind === Als) body_ty
+      else ComposedType(false, PrimType(Var(defn.nme.name))(noProv/*TODO*/), body_ty)(noProv)
+    }
+  }
+  
   case class PrimType(id: SimpleTerm)(val prov: TypeProvenance) extends BaseType {
     def widenPrim: PrimType = id match {
       case _: IntLit => IntType

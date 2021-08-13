@@ -4,27 +4,48 @@ def None = None{}
 //│ Defined class None
 //│ None: None & {}
 
-// FIXME
 class Some[A]: { value: A }
 def Some v = Some { value = v }
-//│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.8: 	class Some[A]: { value: A }
-//│ ╙──     	                        ^
 //│ Defined class Some
-//│ Some: A -> Some & {value: A}
+//│ Some: 'a -> Some & {value: 'a}
 
-// FIXME
 Some 42
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.17: 	Some 42
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `42` does not match type `A`
-//│ ║  l.17: 	Some 42
-//│ ║        	     ^^
-//│ ╟── Note: constraint arises from TODO:
-//│ ║  l.8: 	class Some[A]: { value: A }
-//│ ║       	                        ^
-//│ ╟── from reference:
-//│ ║  l.9: 	def Some v = Some { value = v }
-//│ ╙──     	                            ^
-//│ res: (Some & {value: A}) | error
+(Some 42).value
+//│ res: Some & {value: 42}
+//│ res: 42
+
+type Option[A] = Some[A] | None
+//│ Defined type Option
+
+None: Option[int]
+Some 42 : Option[int]
+//│ res: Option int
+//│ res: Option int
+
+:e
+res.value
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.26: 	res.value
+//│ ║        	^^^
+//│ ╟── expression of type `None & {}` does not match type `{value: ?a}`
+//│ ║  l.17: 	type Option[A] = Some[A] | None
+//│ ║        	                           ^^^^
+//│ ╟── but it flows into reference with expected type `{value: ?a}`
+//│ ║  l.26: 	res.value
+//│ ╙──      	^^^
+//│ res: error | int
+
+// FIXME properly check:
+42: Option[int, int]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:100)
+//│ 	at: mlscript.Typer.typeType(Typer.scala:158)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:297)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:394)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:216)
+//│ 	at: mlscript.DiffTests.$anonfun$new$15(DiffTests.scala:188)
+//│ 	at: mlscript.DiffTests.$anonfun$new$15$adapted(DiffTests.scala:184)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+

@@ -122,6 +122,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
           
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        
         case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse (return), rs, done_rs)
         case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse (return))
           
@@ -238,6 +241,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             fs1.foreach(f => rec(err, f._2))
           case (RecordType(fs1), err @ PrimType(ErrTypeId)) =>
             fs1.foreach(f => rec(f._2, err))
+          case (tr: TypeRef, _) => rec(tr.expand, rhs)
+          case (_, tr: TypeRef) => rec(lhs, tr.expand)
           case (PrimType(ErrTypeId), _) => ()
           case (_, PrimType(ErrTypeId)) => ()
           case (_, ComposedType(true, l, r)) =>

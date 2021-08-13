@@ -122,6 +122,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ctx.copy(tyDefs = newDefs) |> { implicit ctx =>
       tyDefs.foreach { td =>
         val n = td.nme
+        implicit val targs = td.tparams.map(p => p -> freshVar(noProv/*TODO*/)).toMap
         val body_ty = typeType(td.body)
         td.kind match {
           case Als =>
@@ -135,22 +136,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx
     }
   }
-  def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise): SimpleType = ty match {
-    case Top => TopType
-    case Bot => BotType
-    case Tuple(fields) => ??? // TODO
-    case Inter(lhs, rhs) => ComposedType(false, typeType(lhs), typeType(rhs))(noProv)
-    case Union(lhs, rhs) => ComposedType(true, typeType(lhs), typeType(rhs))(noProv)
-    case Applied(lhs, rhs) => ??? // TODO
-    case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "TODO"))
-    case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "TODO"))
-    case Primitive(name) =>
-      if (!ctx.tyDefs.contains(name))
-        err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/)
-      PrimType(Var(name))(tp(ty.toLoc, "TODO"))
-    case _: TypeVar => ??? // TODO
-    case AppliedType(base, targs) => ??? // TODO
-    case Recursive(uv, body) => ??? // TODO
+  def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+    def typeNamed(name: Str): TypeDef = ctx.tyDefs.getOrElse(name, {
+      err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
+      TypeDef(Als, Primitive(name), Nil, Top) })
+    ty match {
+      case Top => TopType
+      case Bot => BotType
+      case Tuple(fields) => ??? // TODO
+      case Inter(lhs, rhs) => ComposedType(false, typeType(lhs), typeType(rhs))(noProv)
+      case Union(lhs, rhs) => ComposedType(true, typeType(lhs), typeType(rhs))(noProv)
+      case Applied(lhs, rhs) => ??? // TODO
+      case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
+      case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "function type"))
+      case Primitive(name) =>
+        vars.get(name) getOrElse
+          TypeRef(typeNamed(name), Nil)(tp(ty.toLoc, "type reference"), ctx)
+      case _: TypeVar => ??? // TODO
+      case AppliedType(base, targs) =>
+        TypeRef(typeNamed(base.name),
+          targs.map(typeType))(tp(ty.toLoc, "applied type reference"), ctx)
+      case Recursive(uv, body) => ??? // TODO
+    }
   }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =
@@ -286,6 +293,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(tp(v.toLoc, "wildcard"))
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
+        implicit val vars = Map.empty[Str, SimpleType]
         val ty_ty = typeType(ty)
         con(trm_ty, ty_ty, ty_ty)
       case (v @ ValidPatVar(nme)) =>
