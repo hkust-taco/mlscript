@@ -28,10 +28,10 @@ Test1 { x = "oops" }
 def Test1 = fun x -> Test1 { x = x }
 //│ Test1: int -> Test1 & {x: int}
 
-// TODO support this syntax
-:pe
-def Test1 x = Test1 { x }
-//│ /!\ Parse error: Expected "=":1:11, found "x = Test1 " at l.33:11: def Test1 x = Test1 { x }
+class Test11: { x: int }
+def Test11 x = Test11 { x }
+//│ Defined class Test11
+//│ Test11: int -> Test11 & {x: int}
 
 
 :e
@@ -103,10 +103,42 @@ foo 42
 //│ ╙──      	^^^
 //│ res: error
 
-type TypeB = TypeB
-def test = fun x -> x
+// FIXME
+42: TypeA
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.107: 	42: TypeA
+//│ ║         	^^
+//│ ╟── expression of type `42` does not match type `TypeA`
+//│ ╟── Note: constraint arises from TODO:
+//│ ║  l.107: 	42: TypeA
+//│ ╙──       	    ^^^^^
+//│ res: TypeA
+
+// FIXME
+type TypeOops = TypeOops
+type TypeB = TypeC
+def test = fun x -> (x: TypeB)
+test 42
 type TypeC = TypeA
+//│ Defined type TypeOops
 //│ Defined type TypeB
 //│ Defined type TypeC
-//│ test: 'a -> 'a
+//│ test: TypeB -> TypeB
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.121: 	test 42
+//│ ║         	^^^^^^^
+//│ ╟── expression of type `42` does not match type `TypeB`
+//│ ║  l.121: 	test 42
+//│ ║         	     ^^
+//│ ╟── Note: constraint arises from TODO:
+//│ ║  l.120: 	def test = fun x -> (x: TypeB)
+//│ ║         	                        ^^^^^
+//│ ╟── from reference:
+//│ ║  l.120: 	def test = fun x -> (x: TypeB)
+//│ ╙──       	                     ^
+//│ res: TypeB | error
+
+// FIXME:
+def test = fun (x: TypeB) -> x
+//│ test: TypeB -> nothing
 

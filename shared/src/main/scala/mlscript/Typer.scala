@@ -33,7 +33,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       env = MutMap.from(builtinBindings),
       lvl = 0,
       inPattern = false,
-      tyDefs = Map.empty)
+      tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)))
   }
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
   
@@ -57,6 +57,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     List("unit" -> UnitType, "bool" -> BoolType, "int" -> IntType, "number" -> DecType, "string" -> StrType,
       "anything" -> TopType, "nothing" -> BotType)
   
+  val builtinTypes: Ls[TypeDef] =
+    TypeDef(Cls, Primitive("int"), Nil, Top) ::
+    TypeDef(Cls, Primitive("string"), Nil, Top) ::
+    Nil
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
@@ -113,17 +117,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         err(msg"Type '$n' is already defined.", td.nme.toLoc)(raise, tp(td.toLoc, "data definition"))
       }
       newDefs += n.name -> td
-      val body_ty = typeType(td.body)
-      td.kind match {
-        case Als =>
-        case Cls | Trt =>
-          val nomTag = PrimType(Var(td.nme.name))(noProv/*FIXME*/)
-          val ctor = FunctionType(body_ty, ComposedType(false, nomTag, body_ty)(noProv))(noProv/*FIXME*/)
-          ctx += n.name -> ctor
-      }
-      // TOOD type check; check regular
     }
-    ctx.copy(tyDefs = newDefs)
+    // implicit val newCtx = ctx.copy(tyDefs = newDefs)
+    ctx.copy(tyDefs = newDefs) |> { implicit ctx =>
+      tyDefs.foreach { td =>
+        val n = td.nme
+        val body_ty = typeType(td.body)
+        td.kind match {
+          case Als =>
+          case Cls | Trt =>
+            val nomTag = PrimType(Var(td.nme.name))(noProv/*FIXME*/)
+            val ctor = FunctionType(body_ty, ComposedType(false, nomTag, body_ty)(noProv))(noProv/*FIXME*/)
+            ctx += n.name -> ctor
+        }
+        // TOOD type check; check regular
+      }
+      ctx
+    }
   }
   def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise): SimpleType = ty match {
     case Top => TopType
@@ -134,7 +144,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case Applied(lhs, rhs) => ??? // TODO
     case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "TODO"))
     case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "TODO"))
-    case Primitive(name) => PrimType(Var(name))(tp(ty.toLoc, "TODO"))
+    case Primitive(name) =>
+      if (!ctx.tyDefs.contains(name))
+        err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/)
+      PrimType(Var(name))(tp(ty.toLoc, "TODO"))
     case _: TypeVar => ??? // TODO
     case AppliedType(base, targs) => ??? // TODO
     case Recursive(uv, body) => ??? // TODO

@@ -1,0 +1,30 @@
+
+class None: {}
+def None = None{}
+//│ Defined class None
+//│ None: None & {}
+
+// FIXME
+class Some[A]: { value: A }
+def Some v = Some { value = v }
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.8: 	class Some[A]: { value: A }
+//│ ╙──     	                        ^
+//│ Defined class Some
+//│ Some: A -> Some & {value: A}
+
+// FIXME
+Some 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.17: 	Some 42
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `42` does not match type `A`
+//│ ║  l.17: 	Some 42
+//│ ║        	     ^^
+//│ ╟── Note: constraint arises from TODO:
+//│ ║  l.8: 	class Some[A]: { value: A }
+//│ ║       	                        ^
+//│ ╟── from reference:
+//│ ║  l.9: 	def Some v = Some { value = v }
+//│ ╙──     	                            ^
+//│ res: (Some & {value: A}) | error

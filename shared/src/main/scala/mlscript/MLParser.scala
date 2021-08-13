@@ -36,12 +36,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ident).rep ).map {
     case (st, sels) => sels.foldLeft(st)(Sel) }
-  def record[_: P]: P[Term] =
-    locate(P( "{" ~/ (ident ~ "=" ~ term).rep(sep = ";") ~ "}" ).map(_.toList pipe Rcd))
-  def fun[_: P]: P[Term] = P( kw("fun") ~/ ident ~ "->" ~ term ).map(nb => Lam(Var(nb._1), nb._2))
-  def let[_: P]: P[Term] =
-    locate(P( kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term ~ kw("in") ~ term )
-    .map(Let.tupled)).opaque("let binding")
+  def record[_: P]: P[Term] = locate(P(
+      "{" ~/ (ident ~ "=" ~ term map L.apply).|(ident map R.apply).rep(sep = ";") ~ "}"
+    ).map { fs =>
+      Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> Var(id) }.toList)
+    })
+  def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(nb._1, nb._2))
+  def let[_: P]: P[Term] = locate(P(
+      kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ term.rep ~ "=" ~ term ~ kw("in") ~ term
+    ) map {
+      case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(i, acc)), bod)
+    })
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
   def appsAsc[_: P]: P[Term] = P( apps ~ (":" ~ ty).rep ).map {
@@ -64,17 +69,22 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def expr[_: P]: P[Term] = P( term ~ End )
   
   def defDecl[_: P]: P[Def] =
-    P( kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ "=" ~ term map Def.tupled )
+    P(kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ term.rep ~ "=" ~ term map {
+      case (rec, id, ps, bod) => Def(rec, id, ps.foldRight(bod)((i, acc) => Lam(i, acc)))
+    })
+  
   def tyKind[_: P]: P[TypeDefKind] = (kw("class") | kw("trait") | kw("type")).! map {
     case "class" => Cls
     case "trait" => Trt
     case "type"  => Als
   }
   def tyDecl[_: P]: P[TypeDef] =
-    P( (tyKind ~/ tyName).flatMap {
-      case (k @ (Cls | Trt), id) => ":" ~ ty map (bod => TypeDef(k, id, Nil, bod))
-      case (k @ Als, id) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod))
-    } )
+    P((tyKind ~/ tyName ~ tyParams).flatMap {
+      case (k @ (Cls | Trt), id, ts) => ":" ~ ty map (bod => TypeDef(k, id, ts, bod))
+      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
+    })
+  def tyParams[_: P]: P[Ls[Str]] =
+    ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatMap(_.map(_.name)))
   
   def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
