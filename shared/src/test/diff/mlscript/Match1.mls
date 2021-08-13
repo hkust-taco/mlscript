@@ -2,67 +2,73 @@
 1
 //│ res: 1
 
+:e
 case 1 of { }
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.5: 	case 1 of { }
+//│ ║  l.6: 	case 1 of { }
 //│ ║       	     ^
 //│ ╙── expression of type `1` does not match type `nothing`
 //│ res: nothing
 
+:e
 case 1 of { A -> 0 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.12: 	case 1 of { A -> 0 }
+//│ ║  l.14: 	case 1 of { A -> 0 }
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.12: 	case 1 of { A -> 0 }
+//│ ║  l.14: 	case 1 of { A -> 0 }
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── expression of type `1` does not match type `(A & anything) | (nothing & neg A)`
-//│ ║  l.12: 	case 1 of { A -> 0 }
+//│ ║  l.14: 	case 1 of { A -> 0 }
 //│ ╙──      	     ^
 //│ res: 0 | nothing
 
+:e
 case 1 of { A -> 0 | B -> 1 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.27: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	            ^
 //│ ╔══[ERROR] type identifier not found: B
-//│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.27: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	                     ^
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.27: 	case 1 of { A -> 0 | B -> 1 }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `1` does not match type `(A & anything) | (((B & anything) | (nothing & neg B)) & neg A)`
-//│ ║  l.24: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.27: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	     ^
 //│ res: 0 | (1 | nothing)
 
+:e
 def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.39: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
+//│ ║  l.43: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                             ^^^
 //│ ╔══[ERROR] type identifier not found: Bar
-//│ ║  l.39: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
+//│ ║  l.43: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                                        ^^^
 //│ f: ((Foo & anything) | (((Bar & anything) | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
 
+:e
 def f = fun x -> case x of
   { Foo -> 0
   | Bar -> 1
   }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.49: 	  { Foo -> 0
+//│ ║  l.54: 	  { Foo -> 0
 //│ ╙──      	    ^^^
 //│ ╔══[ERROR] type identifier not found: Bar
-//│ ║  l.50: 	  | Bar -> 1
+//│ ║  l.55: 	  | Bar -> 1
 //│ ╙──      	    ^^^
 //│ f: ((Foo & anything) | (((Bar & anything) | (nothing & neg Bar)) & neg Foo)) -> 0 | (1 | nothing)
 
+:e
 def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.60: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ║  l.66: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╙──      	                             ^^^
 //│ ╔══[ERROR] type identifier not found: Bar
-//│ ║  l.60: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ║  l.66: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╙──      	                                        ^^^
 //│ f: ((Foo & 'a) | (((Bar & 'b) | (nothing & neg Bar)) & neg Foo)) -> 'a | ('b | nothing)
 

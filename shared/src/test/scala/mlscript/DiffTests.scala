@@ -162,7 +162,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             
             val raise: typer.Raise = d => report(d :: Nil)
             
-            ctx = typer.checkTypeDefs(p.typeDefs)(ctx, raise)
+            ctx = typer.processTypeDefs(p.typeDefs)(ctx, raise)
             
             p.typeDefs.foreach(td => output(s"Defined " + td.kind.str + " " + td.nme.name))
             

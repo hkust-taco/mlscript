@@ -105,7 +105,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     res.toList
   }
   
-  def checkTypeDefs(tyDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
+  def processTypeDefs(tyDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var newDefs = ctx.tyDefs
     tyDefs.foreach { td =>
       val n = td.nme
@@ -113,11 +113,32 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         err(msg"Type '$n' is already defined.", td.nme.toLoc)(raise, tp(td.toLoc, "data definition"))
       }
       newDefs += n.name -> td
+      val body_ty = typeType(td.body)
+      td.kind match {
+        case Als =>
+        case Cls | Trt =>
+          val nomTag = PrimType(Var(td.nme.name))(noProv/*FIXME*/)
+          val ctor = FunctionType(body_ty, ComposedType(false, nomTag, body_ty)(noProv))(noProv/*FIXME*/)
+          ctx += n.name -> ctor
+      }
       // TOOD type check; check regular
     }
     ctx.copy(tyDefs = newDefs)
   }
-  
+  def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise): SimpleType = ty match {
+    case Top => TopType
+    case Bot => BotType
+    case Tuple(fields) => ??? // TODO
+    case Inter(lhs, rhs) => ComposedType(false, typeType(lhs), typeType(rhs))(noProv)
+    case Union(lhs, rhs) => ComposedType(true, typeType(lhs), typeType(rhs))(noProv)
+    case Applied(lhs, rhs) => ??? // TODO
+    case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "TODO"))
+    case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "TODO"))
+    case Primitive(name) => PrimType(Var(name))(tp(ty.toLoc, "TODO"))
+    case _: TypeVar => ??? // TODO
+    case AppliedType(base, targs) => ??? // TODO
+    case Recursive(uv, body) => ??? // TODO
+  }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =
     typeTerm(pat)(ctx.copy(inPattern = true), raise)
@@ -251,7 +272,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case v @ Var("_") => // TODO parse this differently... or handle consistently everywhere
         freshVar(tp(v.toLoc, "wildcard"))
       case Asc(trm, ty) =>
-        ??? // TODO
+        val trm_ty = typeTerm(trm)
+        val ty_ty = typeType(ty)
+        con(trm_ty, ty_ty, ty_ty)
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!

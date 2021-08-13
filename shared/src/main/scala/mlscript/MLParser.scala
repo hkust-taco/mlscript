@@ -28,8 +28,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ident[_: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
-  def term[_: P]: P[Term] = P( let | fun | ite | apps | _match )
-  def const[_: P]: P[Term] = locate(number.map(x => IntLit(BigInt(x))))
+  def term[_: P]: P[Term] = P( let | fun | ite | appsAsc | _match )
+  def const[_: P]: P[Term] =
+    locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Term] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
   def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
@@ -43,6 +44,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     .map(Let.tupled)).opaque("let binding")
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
+  def appsAsc[_: P]: P[Term] = P( apps ~ (":" ~ ty).rep ).map {
+    // case (as, N) => as
+    case (apps, ascs) => ascs.foldLeft(apps)(Asc)
+  }
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
   def _match[_: P]: P[CaseOf] =
     P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled)
@@ -71,14 +76,15 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case (k @ Als, id) => "=" ~ ty map (bod => TypeDef(k, id, Nil, bod))
     } )
   
-  def ty[_: P]: P[Type] = P( tyNoFun ~ ("->" ~ tyNoFun).rep ).map {
-    case (t, ts) => ts.reverseIterator.foldLeft(t)(Function)
-  }
-  def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
+  def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
+  def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
+  def tyNoInter[_: P]: P[Type] = P( tyNoFun ~ ("->" ~ tyNoFun).rep ).map {
+    case (t, ts) => ts.reverseIterator.foldLeft(t)(Function) }
   def tyNoFun[_: P]: P[Type] = P( rcd | ctor | parTy )
   def ctor[_: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
     case (tname, targs) => AppliedType(tname, targs.toList)
   }) | tyName
+  def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )

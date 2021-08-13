@@ -1,0 +1,72 @@
+
+class Person: { name: string; age: int }
+def Person = fun n -> fun a -> Person { name = n; age = a }
+//│ Defined class Person
+//│ Person: string -> int -> Person & {age: int, name: string}
+
+class Animal: {}
+//│ Defined class Animal
+
+def test = fun x -> case x of
+  { Person -> x.age
+  | Animal -> 0
+  }
+//│ test: ((Person & {age: 'a}) | (((Animal & anything) | (nothing & neg Animal)) & neg Person)) -> 'a | (0 | nothing)
+
+// TODO simplify type to : test: Person & {age: 'a} | Animal -> 'a | 0
+
+// TOOD support tyvars
+:pe
+test: Person & {age: 'a} | Animal -> 'a | 0
+//│ /!\ Parse error: Expected "}":1:17, found "age: 'a} |" at l.20:17: test: Person & {age: 'a} | Animal -> 'a | 0
+
+// FIXME
+test: (Person & {age: int} | Animal) -> int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.24: 	test: (Person & {age: int} | Animal) -> int
+//│ ║        	^^^^
+//│ ╟── expression of type `Animal & neg (((Animal & ?a | ((Animal & neg (nothing & neg Animal)) & neg {age: ?b | int}) | ((Animal & neg (nothing & neg Animal)) & neg Person) | ((({age: int} & Person) & neg (nothing & neg Animal)) & neg {age: ?b | int}) | ((({age: int} & Person) & neg (nothing & neg Animal)) & neg Person)) | (nothing & neg Animal)) & neg Person)` does not match type `{age: ?b}`
+//│ ║  l.24: 	test: (Person & {age: int} | Animal) -> int
+//│ ║        	                             ^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.11: 	  { Person -> x.age
+//│ ║        	              ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.10: 	def test = fun x -> case x of
+//│ ╙──      	                         ^
+//│ res: ((Person & {age: int}) | Animal) -> int
+
+def a = Animal{}
+//│ a: Animal & {}
+
+a: {}
+//│ res: {}
+
+def p = Person "Bob" 42
+//│ p: Person & {age: int, name: string}
+
+p: { age: int }
+//│ res: {age: int}
+
+// FIXME
+test a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.52: 	test a
+//│ ║        	^^^^^^
+//│ ╟── expression of type `(Animal & {}) & neg (((Animal & ?a | ((({} & Animal) & neg (nothing & neg Animal)) & neg {age: ?b}) | ((({} & Animal) & neg (nothing & neg Animal)) & neg Person)) | (nothing & neg Animal)) & neg Person)` does not match type `{age: ?b}`
+//│ ║  l.39: 	def a = Animal{}
+//│ ║        	        ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(Person & ?c & {age: ?b}) | (((Animal & ?a) | (nothing & neg Animal)) & neg Person)`
+//│ ║  l.52: 	test a
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.11: 	  { Person -> x.age
+//│ ║        	              ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.10: 	def test = fun x -> case x of
+//│ ╙──      	                         ^
+//│ res: (nothing | (0 | nothing)) | error
+
+test p
+//│ res: int | (0 | nothing)
+

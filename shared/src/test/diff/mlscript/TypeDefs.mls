@@ -1,74 +1,105 @@
 
 // FIXME
-class Test1: { x: Int }
+class Test1: { x: int }
 //│ Defined class Test1
 
+Test1
+//│ res: {x: int} -> Test1 & {x: int}
+
+Test1 { x = 123 }
+//│ res: Test1 & {x: int}
+
 :e
-type Test1 = { x: Int }
+Test1 { x = "oops" }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `"oops"` does not match type `int`
+//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ║        	            ^^^^^^
+//│ ╟── but it flows into record literal with expected type `{x: int}`
+//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ║        	      ^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from TODO:
+//│ ║  l.3: 	class Test1: { x: int }
+//│ ╙──     	                  ^^^
+//│ res: (Test1 & {x: int}) | error
+
+def Test1 = fun x -> Test1 { x = x }
+//│ Test1: int -> Test1 & {x: int}
+
+// TODO syntax
+:pe
+def Test1 x = Test1 { x }
+//│ /!\ Parse error: Expected "=":1:11, found "x = Test1 " at l.33:11: def Test1 x = Test1 { x }
+
+
+:e
+type Test1 = { x: int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
-//│ ║  l.7: 	type Test1 = { x: Int }
-//│ ╙──     	     ^^^^^
+//│ ║  l.38: 	type Test1 = { x: int }
+//│ ╙──      	     ^^^^^
 //│ Defined type Test1
 
 // FIXME
-type Test2 = { x: Int }
+type Test2 = { x: int }
 //│ Defined type Test2
 
 :pe
-class Test = { x: Int }
-//│ /!\ Parse error: Expected ":":1:12, found "= { x: Int" at l.18:12: class Test = { x: Int }
+class Test = { x: int }
+//│ /!\ Parse error: Expected ":":1:12, found "= { x: int" at l.49:12: class Test = { x: int }
 
 :pe
-type Test: { x: Int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: Int" at l.22:10: type Test: { x: Int }
+type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.53:10: type Test: { x: int }
 
 // FIXME
-type Test3 = Int -> Int
+type Test3 = int -> int
 //│ Defined type Test3
 
 // FIXME
-type Test4 = Int -> Int -> Int
+type Test4 = int -> int -> int
 //│ Defined type Test4
 
 // FIXME
-type Test5 = (Int -> Int) -> Int
+type Test5 = (int -> int) -> int
 //│ Defined type Test5
 
 
-type T = Int
+type T = int
 //│ Defined type T
 
 :e
-type T = Int
-type T = Int
+type T = int
+type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.42: 	type T = Int
+//│ ║  l.73: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.43: 	type T = Int
+//│ ║  l.74: 	type T = int
 //│ ╙──      	     ^
 //│ Defined type T
 //│ Defined type T
 
 :e
-type TypeA = Int
+type TypeA = int
 foo 42
 def foo = 1
 foo 42
 //│ Defined type TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.55: 	foo 42
+//│ ║  l.86: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ foo: 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.57: 	foo 42
+//│ ║  l.88: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` is not a function
-//│ ║  l.56: 	def foo = 1
+//│ ║  l.87: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.57: 	foo 42
+//│ ║  l.88: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 
