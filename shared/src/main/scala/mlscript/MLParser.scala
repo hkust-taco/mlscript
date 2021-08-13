@@ -8,7 +8,11 @@ import mlscript.utils._, shorthands._
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
-  val keywords = Set("def", "class", "trait", "type", "let", "rec", "in", "fun", "if", "then", "else")
+  val keywords = Set(
+    "def", "class", "trait", "type",
+    "let", "rec", "in", "fun",
+    "if", "then", "else", "match", "case", "of",
+    "_")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -24,7 +28,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ident[_: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
-  def term[_: P]: P[Term] = P( let | fun | ite | apps )
+  def term[_: P]: P[Term] = P( let | fun | ite | apps | _match )
   def const[_: P]: P[Term] = locate(number.map(x => IntLit(BigInt(x))))
   def variable[_: P]: P[Term] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
@@ -40,6 +44,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
+  def _match[_: P]: P[CaseOf] =
+    P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled)
+  def matchArms[_: P]: P[CaseBranches] = P(
+    (tyName ~ "->" ~ term ~ matchArms2).map {
+      case (t, b, rest) => Case(t, b, rest)
+    } | (kw("_") ~ "->" ~ term).?.map {
+      case None => NoCases
+      case Some(b) => Wildcard(b)
+    }
+  )
+  def matchArms2[_: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
   
   def expr[_: P]: P[Term] = P( term ~ End )
   

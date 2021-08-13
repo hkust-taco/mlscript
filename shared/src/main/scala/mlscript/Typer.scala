@@ -331,11 +331,36 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         con(l_ty, r_ty, TopType)
         BoolType
       case With(t, n, v) => ??? // TODO
-      case CaseOf(s, cs) => ??? // TODO
+      case CaseOf(s, cs) =>
+        val s_ty = typeTerm(s)
+        val (tys, cs_ty) = typeArms(cs)
+        val req = tys.foldRight(BotType: SimpleType) {
+          case (a_ty, req) => ComposedType(true, a_ty,
+            ComposedType(false, req, NegType(a_ty)(noProv // FIXME
+              ))(noProv))(noProv)
+        }
+        con(s_ty, req, cs_ty)
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape:", pat.toLoc)(raise, ttp(pat))
     }
   }(r => s"$lvl. : ${r}")
+  
+  def typeArms(arms: CaseBranches)(implicit ctx: Ctx, raise: Raise, lvl: Int)
+      : Ls[SimpleType] -> SimpleType = arms match {
+    case NoCases => Nil -> BotType
+    case Wildcard(b) => (freshVar(noProv // FIXME
+      ) :: Nil) -> typeTerm(b)
+    case Case(cls, bod, rest) =>
+      val td = ctx.tyDefs.getOrElse(cls.name,
+        err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/))
+      // TODO check td is a class
+      val bod_ty = typeTerm(bod)
+      val (tys, rest_ty) = typeArms(rest)
+      (PrimType(Var(cls.name))(noProv // FIXME
+      // (NomTag(cls)(noProv // FIXME
+      // (AppliedType(cls, Nil)(noProv // FIXME
+      ) :: tys) -> ComposedType(true, bod_ty, rest_ty)(noProv)
+  }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
