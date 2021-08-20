@@ -85,30 +85,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
-  // TODO mv to js project
-  def inferTypesJS(
-    pgrm: Pgrm,
-    ctx: Ctx = Ctx.init,
-    stopAtFirstError: Boolean = true,
-  ): List[Either[TypeError, PolymorphicType]] = {
-    var decls = pgrm.tops
-    var curCtx = ctx
-    var res = collection.mutable.ListBuffer.empty[Either[TypeError, PolymorphicType]]
-    while (decls.nonEmpty) {
-      val Def(isrec, nme, rhs) = decls.head // TODO other Decls
-      decls = decls.tail
-      val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, throw _)) catch {
-        case err: TypeError =>
-          if (stopAtFirstError) decls = Nil
-          Left(err)
-      }
-      res += ty_sch
-      val errProv = TypeProvenance(rhs.toLoc, "let-bound value")
-      curCtx += (nme -> ty_sch.getOrElse(freshVar(errProv)(0)))
-    }
-    res.toList
-  }
-  
   def processTypeDefs(tyDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var newDefs = ctx.tyDefs
     tyDefs.foreach { td =>
@@ -122,7 +98,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ctx.copy(tyDefs = newDefs) |> { implicit ctx =>
       tyDefs.foreach { td =>
         val n = td.nme
-        implicit val targs = td.tparams.map(p => p -> freshVar(noProv/*TODO*/)).toMap
+        implicit val targs: Map[Str, SimpleType] =
+          td.tparams.map(p => p -> freshVar(noProv/*TODO*/)).toMap
         val body_ty = typeType(td.body)
         td.kind match {
           case Als =>
@@ -293,7 +270,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(tp(v.toLoc, "wildcard"))
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
-        implicit val vars = Map.empty[Str, SimpleType]
+        implicit val vars: Map[Str, SimpleType] = Map.empty
         val ty_ty = typeType(ty)
         con(trm_ty, ty_ty, ty_ty)
       case (v @ ValidPatVar(nme)) =>
@@ -524,6 +501,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case ExtrType(_) => ??? // TODO
       case ProxyType(und) => go(und, polarity)(inProcess)
       case PrimType(n) => Primitive(n.idStr)
+      case TypeRef(td, _) => Primitive(td.nme.name)
     }
     go(st, polarity)(Set.empty)
   }

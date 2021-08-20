@@ -18,7 +18,7 @@ final case class Pgrm(tops: Ls[TopLevel]) {
 }
 
 sealed trait TopLevel
-sealed trait OtherTopLevel extends TopLevel
+sealed trait OtherTopLevel extends TopLevel with Located
 
 sealed abstract class Decl extends TopLevel with DeclImpl
 final case class Def(rec: Bool, nme: Str, body: Term) extends Decl with OtherTopLevel

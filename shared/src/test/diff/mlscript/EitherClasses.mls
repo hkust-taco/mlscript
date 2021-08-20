@@ -1,0 +1,34 @@
+class Left[A]: { value: A }
+def Left value = Left{ value }
+//│ Defined class Left
+//│ Left: 'a -> Left & {value: 'a}
+
+class Right[A]: { value: A }
+def Right value = Right{ value }
+//│ Defined class Right
+//│ Right: 'a -> Right & {value: 'a}
+
+def testVal = if true then Left 1 else Right 2
+//│ testVal: (Left & {value: 1}) | (Right & {value: 2})
+
+testVal.value
+//│ res: 2 | 1
+
+def res = case testVal of
+  { Left -> testVal.value
+  | Right -> 1
+  }
+//│ res: 1 | (1 | nothing)
+
+// TODO support:
+res: 1
+case res of { 1 -> "ok" }
+//│ /!\ Parse error: Expected end-of-input:1:4, found ": 1;case r" at l.24:4: res: 1
+
+// TODO simplify this monster:
+def res = case testVal of
+  { Left -> testVal
+  | Right -> 1
+  }
+//│ res: ((((Right & {value: 2}) & anything) & neg (((Right & ((({value: 2} & Right) & neg (nothing & neg Right)) & neg (anything | Left)) | ((({value: 1} & Left) & neg (nothing & neg Right)) & neg (anything | Left))) | (nothing & neg Right)) & neg Left)) & neg nothing) | ((((Left & {value: 1}) & anything) & neg (((Right & ((({value: 2} & Right) & neg (nothing & neg Right)) & neg (anything | Left)) | ((({value: 1} & Left) & neg (nothing & neg Right)) & neg (anything | Left))) | (nothing & neg Right)) & neg Left)) & neg nothing) | (1 | nothing)
+
