@@ -75,6 +75,7 @@ abstract class TyperHelpers { self: Typer =>
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
       case PrimType(_) => Nil
+      case TypeRef(d, ts) => ts
     }
     
     def getVars: Set[TypeVariable] = {

@@ -138,6 +138,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           (done_ls, done_rs) match { // TODO missing cases
             case (LhsTop, _) | (_, RhsBot) => fail
             case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)))) => rec(f0, f1)
+            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _)) => fail
             case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
               if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
               else fail
@@ -146,6 +147,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
+            case (LhsRefined(S(b), r), RhsBases(pts, _)) =>
+              println(b.getClass)
+              ??? // TODO
           }
           
       }
@@ -406,6 +410,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
       case PrimType(_) => ty
+      // case TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol))) // FIXME pol...
     }
   
   
