@@ -4,6 +4,8 @@ import scala.util.chaining._
 import fastparse._, fastparse.ScalaWhitespace._
 import mlscript.utils._, shorthands._
 
+// TODO: empty lines
+
 /** Parser for an ML-style input syntax, used in the legacy `ML*` tests. */
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {

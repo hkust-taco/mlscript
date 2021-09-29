@@ -57,6 +57,7 @@ h1, p{
 
 #mlscript-output {
     border: 1px solid black;
+    overflow: auto;
 }
 
 .binding {

@@ -10,22 +10,17 @@
   <div id="content">
     <div id="left">
 <textarea id="mlscript-input">
-let id = fun x -> x
-let twice = fun f -> fun x -> f (f x)
+class Left[A]: { value: A }
+def Left value = Left{ value }
 
-let object1 = { x = 42; y = id }
-let object2 = { x = 17; y = false }
-let pick_an_object = fun b ->
-  if b then object1 else object2
-
-let rec produce = fun arg ->
-  { head = arg; tail = produce (succ arg) }
-
-let rec consume = fun strm ->
-  add strm.head (consume strm.tail)
-
-let codata = produce 42
-let res = consume codata
+class Right[A]: { value: A }
+def Right value = Right{ value }
+def testVal = if true then Left 1 else Right 2
+def zero = 0
+def bruh = "Bruh"
+def two = add 1 1
+def lambda = fun x -> x
+def simpleLet = let i = 0 in add i 1
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;
@@ -35,7 +30,7 @@ let res = consume codata
       <div id="mlscript-output"></div>
     </div>
   </div>
-  <script type="text/javascript" src="bin/mlscript-opt.js"></script>
+  <script type="text/javascript" src="js/target/scala-2.13/mlscript-fastopt/main.js"></script>
   <br/>
   <p>The code is available <a href="https://github.com/LPTK/mlscript">on github</a>.</p>
   <br/>
