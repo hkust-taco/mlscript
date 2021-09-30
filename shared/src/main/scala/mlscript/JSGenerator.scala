@@ -8,7 +8,7 @@ import collection.immutable.LazyList
 // TODO: should I turn this into a class?
 // Becasue type information for each run is local.
 // Otherwise I could clear for each `apply`.
-class JSBackend {
+class JSGenerator {
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
   val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
