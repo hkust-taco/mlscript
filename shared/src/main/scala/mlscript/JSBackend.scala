@@ -4,6 +4,7 @@ import mlscript.utils._, shorthands._
 import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
+import javax.rmi.CORBA.ClassDesc
 
 // TODO: should I turn this into a class?
 // Becasue type information for each run is local.
@@ -25,45 +26,12 @@ class JSBackend {
   val letLhsAliasMap: HashMap[Str, Str] = HashMap()
 
   // I just realized `Statement` is unused.
-  def translateStatement(stmt: Statement): Str = stmt match {
+  def translateStatement(stmt: Statement): JSStmt = stmt match {
     case LetS(isRec, pat, rhs) => {
-      // TODO: use `isRec` later.
       var (code, ids) = translateLetPattern(pat)
-      "let " + code + " = " + translateTerm(rhs)
+      new JSLetDecl(code, translateTerm(rhs))
     }
-    // BEGIN: Unused in MLscript
-    case DataDefn(body)           => ???
-    case DatatypeDefn(head, body) => ???
-    case _                        => ???
-    // END: Unused in MLscript
-  }
-
-  private def inspectTerm(t: Term): Str = t match {
-    case Var(name)     => s"Var($name)"
-    case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case App(lhs, rhs) => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case Tup(fields)   => s"Tup(...)"
-    case Rcd(fields)   => s"Rcd(...)"
-    case Sel(receiver, fieldName)    => s"Sel()"
-    case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
-    case Blk(stmts)                  => s"Blk(...)"
-    case Bra(rcd, trm)               => s"Bra(...)"
-    case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
-    case Bind(lhs, rhs)              => s"Bind(...)"
-    case Test(trm, ty)               => s"Test(...)"
-    case With(trm, fieldNme, fieldVal) =>
-      s"With(${inspectTerm(trm)}, $fieldNme, ${inspectTerm(fieldVal)})"
-    case CaseOf(trm, cases) =>
-      def inspectCaseBranches(br: CaseBranches): Str = br match {
-        case Case(clsNme, body, rest) =>
-          s"Case($clsNme, ${inspectTerm(t)}, ${inspectCaseBranches(rest)})"
-        case Wildcard(body) => s"Wildcard(${inspectTerm(body)})"
-        case NoCases        => "NoCases"
-      }
-      s"CaseOf(${inspectTerm(trm)}, ${inspectCaseBranches(cases)}"
-    case IntLit(value) => s"IntLit($value)"
-    case DecLit(value) => s"DecLit($value)"
-    case StrLit(value) => s"StrLit($value)"
+    case _ => ???
   }
 
   // This returns (codeFragment, declaredVariables)
@@ -93,157 +61,135 @@ class JSBackend {
       val (code, vars) = translateLetPattern(init)
       s"$code, $last" -> (vars ::: List(last))
     case _ =>
-      println(s"translateLetPattern: ${inspectTerm(t)}")
+      println(
+        s"unreachable case at translateLetPattern: ${JSBackend.inspectTerm(t)}"
+      )
       ???
   }
 
-  def translateTerm(term: Term): Str = term match {
-    case Var(name) => name
+  def translateTerm(term: Term): JSExpr = term match {
+    case Var(name) =>
+      if (classNames.contains(name)) {
+        letLhsAliasMap.get(name) match {
+          case N        => new JSIdent(name, true)
+          case S(alias) => new JSIdent(alias, false)
+        }
+      } else {
+        new JSIdent(name)
+      }
     // TODO: need scope to track variables
     // so that we can rename reserved words
     case Lam(lhs, rhs) =>
       val (paramCode, declaredVars) = translateLetPattern(lhs)
-      s"($paramCode) => ${translateTerm(rhs)}"
+      new JSArrowFn(paramCode, translateTerm(rhs))
+    // Tenary expression.
+    case App(App(Var("add"), left), right) =>
+      JSBinary("+", translateTerm(left), translateTerm(right))
     case App(App(App(Var("if"), tst), con), alt) =>
-      s"(${translateTerm(tst)}) ? (${translateTerm(con)}) : (${translateTerm(alt)})"
-    case App(lhs, rhs) =>
-      lhs match {
-        case Var(callee) =>
-          if (classNames.contains(callee)) {
-            letLhsAliasMap.get(callee) match {
-              case N        => s"new $callee(${translateTerm(rhs)})"
-              case S(alias) => s"$alias(${translateTerm(rhs)})"
-            }
-          } else {
-            s"$callee(${translateTerm(rhs)})"
-          }
-        case App(_, _) => s"${translateTerm(lhs)}(${translateTerm(rhs)})"
-        case _ =>
-          "(" + translateTerm(lhs) + ")" + "(" + translateTerm(rhs) + ")"
-      }
-
-    // Note: unused for now
-    case Tup(fields) =>
-      // TODO: find a representation for named tuple
-      fields
-        .map { case (key, value) => translateTerm(value) }
-        .mkString("[", ", ", "]")
+      new JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+    // Function application.
+    case App(lhs, rhs) => new JSInvoke(translateTerm(lhs), translateTerm(rhs))
     case Rcd(fields) =>
-      fields
-        .map { case (key, value) => key + ":" + translateTerm(value) }
-        .mkString("{", ", ", "}")
+      new JSRecord(fields map { case (key, value) =>
+        key -> translateTerm(value)
+      })
     case Sel(receiver, fieldName) =>
-      "(" + translateTerm(receiver) + ")" + (if (isValidIdentifier(fieldName)) {
-                                               s".$fieldName"
-                                             } else {
-                                               s"[${makeStringLiteral(fieldName)}]"
-                                             })
+      new JSMember(translateTerm(receiver), fieldName)
     // Turn let into an IIFE.
-    case Let(isRec, name, rhs, body) =>
-      s"(($name) => ${translateTerm(body)})" + s"(${translateTerm(rhs)})"
+    case Let(isRec, name, value, body) =>
+      new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
     case Blk(stmts) =>
-      "(function () {" + stmts
-        .map { translateStatement(_) }
-        .mkString(";") + "})()"
-    // Begin: unused in MLParser
-    case Bra(rcd, trm)                 => ???
-    case Asc(trm, _type)               => ???
-    case Bind(lhs, rhs)                => ???
-    case Test(trm, ty)                 => ???
-    case With(trm, fieldNme, fieldVal) => ???
-    // End: unused in MLParser
+      new JSImmEvalFn(Right(stmts map { translateStatement(_) }))
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
-      val body = translateCaseBranch(parameter, cases).mkString("\n")
-      s"(($parameter) => { $body })($argument)"
+      val body = translateCaseBranch(parameter, cases)
+      new JSImmEvalFn(parameter, Right(body), argument)
     }
-
-    case IntLit(value) =>
-      if (MinimalSafeInteger <= value && value <= MaximalSafeInteger) {
-        value.toString
-      } else {
-        value.toString + "n"
-      }
-    case DecLit(value) => value.toString
-    case StrLit(value) => makeStringLiteral(value)
+    case IntLit(value) => {
+      val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
+      new JSLit(if (useBigInt) { value.toString }
+      else { value.toString + "n" })
+    }
+    case DecLit(value) => new JSLit(value.toString)
+    case StrLit(value) => new JSLit(JSLit.makeStringLiteral(value))
+    case _             => ???
   }
 
-  def translateCaseBranch(name: Str, branch: CaseBranches): Ls[Str] =
+  // Translate consecutive case branches into a list of if statements.
+  def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
       case Case(Primitive(className), body, rest) =>
-        (
-          s"if ($name instanceof $className) {" +
-            s"return ${translateTerm(body)};" +
-            s"}"
+        new JSIfStmt(
+          new JSInstanceOf(new JSIdent(name), new JSIdent(className)),
+          Ls(new JSReturnStmt(translateTerm(body)))
         ) :: translateCaseBranch(name, rest)
-      case Wildcard(body) => List("return " + translateTerm(body))
-      case NoCases =>
-        List("throw new Error(\"non-exhaustive case expression\");")
+      case Wildcard(body) => Ls(new JSReturnStmt(translateTerm(body)))
+      case NoCases        => Ls(new JSThrowStmt())
     }
 
   // TODO: add field definitions
-  def translateClassDeclaration(name: Str, actualType: Type): Ls[Str] =
+  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
     actualType match {
-      case Record(fields) =>
-        Ls(s"class $name {", "  constructor(fields) {") ::: fields.map {
-          case (name, _ty) => s"    this.$name = fields.$name"
-        } ::: Ls("  }", "}")
+      case Record(fields) => new JSClassDecl(name, fields map { _._1 })
       // I noticed `class Fun[A]: A -> A` is okay.
       // But I have no idea about how to do it.
       case _ => ???
     }
 
-  def apply(pgrm: Pgrm): Ls[Str] = pgrm.typeDefs
-    .flatMap { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
-      kind match {
-        // So `class Right[A]: { value: A }`
-        // Will be `TypeDef(Cls,Primitive(name),typeParams,actualType)` where
-        // - kind = Cls
-        // - name = "Right"
-        // - typeParams = List(A)
-        // - actualType = Record(List((value,Primitive(A)))))
-        case Cls =>
-          classNames += name
-          translateClassDeclaration(name, actualType)
-        // For debug use
-        case Trt => s"// trait $name" :: Nil
-        // For debug use
-        case Als => s"// type alias $name" :: Nil
+  def apply(pgrm: Pgrm): Ls[Str] = {
+    val stmts: Ls[JSStmt] = pgrm.typeDefs
+      .map { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
+        kind match {
+          case Cls =>
+            classNames += name
+            translateClassDeclaration(name, actualType)
+          case Trt => new JSComment(s"// trait $name")
+          case Als => new JSComment(s"// type alias $name")
+        }
       }
-    }
-    .concat(pgrm.defs.map { case Def(isRecursive, name, body) =>
-      val translatedBody = translateTerm(body)
-      s"let ${getTemporaryName(name)} = $translatedBody"
-    })
+      .concat(pgrm.defs.map { case Def(isRecursive, name, body) =>
+        val translatedBody = translateTerm(body)
+        val tempName = getTemporaryName(name)
+        if (tempName =/= name) {
+          letLhsAliasMap += name -> tempName
+        }
+        new JSConstDecl(tempName, translatedBody)
+      })
+    SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
+  }
 
   private def getTemporaryName(name: Str): Str = (name #:: LazyList
     .from(0)
     .map { name + _.toString }).dropWhile { classNames contains _ }.head
+}
 
-  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
-
-  private def isValidIdentifier(s: Str): Boolean = identifierPattern.matches(s)
-
-  // Make a JavaScript compatible string literal
-  private def makeStringLiteral(s: Str): Str = {
-    s.map[Str] {
-      _ match {
-        case '"'  => "\\\""
-        case '\\' => "\\\\"
-        case '\b' => "\\b"
-        case '\f' => "\\f"
-        case '\n' => "\\n"
-        case '\r' => "\\r"
-        case '\t' => "\\t"
-        case c =>
-          if (0 < c && c <= 255 && !c.isControl) {
-            c.toString
-          } else {
-            s"\\u${c.toInt}"
-          }
+object JSBackend {
+  private def inspectTerm(t: Term): Str = t match {
+    case Var(name)     => s"Var($name)"
+    case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
+    case App(lhs, rhs) => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
+    case Tup(fields)   => s"Tup(...)"
+    case Rcd(fields)   => s"Rcd(...)"
+    case Sel(receiver, fieldName)    => s"Sel()"
+    case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
+    case Blk(stmts)                  => s"Blk(...)"
+    case Bra(rcd, trm)               => s"Bra(...)"
+    case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
+    case Bind(lhs, rhs)              => s"Bind(...)"
+    case Test(trm, ty)               => s"Test(...)"
+    case With(trm, fieldNme, fieldVal) =>
+      s"With(${inspectTerm(trm)}, $fieldNme, ${inspectTerm(fieldVal)})"
+    case CaseOf(trm, cases) =>
+      def inspectCaseBranches(br: CaseBranches): Str = br match {
+        case Case(clsNme, body, rest) =>
+          s"Case($clsNme, ${inspectTerm(t)}, ${inspectCaseBranches(rest)})"
+        case Wildcard(body) => s"Wildcard(${inspectTerm(body)})"
+        case NoCases        => "NoCases"
       }
-    }.mkString("\"", "", "\"")
+      s"CaseOf(${inspectTerm(trm)}, ${inspectCaseBranches(cases)}"
+    case IntLit(value) => s"IntLit($value)"
+    case DecLit(value) => s"DecLit($value)"
+    case StrLit(value) => s"StrLit($value)"
   }
-
 }
