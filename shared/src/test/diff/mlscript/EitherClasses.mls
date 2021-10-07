@@ -18,7 +18,7 @@ def res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
-//│ res: 1 | (1 | nothing)
+//│ res: 1 | 1
 
 // TODO support:
 res: 1
@@ -30,5 +30,5 @@ def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
-//│ res: ((((Right & {value: 2}) & anything) & neg (((Right & ((({value: 2} & Right) & neg (nothing & neg Right)) & neg (anything | Left)) | ((({value: 1} & Left) & neg (nothing & neg Right)) & neg (anything | Left))) | (nothing & neg Right)) & neg Left)) & neg nothing) | ((((Left & {value: 1}) & anything) & neg (((Right & ((({value: 2} & Right) & neg (nothing & neg Right)) & neg (anything | Left)) | ((({value: 1} & Left) & neg (nothing & neg Right)) & neg (anything | Left))) | (nothing & neg Right)) & neg Left)) & neg nothing) | (1 | nothing)
+//│ res: ((Right & {value: 2}) & neg ((Right & nothing) & neg Left)) | ((Left & {value: 1}) & neg ((Right & nothing) & neg Left)) | 1
 

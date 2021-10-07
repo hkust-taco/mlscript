@@ -29,8 +29,27 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
-    def | (that: SimpleType): SimpleType = ComposedType(true, this, that)(noProv)
-    def & (that: SimpleType): SimpleType = ComposedType(false, this, that)(noProv)
+    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = this match {
+      case TopType => TopType
+      case BotType => that
+      case _ if !swapped => that | (this, prov, swapped = true)
+      case `that` => this
+      case _ => ComposedType(true, that, this)(prov)
+    }
+    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = this match {
+      case TopType => that
+      case BotType => BotType
+      case ComposedType(true, l, r) => l & that | r & that
+      case _ if !swapped => that & (this, prov, swapped = true)
+      case `that` => this
+      case _ => ComposedType(false, that, this)(prov)
+    }
+    def neg(prov: TypeProvenance = noProv): SimpleType = this match {
+      case ExtrType(b) => ExtrType(!b)(noProv)
+      case ComposedType(true, l, r) => l.neg() & r.neg()
+      case NegType(n) => n
+      case _ => NegType(this)(prov)
+    }
     
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
       case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)

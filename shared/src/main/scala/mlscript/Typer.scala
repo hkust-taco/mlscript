@@ -105,7 +105,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case Als =>
           case Cls | Trt =>
             val nomTag = PrimType(Var(td.nme.name))(noProv/*FIXME*/)
-            val ctor = FunctionType(body_ty, ComposedType(false, nomTag, body_ty)(noProv))(noProv/*FIXME*/)
+            val ctor = FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/)
             ctx += n.name -> ctor
         }
         // TOOD type check; check regular
@@ -113,6 +113,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx
     }
   }
+  // TODO record provenances!
   def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     def typeNamed(name: Str): TypeDef = ctx.tyDefs.getOrElse(name, {
       err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
@@ -121,8 +122,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Top => TopType
       case Bot => BotType
       case Tuple(fields) => ??? // TODO
-      case Inter(lhs, rhs) => ComposedType(false, typeType(lhs), typeType(rhs))(noProv)
-      case Union(lhs, rhs) => ComposedType(true, typeType(lhs), typeType(rhs))(noProv)
+      case Inter(lhs, rhs) => typeType(lhs) & typeType(rhs)
+      case Union(lhs, rhs) => typeType(lhs) | typeType(rhs)
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "function type"))
@@ -293,16 +294,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-      case App(Var("neg"), trm) => NegType(typeTerm(trm))(prov)
+      case App(Var("neg"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
         val newCtx = ctx.nest // TODO use
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
       case App(App(Var("|"), lhs), rhs) =>
-        ComposedType(true, typeTerm(lhs), typeTerm(rhs))(prov)
+        typeTerm(lhs) | (typeTerm(rhs), prov)
       case App(App(Var("&"), lhs), rhs) =>
-        ComposedType(false, typeTerm(lhs), typeTerm(rhs))(prov)
+        typeTerm(lhs) & (typeTerm(rhs), prov)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -359,10 +360,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case Asc(v: Var, _) => v
         }, cs)
         val req = tys.foldRight(BotType: SimpleType) {
-          case ((a_ty, tv), req) => ComposedType(true,
-            ComposedType(false, a_ty, tv)(noProv),
-            ComposedType(false, req, NegType(a_ty)(noProv // FIXME
-              ))(noProv))(noProv)
+          case ((a_ty, tv), req) =>
+            a_ty & tv | req & a_ty.neg(noProv // FIXME
+              )
         }
         con(s_ty, req, cs_ty)
       case pat if ctx.inPattern =>
@@ -397,7 +397,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           // (AppliedType(cls, Nil)(noProv // FIXME
           ) -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
-      (req_ty :: tys) -> ComposedType(true, bod_ty, rest_ty)(noProv)
+      (req_ty :: tys) -> (bod_ty | rest_ty)
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])

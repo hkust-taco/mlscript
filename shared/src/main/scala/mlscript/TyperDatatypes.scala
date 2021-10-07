@@ -55,7 +55,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends ConstructedType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
-      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => ComposedType(false, l, r)(noProv)))
+      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => l & r))
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   
@@ -102,7 +102,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
       if (defn.kind === Als) body_ty
-      else ComposedType(false, PrimType(Var(defn.nme.name))(noProv/*TODO*/), body_ty)(noProv)
+      else PrimType(Var(defn.nme.name))(noProv/*TODO*/) & body_ty
     }
   }
   
