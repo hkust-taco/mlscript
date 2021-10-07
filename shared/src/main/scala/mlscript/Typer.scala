@@ -72,6 +72,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "discard" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "add" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "sub" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "mul" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "div" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "sqrt" -> fun(IntType, IntType)(noProv),
+      "lt" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "le" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "gt" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "ge" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "eq" -> {
+        val v = freshVar(noProv)(1)
+        PolymorphicType(0, fun(v, fun(v, BoolType)(noProv))(noProv))
+      },
+      "ne" -> {
+        val v = freshVar(noProv)(1)
+        PolymorphicType(0, fun(v, fun(v, BoolType)(noProv))(noProv))
+      },
       "+" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
       "<" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
       "id" -> {

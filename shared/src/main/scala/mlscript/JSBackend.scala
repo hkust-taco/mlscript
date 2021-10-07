@@ -4,7 +4,7 @@ import mlscript.utils._, shorthands._
 import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
-import javax.rmi.CORBA.ClassDesc
+import scala.collection.immutable
 
 // TODO: should I turn this into a class?
 // Becasue type information for each run is local.
@@ -67,6 +67,9 @@ class JSBackend {
       ???
   }
 
+  private def builtinFnOpMap =
+    immutable.HashMap("add" -> "+", "sub" -> "-", "mul" -> "*", "div" -> "/")
+
   def translateTerm(term: Term): JSExpr = term match {
     case Var(name) =>
       if (classNames.contains(name)) {
@@ -82,9 +85,14 @@ class JSBackend {
     case Lam(lhs, rhs) =>
       val (paramCode, declaredVars) = translateLetPattern(lhs)
       new JSArrowFn(paramCode, translateTerm(rhs))
-    // Tenary expression.
-    case App(App(Var("add"), left), right) =>
-      JSBinary("+", translateTerm(left), translateTerm(right))
+    // Binary expressions.
+    case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
+      JSBinary(
+        builtinFnOpMap.get(name).get,
+        translateTerm(left),
+        translateTerm(right)
+      )
+    // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       new JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
