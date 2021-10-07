@@ -50,6 +50,21 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n
       case _ => NegType(this)(prov)
     }
+    def without(name: Str): SimpleType = this match {
+      case Without(b, ns) => Without(b, ns + name)(this.prov)
+      case t @ FunctionType(l, r) => t
+      case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
+      case a @ AppType(f, as) => ???
+      case t @ RecordType(fs) => RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
+      case t @ TupleType(fs) => t
+      case vt: VarType => ???
+      case n @ NegType(neg) => ??? // TODO
+      case e @ ExtrType(_) => ??? // TODO
+      case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
+      case p @ PrimType(_) => p
+      // case tv: TypeVariable => 
+      case _ => Without(this, Set.single(name))(noProv)
+    }
     
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
       case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)

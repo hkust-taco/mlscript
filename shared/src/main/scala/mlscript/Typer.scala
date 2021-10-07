@@ -352,7 +352,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val r_ty = typePattern(r)(newCtx, raise) // TODO make these bindings flow
         con(l_ty, r_ty, TopType)
         BoolType
-      case With(t, n, v) => ??? // TODO
+      case With(t, n, v) =>
+        val t_ty = typeTerm(t)
+        val v_ty = typeTerm(v)
+        (t_ty without n) &
+          RecordType(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
       case CaseOf(s, cs) =>
         val s_ty = typeTerm(s)
         val (tys, cs_ty) = typeArms(s |>? {

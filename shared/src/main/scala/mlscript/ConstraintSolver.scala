@@ -394,6 +394,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case a @ AppType(f, as) => AppType(extrude(f, lvl, !pol), as.map(extrude(_, lvl, pol)))(a.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
+      case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov)(lvl)
         cache += (tv -> nv)
@@ -455,6 +456,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
       case PrimType(_) => ty
+      case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
     }
     freshen(ty)
   }

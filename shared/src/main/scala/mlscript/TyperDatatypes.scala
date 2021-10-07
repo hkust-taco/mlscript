@@ -46,6 +46,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs -> $rhs)"
   }
   
+  // TODO remove or dedup with TypeRef...
   case class AppType(lhs: SimpleType, args: Ls[SimpleType])(val prov: TypeProvenance) extends BaseType {
     require(args.nonEmpty)
     lazy val level: Int = (lhs :: args).maxBy(_.level).level
@@ -81,6 +82,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = negated.level
     override def toString = s"(not ${negated})"
+  }
+  
+  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = base.level
+    override def toString = s"${base}\\${names.mkString("\\")}"
   }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */

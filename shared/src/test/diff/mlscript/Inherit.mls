@@ -1,0 +1,34 @@
+
+class Parent: { name: string }
+//│ Defined class Parent
+
+class Child: Parent & { age: int }
+//│ Defined class Child
+
+:e
+def c = Child(Parent { name = "Bob" })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.9: 	def c = Child(Parent { name = "Bob" })
+//│ ║       	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Parent & {name: string}` does not match type `{age: int}`
+//│ ║  l.9: 	def c = Child(Parent { name = "Bob" })
+//│ ║       	              ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.5: 	class Child: Parent & { age: int }
+//│ ╙──     	                      ^^^^^^^^^^^^
+//│ c: (Child & (Parent & {age: int})) | error
+
+// FIXME
+def c = Child(Parent { name = "Bob" } with { age = 123 })
+//│ /!!!\ Uncaught error: scala.MatchError: (List(α6'\age, {age: 123}),List()) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:94)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:129)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24(ConstraintSolver.scala:255)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24$adapted(ConstraintSolver.scala:162)
+

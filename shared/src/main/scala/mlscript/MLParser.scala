@@ -10,7 +10,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   val keywords = Set(
     "def", "class", "trait", "type",
-    "let", "rec", "in", "fun",
+    "let", "rec", "in", "fun", "with",
     "if", "then", "else", "match", "case", "of",
     "_")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
@@ -28,7 +28,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ident[_: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
-  def term[_: P]: P[Term] = P( let | fun | ite | appsAsc | _match )
+  def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
   def const[_: P]: P[Term] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Term] = locate(ident.map(Var))
@@ -36,7 +36,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ident).rep ).map {
     case (st, sels) => sels.foldLeft(st)(Sel) }
-  def record[_: P]: P[Term] = locate(P(
+  def record[_: P]: P[Rcd] = locate(P(
       "{" ~/ (ident ~ "=" ~ term map L.apply).|(ident map R.apply).rep(sep = ";") ~ "}"
     ).map { fs =>
       Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> Var(id) }.toList)
@@ -49,9 +49,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
-  def appsAsc[_: P]: P[Term] = P( apps ~ (":" ~ ty).rep ).map {
+  def withsAsc[_: P]: P[Term] = P( withs ~ (":" ~ ty).rep ).map {
     // case (as, N) => as
-    case (apps, ascs) => ascs.foldLeft(apps)(Asc)
+    case (withs, ascs) => ascs.foldLeft(withs)(Asc)
+  }
+  def withs[_: P]: P[Term] = P( apps ~ (kw("with") ~ record).rep ).map {
+    case (as, ws) => ws.foldLeft(as)((acc, w) => w.fields.foldLeft(acc)((acc1, fv) => With(acc1, fv._1, fv._2)))
   }
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
   def _match[_: P]: P[CaseOf] =

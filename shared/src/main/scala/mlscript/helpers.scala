@@ -32,12 +32,15 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
     case Applied(Applied(Primitive(op), l), r) if !op.head.isLetter =>
       parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
+    case Applied(Primitive(op), t) if op.head === '\\' =>
+      s"${t.showIn(ctx, 100)}$op"
     case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
     case AppliedType(n, args) => s"$n[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    // case Rem(b, ns) => s"${b.showIn(ctx, 100)}${ns.map("\\"+_).mkString}" // Not yet used
   }
   
   def children: List[Type] = this match {

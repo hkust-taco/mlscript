@@ -143,6 +143,9 @@ trait TypeSimplifier { self: Typer =>
       case ComposedType(p, l, r) => // FIXME tmp hack
         val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"))(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(l, pol, parents) :: go(r, pol, parents) :: Nil))
+      case Without(b, ns) =>
+        val base = ct(prims = BaseTypes single PrimType(Var(ns.map("\\"+_).mkString))(noProv))
+        ct(prims = BaseTypes single CompactAppType(base, go(b, pol, parents) :: Nil))
       case a @ AppType(lhs, args) =>
         ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
       case RecordType(fs) =>

@@ -1,0 +1,27 @@
+
+def rcd = { x = 1 }
+//│ rcd: {x: 1}
+
+rcd with { y = 2 }
+//│ res: {x: 1} & {y: 2}
+
+rcd with { x = "oops" }
+//│ res: {} & {x: "oops"}
+
+
+def f r = r with { x = "oops" }
+//│ f: 'a -> 'a\x & {x: "oops"}
+
+// FIXME
+def f a b = if true then a else b
+def f a b = (if true then a else b) with { x = "oops" }
+//│ f: anything -> nothing
+//│ f: anything -> nothing\x & {x: "oops"}
+
+def f = fun a -> fun b -> if true then a else b
+//│ f: 'a -> 'a -> 'a
+
+def f = fun a -> fun b -> let tmp = a.x in (if true then a else b) with { x = "oops" }
+//│ f: 'a & {x: anything} -> 'a -> 'a\x & {x: "oops"}
+
+
