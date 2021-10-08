@@ -1,6 +1,6 @@
 
 let empty = {}
-//│ empty: {}
+//│ empty: anything
 
 1
 (1)
@@ -61,7 +61,7 @@ r.w
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.59: 	empty.w
 //│ ║        	     ^^
-//│ ╟── expression of type `{}` does not have field 'w'
+//│ ╟── expression of type `anything` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
 //│ ╟── but it flows into reference with expected type `{w: ?a}`

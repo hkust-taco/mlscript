@@ -2,7 +2,7 @@
 class None: {}
 def None = None{}
 //│ Defined class None
-//│ None: None & {}
+//│ None: None
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
@@ -27,7 +27,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.26: 	res.value
 //│ ║        	^^^
-//│ ╟── expression of type `None & {}` does not match type `{value: ?a}`
+//│ ╟── expression of type `None` does not have field 'value'
 //│ ║  l.17: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
@@ -39,7 +39,7 @@ res.value
 42: Option[int, int]
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 //│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:105)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:110)
 //│ 	at: mlscript.Typer.typeType(Typer.scala:136)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:275)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)

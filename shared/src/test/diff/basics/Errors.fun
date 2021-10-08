@@ -267,7 +267,7 @@ succ {a: 1}
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+2: 	{}.u
 //│ ║        	  ^^
-//│ ╟── expression of type `{}` does not have field 'u'
+//│ ╟── expression of type `anything` does not have field 'u'
 //│ ║  l.+2: 	{}.u
 //│ ╙──      	^^
 //│ res: error

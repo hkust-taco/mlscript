@@ -19,16 +19,13 @@ f (rcd with { y = 2 })
 //│ res: ({x: 1}\y & {y: 2})\x & {x: "oops"}
 
 
-// FIXME
 def f a b = if true then a else b
-def f a b = (if true then a else b) with { x = "oops" }
-//│ f: anything -> nothing
-//│ f: anything -> nothing\x & {x: "oops"}
-
-def f = fun a -> fun b -> if true then a else b
 //│ f: 'a -> 'a -> 'a
 
-def f = fun a -> fun b -> let tmp = a.x in (if true then a else b) with { x = "oops" }
+def f a b = (if true then a else b) with { x = "oops" }
+//│ f: 'a -> 'a -> 'a\x & {x: "oops"}
+
+def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
 //│ f: 'a & {x: anything} -> 'a -> 'a\x & {x: "oops"}
 
 

@@ -1,0 +1,96 @@
+class Some[A]: { value: A }
+class None: {}
+//│ Defined class Some
+//│ Defined class None
+
+
+def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
+//│ flatMap3: ('a -> 'b) -> ((Some & 'a) | ('c & neg Some)) -> 'b | 'c
+
+
+def arg = if true then Some{value = 42} with {payload = 23} else None {}
+//│ arg: ((Some & {value: 42})\payload & {payload: 23}) | None
+
+// FIXME
+flatMap3 (fun x -> add x.value x.payload) arg
+//│ /!!!\ Uncaught error: scala.MatchError: (List(),List((not Some)\payload, Some)) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:94)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:131)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:128)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+
+
+
+def arg = if true then Some{value = 42} else None {}
+//│ arg: (Some & {value: 42}) | None
+
+flatMap3 (fun x -> x.value) arg
+//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
+
+def foo = flatMap3 (fun x -> x.value)
+//│ foo: ((Some & {value: 'a}) | ('b & neg Some)) -> 'a | 'b
+
+foo arg
+//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
+
+foo 1
+//│ res: nothing | (1 & neg Some)
+
+def fn = foo None
+//│ fn: nothing | ((anything -> None) & neg Some)
+
+// :d
+fn{} // foo None {}
+//│ res: None
+
+// :d
+foo (None{})
+//│ res: nothing | (None & neg Some)
+
+
+fun f -> flatMap3 f arg
+//│ res: ((None & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) | ((Some & {value: 42}) & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) -> 'a) -> 'a | (None & neg Some) | (({value: 42} & Some) & neg Some)
+
+
+
+
+def foo = flatMap3 (fun x -> x)
+//│ foo: ((Some & 'a) | ('b & neg Some)) -> 'a | 'b
+
+foo 1
+//│ res: (1 & neg ((1 & neg Some) & neg Some)) | (1 & neg Some)
+
+
+
+
+def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
+//│ simpler: (1 -> 'a) -> 'a | None
+
+def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ simpler: ('a -> 'b) -> ((Some & 'a) | ((None & 'c) & neg Some)) -> 'b | 'c
+
+simpler (fun x -> x.value)
+//│ res: ((Some & {value: 'a}) | ((None & 'b) & neg Some)) -> 'a | 'b
+
+:e
+res 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.82: 	res 1
+//│ ║        	^^^^^
+//│ ╟── expression of type `1` does not match type `(Some & ?a & {value: ?b}) | ((None & ?c) & neg Some)`
+//│ ║  l.82: 	res 1
+//│ ║        	    ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ╙──      	                                       ^^^
+//│ res: (nothing | (1 & neg Some)) | error
+
+
+def funny = fun f -> case f of { Some -> f f }
+//│ funny: 'a & Some & ('a -> 'b) -> 'b

@@ -113,7 +113,7 @@ x => x.f
 
 // note: MLsub returns "⊤" (equivalent)
 {}
-//│ res: {}
+//│ res: anything
 
 { f: 42 }
 //│ res: {f: 42}

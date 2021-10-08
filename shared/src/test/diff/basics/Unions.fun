@@ -130,7 +130,7 @@ h(0)
 //│ res: int
 
 let foo(r: { v: 0 } | { v: 1 }) = if r.v < 1 then r.v else 2
-//│ foo: (r: ({v: 0} | {v: 1}) & {v: 'a & int},) -> 'a | 2
+//│ foo: (r: {v: 'a & int & (0 | 1)},) -> 'a | 2
 
 foo({ v: 0 })
 foo({ v: 1 })
@@ -138,7 +138,7 @@ foo({ v: 1 })
 //│ res: 2 | 1
 
 x => foo(x)
-//│ res: (r: ({v: 0} | {v: 1}) & {v: 'a & int},) -> 'a | 2
+//│ res: (r: {v: 'a & int & (0 | 1)},) -> 'a | 2
 
 x => foo { v: x }
 //│ res: 'a & (0 | 1) & int -> 'a | 2

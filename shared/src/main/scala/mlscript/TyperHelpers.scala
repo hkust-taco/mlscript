@@ -29,25 +29,39 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
-    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = this match {
-      case TopType => TopType
-      case BotType => that
+    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+      case (TopType, _) => TopType
+      case (BotType, _) => that
+      case (_: RecordType, _: PrimType | _: FunctionType) => TopType
+      case (_: FunctionType, _: PrimType | _: RecordType) => TopType
+      case (RecordType(fs1), RecordType(fs2)) =>
+        val fs2m = fs2.toMap
+        RecordType(fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) })(prov)
       case _ if !swapped => that | (this, prov, swapped = true)
-      case `that` => this
+      case (`that`, _) => this
+      case (NegType(`that`), _) => TopType
       case _ => ComposedType(true, that, this)(prov)
     }
-    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = this match {
-      case TopType => that
-      case BotType => BotType
-      case ComposedType(true, l, r) => l & that | r & that
+    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+      case (TopType, _) => that
+      case (BotType, _) => BotType
+      case (ComposedType(true, l, r), _) => l & that | r & that
+      case (_: PrimType, _: FunctionType) => BotType
+      case (RecordType(fs1), RecordType(fs2)) =>
+        RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
       case _ if !swapped => that & (this, prov, swapped = true)
-      case `that` => this
+      case (`that`, _) => this
+      case (NegType(`that`), _) => BotType
       case _ => ComposedType(false, that, this)(prov)
     }
     def neg(prov: TypeProvenance = noProv): SimpleType = this match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.neg() & r.neg()
       case NegType(n) => n
+      case _: RecordType =>
+        BotType
+        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+        // meaning negated records are basically bottoms.
       case _ => NegType(this)(prov)
     }
     

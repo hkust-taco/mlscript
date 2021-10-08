@@ -58,6 +58,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => l & r))
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
+  object RecordType {
+    def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+      if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
+  }
   
   case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends BaseType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
@@ -72,6 +76,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
   case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = 0
+    override def toString = if (pol) "⊥" else "⊤"
   }
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {

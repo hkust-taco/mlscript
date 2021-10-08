@@ -2,8 +2,8 @@
 // FIXME
 data type Bool of True, False
 //│ Bool: True | False
-//│ True: {}
-//│ False: {}
+//│ True: anything
+//│ False: anything
 
 :e
 data type Bool of True & False
@@ -11,20 +11,20 @@ data type Bool of True & False
 //│ ║  l.9: 	data type Bool of True & False
 //│ ╙──     	                       ^
 //│ Bool: True & False
-//│ &: True -> False -> {}
+//│ &: True -> False -> anything
 
 data type Bool of
   True; False
 //│ Bool: True | False
-//│ True: {}
-//│ False: {}
+//│ True: anything
+//│ False: anything
 
 data type Bool of
   True
   False
 //│ Bool: True | False
-//│ True: {}
-//│ False: {}
+//│ True: anything
+//│ False: anything
 
 Bool
 True
@@ -35,7 +35,7 @@ True as Bool
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.34: 	True as Bool
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `{}` does not match type `False`
+//│ ╟── expression of type `anything` does not match type `False`
 //│ ║  l.23: 	  True
 //│ ║        	  ^^^^
 //│ ╟── but it flows into reference with expected type `Bool`
@@ -68,7 +68,7 @@ data type List a of // FIXME param type becomes 'anything'
   Nil
   Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
 //│ List: anything -> Nil | Cons (head: 'a,) (tail: 'b,)
-//│ Nil: {}
+//│ Nil: anything
 //│ Cons: (head: 'a,) -> (tail: 'b,) -> {head: 'a, tail: 'b}
 
 Nil

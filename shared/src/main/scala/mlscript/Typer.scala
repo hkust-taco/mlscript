@@ -125,7 +125,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Inter(lhs, rhs) => typeType(lhs) & typeType(rhs)
       case Union(lhs, rhs) => typeType(lhs) | typeType(rhs)
       case Applied(lhs, rhs) => ??? // TODO
-      case Record(fs) => RecordType(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
+      case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "function type"))
       case Primitive(name) =>
         vars.get(name) getOrElse
@@ -146,7 +146,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     val params_ty = d.params.map(typePattern(_)(newCtx, raise))
     val appProv = tp(d.original.toLoc, "data definition")
     val newBindings = newCtx.env.view.mapValues(_.instantiate) // FIXME level?
-    val refinedBase = RecordType(newBindings.toList.sortBy(_._1))(appProv)
+    val refinedBase = RecordType.mk(newBindings.toList.sortBy(_._1))(appProv)
     val ty = params_ty.foldRight(refinedBase: SimpleType)(_.abs(_)(appProv))
     VarType(new VarIdentity(lvl - 1, d.head), ty, false)(tp(d.head.toLoc, "data symbol")) -> params_ty
   }
@@ -321,9 +321,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
         val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType((name, res) :: Nil)(prov), res)
+        con(obj_ty, RecordType.mk((name, res) :: Nil)(prov), res)
       case Rcd(fs) => // TODO rm: no longer used?
-        RecordType(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
+        RecordType.mk(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         val newCtx = ctx.nest
@@ -356,7 +356,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val t_ty = typeTerm(t)
         val v_ty = typeTerm(v)
         (t_ty without n) &
-          RecordType(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
+          RecordType.mk(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
       case CaseOf(s, cs) =>
         val s_ty = typeTerm(s)
         val (tys, cs_ty) = typeArms(s |>? {
@@ -378,8 +378,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       (implicit ctx: Ctx, raise: Raise, lvl: Int)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
-    case Wildcard(b) => (freshVar(noProv // FIXME
-      ) -> TopType :: Nil) -> typeTerm(b)
+    case Wildcard(b) =>
+      val fv = freshVar(noProv // FIXME
+      )
+      val newCtx = ctx.nest
+      scrutVar match {
+        case Some(v) =>
+          newCtx += v.name -> fv
+          val b_ty = typeTerm(b)(newCtx, raise)
+          (fv -> TopType :: Nil) -> b_ty
+        case _ =>
+          (fv -> TopType :: Nil) -> typeTerm(b)
+      }
     case Case(cls, bod, rest) =>
       val td = ctx.tyDefs.getOrElse(cls.name,
         err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/))
@@ -474,7 +484,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             warn("Missing name for record field", t.prov.loco)
             ("_" + (i + 1), t)
         }.toList
-        RecordType(fs)(prov)
+        RecordType.mk(fs)(prov)
       } else TupleType(fields.reverse)(prov)
   }
   

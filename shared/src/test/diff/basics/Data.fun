@@ -27,7 +27,7 @@ bar {age: 1} // TODO B/E
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.24: 	bar {}
 //│ ║        	^^^^^^
-//│ ╟── expression of type `{}` does not have field 'age'
+//│ ╟── expression of type `anything` does not have field 'age'
 //│ ║  l.24: 	bar {}
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from field selection:
