@@ -1,18 +1,8 @@
 
+// FIXME forbid!
 type A = A
 //│ Defined type A
 
-// FIXME
 32: A
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.Typer$$Lambda$42159/0x00000008014ec440.get$Lambda(Unknown Source)
-//│ 	at: mlscript.Typer.typeType(Typer.scala:132)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:113)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$38(ConstraintSolver.scala:263)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$38$adapted(ConstraintSolver.scala:176)
-//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:77)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$35(ConstraintSolver.scala:176)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:174)
+//│ res: A
 

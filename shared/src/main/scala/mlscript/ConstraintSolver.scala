@@ -178,10 +178,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
           // There is no need to remember the subtyping tests performed that did not involve
-          // type variables, as type variables will necessary be part of any possible cycles.
-          // Since these types form regular trees, there will necessarily be a point where a
-          // variable part of a cycle will be matched against the same type periodically.
-          case (_: TypeVariable, _) | (_, _: TypeVariable) =>
+          // type variables or type references, as these will necessary be part of any possible
+          // cycles. Since these types form regular trees, there will necessarily be a point where
+          // a variable or type ref part of a cycle will be matched against the same type periodically.
+          case (_: TypeVariable | _: TypeRef, _) | (_, _: TypeVariable | _: TypeRef) =>
             if (cache(lhs_rhs)) return
             cache += lhs_rhs
           case _ => ()
