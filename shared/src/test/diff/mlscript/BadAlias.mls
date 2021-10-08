@@ -1,0 +1,19 @@
+
+// FIXME forbid!
+
+type A = A
+//│ Defined type A
+
+32: A
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24(ConstraintSolver.scala:163)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24$adapted(ConstraintSolver.scala:162)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:77)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$21(ConstraintSolver.scala:162)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:160)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24(ConstraintSolver.scala:249)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$24$adapted(ConstraintSolver.scala:162)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:77)
+
