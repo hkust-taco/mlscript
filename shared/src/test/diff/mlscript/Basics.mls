@@ -61,7 +61,6 @@ def z = add x y
 //│ ╙──      	^
 //│ res: error
 
-:p
 def f x y z = add x y 
 //│ Parsed: Def(false,f,(x => (y => (z => ((add x) y)))));
 //│ f: int -> int -> anything -> int
