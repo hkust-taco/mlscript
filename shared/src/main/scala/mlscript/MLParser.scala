@@ -4,6 +4,8 @@ import scala.util.chaining._
 import fastparse._, fastparse.ScalaWhitespace._
 import mlscript.utils._, shorthands._
 
+// TODO: empty lines
+
 /** Parser for an ML-style input syntax, used in the legacy `ML*` tests. */
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
@@ -72,7 +74,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def expr[_: P]: P[Term] = P( term ~ End )
   
   def defDecl[_: P]: P[Def] =
-    P(kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ term.rep ~ "=" ~ term map {
+    P(kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, ps.foldRight(bod)((i, acc) => Lam(i, acc)))
     })
   
