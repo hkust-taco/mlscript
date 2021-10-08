@@ -29,7 +29,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case LhsRefined(N, r) => r
         case LhsRefined(S(b), RecordType(Nil)) => b
         case LhsRefined(S(b), r) => b & r
-        case LhsTop => ExtrType(false)(noProv)
+        case LhsTop => TopType
       }
       def & (that: BaseType): Opt[LhsNf] = (this, that) match {
         case (LhsTop, _) => S(LhsRefined(S(that), RecordType(Nil)(noProv)))
@@ -57,8 +57,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       def toTypes: Ls[SimpleType] = toType :: Nil
       def toType: SimpleType = this match {
         case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
-        case RhsBases(ps, b) => ps.foldLeft(b.getOrElse(TopType))(_ | _)
-        case RhsBot => ExtrType(true)(noProv)
+        case RhsBases(ps, b) => ps.foldLeft(b.getOrElse(BotType))(_ | _)
+        case RhsBot => BotType
       }
       def | (that: BaseType): Opt[RhsNf] = (this, that) match {
         case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N))
@@ -96,11 +96,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) =>
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
-          val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
+          val rhs = tys.reduceOption(_ | _).getOrElse(BotType)
           rec(tv, rhs)
         case (_, (tv: TypeVariable) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
-          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
+          val lhs = tys.reduceOption(_ & _).getOrElse(TopType)
           rec(lhs, tv)
         case (ComposedType(true, ll, lr) :: ls, _) =>
           annoying(ll :: ls, done_ls, rs, done_rs)

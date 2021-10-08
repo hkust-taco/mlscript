@@ -15,8 +15,8 @@ def f r = r with { x = "oops" }
 // FIXME
 def f a b = if true then a else b
 def f a b = (if true then a else b) with { x = "oops" }
-//│ f: anything -> nothing
-//│ f: anything -> nothing\x & {x: "oops"}
+//│ f: 'a -> 'a -> 'a
+//│ f: 'a -> 'a -> 'a\x & {x: "oops"}
 
 def f = fun a -> fun b -> if true then a else b
 //│ f: 'a -> 'a -> 'a

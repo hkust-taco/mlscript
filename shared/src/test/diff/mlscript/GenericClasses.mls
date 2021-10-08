@@ -39,7 +39,7 @@ res.value
 42: Option[int, int]
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 //│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:106)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:107)
 //│ 	at: mlscript.Typer.typeType(Typer.scala:136)
 //│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:275)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)

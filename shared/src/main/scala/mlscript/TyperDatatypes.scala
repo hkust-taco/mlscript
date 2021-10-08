@@ -73,6 +73,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
   case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = 0
+    override def toString = if (pol) "⊥" else "⊤"
   }
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
