@@ -133,6 +133,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse (return))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
+        case (Without(b:TypeVariable, ns) :: ls, rs) =>
+          def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
+          val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
+          rec(b, rhs.without(ns))
+        case (ls, Without(b:TypeVariable, ns) :: rs) =>
+          def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
+          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
+          rec(lhs.without(ns), b)
+          
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases

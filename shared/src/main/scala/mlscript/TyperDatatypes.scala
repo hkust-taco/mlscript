@@ -38,7 +38,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type ST = SimpleType
   
-  sealed abstract class ConstructedType extends SimpleType
   sealed abstract class BaseType extends SimpleType
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends BaseType {
@@ -53,7 +52,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs${args.map(" " + _).mkString})"
   }
   
-  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends ConstructedType {
+  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => l & r))
@@ -110,6 +109,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (defn.kind === Als) body_ty
       else PrimType(Var(defn.nme.name))(noProv/*TODO*/) & body_ty
     }
+    override def toString =
+      if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"
   }
   
   case class PrimType(id: SimpleTerm)(val prov: TypeProvenance) extends BaseType {

@@ -50,6 +50,11 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n
       case _ => NegType(this)(prov)
     }
+    
+    // TODO make it the other way around (more efficient)
+    def without(names: Set[Str]): SimpleType =
+      names.foldLeft(this)(_.without(_))
+    
     def without(name: Str): SimpleType = this match {
       case Without(b, ns) => Without(b, ns + name)(this.prov)
       case t @ FunctionType(l, r) => t
@@ -58,11 +63,15 @@ abstract class TyperHelpers { self: Typer =>
       case t @ RecordType(fs) => RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
       case t @ TupleType(fs) => t
       case vt: VarType => ???
-      case n @ NegType(neg) => ??? // TODO
-      case e @ ExtrType(_) => ??? // TODO
+      case n @ NegType(nt) if (nt match {
+        case _: ComposedType | _: ExtrType | _: NegType => true
+        case _ => false
+      }) => nt.neg(n.prov).without(name)
+      case NegType(rt: RecordType) => this // FIXME valid??!
+      case e @ ExtrType(_) => e // FIXME valid??!
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
       case p @ PrimType(_) => p
-      // case tv: TypeVariable => 
+      // case tv: TypeVariable =>
       case _ => Without(this, Set.single(name))(noProv)
     }
     
@@ -110,6 +119,7 @@ abstract class TyperHelpers { self: Typer =>
       case ProxyType(und) => und :: Nil
       case PrimType(_) => Nil
       case TypeRef(d, ts) => ts
+      case Without(b, ns) => b :: Nil
     }
     
     def getVars: Set[TypeVariable] = {

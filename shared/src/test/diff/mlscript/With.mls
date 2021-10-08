@@ -12,6 +12,13 @@ rcd with { x = "oops" }
 def f r = r with { x = "oops" }
 //│ f: 'a -> 'a\x & {x: "oops"}
 
+f rcd
+//│ res: {x: 1}\x & {x: "oops"}
+
+f (rcd with { y = 2 })
+//│ res: ({x: 1} & {y: 2})\x & {x: "oops"}
+
+
 // FIXME
 def f a b = if true then a else b
 def f a b = (if true then a else b) with { x = "oops" }
