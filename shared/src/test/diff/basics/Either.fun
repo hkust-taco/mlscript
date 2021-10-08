@@ -16,15 +16,15 @@ data type Either L R of
 //│ ║  l.5: 	  Right R
 //│ ╙──     	        ^
 //│ Either: error -> error -> Left error | Right error
-//│ Left: error -> {}
-//│ Right: error -> {}
+//│ Left: error -> anything
+//│ Right: error -> anything
 
 data type Either (L: _) (R: _) of
   Left L
   Right R
 //│ Either: (L: 'a,) -> (R: 'b,) -> Left 'a | Right 'b
-//│ Left: anything -> {}
-//│ Right: anything -> {}
+//│ Left: anything -> anything
+//│ Right: anything -> anything
 
 let l = Left 1
 let r = Right "ok"
@@ -55,7 +55,7 @@ e as Either
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.54: 	e as Either
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `{}` is not a function
+//│ ╟── expression of type `anything` is not a function
 //│ ║  l.23: 	  Left L
 //│ ║        	  ^^^^^^
 //│ ╟── Note: constraint arises from data type definition:

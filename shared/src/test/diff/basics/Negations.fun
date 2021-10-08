@@ -1,6 +1,6 @@
 
 data Wine
-//│ Wine: {}
+//│ Wine: anything
 
 
 let jesus = neg Wine => Wine
@@ -22,7 +22,7 @@ jesus(water: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.20: 	jesus w
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `{}` does not match type `neg Wine`
+//│ ╟── expression of type `anything` does not match type `neg Wine`
 //│ ║  l.2: 	data Wine
 //│ ║       	     ^^^^
 //│ ╟── but it flows into reference with expected type `(water: ?a & neg Wine,)`
@@ -35,7 +35,7 @@ jesus(water: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	jesus(water: w)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{}` does not match type `neg Wine`
+//│ ╟── expression of type `anything` does not match type `neg Wine`
 //│ ║  l.2: 	data Wine
 //│ ║       	     ^^^^
 //│ ╟── but it flows into argument with expected type `(water: ?a & neg Wine,)`
@@ -48,7 +48,7 @@ jesus(water: w)
 
 
 (0 | 1) & neg 0
-//│ res: (0 & neg 0) | (1 & neg 0)
+//│ res: 1 & neg 0
 
 (0 | 1) & neg 0 as 1
 //│ res: 1

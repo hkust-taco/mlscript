@@ -9,7 +9,7 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: ((Some & {value: 42})\payload & {payload: 23}) | (None & {})
+//│ arg: ((Some & {value: 42})\payload & {payload: 23}) | None
 
 // FIXME
 flatMap3 (fun x -> add x.value x.payload) arg
@@ -28,34 +28,34 @@ flatMap3 (fun x -> add x.value x.payload) arg
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: (Some & {value: 42}) | (None & {})
+//│ arg: (Some & {value: 42}) | None
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (None & neg {value: 42}) | (({} & None) & neg Some) | ((Some & {value: 42}) & neg {value: 42}) | (({value: 42} & Some) & neg Some)
+//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((Some & {value: 'a}) | ('b & neg Some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (None & neg {value: 42}) | (({} & None) & neg Some) | ((Some & {value: 42}) & neg {value: 42}) | (({value: 42} & Some) & neg Some)
+//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
 
 foo 1
-//│ res: nothing | (1 & neg {value: nothing}) | (1 & neg Some)
+//│ res: nothing | (1 & neg Some)
 
 def fn = foo None
-//│ fn: nothing | (({} -> None & {}) & neg {value: nothing}) | (({} -> None & {}) & neg Some)
+//│ fn: nothing | ((anything -> None) & neg Some)
 
 // :d
 fn{} // foo None {}
-//│ res: None & {}
+//│ res: None
 
 // :d
 foo (None{})
-//│ res: nothing | (None & neg {value: nothing}) | (({} & None) & neg Some)
+//│ res: nothing | (None & neg Some)
 
 
 fun f -> flatMap3 f arg
-//│ res: (((None & {}) & neg ((({} & None) & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) | ((Some & {value: 42}) & neg ((({} & None) & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) -> 'a) -> 'a | (({} & None) & neg Some) | (({value: 42} & Some) & neg Some)
+//│ res: ((None & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) | ((Some & {value: 42}) & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) -> 'a) -> 'a | (None & neg Some) | (({value: 42} & Some) & neg Some)
 
 
 
@@ -70,7 +70,7 @@ foo 1
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> 'a | (None & {})
+//│ simpler: (1 -> 'a) -> 'a | None
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ simpler: ('a -> 'b) -> ((Some & 'a) | ((None & 'c) & neg Some)) -> 'b | 'c
@@ -89,7 +89,7 @@ res 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & neg {value: nothing}) | (1 & neg Some)) | error
+//│ res: (nothing | (1 & neg Some)) | error
 
 
 def funny = fun f -> case f of { Some -> f f }

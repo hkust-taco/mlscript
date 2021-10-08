@@ -24,10 +24,10 @@ test: (Person & {age: int} | Animal) -> int
 //│ res: ((Person & {age: int}) | Animal) -> int
 
 def a = Animal{}
-//│ a: Animal & {}
+//│ a: Animal
 
 a: {}
-//│ res: {}
+//│ res: anything
 
 def p = Person "Bob" 42
 //│ p: Person & {age: int, name: string}

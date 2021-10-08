@@ -59,6 +59,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => l & r))
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
+  object RecordType {
+    def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+      if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
+  }
   
   case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends BaseType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
