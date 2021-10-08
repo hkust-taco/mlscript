@@ -1,0 +1,60 @@
+class Some[A]: { value: A }
+class None: {}
+//│ Defined class Some
+//│ Defined class None
+
+
+def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
+//│ flatMap3: ('a -> 'b) -> ((Some & 'a) | ('c & neg Some)) -> 'b | 'c
+
+
+def arg = if true then Some{value = 42} with {payload = 23} else None {}
+//│ arg: ((Some & {value: 42})\payload & {payload: 23}) | (None & {})
+
+// FIXME
+flatMap3 (fun x -> add x.value x.payload) arg
+//│ /!!!\ Uncaught error: scala.MatchError: (List(α36\payload, {payload: 23}),List()) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:94)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:128)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:93)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:119)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+
+
+
+def arg = if true then Some{value = 42} else None {}
+//│ arg: (Some & {value: 42}) | (None & {})
+
+flatMap3 (fun x -> x.value) arg
+//│ res: 42 | (None & neg {value: 42}) | ((Some & {value: 42}) & neg {value: 42})
+
+def foo = flatMap3 (fun x -> x.value)
+//│ foo: ((Some & {value: 'a}) | ('b & neg Some)) -> 'a | 'b
+
+foo arg
+//│ res: 42 | (None & neg {value: 42}) | ((Some & {value: 42}) & neg {value: 42})
+
+foo 1
+//│ res: nothing | (1 & neg {value: nothing})
+
+def fn = foo None
+//│ fn: nothing | (({} -> None & {}) & neg {value: nothing})
+
+// :d
+fn{} // foo None {}
+//│ res: nothing
+
+// :d
+foo (None{})
+//│ res: nothing | (None & neg {value: nothing})
+
+
+fun f -> flatMap3 f arg
+//│ res: (((None & {}) & neg (nothing & neg Some)) | ((Some & {value: 42}) & neg (nothing & neg Some)) -> 'a) -> 'a | nothing
+
+

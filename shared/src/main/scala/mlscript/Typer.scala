@@ -378,8 +378,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       (implicit ctx: Ctx, raise: Raise, lvl: Int)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
-    case Wildcard(b) => (freshVar(noProv // FIXME
-      ) -> TopType :: Nil) -> typeTerm(b)
+    case Wildcard(b) =>
+      val fv = freshVar(noProv // FIXME
+      )
+      val newCtx = ctx.nest
+      scrutVar match {
+        case Some(v) =>
+          newCtx += v.name -> fv
+          val b_ty = typeTerm(b)(newCtx, raise)
+          (fv -> TopType :: Nil) -> b_ty
+        case _ =>
+          (fv -> TopType :: Nil) -> typeTerm(b)
+      }
     case Case(cls, bod, rest) =>
       val td = ctx.tyDefs.getOrElse(cls.name,
         err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/))
