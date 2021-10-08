@@ -5,8 +5,11 @@ class Parent1: { name: string }
 class Parent2: { name: int }
 //│ Defined class Parent2
 
+// TODO forbid
 class Child: Parent1 & Parent2
 //│ Defined class Child
 
-def f(x:Child)=x.name
+// FIXME param annotations
+def f(x:Child) = x.name
 //│ f: Child -> nothing
+

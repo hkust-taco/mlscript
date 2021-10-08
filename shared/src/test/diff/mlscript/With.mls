@@ -12,16 +12,13 @@ rcd with { x = "oops" }
 def f r = r with { x = "oops" }
 //│ f: 'a -> 'a\x & {x: "oops"}
 
-// FIXME
 def f a b = if true then a else b
-def f a b = (if true then a else b) with { x = "oops" }
 //│ f: 'a -> 'a -> 'a
+
+def f a b = (if true then a else b) with { x = "oops" }
 //│ f: 'a -> 'a -> 'a\x & {x: "oops"}
 
-def f = fun a -> fun b -> if true then a else b
-//│ f: 'a -> 'a -> 'a
-
-def f = fun a -> fun b -> let tmp = a.x in (if true then a else b) with { x = "oops" }
+def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
 //│ f: 'a & {x: anything} -> 'a -> 'a\x & {x: "oops"}
 
 
