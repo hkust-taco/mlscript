@@ -60,7 +60,15 @@ abstract class TyperHelpers { self: Typer =>
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
       case a @ AppType(f, as) => ???
-      case t @ RecordType(fs) => RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
+      case t @ RecordType(fs) =>
+        // RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
+        // ^ Since we want to be able to transform S\a<:T to S<:T\a in the constraint solver,
+        //    interpreting Without as field deletion would be wrong. Instead, Without implements
+        //    field _hiding_, which makes a given field irrelevant for a given type, during
+        //    later subtyping constraints that will involve the type.
+        //    We can still remove fields when these Without types appear in positive positions,
+        //    so there will still be opportunity for simplification.
+        Without(this, Set.single(name))(noProv)
       case t @ TupleType(fs) => t
       case vt: VarType => ???
       case n @ NegType(nt) if (nt match {

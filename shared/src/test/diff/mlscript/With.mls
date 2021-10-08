@@ -3,10 +3,10 @@ def rcd = { x = 1 }
 //│ rcd: {x: 1}
 
 rcd with { y = 2 }
-//│ res: {x: 1} & {y: 2}
+//│ res: {x: 1}\y & {y: 2}
 
 rcd with { x = "oops" }
-//│ res: {} & {x: "oops"}
+//│ res: {x: 1}\x & {x: "oops"}
 
 
 def f r = r with { x = "oops" }
@@ -16,7 +16,7 @@ f rcd
 //│ res: {x: 1}\x & {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: ({x: 1} & {y: 2})\x & {x: "oops"}
+//│ res: ({x: 1}\y & {y: 2})\x & {x: "oops"}
 
 
 // FIXME
