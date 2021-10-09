@@ -1,0 +1,7 @@
+
+class Nil: {}
+class Cons[A]: { head: A; tail: List[A] }
+type List[A] = Nil | Cons[A]
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Defined type List

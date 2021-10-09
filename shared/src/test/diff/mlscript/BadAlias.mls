@@ -1,8 +1,76 @@
 
-// FIXME forbid!
+// TODO forbid?
 type A = A
 //│ Defined type A
 
 32: A
 //│ res: A
+
+// FIXME
+add res 1
+//│ res: int
+
+:e
+type B = Oops
+//│ ╔══[ERROR] type identifier not found: Oops
+//│ ║  l.14: 	type B = Oops
+//│ ╙──      	         ^^^^
+//│ Defined type B
+
+:e // TODO should probaby not report the error again
+42: B
+//│ ╔══[ERROR] type identifier not found: Oops
+//│ ║  l.14: 	type B = Oops
+//│ ╙──      	         ^^^^
+//│ res: B
+
+:e
+type NonReg[A] = { x: NonReg[NonReg[A]] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg NonReg 'a, but is defined as NonReg 'a
+//│ ║  l.28: 	type NonReg[A] = { x: NonReg[NonReg[A]] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+type B = NonReg[A]
+//│ ╔══[ERROR] Type 'B' is already defined.
+//│ ║  l.34: 	type B = NonReg[A]
+//│ ╙──      	     ^
+//│ ╔══[ERROR] type identifier not found: NonReg
+//│ ║  l.34: 	type B = NonReg[A]
+//│ ╙──      	         ^^^^^^^^^
+
+:e
+type NonReg[A] = { x: NonReg[int] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg int, but is defined as NonReg 'a
+//│ ║  l.43: 	type NonReg[A] = { x: NonReg[int] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+42: NonReg[int]
+//│ ╔══[ERROR] type identifier not found: NonReg
+//│ ║  l.49: 	42: NonReg[int]
+//│ ╙──      	    ^^^^^^^^^^^
+//│ res: 42
+
+:e
+type NonReg[A] = { x: NonReg[int] }
+type RefToNongReg[A] = { x: NonReg[A] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg int, but is defined as NonReg 'a
+//│ ║  l.56: 	type NonReg[A] = { x: NonReg[int] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+type Reg[A] = Reg[A] -> Reg[A]
+//│ Defined type Reg
+
+
+type Id[A] = A
+//│ Defined type Id
+
+// Our regularity check for now is very syntactic:
+:e
+type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg Id 'a, but is defined as FalseNeg 'a
+//│ ║  l.72: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -37,15 +37,15 @@ res.value
 
 // FIXME properly check:
 42: Option[int, int]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.<init>(TyperDatatypes.scala:110)
-//│ 	at: mlscript.Typer.typeType(Typer.scala:136)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:275)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:375)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:194)
-//│ 	at: mlscript.DiffTests.$anonfun$new$15(DiffTests.scala:188)
-//│ 	at: mlscript.DiffTests.$anonfun$new$15$adapted(DiffTests.scala:184)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
+//│ ║  l.39: 	42: Option[int, int]
+//│ ╙──      	    ^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.39: 	42: Option[int, int]
+//│ ║        	^^
+//│ ╟── expression of type `42` does not match type `Some int | None`
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.39: 	42: Option[int, int]
+//│ ╙──      	    ^^^^^^^^^^^^^^^^
+//│ res: Option int
 

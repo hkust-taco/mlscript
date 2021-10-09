@@ -162,9 +162,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             
             val raise: typer.Raise = d => report(d :: Nil)
             
+            val oldCtx = ctx
             ctx = typer.processTypeDefs(p.typeDefs)(ctx, raise)
             
-            p.typeDefs.foreach(td => output(s"Defined " + td.kind.str + " " + td.nme.name))
+            p.typeDefs.foreach(td =>
+              if (ctx.tyDefs.contains(td.nme.name)
+                  && !oldCtx.tyDefs.contains(td.nme.name))
+                  // ^ it may not end up being defined if there's an error
+                output(s"Defined " + td.kind.str + " " + td.nme.name))
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.instantiate(0).widenVar

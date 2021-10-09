@@ -85,21 +85,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
-  def processTypeDefs(tyDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
-    var newDefs = ctx.tyDefs
-    tyDefs.foreach { td =>
+  def processTypeDefs(newDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
+    var allDefs = ctx.tyDefs
+    newDefs.foreach { td =>
       val n = td.nme
-      newDefs.get(n.name).foreach { other =>
+      allDefs.get(n.name).foreach { other =>
         err(msg"Type '$n' is already defined.", td.nme.toLoc)(raise, tp(td.toLoc, "data definition"))
       }
-      newDefs += n.name -> td
+      allDefs += n.name -> td
     }
+    import ctx.{tyDefs => oldDefs}
     // implicit val newCtx = ctx.copy(tyDefs = newDefs)
-    ctx.copy(tyDefs = newDefs) |> { implicit ctx =>
-      tyDefs.foreach { td =>
+    ctx.copy(tyDefs = allDefs) |> { implicit ctx =>
+      ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         val n = td.nme
-        implicit val targs: Map[Str, SimpleType] =
-          td.tparams.map(p => p -> freshVar(noProv/*TODO*/)).toMap
+        val dummyTargs =
+          td.tparams.map(p => freshVar(noProv/*TODO*/))
+        implicit val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
         val body_ty = typeType(td.body)
         td.kind match {
           case Als =>
@@ -108,16 +110,39 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val ctor = FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/)
             ctx += n.name -> ctor
         }
-        // TOOD type check; check regular
-      }
-      ctx
+        def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
+          case tr @ TypeRef(defn, targs) => reached.get(defn.nme.name) match {
+            case None => checkRegular(tr.expand)(reached + (defn.nme.name -> targs))
+            case Some(tys) =>
+              // TODO less syntactic check...
+              if (tys =/= targs) {
+                if (defn.nme.name === td.nme.name)
+                  err(msg"Type definition is not regular: it occurs within itself as ${
+                  expandType(tr).show
+                  }, but is defined as ${
+                  expandType(TypeRef(defn, dummyTargs)(noProv, ctx)).show
+                  }", td.toLoc)(raise, noProv)
+                false
+              } else true
+          }
+          case _ => ty.children.forall(checkRegular)
+        }
+        // Note: this will end up going through some types several times... We could make sure to
+        //    only go through each type once, but the error messages would be worse.
+        if (checkRegular(body_ty)(Map(n.name -> dummyTargs)))
+          td.nme.name -> td :: Nil
+        else Nil
+      })
     }
   }
   // TODO record provenances!
   def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
-    def typeNamed(name: Str): TypeDef = ctx.tyDefs.getOrElse(name, {
-      err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
-      TypeDef(Als, Primitive(name), Nil, Top) })
+    def typeNamed(name: Str): Opt[TypeDef] = {
+      val res = ctx.tyDefs.get(name)
+      if (res.isEmpty)
+        err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
+      res
+    }
     ty match {
       case Top => TopType
       case Bot => BotType
@@ -128,12 +153,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "function type"))
       case Primitive(name) =>
-        vars.get(name) getOrElse
-          TypeRef(typeNamed(name), Nil)(tp(ty.toLoc, "type reference"), ctx)
+        vars.get(name) orElse
+          typeNamed(name).map(td => TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx)) getOrElse
+            freshVar(noProv) // TODO use ty's prov
       case _: TypeVar => ??? // TODO
-      case AppliedType(base, targs) =>
-        TypeRef(typeNamed(base.name),
-          targs.map(typeType))(tp(ty.toLoc, "applied type reference"), ctx)
+      case AppliedType(base, targs) => typeNamed(base.name) match {
+        case Some(td) =>
+          val tpnum = td.tparams.size
+          val realTargs = if (targs.size === tpnum) targs.map(typeType) else {
+            err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${targs.size.toString}",
+              ty.toLoc)(raise, noProv /*FIXME*/);
+            (targs.iterator.map(typeType) ++ Iterator.continually(freshVar(noProv)))
+              .take(tpnum).toList
+          }
+          TypeRef(td,
+            realTargs)(tp(ty.toLoc, "applied type reference"), ctx)
+        case None => freshVar(noProv) // TODO use ty's prov
+      }
       case Recursive(uv, body) => ??? // TODO
     }
   }
@@ -515,7 +551,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case ExtrType(_) => ??? // TODO
       case ProxyType(und) => go(und, polarity)(inProcess)
       case PrimType(n) => Primitive(n.idStr)
-      case TypeRef(td, _) => Primitive(td.nme.name)
+      case TypeRef(td, Nil) => Primitive(td.nme.name)
+      case TypeRef(td, targs) =>
+        // FIXME proper type app with [ ]
+        targs.map(expandType(_, polarity)).foldLeft(Primitive(td.nme.name):Type)(Applied)
     }
     go(st, polarity)(Set.empty)
   }

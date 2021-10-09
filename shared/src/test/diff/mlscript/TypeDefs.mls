@@ -39,7 +39,6 @@ type Test1 = { x: int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
 //│ ║  l.38: 	type Test1 = { x: int }
 //│ ╙──      	     ^^^^^
-//│ Defined type Test1
 
 // FIXME
 type Test2 = { x: int }
@@ -47,11 +46,11 @@ type Test2 = { x: int }
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected ":":1:12, found "= { x: int" at l.49:12: class Test = { x: int }
+//│ /!\ Parse error: Expected ":":1:12, found "= { x: int" at l.48:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.53:10: type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.52:10: type Test: { x: int }
 
 // FIXME
 type Test3 = int -> int
@@ -73,13 +72,11 @@ type T = int
 type T = int
 type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.73: 	type T = int
+//│ ║  l.72: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.74: 	type T = int
+//│ ║  l.73: 	type T = int
 //│ ╙──      	     ^
-//│ Defined type T
-//│ Defined type T
 
 :e
 type TypeA = int
@@ -88,18 +85,18 @@ def foo = 1
 foo 42
 //│ Defined type TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.86: 	foo 42
+//│ ║  l.83: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ foo: 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	foo 42
+//│ ║  l.85: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` is not a function
-//│ ║  l.87: 	def foo = 1
+//│ ║  l.84: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.88: 	foo 42
+//│ ║  l.85: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 
