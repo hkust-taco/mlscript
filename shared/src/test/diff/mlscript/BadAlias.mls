@@ -26,7 +26,7 @@ type B = Oops
 
 :e
 type NonReg[A] = { x: NonReg[NonReg[A]] }
-//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg NonReg 'a, but is defined as NonReg 'a
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[NonReg['a]], but is defined as NonReg['a]
 //│ ║  l.28: 	type NonReg[A] = { x: NonReg[NonReg[A]] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -41,7 +41,7 @@ type B = NonReg[A]
 
 :e
 type NonReg[A] = { x: NonReg[int] }
-//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg int, but is defined as NonReg 'a
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['a]
 //│ ║  l.43: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -55,7 +55,7 @@ type NonReg[A] = { x: NonReg[int] }
 :e
 type NonReg[A] = { x: NonReg[int] }
 type RefToNongReg[A] = { x: NonReg[A] }
-//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg int, but is defined as NonReg 'a
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['a]
 //│ ║  l.56: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -70,7 +70,7 @@ type Id[A] = A
 // Our regularity check for now is very syntactic:
 :e
 type FalseNeg[A] = { x: FalseNeg[Id[A]] }
-//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg Id 'a, but is defined as FalseNeg 'a
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg[Id['a]], but is defined as FalseNeg['a]
 //│ ║  l.72: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -553,8 +553,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case PrimType(n) => Primitive(n.idStr)
       case TypeRef(td, Nil) => Primitive(td.nme.name)
       case TypeRef(td, targs) =>
-        // FIXME proper type app with [ ]
-        targs.map(expandType(_, polarity)).foldLeft(Primitive(td.nme.name):Type)(Applied)
+        AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))
     }
     go(st, polarity)(Set.empty)
   }

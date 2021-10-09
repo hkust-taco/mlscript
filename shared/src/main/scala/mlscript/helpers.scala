@@ -39,7 +39,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
-    case AppliedType(n, args) => s"$n[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     // case Rem(b, ns) => s"${b.showIn(ctx, 100)}${ns.map("\\"+_).mkString}" // Not yet used
   }
   
@@ -52,6 +52,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
+    case AppliedType(n, ts) => ts
   }
   
 }
@@ -59,15 +60,15 @@ abstract class TypeImpl extends Located { self: Type =>
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
-     val allVars = tys.iterator.toList.flatMap(_.typeVarsList).distinct
-     ShowCtx(allVars.zipWithIndex.map {
-        case (tv, idx) =>
-          def nme = {
-            assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
-            ('a' + idx).toChar.toString
-          }
-          tv -> (pre + nme)
-      }.toMap, debug)
+    val allVars = tys.iterator.toList.flatMap(_.typeVarsList).distinct
+    ShowCtx(allVars.zipWithIndex.map {
+      case (tv, idx) =>
+        def nme = {
+          assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
+          ('a' + idx).toChar.toString
+        }
+        tv -> (pre + nme)
+    }.toMap, debug)
   }
 }
 
