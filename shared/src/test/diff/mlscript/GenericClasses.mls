@@ -19,8 +19,8 @@ type Option[A] = Some[A] | None
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: Option int
-//│ res: Option int
+//│ res: Option[int]
+//│ res: Option[int]
 
 :e
 res.value
@@ -43,9 +43,9 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `Some int | None`
+//│ ╟── expression of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: Option int
+//│ res: Option[int]
 

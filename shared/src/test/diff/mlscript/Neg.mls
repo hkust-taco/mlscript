@@ -1,0 +1,21 @@
+
+1: ~string
+//│ res: ~string
+
+// FIXME
+1: ~int
+//│ res: ~int
+
+:e
+add res 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.10: 	add res 1
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `~int` does not match type `int`
+//│ ║  l.6: 	1: ~int
+//│ ║       	   ^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.10: 	add res 1
+//│ ╙──      	    ^^^
+//│ res: error | int
+

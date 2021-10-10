@@ -30,5 +30,5 @@ def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
-//│ res: ((right & {value: 2}) & neg ((right & (({value: 2} & right) & neg left) | (({value: 1} & left) & neg left)) & neg left)) | ((left & {value: 1}) & neg ((right & (({value: 2} & right) & neg left) | (({value: 1} & left) & neg left)) & neg left)) | 1
+//│ res: ((right & {value: 2}) & ~((right & (({value: 2} & right) & ~left) | (({value: 1} & left) & ~left)) & ~left)) | ((left & {value: 1}) & ~((right & (({value: 2} & right) & ~left) | (({value: 1} & left) & ~left)) & ~left)) | 1
 

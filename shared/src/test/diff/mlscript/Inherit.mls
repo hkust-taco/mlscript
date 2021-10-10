@@ -30,11 +30,8 @@ def c = Child(Parent { name = "Bob" } with { age = 123 })
 c: Parent
 //│ res: Parent
 
-// TODO support type variables
-c: { name: _a }
-//│ ╔══[ERROR] type identifier not found: _a
-//│ ║  l.34: 	c: { name: _a }
-//│ ╙──      	           ^^
+// FIXME!
+c: { name: 'a }
 //│ res: {name: nothing}
 
 c: { name: string }

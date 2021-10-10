@@ -6,7 +6,7 @@ def foo x = case x of
   { Test -> x.value
   | _ -> 1
   }
-//│ foo: ((test & {value: 'a}) | (anything & neg test)) -> 'a | 1
+//│ foo: ((test & {value: 'a}) | (anything & ~test)) -> 'a | 1
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
@@ -26,14 +26,14 @@ def bar x = case x of
   { Test -> x.value
   | Toast -> x.name
   }
-//│ bar: ((test & {value: 'a}) | ((toast & {name: 'b}) & neg test)) -> 'a | 'b
+//│ bar: ((test & {value: 'a}) | ((toast & {name: 'b}) & ~test)) -> 'a | 'b
 
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: int} -> test & {value: int}` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & neg test)`
+//│ ╟── expression of type `{value: int} -> test & {value: int}` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -46,7 +46,7 @@ bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.45: 	bar "ops"
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & neg test)`
+//│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
 //│ ║  l.45: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,18 +59,18 @@ def baz x = case x of
   { Test -> x
   | Toast -> x
   }
-//│ baz: ((test & 'a) | ((toast & 'b) & neg test)) -> 'a | 'b
+//│ baz: ((test & 'a) | ((toast & 'b) & ~test)) -> 'a | 'b
 
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.65: 	baz "oops"
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & neg test)`
+//│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & ~test)`
 //│ ║  l.65: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.58: 	def baz x = case x of
 //│ ╙──      	                 ^
-//│ res: (("oops" & neg ((toast & ("oops" & neg test)) & neg test)) | ("oops" & neg test)) | error
+//│ res: (("oops" & ~((toast & ("oops" & ~test)) & ~test)) | ("oops" & ~test)) | error
 

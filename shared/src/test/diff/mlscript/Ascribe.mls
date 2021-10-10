@@ -1,0 +1,28 @@
+
+"hello": 'a
+//│ res: "hello"
+
+:e
+"hello": 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.6: 	"hello": 'a -> 'a
+//│ ║       	^^^^^^^
+//│ ╙── expression of type `"hello"` is not a function
+//│ res: error -> error
+
+{ name = "Bob" } : { name: 'a }
+//│ res: {name: "Bob"}
+
+def foo(n: 'a) = add n 1
+//│ foo: int -> int
+def foo(n: 'a) = add n 1: 'a
+//│ foo: int -> int
+
+
+class Foo[A]: { field: A }
+//│ Defined class Foo
+
+def foo(f: Foo['a]) = f.field
+//│ foo: Foo[anything] & {field: 'a} -> 'a
+
+

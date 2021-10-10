@@ -34,6 +34,8 @@ abstract class TypeImpl extends Located { self: Type =>
       parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
     case Applied(Primitive(op), t) if op.head === '\\' =>
       s"${t.showIn(ctx, 100)}$op"
+    case Applied(Primitive(op), t) if op === "~" =>
+      s"~${t.showIn(ctx, 100)}"
     case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")

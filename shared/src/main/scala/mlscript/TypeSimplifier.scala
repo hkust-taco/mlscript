@@ -133,7 +133,7 @@ trait TypeSimplifier { self: Typer =>
           targs.map(go(_, pol, Set.empty)))) // FIXME variance!
       case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
       case NegType(ty) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var("neg"))(noProv))
+        val base = ct(prims = BaseTypes single PrimType(Var("~"))(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(ty, pol, Set.empty) :: Nil))
       case ExtrType(pol) => // FIXME tmp hack
         ct(prims = BaseTypes single PrimType(Var(if (pol) "nothing" else "anything"))(noProv))
@@ -343,7 +343,13 @@ trait TypeSimplifier { self: Typer =>
             (vars.iterator.map(go(_, pol)).toList
               ::: prims.underlying.iterator.map {
                 case CompactPrimType(PrimType(id)) => Primitive(id.idStr)
-                case CompactAppType(lhs, args) => args.map(go(_, pol)).foldLeft(go(lhs, pol))(Applied(_, _))
+                case CompactAppType(lhs @ CompactType(vs, cs, r, t, f), targs) =>
+                  (cs.underlying.toList, vs.size) match {
+                    case (CompactPrimType(PrimType(Var(id))) :: Nil, 0) if id.head.isLetter && targs.nonEmpty =>
+                      AppliedType(Primitive(id), targs.map(go(_, pol)))
+                    case _ =>
+                      targs.map(go(_, pol)).foldLeft(go(lhs, pol))(Applied(_, _))
+                  }
                 case CompactVarType(vt, sign) => Primitive(vt.vi.v.name) // FIXME do sthg else for higher levels?
               }.toList
               ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList

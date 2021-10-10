@@ -5,7 +5,7 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> ((some & 'a) | ('c & neg some)) -> 'b | 'c
+//│ flatMap3: ('a -> 'b) -> ((some & 'a) | ('c & ~some)) -> 'b | 'c
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
@@ -31,19 +31,19 @@ def arg = if true then Some{value = 42} else None {}
 //│ arg: (some & {value: 42}) | none
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (none & neg some) | (({value: 42} & some) & neg some)
+//│ res: 42 | (none & ~some) | (({value: 42} & some) & ~some)
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: ((some & {value: 'a}) | ('b & neg some)) -> 'a | 'b
+//│ foo: ((some & {value: 'a}) | ('b & ~some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (none & neg some) | (({value: 42} & some) & neg some)
+//│ res: 42 | (none & ~some) | (({value: 42} & some) & ~some)
 
 foo 1
-//│ res: nothing | (1 & neg some)
+//│ res: nothing | (1 & ~some)
 
 def fn = foo None
-//│ fn: nothing | ((anything -> none) & neg some)
+//│ fn: nothing | ((anything -> none) & ~some)
 
 // :d
 fn{} // foo None {}
@@ -51,20 +51,20 @@ fn{} // foo None {}
 
 // :d
 foo (None{})
-//│ res: nothing | (none & neg some)
+//│ res: nothing | (none & ~some)
 
 
 fun f -> flatMap3 f arg
-//│ res: ((none & neg ((none & neg some) | (({value: 42} & some) & neg some) & neg some)) | ((some & {value: 42}) & neg ((none & neg some) | (({value: 42} & some) & neg some) & neg some)) -> 'a) -> 'a | (none & neg some) | (({value: 42} & some) & neg some)
+//│ res: ((none & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) | ((some & {value: 42}) & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) -> 'a) -> 'a | (none & ~some) | (({value: 42} & some) & ~some)
 
 
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: ((some & 'a) | ('b & neg some)) -> 'a | 'b
+//│ foo: ((some & 'a) | ('b & ~some)) -> 'a | 'b
 
 foo 1
-//│ res: (1 & neg ((1 & neg some) & neg some)) | (1 & neg some)
+//│ res: (1 & ~((1 & ~some) & ~some)) | (1 & ~some)
 
 
 
@@ -73,23 +73,23 @@ def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
 //│ simpler: (1 -> 'a) -> 'a | none
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> ((some & 'a) | ((none & 'c) & neg some)) -> 'b | 'c
+//│ simpler: ('a -> 'b) -> ((some & 'a) | ((none & 'c) & ~some)) -> 'b | 'c
 
 simpler (fun x -> x.value)
-//│ res: ((some & {value: 'a}) | ((none & 'b) & neg some)) -> 'a | 'b
+//│ res: ((some & {value: 'a}) | ((none & 'b) & ~some)) -> 'a | 'b
 
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & neg some)`
+//│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & ~some)`
 //│ ║  l.82: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & neg some)) | error
+//│ res: (nothing | (1 & ~some)) | error
 
 
 def funny = fun f -> case f of { Some -> f f }

@@ -158,6 +158,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Tuple(fields) => ??? // TODO
       case Inter(lhs, rhs) => rec(lhs) & rec(rhs)
       case Union(lhs, rhs) => rec(lhs) | rec(rhs)
+      case Applied(Primitive("~"), rhs) => NegType(rec(rhs))(tp(ty.toLoc, "type negation"))
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
@@ -273,7 +274,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedNames: Set[Str] = Set("|", "&", ",", "neg", "and", "or")
+  val reservedNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
@@ -336,7 +337,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
       case lit: Lit => PrimType(lit)(prov)
-      case App(Var("neg"), trm) => typeTerm(trm).neg(prov)
+      case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
       case App(App(Var("&"), lhs), rhs) =>

@@ -11,7 +11,7 @@ def test = fun x -> case x of
   { Person -> x.age
   | Animal -> 0
   }
-//│ test: ((person & {age: 'a}) | ((animal & anything) & neg person)) -> 'a | 0
+//│ test: ((person & {age: 'a}) | ((animal & anything) & ~person)) -> 'a | 0
 
 // TODO simplify type to : test: Person & {age: 'a} | Animal -> 'a | 0
 
