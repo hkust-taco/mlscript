@@ -45,11 +45,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   val TopType: ExtrType = ExtrType(false)(noProv)
   val BotType: ExtrType = ExtrType(true)(noProv)
-  val UnitType: PrimType = PrimType(Var("unit"))(noProv)
-  val BoolType: PrimType = PrimType(Var("bool"))(noProv)
-  val IntType: PrimType = PrimType(Var("int"))(noProv)
-  val DecType: PrimType = PrimType(Var("number"))(noProv)
-  val StrType: PrimType = PrimType(Var("string"))(noProv)
+  val UnitType: PrimType = PrimType(Var("unit"), Set.empty)(noProv)
+  val BoolType: PrimType = PrimType(Var("bool"), Set.empty)(noProv)
+  val IntType: PrimType = PrimType(Var("int"), Set.single(Var("number")))(noProv)
+  val DecType: PrimType = PrimType(Var("number"), Set.empty)(noProv)
+  val StrType: PrimType = PrimType(Var("string"), Set.empty)(noProv)
   
   val ErrTypeId: SimpleTerm = Var("error")
   
@@ -58,10 +58,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, Primitive("int"), Nil, Top) ::
-    TypeDef(Cls, Primitive("string"), Nil, Top) ::
-    TypeDef(Als, Primitive("anything"), Nil, Top) ::
-    TypeDef(Als, Primitive("nothing"), Nil, Bot) ::
+    TypeDef(Cls, Primitive("int"), Nil, Set.empty, Top) ::
+    TypeDef(Cls, Primitive("string"), Nil, Set.empty, Top) ::
+    TypeDef(Als, Primitive("anything"), Nil, Set.empty, Top) ::
+    TypeDef(Als, Primitive("nothing"), Nil, Set.empty, Bot) ::
     Nil
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
@@ -87,8 +87,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
-  def clsNameToNomTag(nme: Str)(prov: TypeProvenance): SimpleType =
-    PrimType(Var(nme.head.toLower.toString + nme.tail))(prov)
+  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance): SimpleType =
+    PrimType(Var(td.nme.name.head.toLower.toString + td.nme.name.tail), td.baseClasses)(prov)
   
   def processTypeDefs(newDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
@@ -114,7 +114,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         td.kind match {
           case Als =>
           case Cls | Trt =>
-            val nomTag = clsNameToNomTag(td.nme.name)(noProv/*FIXME*/)
+            val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
             val ctor = FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/)
             ctx += n.name -> ctor
         }
@@ -288,7 +288,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
         ctx.parent.dlof(_.get(v.name))(N).map(_.instantiate(0).unwrapProxies) |>? {
-          case S(_: VarType | PrimType(Var(v.name))) =>
+          case S(_: VarType | PrimType(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
               s"if not, give your future readers a break and use another name :^)", v.toLoc)
@@ -336,7 +336,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case lit: Lit => PrimType(lit)(prov)
+      case lit: Lit => PrimType(lit, Set.single(lit.baseClass))(prov)
       case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
@@ -440,9 +440,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
     case Case(cls, bod, rest) =>
-      val td = ctx.tyDefs.getOrElse(cls.name,
-        err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/))
+      ctx.tyDefs.get(cls.name) match {
+      case None =>
+        err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/)
+        val e = PrimType(ErrTypeId, Set.empty)(noProv)
+        ((e -> e) :: Nil) ->
+          e
+      case Some(td) =>
       // TODO check td is a class
+      if (td.kind === Als) err(msg"can only match on classes and traits", cls.toLoc)(raise, noProv /*FIXME*/)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
@@ -451,16 +457,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val bod_ty = typeTerm(bod)(newCtx, raise)
           // (ComposedType(false, PrimType(Var(cls.name))(noProv // FIXME
           // ), tv)(noProv), bod_ty, typeArms(scrutVar, rest))
-          (clsNameToNomTag(cls.name)(noProv // FIXME
+          (clsNameToNomTag(td)(noProv // FIXME
           ) -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise)
-          (clsNameToNomTag(cls.name)(noProv // FIXME
+          (clsNameToNomTag(td)(noProv // FIXME
           // (NomTag(cls)(noProv // FIXME
           // (AppliedType(cls, Nil)(noProv // FIXME
           ) -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
+      }
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])
@@ -563,7 +570,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case NegType(_) => ??? // TODO
       case ExtrType(_) => ??? // TODO
       case ProxyType(und) => go(und, polarity)(inProcess)
-      case PrimType(n) => Primitive(n.idStr)
+      case PrimType(n, _) => Primitive(n.idStr)
       case TypeRef(td, Nil) => Primitive(td.nme.name)
       case TypeRef(td, targs) =>
         AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))

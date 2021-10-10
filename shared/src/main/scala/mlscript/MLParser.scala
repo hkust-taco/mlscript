@@ -86,10 +86,16 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case "trait" => Trt
     case "type"  => Als
   }
+  def baseClassesOf(ty: Type): Set[Var] = ty match {
+    case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
+    case Primitive(v) => Set.single(Var(v))
+    case Record(_) => Set.empty
+    case _ => ??? // TODO error
+  }
   def tyDecl[_: P]: P[TypeDef] =
     P((tyKind ~/ tyName ~ tyParams).flatMap {
-      case (k @ (Cls | Trt), id, ts) => ":" ~ ty map (bod => TypeDef(k, id, ts, bod))
-      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
+      case (k @ (Cls | Trt), id, ts) => ":" ~ ty map (bod => TypeDef(k, id, ts, baseClassesOf(bod), bod))
+      case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, Set.empty, bod))
     })
   def tyParams[_: P]: P[Ls[Str]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatMap(_.map(_.name)))

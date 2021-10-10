@@ -8,7 +8,7 @@ object JSBackend {
     
     val res = new collection.mutable.StringBuilder
     
-    pgrm.typeDefs.foreach { case TypeDef(k, n, tps, b) =>
+    pgrm.typeDefs.foreach { case TypeDef(k, n, tps, bcs, b) =>
       // ...
     }
     // ...

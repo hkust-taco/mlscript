@@ -41,3 +41,22 @@ test a
 test p
 //│ res: int | 0
 
+:d
+1: int
+//│ 0. Typing term 1 : Primitive(int)
+//│  0. Typing term 1
+//│  0. : 1<int>
+//│  CONSTRAIN 1<int> <! int
+//│    where 
+//│  C 1<int> <! int
+//│   C 1<int> <! int<>
+//│ 0. : int
+//│ Typed as: int
+//│  where: 
+//│ Compact type before simplification: CompactTypeScheme(‹CompactAppType(‹CompactPrimType(int<>)›,List())›,TreeMap())
+//│ [occ] LinkedHashMap()
+//│ [rec] TreeSet()
+//│ [sub] 
+//│ Compact type after simplification: CompactTypeScheme(‹CompactAppType(‹CompactPrimType(int<>)›,List())›,Map())
+//│ res: int
+

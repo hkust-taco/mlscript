@@ -4,31 +4,38 @@
 
 // FIXME
 1: ~int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.6: 	1: ~int
+//│ ║       	^
+//│ ╟── expression of type `1` does not match type `~int`
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.6: 	1: ~int
+//│ ╙──     	   ^^^^
 //│ res: ~int
 
 :e
 add res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.10: 	add res 1
+//│ ║  l.17: 	add res 1
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `~int` does not match type `int`
 //│ ║  l.6: 	1: ~int
 //│ ║       	   ^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.10: 	add res 1
+//│ ║  l.17: 	add res 1
 //│ ╙──      	    ^^^
 //│ res: error | int
 
 :e
 (1: int): ~int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.23: 	(1: int): ~int
+//│ ║  l.30: 	(1: int): ~int
 //│ ║        	 ^
 //│ ╟── expression of type `int` does not match type `~int`
-//│ ║  l.23: 	(1: int): ~int
+//│ ║  l.30: 	(1: int): ~int
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.23: 	(1: int): ~int
+//│ ║  l.30: 	(1: int): ~int
 //│ ╙──      	          ^^^^
 //│ res: ~int
 

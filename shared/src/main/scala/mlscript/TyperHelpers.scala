@@ -93,7 +93,7 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(rt: RecordType) => this // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
-      case p @ PrimType(_) => p
+      case p @ PrimType(_, _) => p
       // case tv: TypeVariable =>
       case _ => Without(this, Set.single(name))(noProv)
     }
@@ -140,7 +140,7 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case PrimType(_) => Nil
+      case PrimType(_, _) => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
     }

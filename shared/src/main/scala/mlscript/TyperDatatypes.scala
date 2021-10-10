@@ -113,21 +113,41 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
       if (defn.kind === Als) body_ty
-      else clsNameToNomTag(defn.nme.name)(noProv/*TODO*/) & body_ty
+      else clsNameToNomTag(defn)(noProv/*TODO*/) & body_ty
     }
     override def toString =
       if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"
   }
   
-  case class PrimType(id: SimpleTerm)(val prov: TypeProvenance) extends BaseType {
-    def widenPrim: PrimType = id match {
+  case class PrimType(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType {
+    def widenPrim: PrimType = id match { // FIXME rm
       case _: IntLit => IntType
       case _: StrLit => StrType
       case _: DecLit => DecType
       case _ => this
     }
+    lazy val parentsST = parents.map(identity[SimpleTerm])
+    // def widenPrim: SimpleType = // FIXME rm -- can't get parents' parents...
+    //   parents.iterator.map(PrimType(_, Set.empty)(noProv):SimpleType).reduceOption(_ & _).getOrElse(TopType)
+    // def lub(that: PrimType): Opt[PrimType] = ???
+    def glb(that: PrimType): Opt[PrimType] =
+      if (that.id === this.id) S(this)
+      else if (that.parentsST.contains(this.id)) S(that)
+      else if (this.parentsST.contains(that.id)) S(this)
+      // else S(this.parentsST.intersect(that.parentsST)).filt
+      else N
+    def lub(that: PrimType): Set[SimpleTerm] =
+      if (that.id === this.id) Set.single(that.id)
+      else if (that.parentsST.contains(this.id)) Set.single(this.id)
+      else if (this.parentsST.contains(that.id)) Set.single(that.id)
+      else this.parentsST.union(that.parentsST)
+    // def glb(that: PrimType): Set[SimpleTerm] =
+    //   if (that.id === this.id) Set.single(this.id)
+    //   else if (that.parentsST.contains(this.id)) Set.single(that.id)
+    //   else if (this.parentsST.contains(that.id)) Set.single(this.id)
+    //   else this.parentsST.intersect(that.parentsST)
     def level: Int = 0
-    override def toString = id.idStr
+    override def toString = id.idStr+s"<${parents.mkString}>"
   }
   
   sealed trait Variable extends SimpleType

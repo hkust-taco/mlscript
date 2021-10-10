@@ -36,16 +36,16 @@ c.name
 //│  0. Typing term c
 //│  0. : [α0]
 //│  CONSTRAIN [[α0]] <! {name: α1}
-//│    where α0 :> (child & (Parent & {age: int}))
+//│    where α0 :> (child<Parent> & (Parent & {age: int}))
 //│  C [[α0]] <! {name: α1}
 //│   C [α0] <! {name: α1}
 //│    C α0 <! {name: α1}
-//│     C (child & (Parent & {age: int})) <! {name: α1}
-//│      A  LhsTop  %  List(child, (Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
-//│       A  LhsRefined(Some(child),{})  %  List((Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
-//│        A  LhsRefined(Some(child),{})  %  List(Parent, {age: int})  <!  List({name: α1})  %  RhsBot
-//│         A  LhsRefined(Some(child),{})  %  List((parent & {name: string}), {age: int})  <!  List({name: α1})  %  RhsBot
-//│          A  LhsRefined(Some(child),{})  %  List(parent, {name: string}, {age: int})  <!  List({name: α1})  %  RhsBot
+//│     C (child<Parent> & (Parent & {age: int})) <! {name: α1}
+//│      A  LhsTop  %  List(child<Parent>, (Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
+//│       A  LhsRefined(Some(child<Parent>),{})  %  List((Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
+//│        A  LhsRefined(Some(child<Parent>),{})  %  List(Parent, {age: int})  <!  List({name: α1})  %  RhsBot
+//│         A  LhsRefined(Some(child<Parent>),{})  %  List((parent<> & {name: string}), {age: int})  <!  List({name: α1})  %  RhsBot
+//│          A  LhsRefined(Some(child<Parent>),{})  %  List(parent<>, {name: string}, {age: int})  <!  List({name: α1})  %  RhsBot
 //│ 0. : α1
 //│ Typed as: α1
 //│  where: 

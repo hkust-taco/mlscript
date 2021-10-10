@@ -35,7 +35,16 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (LhsTop, _) => S(LhsRefined(S(that), RecordType(Nil)(noProv)))
         case (LhsRefined(b1, r1), _) =>
           ((b1, that) match {
-            case (S(p @ PrimType(pt0)), PrimType(pt1)) => Option.when(pt0 === pt1)(p)
+            case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
+              // Option.when(pt0 === pt1)(p)
+              // Some(glb(p0, p1)).filterNot(_ === BotType)
+              p0.glb(p1)
+              // val common = p0.glb(p1)
+              // common.toList match {
+              //   case st :: Nil => S(PrimType(st, Set.empty/*FIXME*/)(noProv))
+              //   case Nil => N
+              //   case _ => ??? // TODO
+              // }
             case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
             case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
             case (S(TupleType(fs0)), TupleType(fs1)) => ???
@@ -205,7 +214,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
             rec(r0, r1)(raise, Nil :: ctx)
-          case (prim: PrimType, _) if rhs === prim || rhs === prim.widen => ()
+          // case (prim: PrimType, _) if rhs === prim || rhs === prim.widen => ()
+          case (prim: PrimType, _) if rhs === prim => ()
+          case (prim: PrimType, PrimType(id:Var, _)) if prim.parents.contains(id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_, S(prov)))
             lhs.upperBounds ::= newBound // update the bound
@@ -246,10 +257,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (vt: VarType, _) => rec(vt.sign, rhs)
           case (_, TupleType(f :: Nil)) =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
-          case (err @ PrimType(ErrTypeId), FunctionType(l1, r1)) =>
+          case (err @ PrimType(ErrTypeId, _), FunctionType(l1, r1)) =>
             rec(l1, err)
             rec(err, r1)
-          case (FunctionType(l0, r0), err @ PrimType(ErrTypeId)) =>
+          case (FunctionType(l0, r0), err @ PrimType(ErrTypeId, _)) =>
             rec(err, l0)
             rec(r0, err)
           case (AppType(fun0, args0), AppType(fun1, args1)) if fun0.isInjective && fun1.isInjective =>
@@ -266,14 +277,14 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(AppType(fun, args)(lhs.prov), FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // Q: disregard error context?
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs)
-          case (err @ PrimType(ErrTypeId), RecordType(fs1)) =>
+          case (err @ PrimType(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2))
-          case (RecordType(fs1), err @ PrimType(ErrTypeId)) =>
+          case (RecordType(fs1), err @ PrimType(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2, err))
           case (tr: TypeRef, _) => rec(tr.expand, rhs)
           case (_, tr: TypeRef) => rec(lhs, tr.expand)
-          case (PrimType(ErrTypeId), _) => ()
-          case (_, PrimType(ErrTypeId)) => ()
+          case (PrimType(ErrTypeId, _), _) => ()
+          case (_, PrimType(ErrTypeId, _)) => ()
           case (_, ComposedType(true, l, r)) =>
             annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
           case (ComposedType(false, l, r), _) =>
@@ -440,7 +451,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
-      case PrimType(_) => ty
+      case PrimType(_, _) => ty
       // case TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol))) // FIXME pol...
     }
   
@@ -449,7 +460,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     raise(TypeError((msg, loco) :: Nil))
     errType
   }
-  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId)(prov)
+  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId, Set.empty)(prov)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(Warning((msg, loco) :: Nil))
@@ -462,7 +473,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = PrimType(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
+          val v = PrimType(Var("_"+freshVar(tv.prov).toString), Set.empty)(noProv/*TODO*/)
           freshened += tv -> v
           // TODO support bounds on rigidified variables (intersect/union them in):
           assert(tv.lowerBounds.isEmpty)
@@ -492,7 +503,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
-      case PrimType(_) => ty
+      case PrimType(_, _) => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
     }
     freshen(ty)

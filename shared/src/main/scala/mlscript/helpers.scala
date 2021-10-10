@@ -89,14 +89,14 @@ trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def children: Ls[Located] = self match {
     case d @ Def(rec, nme, _) => d.body :: Nil
-    case TypeDef(kind, nme, tparams, body) => nme :: body :: Nil
+    case TypeDef(kind, nme, tparams, bcs, body) => nme :: body :: Nil
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + body
+    case TypeDef(Als, _, _, _, _) => " = "; case _ => ": " }) + body
   def showHead: Str = this match {
     case Def(true, n, b) => s"rec def $n"
     case Def(false, n, b) => s"def $n"
-    case TypeDef(k, n, tps, b) =>
+    case TypeDef(k, n, tps, bcs, b) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.mkString("[", ", ", "]")}"
   }
 }
@@ -158,6 +158,14 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c"
   }
   
+}
+
+trait LitImpl { self: Lit =>
+  def baseClass: Var = this match {
+    case _: IntLit => Var("int")
+    case _: StrLit => Var("string")
+    case _: DecLit => Var("number")
+  }
 }
 
 trait VarImpl { self: Var =>
