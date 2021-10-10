@@ -5,19 +5,47 @@ class Parent: { name: string }
 class Child: Parent & { age: int }
 //│ Defined class Child
 
+def p = Parent{ name = "Bob" }
+//│ p: parent & {name: string}
+
+p: Parent
+//│ res: Parent
+
 :e
 def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.9: 	def c = Child(Parent { name = "Bob" })
-//│ ║       	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Parent & {name: string}` does not match type `{age: int}`
-//│ ║  l.9: 	def c = Child(Parent { name = "Bob" })
-//│ ║       	              ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `parent & {name: string}` does not match type `{age: int}`
+//│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.5: 	class Child: Parent & { age: int }
 //│ ╙──     	                      ^^^^^^^^^^^^
-//│ c: (Child & (Parent & {age: int})) | error
+//│ c: (child & (Parent & {age: int})) | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
-//│ c: Child & (Parent & {age: int})
+//│ c: child & (Parent & {age: int})
 
+c: Parent
+//│ res: Parent
+
+// TODO support type variables
+c: { name: _a }
+//│ ╔══[ERROR] type identifier not found: _a
+//│ ║  l.34: 	c: { name: _a }
+//│ ╙──      	           ^^
+//│ res: {name: nothing}
+
+c: { name: string }
+//│ res: {name: string}
+
+def f x = case x of {
+  | Parent -> x.name
+  }
+//│ f: parent & {name: 'a} -> 'a
+
+// FIXME
+// :d
+f c
+//│ res: nothing

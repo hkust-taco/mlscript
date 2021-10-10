@@ -1,15 +1,15 @@
 class Left[A]: { value: A }
 def Left value = Left{ value }
 //│ Defined class Left
-//│ Left: 'a -> Left & {value: 'a}
+//│ Left: 'a -> left & {value: 'a}
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
 //│ Defined class Right
-//│ Right: 'a -> Right & {value: 'a}
+//│ Right: 'a -> right & {value: 'a}
 
 def testVal = if true then Left 1 else Right 2
-//│ testVal: (Left & {value: 1}) | (Right & {value: 2})
+//│ testVal: (left & {value: 1}) | (right & {value: 2})
 
 testVal.value
 //│ res: 2 | 1
@@ -30,5 +30,5 @@ def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
-//│ res: ((Right & {value: 2}) & neg ((Right & (({value: 2} & Right) & neg Left) | (({value: 1} & Left) & neg Left)) & neg Left)) | ((Left & {value: 1}) & neg ((Right & (({value: 2} & Right) & neg Left) | (({value: 1} & Left) & neg Left)) & neg Left)) | 1
+//│ res: ((right & {value: 2}) & neg ((right & (({value: 2} & right) & neg left) | (({value: 1} & left) & neg left)) & neg left)) | ((left & {value: 1}) & neg ((right & (({value: 2} & right) & neg left) | (({value: 1} & left) & neg left)) & neg left)) | 1
 

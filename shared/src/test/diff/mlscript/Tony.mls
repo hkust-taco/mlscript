@@ -5,15 +5,15 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> ((Some & 'a) | ('c & neg Some)) -> 'b | 'c
+//│ flatMap3: ('a -> 'b) -> ((some & 'a) | ('c & neg some)) -> 'b | 'c
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: ((Some & {value: 42})\payload & {payload: 23}) | None
+//│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
 
 // FIXME
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ /!!!\ Uncaught error: scala.MatchError: (List(),List((not Some)\payload, Some)) (of class scala.Tuple2)
+//│ /!!!\ Uncaught error: scala.MatchError: (List(),List((not some)\payload, some)) (of class scala.Tuple2)
 //│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:94)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
@@ -28,69 +28,69 @@ flatMap3 (fun x -> add x.value x.payload) arg
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: (Some & {value: 42}) | None
+//│ arg: (some & {value: 42}) | none
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
+//│ res: 42 | (none & neg some) | (({value: 42} & some) & neg some)
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: ((Some & {value: 'a}) | ('b & neg Some)) -> 'a | 'b
+//│ foo: ((some & {value: 'a}) | ('b & neg some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (None & neg Some) | (({value: 42} & Some) & neg Some)
+//│ res: 42 | (none & neg some) | (({value: 42} & some) & neg some)
 
 foo 1
-//│ res: nothing | (1 & neg Some)
+//│ res: nothing | (1 & neg some)
 
 def fn = foo None
-//│ fn: nothing | ((anything -> None) & neg Some)
+//│ fn: nothing | ((anything -> none) & neg some)
 
 // :d
 fn{} // foo None {}
-//│ res: None
+//│ res: none
 
 // :d
 foo (None{})
-//│ res: nothing | (None & neg Some)
+//│ res: nothing | (none & neg some)
 
 
 fun f -> flatMap3 f arg
-//│ res: ((None & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) | ((Some & {value: 42}) & neg ((None & neg Some) | (({value: 42} & Some) & neg Some) & neg Some)) -> 'a) -> 'a | (None & neg Some) | (({value: 42} & Some) & neg Some)
+//│ res: ((none & neg ((none & neg some) | (({value: 42} & some) & neg some) & neg some)) | ((some & {value: 42}) & neg ((none & neg some) | (({value: 42} & some) & neg some) & neg some)) -> 'a) -> 'a | (none & neg some) | (({value: 42} & some) & neg some)
 
 
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: ((Some & 'a) | ('b & neg Some)) -> 'a | 'b
+//│ foo: ((some & 'a) | ('b & neg some)) -> 'a | 'b
 
 foo 1
-//│ res: (1 & neg ((1 & neg Some) & neg Some)) | (1 & neg Some)
+//│ res: (1 & neg ((1 & neg some) & neg some)) | (1 & neg some)
 
 
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> 'a | None
+//│ simpler: (1 -> 'a) -> 'a | none
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> ((Some & 'a) | ((None & 'c) & neg Some)) -> 'b | 'c
+//│ simpler: ('a -> 'b) -> ((some & 'a) | ((none & 'c) & neg some)) -> 'b | 'c
 
 simpler (fun x -> x.value)
-//│ res: ((Some & {value: 'a}) | ((None & 'b) & neg Some)) -> 'a | 'b
+//│ res: ((some & {value: 'a}) | ((none & 'b) & neg some)) -> 'a | 'b
 
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `(Some & ?a & {value: ?b}) | ((None & ?c) & neg Some)`
+//│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & neg some)`
 //│ ║  l.82: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & neg Some)) | error
+//│ res: (nothing | (1 & neg some)) | error
 
 
 def funny = fun f -> case f of { Some -> f f }
-//│ funny: 'a & Some & ('a -> 'b) -> 'b
+//│ funny: 'a & some & ('a -> 'b) -> 'b

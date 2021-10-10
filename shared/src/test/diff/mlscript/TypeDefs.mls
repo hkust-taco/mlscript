@@ -4,10 +4,10 @@ class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: int} -> Test1 & {x: int}
+//│ res: {x: int} -> test1 & {x: int}
 
 Test1 { x = 123 }
-//│ res: Test1 & {x: int}
+//│ res: test1 & {x: int}
 
 :e
 Test1 { x = "oops" }
@@ -23,15 +23,15 @@ Test1 { x = "oops" }
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.3: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: (Test1 & {x: int}) | error
+//│ res: (test1 & {x: int}) | error
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: int -> Test1 & {x: int}
+//│ Test1: int -> test1 & {x: int}
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: int -> Test11 & {x: int}
+//│ Test11: int -> test11 & {x: int}
 
 
 :e

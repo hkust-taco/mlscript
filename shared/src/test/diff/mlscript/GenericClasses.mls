@@ -2,16 +2,16 @@
 class None: {}
 def None = None{}
 //│ Defined class None
-//│ None: None
+//│ None: none
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> Some & {value: 'a}
+//│ Some: 'a -> some & {value: 'a}
 
 Some 42
 (Some 42).value
-//│ res: Some & {value: 42}
+//│ res: some & {value: 42}
 //│ res: 42
 
 type Option[A] = Some[A] | None
@@ -27,7 +27,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.26: 	res.value
 //│ ║        	^^^
-//│ ╟── expression of type `None` does not have field 'value'
+//│ ╟── expression of type `none` does not have field 'value'
 //│ ║  l.17: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`

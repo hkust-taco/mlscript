@@ -85,6 +85,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
+  def clsNameToNomTag(nme: Str)(prov: TypeProvenance): SimpleType =
+    PrimType(Var(nme.head.toLower.toString + nme.tail))(prov)
+  
   def processTypeDefs(newDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
     newDefs.foreach { td =>
@@ -92,6 +95,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       allDefs.get(n.name).foreach { other =>
         err(msg"Type '$n' is already defined.", td.nme.toLoc)(raise, tp(td.toLoc, "data definition"))
       }
+      if (!n.name.head.isUpper) err(
+        msg"Type names must start with a capital letter", n.toLoc)(
+          raise, tp(td.toLoc, "data definition"))
       allDefs += n.name -> td
     }
     import ctx.{tyDefs => oldDefs}
@@ -106,7 +112,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         td.kind match {
           case Als =>
           case Cls | Trt =>
-            val nomTag = PrimType(Var(td.nme.name))(noProv/*FIXME*/)
+            val nomTag = clsNameToNomTag(td.nme.name)(noProv/*FIXME*/)
             val ctor = FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/)
             ctx += n.name -> ctor
         }
@@ -438,11 +444,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val bod_ty = typeTerm(bod)(newCtx, raise)
           // (ComposedType(false, PrimType(Var(cls.name))(noProv // FIXME
           // ), tv)(noProv), bod_ty, typeArms(scrutVar, rest))
-          (PrimType(Var(cls.name))(noProv // FIXME
+          (clsNameToNomTag(cls.name)(noProv // FIXME
           ) -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise)
-          (PrimType(Var(cls.name))(noProv // FIXME
+          (clsNameToNomTag(cls.name)(noProv // FIXME
           // (NomTag(cls)(noProv // FIXME
           // (AppliedType(cls, Nil)(noProv // FIXME
           ) -> TopType, bod_ty, typeArms(scrutVar, rest))
