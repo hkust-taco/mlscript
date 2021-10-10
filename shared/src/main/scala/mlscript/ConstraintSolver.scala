@@ -399,6 +399,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
   }
   
   
+  def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)(implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
+    constrain(ty_sch.instantiate, sign.rigidify)
+  }
+  
+  
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
       (implicit cache: MutMap[Variable, Variable] = MutMap.empty): SimpleType =
@@ -440,11 +445,18 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
   
   
   // Note: maybe this and `extrude` should be merged?
-  def freshenAbove(lim: Int, ty: SimpleType)(implicit lvl: Int): SimpleType = {
-    val freshened = MutMap.empty[Variable, Variable]
+  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false)(implicit lvl: Int): SimpleType = {
+    val freshened = MutMap.empty[Variable, SimpleType]
     def freshen(ty: SimpleType): SimpleType = if (ty.level <= lim) ty else ty match {
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
+        case None if rigidify =>
+          val v = PrimType(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
+          freshened += tv -> v
+          // TODO support bounds on rigidified variables (intersect/union them in):
+          assert(tv.lowerBounds.isEmpty)
+          assert(tv.upperBounds.isEmpty)
+          v
         case None =>
           val v = freshVar(tv.prov)
           freshened += tv -> v

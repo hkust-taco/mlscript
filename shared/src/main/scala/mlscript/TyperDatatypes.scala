@@ -26,7 +26,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
    *  (by convention, those variables of level greater than `level` are considered quantified). */
   case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
     val prov: TypeProvenance = body.prov
-    def instantiate(implicit lvl: Int) = freshenAbove(level, body)
+    def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
+    def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
   /** A type without universally quantified type variables. */

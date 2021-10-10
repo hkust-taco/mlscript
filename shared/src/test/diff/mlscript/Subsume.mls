@@ -1,0 +1,117 @@
+
+// Declare signature:
+def f: int -> int
+//│ f: int -> int
+
+// Define body:
+def f x = x
+//│ 'a -> 'a  <:  f: int -> int
+
+:e
+def f = 42
+//│ 42  <:  f: int -> int
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.11: 	def f = 42
+//│ ║        	        ^^
+//│ ╟── expression of type `42` is not a function
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.3: 	def f: int -> int
+//│ ╙──     	       ^^^^^^^^^^
+
+
+f 1
+//│ res: int
+
+fun x -> f x
+//│ res: int -> int
+
+
+
+def boom: anything
+//│ boom: anything
+
+def boom = 1
+//│ 1  <:  f: anything
+
+:e
+add boom 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.37: 	add boom 1
+//│ ║        	^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `int`
+//│ ║  l.30: 	def boom: anything
+//│ ║        	          ^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.37: 	add boom 1
+//│ ╙──      	    ^^^^
+//│ res: error | int
+
+
+def boom: nothing
+//│ boom: nothing
+
+:e
+def boom = 1
+//│ 1  <:  f: nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.54: 	def boom = 1
+//│ ║        	           ^
+//│ ╟── expression of type `1` does not match type `nothing`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.50: 	def boom: nothing
+//│ ╙──      	          ^^^^^^^
+
+
+def boom: 'a
+//│ boom: nothing
+
+:e
+def boom = 1
+//│ 1  <:  f: nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.69: 	def boom = 1
+//│ ║        	           ^
+//│ ╙── expression of type `1` does not match type `_α13`
+
+
+
+def id: 'a -> 'a
+//│ id: 'a -> 'a
+
+def id x = x
+//│ 'a -> 'a  <:  f: 'a -> 'a
+
+
+:e
+def id n = add n 1
+//│ int -> int  <:  f: 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.86: 	def id n = add n 1
+//│ ║        	       ^^^^^^^^^^^
+//│ ╟── expression of type `_α28` does not match type `int`
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.86: 	def id n = add n 1
+//│ ╙──      	               ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.86: 	def id n = add n 1
+//│ ║        	       ^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `_α28`
+//│ ║  l.86: 	def id n = add n 1
+//│ ║        	           ^^^^^^^
+//│ ╟── but it flows into function of type `?a & int -> ?b | int`
+//│ ║  l.86: 	def id n = add n 1
+//│ ║        	       ^^^^^^^^^^^
+//│ ╙── which does not match type `_α28 -> _α28`
+
+:e
+def id (x: int) = x
+//│ 'a & int -> 'a  <:  f: 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.107: 	def id (x: int) = x
+//│ ║         	        ^^^^^^^^^^^
+//│ ╟── expression of type `_α33` does not match type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.107: 	def id (x: int) = x
+//│ ╙──       	           ^^^
+
+

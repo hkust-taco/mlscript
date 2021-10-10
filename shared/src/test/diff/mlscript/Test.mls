@@ -18,7 +18,7 @@ def test = fun x -> case x of
 // TOOD support tyvars
 :pe
 test: Person & {age: 'a} | Animal -> 'a | 0
-//│ /!\ Parse error: Expected "}":1:17, found "age: 'a} |" at l.20:17: test: Person & {age: 'a} | Animal -> 'a | 0
+//│ /!\ Parse error: Expected end-of-input:1:41, found "| 0;" at l.20:41: test: Person & {age: 'a} | Animal -> 'a | 0
 
 test: (Person & {age: int} | Animal) -> int
 //│ res: ((Person & {age: int}) | Animal) -> int

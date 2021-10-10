@@ -86,7 +86,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def children: Ls[Located] = self match {
-    case Def(rec, nme, body) => body :: Nil
+    case d @ Def(rec, nme, _) => d.body :: Nil
     case TypeDef(kind, nme, tparams, body) => nme :: body :: Nil
   }
   def show: Str = showHead + (this match {

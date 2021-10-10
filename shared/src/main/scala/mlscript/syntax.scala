@@ -21,7 +21,8 @@ sealed trait TopLevel
 sealed trait OtherTopLevel extends TopLevel with Located
 
 sealed abstract class Decl extends TopLevel with DeclImpl
-final case class Def(rec: Bool, nme: Str, body: Term) extends Decl with OtherTopLevel
+final case class Def(rec: Bool, nme: Str, rhs: Term \/ Type) extends Decl with OtherTopLevel
+  { val body = rhs.fold(identity, identity) }
 final case class TypeDef(kind: TypeDefKind, nme: Primitive, tparams: List[Str], body: Type) extends Decl
 
 sealed abstract class TypeDefKind(val str: Str)

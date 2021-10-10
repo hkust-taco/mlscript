@@ -60,6 +60,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, Primitive("int"), Nil, Top) ::
     TypeDef(Cls, Primitive("string"), Nil, Top) ::
+    TypeDef(Als, Primitive("anything"), Nil, Top) ::
+    TypeDef(Als, Primitive("nothing"), Nil, Bot) ::
     Nil
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
@@ -143,33 +145,35 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   // TODO record provenances!
   def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
-    def typeNamed(name: Str): Opt[TypeDef] = {
+    def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
       if (res.isEmpty)
         err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
       res
     }
-    ty match {
+    val localVars = mutable.Map.empty[TypeVar, TypeVariable]
+    def rec(ty: Type)(implicit ctx: Ctx): SimpleType = ty match {
       case Top => TopType
       case Bot => BotType
       case Tuple(fields) => ??? // TODO
-      case Inter(lhs, rhs) => typeType(lhs) & typeType(rhs)
-      case Union(lhs, rhs) => typeType(lhs) | typeType(rhs)
+      case Inter(lhs, rhs) => rec(lhs) & rec(rhs)
+      case Union(lhs, rhs) => rec(lhs) | rec(rhs)
       case Applied(lhs, rhs) => ??? // TODO
-      case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> typeType(nt._2)))(tp(ty.toLoc, "record type"))
-      case Function(lhs, rhs) => FunctionType(typeType(lhs), typeType(rhs))(tp(ty.toLoc, "function type"))
+      case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
+      case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case Primitive(name) =>
         vars.get(name) orElse
-          typeNamed(name).map(td => TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx)) getOrElse
+          typeNamed(ty, name).map(td => TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx)) getOrElse
             freshVar(noProv) // TODO use ty's prov
-      case _: TypeVar => ??? // TODO
-      case AppliedType(base, targs) => typeNamed(base.name) match {
+      case tv: TypeVar =>
+        localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil)(tp(ty.toLoc, "type variable")))
+      case AppliedType(base, targs) => typeNamed(ty, base.name) match {
         case Some(td) =>
           val tpnum = td.tparams.size
-          val realTargs = if (targs.size === tpnum) targs.map(typeType) else {
+          val realTargs = if (targs.size === tpnum) targs.map(rec) else {
             err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${targs.size.toString}",
               ty.toLoc)(raise, noProv /*FIXME*/);
-            (targs.iterator.map(typeType) ++ Iterator.continually(freshVar(noProv)))
+            (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv)))
               .take(tpnum).toList
           }
           TypeRef(td,
@@ -178,6 +182,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       }
       case Recursive(uv, body) => ??? // TODO
     }
+    rec(ty)
   }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =

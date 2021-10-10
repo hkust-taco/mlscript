@@ -83,13 +83,16 @@ object Main {
             val d = decls.head
             decls = decls.tail
             try d match {
-              case d @ Def(isrec, nme, rhs) =>
-                val errProv = TypeProvenance(rhs.toLoc, "let-bound value")
+              case d @ Def(isrec, nme, L(rhs)) =>
+                val errProv = TypeProvenance(rhs.toLoc, "def definition")
                 val ty = typeLetRhs(isrec, nme, rhs)
                 ctx += nme -> ty
                 println(s"Typed `${d.nme}` as: $ty")
                 println(s" where: ${ty.instantiate(0).showBounds}")
                 res ++= formatBinding(d.nme, ty)
+              case d @ Def(isrec, nme, R(rhs)) =>
+                val errProv = TypeProvenance(rhs.toLoc, "def signature")
+                ??? // TODO
               case s: Statement =>
                 val errProv = TypeProvenance(s.toLoc, "expression in statement position")
                 val (diags, desug) = s.desugared

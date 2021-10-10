@@ -28,6 +28,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
+    var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     
     case class Mode(
@@ -204,11 +205,25 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                       output(s"res: ${exp.show}")
                     }
                 }
-              case Def(isrec, nme, rhs) =>
-                val ty_sch = typer.typeLetRhs(isrec, nme, rhs)(ctx, raise)
+              case Def(isrec, nme, R(rhs)) =>
+                val ty_sch = typer.typeType(rhs)(ctx.nextLevel, raise, Map.empty)
                 ctx += nme -> ty_sch
+                declared += nme -> typer.PolymorphicType(0, ty_sch)
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
+              case d @ Def(isrec, nme, L(rhs)) =>
+                val ty_sch = typer.typeLetRhs(isrec, nme, rhs)(ctx, raise)
+                val exp = getType(ty_sch)
+                declared.get(nme) match {
+                  case N =>
+                    ctx += nme -> ty_sch
+                    output(s"$nme: ${exp.show}")
+                  case S(sign) =>
+                    ctx += nme -> sign
+                    val sign_exp = getType(sign)
+                    output(s"${exp.show}  <:  f: ${sign_exp.show}")
+                    typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                }
             }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
