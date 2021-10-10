@@ -73,6 +73,7 @@ abstract class TyperHelpers { self: Typer =>
       case Without(b, ns) => Without(b, ns + name)(this.prov)
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
+      case t @ ComposedType(false, l, r) => l.without(name) & r.without(name)
       case a @ AppType(f, as) => ???
       case t @ RecordType(fs) =>
         // RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
