@@ -38,6 +38,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
               // Option.when(pt0 === pt1)(p)
               // Some(glb(p0, p1)).filterNot(_ === BotType)
+              println(s"!! ${p0.glb(p1)}")
               p0.glb(p1)
               // val common = p0.glb(p1)
               // common.toList match {
@@ -174,7 +175,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)))) => rec(f0, f1)
             case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _)) => fail
             case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
-              if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
+              // if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
+              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)) || pts.contains(pt.widenPrim)) ()
               else fail
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {

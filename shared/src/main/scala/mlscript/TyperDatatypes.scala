@@ -147,7 +147,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     //   else if (this.parentsST.contains(that.id)) Set.single(this.id)
     //   else this.parentsST.intersect(that.parentsST)
     def level: Int = 0
-    override def toString = id.idStr+s"<${parents.mkString}>"
+    override def toString = id.idStr+s"<${parents.mkString(",")}>"
   }
   
   sealed trait Variable extends SimpleType

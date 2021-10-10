@@ -444,8 +444,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case None =>
         err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/)
         val e = PrimType(ErrTypeId, Set.empty)(noProv)
-        ((e -> e) :: Nil) ->
-          e
+        ((e -> e) :: Nil) -> e
       case Some(td) =>
       // TODO check td is a class
       if (td.kind === Als) err(msg"can only match on classes and traits", cls.toLoc)(raise, noProv /*FIXME*/)

@@ -88,7 +88,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def baseClassesOf(ty: Type): Set[Var] = ty match {
     case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
-    case Primitive(v) => Set.single(Var(v))
+    case Primitive(nme) if nme.nonEmpty => Set.single(Var(nme.head.toLower + nme.tail))
     case Record(_) => Set.empty
     case _ => ??? // TODO error
   }
