@@ -30,6 +30,33 @@ def c = Child(Parent { name = "Bob" } with { age = 123 })
 c: Parent
 //│ res: Parent
 
+:d
+c.name
+//│ 0. Typing term c.name
+//│  0. Typing term c
+//│  0. : [α0]
+//│  CONSTRAIN [[α0]] <! {name: α1}
+//│    where α0 :> (child & (Parent & {age: int}))
+//│  C [[α0]] <! {name: α1}
+//│   C [α0] <! {name: α1}
+//│    C α0 <! {name: α1}
+//│     C (child & (Parent & {age: int})) <! {name: α1}
+//│      A  LhsTop  %  List(child, (Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
+//│       A  LhsRefined(Some(child),{})  %  List((Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
+//│        A  LhsRefined(Some(child),{})  %  List(Parent, {age: int})  <!  List({name: α1})  %  RhsBot
+//│         A  LhsRefined(Some(child),{})  %  List((parent & {name: string}), {age: int})  <!  List({name: α1})  %  RhsBot
+//│          A  LhsRefined(Some(child),{})  %  List(parent, {name: string}, {age: int})  <!  List({name: α1})  %  RhsBot
+//│ 0. : α1
+//│ Typed as: α1
+//│  where: 
+//│ Compact type before simplification: CompactTypeScheme(‹α1›,TreeMap())
+//│ [occ] LinkedHashMap((true,α1) -> LinkedHashSet(α1))
+//│ [rec] TreeSet()
+//│ [!] α1
+//│ [sub] α1 -> None
+//│ Compact type after simplification: CompactTypeScheme(‹›,Map())
+//│ res: nothing
+
 // FIXME!
 c: { name: 'a }
 //│ res: {name: nothing}
@@ -46,3 +73,12 @@ def f x = case x of {
 // :d
 f c
 //│ res: nothing
+
+def f x = case x of {
+  | Child -> x.name
+  }
+//│ f: child & {name: 'a} -> 'a
+
+f c
+//│ res: nothing
+

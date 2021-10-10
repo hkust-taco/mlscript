@@ -19,3 +19,17 @@ add res 1
 //│ ╙──      	    ^^^
 //│ res: error | int
 
+:e
+(1: int): ~int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.23: 	(1: int): ~int
+//│ ║        	 ^
+//│ ╟── expression of type `int` does not match type `~int`
+//│ ║  l.23: 	(1: int): ~int
+//│ ║        	    ^^^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.23: 	(1: int): ~int
+//│ ╙──      	          ^^^^
+//│ res: ~int
+
+

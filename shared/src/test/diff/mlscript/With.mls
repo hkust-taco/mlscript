@@ -29,3 +29,12 @@ def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
 //│ f: 'a & {x: anything} -> 'a -> 'a\x & {x: "oops"}
 
 
+({ name = "Bob" } with { age = 123 }).age
+//│ res: 123
+
+({ name = "Bob" } with { age = 123 }).name
+//│ res: "Bob"
+
+({ name = "Bob" } with { name = 123 }).name
+//│ res: 123
+
