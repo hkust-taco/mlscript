@@ -9,7 +9,6 @@ class Parent2: { name: int }
 class Child: Parent1 & Parent2
 //│ Defined class Child
 
-// FIXME param annotations
 def f(x:Child) = x.name
-//│ f: Child -> nothing
+//│ f: Child & {name: 'a} -> 'a
 

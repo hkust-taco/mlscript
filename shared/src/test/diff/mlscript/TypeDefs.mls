@@ -117,5 +117,5 @@ type TypeC = TypeA
 
 // FIXME:
 def test = fun (x: TypeB) -> x
-//│ test: TypeB -> nothing
+//│ test: 'a & TypeB -> 'a
 

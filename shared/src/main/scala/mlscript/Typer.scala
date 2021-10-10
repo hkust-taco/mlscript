@@ -314,8 +314,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
         implicit val vars: Map[Str, SimpleType] = Map.empty
-        val ty_ty = typeType(ty)
+        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
+        if (ctx.inPattern) trm_ty else ty_ty
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!
@@ -329,6 +330,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
+      case lit: Lit => PrimType(lit)(prov)
+      case App(Var("neg"), trm) => typeTerm(trm).neg(prov)
+      case App(App(Var("|"), lhs), rhs) =>
+        typeTerm(lhs) | (typeTerm(rhs), prov)
+      case App(App(Var("&"), lhs), rhs) =>
+        typeTerm(lhs) & (typeTerm(rhs), prov)
+      case Rcd(fs) => // TODO rm: no longer used?
+        RecordType.mk(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
+      case tup: Tup =>
+        typeTerms(tup :: Nil, false, Nil)
+      case Bra(false, trm: Blk) => typeTerm(trm)
+      case Bra(rcd, trm @ (_: Tup | _: Blk)) => typeTerms(trm :: Nil, rcd, Nil)
+      case Bra(_, trm) => typeTerm(trm)
+      case Blk((s: Term) :: Nil) => typeTerm(s)
+      case Blk(Nil) => UnitType
+      case pat if ctx.inPattern =>
+        err(msg"Unsupported pattern shape(${pat.getClass.toString()}):", pat.toLoc)(raise, ttp(pat))
       case Lam(pat, body) =>
         val newBindings = mutable.Map.empty[Str, TypeVariable]
         val newCtx = ctx.nest
@@ -336,16 +354,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-      case App(Var("neg"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
         val newCtx = ctx.nest // TODO use
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
-      case App(App(Var("|"), lhs), rhs) =>
-        typeTerm(lhs) | (typeTerm(rhs), prov)
-      case App(App(Var("&"), lhs), rhs) =>
-        typeTerm(lhs) & (typeTerm(rhs), prov)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typeTerm(a)
@@ -358,26 +371,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         if (raw_fun_ty.isInstanceOf[VarType] || raw_fun_ty.isInstanceOf[AppType]) // TODO more principled
           (fun_ty app arg_ty)(appProv)
         else resTy
-      case lit: Lit => PrimType(lit)(prov)
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
         val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
         con(obj_ty, RecordType.mk((name, res) :: Nil)(prov), res)
-      case Rcd(fs) => // TODO rm: no longer used?
-        RecordType.mk(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         val newCtx = ctx.nest
         newCtx += nme -> n_ty
         typeTerm(bod)(newCtx, raise)
-      case tup: Tup =>
-        typeTerms(tup :: Nil, false, Nil)
-      case Bra(false, trm: Blk) => typeTerm(trm)
-      case Bra(rcd, trm @ (_: Tup | _: Blk)) => typeTerms(trm :: Nil, rcd, Nil)
-      case Bra(_, trm) => typeTerm(trm)
-      case Blk((s: Term) :: Nil) => typeTerm(s)
-      case Blk(Nil) => UnitType
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
       //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
@@ -411,8 +414,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               )
         }
         con(s_ty, req, cs_ty)
-      case pat if ctx.inPattern =>
-        err(msg"Unsupported pattern shape:", pat.toLoc)(raise, ttp(pat))
     }
   }(r => s"$lvl. : ${r}")
   
