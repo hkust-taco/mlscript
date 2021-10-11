@@ -108,14 +108,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         val n = td.nme
         val dummyTargs =
-          td.tparams.map(p => freshVar(noProv/*TODO*/))
-        implicit val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
-        val body_ty = typeType(td.body)
+          td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
+        val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
+        val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
         td.kind match {
           case Als =>
           case Cls | Trt =>
             val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
-            val ctor = FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/)
+            val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
             ctx += n.name -> ctor
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {

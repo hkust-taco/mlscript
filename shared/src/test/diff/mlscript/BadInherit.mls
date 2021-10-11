@@ -5,10 +5,62 @@ class Parent1: { name: string }
 class Parent2: { name: int }
 //│ Defined class Parent2
 
-// TODO forbid
+// Note: no need to forbid, as it's not instantiable...
 class Child: Parent1 & Parent2
 //│ Defined class Child
 
 def f(x:Child) = x.name
 //│ f: Child & {name: 'a} -> 'a
+
+def f(x:Child) = x: nothing
+//│ f: nothing & Child -> nothing
+
+:pe
+def c = Child(Parent1{name="A"} with Parent2{name="B"})
+//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.19:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
+
+:e
+def c = Child(Parent1{name="A"})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	def c = Child(Parent1{name="A"})
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `parent1 & {name: string}` does not match type `parent2`
+//│ ║  l.23: 	def c = Child(Parent1{name="A"})
+//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class Child: Parent1 & Parent2
+//│ ╙──     	                       ^^^^^^^
+//│ c: (child & (Parent1 & Parent2)) | error
+
+// TODO forbid
+class Crazy[A]: A & { name: string }
+//│ Defined class Crazy
+
+Crazy
+//│ res: ('a & {name: string}) -> crazy & ('a & {name: string})
+
+def c = Crazy({ name = "Bob"; age = 42 })
+//│ c: crazy & ({age: 42, name: "Bob"} & {name: string})
+
+:e
+c: nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.46: 	c: nothing
+//│ ║        	^
+//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~crazy`
+//│ ║  l.42: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.46: 	c: nothing
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.46: 	c: nothing
+//│ ╙──      	   ^^^^^^^
+//│ res: nothing
+
+def d = Crazy(Parent1{name = "Bob"})
+//│ d: crazy & ((parent1 & {name: string}) & {name: string})
+
+d: nothing
+//│ res: nothing
 
