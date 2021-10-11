@@ -15,13 +15,13 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~(some<>)\payload)\payload (class mlscript.TyperDatatypes$Without)
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:114)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:105)
 //│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
 //│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
 //│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
 //│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:153)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
@@ -30,32 +30,95 @@ def arg = if true then Some{value = 42} else None {}
 //│ arg: (some & {value: 42}) | none
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((some & {value: 'a}) | ('b & ~some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 foo 1
-//│ res: nothing | (1 & ~{value: nothing}) | (1 & ~some)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 def fn = foo None
-//│ fn: nothing | ((anything -> none) & ~{value: nothing}) | ((anything -> none) & ~some)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 // :d
 fn{} // foo None {}
-//│ res: none
+//│ ╔══[ERROR] identifier not found: fn
+//│ ║  l.89: 	fn{} // foo None {}
+//│ ╙──      	^^
+//│ res: error
 
 // :d
 foo (None{})
-//│ res: nothing | (none & ~{value: nothing}) | (none & ~some)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 
 fun f -> flatMap3 f arg
-//│ res: ((none & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) | ((some & {value: 42}) & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) -> 'a) -> 'a | (none & ~some) | (({value: 42} & some) & ~some)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: head of empty String
+//│ 	at: scala.collection.StringOps$.head$extension(StringOps.scala:1124)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$7(TypeSimplifier.scala:348)
+//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:575)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1251)
+//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1251)
+//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$3(TypeSimplifier.scala:344)
+//│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
+//│ 	at: mlscript.TypeSimplifier.go$3(TypeSimplifier.scala:338)
 
 
 
@@ -64,7 +127,17 @@ def foo = flatMap3 (fun x -> x)
 //│ foo: ((some & 'a) | ('b & ~some)) -> 'a | 'b
 
 foo 1
-//│ res: (1 & ~((1 & ~some) & ~some)) | (1 & ~some)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: head of empty String
+//│ 	at: scala.collection.StringOps$.head$extension(StringOps.scala:1124)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$7(TypeSimplifier.scala:348)
+//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:575)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1251)
+//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1251)
+//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$3(TypeSimplifier.scala:344)
+//│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
+//│ 	at: mlscript.TypeSimplifier.go$3(TypeSimplifier.scala:338)
 
 
 
@@ -81,15 +154,25 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	res 1
-//│ ║        	^^^^^
+//│ ║  l.155: 	res 1
+//│ ║         	^^^^^
 //│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & ~some)`
-//│ ║  l.82: 	res 1
-//│ ║        	    ^
+//│ ║  l.155: 	res 1
+//│ ║         	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & ~{value: nothing}) | (1 & ~some)) | error
+//│ ║  l.148: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ╙──       	                                       ^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 
 def funny = fun f -> case f of { Some -> f f }

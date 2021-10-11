@@ -67,7 +67,7 @@ abstract class TyperHelpers { self: Typer =>
     
     // TODO make it the other way around (more efficient)
     def without(names: Set[Str]): SimpleType =
-      names.foldLeft(this)(_.without(_))
+      if (names.isEmpty) this else names.foldLeft(this)(_.without(_))
     
     def without(name: Str): SimpleType = this match {
       case Without(b, ns) => Without(b, ns + name)(this.prov)
@@ -89,8 +89,10 @@ abstract class TyperHelpers { self: Typer =>
       case vt: VarType => ???
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
+        // case _: ExtrType | _: NegType => true
+        // case c: ComposedType => c.pol
         case _ => false
-      }) => nt.neg(n.prov).without(name)
+      }) => /* println(s"! $n ${nt.getClass}"); */ nt.neg(n.prov).without(name)
       // case NegType(rt: RecordType) => this // FIXME valid??!
       // case NegType(t) => this // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!

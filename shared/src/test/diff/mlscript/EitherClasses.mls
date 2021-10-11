@@ -18,17 +18,37 @@ def res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
-//│ res: 1 | 1
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.utils.package$.die(package.scala:134)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 // TODO support:
 res: 1
 case res of { 1 -> "ok" }
-//│ /!\ Parse error: Expected end-of-input:1:4, found ": 1;case r" at l.24:4: res: 1
+//│ /!\ Parse error: Expected end-of-input:1:4, found ": 1;case r" at l.34:4: res: 1
 
 // TODO simplify this monster:
 def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
-//│ res: ((right & {value: 2}) & ~((right & (({value: 2} & right) & ~left) | (({value: 1} & left) & ~left)) & ~left)) | ((left & {value: 1}) & ~((right & (({value: 2} & right) & ~left) | (({value: 1} & left) & ~left)) & ~left)) | 1
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: head of empty String
+//│ 	at: scala.collection.StringOps$.head$extension(StringOps.scala:1124)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$7(TypeSimplifier.scala:348)
+//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:575)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1251)
+//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1251)
+//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$3(TypeSimplifier.scala:344)
+//│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
+//│ 	at: mlscript.TypeSimplifier.go$3(TypeSimplifier.scala:338)
 

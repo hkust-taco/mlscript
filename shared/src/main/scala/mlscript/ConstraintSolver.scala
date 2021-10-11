@@ -101,9 +101,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         which are those that involve either unions and intersections at the wrong polarities, or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
-    def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit ctx: ConCtx): Unit = annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
-    def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+    def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf, ns: Set[Str])
+          (implicit ctx: ConCtx): Unit = annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs, ns)
+    def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf, ns: Set[Str])
           (implicit ctx: ConCtx): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       // (ls, rs) match {
       (ls.mapHead(_.pushPosWithout), rs) match {
@@ -112,51 +112,68 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case ((tv: TypeVariable) :: ls, _) =>
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(_ | _).getOrElse(BotType)
-          rec(tv, rhs)
+          rec(Without(tv,ns)(noProv).pushPosWithout, rhs)
         case (_, (tv: TypeVariable) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
           val lhs = tys.reduceOption(_ & _).getOrElse(TopType)
-          rec(lhs, tv)
+          rec(Without(lhs,ns)(noProv).pushPosWithout, tv)
         case (ComposedType(true, ll, lr) :: ls, _) =>
-          annoying(ll :: ls, done_ls, rs, done_rs)
-          annoying(lr :: ls, done_ls, rs, done_rs)
+          annoying(ll :: ls, done_ls, rs, done_rs, ns)
+          annoying(lr :: ls, done_ls, rs, done_rs, ns)
         case (_, ComposedType(false, rl, rr) :: rs) =>
-          annoying(ls, done_ls, rl :: rs, done_rs)
-          annoying(ls, done_ls, rr :: rs, done_rs)
+          annoying(ls, done_ls, rl :: rs, done_rs, ns)
+          annoying(ls, done_ls, rr :: rs, done_rs, ns)
         case (_, ComposedType(true, rl, rr) :: rs) =>
-          annoying(ls, done_ls, rl :: rr :: rs, done_rs)
+          annoying(ls, done_ls, rl :: rr :: rs, done_rs, ns)
         case (ComposedType(false, ll, lr) :: ls, _) =>
-          annoying(ll :: lr :: ls, done_ls, rs, done_rs)
-        case (p @ ProxyType(und) :: ls, _) => annoying(und :: ls, done_ls, rs, done_rs)
-        case (_, p @ ProxyType(und) :: rs) => annoying(ls, done_ls, und :: rs, done_rs)
+          annoying(ll :: lr :: ls, done_ls, rs, done_rs, ns)
+        case (p @ ProxyType(und) :: ls, _) => annoying(und :: ls, done_ls, rs, done_rs, ns)
+        case (_, p @ ProxyType(und) :: rs) => annoying(ls, done_ls, und :: rs, done_rs, ns)
         // ^ TODO retain the proxy provs wrapping each ConstructedType... for better errors later on?
-        case (n @ NegType(ty) :: ls, _) => annoying(ls, done_ls, ty :: rs, done_rs)
-        case (_, n @ NegType(ty) :: rs) => annoying(ty :: ls, done_ls, rs, done_rs)
+        case (n @ NegType(ty) :: ls, _) => annoying(ls, done_ls, ty :: rs, done_rs, ns)
+        case (_, n @ NegType(ty) :: rs) => annoying(ty :: ls, done_ls, rs, done_rs, ns)
         case (ExtrType(true) :: ls, rs) => () // Bot in the LHS intersection makes the constraint trivial
         case (ls, ExtrType(false) :: rs) => () // Top in the RHS union makes the constraint trivial
-        case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
-        case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
+        case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs, ns)
+        case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs, ns)
           
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs, ns)
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs, ns)
         
         case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse
-          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
+          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs, ns)
         case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
-          (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))
+          (return println(s"OK  $done_rs | $r  =:=  ${TopType}")), ns)
           
-        case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs)
+        // case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs, ns)
+        // case (ls, (r @ RecordType(Nil)) :: rs) => ()
+        // case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
+        //   (return println(s"OK  $done_rs | $f  =:=  ${TopType}")), ns)
+        // case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs, ns)
+        case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l.filterNot(ns), rs, done_rs, ns)
         case (ls, (r @ RecordType(Nil)) :: rs) => ()
+        // case (ls, (r @ RecordType(f :: Nil)) :: rs) if ns(f) => annoying(ls, done_ls, TopType :: rs, done_rs | f getOrElse
         case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
-          (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
-        case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
-          
+          (return println(s"OK  $done_rs | $f  =:=  ${TopType}")), ns)
+        case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs, ns)
+        
+        // case (Without(l, ns2) :: ls, rs) =>
+        //   annoying(l :: ls, done_ls, rs, done_rs, ns ++ ns2)
+        // case (ls, Without(r, ns2) :: rs) =>
+        //   annoying(ls, done_ls, r :: rs, done_rs, ns ++ ns2)
+        case (Without(l, ns2) :: Nil, rs) if done_ls === LhsTop =>
+          annoying(l :: ls, done_ls, rs, done_rs, ns ++ ns2)
+        case (ls, Without(r, ns2) :: Nil) if done_rs === RhsBot =>
+          annoying(ls, done_ls, r :: rs, done_rs, ns ++ ns2)
+         
+          // /* 
         case (Without(rt:RecordType, ns) :: ls, rs) =>
-          annoying(RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: ls, done_ls, rs, done_rs)
+          annoying(RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: ls, done_ls, rs, done_rs, ns)
         // case (ls, Without(rt:RecordType, ns) :: rs) =>
         //   annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
           
         case (Without(b:TypeVariable, ns) :: ls, rs) =>
+        // case (Without(b@(_:TypeVariable|_:NegType), ns) :: ls, rs) =>
           println("!" + (ls.iterator ++ done_ls.toTypes).map(_.neg()).toList)
           println("!" + ((ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes).reduceOption(_ | _))
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
@@ -164,15 +181,16 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           rec(b, rhs.without(ns))
         case (Without(_, ns) :: ls, rs) => die
         // case (ls, Without(b:TypeVariable, ns) :: rs) =>
-        case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
-          def tys = ls.iterator ++ done_ls.toTypes
-          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
-          rec(lhs.without(ns), b)
+        // case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
+        //   def tys = ls.iterator ++ done_ls.toTypes
+        //   val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
+        //   rec(lhs.without(ns), b)
         case (ls, Without(b, ns) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
           val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
           rec(lhs.without(ns), b)
-        
+        //  */
+         
           /* 
         case (Without(np @ NegType(_: PrimType), ns) :: ls, rs) =>
           annoying(np :: ls, done_ls, rs, done_rs)
@@ -198,7 +216,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               else fail
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
-              r.fields.find(_._1 === n) match {
+              // if (ns(n))
+              // r.fields.find(_._1 === n) match {
+              r.fields.find(f => f._1 === n && !ns(f._1)) match {
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
@@ -313,12 +333,12 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (PrimType(ErrTypeId, _), _) => ()
           case (_, PrimType(ErrTypeId, _)) => ()
           case (_, ComposedType(true, l, r)) =>
-            annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
+            annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot, Set.empty)
           case (ComposedType(false, l, r), _) =>
-            annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot)
+            annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot, Set.empty)
           // case (_: NegType, _) | (_, _: NegType) =>
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
-            annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot)
+            annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot, Set.empty)
           case _ =>
             val failureOpt = lhs_rhs match {
               case (RecordType(fs0), RecordType(fs1)) =>
