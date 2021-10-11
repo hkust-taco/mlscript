@@ -19,6 +19,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
+  final case class TypeDef(
+    kind: TypeDefKind,
+    nme: Primitive,
+    tparams: List[Str],
+    body: Type,
+    baseClasses: Set[Var],
+    toLoc: Opt[Loc],
+  )
+  
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
     def +=(b: Binding): Unit = env += b
     def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
@@ -58,10 +67,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, Primitive("int"), Nil, Set.empty, Top) ::
-    TypeDef(Cls, Primitive("string"), Nil, Set.empty, Top) ::
-    TypeDef(Als, Primitive("anything"), Nil, Set.empty, Top) ::
-    TypeDef(Als, Primitive("nothing"), Nil, Set.empty, Bot) ::
+    TypeDef(Cls, Primitive("int"), Nil, Top, Set.empty, N) ::
+    TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
+    TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
+    TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::
     Nil
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
@@ -90,33 +99,72 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance): SimpleType =
     PrimType(Var(td.nme.name.head.toLower.toString + td.nme.name.tail), td.baseClasses)(prov)
   
-  def processTypeDefs(newDefs: List[TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
+  def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
+    if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)
+  
+  private def baseClassesOf(ty: Type): Set[Var] = ty match {
+      case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
+      case Primitive(nme) if nme.nonEmpty =>
+        Set.single(Var(nme.head.toLower.toString + nme.tail))
+      case AppliedType(b, _) => baseClassesOf(b)
+      case Record(_) => Set.empty
+      case _: Union => Set.empty
+      case _ => Set.empty // TODO TupleType?
+    }
+  
+  def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
-    newDefs.foreach { td =>
+    val newDefs = newDefs0.map { td =>
+      implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
       val n = td.nme
       allDefs.get(n.name).foreach { other =>
-        err(msg"Type '$n' is already defined.", td.nme.toLoc)(raise, tp(td.toLoc, "data definition"))
+        err(msg"Type '$n' is already defined.", td.nme.toLoc)
       }
       if (!n.name.head.isUpper) err(
-        msg"Type names must start with a capital letter", n.toLoc)(
-          raise, tp(td.toLoc, "data definition"))
-      allDefs += n.name -> td
+        msg"Type names must start with a capital letter", n.toLoc)
+      val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, baseClassesOf(td), td.toLoc)
+      allDefs += n.name -> td1
+      td1
     }
     import ctx.{tyDefs => oldDefs}
     // implicit val newCtx = ctx.copy(tyDefs = newDefs)
     ctx.copy(tyDefs = allDefs) |> { implicit ctx =>
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
+        implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
         val n = td.nme
         val dummyTargs =
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
         val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
         val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
-        td.kind match {
-          case Als =>
+        val rightParents = td.kind match {
+          case Als => true
           case Cls | Trt =>
-            val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
-            val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
-            ctx += n.name -> ctor
+            def checkParents(ty: SimpleType): Bool = ty match {
+              case PrimType(_, _) => true // Q: always?
+              case TypeRef(_, _) => true // Q: always?
+              case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
+              case ComposedType(true, l, r) =>
+                err(msg"cannot inherit from a type union", prov.loco)
+                false
+              case tv: TypeVariable =>
+                err(msg"cannot inherit from a type variable", prov.loco)
+                false
+              case _: FunctionType =>
+                err(msg"cannot inherit from a function type", prov.loco)
+                false
+              case _: NegType =>
+                err(msg"cannot inherit from a type negation", prov.loco)
+                false
+              case _: RecordType | _: ExtrType => true
+              case p: ProxyType => checkParents(p.underlying)
+              case _ => ??? // TODO
+            }
+            checkParents(body_ty) && {
+              val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
+              val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
+              ctx += n.name -> ctor
+              true
+            }
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.nme.name) match {
@@ -137,7 +185,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
-        if (checkRegular(body_ty)(Map(n.name -> dummyTargs)))
+        if (rightParents && checkRegular(body_ty)(Map(n.name -> dummyTargs)))
           td.nme.name -> td :: Nil
         else Nil
       })

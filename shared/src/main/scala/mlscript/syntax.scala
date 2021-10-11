@@ -27,7 +27,6 @@ final case class TypeDef(
   kind: TypeDefKind,
   nme: Primitive,
   tparams: List[Str],
-  baseClasses: Set[Var],
   body: Type,
 ) extends Decl
 

@@ -71,47 +71,57 @@ def boom = 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.69: 	def boom = 1
 //│ ║        	           ^
-//│ ╙── expression of type `1` does not match type `_α13`
+//│ ╙── expression of type `1` does not match type `_α14`
 
 
 
 def id: 'a -> 'a
 //│ id: 'a -> 'a
 
+id 1
+id true
+//│ res: 1
+//│ res: bool
+
 def id x = x
 //│ 'a -> 'a  <:  f: 'a -> 'a
+
+id 1
+id true
+//│ res: 1
+//│ res: bool
 
 
 :e
 def id n = add n 1
 //│ int -> int  <:  f: 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.86: 	def id n = add n 1
+//│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╟── expression of type `_α28` does not match type `int`
+//│ ╟── expression of type `_α38` does not match type `int`
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.86: 	def id n = add n 1
+//│ ║  l.96: 	def id n = add n 1
 //│ ╙──      	               ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.86: 	def id n = add n 1
+//│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `_α28`
-//│ ║  l.86: 	def id n = add n 1
+//│ ╟── expression of type `int` does not match type `_α38`
+//│ ║  l.96: 	def id n = add n 1
 //│ ║        	           ^^^^^^^
 //│ ╟── but it flows into function of type `?a & int -> ?b | int`
-//│ ║  l.86: 	def id n = add n 1
+//│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╙── which does not match type `_α28 -> _α28`
+//│ ╙── which does not match type `_α38 -> _α38`
 
 :e
 def id (x: int) = x
 //│ 'a & int -> 'a  <:  f: 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.107: 	def id (x: int) = x
+//│ ║  l.117: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
-//│ ╟── expression of type `_α33` does not match type `int`
+//│ ╟── expression of type `_α43` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.107: 	def id (x: int) = x
+//│ ║  l.117: 	def id (x: int) = x
 //│ ╙──       	           ^^^
 
 

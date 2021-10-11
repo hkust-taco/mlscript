@@ -89,14 +89,14 @@ trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def children: Ls[Located] = self match {
     case d @ Def(rec, nme, _) => d.body :: Nil
-    case TypeDef(kind, nme, tparams, bcs, body) => nme :: body :: Nil
+    case TypeDef(kind, nme, tparams, body) => nme :: body :: Nil
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _, _) => " = "; case _ => ": " }) + body
+    case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + body
   def showHead: Str = this match {
     case Def(true, n, b) => s"rec def $n"
     case Def(false, n, b) => s"def $n"
-    case TypeDef(k, n, tps, bcs, b) =>
+    case TypeDef(k, n, tps, b) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.mkString("[", ", ", "]")}"
   }
 }

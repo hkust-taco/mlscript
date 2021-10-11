@@ -1,0 +1,59 @@
+
+class Seq[A]: { size: int }
+//│ Defined class Seq
+
+class ListBase[A]: Seq[A]
+//│ Defined class ListBase
+
+class Nil: ListBase[nothing] & {}
+class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
+type List[A] = Nil | Cons[A]
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Defined type List
+
+:e
+Nil{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.16: 	Nil{}
+//│ ║        	^^^^^
+//│ ╟── expression of type `anything` does not match type `listBase`
+//│ ║  l.16: 	Nil{}
+//│ ║        	   ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.8: 	class Nil: ListBase[nothing] & {}
+//│ ╙──     	           ^^^^^^^^^^^^^^^^^
+//│ res: (nil & ListBase[nothing]) | error
+
+// FIXME
+def Nil = Nil (ListBase (Seq { size = 0 }))
+def Cons head tail =
+  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ Nil: nil & ListBase[nothing]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `int`
+//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ ║        	                               ^^^^^^^^^
+//│ ╟── but it flows into record literal with expected type `{size: int}`
+//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.2: 	class Seq[A]: { size: int }
+//│ ╙──     	                      ^^^
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:104)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:103)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:169)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:103)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:169)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+
+Nil: ListBase[anything]
+//│ res: ListBase[anything]
+

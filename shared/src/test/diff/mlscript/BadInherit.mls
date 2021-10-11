@@ -32,35 +32,62 @@ def c = Child(Parent1{name="A"})
 //│ ╙──     	                       ^^^^^^^
 //│ c: (child & (Parent1 & Parent2)) | error
 
-// TODO forbid
-class Crazy[A]: A & { name: string }
-//│ Defined class Crazy
+:e
+class Crazy[A]: A & { name: A }
+//│ ╔══[ERROR] cannot inherit from a type variable
+//│ ║  l.36: 	class Crazy[A]: A & { name: A }
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 
+class Crazy[A]: { name: A }
+def Crazy: 'a -> (Crazy['a] & 'a)
+//│ Defined class Crazy
+//│ Crazy: 'a -> Crazy[nothing] & 'a
+
+// FIXME? Crazy[nothing]
 Crazy
-//│ res: ('a & {name: string}) -> crazy & ('a & {name: string})
+//│ res: 'a -> Crazy[nothing] & 'a
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: crazy & ({age: 42, name: "Bob"} & {name: string})
+//│ c: Crazy[nothing] & {age: 42, name: "Bob"}
 
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.46: 	c: nothing
+//│ ║  l.54: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~crazy`
-//│ ║  l.42: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~(crazy & {name: ?a})`
+//│ ║  l.50: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.46: 	c: nothing
+//│ ║  l.54: 	c: nothing
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.46: 	c: nothing
+//│ ║  l.54: 	c: nothing
 //│ ╙──      	   ^^^^^^^
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: crazy & ((parent1 & {name: string}) & {name: string})
+//│ d: Crazy[nothing] & (parent1 & {name: string})
 
 d: nothing
 //│ res: nothing
+
+
+:e
+class Stupid: Parent1 | Parent2
+//│ ╔══[ERROR] cannot inherit from a type union
+//│ ║  l.77: 	class Stupid: Parent1 | Parent2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
+:e
+class Stupid: Parent1 -> Parent2
+//│ ╔══[ERROR] cannot inherit from a function type
+//│ ║  l.82: 	class Stupid: Parent1 -> Parent2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+:e
+class Stupid: ~Parent1
+//│ ╔══[ERROR] cannot inherit from a type negation
+//│ ║  l.87: 	class Stupid: ~Parent1
+//│ ╙──      	      ^^^^^^^^^^^^^^^^
+
+
 
