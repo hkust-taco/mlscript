@@ -6,6 +6,8 @@ type List[A] = Nil | Cons[A]
 //│ Defined class Cons
 //│ Defined type List
 
+def originalCons = Cons
+//│ originalCons: {head: 'a, tail: List['a]} -> cons & {head: 'a, tail: List['a]}
 
 def Nil = Nil {}
 //│ Nil: nil
@@ -20,6 +22,7 @@ Cons 2
 Cons 2 Nil
 //│ res: cons & {head: 2, tail: List[2]}
 
+// FIXME List[1]...
 Cons 1 res
 //│ res: cons & {head: 1, tail: List[1]}
 
@@ -35,35 +38,35 @@ res.tail
 :e // Q: why the duplicated error?
 res.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.36: 	res.tail
+//│ ║  l.39: 	res.tail
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.36: 	res.tail
+//│ ║  l.39: 	res.tail
 //│ ╙──      	^^^
 //│ res: List[1] | error
 
 :e // Q: why the duplicated error?
 res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.49: 	res.tail.head
+//│ ║  l.52: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.49: 	res.tail.head
+//│ ║  l.52: 	res.tail.head
 //│ ╙──      	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.49: 	res.tail.head
+//│ ║  l.52: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'head'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.49: 	res.tail.head
+//│ ║  l.52: 	res.tail.head
 //│ ╙──      	^^^
 //│ res: 1 | error
 
@@ -92,5 +95,22 @@ Cons 1 (Cons 2 Nil)
 
 // FIXME
 res.head
+//│ res: nothing
+
+
+def Cons head = originalCons { head=0; tail=Nil } with { head }
+//│ Cons: 'a -> (cons & {head: 0, tail: List[0]})\head & {head: 'a}
+
+Cons 1
+//│ res: (cons & {head: 0, tail: List[0]})\head & {head: 1}
+
+// FIXME
+res.head
+//│ res: nothing
+
+def c = Cons 1
+//│ c: (cons & {head: 0, tail: List[0]})\head & {head: 1}
+
+c.head
 //│ res: nothing
 
