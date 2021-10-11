@@ -58,10 +58,10 @@ abstract class TyperHelpers { self: Typer =>
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.neg() & r.neg()
       case NegType(n) => n
-      case _: RecordType =>
-        BotType
-        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
-        // meaning negated records are basically bottoms.
+      // case _: RecordType =>
+      //   BotType
+      //   // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+      //   // meaning negated records are basically bottoms.
       case _ => NegType(this)(prov)
     }
     
@@ -75,6 +75,7 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
       case t @ ComposedType(false, l, r) => l.without(name) & r.without(name)
       case a @ AppType(f, as) => ???
+      // case t @ RecordType(fs) if fs.forall(_._1 =/= name) => t // TODO
       case t @ RecordType(fs) =>
         // RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
         // ^ Since we want to be able to transform S\a<:T to S<:T\a in the constraint solver,
@@ -91,12 +92,13 @@ abstract class TyperHelpers { self: Typer =>
         case _ => false
       }) => nt.neg(n.prov).without(name)
       // case NegType(rt: RecordType) => this // FIXME valid??!
-      case NegType(t) => t // FIXME valid??!
+      // case NegType(t) => this // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
       case p @ PrimType(_, _) => p
       // case tv: TypeVariable =>
-      case _: TypeVariable => Without(this, Set.single(name))(noProv)
+      // case _: TypeVariable => Without(this, Set.single(name))(noProv)
+      case _: TypeVariable | _: NegType => Without(this, Set.single(name))(noProv)
     }
     def pushPosWithout: SimpleType = this match {
       case Without(b, ns) => b.without(ns) match {
@@ -104,6 +106,9 @@ abstract class TyperHelpers { self: Typer =>
           case t @ RecordType(fs) => // In positive position, this is valid:
             RecordType(fs.filterNot(nt => ns(nt._1)))(t.prov)
           case _: TypeVariable => this
+          // case t: NegType => t
+          // case NegType(t) => t.without(ns).neg(b.prov)
+          // case t: NegType => this
           case _ => lastWords(s"$this (${this.getClass})")
         }
         case _ => this

@@ -31,7 +31,17 @@ def Nil = Nil (ListBase (Seq { size = 0 }))
 // FIXME type of head...
 def Cons head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons: anything -> {size: int} -> cons & (ListBase[nothing] & {head: nothing, tail: List[nothing]})
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~({tail: [α14']})\head-tail)\head-tail (class mlscript.TyperDatatypes$Without)
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
+//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
+//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 Nil: ListBase[anything]
 //│ res: ListBase[anything]

@@ -60,7 +60,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           LhsRefined(b1, RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/))
       }
     }
-    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf
+    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf {
+      override def toString: Str = s"${base.getOrElse("")}${reft}"
+    }
     case object LhsTop extends LhsNf
     
     sealed abstract class RhsNf {
@@ -151,15 +153,21 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           
         case (Without(rt:RecordType, ns) :: ls, rs) =>
           annoying(RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: ls, done_ls, rs, done_rs)
-        case (ls, Without(rt:RecordType, ns) :: rs) =>
-          annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
+        // case (ls, Without(rt:RecordType, ns) :: rs) =>
+        //   annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
           
         case (Without(b:TypeVariable, ns) :: ls, rs) =>
+          println("!" + (ls.iterator ++ done_ls.toTypes).map(_.neg()).toList)
+          println("!" + ((ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes).reduceOption(_ | _))
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
           rec(b, rhs.without(ns))
         case (Without(_, ns) :: ls, rs) => die
         // case (ls, Without(b:TypeVariable, ns) :: rs) =>
+        case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
+          def tys = ls.iterator ++ done_ls.toTypes
+          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
+          rec(lhs.without(ns), b)
         case (ls, Without(b, ns) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
           val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
@@ -203,6 +211,12 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     }()
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
+          (implicit raise: Raise, ctx: ConCtx): Unit = {
+      val pushed = lhs.pushPosWithout
+      if (pushed isnt lhs) println(s"Push LHS  $lhs  ~>  $pushed")
+      recImpl(pushed, rhs, outerProv)
+    }
+    def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, ctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
@@ -302,7 +316,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
           case (ComposedType(false, l, r), _) =>
             annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot)
-          case (_: NegType, _) | (_, _: NegType) =>
+          // case (_: NegType, _) | (_, _: NegType) =>
+          case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot)
           case _ =>
             val failureOpt = lhs_rhs match {
