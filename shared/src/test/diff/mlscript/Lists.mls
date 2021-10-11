@@ -5,3 +5,44 @@ type List[A] = Nil | Cons[A]
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Defined type List
+
+def Nil = Nil {}
+//│ Nil: nil
+
+def Cons head tail =
+  Cons { head; tail }
+//│ Cons: 'a -> List['b] -> cons & {head: 'a, tail: List['b]}
+
+Cons 2
+//│ res: List['a] -> cons & {head: 2, tail: List['a]}
+
+Cons 2 Nil
+//│ res: cons & {head: 2, tail: List[nothing]}
+
+// FIXME tail's type...
+Cons 1 (Cons 2 Nil)
+//│ res: cons & {head: 1, tail: List[nothing]}
+
+res.tail
+//│ res: List[nothing]
+
+res.tail.head
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.29: 	res.tail.head
+//│ ║        	^^^
+//│ ╟── expression of type `nil` does not have field 'tail'
+//│ ║  l.4: 	type List[A] = Nil | Cons[A]
+//│ ║       	               ^^^
+//│ ╟── but it flows into reference with expected type `{tail: ?a}`
+//│ ║  l.29: 	res.tail.head
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.29: 	res.tail.head
+//│ ║        	^^^
+//│ ╟── expression of type `nil` does not have field 'head'
+//│ ║  l.4: 	type List[A] = Nil | Cons[A]
+//│ ║       	               ^^^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
+//│ ║  l.29: 	res.tail.head
+//│ ╙──      	^^^
+//│ res: error

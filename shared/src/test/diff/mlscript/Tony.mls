@@ -13,7 +13,7 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | (none & ~some) | ((some & {value: 42}\payload) & ~{payload: nothing}\payload\payload) | ((some & {value: 42}\payload) & ~{value: 42}\payload\payload) | (((some & {value: 42})\payload & {payload: 23}) & ~some)
+//│ res: int | (none & ~some) | ((some & {value: 42}\payload) & {payload: nothing}\payload) | ((some & {value: 42}\payload) & {value: nothing}\payload) | (((some & {value: 42})\payload & {payload: 23}) & ~some)
 
 
 def arg = if true then Some{value = 42} else None {}

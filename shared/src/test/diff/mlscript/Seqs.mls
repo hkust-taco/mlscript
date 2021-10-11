@@ -25,22 +25,13 @@ Nil{}
 //│ ╙──     	           ^^^^^^^^^^^^^^^^^
 //│ res: (nil & ListBase[nothing]) | error
 
-// FIXME
 def Nil = Nil (ListBase (Seq { size = 0 }))
+//│ Nil: nil & ListBase[nothing]
+
+// FIXME type of head...
 def Cons head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Nil: nil & ListBase[nothing]
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:104)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:103)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:169)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:103)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:169)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ Cons: anything -> {size: int} -> cons & (ListBase[nothing] & {head: nothing, tail: List[nothing]})
 
 Nil: ListBase[anything]
 //│ res: ListBase[anything]

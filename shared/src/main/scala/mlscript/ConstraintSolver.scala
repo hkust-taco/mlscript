@@ -100,8 +100,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+          (implicit ctx: ConCtx): Unit = annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
+    def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit ctx: ConCtx): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
-      (ls, rs) match {
+      // (ls, rs) match {
+      (ls.mapHead(_.pushPosWithout), rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) =>
@@ -152,11 +155,14 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
           rec(b, rhs.without(ns))
-        case (ls, Without(b:TypeVariable, ns) :: rs) =>
+        case (Without(_, ns) :: ls, rs) => die
+        // case (ls, Without(b:TypeVariable, ns) :: rs) =>
+        case (ls, Without(b, ns) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
           val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
           rec(lhs.without(ns), b)
-          
+        
+          /* 
         case (Without(np @ NegType(_: PrimType), ns) :: ls, rs) =>
           annoying(np :: ls, done_ls, rs, done_rs)
         case (ls, Without(np @ NegType(_: PrimType), ns) :: rs) =>
@@ -167,6 +173,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ls, Without(ty, ns) :: rs) =>
           // println(s"$ty --> ${ty.without(ns)}")
           annoying(ls, done_ls, ty.without(ns) :: rs, done_rs)
+          */
           
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))

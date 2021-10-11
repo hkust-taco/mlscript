@@ -90,12 +90,25 @@ abstract class TyperHelpers { self: Typer =>
         case _: ComposedType | _: ExtrType | _: NegType => true
         case _ => false
       }) => nt.neg(n.prov).without(name)
-      case NegType(rt: RecordType) => this // FIXME valid??!
+      // case NegType(rt: RecordType) => this // FIXME valid??!
+      case NegType(t) => t // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
       case p @ PrimType(_, _) => p
       // case tv: TypeVariable =>
-      case _ => Without(this, Set.single(name))(noProv)
+      case _: TypeVariable => Without(this, Set.single(name))(noProv)
+    }
+    def pushPosWithout: SimpleType = this match {
+      case Without(b, ns) => b.without(ns) match {
+        case Without(b, ns) => b match {
+          case t @ RecordType(fs) => // In positive position, this is valid:
+            RecordType(fs.filterNot(nt => ns(nt._1)))(t.prov)
+          case _: TypeVariable => this
+          case _ => lastWords(s"$this (${this.getClass})")
+        }
+        case _ => this
+      }
+      case _ => this
     }
     
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
