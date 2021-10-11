@@ -41,33 +41,32 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> Crazy[nothing] & 'a
+//│ Crazy: 'a -> Crazy['a] & 'a
 
-// FIXME? Crazy[nothing]
 Crazy
-//│ res: 'a -> Crazy[nothing] & 'a
+//│ res: 'a -> Crazy['a] & 'a
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: Crazy[nothing] & {age: 42, name: "Bob"}
+//│ c: Crazy[{age: 42, name: "Bob"}] & {age: 42, name: "Bob"}
 
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~(crazy & {name: ?a})`
-//│ ║  l.50: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~(crazy & {name: ?b & ~?a}) as ?a`
+//│ ║  l.49: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ╙──      	   ^^^^^^^
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: Crazy[nothing] & (parent1 & {name: string})
+//│ d: Crazy[parent1 & {name: string}] & (parent1 & {name: string})
 
 d: nothing
 //│ res: nothing
@@ -76,17 +75,17 @@ d: nothing
 :e
 class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.77: 	class Stupid: Parent1 | Parent2
+//│ ║  l.76: 	class Stupid: Parent1 | Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
-//│ ║  l.82: 	class Stupid: Parent1 -> Parent2
+//│ ║  l.81: 	class Stupid: Parent1 -> Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.87: 	class Stupid: ~Parent1
+//│ ║  l.86: 	class Stupid: ~Parent1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^
 
 

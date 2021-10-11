@@ -138,12 +138,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
         case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
         
-        case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse (return), rs, done_rs)
-        case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse (return))
+        case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse
+          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
+        case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
+          (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))
           
         case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs)
         case (ls, (r @ RecordType(Nil)) :: rs) => ()
-        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse (return))
+        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
+          (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
         case (Without(rt:RecordType, ns) :: ls, rs) =>
@@ -183,7 +186,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _)) => fail
             case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
               // if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
-              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)) || pts.contains(pt.widenPrim)) ()
+              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)) /* || pts.contains(pt.widenPrim) */)
+                println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               else fail
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
@@ -514,6 +518,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
       case PrimType(_, _) => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov, tr.ctx)
     }
     freshen(ty)
   }

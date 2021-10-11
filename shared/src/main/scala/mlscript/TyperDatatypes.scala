@@ -107,9 +107,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
   
-  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, ctx: Ctx) extends SimpleType {
+  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
     assert(targs.size === defn.tparams.size)
-    def level: Int = 0
+    def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
       if (defn.kind === Als) body_ty

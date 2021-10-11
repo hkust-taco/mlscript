@@ -6,43 +6,91 @@ type List[A] = Nil | Cons[A]
 //│ Defined class Cons
 //│ Defined type List
 
+
 def Nil = Nil {}
 //│ Nil: nil
 
-def Cons head tail =
-  Cons { head; tail }
-//│ Cons: 'a -> List['b] -> cons & {head: 'a, tail: List['b]}
+def Cons head tail = Cons { head; tail }
+//│ Cons: 'a -> List['a] -> cons & {head: 'a, tail: List['a]}
+
 
 Cons 2
-//│ res: List['a] -> cons & {head: 2, tail: List['a]}
+//│ res: List['a] -> cons & {head: 'a | 2, tail: List['a | 2]}
 
 Cons 2 Nil
-//│ res: cons & {head: 2, tail: List[nothing]}
+//│ res: cons & {head: 2, tail: List[2]}
 
-// FIXME tail's type...
-Cons 1 (Cons 2 Nil)
-//│ res: cons & {head: 1, tail: List[nothing]}
+Cons 1 res
+//│ res: cons & {head: 1, tail: List[1]}
 
 res.tail
-//│ res: List[nothing]
+//│ res: List[1]
 
-res.tail.head
+Cons 1 (Cons 2 Nil)
+//│ res: cons & {head: 1, tail: List[1]}
+
+res.tail
+//│ res: List[1]
+
+:e // Q: why the duplicated error?
+res.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.29: 	res.tail.head
+//│ ║  l.36: 	res.tail
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.29: 	res.tail.head
+//│ ║  l.36: 	res.tail
+//│ ╙──      	^^^
+//│ res: List[1] | error
+
+:e // Q: why the duplicated error?
+res.tail.head
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.49: 	res.tail.head
+//│ ║        	^^^
+//│ ╟── expression of type `nil` does not have field 'tail'
+//│ ║  l.4: 	type List[A] = Nil | Cons[A]
+//│ ║       	               ^^^
+//│ ╟── but it flows into reference with expected type `{tail: ?a}`
+//│ ║  l.49: 	res.tail.head
 //│ ╙──      	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.29: 	res.tail.head
+//│ ║  l.49: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'head'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.29: 	res.tail.head
+//│ ║  l.49: 	res.tail.head
 //│ ╙──      	^^^
-//│ res: error
+//│ res: 1 | error
+
+
+
+// More precise Cons?
+def Cons head tail = Cons { head; tail } with { head; tail }
+//│ Cons: 'a -> 'b -> ((List['c] -> cons & {head: 'c | {head: 'a, tail: 'b}, tail: List['c | {head: 'a, tail: 'b}]})\head\tail & {head: 'a}\tail) & {tail: 'b}
+
+
+Cons 2
+//│ res: 'a -> ((List['b] -> cons & {head: 'b | {head: 2, tail: 'a}, tail: List['b | {head: 2, tail: 'a}]})\head\tail & {head: 2}\tail) & {tail: 'a}
+
+Cons 2 Nil
+//│ res: ((List['a] -> cons & {head: 'a | {head: 2, tail: nil}, tail: List['a | {head: 2, tail: nil}]})\head\tail & {head: 2}\tail) & {tail: nil}
+
+// FIXME
+res.head
+//│ res: nothing
+
+Cons 1 res
+//│ res: ((List['a] -> cons & {head: 'a | {head: 1, tail: nothing}, tail: List['a | {head: 1, tail: nothing}]})\head\tail & {head: 1}\tail) & {tail: nothing}
+
+Cons 1 (Cons 2 Nil)
+//│ res: ((List['a] -> cons & {head: 'a | {head: 1, tail: ((List['b] -> cons & {head: 'b | {head: 2, tail: nil}, tail: List['b | {head: 2, tail: nil}]})\head\tail & {head: 2}\tail) & {tail: nil}}, tail: List['a | {head: 1, tail: ((List['b] -> cons & {head: 'b | {head: 2, tail: nil}, tail: List['b | {head: 2, tail: nil}]})\head\tail & {head: 2}\tail) & {tail: nil}}]})\head\tail & {head: 1}\tail) & {tail: ((List['b] -> cons & {head: 'b | {head: 2, tail: nil}, tail: List['b | {head: 2, tail: nil}]})\head\tail & {head: 2}\tail) & {tail: nil}}
+
+// FIXME
+res.head
+//│ res: nothing
+
