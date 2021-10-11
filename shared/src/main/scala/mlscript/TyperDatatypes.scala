@@ -86,7 +86,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = negated.level
-    override def toString = s"(not ${negated})"
+    override def toString = s"~(${negated})"
   }
   
   case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends SimpleType {

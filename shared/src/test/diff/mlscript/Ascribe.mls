@@ -26,3 +26,6 @@ def foo(f: Foo['a]) = f.field
 //│ foo: Foo[anything] & {field: 'a} -> 'a
 
 
+(succ 1): int
+//│ res: int
+

@@ -67,7 +67,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, Primitive("int"), Nil, Top, Set.empty, N) ::
+    TypeDef(Cls, Primitive("int"), Nil, Top, Set.single(Var("number")), N) ::
     TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::

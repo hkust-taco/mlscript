@@ -49,7 +49,7 @@ test p
 //│  CONSTRAIN 1<int> <! int
 //│    where 
 //│  C 1<int> <! int
-//│   C 1<int> <! int<>
+//│   C 1<int> <! int<number>
 //│ 0. : int
 //│ Typed as: int
 //│  where: 

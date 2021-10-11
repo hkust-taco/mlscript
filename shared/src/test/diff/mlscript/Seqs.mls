@@ -30,18 +30,6 @@ def Nil = Nil (ListBase (Seq { size = 0 }))
 def Cons head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
 //│ Nil: nil & ListBase[nothing]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `int`
-//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ ║        	                               ^^^^^^^^^
-//│ ╟── but it flows into record literal with expected type `{size: int}`
-//│ ║  l.31: 	  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.2: 	class Seq[A]: { size: int }
-//│ ╙──     	                      ^^^
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 //│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:104)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
