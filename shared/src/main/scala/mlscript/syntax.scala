@@ -23,7 +23,12 @@ sealed trait OtherTopLevel extends TopLevel with Located
 sealed abstract class Decl extends TopLevel with DeclImpl
 final case class Def(rec: Bool, nme: Str, rhs: Term \/ Type) extends Decl with OtherTopLevel
   { val body = rhs.fold(identity, identity) }
-final case class TypeDef(kind: TypeDefKind, nme: Primitive, tparams: List[Str], body: Type) extends Decl
+final case class TypeDef(
+  kind: TypeDefKind,
+  nme: Primitive,
+  tparams: List[Str],
+  body: Type,
+) extends Decl
 
 sealed abstract class TypeDefKind(val str: Str)
 case object Cls extends TypeDefKind("class")
@@ -31,7 +36,7 @@ case object Trt extends TypeDefKind("trait")
 case object Als extends TypeDefKind("type")
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
-sealed abstract class Lit                                            extends SimpleTerm
+sealed abstract class Lit                                            extends SimpleTerm with LitImpl
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term

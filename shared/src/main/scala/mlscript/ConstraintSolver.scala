@@ -35,7 +35,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (LhsTop, _) => S(LhsRefined(S(that), RecordType(Nil)(noProv)))
         case (LhsRefined(b1, r1), _) =>
           ((b1, that) match {
-            case (S(p @ PrimType(pt0)), PrimType(pt1)) => Option.when(pt0 === pt1)(p)
+            case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
+              println(s"!GLB! ${p0.glb(p1)}")
+              p0.glb(p1)
             case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
             case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
             case (S(TupleType(fs0)), TupleType(fs1)) => ???
@@ -50,38 +52,43 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           LhsRefined(b1, RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/))
       }
     }
-    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf
+    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf {
+      override def toString: Str = s"${base.getOrElse("")}${reft}"
+    }
     case object LhsTop extends LhsNf
     
     sealed abstract class RhsNf {
       def toTypes: Ls[SimpleType] = toType :: Nil
       def toType: SimpleType = this match {
         case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
-        case RhsBases(ps, b) => ps.foldLeft(b.getOrElse(BotType))(_ | _)
+        case RhsBases(ps, b, f) => ps.foldLeft(b.getOrElse(BotType) | f.fold(BotType:SimpleType)(_.toType))(_ | _)
         case RhsBot => BotType
       }
       def | (that: BaseType): Opt[RhsNf] = (this, that) match {
-        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N))
-        case (RhsBot, _) => S(RhsBases(Nil,S(that)))
-        case (RhsBases(ps, b), p: PrimType) =>
-          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b))
-        case (RhsBases(ps, N), _) => S(RhsBases(ps, S(that)))
-        case (RhsBases(_, S(TupleType(_))), TupleType(_)) =>
+        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N,N))
+        case (RhsBot, _) => S(RhsBases(Nil,S(that),N))
+        case (RhsBases(ps, b, f), p: PrimType) =>
+          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b, f))
+        case (RhsBases(ps, N, f), _) => S(RhsBases(ps, S(that), f))
+        case (RhsBases(_, S(TupleType(_)), f), TupleType(_)) =>
           // ??? // TODO
           err("TODO handle tuples", prov.loco)
           N
-        case (RhsBases(_, _), _) => N
+        case (RhsBases(_, _, _), _) => N
         case (RhsField(_, _), _) => N
       }
       def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
         case RhsBot => S(RhsField(that._1, that._2))
         case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
-        case _ => N
+        case RhsBases(p, b, N) => S(RhsBases(p, b, S(RhsField(that._1, that._2))))
+        case RhsBases(p, b, S(RhsField(n1, t1))) if n1 === that._1 => S(RhsBases(p, b, S(RhsField(n1, t1 | that._2))))
+        case _: RhsField | _: RhsBases => N
       }
     }
     case class RhsField(name: Str, ty: SimpleType) extends RhsNf
-    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType]) extends RhsNf {
+    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
       assert(!bty.exists(_.isInstanceOf[PrimType]))
+      override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
     }
     case object RhsBot extends RhsNf
     
@@ -90,8 +97,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+          (implicit ctx: ConCtx): Unit = annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
+    def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit ctx: ConCtx): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
-      (ls, rs) match {
+      // (ls, rs) match {
+      (ls.mapHead(_.pushPosWithout), rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) =>
@@ -125,28 +135,40 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
         case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
         
-        case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse (return), rs, done_rs)
-        case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse (return))
+        case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse
+          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
+        case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
+          (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))
           
         case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs)
         case (ls, (r @ RecordType(Nil)) :: rs) => ()
-        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse (return))
+        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
+          (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
         case (Without(rt:RecordType, ns) :: ls, rs) =>
           annoying(RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: ls, done_ls, rs, done_rs)
-        case (ls, Without(rt:RecordType, ns) :: rs) =>
-          annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
+        // case (ls, Without(rt:RecordType, ns) :: rs) =>
+        //   annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
           
         case (Without(b:TypeVariable, ns) :: ls, rs) =>
+          // println("!" + (ls.iterator ++ done_ls.toTypes).map(_.neg()).toList)
+          // println("!" + ((ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes).reduceOption(_ | _))
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
           rec(b, rhs.without(ns))
-        case (ls, Without(b:TypeVariable, ns) :: rs) =>
+        // case (Without(_, ns) :: ls, rs) => die
+        // case (ls, Without(b:TypeVariable, ns) :: rs) =>
+        case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
+          def tys = ls.iterator ++ done_ls.toTypes
+          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
+          rec(lhs.without(ns), b)
+        case (ls, Without(b, ns) :: rs) =>
           def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
           val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
           rec(lhs.without(ns), b)
-          
+        
+          /* 
         case (Without(np @ NegType(_: PrimType), ns) :: ls, rs) =>
           annoying(np :: ls, done_ls, rs, done_rs)
         case (ls, Without(np @ NegType(_: PrimType), ns) :: rs) =>
@@ -157,30 +179,44 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ls, Without(ty, ns) :: rs) =>
           // println(s"$ty --> ${ty.without(ns)}")
           annoying(ls, done_ls, ty.without(ns) :: rs, done_rs)
+          */
           
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases
             case (LhsTop, _) | (_, RhsBot) => fail
-            case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)))) => rec(f0, f1)
-            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _)) => fail
-            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
-              if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
-              else fail
+            case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)), _)) => rec(f0, f1)
+            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _, _)) => fail
+            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, bs, f)) if pts.nonEmpty =>
+              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
+                println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
+              else annoying(Nil, done_ls, Nil, RhsBases(Nil, bs, f)) // hacky
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(S(b), r), RhsBases(pts, _)) =>
-              println(b.getClass)
-              ??? // TODO
+            case (LhsRefined(bo, r), RhsBases(_, _, S(RhsField(n, t2)))) => // Q: missing anything in prev fields?
+              // TODO dedup with above
+              r.fields.find(_._1 === n) match {
+                case S(nt1) => rec(nt1._2, t2)
+                case N => fail
+              }
+            case (LhsRefined(_, r), RhsBases(Nil, bs, f)) => fail
+            case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
+              lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }
           
       }
     }()
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
+          (implicit raise: Raise, ctx: ConCtx): Unit = {
+      val pushed = lhs.pushPosWithout
+      if (pushed isnt lhs) println(s"Push LHS  $lhs  ~>  $pushed")
+      recImpl(pushed, rhs, outerProv)
+    }
+    def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, ctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
@@ -205,7 +241,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
             rec(r0, r1)(raise, Nil :: ctx)
-          case (prim: PrimType, _) if rhs === prim || rhs === prim.widen => ()
+          case (prim: PrimType, _) if rhs === prim => ()
+          case (prim: PrimType, PrimType(id:Var, _)) if prim.parents.contains(id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_, S(prov)))
             lhs.upperBounds ::= newBound // update the bound
@@ -246,10 +283,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (vt: VarType, _) => rec(vt.sign, rhs)
           case (_, TupleType(f :: Nil)) =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
-          case (err @ PrimType(ErrTypeId), FunctionType(l1, r1)) =>
+          case (err @ PrimType(ErrTypeId, _), FunctionType(l1, r1)) =>
             rec(l1, err)
             rec(err, r1)
-          case (FunctionType(l0, r0), err @ PrimType(ErrTypeId)) =>
+          case (FunctionType(l0, r0), err @ PrimType(ErrTypeId, _)) =>
             rec(err, l0)
             rec(r0, err)
           case (AppType(fun0, args0), AppType(fun1, args1)) if fun0.isInjective && fun1.isInjective =>
@@ -266,19 +303,20 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             rec(AppType(fun, args)(lhs.prov), FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // Q: disregard error context?
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs)
-          case (err @ PrimType(ErrTypeId), RecordType(fs1)) =>
+          case (err @ PrimType(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2))
-          case (RecordType(fs1), err @ PrimType(ErrTypeId)) =>
+          case (RecordType(fs1), err @ PrimType(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2, err))
           case (tr: TypeRef, _) => rec(tr.expand, rhs)
           case (_, tr: TypeRef) => rec(lhs, tr.expand)
-          case (PrimType(ErrTypeId), _) => ()
-          case (_, PrimType(ErrTypeId)) => ()
+          case (PrimType(ErrTypeId, _), _) => ()
+          case (_, PrimType(ErrTypeId, _)) => ()
           case (_, ComposedType(true, l, r)) =>
             annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
           case (ComposedType(false, l, r), _) =>
             annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot)
-          case (_: NegType, _) | (_, _: NegType) =>
+          // case (_: NegType, _) | (_, _: NegType) =>
+          case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot)
           case _ =>
             val failureOpt = lhs_rhs match {
@@ -440,7 +478,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
-      case PrimType(_) => ty
+      case PrimType(_, _) => ty
       // case TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol))) // FIXME pol...
     }
   
@@ -449,7 +487,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     raise(TypeError((msg, loco) :: Nil))
     errType
   }
-  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId)(prov)
+  def errType(implicit prov: TypeProvenance): SimpleType = PrimType(ErrTypeId, Set.empty)(prov)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     raise(Warning((msg, loco) :: Nil))
@@ -462,7 +500,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = PrimType(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
+          val v = PrimType(Var("_"+freshVar(tv.prov).toString), Set.empty)(noProv/*TODO*/)
           freshened += tv -> v
           // TODO support bounds on rigidified variables (intersect/union them in):
           assert(tv.lowerBounds.isEmpty)
@@ -492,8 +530,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
-      case PrimType(_) => ty
+      case PrimType(_, _) => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov, tr.ctx)
     }
     freshen(ty)
   }

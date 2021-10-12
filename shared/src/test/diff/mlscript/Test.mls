@@ -41,3 +41,6 @@ test a
 test p
 //│ res: int | 0
 
+1: int
+//│ res: int
+

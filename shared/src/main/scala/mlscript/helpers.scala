@@ -160,6 +160,14 @@ trait TermImpl extends StatementImpl { self: Term =>
   
 }
 
+trait LitImpl { self: Lit =>
+  def baseClass: Var = this match {
+    case _: IntLit => Var("int")
+    case _: StrLit => Var("string")
+    case _: DecLit => Var("number")
+  }
+}
+
 trait VarImpl { self: Var =>
   def isPatVar: Bool =
     name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"

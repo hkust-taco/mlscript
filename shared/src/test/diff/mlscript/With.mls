@@ -2,21 +2,46 @@
 def rcd = { x = 1 }
 //│ rcd: {x: 1}
 
+rcd.x
+//│ res: 1
+
 rcd with { y = 2 }
 //│ res: {x: 1}\y & {y: 2}
 
+add res.x res.y
+//│ res: int
+
 rcd with { x = "oops" }
 //│ res: {x: 1}\x & {x: "oops"}
+
+res.x
+//│ res: "oops"
+
+id rcd with { x = "oops" }
+//│ res: {x: 1}\x & {x: "oops"}
+
+res.x
+//│ res: "oops"
+
+
+def rcd = { }
+//│ rcd: anything
+
+id rcd with { x = "oops" }
+//│ res: anything\x & {x: "oops"}
+
+res.x
+//│ res: "oops"
 
 
 def f r = r with { x = "oops" }
 //│ f: 'a -> 'a\x & {x: "oops"}
 
 f rcd
-//│ res: {x: 1}\x & {x: "oops"}
+//│ res: anything\x & {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: ({x: 1}\y & {y: 2})\x & {x: "oops"}
+//│ res: (anything & {y: 2})\x & {x: "oops"}
 
 
 def f a b = if true then a else b

@@ -30,36 +30,11 @@ def c = Child(Parent { name = "Bob" } with { age = 123 })
 c: Parent
 //│ res: Parent
 
-:d
 c.name
-//│ 0. Typing term c.name
-//│  0. Typing term c
-//│  0. : [α0]
-//│  CONSTRAIN [[α0]] <! {name: α1}
-//│    where α0 :> (child & (Parent & {age: int}))
-//│  C [[α0]] <! {name: α1}
-//│   C [α0] <! {name: α1}
-//│    C α0 <! {name: α1}
-//│     C (child & (Parent & {age: int})) <! {name: α1}
-//│      A  LhsTop  %  List(child, (Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
-//│       A  LhsRefined(Some(child),{})  %  List((Parent & {age: int}))  <!  List({name: α1})  %  RhsBot
-//│        A  LhsRefined(Some(child),{})  %  List(Parent, {age: int})  <!  List({name: α1})  %  RhsBot
-//│         A  LhsRefined(Some(child),{})  %  List((parent & {name: string}), {age: int})  <!  List({name: α1})  %  RhsBot
-//│          A  LhsRefined(Some(child),{})  %  List(parent, {name: string}, {age: int})  <!  List({name: α1})  %  RhsBot
-//│ 0. : α1
-//│ Typed as: α1
-//│  where: 
-//│ Compact type before simplification: CompactTypeScheme(‹α1›,TreeMap())
-//│ [occ] LinkedHashMap((true,α1) -> LinkedHashSet(α1))
-//│ [rec] TreeSet()
-//│ [!] α1
-//│ [sub] α1 -> None
-//│ Compact type after simplification: CompactTypeScheme(‹›,Map())
-//│ res: nothing
+//│ res: string
 
-// FIXME!
 c: { name: 'a }
-//│ res: {name: nothing}
+//│ res: {name: string}
 
 c: { name: string }
 //│ res: {name: string}
@@ -70,10 +45,11 @@ def f x = case x of {
   }
 //│ f: parent & {name: 'a} -> 'a
 
-// FIXME
-// :d
 f c
-//│ res: nothing
+//│ res: string
+
+f (c: Parent)
+//│ res: string
 
 
 def f x = case x of {
@@ -82,7 +58,23 @@ def f x = case x of {
 //│ f: child & {name: 'a} -> 'a
 
 f c
-//│ res: nothing
+//│ res: string
+
+:e
+f (c: Parent)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.64: 	f (c: Parent)
+//│ ║        	^^^^
+//│ ╟── expression of type `parent & {name: string}` does not match type `child`
+//│ ║  l.64: 	f (c: Parent)
+//│ ║        	      ^^^^^^
+//│ ╟── but it flows into argument with expected type `child`
+//│ ║  l.64: 	f (c: Parent)
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.55: 	def f x = case x of {
+//│ ╙──      	               ^
+//│ res: string | error
 
 
 def f x = case x of {
@@ -92,7 +84,10 @@ def f x = case x of {
 //│ f: ((parent & {name: 'a}) | (anything & ~parent)) -> 'a | ""
 
 f c
-//│ res: nothing | ""
+//│ res: string | ""
+
+f (c: Parent)
+//│ res: string | ""
 
 
 def f x = case x of {
@@ -102,5 +97,8 @@ def f x = case x of {
 //│ f: ((parent & {name: 'a}) | ((child & {name: 'b}) & ~parent)) -> 'a | 'b
 
 f c
-//│ res: nothing | nothing
+//│ res: string | (string & ~nothing) | nothing
+
+f (c: Parent)
+//│ res: (string & ~nothing) | string | nothing
 

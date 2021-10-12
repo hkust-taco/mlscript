@@ -54,12 +54,12 @@ abstract class TyperHelpers { self: Typer =>
       case (NegType(`that`), _) => BotType
       case _ => ComposedType(false, that, this)(prov)
     }
-    def neg(prov: TypeProvenance = noProv): SimpleType = this match {
+    def neg(prov: TypeProvenance = noProv, force: Bool = false): SimpleType = this match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.neg() & r.neg()
+      case ComposedType(false, l, r) if force => l.neg() | r.neg()
       case NegType(n) => n
-      case _: RecordType =>
-        BotType
+      // case _: RecordType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.
       case _ => NegType(this)(prov)
@@ -67,7 +67,7 @@ abstract class TyperHelpers { self: Typer =>
     
     // TODO make it the other way around (more efficient)
     def without(names: Set[Str]): SimpleType =
-      names.foldLeft(this)(_.without(_))
+      if (names.isEmpty) this else names.foldLeft(this)(_.without(_))
     
     def without(name: Str): SimpleType = this match {
       case Without(b, ns) => Without(b, ns + name)(this.prov)
@@ -75,6 +75,7 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
       case t @ ComposedType(false, l, r) => l.without(name) & r.without(name)
       case a @ AppType(f, as) => ???
+      // case t @ RecordType(fs) if fs.forall(_._1 =/= name) => t // ? probably not right
       case t @ RecordType(fs) =>
         // RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
         // ^ Since we want to be able to transform S\a<:T to S<:T\a in the constraint solver,
@@ -88,14 +89,46 @@ abstract class TyperHelpers { self: Typer =>
       case vt: VarType => ???
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
+        // case c: ComposedType => c.pol
+        // case _: ExtrType | _: NegType => true
         case _ => false
-      }) => nt.neg(n.prov).without(name)
-      case NegType(rt: RecordType) => this // FIXME valid??!
-      case e @ ExtrType(_) => e // FIXME valid??!
+      }) => nt.neg(n.prov, force = true).without(name)
+      case e @ ExtrType(_) => e // valid?
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
-      case p @ PrimType(_) => p
-      // case tv: TypeVariable =>
-      case _ => Without(this, Set.single(name))(noProv)
+      case p @ PrimType(_, _) => p
+      case _: TypeVariable | _: NegType => Without(this, Set.single(name))(noProv)
+    }
+    def pushPosWithout: SimpleType = this match {
+      case Without(b, ns) => b.without(ns) match {
+        case rewritten @ Without(b, ns) => b match {
+          case t @ RecordType(fs) => // In positive position, this is valid:
+            RecordType(fs.filterNot(nt => ns(nt._1)))(t.prov)
+          case _: TypeVariable => this
+          // case t: NegType => t
+          // case NegType(t) => t.without(ns).neg(b.prov)
+          // case NegType(_: BaseType | _: RecordType) => b
+          // case NegType(Without(b2, ns2)) => b
+          
+          case NegType(_: BaseType) => b
+          
+          // case NegType(Without(NegType(b2), ns2)) => b2.without(ns).neg().without(ns2).neg()
+          // case NegType(Without(_: BaseType | _: RecordType, ns2)) => b
+          // case NegType(Without(_: BaseType | _: RecordType, ns2)) /* if ns.exists(ns2) */ =>
+          //   b.without(ns.filterNot(ns2))
+          case NegType(Without(b2, ns2)) /* if ns.exists(ns2) */ =>
+            b2.without(ns2.filterNot(ns)).neg().without(ns.filterNot(ns2))
+          
+          // case NegType(Without(b2, ns2)) => b2.without(ns.filterNot(ns2)).neg() // make things work but surely wrong!
+          case NegType(Without(NegType(b2), ns2)) => b2.without(ns.filterNot(ns2)).neg().without(ns2).neg()
+          
+          case NegType(_) => rewritten
+          
+          // case t: NegType => this
+          case _ => lastWords(s"$this (${this.getClass})")
+        }
+        case _ => this
+      }
+      case _ => this
     }
     
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
@@ -140,7 +173,7 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case PrimType(_) => Nil
+      case PrimType(_, _) => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
     }

@@ -206,9 +206,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     }
                 }
               case Def(isrec, nme, R(rhs)) =>
-                val ty_sch = typer.typeType(rhs)(ctx.nextLevel, raise, Map.empty)
+                val ty_sch = typer.PolymorphicType(0,
+                  typer.typeType(rhs)(ctx.nextLevel, raise, Map.empty))
                 ctx += nme -> ty_sch
-                declared += nme -> typer.PolymorphicType(0, ty_sch)
+                declared += nme -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
               case d @ Def(isrec, nme, L(rhs)) =>

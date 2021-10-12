@@ -13,27 +13,27 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | (none & ~some) | ((some & {value: 42}\payload) & ~{payload: nothing}\payload\payload) | ((some & {value: 42}\payload) & ~{value: 42}\payload\payload) | (((some & {value: 42})\payload & {payload: 23}) & ~some)
+//│ res: int | (((some & {value: 42})\payload & {payload: 23}) & ~some) | (none & ~{value: 42}) | (none & ~some) | (none & ~{payload: 23}) | (((some & {value: 42}\payload) & ~{value: 42}\payload\payload) & {payload: 23}) | (((some & {value: 42}\payload) & ~{payload: 23}\payload\payload) & {payload: 23})
 
 
 def arg = if true then Some{value = 42} else None {}
 //│ arg: (some & {value: 42}) | none
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (none & ~some) | (({value: 42} & some) & ~some)
+//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
 
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((some & {value: 'a}) | ('b & ~some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (none & ~some) | (({value: 42} & some) & ~some)
+//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
 
 foo 1
-//│ res: nothing | (1 & ~some)
+//│ res: nothing | (1 & ~{value: nothing}) | (1 & ~some)
 
 def fn = foo None
-//│ fn: nothing | ((anything -> none) & ~some)
+//│ fn: nothing | ((anything -> none) & ~{value: nothing}) | ((anything -> none) & ~some)
 
 // :d
 fn{} // foo None {}
@@ -41,7 +41,7 @@ fn{} // foo None {}
 
 // :d
 foo (None{})
-//│ res: nothing | (none & ~some)
+//│ res: nothing | (none & ~{value: nothing}) | (none & ~some)
 
 
 fun f -> flatMap3 f arg
@@ -79,7 +79,7 @@ res 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.65: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & ~some)) | error
+//│ res: (nothing | (1 & ~{value: nothing}) | (1 & ~some)) | error
 
 
 def funny = fun f -> case f of { Some -> f f }

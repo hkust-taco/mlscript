@@ -64,23 +64,23 @@ trait TypeSimplifier { self: Typer =>
       var cur = underlying
       // println(s"[$pol]++ $this $that")
       if (pol) that.underlying.foreach {
-        case prim @ CompactPrimType(PrimType(_: Lit)) =>
+        case prim @ CompactPrimType(PrimType(_: Lit, _)) =>
           if (!cur.contains(prim.widen)) cur += prim
-        case prim @ CompactPrimType(PrimType(_: Var)) =>
+        case prim @ CompactPrimType(PrimType(_: Var, _)) =>
           cur = cur.filterNot(_.widen === prim) + prim
         case app @ CompactAppType(lhs, args) =>
           cur = cur.filterNot(_.widen === app) + app // TODO what if widen returns a CompactType?!
         case vt @ CompactVarType(_, sign) =>
           cur = cur.filterNot(_.widen === vt) + vt // TODO what if widen returns a CompactType?!
       } else that.underlying.foreach {
-        case prim @ CompactPrimType(PrimType(l0: Lit)) =>
+        case prim @ CompactPrimType(PrimType(l0: Lit, _)) =>
           if (cur.collectFirst {
-            case CompactPrimType(PrimType(l1: Lit)) if l1 =/= l0 =>
+            case CompactPrimType(PrimType(l1: Lit, _)) if l1 =/= l0 =>
           }.isDefined)
             // return ... // TODO return Nothing, when we have a repr for it...
             ()
           if (cur.forall(_.widen =/= prim)) cur += prim
-        case prim @ CompactPrimType(PrimType(_: Var)) =>
+        case prim @ CompactPrimType(PrimType(_: Var, _)) =>
           if (cur.forall(_.widen =/= prim)) cur += prim
         case app @ CompactAppType(lhs, args) =>
           cur = cur.filterNot(app.widen === _) + app // TODO what if widen returns a CompactType?!
@@ -129,22 +129,22 @@ trait TypeSimplifier { self: Typer =>
       case p: PrimType => ct(prims = BaseTypes.single(p))
       case TypeRef(td, targs) =>
         ct(prims = BaseTypes single CompactAppType(
-          ct(prims = BaseTypes single PrimType(Var(td.nme.name))(noProv)),
+          ct(prims = BaseTypes single PrimType(Var(td.nme.name), Set.empty/*FIXME*/)(noProv)),
           targs.map(go(_, pol, Set.empty)))) // FIXME variance!
       case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
       case NegType(ty) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var("~"))(noProv))
+        val base = ct(prims = BaseTypes single PrimType(Var("~"), Set.empty/*FIXME*/)(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(ty, pol, Set.empty) :: Nil))
       case ExtrType(pol) => // FIXME tmp hack
-        ct(prims = BaseTypes single PrimType(Var(if (pol) "nothing" else "anything"))(noProv))
+        ct(prims = BaseTypes single PrimType(Var(if (pol) "nothing" else "anything"), Set.empty/*FIXME*/)(noProv))
       case ProxyType(und) => go(und, pol, parents)
       case FunctionType(l, r) =>
         ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
       case ComposedType(p, l, r) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"))(noProv))
+        val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"), Set.empty/*FIXME*/)(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(l, pol, parents) :: go(r, pol, parents) :: Nil))
       case Without(b, ns) =>
-        val base = ct(prims = BaseTypes single PrimType(Var(ns.map("\\"+_).mkString))(noProv))
+        val base = ct(prims = BaseTypes single PrimType(Var(ns.map("\\"+_).mkString), Set.empty/*FIXME*/)(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(b, pol, parents) :: Nil))
       case a @ AppType(lhs, args) =>
         ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
@@ -342,10 +342,10 @@ trait TypeSimplifier { self: Typer =>
             val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
             (vars.iterator.map(go(_, pol)).toList
               ::: prims.underlying.iterator.map {
-                case CompactPrimType(PrimType(id)) => Primitive(id.idStr)
+                case CompactPrimType(PrimType(id, bcs)) => Primitive(id.idStr)
                 case CompactAppType(lhs @ CompactType(vs, cs, r, t, f), targs) =>
                   (cs.underlying.toList, vs.size) match {
-                    case (CompactPrimType(PrimType(Var(id))) :: Nil, 0) if id.head.isLetter && targs.nonEmpty =>
+                    case (CompactPrimType(PrimType(Var(id), bcs)) :: Nil, 0) if id.head.isLetter && targs.nonEmpty =>
                       AppliedType(Primitive(id), targs.map(go(_, pol)))
                     case _ =>
                       targs.map(go(_, pol)).foldLeft(go(lhs, pol))(Applied(_, _))

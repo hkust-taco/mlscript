@@ -1,0 +1,91 @@
+
+class Seq[A]: { size: int }
+//│ Defined class Seq
+
+class ListBase[A]: Seq[A]
+//│ Defined class ListBase
+
+class Nil: ListBase[nothing] & {}
+class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
+type List[A] = Nil | Cons[A]
+//│ Defined class Nil
+//│ Defined class Cons
+//│ Defined type List
+
+:e
+Nil{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.16: 	Nil{}
+//│ ║        	^^^^^
+//│ ╟── expression of type `anything` does not match type `listBase`
+//│ ║  l.16: 	Nil{}
+//│ ║        	   ^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.8: 	class Nil: ListBase[nothing] & {}
+//│ ╙──     	           ^^^^^^^^^^^^^^^^^
+//│ res: (nil & ListBase[nothing]) | error
+
+def Nil = Nil (ListBase (Seq { size = 0 }))
+//│ Nil: nil & ListBase[nothing]
+
+def Cons head tail =
+  Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ Cons: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
+
+Nil: ListBase[anything]
+//│ res: ListBase[anything]
+
+def c = Cons 1 Nil
+//│ c: cons & (ListBase[1] & {head: 1, tail: List[1]})
+
+c: ListBase[int]
+//│ res: ListBase[int]
+
+c.head
+//│ res: 1
+
+c.tail
+//│ res: List[1]
+
+c.size
+//│ res: int
+
+def d = Cons 2 c
+//│ d: cons & (ListBase[1 | 2] & {head: 1 | 2, tail: List[1 | 2]})
+
+d.head
+//│ res: 2 | 1
+
+d.size
+//│ res: int
+
+d.tail
+//│ res: List[1 | 2]
+
+d.tail.size
+//│ res: int
+
+:e
+d.tail.head
+d.tail.tail
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.69: 	d.tail.head
+//│ ║        	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
+//│ ║  l.69: 	d.tail.head
+//│ ╙──      	^
+//│ res: 2 | 1 | error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.70: 	d.tail.tail
+//│ ║        	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
+//│ ║  l.70: 	d.tail.tail
+//│ ╙──      	^
+//│ res: List[1 | 2] | error
+
