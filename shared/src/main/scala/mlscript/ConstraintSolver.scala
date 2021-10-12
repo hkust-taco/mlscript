@@ -69,31 +69,34 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       def toTypes: Ls[SimpleType] = toType :: Nil
       def toType: SimpleType = this match {
         case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
-        case RhsBases(ps, b) => ps.foldLeft(b.getOrElse(BotType))(_ | _)
+        case RhsBases(ps, b, f) => ps.foldLeft(b.getOrElse(BotType) | f.fold(BotType:SimpleType)(_.toType))(_ | _)
         case RhsBot => BotType
       }
       def | (that: BaseType): Opt[RhsNf] = (this, that) match {
-        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N))
-        case (RhsBot, _) => S(RhsBases(Nil,S(that)))
-        case (RhsBases(ps, b), p: PrimType) =>
-          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b))
-        case (RhsBases(ps, N), _) => S(RhsBases(ps, S(that)))
-        case (RhsBases(_, S(TupleType(_))), TupleType(_)) =>
+        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N,N))
+        case (RhsBot, _) => S(RhsBases(Nil,S(that),N))
+        case (RhsBases(ps, b, f), p: PrimType) =>
+          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b, f))
+        case (RhsBases(ps, N, f), _) => S(RhsBases(ps, S(that), f))
+        case (RhsBases(_, S(TupleType(_)), f), TupleType(_)) =>
           // ??? // TODO
           err("TODO handle tuples", prov.loco)
           N
-        case (RhsBases(_, _), _) => N
+        case (RhsBases(_, _, _), _) => N
         case (RhsField(_, _), _) => N
       }
       def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
         case RhsBot => S(RhsField(that._1, that._2))
         case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
-        case _ => N
+        case RhsBases(p, b, N) => S(RhsBases(p, b, S(RhsField(that._1, that._2))))
+        case RhsBases(p, b, S(RhsField(n1, t1))) if n1 === that._1 => S(RhsBases(p, b, S(RhsField(n1, t1 | that._2))))
+        case _: RhsField | _: RhsBases => N
       }
     }
     case class RhsField(name: Str, ty: SimpleType) extends RhsNf
-    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType]) extends RhsNf {
+    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
       assert(!bty.exists(_.isInstanceOf[PrimType]))
+      override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
     }
     case object RhsBot extends RhsNf
     
@@ -190,21 +193,27 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases
             case (LhsTop, _) | (_, RhsBot) => fail
-            case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)))) => rec(f0, f1)
-            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _)) => fail
-            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, _)) =>
+            case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)), _)) => rec(f0, f1)
+            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _, _)) => fail
+            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, bs, f)) if pts.nonEmpty =>
               // if (pts.contains(pt) || pts.contains(pt.widenPrim)) ()
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)) /* || pts.contains(pt.widenPrim) */)
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
-              else fail
+              else annoying(Nil, done_ls, Nil, RhsBases(Nil, bs, f)) // hacky
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(S(b), r), RhsBases(pts, _)) =>
-              println(b.getClass)
-              ??? // TODO
+            case (LhsRefined(bo, r), RhsBases(_, _, S(RhsField(n, t2)))) => // Q: missing anything in prev fields?
+              // TODO dedup with above
+              r.fields.find(_._1 === n) match {
+                case S(nt1) => rec(nt1._2, t2)
+                case N => fail
+              }
+            case (LhsRefined(_, r), RhsBases(Nil, bs, f)) => fail
+            case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
+              lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }
           
       }

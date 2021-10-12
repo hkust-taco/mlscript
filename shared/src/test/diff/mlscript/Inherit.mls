@@ -100,5 +100,5 @@ f c
 //│ res: string | (string & ~nothing) | nothing
 
 f (c: Parent)
-//│ res: string | (string & ~nothing) | nothing
+//│ res: (string & ~nothing) | string | nothing
 

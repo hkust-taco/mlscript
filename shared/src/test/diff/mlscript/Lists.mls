@@ -22,53 +22,52 @@ Cons 2
 Cons 2 Nil
 //│ res: cons & {head: 2, tail: List[2]}
 
-// FIXME List[1]...
 Cons 1 res
-//│ res: cons & {head: 1, tail: List[1]}
+//│ res: cons & {head: 2 | 1, tail: List[2 | 1]}
 
 res.tail
-//│ res: List[1]
+//│ res: List[2 | 1]
 
 Cons 1 (Cons 2 Nil)
-//│ res: cons & {head: 1, tail: List[1]}
+//│ res: cons & {head: 2 | 1, tail: List[2 | 1]}
 
 res.tail
-//│ res: List[1]
+//│ res: List[2 | 1]
 
 :e // Q: why the duplicated error?
 res.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.39: 	res.tail
+//│ ║  l.38: 	res.tail
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.39: 	res.tail
+//│ ║  l.38: 	res.tail
 //│ ╙──      	^^^
-//│ res: List[1] | error
+//│ res: List[2 | 1] | error
 
 :e // Q: why the duplicated error?
 res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.52: 	res.tail.head
+//│ ║  l.51: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.52: 	res.tail.head
+//│ ║  l.51: 	res.tail.head
 //│ ╙──      	^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.52: 	res.tail.head
+//│ ║  l.51: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── expression of type `nil` does not have field 'head'
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^
 //│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.52: 	res.tail.head
+//│ ║  l.51: 	res.tail.head
 //│ ╙──      	^^^
-//│ res: 1 | error
+//│ res: 1 | 2 | error
 
 
 
@@ -89,13 +88,13 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.90: 	Cons 1 res
+//│ ║  l.89: 	Cons 1 res
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?a]`
-//│ ║  l.83: 	Cons 2 Nil
+//│ ║  l.82: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `List[?a]`
-//│ ║  l.90: 	Cons 1 res
+//│ ║  l.89: 	Cons 1 res
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
