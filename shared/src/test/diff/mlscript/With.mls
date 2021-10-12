@@ -17,6 +17,12 @@ rcd with { x = "oops" }
 res.x
 //│ res: "oops"
 
+id rcd with { x = "oops" }
+//│ res: {x: 1}\x & {x: "oops"}
+
+res.x
+//│ res: "oops"
+
 
 def rcd = { }
 //│ rcd: anything
@@ -24,37 +30,8 @@ def rcd = { }
 id rcd with { x = "oops" }
 //│ res: anything\x & {x: "oops"}
 
-:d
 res.x
-//│ 0. Typing term res.x
-//│  0. Typing term res
-//│  0. : [(α10\x & {x: "oops"<string>})]
-//│  CONSTRAIN [[(α10\x & {x: "oops"<string>})]] <! {x: α0}
-//│    where α10 :> [[⊤]]
-//│  C [[(α10\x & {x: "oops"<string>})]] <! {x: α0}
-//│   C [(α10\x & {x: "oops"<string>})] <! {x: α0}
-//│    C (α10\x & {x: "oops"<string>}) <! {x: α0}
-//│     A  LhsTop  %  List(α10\x, {x: "oops"<string>})  <!  List({x: α0})  %  RhsBot
-//│      A  LhsTop  %  List(α10\x, {x: "oops"<string>})  <!  List()  %  RhsField(x,α0)
-//│       !List(~({x: "oops"<string>}), ⊥)
-//│       !Some((~({x: "oops"<string>}) | {x: α0}))
-//│       C α10 <! (~({x: "oops"<string>})\x | {x: α0}\x)
-//│        C [[⊤]] <! (~({x: "oops"<string>})\x | {x: α0}\x)
-//│         C [⊤] <! (~({x: "oops"<string>})\x | {x: α0}\x)
-//│          C ⊤ <! (~({x: "oops"<string>})\x | {x: α0}\x)
-//│           A  LhsTop  %  List(⊤)  <!  List(~({x: "oops"<string>})\x, {x: α0}\x)  %  RhsBot
-//│            A  LhsTop  %  List()  <!  List(~({x: "oops"<string>})\x, {x: α0}\x)  %  RhsBot
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~({x: α0}\x)\x (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:215)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:174)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
+//│ res: "oops"
 
 
 def f r = r with { x = "oops" }

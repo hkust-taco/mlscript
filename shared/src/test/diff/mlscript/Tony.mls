@@ -13,17 +13,7 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~(some<>)\payload)\payload (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: int | (((some & {value: 42})\payload & {payload: 23}) & ~some) | (none & ~{value: 42}) | (none & ~some) | (none & ~{payload: 23}) | (((some & {value: 42}\payload) & ~{value: 42}\payload\payload) & {payload: 23}) | (((some & {value: 42}\payload) & ~{payload: 23}\payload\payload) & {payload: 23})
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -81,13 +71,13 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	res 1
+//│ ║  l.72: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & ~some)`
-//│ ║  l.82: 	res 1
+//│ ║  l.72: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.75: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.65: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: (nothing | (1 & ~{value: nothing}) | (1 & ~some)) | error
 

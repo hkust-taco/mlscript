@@ -54,9 +54,10 @@ abstract class TyperHelpers { self: Typer =>
       case (NegType(`that`), _) => BotType
       case _ => ComposedType(false, that, this)(prov)
     }
-    def neg(prov: TypeProvenance = noProv): SimpleType = this match {
+    def neg(prov: TypeProvenance = noProv, force: Bool = false): SimpleType = this match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.neg() & r.neg()
+      case ComposedType(false, l, r) if force => l.neg() | r.neg()
       case NegType(n) => n
       // case _: RecordType =>
       //   BotType
@@ -89,8 +90,10 @@ abstract class TyperHelpers { self: Typer =>
       case vt: VarType => ???
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
+        // case c: ComposedType => c.pol
+        // case _: ExtrType | _: NegType => true
         case _ => false
-      }) => nt.neg(n.prov).without(name)
+      }) => /* println(s"$this ${nt.neg(n.prov)}"); */ nt.neg(n.prov, force = true).without(name)
       // case NegType(rt: RecordType) => this // FIXME valid??!
       // case NegType(t) => this // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!
@@ -102,12 +105,29 @@ abstract class TyperHelpers { self: Typer =>
     }
     def pushPosWithout: SimpleType = this match {
       case Without(b, ns) => b.without(ns) match {
-        case Without(b, ns) => b match {
+        case rewritten @ Without(b, ns) => b match {
           case t @ RecordType(fs) => // In positive position, this is valid:
             RecordType(fs.filterNot(nt => ns(nt._1)))(t.prov)
           case _: TypeVariable => this
           // case t: NegType => t
           // case NegType(t) => t.without(ns).neg(b.prov)
+          // case NegType(_: BaseType | _: RecordType) => b
+          // case NegType(Without(b2, ns2)) => b
+          
+          case NegType(_: BaseType) => b
+          
+          // case NegType(Without(NegType(b2), ns2)) => b2.without(ns).neg().without(ns2).neg()
+          // case NegType(Without(_: BaseType | _: RecordType, ns2)) => b
+          // case NegType(Without(_: BaseType | _: RecordType, ns2)) /* if ns.exists(ns2) */ =>
+          //   b.without(ns.filterNot(ns2))
+          case NegType(Without(b2, ns2)) /* if ns.exists(ns2) */ =>
+            b2.without(ns2.filterNot(ns)).neg().without(ns.filterNot(ns2))
+          
+          // case NegType(Without(b2, ns2)) => b2.without(ns.filterNot(ns2)).neg() // make things work but surely wrong!
+          case NegType(Without(NegType(b2), ns2)) => b2.without(ns.filterNot(ns2)).neg().without(ns2).neg()
+          
+          case NegType(_) => rewritten
+          
           // case t: NegType => this
           case _ => lastWords(s"$this (${this.getClass})")
         }

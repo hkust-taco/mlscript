@@ -25,26 +25,16 @@ def c = Child(Parent { name = "Bob" })
 //│ c: (child & (Parent & {age: int})) | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(parent<>)\age (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ c: child & (Parent & {age: int})
 
 c: Parent
 //│ res: Parent
 
 c.name
-//│ res: error | string
+//│ res: string
 
 c: { name: 'a }
-//│ res: {name: error | string}
+//│ res: {name: string}
 
 c: { name: string }
 //│ res: {name: string}
@@ -56,7 +46,7 @@ def f x = case x of {
 //│ f: parent & {name: 'a} -> 'a
 
 f c
-//│ res: string | error
+//│ res: string
 
 f (c: Parent)
 //│ res: string
@@ -68,21 +58,21 @@ def f x = case x of {
 //│ f: child & {name: 'a} -> 'a
 
 f c
-//│ res: string | error
+//│ res: string
 
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	^^^^
 //│ ╟── expression of type `parent & {name: string}` does not match type `child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── but it flows into argument with expected type `child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.65: 	def f x = case x of {
+//│ ║  l.55: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: string | error
 

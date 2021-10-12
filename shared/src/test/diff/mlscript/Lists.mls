@@ -83,89 +83,40 @@ Cons 2
 Cons 2 Nil
 //│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
 
-// FIXME
-:d
 res.head
-//│ 0. Typing term res.head
-//│  0. Typing term res
-//│  0. : [α72]
-//│  CONSTRAIN [[α72]] <! {head: α0}
-//│    where α66 :> [2<int>], α67 :> [[α71]] <: [List[α68]], α68 :> [α66], α69 :> (cons<> & {head: α68, tail: List[α68]}), α71 :> nil<> <: [[List[α68]]], α72 :> ((α69\head-tail & {head: [α66]}\tail) & {tail: [α67]})
-//│  C [[α72]] <! {head: α0}
-//│   C [α72] <! {head: α0}
-//│    C α72 <! {head: α0}
-//│     C ((α69\head-tail & {head: [α66]}\tail) & {tail: [α67]}) <! {head: α0}
-//│      A  LhsTop  %  List((α69\head-tail & {head: [α66]}\tail), {tail: [α67]})  <!  List({head: α0})  %  RhsBot
-//│       A  LhsTop  %  List(α69\head-tail, {head: [α66]}\tail, {tail: [α67]})  <!  List({head: α0})  %  RhsBot
-//│        A  LhsTop  %  List(α69\head-tail, {head: [α66]}\tail, {tail: [α67]})  <!  List()  %  RhsField(head,α0)
-//│         !List(~({head: [α66]}\tail), ~({tail: [α67]}), ⊥)
-//│         !Some(((~({head: [α66]}\tail) | ~({tail: [α67]})) | {head: α0}))
-//│         C α69 <! ((~({head: [α66]}\tail)\head-tail | ~({tail: [α67]})\head-tail) | {head: α0}\head-tail)
-//│          C (cons<> & {head: α68, tail: List[α68]}) <! ((~({head: [α66]}\tail)\head-tail | ~({tail: [α67]})\head-tail) | {head: α0}\head-tail)
-//│           A  LhsTop  %  List((cons<> & {head: α68, tail: List[α68]}))  <!  List((~({head: [α66]}\tail)\head-tail | ~({tail: [α67]})\head-tail), {head: α0}\head-tail)  %  RhsBot
-//│            A  LhsTop  %  List((cons<> & {head: α68, tail: List[α68]}))  <!  List(~({head: [α66]}\tail)\head-tail, ~({tail: [α67]})\head-tail, {head: α0}\head-tail)  %  RhsBot
-//│             A  LhsTop  %  List(cons<>, {head: α68, tail: List[α68]})  <!  List(~({head: [α66]}\tail)\head-tail, ~({tail: [α67]})\head-tail, {head: α0}\head-tail)  %  RhsBot
-//│              A  cons<>{}  %  List({head: α68, tail: List[α68]})  <!  List(~({head: [α66]}\tail)\head-tail, ~({tail: [α67]})\head-tail, {head: α0}\head-tail)  %  RhsBot
-//│               A  cons<>{head: α68, tail: List[α68]}  %  List()  <!  List(~({head: [α66]}\tail)\head-tail, ~({tail: [α67]})\head-tail, {head: α0}\head-tail)  %  RhsBot
-//│                C (((cons<> & {head: α68, tail: List[α68]}\head-tail) & ~(~({tail: [α67]})\head-tail)\head-tail) & ~({head: α0}\head-tail)\head-tail) <! ~({head: [α66]}\tail)
-//│                 A  LhsTop  %  List(((cons<> & {head: α68, tail: List[α68]}\head-tail) & ~(~({tail: [α67]})\head-tail)\head-tail), ~({head: α0}\head-tail)\head-tail)  <!  List(~({head: [α66]}\tail))  %  RhsBot
-//│                  A  LhsTop  %  List((cons<> & {head: α68, tail: List[α68]}\head-tail), ~(~({tail: [α67]})\head-tail)\head-tail, ~({head: α0}\head-tail)\head-tail)  <!  List(~({head: [α66]}\tail))  %  RhsBot
-//│                   A  LhsTop  %  List(cons<>, {head: α68, tail: List[α68]}\head-tail, ~(~({tail: [α67]})\head-tail)\head-tail, ~({head: α0}\head-tail)\head-tail)  <!  List(~({head: [α66]}\tail))  %  RhsBot
-//│                    A  LhsTop  %  List({head: [α66]}, cons<>, {head: α68, tail: List[α68]}\head-tail, ~(~({tail: [α67]})\head-tail)\head-tail, ~({head: α0}\head-tail)\head-tail)  <!  List()  %  RhsBot
-//│                     A  {head: [α66]}  %  List(cons<>, {head: α68, tail: List[α68]}\head-tail, ~(~({tail: [α67]})\head-tail)\head-tail, ~({head: α0}\head-tail)\head-tail)  <!  List()  %  RhsBot
-//│                      A  cons<>{head: [α66]}  %  List({}, ~(~({tail: [α67]})\head-tail)\head-tail, ~({head: α0}\head-tail)\head-tail)  <!  List()  %  RhsBot
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~({tail: [α67]})\head-tail)\head-tail (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: 2
 
+:e
 Cons 1 res
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~({tail: [α67]})\head-tail)\head-tail (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.90: 	Cons 1 res
+//│ ║        	^^^^^^^^^^
+//│ ╟── expression of type `2` does not match type `Nil | Cons[?a]`
+//│ ║  l.83: 	Cons 2 Nil
+//│ ║        	     ^
+//│ ╟── but it flows into reference with expected type `List[?a]`
+//│ ║  l.90: 	Cons 1 res
+//│ ║        	       ^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
+//│ ╙──     	                                ^^^^^^^
+//│ res: (((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: 2}) | error
 
 Cons 1 (Cons 2 Nil)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~({tail: [α13]})\head-tail)\head-tail (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
 
-// FIXME
-res.head
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~(~({tail: [α67]})\head-tail)\head-tail (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ res: {a: 1, b: 2, c: nil}
 
+
+Cons 2 Nil
+//│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
+
+Cons 1 (id res)
+//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
+
+{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ res: {a: 1, b: 2, c: nil}
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
@@ -174,59 +125,12 @@ def Cons head = originalCons { head=0; tail=Nil } with { head }
 Cons 1
 //│ res: (cons & {head: 0, tail: List[0]})\head & {head: 1}
 
-// FIXME
-:d
 res.head
-//│ 0. Typing term res.head
-//│  0. Typing term res
-//│  0. : [α31]
-//│  CONSTRAIN [[α31]] <! {head: α0}
-//│    where α28 :> [1<int>], α29 :> (cons<> & {head: α30, tail: List[α30]}), α30 :> 0<int>, α31 :> (α29\head & {head: [α28]})
-//│  C [[α31]] <! {head: α0}
-//│   C [α31] <! {head: α0}
-//│    C α31 <! {head: α0}
-//│     C (α29\head & {head: [α28]}) <! {head: α0}
-//│      A  LhsTop  %  List(α29\head, {head: [α28]})  <!  List({head: α0})  %  RhsBot
-//│       A  LhsTop  %  List(α29\head, {head: [α28]})  <!  List()  %  RhsField(head,α0)
-//│        !List(~({head: [α28]}), ⊥)
-//│        !Some((~({head: [α28]}) | {head: α0}))
-//│        C α29 <! (~({head: [α28]})\head | {head: α0}\head)
-//│         C (cons<> & {head: α30, tail: List[α30]}) <! (~({head: [α28]})\head | {head: α0}\head)
-//│          A  LhsTop  %  List((cons<> & {head: α30, tail: List[α30]}))  <!  List(~({head: [α28]})\head, {head: α0}\head)  %  RhsBot
-//│           A  LhsTop  %  List(cons<>, {head: α30, tail: List[α30]})  <!  List(~({head: [α28]})\head, {head: α0}\head)  %  RhsBot
-//│            A  cons<>{}  %  List({head: α30, tail: List[α30]})  <!  List(~({head: [α28]})\head, {head: α0}\head)  %  RhsBot
-//│             A  cons<>{head: α30, tail: List[α30]}  %  List()  <!  List(~({head: [α28]})\head, {head: α0}\head)  %  RhsBot
-//│              C ((cons<> & {head: α30, tail: List[α30]}\head) & ~({head: α0}\head)\head) <! ~({head: [α28]})
-//│               A  LhsTop  %  List((cons<> & {head: α30, tail: List[α30]}\head), ~({head: α0}\head)\head)  <!  List(~({head: [α28]}))  %  RhsBot
-//│                A  LhsTop  %  List(cons<>, {head: α30, tail: List[α30]}\head, ~({head: α0}\head)\head)  <!  List(~({head: [α28]}))  %  RhsBot
-//│                 A  LhsTop  %  List({head: [α28]}, cons<>, {head: α30, tail: List[α30]}\head, ~({head: α0}\head)\head)  <!  List()  %  RhsBot
-//│                  A  {head: [α28]}  %  List(cons<>, {head: α30, tail: List[α30]}\head, ~({head: α0}\head)\head)  <!  List()  %  RhsBot
-//│                   A  cons<>{head: [α28]}  %  List({tail: List[α30]}, ~({head: α0}\head)\head)  <!  List()  %  RhsBot
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~({head: α0}\head)\head (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: 1
 
 def c = Cons 1
 //│ c: (cons & {head: 0, tail: List[0]})\head & {head: 1}
 
 c.head
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: ~({head: α13}\head)\head (class mlscript.TyperDatatypes$Without)
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout(TyperHelpers.scala:112)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.pushPosWithout$(TyperHelpers.scala:103)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.pushPosWithout(TyperDatatypes.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$3(ConstraintSolver.scala:105)
-//│ 	at: mlscript.utils.package$ListHelpers.mapHead(package.scala:121)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:148)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: 1
 

@@ -162,7 +162,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
           val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
           rec(b, rhs.without(ns))
-        case (Without(_, ns) :: ls, rs) => die
+        // case (Without(_, ns) :: ls, rs) => die
         // case (ls, Without(b:TypeVariable, ns) :: rs) =>
         case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
           def tys = ls.iterator ++ done_ls.toTypes
