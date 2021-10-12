@@ -21,17 +21,7 @@ test: Person & {age: 'a} | Animal -> 'a | 0
 //│ /!\ Parse error: Expected end-of-input:1:41, found "| 0;" at l.20:41: test: Person & {age: 'a} | Animal -> 'a | 0
 
 test: (Person & {age: int} | Animal) -> int
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: ((Person & {age: int}) | Animal) -> int
 
 def a = Animal{}
 //│ a: animal
@@ -46,30 +36,10 @@ p: { age: int }
 //│ res: {age: int}
 
 test a
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: nothing | 0
 
 test p
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: int | 0
 
 :d
 1: int

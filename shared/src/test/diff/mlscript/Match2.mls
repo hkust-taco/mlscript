@@ -13,30 +13,10 @@ def t = Test { value = 0 }
 //│ t: test & {value: int}
 
 foo Test
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: nothing | 1
 
 foo t
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: int | 1
 
 
 class Toast: { name: string }
@@ -51,48 +31,28 @@ def bar x = case x of
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	bar Test
+//│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `{value: int} -> test & {value: int}` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
-//│ ║  l.42: 	bar Test
+//│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.35: 	def bar x = case x of
+//│ ║  l.25: 	def bar x = case x of
 //│ ╙──      	                 ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: (nothing | nothing) | error
 
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	bar "ops"
+//│ ║  l.45: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
-//│ ║  l.65: 	bar "ops"
+//│ ║  l.45: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.35: 	def bar x = case x of
+//│ ║  l.25: 	def bar x = case x of
 //│ ╙──      	                 ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:135)
-//│ 	at: mlscript.utils.package$.die(package.scala:134)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:182)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:107)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:105)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$4(ConstraintSolver.scala:156)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ res: (nothing | nothing) | error
 
 
 def baz x = case x of
@@ -104,23 +64,13 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.95: 	baz "oops"
+//│ ║  l.65: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & ~test)`
-//│ ║  l.95: 	baz "oops"
+//│ ║  l.65: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.88: 	def baz x = case x of
+//│ ║  l.58: 	def baz x = case x of
 //│ ╙──      	                 ^
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: head of empty String
-//│ 	at: scala.collection.StringOps$.head$extension(StringOps.scala:1124)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$7(TypeSimplifier.scala:348)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:575)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1251)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1251)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1288)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$expandCompactType$3(TypeSimplifier.scala:344)
-//│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
-//│ 	at: mlscript.TypeSimplifier.go$3(TypeSimplifier.scala:338)
+//│ res: (("oops" & ~((toast & ("oops" & ~test)) & ~test)) | ("oops" & ~test)) | error
 

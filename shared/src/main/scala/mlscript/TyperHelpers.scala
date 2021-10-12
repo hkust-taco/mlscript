@@ -89,10 +89,8 @@ abstract class TyperHelpers { self: Typer =>
       case vt: VarType => ???
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
-        // case _: ExtrType | _: NegType => true
-        // case c: ComposedType => c.pol
         case _ => false
-      }) => /* println(s"! $n ${nt.getClass}"); */ nt.neg(n.prov).without(name)
+      }) => nt.neg(n.prov).without(name)
       // case NegType(rt: RecordType) => this // FIXME valid??!
       // case NegType(t) => this // FIXME valid??!
       case e @ ExtrType(_) => e // FIXME valid??!
