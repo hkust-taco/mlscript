@@ -32,8 +32,12 @@ abstract class TyperHelpers { self: Typer =>
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
       case (BotType, _) => that
-      case (_: RecordType, _: PrimType | _: FunctionType) => TopType
-      case (_: FunctionType, _: PrimType | _: RecordType) => TopType
+      
+      // These were wrong! During constraint solving it's important to keep them!
+      // case (_: RecordType, _: PrimType | _: FunctionType) => TopType
+      // case (_: FunctionType, _: PrimType | _: RecordType) => TopType
+      
+      case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         val fs2m = fs2.toMap
         RecordType(fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) })(prov)
