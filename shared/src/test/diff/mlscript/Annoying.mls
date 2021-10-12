@@ -11,16 +11,16 @@ foo: (~int)\x
 // FIXME
 res: ~(int\x)
 //│ /!!!\ Uncaught error: scala.MatchError: (List(~(int)\x),List()) (of class scala.Tuple2)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:129)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:163)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:164)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 
 def foo: (~ 'a \ x) -> 'a -> 'a
@@ -46,16 +46,16 @@ def v0: (~(X\x))\y
 // FIXME
 v0: int
 //│ /!!!\ Uncaught error: scala.MatchError: (List(~(X\x)\y),List()) (of class scala.Tuple2)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:129)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:165)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:166)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 
 

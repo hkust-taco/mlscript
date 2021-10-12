@@ -151,12 +151,12 @@ let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 bar(0, 1)
 bar(2, 2)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.67: 	bar(0, 1)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.151: 	bar(0, 1)
+//│ ╙──       	^^^^^^^^^
 //│ res: 1 | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.68: 	bar(2, 2)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.152: 	bar(2, 2)
+//│ ╙──       	^^^^^^^^^
 //│ res: 2 | error
 
 // TODO
@@ -165,20 +165,20 @@ bar(1, 1)
 bar(0, _)
 bar(_, 1)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.79: 	bar(0, 0)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.163: 	bar(0, 0)
+//│ ╙──       	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.80: 	bar(1, 1)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.164: 	bar(1, 1)
+//│ ╙──       	^^^^^^^^^
 //│ res: 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.81: 	bar(0, _)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.165: 	bar(0, _)
+//│ ╙──       	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.82: 	bar(_, 1)
-//│ ╙──      	^^^^^^^^^
+//│ ║  l.166: 	bar(_, 1)
+//│ ╙──       	^^^^^^^^^
 //│ res: 1 | error
 
 // TODO
@@ -186,15 +186,15 @@ x => bar(x, x) // TODO simplify better
 x => bar(1, x)
 x => bar(x, 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.101: 	x => bar(x, x) // TODO simplify better
+//│ ║  l.185: 	x => bar(x, x) // TODO simplify better
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.102: 	x => bar(1, x)
+//│ ║  l.186: 	x => bar(1, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.103: 	x => bar(x, 0)
+//│ ║  l.187: 	x => bar(x, 0)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 
@@ -202,11 +202,11 @@ x => bar(x, 0)
 bar(_, _)
 (x, y) => bar(x, y)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.118: 	bar(_, _)
+//│ ║  l.202: 	bar(_, _)
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.119: 	(x, y) => bar(x, y)
+//│ ║  l.203: 	(x, y) => bar(x, y)
 //│ ╙──       	          ^^^^^^^^^
 //│ res: ('a & int, 'a,) -> 'a | error
 
@@ -218,31 +218,31 @@ x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.132: 	x => bar(bar(0, x), 0)
+//│ ║  l.216: 	x => bar(bar(0, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.132: 	x => bar(bar(0, x), 0)
+//│ ║  l.216: 	x => bar(bar(0, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.133: 	x => bar(bar(x, x), 0)
+//│ ║  l.217: 	x => bar(bar(x, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.133: 	x => bar(bar(x, x), 0)
+//│ ║  l.217: 	x => bar(bar(x, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.134: 	x => bar(bar(0, x), x)
+//│ ║  l.218: 	x => bar(bar(0, x), x)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.134: 	x => bar(bar(0, x), x)
+//│ ║  l.218: 	x => bar(bar(0, x), x)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.135: 	x => bar(bar(x, x), 0)
+//│ ║  l.219: 	x => bar(bar(x, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.135: 	x => bar(bar(x, x), 0)
+//│ ║  l.219: 	x => bar(bar(x, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 
@@ -250,27 +250,27 @@ x => bar(bar(x, x), 0)
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.166: 	x => bar(bar(x, 1), 0)
+//│ ║  l.250: 	x => bar(bar(x, 1), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.166: 	x => bar(bar(x, 1), 0)
+//│ ║  l.250: 	x => bar(bar(x, 1), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.167: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.251: 	(x, y) => bar(bar(x, y), x)
 //│ ╙──       	              ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.167: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.251: 	(x, y) => bar(bar(x, y), x)
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^
 //│ res: ('a & int, 'a & int,) -> 'a | error
 
 :e // TODO delay tricky constraints for later (instead of eager) resolution:
 (x, y) => bar(bar(x, y), 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.184: 	(x, y) => bar(bar(x, y), 0)
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), 0)
 //│ ╙──       	              ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.184: 	(x, y) => bar(bar(x, y), 0)
+//│ ║  l.268: 	(x, y) => bar(bar(x, y), 0)
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^
 //│ res: ('a & int, 'a & int,) -> 'a | 0 | error
 
@@ -281,19 +281,19 @@ let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 :e
 baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.198: 	baz(0)
+//│ ║  l.282: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.198: 	baz(0)
+//│ ║  l.282: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | ?b) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.198: 	baz(0)
+//│ ║  l.282: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.194: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.278: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                     ^^^
 //│ ╟── from parameter type:
-//│ ║  l.194: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.278: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^
 //│ res: error
 
@@ -321,23 +321,23 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.237: 	baz(0)
+//│ ║  l.321: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.237: 	baz(0)
+//│ ║  l.321: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | (1, ?b,)) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.237: 	baz(0)
+//│ ║  l.321: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.233: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.317: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                          ^^^
 //│ ╟── from parameter type:
-//│ ║  l.233: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.317: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.238: 	baz(0, 1)
+//│ ║  l.322: 	baz(0, 1)
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 0 | error
 
@@ -348,23 +348,23 @@ x => baz(0, x)
 x => baz(1, x)
 x => baz(x, 1)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.261: 	baz(0, 0)
+//│ ║  l.345: 	baz(0, 0)
 //│ ╙──       	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.262: 	baz(1, 1)
+//│ ║  l.346: 	baz(1, 1)
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.263: 	x => baz(0, x)
+//│ ║  l.347: 	x => baz(0, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.264: 	x => baz(1, x)
+//│ ║  l.348: 	x => baz(1, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.265: 	x => baz(x, 1)
+//│ ║  l.349: 	x => baz(x, 1)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 1 | error
 
@@ -373,15 +373,15 @@ x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.288: 	x => baz(x, 0)
+//│ ║  l.372: 	x => baz(x, 0)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.289: 	x => baz(x, x)
+//│ ║  l.373: 	x => baz(x, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.290: 	(x, y) => baz(x, y)
+//│ ║  l.374: 	(x, y) => baz(x, y)
 //│ ╙──       	          ^^^^^^^^^
 //│ res: ('a & int, 'a,) -> 'a | error
 

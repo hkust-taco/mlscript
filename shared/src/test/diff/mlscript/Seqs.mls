@@ -69,23 +69,23 @@ d.tail.size
 d.tail.head
 d.tail.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.144: 	d.tail.head
-//│ ║         	^
+//│ ║  l.69: 	d.tail.head
+//│ ║        	^
 //│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
 //│ ║  l.10: 	type List[A] = Nil | Cons[A]
 //│ ║        	               ^^^
 //│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.144: 	d.tail.head
-//│ ╙──       	^
+//│ ║  l.69: 	d.tail.head
+//│ ╙──      	^
 //│ res: 2 | 1 | error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.145: 	d.tail.tail
-//│ ║         	^
+//│ ║  l.70: 	d.tail.tail
+//│ ║        	^
 //│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
 //│ ║  l.10: 	type List[A] = Nil | Cons[A]
 //│ ║        	               ^^^
 //│ ╟── but it flows into field selection with expected type `{tail: ?a}`
-//│ ║  l.145: 	d.tail.tail
-//│ ╙──       	^
+//│ ║  l.70: 	d.tail.tail
+//│ ╙──      	^
 //│ res: List[1 | 2] | error
 

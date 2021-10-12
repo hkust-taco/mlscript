@@ -82,122 +82,40 @@ Cons 2
 Cons 2 Nil
 //│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
 
-:d
 res.head
-//│ 0. Typing term res.head
-//│  0. Typing term res
-//│  0. : [α72]
-//│  CONSTRAIN [[α72]] <! {head: α0}
-//│    where α66 :> [2<int>], α67 :> [[α71]] <: [List[α68]], α68 :> [α66], α69 :> (cons<> & {head: α68, tail: List[α68]}), α71 :> nil<> <: [[List[α68]]], α72 :> α69 w/ {head: [α66]} w/ {tail: [α67]}
-//│  C [[α72]] <! {head: α0}
-//│   C [α72] <! {head: α0}
-//│    C α72 <! {head: α0}
-//│     C α69 w/ {head: [α66]} w/ {tail: [α67]} <! {head: α0}
-//│      A  LhsTop  %  List(α69 w/ {head: [α66]} w/ {tail: [α67]})  <!  List({head: α0})  %  RhsBot
-//│       A  LhsTop  %  List(α69 w/ {head: [α66]} w/ {tail: [α67]})  <!  List()  %  RhsField(head,α0)
-//│        A  {}  %  List()  <!  List()  %  RhsField(head,α0)
-//│         A  {}  %  List(α69 w/ {head: [α66]})  <!  List()  %  RhsField(head,α0)
-//│          A  {}  %  List()  <!  List()  %  RhsField(head,α0)
-//│           C [α66] <! α0
-//│ 0. : α0
-//│ Typed as: α0
-//│  where: α0 :> [α66], α66 :> [2<int>]
-//│ Compact type before simplification: CompactTypeScheme(‹α0, α66, CompactPrimType(2<int>)›,TreeMap())
-//│ [occ] LinkedHashMap((true,α0) -> LinkedHashSet(α0, α66, CompactPrimType(2<int>)), (true,α66) -> LinkedHashSet(α0, α66, CompactPrimType(2<int>)))
-//│ [rec] TreeSet()
-//│ [!] α66
-//│ [!] α0
-//│ [sub] α0 -> None, α66 -> None
-//│ Compact type after simplification: CompactTypeScheme(‹CompactPrimType(2<int>)›,Map())
 //│ res: 2
 
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	Cons 1 res
-//│ ║         	^^^^^^^^^^
+//│ ║  l.89: 	Cons 1 res
+//│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?a]`
 //│ ║  l.82: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `List[?a]`
-//│ ║  l.113: 	Cons 1 res
-//│ ║         	       ^^^
+//│ ║  l.89: 	Cons 1 res
+//│ ║        	       ^^^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ╙──     	                                ^^^^^^^
 //│ res: (cons & {head: 1, tail: List[1]} with {head: 1} with {tail: 2}) | error
 
 Cons 1 (Cons 2 Nil)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:255)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:176)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
+//│ res: cons & {head: 2 | 1, tail: List[2 | 1]} with {head: 1} with {tail: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.129: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                    ^^^
-//│ ╟── expression of type `2` does not have field 'head'
-//│ ║  l.82: 	Cons 2 Nil
-//│ ║        	     ^
-//│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.129: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                    ^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.129: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                                       ^^^
-//│ ╟── expression of type `2` does not have field 'tail'
-//│ ║  l.82: 	Cons 2 Nil
-//│ ║        	     ^
-//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
-//│ ║  l.129: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                                       ^^^
-//│ res: {a: error | 1, b: error, c: error}
+//│ res: {a: 1, b: 2, c: nil}
 
 
 Cons 2 Nil
 //│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
 
 Cons 1 (id res)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:255)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:176)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
+//│ res: cons & {head: 2 | 1, tail: List[2 | 1]} with {head: 1} with {tail: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.159: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                    ^^^
-//│ ╟── expression of type `nil` does not have field 'head'
-//│ ║  l.12: 	def Nil = Nil {}
-//│ ║        	          ^^^^^^
-//│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.159: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                    ^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.159: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                                       ^^^
-//│ ╟── expression of type `nil` does not have field 'tail'
-//│ ║  l.12: 	def Nil = Nil {}
-//│ ║        	          ^^^^^^
-//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
-//│ ║  l.159: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                                       ^^^
-//│ res: {a: 2, b: error, c: error}
+//│ res: {a: 1, b: 2, c: nil}
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }

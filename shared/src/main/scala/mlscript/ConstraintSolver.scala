@@ -68,7 +68,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       }
     }
     case class LhsRefined(base: Opt[BaseType], reft: RecordType, ws: Ls[WithType]) extends LhsNf {
-      override def toString: Str = s"${base.getOrElse("")}${reft}"
+      override def toString: Str = s"${base.getOrElse("")}${reft}${ws.map(" & " + _).mkString}"
     }
     case object LhsTop extends LhsNf
     
@@ -104,6 +104,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     case class RhsField(name: Str, ty: SimpleType) extends RhsNf
     case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
       assert(!bty.exists(_.isInstanceOf[PrimType]))
+      // TODO assert we don't have both bases and a field? -> should make that an either...
       override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
     }
     case object RhsBot extends RhsNf
@@ -213,17 +214,21 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases
-            case (LhsTop, _) | (_, RhsBot) => fail
-            case (LhsRefined(S(f0@FunctionType(l0, r0)), r, Nil), RhsBases(_, S(f1@FunctionType(l1, r1)), fo)) =>
+            case (LhsTop, _) | (LhsRefined(N, RecordType(Nil), Nil), _) | (_, RhsBot) | (_, RhsBases(Nil, N, N)) => fail  // TODO actually get rid of LhsTop and RhsBot...
+            // case (_, RhsBases(Nil, N, N)) => fail
+            case (LhsRefined(S(f0@FunctionType(l0, r0)), r, ws), RhsBases(_, S(f1@FunctionType(l1, r1)), fo)) =>
               // FIXME shoudn't we check the reft is empty?:
               // if (fo.isEmpty)
                 rec(f0, f1)
               // else ()
-            case (LhsRefined(S(f: FunctionType), r, Nil), RhsBases(pts, _, _)) => fail
-            case (LhsRefined(S(pt: PrimType), r, Nil), RhsBases(pts, bs, f)) =>
+            case (LhsRefined(S(f: FunctionType), r, ws), RhsBases(pts, _, _)) =>
+              // fail
+              annoying(Nil, LhsRefined(N, r, ws), Nil, done_rs)
+            case (LhsRefined(S(pt: PrimType), r, ws), RhsBases(pts, bs, f)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
-              else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
+              // else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
+              else annoying(Nil, LhsRefined(N, r, ws), Nil, RhsBases(Nil, bs, f))
             case (LhsRefined(bo, r, Nil), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
@@ -235,11 +240,13 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(b, r, ws), RhsField(n, t)) => // TODO factor
+            case (LhsRefined(b, r, ws), RhsField(n, t)) =>
               // val ws2 = ws.filter(_.reft.fields.exists(_._1 === n))
-              val (ws2, ws3) = ws.partition(_.reft.fields.exists(_._1 === n))
+              val (ws2, ws3) = (WithType(TopType, r)(noProv) :: ws).partition(_.reft.fields.exists(_._1 === n))
               // if (ws2.size < ws.size)
-              if (ws3.isEmpty)
+              println(s"$ws2 $ws3")
+              // if (ws3.isEmpty)
+              if (ws3.forall(_.isEmpty))
                 // annoying(Nil,
                 //   ws2.flatMap(_.reft.fields.filter(_._1 === n).map(_._2)).reduceOption(_ & _).getOrElse(BotType),
                 //   Nil, done_rs)
@@ -251,8 +258,12 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
               else annoying(ws3.map(_.base), LhsRefined(b, r, ws2), Nil, done_rs)
             case (LhsRefined(b, r, ws), RhsBases(ps, bty, N)) =>
               annoying(ws.map(_.base), LhsRefined(b, r, Nil), Nil, done_rs)
-            case (LhsRefined(b, r, ws), RhsBases(ps, bty, S(RhsField(n, t)))) =>
-              ???
+            case (LhsRefined(b, r, ws), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
+              // val (ws2, ws3) = ws.partition(_.reft.fields.exists(_._1 === n))
+              // if (ws3.isEmpty)
+              // else annoying(ws3.map(_.base), LhsRefined(b, r, ws2), Nil, done_rs)
+              // ???
+              annoying(Nil, done_ls, Nil, rf)
             case (LhsRefined(S(b), r, Nil), RhsBases(pts, _, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }

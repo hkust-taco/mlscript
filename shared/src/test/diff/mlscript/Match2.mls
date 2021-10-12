@@ -44,10 +44,10 @@ bar Test
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	bar "ops"
+//│ ║  l.45: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
-//│ ║  l.46: 	bar "ops"
+//│ ║  l.45: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.25: 	def bar x = case x of
@@ -64,13 +64,13 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	baz "oops"
+//│ ║  l.65: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & ~test)`
-//│ ║  l.67: 	baz "oops"
+//│ ║  l.65: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.60: 	def baz x = case x of
+//│ ║  l.58: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: (("oops" & ~((toast & ("oops" & ~test)) & ~test)) | ("oops" & ~test)) | error
 

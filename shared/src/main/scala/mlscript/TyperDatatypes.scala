@@ -97,9 +97,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class WithType(base: SimpleType, reft: RecordType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = base.level max reft.level
-    def nonEmpty: Bool = this match {
-      case WithType(TopType | RecordType(Nil), RecordType(Nil)) => false
-      case _ => true
+    def isEmpty: Bool = this match {
+      case WithType(TopType | RecordType(Nil), RecordType(Nil)) => true
+      case _ => false
     }
     override def toString = s"${base} w/ ${reft}"
   }

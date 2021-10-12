@@ -35,7 +35,7 @@ def c = Child(Parent1{name="A"})
 :e
 class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.37: 	class Crazy[A]: A & { name: A }
+//│ ║  l.36: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 class Crazy[A]: { name: A }
@@ -52,16 +52,16 @@ def c = Crazy({ name = "Bob"; age = 42 })
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ║        	^
 //│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~(crazy & {name: ?b & ~?a}) as ?a`
-//│ ║  l.50: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║  l.49: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.54: 	c: nothing
+//│ ║  l.53: 	c: nothing
 //│ ╙──      	   ^^^^^^^
 //│ res: nothing
 
@@ -75,17 +75,17 @@ d: nothing
 :e
 class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.77: 	class Stupid: Parent1 | Parent2
+//│ ║  l.76: 	class Stupid: Parent1 | Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
-//│ ║  l.82: 	class Stupid: Parent1 -> Parent2
+//│ ║  l.81: 	class Stupid: Parent1 -> Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.87: 	class Stupid: ~Parent1
+//│ ║  l.86: 	class Stupid: ~Parent1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^
 
 :e // TODO don't report several times
@@ -93,24 +93,24 @@ class Cycle1: Cycle2
 class Cycle2: Cycle1
 type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.93: 	class Cycle1: Cycle2
+//│ ║  l.92: 	class Cycle1: Cycle2
 //│ ╙──      	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle2
-//│ ║  l.94: 	class Cycle2: Cycle1
+//│ ║  l.93: 	class Cycle2: Cycle1
 //│ ╙──      	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.95: 	type Stutter = Cycle1
+//│ ║  l.94: 	type Stutter = Cycle1
 //│ ╙──      	     ^^^^^^^^^^^^^^^^
 
 :e
 def c = Cycle1 error
 c: Cycle1
 //│ ╔══[ERROR] identifier not found: Cycle1
-//│ ║  l.107: 	def c = Cycle1 error
+//│ ║  l.106: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
 //│ ╔══[ERROR] type identifier not found: Cycle1
-//│ ║  l.108: 	c: Cycle1
+//│ ║  l.107: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 
@@ -121,6 +121,6 @@ type N[A] = ~A
 :e
 class Cycle: N[Cycle]
 //│ ╔══[ERROR] illegal cycle involving type Cycle
-//│ ║  l.123: 	class Cycle: N[Cycle]
+//│ ║  l.122: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 

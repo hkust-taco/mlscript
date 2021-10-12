@@ -63,16 +63,16 @@ f c
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	^^^^
 //│ ╟── expression of type `parent & {name: string}` does not match type `child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── but it flows into argument with expected type `child`
-//│ ║  l.74: 	f (c: Parent)
+//│ ║  l.64: 	f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.65: 	def f x = case x of {
+//│ ║  l.55: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: string | error
 

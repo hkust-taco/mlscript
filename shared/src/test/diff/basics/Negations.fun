@@ -70,13 +70,13 @@ jesus(water: w)
 :e
 neg 0 as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.74: 	neg 0 as 1
+//│ ║  l.71: 	neg 0 as 1
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `~0` does not match type `1`
-//│ ║  l.74: 	neg 0 as 1
+//│ ║  l.71: 	neg 0 as 1
 //│ ║        	^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.74: 	neg 0 as 1
+//│ ║  l.71: 	neg 0 as 1
 //│ ╙──      	         ^
 //│ res: 1
 
