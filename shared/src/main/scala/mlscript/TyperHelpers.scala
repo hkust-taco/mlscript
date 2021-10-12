@@ -116,10 +116,32 @@ abstract class TyperHelpers { self: Typer =>
       case tr: TypeRef => tr.expand.unwrapAll
       case u => u
     }
+    def negAll(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
+      case ExtrType(b) => ExtrType(!b)(noProv)
+      case ComposedType(true, l, r) => l.negAll(f, p) & r.negAll(f, p)
+      case ComposedType(false, l, r) => l.negAll(f, p) | r.negAll(f, p)
+      case NegType(n) => f(n).withProv(p)
+      case tr: TypeRef => tr.expand.negAll(f, p)
+      case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
+        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+        // meaning negated records are basically bottoms.
+      case rw => NegType(f(rw))(p)
+    }
+    def withProvOf(ty: SimpleType): ProxyType = withProv(ty.prov)
+    def withProv(p: TypeProvenance): ProxyType = ProxyType(this)(p)
     def pushPosWithout(implicit raise: Raise): SimpleType = this match {
+      case NegType(n) => n.negAll(_.pushPosWithout, prov)
       case WithType(b, rcd) => b.unwrapAll.w(rcd) match {
-        case WithType(ComposedType(pol, l, r), rcd) => ComposedType(pol, l.w(rcd), r.w(rcd))(prov)
-        // case WithType(ExtrType(pol), rcd) => 
+        case WithType(c @ ComposedType(pol, l, r), rcd) => ComposedType(pol, l.w(rcd), r.w(rcd))(c.prov)
+        // case WithType(NegType(nt), rcd) => nt.negAll(_.pushPosWithout.withProvOf(nt)).w(rcd) match {
+        case WithType(NegType(nt), rcd) => nt.negAll(_.pushPosWithout, nt.prov).w(rcd) match {
+          case rw @ WithType(NegType(nt), rcd) =>
+            nt match {
+              case _: TypeVariable | _: PrimType | _: RecordType => rw
+              case _ => lastWords(s"$this  $rw  (${nt.getClass})")
+            }
+          case rw => rw
+        }
         case rw => rw
       }
       case Without(b, ns) => b.without(ns) match {

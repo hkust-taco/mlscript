@@ -50,5 +50,5 @@ foo arg
 //│ res: (int | (string | {l: bool, r: nothing})) | error
 
 foo (arg with { payload = 1 })
-//│ res: int | (string | {l: bool, r: 1 | (1 & ~int)})
+//│ res: int | (string | {l: bool, r: 1})
 

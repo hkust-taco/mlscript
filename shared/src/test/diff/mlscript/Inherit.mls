@@ -97,8 +97,8 @@ def f x = case x of {
 //│ f: ((parent & {name: 'a}) | ((child & {name: 'b}) & ~parent)) -> 'a | 'b
 
 f c
-//│ res: string | (string & ~nothing) | nothing
+//│ res: string | nothing
 
 f (c: Parent)
-//│ res: (string & ~nothing) | string | nothing
+//│ res: string | nothing
 

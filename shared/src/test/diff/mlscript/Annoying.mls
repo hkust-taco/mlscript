@@ -173,3 +173,47 @@ test (error: C & { xC: int; yC: string })
 //│ res: {l: int, r: string}
 //│ res: {l: int, r: string}
 
+
+def negInt: ~int
+//│ negInt: ~int
+
+def v = negInt with { x = 1 }
+//│ v: ~int with {x: 1}
+
+v.x
+//│ res: 1
+
+(id v).x
+//│ res: 1
+
+:e
+negInt: A | { x: 'a }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.190: 	negInt: A | { x: 'a }
+//│ ║         	^^^^^^
+//│ ╟── expression of type `~int` does not match type `A | {x: ?a}`
+//│ ║  l.177: 	def negInt: ~int
+//│ ║         	            ^^^^
+//│ ╟── but it flows into reference with expected type `A | {x: ?a}`
+//│ ║  l.190: 	negInt: A | { x: 'a }
+//│ ╙──       	^^^^^^
+//│ res: A | {x: nothing}
+
+v: A | { x: 'a }
+//│ res: A | {x: 1}
+
+(error: A) with { x = 1 } : A | { x: 'a }
+//│ res: A | {x: nothing}
+
+id (error: A) with { x = 1 } : A | { x: 'a }
+//│ res: A | {x: nothing}
+
+def negWeird: ~(~(~(A & { x: int })))
+//│ negWeird: ~~~(A & {x: int})
+
+def v = negWeird with { x = 1 }
+//│ v: ~~~(A & {x: int}) with {x: 1}
+
+v: A | { x: 'a }
+//│ res: A | {x: 1}
+

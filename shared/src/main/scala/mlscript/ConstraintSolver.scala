@@ -267,7 +267,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                       .map(_.neg())
                       .foldLeft(BotType: SimpleType)(_ | _), rcd)(noProv))
                 case N => // The idea is that this case should never happen... is that true?
-                  (r.fields.iterator ++ ws.iterator.flatMap(_.reft.fields))
+                  if (ws.forall{
+                    case WithType(NegType(_: RecordType | _: PrimType), _)=> true
+                    case _ => false
+                  })
+                    // If all bases of the ws-es are crappy neg types,
+                    // can assume they can't be used to solve the constraint at hand
+                    // through its base types. We can treat the ws as their fields!
+                    annoying(Nil, LhsRefined(b, r.mergeAllFields(ws.view.flatMap(_.reft.fields)), Nil), Nil, RhsBases(Nil, N, S(rf)))
+                  else (r.fields.iterator ++ ws.iterator.flatMap(_.reft.fields))
                       .filter(_._1 === n).map(_._2)
                       .reduceOption(_ & _) match {
                     case S(ty) =>
