@@ -83,7 +83,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           err("TODO handle tuples", prov.loco)
           N
         case (RhsBases(_, _, _), _) => N
-        case (RhsField(_, _), _) => N
+        case (f @ RhsField(_, _), p: PrimType) => S(RhsBases(p::Nil, N, S(f)))
+        case (f @ RhsField(_, _), _) => S(RhsBases(Nil, S(that), S(f)))
       }
       def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
         case RhsBot => S(RhsField(that._1, that._2))

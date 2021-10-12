@@ -11,16 +11,16 @@ foo: (~int)\x
 // FIXME
 res: ~(int\x)
 //│ /!!!\ Uncaught error: scala.MatchError: (List(~(int)\x),List()) (of class scala.Tuple2)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:121)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:122)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:119)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:116)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:155)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:120)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:117)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:156)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:119)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:116)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:120)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:117)
 
 
 def foo: (~ 'a \ x) -> 'a -> 'a
@@ -35,4 +35,120 @@ def foo: (~ 'a \ x) -> 'a
 // :d
 foo 1
 //│ res: nothing
+
+
+
+// def test: (int | { x: 'a } | { y: 'a }) -> 'a
+def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
+//│ test: (((int & {f: 'a}) | {x: 'a}) | {y: 'a}) -> 'a
+
+:e
+def test x = case x of { int -> x.f | _ -> x.x }
+//│ ((int & {f: 'a}) | ({x: 'b} & ~int)) -> 'a | 'b  <:  f: (((int & {f: 'a}) | {x: 'a}) | {y: 'a}) -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: _α29} & ~(?a | ({x: _α29} & ~{f: ?b | _α29}) | ({x: _α29} & ~int) | ((int & {f: _α29}) & ~{f: ?b | _α29}) | (({f: _α29} & int) & ~int) & ~int)` does not match type `{f: ?b}`
+//│ ║  l.42: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
+//│ ║        	                             ^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	                                ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{y: _α29} & ~int` does not match type `{x: ?a}`
+//│ ║  l.42: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
+//│ ║        	                                         ^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	                                           ^
+//│ ╟── from reference:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{y: _α29} & ~(?a | ({y: _α29} & ~{f: ?b | _α29}) | ({x: _α29} & ~{f: ?b | _α29}) | ((int & {f: _α29}) & ~{f: ?b | _α29}) | ({x: _α29} & ~int) | (({f: _α29} & int) & ~int) | ({y: _α29} & ~int) & ~int)` does not match type `{f: ?b}`
+//│ ║  l.42: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
+//│ ║        	                                         ^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ║        	                                ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.46: 	def test x = case x of { int -> x.f | _ -> x.x }
+//│ ╙──      	                  ^
+
+// Note: not an error, but a terminating `test` can't be implemented
+test 1
+//│ res: nothing
+
+test { x = 1 }
+//│ res: nothing
+
+test { y = 1 }
+//│ res: nothing
+
+
+class A: { }
+class B: { }
+class C: { }
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+
+def test: (A & { a: 'a } | B & { b: 'a } | C & { c: 'a }) -> 'a
+//│ test: (((A & {a: 'a}) | (B & {b: 'a})) | (C & {c: 'a})) -> 'a
+
+test (error: A & { a: int })
+test (error: B & { b: int })
+test (error: C & { c: int })
+//│ res: int
+//│ res: int
+//│ res: int
+
+:e
+test (error: B & { c: int })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.114: 	test (error: B & { c: int })
+//│ ║         	^^^^^^^^^^^
+//│ ╟── expression of type `B & {c: int}` does not match type `((A & {a: ?a}) | (B & {b: ?a})) | (C & {c: ?a})`
+//│ ║  l.114: 	test (error: B & { c: int })
+//│ ╙──       	      ^^^^^
+//│ res: error
+
+
+def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
+//│ test: (((A & {x: 'a, y: 'b}) | (B & {x: 'a, y: 'b})) | (C & {x: 'a, y: 'b})) -> {l: 'a, r: 'b}
+
+test (error: A & { x: int; y: string })
+test (error: B & { x: int; y: string })
+test (error: C & { x: int; y: string })
+//│ res: {l: int, r: string}
+//│ res: {l: int, r: string}
+//│ res: {l: int, r: string}
+
+:e
+test (error: A & { x: int })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.135: 	test (error: A & { x: int })
+//│ ║         	^^^^^^^^^^^
+//│ ╟── expression of type `A & {x: int}` does not match type `((A & {x: ?a, y: ?b}) | (B & {x: ?a, y: ?b})) | (C & {x: ?a, y: ?b})`
+//│ ║  l.135: 	test (error: A & { x: int })
+//│ ╙──       	      ^^^^^
+//│ res: error | {l: int, r: nothing}
+
+
+def test: (A & { xA: 'a; yA: 'b } | B & { xB: 'a; yB: 'b } | C & { xC: 'a; yC: 'b }) -> { l: 'a; r: 'b }
+//│ test: (((A & {xA: 'a, yA: 'b}) | (B & {xB: 'a, yB: 'b})) | (C & {xC: 'a, yC: 'b})) -> {l: 'a, r: 'b}
+
+test (error: A & { xA: int; yA: string })
+test (error: B & { xB: int; yB: string })
+test (error: C & { xC: int; yC: string })
+//│ res: {l: int, r: string}
+//│ res: {l: int, r: string}
+//│ res: {l: int, r: string}
 
