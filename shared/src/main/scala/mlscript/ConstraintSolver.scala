@@ -221,14 +221,14 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
               // if (fo.isEmpty)
                 rec(f0, f1)
               // else ()
-            case (LhsRefined(S(f: FunctionType), r, ws), RhsBases(pts, _, _)) =>
+            case (LhsRefined(S(f: FunctionType), r, ws), RhsBases(pts, _, _)) => // Q: ws nonEmpty okay here?!
               // fail
               annoying(Nil, LhsRefined(N, r, ws), Nil, done_rs)
-            case (LhsRefined(S(pt: PrimType), r, ws), RhsBases(pts, bs, f)) =>
+            case (LhsRefined(S(pt: PrimType), r, Nil), RhsBases(pts, bs, f)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, r, ws), Nil, RhsBases(Nil, bs, f))
+              else annoying(Nil, LhsRefined(N, r, Nil), Nil, RhsBases(Nil, bs, f))
             case (LhsRefined(bo, r, Nil), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
