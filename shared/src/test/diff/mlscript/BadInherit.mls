@@ -21,17 +21,16 @@ def c = Child(Parent1{name="A"} with Parent2{name="B"})
 
 :e
 def c = Child(Parent1{name="A"})
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	def c = Child(Parent1{name="A"})
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `parent1 & {name: string}` does not match type `parent2`
+//│ ║  l.23: 	def c = Child(Parent1{name="A"})
+//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class Child: Parent1 & Parent2
+//│ ╙──     	                       ^^^^^^^
+//│ c: (child & (Parent1 & Parent2)) | error
 
 :e
 class Crazy[A]: A & { name: A }

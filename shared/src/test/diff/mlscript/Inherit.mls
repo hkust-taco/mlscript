@@ -25,26 +25,16 @@ def c = Child(Parent { name = "Bob" })
 //│ c: (child & (Parent & {age: int})) | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:158)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ c: child & (Parent & {age: int})
 
 c: Parent
 //│ res: Parent
 
 c.name
-//│ res: error | string
+//│ res: string
 
 c: { name: 'a }
-//│ res: {name: error | string}
+//│ res: {name: string}
 
 c: { name: string }
 //│ res: {name: string}
@@ -56,7 +46,7 @@ def f x = case x of {
 //│ f: parent & {name: 'a} -> 'a
 
 f c
-//│ res: string | error
+//│ res: string
 
 f (c: Parent)
 //│ res: string
@@ -68,21 +58,23 @@ def f x = case x of {
 //│ f: child & {name: 'a} -> 'a
 
 f c
-//│ res: string | error
+//│ res: string
 
 :e
 f (c: Parent)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:136)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.74: 	f (c: Parent)
+//│ ║        	^^^^
+//│ ╟── expression of type `parent & {name: string}` does not match type `child`
+//│ ║  l.74: 	f (c: Parent)
+//│ ║        	      ^^^^^^
+//│ ╟── but it flows into argument with expected type `child`
+//│ ║  l.74: 	f (c: Parent)
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.65: 	def f x = case x of {
+//│ ╙──      	               ^
+//│ res: string | error
 
 
 def f x = case x of {

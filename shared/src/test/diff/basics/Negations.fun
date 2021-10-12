@@ -55,17 +55,14 @@ jesus(water: w)
 
 :e
 (0 | 1) & neg 0 as 0
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.57: 	(0 | 1) & neg 0 as 0
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `1 & ~0` does not match type `0`
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.57: 	(0 | 1) & neg 0 as 0
+//│ ╙──      	                   ^
+//│ res: 0
 
 (0 | 1) & neg 0 & neg 1 as "wat"
 //│ res: "wat"

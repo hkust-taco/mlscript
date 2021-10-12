@@ -20,17 +20,17 @@ foo arg
 //│ res: int | (string | bool)
 
 foo (arg with { fC = true })
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.$anonfun$toString$2(ConstraintSolver.scala:71)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.toString(ConstraintSolver.scala:71)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:255)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:165)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
 
 
 def foo x = case x of {
@@ -60,15 +60,15 @@ foo arg
 //│ res: (int | (string | {l: bool, r: nothing})) | error
 
 foo (arg with { payload = 1 })
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.$anonfun$toString$2(ConstraintSolver.scala:71)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.toString(ConstraintSolver.scala:71)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:255)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:165)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:127)
 

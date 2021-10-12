@@ -22,17 +22,101 @@ f (0 as 1 | 3)
 f (0 as 0 | 3)
 f (0 as 3 | 4)
 f (0 as Int)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	f 3
+//│ ║        	^^^
+//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ║  l.20: 	f 3
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ║       	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ╙──     	           ^
+//│ res: (0 | 1) | error
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ║        	   ^^^^^^^^^^
+//│ ╟── expression of type `0` does not match type `1 | 3`
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ╙──      	        ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ║        	            ^
+//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ║  l.21: 	f (0 as 1 | 3)
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ║       	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ╙──     	           ^
+//│ res: (0 | 1) | error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.22: 	f (0 as 0 | 3)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ║  l.22: 	f (0 as 0 | 3)
+//│ ║        	            ^
+//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ║  l.22: 	f (0 as 0 | 3)
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ║       	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ╙──     	           ^
+//│ res: (0 | 1) | error
+//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ║        	   ^^^^^^^^^^
+//│ ╟── expression of type `0` does not match type `3 | 4`
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ║        	   ^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ╙──      	        ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ║        	        ^
+//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ║  l.23: 	f (0 as 3 | 4)
+//│ ║        	  ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ║       	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ╙──     	           ^
+//│ res: (0 | 1) | error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.24: 	f (0 as Int)
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `0 | 1`
+//│ ║  l.24: 	f (0 as Int)
+//│ ║        	        ^^^
+//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ║  l.24: 	f (0 as Int)
+//│ ║        	  ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ║       	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.9: 	let f(x) = x as 0 | 1
+//│ ╙──     	           ^
+//│ res: (0 | 1) | error
 
 let g(x: int) = succ x
 g 0

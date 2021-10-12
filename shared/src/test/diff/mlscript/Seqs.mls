@@ -30,125 +30,62 @@ def Nil = Nil (ListBase (Seq { size = 0 }))
 
 def Cons head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:244)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:158)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ Cons: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
 
 Nil: ListBase[anything]
 //│ res: ListBase[anything]
 
 def c = Cons 1 Nil
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	def c = Cons 1 Nil
-//│ ║        	        ^^^^^^
-//│ ╟── expression of type `1` does not match type `listBase`
-//│ ║  l.48: 	def c = Cons 1 Nil
-//│ ║        	             ^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.9: 	class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
-//│ ╙──     	               ^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$ProxyType.toString(TyperDatatypes.scala:112)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$ProxyType.toString(TyperDatatypes.scala:112)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$FunctionType.toString(TyperDatatypes.scala:46)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ c: cons & (ListBase[1] & {head: 1, tail: List[1]})
 
 c: ListBase[int]
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.70: 	c: ListBase[int]
-//│ ╙──      	^
 //│ res: ListBase[int]
 
 c.head
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.76: 	c.head
-//│ ╙──      	^
-//│ res: error
+//│ res: 1
 
 c.tail
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.82: 	c.tail
-//│ ╙──      	^
-//│ res: error
+//│ res: List[1]
 
 c.size
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.88: 	c.size
-//│ ╙──      	^
-//│ res: error
+//│ res: int
 
 def d = Cons 2 c
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.94: 	def d = Cons 2 c
-//│ ║        	        ^^^^^^
-//│ ╟── expression of type `2` does not match type `listBase`
-//│ ║  l.94: 	def d = Cons 2 c
-//│ ║        	             ^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.9: 	class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
-//│ ╙──     	               ^^^^^^^^^^^
-//│ ╔══[ERROR] identifier not found: c
-//│ ║  l.94: 	def d = Cons 2 c
-//│ ╙──      	               ^
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$ProxyType.toString(TyperDatatypes.scala:112)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$ProxyType.toString(TyperDatatypes.scala:112)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
-//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
-//│ 	at: mlscript.TyperDatatypes$FunctionType.toString(TyperDatatypes.scala:46)
-//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ d: cons & (ListBase[1 | 2] & {head: 1 | 2, tail: List[1 | 2]})
 
 d.head
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.119: 	d.head
-//│ ╙──       	^
-//│ res: error
+//│ res: 2 | 1
 
 d.size
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.125: 	d.size
-//│ ╙──       	^
-//│ res: error
+//│ res: int
 
 d.tail
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.131: 	d.tail
-//│ ╙──       	^
-//│ res: error
+//│ res: List[1 | 2]
 
 d.tail.size
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.137: 	d.tail.size
-//│ ╙──       	^
-//│ res: error
+//│ res: int
 
 :e
 d.tail.head
 d.tail.tail
-//│ ╔══[ERROR] identifier not found: d
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.144: 	d.tail.head
+//│ ║         	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
 //│ ║  l.144: 	d.tail.head
 //│ ╙──       	^
-//│ res: error
-//│ ╔══[ERROR] identifier not found: d
+//│ res: 2 | 1 | error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.145: 	d.tail.tail
+//│ ║         	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
 //│ ║  l.145: 	d.tail.tail
 //│ ╙──       	^
-//│ res: error
+//│ res: List[1 | 2] | error
 
