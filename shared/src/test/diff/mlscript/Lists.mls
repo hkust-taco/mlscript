@@ -34,7 +34,7 @@ Cons 1 (Cons 2 Nil)
 res.tail
 //│ res: List[2 | 1]
 
-:e // Q: why the duplicated error?
+:e
 res.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.38: 	res.tail

@@ -59,10 +59,9 @@ abstract class TyperHelpers { self: Typer =>
       case ComposedType(true, l, r) => l.neg() & r.neg()
       case ComposedType(false, l, r) if force => l.neg() | r.neg()
       case NegType(n) => n
-      // case _: RecordType =>
-      //   BotType
-      //   // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
-      //   // meaning negated records are basically bottoms.
+      // case _: RecordType => BotType // Only valid in positive positions!
+        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+        // meaning negated records are basically bottoms.
       case _ => NegType(this)(prov)
     }
     
@@ -76,7 +75,7 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(true, l, r) => l.without(name) | r.without(name)
       case t @ ComposedType(false, l, r) => l.without(name) & r.without(name)
       case a @ AppType(f, as) => ???
-      // case t @ RecordType(fs) if fs.forall(_._1 =/= name) => t // TODO
+      // case t @ RecordType(fs) if fs.forall(_._1 =/= name) => t // ? probably not right
       case t @ RecordType(fs) =>
         // RecordType(fs.filter(nt => nt._1 =/= name))(t.prov)
         // ^ Since we want to be able to transform S\a<:T to S<:T\a in the constraint solver,
@@ -93,14 +92,10 @@ abstract class TyperHelpers { self: Typer =>
         // case c: ComposedType => c.pol
         // case _: ExtrType | _: NegType => true
         case _ => false
-      }) => /* println(s"$this ${nt.neg(n.prov)}"); */ nt.neg(n.prov, force = true).without(name)
-      // case NegType(rt: RecordType) => this // FIXME valid??!
-      // case NegType(t) => this // FIXME valid??!
-      case e @ ExtrType(_) => e // FIXME valid??!
+      }) => nt.neg(n.prov, force = true).without(name)
+      case e @ ExtrType(_) => e // valid?
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
       case p @ PrimType(_, _) => p
-      // case tv: TypeVariable =>
-      // case _: TypeVariable => Without(this, Set.single(name))(noProv)
       case _: TypeVariable | _: NegType => Without(this, Set.single(name))(noProv)
     }
     def pushPosWithout: SimpleType = this match {

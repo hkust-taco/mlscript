@@ -126,26 +126,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       case _: DecLit => DecType
       case _ => this
     }
-    lazy val parentsST = parents.map(identity[SimpleTerm])
-    // def widenPrim: SimpleType = // FIXME rm -- can't get parents' parents...
-    //   parents.iterator.map(PrimType(_, Set.empty)(noProv):SimpleType).reduceOption(_ & _).getOrElse(TopType)
-    // def lub(that: PrimType): Opt[PrimType] = ???
+    lazy val parentsST = parents.map(identity[SimpleTerm]) // TODO inefficient... improve
     def glb(that: PrimType): Opt[PrimType] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)
       else if (this.parentsST.contains(that.id)) S(this)
-      // else S(this.parentsST.intersect(that.parentsST)).filt
       else N
-    def lub(that: PrimType): Set[SimpleTerm] =
-      if (that.id === this.id) Set.single(that.id)
-      else if (that.parentsST.contains(this.id)) Set.single(this.id)
-      else if (this.parentsST.contains(that.id)) Set.single(that.id)
-      else this.parentsST.union(that.parentsST)
-    // def glb(that: PrimType): Set[SimpleTerm] =
-    //   if (that.id === this.id) Set.single(this.id)
-    //   else if (that.parentsST.contains(this.id)) Set.single(that.id)
-    //   else if (this.parentsST.contains(that.id)) Set.single(this.id)
-    //   else this.parentsST.intersect(that.parentsST)
+    def lub(that: PrimType): Set[PrimType] = // TODO rm? it's unused
+      if (that.id === this.id) Set.single(that)
+      else if (that.parentsST.contains(this.id)) Set.single(this)
+      else if (this.parentsST.contains(that.id)) Set.single(that)
+      // else this.parentsST.union(that.parentsST)
+      else Set(this, that)
     def level: Int = 0
     override def toString = id.idStr+s"<${parents.mkString(",")}>"
   }

@@ -2,7 +2,7 @@
 1: ~string
 //│ res: ~string
 
-// FIXME
+:e
 1: ~int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.6: 	1: ~int
@@ -39,4 +39,8 @@ add res 1
 //│ ╙──      	          ^^^^
 //│ res: ~int
 
+// TODO parse & test
+:pe
+1: ~2
+//│ /!\ Parse error: Expected (Index ~ rcd | Index ~ ctor | Index ~ tyNeg | Index ~ tyName | Index ~ tyVar | parTy):1:5, found "2;" at l.44:5: 1: ~2
 
