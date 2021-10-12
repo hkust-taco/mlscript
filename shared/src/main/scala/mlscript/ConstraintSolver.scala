@@ -259,7 +259,15 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (LhsRefined(b, r, ws), RhsBases(ps, bty, N)) =>
               annoying(ws.map(_.base), LhsRefined(b, r, Nil), Nil, done_rs)
             case (LhsRefined(b, r, ws), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
-              ???
+              (r.fields.iterator ++ ws.iterator.flatMap(_.reft.fields))
+                  .filter(_._1 === n).map(_._2)
+                  .reduceOption(_ & _) match {
+                case S(ty) =>
+                  warn(msg"Potential loss of principal typing here!", prov.loco)//(prov)
+                  rec(ty, t)
+                case N =>
+                  annoying(Nil, LhsRefined(b, RecordType(Nil)(noProv), Nil), Nil, done_rs)
+              }
             case (LhsRefined(b, r, Nil), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
               // val (ws2, ws3) = ws.partition(_.reft.fields.exists(_._1 === n))
               // if (ws3.isEmpty)
