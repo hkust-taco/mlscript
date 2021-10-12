@@ -22,101 +22,17 @@ f (0 as 1 | 3)
 f (0 as 0 | 3)
 f (0 as 3 | 4)
 f (0 as Int)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	f 3
-//│ ║        	^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
-//│ ║  l.20: 	f 3
-//│ ║        	  ^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ║       	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ╙──     	           ^
-//│ res: (0 | 1) | error
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	   ^^^^^^^^^^
-//│ ╟── expression of type `0` does not match type `1 | 3`
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	   ^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ╙──      	        ^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
-//│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	  ^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ║       	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ╙──     	           ^
-//│ res: (0 | 1) | error
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.22: 	f (0 as 0 | 3)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
-//│ ║  l.22: 	f (0 as 0 | 3)
-//│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
-//│ ║  l.22: 	f (0 as 0 | 3)
-//│ ║        	  ^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ║       	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ╙──     	           ^
-//│ res: (0 | 1) | error
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	   ^^^^^^^^^^
-//│ ╟── expression of type `0` does not match type `3 | 4`
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	   ^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ╙──      	        ^^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	        ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
-//│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	  ^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ║       	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ╙──     	           ^
-//│ res: (0 | 1) | error
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.24: 	f (0 as Int)
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `0 | 1`
-//│ ║  l.24: 	f (0 as Int)
-//│ ║        	        ^^^
-//│ ╟── but it flows into argument with expected type `0 | 1`
-//│ ║  l.24: 	f (0 as Int)
-//│ ║        	  ^^^^^^^^^^
-//│ ╟── Note: constraint arises from type union:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ║       	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.9: 	let f(x) = x as 0 | 1
-//│ ╙──     	           ^
-//│ res: (0 | 1) | error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
 
 let g(x: int) = succ x
 g 0
@@ -151,12 +67,12 @@ let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 bar(0, 1)
 bar(2, 2)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.151: 	bar(0, 1)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.67: 	bar(0, 1)
+//│ ╙──      	^^^^^^^^^
 //│ res: 1 | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.152: 	bar(2, 2)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.68: 	bar(2, 2)
+//│ ╙──      	^^^^^^^^^
 //│ res: 2 | error
 
 // TODO
@@ -165,20 +81,20 @@ bar(1, 1)
 bar(0, _)
 bar(_, 1)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.163: 	bar(0, 0)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.79: 	bar(0, 0)
+//│ ╙──      	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.164: 	bar(1, 1)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.80: 	bar(1, 1)
+//│ ╙──      	^^^^^^^^^
 //│ res: 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.165: 	bar(0, _)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.81: 	bar(0, _)
+//│ ╙──      	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.166: 	bar(_, 1)
-//│ ╙──       	^^^^^^^^^
+//│ ║  l.82: 	bar(_, 1)
+//│ ╙──      	^^^^^^^^^
 //│ res: 1 | error
 
 // TODO
@@ -186,15 +102,15 @@ x => bar(x, x) // TODO simplify better
 x => bar(1, x)
 x => bar(x, 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.185: 	x => bar(x, x) // TODO simplify better
+//│ ║  l.101: 	x => bar(x, x) // TODO simplify better
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.186: 	x => bar(1, x)
+//│ ║  l.102: 	x => bar(1, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.187: 	x => bar(x, 0)
+//│ ║  l.103: 	x => bar(x, 0)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 
@@ -202,11 +118,11 @@ x => bar(x, 0)
 bar(_, _)
 (x, y) => bar(x, y)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.202: 	bar(_, _)
+//│ ║  l.118: 	bar(_, _)
 //│ ╙──       	^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.203: 	(x, y) => bar(x, y)
+//│ ║  l.119: 	(x, y) => bar(x, y)
 //│ ╙──       	          ^^^^^^^^^
 //│ res: ('a & int, 'a,) -> 'a | error
 
@@ -218,31 +134,31 @@ x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.216: 	x => bar(bar(0, x), 0)
+//│ ║  l.132: 	x => bar(bar(0, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.216: 	x => bar(bar(0, x), 0)
+//│ ║  l.132: 	x => bar(bar(0, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.217: 	x => bar(bar(x, x), 0)
+//│ ║  l.133: 	x => bar(bar(x, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.217: 	x => bar(bar(x, x), 0)
+//│ ║  l.133: 	x => bar(bar(x, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.218: 	x => bar(bar(0, x), x)
+//│ ║  l.134: 	x => bar(bar(0, x), x)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.218: 	x => bar(bar(0, x), x)
+//│ ║  l.134: 	x => bar(bar(0, x), x)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.219: 	x => bar(bar(x, x), 0)
+//│ ║  l.135: 	x => bar(bar(x, x), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.219: 	x => bar(bar(x, x), 0)
+//│ ║  l.135: 	x => bar(bar(x, x), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 
@@ -250,27 +166,27 @@ x => bar(bar(x, x), 0)
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.250: 	x => bar(bar(x, 1), 0)
+//│ ║  l.166: 	x => bar(bar(x, 1), 0)
 //│ ╙──       	         ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.250: 	x => bar(bar(x, 1), 0)
+//│ ║  l.166: 	x => bar(bar(x, 1), 0)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.251: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.167: 	(x, y) => bar(bar(x, y), x)
 //│ ╙──       	              ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.251: 	(x, y) => bar(bar(x, y), x)
+//│ ║  l.167: 	(x, y) => bar(bar(x, y), x)
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^
 //│ res: ('a & int, 'a & int,) -> 'a | error
 
 :e // TODO delay tricky constraints for later (instead of eager) resolution:
 (x, y) => bar(bar(x, y), 0)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.268: 	(x, y) => bar(bar(x, y), 0)
+//│ ║  l.184: 	(x, y) => bar(bar(x, y), 0)
 //│ ╙──       	              ^^^^^^^^^
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.268: 	(x, y) => bar(bar(x, y), 0)
+//│ ║  l.184: 	(x, y) => bar(bar(x, y), 0)
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^
 //│ res: ('a & int, 'a & int,) -> 'a | 0 | error
 
@@ -281,19 +197,19 @@ let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 :e
 baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.282: 	baz(0)
+//│ ║  l.198: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.282: 	baz(0)
+//│ ║  l.198: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | ?b) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.282: 	baz(0)
+//│ ║  l.198: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.278: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.194: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                     ^^^
 //│ ╟── from parameter type:
-//│ ║  l.278: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.194: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^
 //│ res: error
 
@@ -321,23 +237,23 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.321: 	baz(0)
+//│ ║  l.237: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.321: 	baz(0)
+//│ ║  l.237: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a & ((0, 0,) | (1, ?b,)) & {_1: ?c & int, _2: ?d},)`
-//│ ║  l.321: 	baz(0)
+//│ ║  l.237: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.317: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.233: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                          ^^^
 //│ ╟── from parameter type:
-//│ ║  l.317: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.233: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.322: 	baz(0, 1)
+//│ ║  l.238: 	baz(0, 1)
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 0 | error
 
@@ -348,23 +264,23 @@ x => baz(0, x)
 x => baz(1, x)
 x => baz(x, 1)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.345: 	baz(0, 0)
+//│ ║  l.261: 	baz(0, 0)
 //│ ╙──       	^^^^^^^^^
 //│ res: 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.346: 	baz(1, 1)
+//│ ║  l.262: 	baz(1, 1)
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.347: 	x => baz(0, x)
+//│ ║  l.263: 	x => baz(0, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.348: 	x => baz(1, x)
+//│ ║  l.264: 	x => baz(1, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a -> 'a | 1 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.349: 	x => baz(x, 1)
+//│ ║  l.265: 	x => baz(x, 1)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 1 | error
 
@@ -373,15 +289,15 @@ x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.372: 	x => baz(x, 0)
+//│ ║  l.288: 	x => baz(x, 0)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | 0 | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.373: 	x => baz(x, x)
+//│ ║  l.289: 	x => baz(x, x)
 //│ ╙──       	     ^^^^^^^^^
 //│ res: 'a & int -> 'a | error
 //│ ╔══[ERROR] TODO handle tuples
-//│ ║  l.374: 	(x, y) => baz(x, y)
+//│ ║  l.290: 	(x, y) => baz(x, y)
 //│ ╙──       	          ^^^^^^^^^
 //│ res: ('a & int, 'a,) -> 'a | error
 

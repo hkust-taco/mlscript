@@ -69,6 +69,14 @@ abstract class TyperHelpers { self: Typer =>
     def without(names: Set[Str]): SimpleType =
       if (names.isEmpty) this else names.foldLeft(this)(_.without(_))
     
+    def w(rcd: RecordType, prov: TypeProvenance = noProv): SimpleType = this match {
+      case RecordType(fs) =>
+        RecordType(fs.filterNot(f => rcd.fields.exists(_._1 === f._1)) ++ rcd.fields)(prov)
+      case ExtrType(false) => rcd
+      case ExtrType(true) => this
+      case _ => WithType(this, rcd)(prov)
+    }
+    
     def without(name: Str): SimpleType = this match {
       case Without(b, ns) => Without(b, ns + name)(this.prov)
       case t @ FunctionType(l, r) => t
@@ -180,6 +188,7 @@ abstract class TyperHelpers { self: Typer =>
       case PrimType(_, _) => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
+      case WithType(b, r) => b :: r :: Nil
     }
     
     def getVars: Set[TypeVariable] = {

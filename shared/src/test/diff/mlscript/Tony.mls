@@ -10,10 +10,20 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
+//│ arg: (some & {value: 42} with {payload: 23}) | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | (((some & {value: 42})\payload & {payload: 23}) & ~some) | (none & ~{value: 42}) | (none & ~some) | (none & ~{payload: 23}) | (((some & {value: 42}\payload) & ~{value: 42}\payload\payload) & {payload: 23}) | (((some & {value: 42}\payload) & ~{payload: 23}\payload\payload) & {payload: 23})
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.TyperDatatypes$PrimType.toString(TyperDatatypes.scala:152)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.TyperDatatypes$RecordType.$anonfun$toString$4(TyperDatatypes.scala:61)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.TyperDatatypes$RecordType.toString(TyperDatatypes.scala:61)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -70,16 +80,17 @@ simpler (fun x -> x.value)
 
 :e
 res 1
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	res 1
-//│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `(some & ?a & {value: ?b}) | ((none & ?c) & ~some)`
-//│ ║  l.72: 	res 1
-//│ ║        	    ^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.65: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ ╙──      	                                       ^^^
-//│ res: (nothing | (1 & ~{value: nothing}) | (1 & ~some)) | error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 
 def funny = fun f -> case f of { Some -> f f }

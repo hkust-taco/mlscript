@@ -40,12 +40,15 @@ res.value
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.39: 	42: Option[int, int]
-//│ ║        	^^
-//│ ╟── expression of type `42` does not match type `Some[int] | None`
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.39: 	42: Option[int, int]
-//│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: Option[int]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 

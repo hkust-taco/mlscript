@@ -54,6 +54,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+    // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
@@ -92,6 +93,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends SimpleType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
+  }
+  
+  case class WithType(base: SimpleType, reft: RecordType)(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = base.level max reft.level
+    def nonEmpty: Bool = this match {
+      case WithType(TopType | RecordType(Nil), RecordType(Nil)) => false
+      case _ => true
+    }
+    override def toString = s"${base} w/ ${reft}"
   }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */

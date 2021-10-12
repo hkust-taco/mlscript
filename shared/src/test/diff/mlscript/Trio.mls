@@ -20,7 +20,17 @@ foo arg
 //│ res: int | (string | bool)
 
 foo (arg with { fC = true })
-//│ res: int | (string | (bool & bool))
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.$anonfun$toString$2(ConstraintSolver.scala:71)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.toString(ConstraintSolver.scala:71)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
 
 
 def foo x = case x of {
@@ -33,22 +43,32 @@ def foo x = case x of {
 :e
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	foo arg
+//│ ║  l.44: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `(a & {fA: int}) & (~((b & ?a | ((({fA: int} & a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a)) & ~a)) & ~a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a))` does not match type `{payload: ?d & int}`
 //│ ║  l.16: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `(a & ?e & {fA: ?f & int, payload: ?d & int}) | (((b & ?a & {fB: ?c}) & ~a) | (((c & ?b & {fC: ?g, payload: ?h}) & ~b) & ~a))`
-//│ ║  l.34: 	foo arg
+//│ ║  l.44: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.27: 	  | A -> add x.fA x.payload
+//│ ║  l.37: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.26: 	def foo x = case x of {
+//│ ║  l.36: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: (int | (string | {l: bool, r: nothing})) | error
 
 foo (arg with { payload = 1 })
-//│ res: int | (string | {l: bool, r: (1 & ~int) | 1})
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.$anonfun$toString$2(ConstraintSolver.scala:71)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.toString(ConstraintSolver.scala:71)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
 

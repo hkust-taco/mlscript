@@ -30,29 +30,31 @@ def bar x = case x of
 
 :e
 bar Test
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	bar Test
-//│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: int} -> test & {value: int}` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
-//│ ║  l.32: 	bar Test
-//│ ║        	    ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	def bar x = case x of
-//│ ╙──      	                 ^
-//│ res: (nothing | nothing) | error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 :e
 bar "ops"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	bar "ops"
-//│ ║        	^^^^^^^^^
-//│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
-//│ ║  l.45: 	bar "ops"
-//│ ║        	    ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	def bar x = case x of
-//│ ╙──      	                 ^
-//│ res: (nothing | nothing) | error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 
 def baz x = case x of
@@ -63,14 +65,15 @@ def baz x = case x of
 
 :e
 baz "oops"
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	baz "oops"
-//│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & ~test)`
-//│ ║  l.65: 	baz "oops"
-//│ ║        	    ^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.58: 	def baz x = case x of
-//│ ╙──      	                 ^
-//│ res: (("oops" & ~((toast & ("oops" & ~test)) & ~test)) | ("oops" & ~test)) | error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:259)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 

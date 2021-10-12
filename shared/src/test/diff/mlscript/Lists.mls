@@ -73,63 +73,135 @@ res.tail.head
 
 // More precise Cons?
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> 'b & List['c] -> ((cons & {head: 'c | 'a, tail: List['c | 'a]})\head\tail & {head: 'a}\tail) & {tail: 'b}
+//│ Cons: 'a -> 'b & List['c] -> (cons & {head: 'c | 'a, tail: List['c | 'a]} with {head: 'a} with {tail: 'b})
 
 
 Cons 2
-//│ res: 'a & List['b] -> ((cons & {head: 'b | 2, tail: List['b | 2]})\head\tail & {head: 2}\tail) & {tail: 'a}
+//│ res: 'a & List['b] -> (cons & {head: 'b | 2, tail: List['b | 2]} with {head: 2} with {tail: 'a})
 
 Cons 2 Nil
-//│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
+//│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
 
+:d
 res.head
-//│ res: 2
+//│ 0. Typing term res.head
+//│  0. Typing term res
+//│  0. : [α72]
+//│  CONSTRAIN [[α72]] <! {head: α0}
+//│    where α66 :> [2<int>], α67 :> [[α71]] <: [List[α68]], α68 :> [α66], α69 :> (cons<> & {head: α68, tail: List[α68]}), α71 :> nil<> <: [[List[α68]]], α72 :> α69 w/ {head: [α66]} w/ {tail: [α67]}
+//│  C [[α72]] <! {head: α0}
+//│   C [α72] <! {head: α0}
+//│    C α72 <! {head: α0}
+//│     C α69 w/ {head: [α66]} w/ {tail: [α67]} <! {head: α0}
+//│      A  LhsTop  %  List(α69 w/ {head: [α66]} w/ {tail: [α67]})  <!  List({head: α0})  %  RhsBot
+//│       A  LhsTop  %  List(α69 w/ {head: [α66]} w/ {tail: [α67]})  <!  List()  %  RhsField(head,α0)
+//│        A  {} & α69 w/ {head: [α66]} w/ {tail: [α67]}  %  List()  <!  List()  %  RhsField(head,α0)
+//│         List() List(⊤ w/ {}, α69 w/ {head: [α66]} w/ {tail: [α67]})
+//│         C ⊥ <! α0
+//│ 0. : α0
+//│ Typed as: α0
+//│  where: 
+//│ Compact type before simplification: CompactTypeScheme(‹α0›,TreeMap())
+//│ [occ] LinkedHashMap((true,α0) -> LinkedHashSet(α0))
+//│ [rec] TreeSet()
+//│ [!] α0
+//│ [sub] α0 -> None
+//│ Compact type after simplification: CompactTypeScheme(‹›,Map())
+//│ res: nothing
 
 :e
 Cons 1 res
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	Cons 1 res
-//│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `2` does not match type `Nil | Cons[?a]`
-//│ ║  l.82: 	Cons 2 Nil
-//│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `List[?a]`
-//│ ║  l.89: 	Cons 1 res
-//│ ║        	       ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
-//│ ╙──     	                                ^^^^^^^
-//│ res: (((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: 2}) | error
+//│ res: cons & {head: 1, tail: List[1]} with {head: 1} with {tail: nothing}
 
 Cons 1 (Cons 2 Nil)
-//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:257)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ res: {a: 1, b: 2, c: nil}
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.TyperDatatypes$WithType.toString(TyperDatatypes.scala:104)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.$anonfun$toString$2(ConstraintSolver.scala:71)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.ConstraintSolver$LhsRefined$1.toString(ConstraintSolver.scala:71)
+//│ 	at: java.lang.String.valueOf(String.java:2994)
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:131)
 
 
 Cons 2 Nil
-//│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
+//│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
 
 Cons 1 (id res)
-//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:130)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:257)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ res: {a: 1, b: 2, c: nil}
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$49(ConstraintSolver.scala:244)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$49$adapted(ConstraintSolver.scala:244)
+//│ 	at: scala.collection.StrictOptimizedIterableOps.$anonfun$partition$1(StrictOptimizedIterableOps.scala:33)
+//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
+//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
+//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
+//│ 	at: scala.collection.immutable.List.partition(List.scala:588)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:244)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
-//│ Cons: 'a -> (cons & {head: 0, tail: List[0]})\head & {head: 'a}
+//│ Cons: 'a -> (cons & {head: 0, tail: List[0]} with {head: 'a})
 
 Cons 1
-//│ res: (cons & {head: 0, tail: List[0]})\head & {head: 1}
+//│ res: cons & {head: 0, tail: List[0]} with {head: 1}
 
 res.head
-//│ res: 1
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:136)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:158)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:257)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 
 def c = Cons 1
-//│ c: (cons & {head: 0, tail: List[0]})\head & {head: 1}
+//│ c: cons & {head: 0, tail: List[0]} with {head: 1}
 
 c.head
-//│ res: 1
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: java.lang.StringBuilder.append(StringBuilder.java:136)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:158)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:257)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 
