@@ -113,7 +113,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
       if (defn.kind === Als) body_ty
-      else clsNameToNomTag(defn)(noProv/*TODO*/) & body_ty
+      else clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
     }
     override def toString =
       if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"

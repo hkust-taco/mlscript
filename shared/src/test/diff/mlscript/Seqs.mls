@@ -41,15 +41,52 @@ def c = Cons 1 Nil
 c: ListBase[int]
 //│ res: ListBase[int]
 
-
-// FIXME:
-
 c.head
-//│ res: nothing
+//│ res: 1
 
 c.tail
-//│ res: nothing
+//│ res: List[1]
 
 c.size
-//│ res: nothing
+//│ res: int
+
+// FIXME List[2]...
+def d = Cons 2 c
+//│ d: cons & (ListBase[2] & {head: 2, tail: List[2]})
+
+d.head
+//│ res: 2
+
+d.size
+//│ res: int
+
+d.tail
+//│ res: List[2]
+
+d.tail.size
+//│ res: int
+
+:e
+d.tail.head
+d.tail.tail
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.70: 	d.tail.head
+//│ ║        	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
+//│ ║  l.70: 	d.tail.head
+//│ ╙──      	^
+//│ res: 2 | error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.71: 	d.tail.tail
+//│ ║        	^
+//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
+//│ ║  l.10: 	type List[A] = Nil | Cons[A]
+//│ ║        	               ^^^
+//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
+//│ ║  l.71: 	d.tail.tail
+//│ ╙──      	^
+//│ res: List[2] | error
 

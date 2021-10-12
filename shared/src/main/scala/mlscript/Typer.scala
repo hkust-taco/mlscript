@@ -19,14 +19,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
-  final case class TypeDef(
+  case class TypeDef(
     kind: TypeDefKind,
     nme: Primitive,
     tparams: List[Str],
     body: Type,
     baseClasses: Set[Var],
     toLoc: Opt[Loc],
-  )
+  ) {
+    def allBaseClasses(ctx: Ctx)(implicit traversed: Set[Var]): Set[Var] =
+      baseClasses.map(v => Var(v.name.toList.mapHead(_.toLower).mkString)) ++
+        baseClasses.iterator.filterNot(traversed).flatMap(v =>
+          ctx.tyDefs(v.name).allBaseClasses(ctx)(traversed + v))
+  }
   
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
     def +=(b: Binding): Unit = env += b
@@ -68,6 +73,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, Primitive("int"), Nil, Top, Set.single(Var("number")), N) ::
+    TypeDef(Cls, Primitive("number"), Nil, Top, Set.empty, N) ::
     TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::
@@ -97,16 +103,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
   }
   
-  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance): SimpleType =
-    PrimType(Var(td.nme.name.head.toLower.toString + td.nme.name.tail), td.baseClasses)(prov)
+  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType =
+    PrimType(Var(td.nme.name.head.toLower.toString + td.nme.name.tail), td.allBaseClasses(ctx)(Set.single(Var(td.nme.name))))(prov)
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
     if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)
   
   private def baseClassesOf(ty: Type): Set[Var] = ty match {
       case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
-      case Primitive(nme) if nme.nonEmpty =>
-        Set.single(Var(nme.head.toLower.toString + nme.tail))
+      case Primitive(nme) => Set.single(Var(nme))
       case AppliedType(b, _) => baseClassesOf(b)
       case Record(_) => Set.empty
       case _: Union => Set.empty
@@ -175,7 +180,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case _ => ??? // TODO
             }
             checkParents(body_ty) && checkCycle(body_ty)(Set.single(td)) && {
-              val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
+              val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
               val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
               ctx += n.name -> ctor
               true
@@ -520,13 +525,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           // (ComposedType(false, PrimType(Var(cls.name))(noProv // FIXME
           // ), tv)(noProv), bod_ty, typeArms(scrutVar, rest))
           (clsNameToNomTag(td)(noProv // FIXME
-          ) -> tv, bod_ty, typeArms(scrutVar, rest))
+          , ctx) -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise)
           (clsNameToNomTag(td)(noProv // FIXME
           // (NomTag(cls)(noProv // FIXME
           // (AppliedType(cls, Nil)(noProv // FIXME
-          ) -> TopType, bod_ty, typeArms(scrutVar, rest))
+          , ctx) -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
       }

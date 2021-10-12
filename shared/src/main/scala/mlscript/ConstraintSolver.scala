@@ -38,7 +38,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
               // Option.when(pt0 === pt1)(p)
               // Some(glb(p0, p1)).filterNot(_ === BotType)
-              println(s"!! ${p0.glb(p1)}")
+              println(s"!GLB! ${p0.glb(p1)}")
               p0.glb(p1)
               // val common = p0.glb(p1)
               // common.toList match {
