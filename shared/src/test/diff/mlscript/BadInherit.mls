@@ -88,5 +88,39 @@ class Stupid: ~Parent1
 //│ ║  l.86: 	class Stupid: ~Parent1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^
 
+:e // TODO don't report several times
+class Cycle1: Cycle2
+class Cycle2: Cycle1
+type Stutter = Cycle1
+//│ ╔══[ERROR] illegal cycle involving type Cycle1
+//│ ║  l.92: 	class Cycle1: Cycle2
+//│ ╙──      	      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] illegal cycle involving type Cycle2
+//│ ║  l.93: 	class Cycle2: Cycle1
+//│ ╙──      	      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] illegal cycle involving type Cycle1
+//│ ║  l.94: 	type Stutter = Cycle1
+//│ ╙──      	     ^^^^^^^^^^^^^^^^
 
+:e
+def c = Cycle1 error
+c: Cycle1
+//│ ╔══[ERROR] identifier not found: Cycle1
+//│ ║  l.108: 	def c = Cycle1 error
+//│ ╙──       	        ^^^^^^
+//│ c: error
+//│ ╔══[ERROR] type identifier not found: Cycle1
+//│ ║  l.109: 	c: Cycle1
+//│ ╙──       	   ^^^^^^
+//│ res: error
+
+
+type N[A] = ~A
+//│ Defined type N
+
+:e
+class Cycle: N[Cycle]
+//│ ╔══[ERROR] illegal cycle involving type Cycle
+//│ ║  l.124: 	class Cycle: N[Cycle]
+//│ ╙──       	      ^^^^^^^^^^^^^^^
 

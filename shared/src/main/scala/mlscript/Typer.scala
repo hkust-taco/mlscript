@@ -83,6 +83,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "discard" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "add" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "error" -> BotType,
       "+" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
       "<" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
       "id" -> {
@@ -136,8 +137,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
         val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
         val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
+        def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeDef]): Bool = trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
+          case PrimType(_, _) => true
+          case TypeRef(td, _) if travsersed(td) =>
+            err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
+            false
+          case tr @ TypeRef(td, targs) => checkCycle(tr.expand)(travsersed + td)
+          case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
+          case tv: TypeVariable => true
+          case _: FunctionType => true
+          case NegType(u) => checkCycle(u)
+          case _: RecordType | _: ExtrType => true
+          case p: ProxyType => checkCycle(p.underlying)
+          case _ => ??? // TODO
+        }}()
         val rightParents = td.kind match {
-          case Als => true
+          case Als => checkCycle(body_ty)(Set.single(td))
           case Cls | Trt =>
             def checkParents(ty: SimpleType): Bool = ty match {
               case PrimType(_, _) => true // Q: always?
@@ -159,7 +174,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case p: ProxyType => checkParents(p.underlying)
               case _ => ??? // TODO
             }
-            checkParents(body_ty) && {
+            checkParents(body_ty) && checkCycle(body_ty)(Set.single(td)) && {
               val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/)
               val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
               ctx += n.name -> ctor
