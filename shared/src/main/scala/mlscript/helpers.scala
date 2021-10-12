@@ -33,7 +33,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Applied(Applied(Primitive(op), l), r) if !op.head.isLetter =>
       parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
     case Applied(Primitive(op), t) if op.head === '\\' =>
-      s"${t.showIn(ctx, 100)}$op"
+      s"${t.showIn(ctx, 90)}$op"
     case Applied(Primitive(op), t) if op === "~" =>
       s"~${t.showIn(ctx, 100)}"
     case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
@@ -42,7 +42,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
-    // case Rem(b, ns) => s"${b.showIn(ctx, 100)}${ns.map("\\"+_).mkString}" // Not yet used
+    case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}" // Note: Not currently used by expanded compact type!
   }
   
   def children: List[Type] = this match {
@@ -55,6 +55,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
     case AppliedType(n, ts) => ts
+    case Rem(b, _) => b :: Nil
   }
   
 }

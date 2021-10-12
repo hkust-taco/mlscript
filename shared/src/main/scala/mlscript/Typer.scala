@@ -74,6 +74,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, Primitive("int"), Nil, Top, Set.single(Var("number")), N) ::
     TypeDef(Cls, Primitive("number"), Nil, Top, Set.empty, N) ::
+    TypeDef(Cls, Primitive("bool"), Nil, Top, Set.empty, N) ::
     TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::
@@ -213,6 +214,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   // TODO record provenances!
   def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+    val typeType = ()
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
       if (res.isEmpty)
@@ -232,8 +234,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case Primitive(name) =>
         vars.get(name) orElse
-          typeNamed(ty, name).map(td => TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx)) getOrElse
-            freshVar(noProv) // TODO use ty's prov
+          typeNamed(ty, name).flatMap(td =>
+            if (td.tparams.nonEmpty) {
+              err(msg"Type $name takes parameters", ty.toLoc)(raise, noProv /*FIXME*/)
+              N
+            } else S(TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx))
+          ) getOrElse freshVar(noProv) // TODO use ty's prov
       case tv: TypeVar =>
         localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil)(tp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) => typeNamed(ty, base.name) match {
@@ -250,6 +256,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case None => freshVar(noProv) // TODO use ty's prov
       }
       case Recursive(uv, body) => ??? // TODO
+      case Rem(base, fs) => Without(rec(base), fs.map(_.name) // TODO Without should store Var's with locs...
+        .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov
     }
     rec(ty)
   }

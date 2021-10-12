@@ -34,7 +34,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
   def const[_: P]: P[Term] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
-  def variable[_: P]: P[Term] = locate(ident.map(Var))
+  def variable[_: P]: P[Var] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
   def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ident).rep ).map {
@@ -96,13 +96,18 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
-  def tyNoInter[_: P]: P[Type] = P( tyNoFun ~ ("->" ~ tyNoFun).rep ).map {
-    case (t, ts) => ts.reverseIterator.foldLeft(t)(Function) }
-  def tyNoFun[_: P]: P[Type] = P( rcd | ctor | parTy )
+  def tyNoInter[_: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
+    case (l, S(r)) => Function(l, r)
+    case (l, N) => l
+  }
+  def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
+    case (ty, Nil) => ty
+    case (ty, ids) => Rem(ty, ids.toList)
+  }
   def ctor[_: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
     case (tname, targs) => AppliedType(tname, targs.toList)
   }) | tyNeg | tyName | tyVar //| const.map(Const) // TODO
-  def tyNeg[_: P]: P[Type] = locate(P("~" ~/ ty map { t => Applied(Primitive("~"), t) }))
+  def tyNeg[_: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Applied(Primitive("~"), t) }))
   def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => getVar(id))), ignoreIfSet = true)
   def rcd[_: P]: P[Record] =

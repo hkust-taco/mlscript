@@ -11,6 +11,14 @@ import mlscript.Message._
 class ConstraintSolver extends TyperDatatypes { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   
+  private var constrainCalls = 0
+  private var annoyingCalls = 0
+  def stats: (Int, Int) = (constrainCalls, annoyingCalls)
+  def resetStats(): Unit = {
+    constrainCalls = 0
+    annoyingCalls  = 0
+  }
+  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance): Unit = {
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -92,14 +100,23 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     }
     case object RhsBot extends RhsNf
     
+    def mkCase[A](str: Str)(k: Str => A)(implicit dbgHelp: Str): A = {
+      val newStr = dbgHelp + "." + str
+      println(newStr)
+      k(newStr)
+    }
+    
     /* Solve annoying constraints,
         which are those that involve either unions and intersections at the wrong polarities, or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit ctx: ConCtx): Unit = annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
+          (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
+        annoyingCalls += 1
+        annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
+      }
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit ctx: ConCtx): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
+          (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       // (ls, rs) match {
       (ls.mapHead(_.pushPosWithout), rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
@@ -113,11 +130,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           val lhs = tys.reduceOption(_ & _).getOrElse(TopType)
           rec(lhs, tv)
         case (ComposedType(true, ll, lr) :: ls, _) =>
-          annoying(ll :: ls, done_ls, rs, done_rs)
-          annoying(lr :: ls, done_ls, rs, done_rs)
+          mkCase("1"){ implicit dbgHelp => annoying(ll :: ls, done_ls, rs, done_rs) }
+          mkCase("2"){ implicit dbgHelp => annoying(lr :: ls, done_ls, rs, done_rs) }
         case (_, ComposedType(false, rl, rr) :: rs) =>
-          annoying(ls, done_ls, rl :: rs, done_rs)
-          annoying(ls, done_ls, rr :: rs, done_rs)
+          mkCase("1"){ implicit dbgHelp => annoying(ls, done_ls, rl :: rs, done_rs) }
+          mkCase("2"){ implicit dbgHelp => annoying(ls, done_ls, rr :: rs, done_rs) }
         case (_, ComposedType(true, rl, rr) :: rs) =>
           annoying(ls, done_ls, rl :: rr :: rs, done_rs)
         case (ComposedType(false, ll, lr) :: ls, _) =>
@@ -187,10 +204,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (LhsTop, _) | (_, RhsBot) => fail
             case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)), _)) => rec(f0, f1)
             case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _, _)) => fail
-            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, bs, f)) if pts.nonEmpty =>
+            case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, bs, f)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
-              else annoying(Nil, done_ls, Nil, RhsBases(Nil, bs, f)) // hacky
+              else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
             case (LhsRefined(bo, r), RhsField(n, t2)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
@@ -202,7 +219,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(_, r), RhsBases(Nil, bs, f)) => fail
             case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }
@@ -212,6 +228,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, ctx: ConCtx): Unit = {
+      constrainCalls += 1
       val pushed = lhs.pushPosWithout
       if (pushed isnt lhs) println(s"Push LHS  $lhs  ~>  $pushed")
       recImpl(pushed, rhs, outerProv)

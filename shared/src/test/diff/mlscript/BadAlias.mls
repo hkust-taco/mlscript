@@ -89,3 +89,14 @@ type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ║  l.87: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
+:e
+42: Id
+//│ ╔══[ERROR] Type Id takes parameters
+//│ ║  l.94: 	42: Id
+//│ ╙──      	    ^^
+//│ res: 42
+
+42: Id[int]
+//│ res: Id[int]
+

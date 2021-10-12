@@ -93,7 +93,7 @@ final case class Record(fields: Ls[Str -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Str] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: Primitive, targs: List[Type]) extends Type
-// final case class Rem(base: Type, names: Ls[Str])         extends Type // Not yet used
+final case class Rem(base: Type, names: Ls[Var])         extends Type // Not yet used
 
 sealed abstract class NullaryType                        extends Type
 

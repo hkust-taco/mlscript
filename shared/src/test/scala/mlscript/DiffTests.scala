@@ -34,8 +34,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false)
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -54,6 +54,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
+          case "stats" => mode.copy(stats = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case _ =>
@@ -99,6 +100,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
+            if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
@@ -225,6 +227,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     output(s"${exp.show}  <:  f: ${sign_exp.show}")
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                 }
+            }
+            
+            if (mode.stats) {
+              val (co, an) = typer.stats
+              output(s"constrain calls: " + co)
+              output(s"annoying  calls: " + an)
             }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)

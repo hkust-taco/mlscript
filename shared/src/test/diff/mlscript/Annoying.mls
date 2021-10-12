@@ -1,0 +1,38 @@
+
+def foo: ~int\x
+//│ foo: ~int\x
+
+foo: ~(int\x)
+//│ res: ~int\x
+
+foo: (~int)\x
+//│ res: ~int\x
+
+// FIXME
+res: ~(int\x)
+//│ /!!!\ Uncaught error: scala.MatchError: (List(~(int)\x),List()) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:121)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:119)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:116)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:155)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:119)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:116)
+
+
+def foo: (~ 'a \ x) -> 'a -> 'a
+//│ foo: ~'a\x -> 'a -> 'a
+
+foo 1
+//│ res: 'a & ~1\x -> 'a
+
+def foo: (~ 'a \ x) -> 'a
+//│ foo: ~'a\x -> 'a
+
+// :d
+foo 1
+//│ res: nothing
+

@@ -1,0 +1,54 @@
+
+class A: { fA: int }
+class B: { fB: string }
+class C: { fC: bool }
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  }
+//│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | (((c & {fC: 'c}) & ~b) & ~a))) -> 'a | ('b | 'c)
+
+def arg: A | B | C
+//│ arg: (A | B) | C
+
+foo arg
+//│ res: int | (string | bool)
+
+foo (arg with { fC = true })
+//│ res: int | (string | (bool & bool))
+
+
+def foo x = case x of {
+  | A -> add x.fA x.payload
+  | B -> x.fB
+  | C -> { l = x.fC; r = x.payload }
+  }
+//│ foo: ((a & {fA: int, payload: int}) | (((b & {fB: 'a}) & ~a) | (((c & {fC: 'b, payload: 'c}) & ~b) & ~a))) -> int | ('a | {l: 'b, r: 'c})
+
+:e
+foo arg
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.34: 	foo arg
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `(a & {fA: int}) & (~((b & ?a | ((({fA: int} & a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a)) & ~a)) & ~a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a))` does not match type `{payload: ?d & int}`
+//│ ║  l.16: 	def arg: A | B | C
+//│ ║        	         ^
+//│ ╟── but it flows into reference with expected type `(a & ?e & {fA: ?f & int, payload: ?d & int}) | (((b & ?a & {fB: ?c}) & ~a) | (((c & ?b & {fC: ?g, payload: ?h}) & ~b) & ~a))`
+//│ ║  l.34: 	foo arg
+//│ ║        	    ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.27: 	  | A -> add x.fA x.payload
+//│ ║        	                  ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.26: 	def foo x = case x of {
+//│ ╙──      	                 ^
+//│ res: (int | (string | {l: bool, r: nothing})) | error
+
+foo (arg with { payload = 1 })
+//│ res: int | (string | {l: bool, r: (1 & ~int) | 1})
+

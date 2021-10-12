@@ -96,7 +96,7 @@ abstract class TyperHelpers { self: Typer =>
       case e @ ExtrType(_) => e // valid?
       case p @ ProxyType(und) => ProxyType(und.without(name))(p.prov)
       case p @ PrimType(_, _) => p
-      case _: TypeVariable | _: NegType => Without(this, Set.single(name))(noProv)
+      case _: TypeVariable | _: NegType | _: TypeRef => Without(this, Set.single(name))(noProv)
     }
     def pushPosWithout: SimpleType = this match {
       case Without(b, ns) => b.without(ns) match {
@@ -123,8 +123,12 @@ abstract class TyperHelpers { self: Typer =>
           
           case NegType(_) => rewritten
           
+          // case Without(_: BaseType, ns) => b
+          case b: BaseType => b
+          case b: TypeRef => b
+          
           // case t: NegType => this
-          case _ => lastWords(s"$this (${this.getClass})")
+          case _ => lastWords(s"$this $rewritten (${this.getClass})")
         }
         case _ => this
       }
