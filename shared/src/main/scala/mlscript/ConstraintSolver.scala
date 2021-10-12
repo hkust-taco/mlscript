@@ -259,6 +259,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             case (LhsRefined(b, r, ws), RhsBases(ps, bty, N)) =>
               annoying(ws.map(_.base), LhsRefined(b, r, Nil), Nil, done_rs)
             case (LhsRefined(b, r, ws), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
+              ???
+            case (LhsRefined(b, r, Nil), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
               // val (ws2, ws3) = ws.partition(_.reft.fields.exists(_._1 === n))
               // if (ws3.isEmpty)
               // else annoying(ws3.map(_.base), LhsRefined(b, r, ws2), Nil, done_rs)

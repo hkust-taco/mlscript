@@ -58,6 +58,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
+    def addFields(fs: Ls[Str -> SimpleType]): RecordType = {
+      val shadowing = fs.iterator.map(_._1).toSet
+      RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
+    }
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {

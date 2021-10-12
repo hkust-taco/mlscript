@@ -73,14 +73,14 @@ res.tail.head
 
 // More precise Cons?
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> 'b & List['c] -> (cons & {head: 'c | 'a, tail: List['c | 'a]} with {head: 'a} with {tail: 'b})
+//│ Cons: 'a -> 'b & List['c] -> (cons & {head: 'c | 'a, tail: List['c | 'a]} with {head: 'a, tail: 'b})
 
 
 Cons 2
-//│ res: 'a & List['b] -> (cons & {head: 'b | 2, tail: List['b | 2]} with {head: 2} with {tail: 'a})
+//│ res: 'a & List['b] -> (cons & {head: 'b | 2, tail: List['b | 2]} with {head: 2, tail: 'a})
 
 Cons 2 Nil
-//│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
+//│ res: cons & {head: 2, tail: List[2]} with {head: 2, tail: nil}
 
 res.head
 //│ res: 2
@@ -99,23 +99,196 @@ Cons 1 res
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ╙──     	                                ^^^^^^^
-//│ res: (cons & {head: 1, tail: List[1]} with {head: 1} with {tail: 2}) | error
+//│ res: (cons & {head: 1, tail: List[1]} with {head: 1, tail: 2}) | error
 
+// FIXME (how?)
+:d
 Cons 1 (Cons 2 Nil)
-//│ res: cons & {head: 2 | 1, tail: List[2 | 1]} with {head: 1} with {tail: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}}
+//│ 0. Typing term ((Cons 1) ((Cons 2) Nil))
+//│  0. Typing term (Cons 1)
+//│   0. Typing term Cons
+//│   0. : [(α0 -> (α1 -> α3 w/ {head: [α0], tail: [α1]}))]
+//│   0. Typing term 1
+//│   0. : 1<int>
+//│   CONSTRAIN [[(α0 -> (α1 -> α3 w/ {head: [α0], tail: [α1]}))]] <! ([1<int>] -> α4)
+//│     where α1 <: [List[α2]], α2 :> [α0], α3 :> (cons<> & {head: α2, tail: List[α2]})
+//│   C [[(α0 -> (α1 -> α3 w/ {head: [α0], tail: [α1]}))]] <! ([1<int>] -> α4)
+//│    C [(α0 -> (α1 -> α3 w/ {head: [α0], tail: [α1]}))] <! ([1<int>] -> α4)
+//│     C (α0 -> (α1 -> α3 w/ {head: [α0], tail: [α1]})) <! ([1<int>] -> α4)
+//│      C [1<int>] <! α0
+//│      C (α1 -> α3 w/ {head: [α0], tail: [α1]}) <! α4
+//│  0. : α4
+//│  0. Typing term ((Cons 2) Nil)
+//│   0. Typing term (Cons 2)
+//│    0. Typing term Cons
+//│    0. : [(α5 -> (α6 -> α8 w/ {head: [α5], tail: [α6]}))]
+//│    0. Typing term 2
+//│    0. : 2<int>
+//│    CONSTRAIN [[(α5 -> (α6 -> α8 w/ {head: [α5], tail: [α6]}))]] <! ([2<int>] -> α9)
+//│      where α6 <: [List[α7]], α7 :> [α5], α8 :> (cons<> & {head: α7, tail: List[α7]})
+//│    C [[(α5 -> (α6 -> α8 w/ {head: [α5], tail: [α6]}))]] <! ([2<int>] -> α9)
+//│     C [(α5 -> (α6 -> α8 w/ {head: [α5], tail: [α6]}))] <! ([2<int>] -> α9)
+//│      C (α5 -> (α6 -> α8 w/ {head: [α5], tail: [α6]})) <! ([2<int>] -> α9)
+//│       C [2<int>] <! α5
+//│       C (α6 -> α8 w/ {head: [α5], tail: [α6]}) <! α9
+//│   0. : α9
+//│   0. Typing term Nil
+//│   0. : [α10]
+//│   CONSTRAIN [α9] <! ([[α10]] -> α11)
+//│     where α5 :> [2<int>], α6 <: [List[α7]], α7 :> [α5], α8 :> (cons<> & {head: α7, tail: List[α7]}), α9 :> (α6 -> α8 w/ {head: [α5], tail: [α6]}), α10 :> nil<>
+//│   C [α9] <! ([[α10]] -> α11)
+//│    C α9 <! ([[α10]] -> α11)
+//│     C (α6 -> α8 w/ {head: [α5], tail: [α6]}) <! ([[α10]] -> α11)
+//│      C [[α10]] <! α6
+//│       C [[α10]] <! [List[α7]]
+//│        C [α10] <! [List[α7]]
+//│         C α10 <! [List[α7]]
+//│          C nil<> <! [List[α7]]
+//│           C nil<> <! List[α7]
+//│            C nil<> <! (Nil | Cons[α7])
+//│             A  LhsTop  %  List(nil<>)  <!  List(Nil, Cons[α7])  %  RhsBot
+//│              A  LhsTop  %  List(nil<>)  <!  List(nil<>, Cons[α7])  %  RhsBot
+//│               A  nil<>{}  %  List()  <!  List(nil<>, Cons[α7])  %  RhsBot
+//│                A  nil<>{}  %  List()  <!  List(Cons[α7])  %  nil<>|None|None
+//│                 A  nil<>{}  %  List()  <!  List((cons<> & {head: α7, tail: List[α7]}))  %  nil<>|None|None
+//│                  Case.1
+//│                  A  nil<>{}  %  List()  <!  List(cons<>)  %  nil<>|None|None
+//│                   A  nil<>{}  %  List()  <!  List()  %  cons<>|nil<>|None|None
+//│                    OK  nil<>  <:  cons<> | nil<>
+//│                  Case.2
+//│                  A  nil<>{}  %  List()  <!  List({head: α7, tail: List[α7]})  %  nil<>|None|None
+//│                   A  nil<>{}  %  List()  <!  List(((⊤ & {head: α7}) & {tail: List[α7]}))  %  nil<>|None|None
+//│                    Case.2.1
+//│                    A  nil<>{}  %  List()  <!  List((⊤ & {head: α7}))  %  nil<>|None|None
+//│                     Case.2.1.1
+//│                     A  nil<>{}  %  List()  <!  List(⊤)  %  nil<>|None|None
+//│                     Case.2.1.2
+//│                     A  nil<>{}  %  List()  <!  List({head: α7})  %  nil<>|None|None
+//│                      A  nil<>{}  %  List()  <!  List()  %  nil<>|None|Some(RhsField(head,α7))
+//│                       OK  nil<>  <:  nil<>
+//│                    Case.2.2
+//│                    A  nil<>{}  %  List()  <!  List({tail: List[α7]})  %  nil<>|None|None
+//│                     A  nil<>{}  %  List()  <!  List()  %  nil<>|None|Some(RhsField(tail,List[α7]))
+//│                      OK  nil<>  <:  nil<>
+//│      Push LHS  α8 w/ {head: [α5], tail: [α6]}  ~>  α8 w/ {head: [α5], tail: [α6]}
+//│      C α8 w/ {head: [α5], tail: [α6]} <! α11
+//│  0. : α11
+//│  CONSTRAIN [α4] <! ([α11] -> α12)
+//│    where α0 :> [1<int>], α1 <: [List[α2]], α2 :> [α0], α3 :> (cons<> & {head: α2, tail: List[α2]}), α4 :> (α1 -> α3 w/ {head: [α0], tail: [α1]}), α5 :> [2<int>], α6 :> [[α10]] <: [List[α7]], α7 :> [α5], α8 :> (cons<> & {head: α7, tail: List[α7]}), α10 :> nil<> <: [[List[α7]]], α11 :> α8 w/ {head: [α5], tail: [α6]}
+//│  C [α4] <! ([α11] -> α12)
+//│   C α4 <! ([α11] -> α12)
+//│    C (α1 -> α3 w/ {head: [α0], tail: [α1]}) <! ([α11] -> α12)
+//│     C [α11] <! α1
+//│      C [α11] <! [List[α2]]
+//│       C α11 <! [List[α2]]
+//│        Push LHS  α8 w/ {head: [α5], tail: [α6]}  ~>  α8 w/ {head: [α5], tail: [α6]}
+//│        C α8 w/ {head: [α5], tail: [α6]} <! [List[α2]]
+//│         Push LHS  α8 w/ {head: [α5], tail: [α6]}  ~>  α8 w/ {head: [α5], tail: [α6]}
+//│         C α8 w/ {head: [α5], tail: [α6]} <! List[α2]
+//│          Push LHS  α8 w/ {head: [α5], tail: [α6]}  ~>  α8 w/ {head: [α5], tail: [α6]}
+//│          C α8 w/ {head: [α5], tail: [α6]} <! (Nil | Cons[α2])
+//│           A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(Nil, Cons[α2])  %  RhsBot
+//│            A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(nil<>, Cons[α2])  %  RhsBot
+//│             A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(Cons[α2])  %  nil<>|None|None
+//│              A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List((cons<> & {head: α2, tail: List[α2]}))  %  nil<>|None|None
+//│               Case.1
+//│               A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(cons<>)  %  nil<>|None|None
+//│                A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List()  %  cons<>|nil<>|None|None
+//│                 A  {} & α8 w/ {head: [α5], tail: [α6]}  %  List()  <!  List()  %  cons<>|nil<>|None|None
+//│                  A  {}  %  List(α8)  <!  List()  %  cons<>|nil<>|None|None
+//│                   C α8 <! (~({}) | (cons<> | nil<>))
+//│                    C (cons<> & {head: α7, tail: List[α7]}) <! (~({}) | (cons<> | nil<>))
+//│                     A  LhsTop  %  List((cons<> & {head: α7, tail: List[α7]}))  <!  List(~({}), (cons<> | nil<>))  %  RhsBot
+//│                      A  LhsTop  %  List(cons<>, {head: α7, tail: List[α7]})  <!  List(~({}), (cons<> | nil<>))  %  RhsBot
+//│                       A  LhsTop  %  List({}, cons<>, {head: α7, tail: List[α7]})  <!  List((cons<> | nil<>))  %  RhsBot
+//│                        A  LhsTop  %  List({}, cons<>, {head: α7, tail: List[α7]})  <!  List(cons<>, nil<>)  %  RhsBot
+//│                         A  LhsTop  %  List({}, cons<>, {head: α7, tail: List[α7]})  <!  List(nil<>)  %  cons<>|None|None
+//│                          A  LhsTop  %  List({}, cons<>, {head: α7, tail: List[α7]})  <!  List()  %  nil<>|cons<>|None|None
+//│                           A  {}  %  List(cons<>, {head: α7, tail: List[α7]})  <!  List()  %  nil<>|cons<>|None|None
+//│                            A  cons<>{}  %  List({head: α7, tail: List[α7]})  <!  List()  %  nil<>|cons<>|None|None
+//│                             A  cons<>{head: α7, tail: List[α7]}  %  List()  <!  List()  %  nil<>|cons<>|None|None
+//│                              OK  cons<>  <:  nil<> | cons<>
+//│               Case.2
+//│               A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List({head: α2, tail: List[α2]})  %  nil<>|None|None
+//│                A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(((⊤ & {head: α2}) & {tail: List[α2]}))  %  nil<>|None|None
+//│                 Case.2.1
+//│                 A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List((⊤ & {head: α2}))  %  nil<>|None|None
+//│                  Case.2.1.1
+//│                  A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List(⊤)  %  nil<>|None|None
+//│                  Case.2.1.2
+//│                  A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List({head: α2})  %  nil<>|None|None
+//│                   A  LhsTop  %  List(α8 w/ {head: [α5], tail: [α6]})  <!  List()  %  nil<>|None|Some(RhsField(head,α2))
+//│                    A  {} & α8 w/ {head: [α5], tail: [α6]}  %  List()  <!  List()  %  nil<>|None|Some(RhsField(head,α2))
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:262)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:177)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ res: {a: 1, b: 2, c: nil}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.234: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ║         	                    ^^^
+//│ ╟── expression of type `2` does not have field 'head'
+//│ ║  l.82: 	Cons 2 Nil
+//│ ║        	     ^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
+//│ ║  l.234: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ╙──       	                    ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.234: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ║         	                                       ^^^
+//│ ╟── expression of type `2` does not have field 'tail'
+//│ ║  l.82: 	Cons 2 Nil
+//│ ║        	     ^
+//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
+//│ ║  l.234: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ╙──       	                                       ^^^
+//│ res: {a: error | 1, b: error, c: error}
 
 
 Cons 2 Nil
-//│ res: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}
+//│ res: cons & {head: 2, tail: List[2]} with {head: 2, tail: nil}
 
 Cons 1 (id res)
-//│ res: cons & {head: 2 | 1, tail: List[2 | 1]} with {head: 1} with {tail: cons & {head: 2, tail: List[2]} with {head: 2} with {tail: nil}}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:262)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:125)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:177)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:128)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ res: {a: 1, b: 2, c: nil}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.272: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ║         	                    ^^^
+//│ ╟── expression of type `nil` does not have field 'head'
+//│ ║  l.12: 	def Nil = Nil {}
+//│ ║        	          ^^^^^^
+//│ ╟── but it flows into field selection with expected type `{head: ?a}`
+//│ ║  l.272: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ╙──       	                    ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.272: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ║         	                                       ^^^
+//│ ╟── expression of type `nil` does not have field 'tail'
+//│ ║  l.12: 	def Nil = Nil {}
+//│ ║        	          ^^^^^^
+//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
+//│ ║  l.272: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
+//│ ╙──       	                                       ^^^
+//│ res: {a: 2, b: error, c: error}
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }

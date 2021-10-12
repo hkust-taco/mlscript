@@ -74,6 +74,8 @@ abstract class TyperHelpers { self: Typer =>
         RecordType(fs.filterNot(f => rcd.fields.exists(_._1 === f._1)) ++ rcd.fields)(prov)
       case ExtrType(false) => rcd
       case ExtrType(true) => this
+      case b: BaseType => b & rcd
+      case WithType(b, rcd2) => WithType(b, rcd2.addFields(rcd.fields))(prov)
       case _ => WithType(this, rcd)(prov)
     }
     
@@ -106,7 +108,16 @@ abstract class TyperHelpers { self: Typer =>
       case p @ PrimType(_, _) => p
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, Set.single(name))(noProv)
     }
-    def pushPosWithout: SimpleType = this match {
+    def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
+      case tr: TypeRef => tr.expand.unwrapAll
+      case u => u
+    }
+    def pushPosWithout(implicit raise: Raise): SimpleType = this match {
+      case WithType(b, rcd) => b.unwrapAll.w(rcd) match {
+        case WithType(ComposedType(pol, l, r), rcd) => ComposedType(pol, l.w(rcd), r.w(rcd))(prov)
+        // case WithType(ExtrType(pol), rcd) => 
+        case rw => rw
+      }
       case Without(b, ns) => b.without(ns) match {
         case rewritten @ Without(b, ns) => b match {
           case t @ RecordType(fs) => // In positive position, this is valid:
