@@ -57,10 +57,17 @@ object Main {
             exp
           }
           def formatError(culprit: Str, err: TypeError): Str = {
+            val ws = "&nbsp;" * _
+            val lf = "<br/>"
+            val stackTrace = err.getStackTrace.map { case x => 
+              s"""${ws(2)}at <span style="font-weight:bold">${x.getClassName}.${x.getMethodName}</span>
+                  <span style="white-space:nowrap"$lf${ws(4)} in file <font color="gray">${x.getFileName}:${x.getLineNumber}</font></span>"""
+            }.mkString("<br/>")
             s"""<b><font color="Red">
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
                 ${err.allMsgs.tail.map(_._1.show.toString + "<br/>").mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}
-                </font></b><br/>"""
+                </font></b>
+                $stackTrace"""
           }
           def formatBinding(nme: Str, ty: TypeScheme): Str = {
             val exp = getType(ty)
