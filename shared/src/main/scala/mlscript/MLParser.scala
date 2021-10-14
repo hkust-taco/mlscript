@@ -77,7 +77,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def defDecl[_: P]: P[Def] =
     P((kw("def") ~ ident ~ ":" ~/ ty map {
       case (id, t) => Def(true, id, R(t))
-    }) | (kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ subterm.rep ~ "=" ~ term map {
+    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ ident ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
     }))
   
