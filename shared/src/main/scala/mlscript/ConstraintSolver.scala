@@ -401,6 +401,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           case (_, tr: TypeRef) => rec(lhs, tr.expand)
           case (PrimType(ErrTypeId, _), _) => ()
           case (_, PrimType(ErrTypeId, _)) => ()
+          case (_, w @ Without(b, ns)) => rec(Without(lhs, ns)(w.prov), b)
+          case (_, n @ NegType(w @ Without(b, ns))) => rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov))
           case (_, w @ WithType(b, rcd)) => rec(WithType(lhs, rcd)(w.prov), b)
           case (_, ComposedType(true, l, r)) =>
             annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)

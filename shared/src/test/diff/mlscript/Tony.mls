@@ -10,10 +10,10 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: (some & {value: 42} with {payload: 23}) | none
+//│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | (({} & (some & {value: 42} with {payload: 23})) & ~{value: 42}) | ((some & {value: 42} with {payload: 23}) & ~some) | (none & ~some) | (none & ~{payload: 23}) | (({} & (some & {value: 42} with {payload: 23})) & ~{payload: 23}) | (none & ~{value: 42})
+//│ res: int | (none & ~some) | (none & ~{payload: 23}) | ((({payload: 23} & some) & {value: 42}\payload) & ~{payload: 23}) | (((some & {value: 42})\payload & {payload: 23}) & ~some) | ((({payload: 23} & some) & {value: 42}\payload) & ~{value: 42}) | (none & ~{value: 42})
 
 
 def arg = if true then Some{value = 42} else None {}

@@ -482,10 +482,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case With(t, n, v) =>
         val t_ty = typeTerm(t)
         val v_ty = typeTerm(v)
-        // (t_ty without n) &
-        //   RecordType.mk(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
+        (t_ty without n) &
+          RecordType.mk(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
         // WithType(t_ty, RecordType(n -> v_ty :: Nil)(noProv/*TODO*/))(tp(term.toLoc, "field extension"))
-        t_ty.w(RecordType(n -> v_ty :: Nil)(noProv/*TODO*/), tp(term.toLoc, "field extension"))
+        // t_ty.w(RecordType(n -> v_ty :: Nil)(noProv/*TODO*/), tp(term.toLoc, "field extension"))
       case CaseOf(s, cs) =>
         val s_ty = typeTerm(s)
         val (tys, cs_ty) = typeArms(s |>? {

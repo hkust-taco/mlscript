@@ -6,19 +6,19 @@ rcd.x
 //│ res: 1
 
 rcd with { y = 2 }
-//│ res: {x: 1} with {y: 2}
+//│ res: {x: 1}\y & {y: 2}
 
 add res.x res.y
 //│ res: int
 
 rcd with { x = "oops" }
-//│ res: {x: 1} with {x: "oops"}
+//│ res: {x: 1}\x & {x: "oops"}
 
 res.x
 //│ res: "oops"
 
 id rcd with { x = "oops" }
-//│ res: {x: 1} with {x: "oops"}
+//│ res: {x: 1}\x & {x: "oops"}
 
 res.x
 //│ res: "oops"
@@ -28,30 +28,30 @@ def rcd = { }
 //│ rcd: anything
 
 id rcd with { x = "oops" }
-//│ res: anything with {x: "oops"}
+//│ res: anything\x & {x: "oops"}
 
 res.x
 //│ res: "oops"
 
 
 def f r = r with { x = "oops" }
-//│ f: 'a -> ('a with {x: "oops"})
+//│ f: 'a -> 'a\x & {x: "oops"}
 
 f rcd
-//│ res: anything with {x: "oops"}
+//│ res: anything\x & {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: anything with {y: 2} with {x: "oops"}
+//│ res: (anything\y & {y: 2})\x & {x: "oops"}
 
 
 def f a b = if true then a else b
 //│ f: 'a -> 'a -> 'a
 
 def f a b = (if true then a else b) with { x = "oops" }
-//│ f: 'a -> 'a -> ('a with {x: "oops"})
+//│ f: 'a -> 'a -> 'a\x & {x: "oops"}
 
 def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
-//│ f: 'a & {x: anything} -> 'a -> ('a with {x: "oops"})
+//│ f: 'a & {x: anything} -> 'a -> 'a\x & {x: "oops"}
 
 
 ({ name = "Bob" } with { age = 123 }).age
@@ -70,7 +70,7 @@ def getf { f } = f
 def foo x =
   let xf = x with { f = 42 }
   in getf xf
-//│ foo: anything -> 42
+//│ foo: (~{f: 42} | {f: 'a})\f -> 'a
 
 foo 123
 //│ res: 42
@@ -78,12 +78,12 @@ foo 123
 def foo x =
   let xf = x with { f = 42 }
   in add (getf xf) (getf x)
-//│ foo: {f: int} -> int
+//│ foo: (~{f: 42} | {f: int})\f & {f: int} -> int
 
 def foo x =
   let xf = x with { f = 42 }
   in { l = getf xf; r = getf x; s = x }
-//│ foo: 'a & {f: 'b} -> {l: 42, r: 'b, s: 'a}
+//│ foo: 'a & (~{f: 42} | {f: 'b})\f & {f: 'c} -> {l: 'b, r: 'c, s: 'a}
 
 :e
 foo 42
@@ -102,7 +102,7 @@ foo 42
 //│ res: error | {l: 42, r: nothing, s: 42}
 
 def r = foo (42 with { f = 1 })
-//│ r: {l: 42, r: 1, s: 42 & {f: 1}}
+//│ r: {l: 42, r: 1, s: 42\f & {f: 1}}
 
 r.s.f
 //│ res: 1
