@@ -77,7 +77,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def defDecl[_: P]: P[Def] =
     P((kw("def") ~ ident ~ ":" ~/ ty map {
       case (id, t) => Def(true, id, R(t))
-    }) | (kw("def") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ subterm.rep ~ "=" ~ term map {
+    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ ident ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
     }))
   
@@ -100,6 +100,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (l, S(r)) => Function(l, r)
     case (l, N) => l
   }
+  // Note: field removal types are not supposed to be explicitly used by programmers,
+  //    and they won't work in negative positions,
+  //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
   def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)

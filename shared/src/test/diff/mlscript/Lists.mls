@@ -73,14 +73,14 @@ res.tail.head
 
 // More precise Cons?
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> 'b & List['c] -> ((cons & {head: 'c | 'a, tail: List['c | 'a]})\head\tail & {head: 'a}\tail) & {tail: 'b}
+//│ Cons: 'a -> 'b & List['c] -> ((cons & {head: 'c | 'a, tail: List['c | 'a]})\head & {head: 'a})\tail & {tail: 'b}
 
 
 Cons 2
-//│ res: 'a & List['b] -> ((cons & {head: 'b | 2, tail: List['b | 2]})\head\tail & {head: 2}\tail) & {tail: 'a}
+//│ res: 'a & List['b] -> ((cons & {head: 'b | 2, tail: List['b | 2]})\head & {head: 2})\tail & {tail: 'a}
 
 Cons 2 Nil
-//│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
+//│ res: ((cons & {head: 2, tail: List[2]})\head & {head: 2})\tail & {tail: nil}
 
 res.head
 //│ res: 2
@@ -99,20 +99,28 @@ Cons 1 res
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ╙──     	                                ^^^^^^^
-//│ res: (((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: 2}) | error
+//│ res: (((cons & {head: 1, tail: List[1]})\head & {head: 1})\tail & {tail: 2}) | error
 
+// Here there used to be a loss of precision in the older with-field approach.
+//    The problem occured when constraining `α8 w/ {head: α5, tail: [α6]}  <!  nil | {head: α2}`
+//    as we can't decide whether to constrain `α8 <! nil` or `α5 <! α2`...
+// I seemingly solved it by just pushing `with` extensions applied on variables to the right
+//    just long enough to push it back on the left after travsering type variable bounds...
+//    This is okay because `with` types otherwise never occur in negative position... Note we could
+//    have used a different "delayed with" type to be cleaner, though it's just not necessary.
+// 
 Cons 1 (Cons 2 Nil)
-//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
+//│ res: ((cons & {head: 2 | 1, tail: List[2 | 1]})\head & {head: 1})\tail & {tail: ((cons & {head: 2, tail: List[2]})\head & {head: 2})\tail & {tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: nil}
 
 
 Cons 2 Nil
-//│ res: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}
+//│ res: ((cons & {head: 2, tail: List[2]})\head & {head: 2})\tail & {tail: nil}
 
 Cons 1 (id res)
-//│ res: ((cons & {head: 1, tail: List[1]})\head\tail & {head: 1}\tail) & {tail: ((cons & {head: 2, tail: List[2]})\head\tail & {head: 2}\tail) & {tail: nil}}
+//│ res: ((cons & {head: 2 | 1, tail: List[2 | 1]})\head & {head: 1})\tail & {tail: ((cons & {head: 2, tail: List[2]})\head & {head: 2})\tail & {tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: nil}

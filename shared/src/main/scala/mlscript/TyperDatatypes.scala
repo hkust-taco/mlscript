@@ -54,9 +54,22 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+    // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
+    def mergeAllFields(fs: Iterable[Str -> SimpleType]): RecordType = {
+      val res = mutable.SortedMap.empty[Str, SimpleType]
+      fs.foreach(f => res.get(f._1) match {
+        case N => res(f._1) = f._2
+        case S(ty) => res(f._1) = ty & f._2
+      })
+      RecordType(res.toList)(prov)
+    }
+    def addFields(fs: Ls[Str -> SimpleType]): RecordType = {
+      val shadowing = fs.iterator.map(_._1).toSet
+      RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
+    }
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {

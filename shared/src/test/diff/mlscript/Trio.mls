@@ -20,7 +20,7 @@ foo arg
 //│ res: int | (string | bool)
 
 foo (arg with { fC = true })
-//│ res: int | (string | (bool & bool))
+//│ res: int | (string | bool)
 
 
 def foo x = case x of {
@@ -50,5 +50,5 @@ foo arg
 //│ res: (int | (string | {l: bool, r: nothing})) | error
 
 foo (arg with { payload = 1 })
-//│ res: int | (string | {l: bool, r: (1 & ~int) | 1})
+//│ res: int | (string | {l: bool, r: 1})
 

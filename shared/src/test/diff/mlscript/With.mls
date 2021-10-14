@@ -41,7 +41,7 @@ f rcd
 //│ res: anything\x & {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: (anything & {y: 2})\x & {x: "oops"}
+//│ res: (anything\y & {y: 2})\x & {x: "oops"}
 
 
 def f a b = if true then a else b
@@ -62,4 +62,51 @@ def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
 
 ({ name = "Bob" } with { name = 123 }).name
 //│ res: 123
+
+
+def getf { f } = f
+//│ getf: {f: 'a} -> 'a
+
+def foo x =
+  let xf = x with { f = 42 }
+  in getf xf
+//│ foo: (~{f: 42} | {f: 'a})\f -> 'a
+
+foo 123
+//│ res: 42
+
+def foo x =
+  let xf = x with { f = 42 }
+  in add (getf xf) (getf x)
+//│ foo: (~{f: 42} | {f: int})\f & {f: int} -> int
+
+def foo x =
+  let xf = x with { f = 42 }
+  in { l = getf xf; r = getf x; s = x }
+//│ foo: 'a & (~{f: 42} | {f: 'b})\f & {f: 'c} -> {l: 'b, r: 'c, s: 'a}
+
+:e
+foo 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.89: 	foo 42
+//│ ║        	^^^^^^
+//│ ╟── expression of type `42` does not have field 'f'
+//│ ║  l.89: 	foo 42
+//│ ║        	    ^^
+//│ ╟── Note: constraint arises from record literal:
+//│ ║  l.67: 	def getf { f } = f
+//│ ║        	         ^^^^^
+//│ ╟── from argument:
+//│ ║  l.85: 	  in { l = getf xf; r = getf x; s = x }
+//│ ╙──      	                             ^
+//│ res: error | {l: 42, r: nothing, s: 42}
+
+def r = foo (42 with { f = 1 })
+//│ r: {l: 42, r: 1, s: 42\f & {f: 1}}
+
+r.s.f
+//│ res: 1
+
+add r.s 1
+//│ res: int
 

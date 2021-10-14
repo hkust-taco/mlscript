@@ -1,0 +1,21 @@
+
+class None: {}
+class Some[A]: { value: A }
+//│ Defined class None
+//│ Defined class Some
+
+type List[A] = Cons[A] | None
+class Cons[A]: Some[A] & { tail: List[A] }
+//│ Defined type List
+//│ Defined class Cons
+
+// TODO will be no longer needed with new class ctors
+def Cons{value; tail} = Cons(Some{value} with {tail})
+//│ Cons: {tail: List['a], value: 'a} -> cons & (Some['a] & {tail: List['a]})
+
+rec def map2 f ls = case ls of {
+  | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
+  | None -> None{}
+  }
+//│ map2: ('a -> 'b) -> ((cons & {tail: 'c, value: 'a}) | ((none & anything) & ~cons)) as 'c -> (cons & (Some['b] & {tail: List['b]})) | none
+
