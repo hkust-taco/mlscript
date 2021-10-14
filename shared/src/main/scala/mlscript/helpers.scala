@@ -41,8 +41,6 @@ abstract class TypeImpl extends Located { self: Type =>
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
-    case AppliedType(Primitive(op), l :: r :: Nil) if op === "with" =>
-      parensIf(l.showIn(ctx, 0) + " with " + r.showIn(ctx, 1), outerPrec >= 1)
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}" // Note: Not currently used by expanded compact type!
   }

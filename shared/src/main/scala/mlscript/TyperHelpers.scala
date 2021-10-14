@@ -69,6 +69,10 @@ abstract class TyperHelpers { self: Typer =>
       case _ => NegType(this)(prov)
     }
     
+    // Sometimes, Without types are temporarily pushed to the RHS of constraints,
+    // sometimes behind a single negation,
+    // just for the time of massaging the constraint through a type variable.
+    // So it's important we only push and simplify Without types only in _positive_ position!
     def without(names: Set[Str]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
@@ -82,16 +86,7 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
       case a @ AppType(f, as) => ???
-      // case t @ RecordType(fs) if fs.forall(_._1 =/= name) => t // ? probably not right
-      case t @ RecordType(fs) =>
-        RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
-        // ^ Since we want to be able to transform S\a<:T to S<:T\a in the constraint solver,
-        //    interpreting Without as field deletion would be wrong. Instead, Without implements
-        //    field _hiding_, which makes a given field irrelevant for a given type, during
-        //    later subtyping constraints that will involve the type.
-        //    We can still remove fields when these Without types appear in positive positions,
-        //    so there will still be opportunity for simplification.
-        Without(this, names)(noProv)
+      case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
       case t @ TupleType(fs) => t
       case vt: VarType => ???
       case n @ NegType(_ : PrimType | _: FunctionType | _: RecordType) => n
@@ -101,7 +96,8 @@ abstract class TyperHelpers { self: Typer =>
         // case _: ExtrType | _: NegType => true
         case _ => false
       }) => nt.neg(n.prov, force = true).withoutPos(names)
-      case e @ ExtrType(_) => e // valid?
+      case e @ ExtrType(_) => e // valid? -> seems we could go both ways, but this way simplifies constraint solving
+      // case e @ ExtrType(false) => e
       case p @ ProxyType(und) => ProxyType(und.withoutPos(names))(p.prov)
       case p @ PrimType(_, _) => p
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
@@ -110,12 +106,12 @@ abstract class TyperHelpers { self: Typer =>
       case tr: TypeRef => tr.expand.unwrapAll
       case u => u
     }
-    def negAll(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
+    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
       case ExtrType(b) => ExtrType(!b)(noProv)
-      case ComposedType(true, l, r) => l.negAll(f, p) & r.negAll(f, p)
-      case ComposedType(false, l, r) => l.negAll(f, p) | r.negAll(f, p)
+      case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
+      case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
-      case tr: TypeRef => tr.expand.negAll(f, p)
+      case tr: TypeRef => tr.expand.negNormPos(f, p)
       case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.
@@ -124,10 +120,10 @@ abstract class TyperHelpers { self: Typer =>
     def withProvOf(ty: SimpleType): ProxyType = withProv(ty.prov)
     def withProv(p: TypeProvenance): ProxyType = ProxyType(this)(p)
     def pushPosWithout(implicit raise: Raise): SimpleType = this match {
-      case NegType(n) => n.negAll(_.pushPosWithout, prov)
+      case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => b.unwrapAll.withoutPos(ns) match {
         case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
-        case Without(NegType(nt), ns) => nt.negAll(_.pushPosWithout, nt.prov).withoutPos(ns) match {
+        case Without(NegType(nt), ns) => nt.negNormPos(_.pushPosWithout, nt.prov).withoutPos(ns) match {
           case rw @ Without(NegType(nt), ns) =>
             nt match {
               case _: TypeVariable | _: PrimType | _: RecordType => rw
@@ -136,40 +132,6 @@ abstract class TyperHelpers { self: Typer =>
           case rw => rw
         }
         case rw => rw
-      }
-      // TODO rm:
-      case Without(b, ns) => b.without(ns) match {
-        case rewritten @ Without(b, ns) => b match {
-          case t @ RecordType(fs) => // In positive position, this is valid:
-            RecordType(fs.filterNot(nt => ns(nt._1)))(t.prov)
-          case _: TypeVariable => this
-          // case t: NegType => t
-          // case NegType(t) => t.without(ns).neg(b.prov)
-          // case NegType(_: BaseType | _: RecordType) => b
-          // case NegType(Without(b2, ns2)) => b
-          
-          case NegType(_: BaseType) => b
-          
-          // case NegType(Without(NegType(b2), ns2)) => b2.without(ns).neg().without(ns2).neg()
-          // case NegType(Without(_: BaseType | _: RecordType, ns2)) => b
-          // case NegType(Without(_: BaseType | _: RecordType, ns2)) /* if ns.exists(ns2) */ =>
-          //   b.without(ns.filterNot(ns2))
-          case NegType(Without(b2, ns2)) /* if ns.exists(ns2) */ =>
-            b2.without(ns2.filterNot(ns)).neg().without(ns.filterNot(ns2))
-          
-          // case NegType(Without(b2, ns2)) => b2.without(ns.filterNot(ns2)).neg() // make things work but surely wrong!
-          case NegType(Without(NegType(b2), ns2)) => b2.without(ns.filterNot(ns2)).neg().without(ns2).neg()
-          
-          case NegType(_) => rewritten
-          
-          // case Without(_: BaseType, ns) => b
-          case b: BaseType => b
-          case b: TypeRef => b
-          
-          // case t: NegType => this
-          case _ => lastWords(s"$this $rewritten (${this.getClass})")
-        }
-        case _ => this
       }
       case _ => this
     }

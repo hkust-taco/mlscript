@@ -102,13 +102,13 @@ foo arg
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int | (int | (int | int))
 //│ constrain calls: 464
-//│ annoying  calls: 2509
+//│ annoying  calls: 2423
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int | (int | (int | int))
 //│ constrain calls: 464
-//│ annoying  calls: 2640
+//│ annoying  calls: 2506
 
 
 // ====== 5 ====== //

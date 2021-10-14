@@ -96,8 +96,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     }
     case class RhsField(name: Str, ty: SimpleType) extends RhsNf
     case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
-      assert(!bty.exists(_.isInstanceOf[PrimType]))
-      // TODO assert we don't have both bases and a field? -> should make that an either...
+      require(!bty.exists(_.isInstanceOf[PrimType]))
+      require(bty.isEmpty || f.isEmpty)
+      // TODO improve type: should make (bty, f) an either...
       override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
     }
     case object RhsBot extends RhsNf
@@ -203,15 +204,13 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases
-            case (LhsTop, _) | (LhsRefined(N, RecordType(Nil)), _) | (_, RhsBot) | (_, RhsBases(Nil, N, N)) => fail  // TODO actually get rid of LhsTop and RhsBot...
-            // case (_, RhsBases(Nil, N, N)) => fail
+            case (LhsTop, _) | (LhsRefined(N, RecordType(Nil)), _) | (_, RhsBot) | (_, RhsBases(Nil, N, N)) =>
+              // TODO ^ actually get rid of LhsTop and RhsBot...
+              fail
             case (LhsRefined(S(f0@FunctionType(l0, r0)), r), RhsBases(_, S(f1@FunctionType(l1, r1)), fo)) =>
-              // FIXME shoudn't we check the reft is empty?:
-              // if (fo.isEmpty)
-                rec(f0, f1)
-              // else ()
-            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _, _)) => // Q: ws nonEmpty okay here?!
-              // fail
+              assert(fo.isEmpty)
+              rec(f0, f1)
+            case (LhsRefined(S(f: FunctionType), r), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, r), Nil, done_rs)
             case (LhsRefined(S(pt: PrimType), r), RhsBases(pts, bs, f)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
@@ -229,61 +228,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-              /* 
-            case (LhsRefined(b, r, ws), RhsField(n, t)) =>
-              // val ws2 = ws.filter(_.reft.fields.exists(_._1 === n))
-              val (ws2, ws3) = (WithType(TopType, r)(noProv) :: ws).partition(_.reft.fields.exists(_._1 === n))
-              // if (ws2.size < ws.size)
-              println(s"$ws2 $ws3")
-              // if (ws3.isEmpty)
-              if (ws3.forall(_.isEmpty))
-                // annoying(Nil,
-                //   ws2.flatMap(_.reft.fields.filter(_._1 === n).map(_._2)).reduceOption(_ & _).getOrElse(BotType),
-                //   Nil, done_rs)
-                rec(
-                  ws2.flatMap(_.reft.fields.filter(_._1 === n).map(_._2)).reduceOption(_ & _).getOrElse(BotType),
-                  // done_rs.toType
-                  t
-                )
-              else annoying(ws3.map(_.base), LhsRefined(b, r, ws2), Nil, done_rs)
-              ???
-            case (LhsRefined(b, r, ws), RhsBases(ps, bty, N)) =>
-              annoying(ws.map(_.base), LhsRefined(b, r, Nil), Nil, done_rs)
-            case (LhsRefined(b, r, ws), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
-              ws.collectFirst { case WithType(tv: TypeVariable, rcd) => tv -> rcd } match {
-                case S(tv -> rcd) =>
-                  var found = false
-                  rec(tv, WithType(done_rs.toType | b.fold(BotType: SimpleType)(_.neg()) | r.neg() | 
-                    ws.filterNot(_.base.isInstanceOf[TypeVariable] && !found && { found = false; true })
-                      .map(_.neg())
-                      .foldLeft(BotType: SimpleType)(_ | _), rcd)(noProv))
-                case N => // The idea is that this case should never happen... is that true?
-                  if (ws.forall{
-                    case WithType(NegType(_: RecordType | _: PrimType), _)=> true
-                    case _ => false
-                  })
-                    // If all bases of the ws-es are crappy neg types,
-                    // can assume they can't be used to solve the constraint at hand
-                    // through its base types. We can treat the ws as their fields!
-                    annoying(Nil, LhsRefined(b, r.mergeAllFields(ws.view.flatMap(_.reft.fields)), Nil), Nil, RhsBases(Nil, N, S(rf)))
-                  else (r.fields.iterator ++ ws.iterator.flatMap(_.reft.fields))
-                      .filter(_._1 === n).map(_._2)
-                      .reduceOption(_ & _) match {
-                    case S(ty) =>
-                      println(s"ARGH  $done_ls  <!  $done_rs")
-                      warn(msg"Potential loss of principal typing here!", prov.loco)//(prov)
-                      rec(ty, t)
-                    case N =>
-                      annoying(Nil, LhsRefined(b, RecordType(Nil)(noProv), Nil), Nil, done_rs)
-                  }
-              }
-            case (LhsRefined(b, r, Nil), RhsBases(ps, bty, S(rf@RhsField(n, t)))) =>
-              // val (ws2, ws3) = ws.partition(_.reft.fields.exists(_._1 === n))
-              // if (ws3.isEmpty)
-              // else annoying(ws3.map(_.base), LhsRefined(b, r, ws2), Nil, done_rs)
-              // ???
-              annoying(Nil, done_ls, Nil, rf)
-              */
             case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }
@@ -399,10 +343,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
             annoying(lhs :: Nil, LhsTop, l :: r :: Nil, RhsBot)
           case (ComposedType(false, l, r), _) =>
             annoying(l :: r :: Nil, LhsTop, rhs :: Nil, RhsBot)
-          // case (WithType(b, r), r @ RecordType(fs)) =>
-          //   // fs.foreach(f => r.find(_._1 === f._1).foreach(f0 => rec(f0._2, f1._2))
-          //   val captured = fs.partitionMap()
-          // case (_: NegType, _) | (_, _: NegType) =>
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             annoying(lhs :: Nil, LhsTop, rhs :: Nil, RhsBot)
           case _ =>

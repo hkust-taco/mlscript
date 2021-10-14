@@ -209,3 +209,11 @@ def v = negWeird with { x = 1 }
 v: A | { x: 'a }
 //│ res: A | {x: 1}
 
+
+def funny = error: nothing\x
+//│ funny: nothing\x
+
+// It could be agrued this should fail... but that would make constraint solving more awkward!
+funny.x
+//│ res: nothing
+
