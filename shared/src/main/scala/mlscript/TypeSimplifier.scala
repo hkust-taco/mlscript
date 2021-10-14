@@ -146,10 +146,6 @@ trait TypeSimplifier { self: Typer =>
       case Without(b, ns) =>
         val base = ct(prims = BaseTypes single PrimType(Var(ns.map("\\"+_).mkString), Set.empty/*FIXME*/)(noProv))
         ct(prims = BaseTypes single CompactAppType(base, go(b, pol, parents) :: Nil))
-      case WithType(b, r) =>
-        val op = ct(prims = BaseTypes single PrimType(Var("with"), Set.empty/*FIXME*/)(noProv))
-        // val base = go(b, pol, Set.empty)
-        ct(prims = BaseTypes single CompactAppType(op, go(b, pol, Set.empty) :: go(r, pol, Set.empty) :: Nil))
       case a @ AppType(lhs, args) =>
         ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
       case RecordType(fs) =>

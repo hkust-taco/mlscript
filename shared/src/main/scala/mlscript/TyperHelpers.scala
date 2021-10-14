@@ -76,16 +76,6 @@ abstract class TyperHelpers { self: Typer =>
     def without(name: Str): SimpleType = 
       without(Set.single(name))
     
-    def w(rcd: RecordType, prov: TypeProvenance = noProv): SimpleType = this match {
-      case RecordType(fs) =>
-        RecordType(fs.filterNot(f => rcd.fields.exists(_._1 === f._1)) ++ rcd.fields)(prov)
-      case ExtrType(false) => rcd
-      case ExtrType(true) => this
-      case b: BaseType => b & rcd
-      case WithType(b, rcd2) => WithType(b, rcd2.addFields(rcd.fields))(prov)
-      case _ => WithType(this, rcd)(prov)
-    }
-    
     def withoutPos(names: Set[Str]): SimpleType = this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case t @ FunctionType(l, r) => t
@@ -135,19 +125,6 @@ abstract class TyperHelpers { self: Typer =>
     def withProv(p: TypeProvenance): ProxyType = ProxyType(this)(p)
     def pushPosWithout(implicit raise: Raise): SimpleType = this match {
       case NegType(n) => n.negAll(_.pushPosWithout, prov)
-      case WithType(b, rcd) => b.unwrapAll.w(rcd) match {
-        case WithType(c @ ComposedType(pol, l, r), rcd) => ComposedType(pol, l.w(rcd), r.w(rcd))(c.prov)
-        // case WithType(NegType(nt), rcd) => nt.negAll(_.pushPosWithout.withProvOf(nt)).w(rcd) match {
-        case WithType(NegType(nt), rcd) => nt.negAll(_.pushPosWithout, nt.prov).w(rcd) match {
-          case rw @ WithType(NegType(nt), rcd) =>
-            nt match {
-              case _: TypeVariable | _: PrimType | _: RecordType => rw
-              case _ => lastWords(s"$this  $rw  (${nt.getClass})")
-            }
-          case rw => rw
-        }
-        case rw => rw
-      }
       case Without(b, ns) => b.unwrapAll.withoutPos(ns) match {
         case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
         case Without(NegType(nt), ns) => nt.negAll(_.pushPosWithout, nt.prov).withoutPos(ns) match {
@@ -160,6 +137,7 @@ abstract class TyperHelpers { self: Typer =>
         }
         case rw => rw
       }
+      // TODO rm:
       case Without(b, ns) => b.without(ns) match {
         case rewritten @ Without(b, ns) => b match {
           case t @ RecordType(fs) => // In positive position, this is valid:
@@ -241,7 +219,6 @@ abstract class TyperHelpers { self: Typer =>
       case PrimType(_, _) => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
-      case WithType(b, r) => b :: r :: Nil
     }
     
     def getVars: Set[TypeVariable] = {

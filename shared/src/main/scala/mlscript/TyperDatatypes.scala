@@ -107,15 +107,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"${base}\\${names.mkString("-")}"
   }
   
-  case class WithType(base: SimpleType, reft: RecordType)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = base.level max reft.level
-    def isEmpty: Bool = this match {
-      case WithType(TopType | RecordType(Nil), RecordType(Nil)) => true
-      case _ => false
-    }
-    override def toString = s"${base} w/ ${reft}"
-  }
-  
   /** The sole purpose of ProxyType is to store additional type provenance info. */
   case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance, override val ctxProv: Opt[TypeProvenance] = N)
       extends SimpleType {
