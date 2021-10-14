@@ -120,18 +120,19 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
       }
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
-      // (ls, rs) match {
+      def mkRhs(ls: Ls[SimpleType]): SimpleType = {
+        def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
+        tys.reduceOption(_ | _).getOrElse(BotType)
+      }
+      def mkLhs(rs: Ls[SimpleType]): SimpleType = {
+        def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
+        tys.reduceOption(_ & _).getOrElse(TopType)
+      }
       (ls.mapHead(_.pushPosWithout), rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
-        case ((tv: TypeVariable) :: ls, _) =>
-          def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
-          val rhs = tys.reduceOption(_ | _).getOrElse(BotType)
-          rec(tv, rhs)
-        case (_, (tv: TypeVariable) :: rs) =>
-          def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
-          val lhs = tys.reduceOption(_ & _).getOrElse(TopType)
-          rec(lhs, tv)
+        case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls))
+        case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv)
         case (ComposedType(true, ll, lr) :: ls, _) =>
           mkCase("1"){ implicit dbgHelp => annoying(ll :: ls, done_ls, rs, done_rs) }
           mkCase("2"){ implicit dbgHelp => annoying(lr :: ls, done_ls, rs, done_rs) }
@@ -166,40 +167,10 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
-        case (Without(rt:RecordType, ns) :: ls, rs) =>
-          annoying(RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: ls, done_ls, rs, done_rs)
-        // case (ls, Without(rt:RecordType, ns) :: rs) =>
-        //   annoying(ls, done_ls, RecordType(rt.fields.filterNot(ns contains _._1))(rt.prov) :: rs, done_rs)
-          
-        case (Without(b:TypeVariable, ns) :: ls, rs) =>
-          // println("!" + (ls.iterator ++ done_ls.toTypes).map(_.neg()).toList)
-          // println("!" + ((ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes).reduceOption(_ | _))
-          def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
-          val rhs = tys.reduceOption(_ | _).getOrElse(ExtrType(true)(noProv))
-          rec(b, rhs.without(ns))
-        // case (Without(_, ns) :: ls, rs) => die
-        // case (ls, Without(b:TypeVariable, ns) :: rs) =>
-        case (ls, Without(b, ns) :: Nil) if done_rs === RhsBot =>
-          def tys = ls.iterator ++ done_ls.toTypes
-          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
-          rec(lhs.without(ns), b)
-        case (ls, Without(b, ns) :: rs) =>
-          def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
-          val lhs = tys.reduceOption(_ & _).getOrElse(ExtrType(false)(noProv))
-          rec(lhs.without(ns), b)
-        
-          /* 
-        case (Without(np @ NegType(_: PrimType), ns) :: ls, rs) =>
-          annoying(np :: ls, done_ls, rs, done_rs)
-        case (ls, Without(np @ NegType(_: PrimType), ns) :: rs) =>
-          annoying(ls, done_ls, np :: rs, done_rs)
-        case (Without(ty, ns) :: ls, rs) => 
-          // println(s"$ty --> ${ty.without(ns)}")
-          annoying(ty.without(ns) :: ls, done_ls, rs, done_rs)
-        case (ls, Without(ty, ns) :: rs) =>
-          // println(s"$ty --> ${ty.without(ns)}")
-          annoying(ls, done_ls, ty.without(ns) :: rs, done_rs)
-          */
+        case (Without(b: TypeVariable, ns) :: ls, rs) => rec(b, mkRhs(ls).without(ns))
+        case (Without(NegType(b: TypeVariable), ns) :: ls, rs) => rec(b, NegType(mkRhs(ls).without(ns))(noProv))
+        case (Without(_, _) :: ls, rs) => lastWords(s"`pushPosWithout` should have removed this Without")
+        case (ls, Without(_, _) :: rs) => lastWords(s"unexpected Without in negative position not at the top level")
           
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))
@@ -228,6 +199,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
+            case (LhsRefined(N, r), RhsBases(pts, N, N)) => fail
             case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }

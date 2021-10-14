@@ -217,3 +217,19 @@ def funny = error: nothing\x
 funny.x
 //│ res: nothing
 
+
+:e
+(error: { x: int }): int | string
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.222: 	(error: { x: int }): int | string
+//│ ║         	 ^^^^^
+//│ ╟── expression of type `{x: int}` does not match type `int | string`
+//│ ║  l.222: 	(error: { x: int }): int | string
+//│ ╙──       	        ^^^^^^^^^^
+//│ res: int | string
+
+
+(error: (~ 'a) \ x): { x: int }
+//│ res: {x: int}
+
+

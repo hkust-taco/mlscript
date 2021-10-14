@@ -100,6 +100,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (l, S(r)) => Function(l, r)
     case (l, N) => l
   }
+  // Note: field removal types are not supposed to be explicitly used by programmers,
+  //    and they won't work in negative positions,
+  //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
   def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)
