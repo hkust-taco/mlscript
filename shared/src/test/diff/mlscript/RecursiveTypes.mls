@@ -1,0 +1,15 @@
+
+// From Simple-sub tests:
+let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
+//│ res: (anything -> anything -> anything -> 'a) as 'a | (anything -> anything -> 'b) as 'b
+
+rec def l a a a = l
+//│ l: (anything -> anything -> anything -> 'a) as 'a
+
+rec def r a a = l
+//│ r: (anything -> anything -> anything -> 'a) as 'a
+
+if true then l else r
+//│ res: (anything -> anything -> anything -> 'a) as 'a | (anything -> (anything -> anything -> anything -> 'b) as 'b)
+
+
