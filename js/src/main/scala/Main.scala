@@ -113,6 +113,77 @@ object Main {
               </b><br/>"""
     }
 
+    def underline(fragment: Str): Str =
+      s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
+
+    var totalTypeErrors = 0
+    var totalWarnings = 0
+    var outputMarker = ""
+    val blockLineNum = 0
+    val showRelativeLineNums = false
+
+    def report(diag: Diagnostic): Str = {
+      var sb = new collection.mutable.StringBuilder
+      def output(s: Str): Unit = {
+        sb ++= outputMarker
+        sb ++= s
+        sb ++= htmlLineBreak
+        ()
+      }
+      val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+      val headStr = diag match {
+        case TypeError(msg, loco) =>
+          totalTypeErrors += 1
+          s"╔══ <strong style=\"color: #E74C3C\">[ERROR]</strong> "
+        case Warning(msg, loco) =>
+          totalWarnings += 1
+          s"╔══ <strong style=\"color: #F39C12\">[WARNING]</strong> "
+      }
+      val lastMsgNum = diag.allMsgs.size - 1
+      var globalLineNum =
+        blockLineNum // solely used for reporting useful test failure messages
+      diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
+        val isLast = msgNum =:= lastMsgNum
+        val msgStr = msg.showIn(sctx)
+        if (msgNum =:= 0)
+          output(headStr + msgStr)
+        else
+          output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
+        if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
+        loco.foreach { loc =>
+          val (startLineNum, startLineStr, startLineCol) =
+            loc.origin.fph.getLineColAt(loc.spanStart)
+          if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
+          val (endLineNum, endLineStr, endLineCol) =
+            loc.origin.fph.getLineColAt(loc.spanEnd)
+          var l = startLineNum
+          var c = startLineCol // c starts from 1
+          while (l <= endLineNum) {
+            val globalLineNum = loc.origin.startLineNum + l - 1
+            val relativeLineNum = globalLineNum - blockLineNum + 1
+            val shownLineNum =
+              if (showRelativeLineNums && relativeLineNum > 0)
+                s"l.+$relativeLineNum"
+              else "l." + globalLineNum
+            val prepre = "║  "
+            val pre = s"$shownLineNum: " // Looks like l.\d+
+            val curLine = loc.origin.fph.lines(l - 1)
+            val lastCol =
+              if (l =:= endLineNum) endLineCol else curLine.length + 1
+            val front = curLine.slice(0, c - 1)
+            val middle = underline(curLine.slice(c - 1, lastCol - 1))
+            val back = curLine.slice(lastCol - 1, curLine.size)
+            output(s"$prepre$pre\t$front$middle$back")
+            c = 1
+            l += 1
+            if (isLast) output("╙──")
+          }
+        }
+      }
+      if (diag.allMsgs.isEmpty) output("╙──")
+      sb.toString
+    }
+
     implicit val raise: Raise = throw _
     implicit var ctx: Ctx =
       try processTypeDefs(pgrm.typeDefs)(Ctx.init, raise)
@@ -161,7 +232,7 @@ object Main {
             case LetS(isrec, Var(nme), rhs) => "let " + nme
             case _: Statement               => "statement"
           }
-          res ++= formatError(culprit, err)
+          res ++= report(err)
           errorOccurred = true
       }
     }
