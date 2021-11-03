@@ -121,7 +121,7 @@ object Main {
                 var l = startLineNum
                 var c = startLineCol // c starts from 1
                 while (l <= endLineNum) {
-                  val globalLineNum = loc.origin.startLineNum + l - 1
+                  val globalLineNum = loc.origin.startLineNum + l
                   val relativeLineNum = globalLineNum - blockLineNum + 1
                   val shownLineNum =
                     if (showRelativeLineNums && relativeLineNum > 0)
@@ -136,9 +136,9 @@ object Main {
                   val middle = underline(curLine.slice(c - 1, lastCol - 1))
                   val back = curLine.slice(lastCol - 1, curLine.size)
                   output(s"$prepre$pre\t$front$middle$back")
+                  if (isLast && l =:= endLineNum) output("╙──")
                   c = 1
                   l += 1
-                  if (isLast) output("╙──")
                 }
               }
             }
