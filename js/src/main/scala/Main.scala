@@ -67,7 +67,7 @@ object Main {
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
                 ${err.allMsgs.tail.map(_._1.show.toString + "<br/>").mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}
                 </font></b>
-                $stackTrace"""
+                $stackTrace$htmlLineBreak"""
           }
           def formatBinding(nme: Str, ty: TypeScheme): Str = {
             val exp = getType(ty)
@@ -81,7 +81,6 @@ object Main {
           var totalTypeErrors = 0
           var totalWarnings = 0
           var outputMarker = ""
-          val blockLineNum = 0
           val showRelativeLineNums = false
 
           def report(diag: Diagnostic): Str = {
@@ -102,8 +101,7 @@ object Main {
                 s"╔══ <strong style=\"color: #F39C12\">[WARNING]</strong> "
             }
             val lastMsgNum = diag.allMsgs.size - 1
-            var globalLineNum =
-              blockLineNum // solely used for reporting useful test failure messages
+            var globalLineNum = 0
             diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
               val isLast = msgNum =:= lastMsgNum
               val msgStr = msg.showIn(sctx)
@@ -122,7 +120,7 @@ object Main {
                 var c = startLineCol // c starts from 1
                 while (l <= endLineNum) {
                   val globalLineNum = loc.origin.startLineNum + l
-                  val relativeLineNum = globalLineNum - blockLineNum + 1
+                  val relativeLineNum = globalLineNum + 1
                   val shownLineNum =
                     if (showRelativeLineNums && relativeLineNum > 0)
                       s"l.+$relativeLineNum"
