@@ -22,11 +22,36 @@ Nil{}
 //│ ╙──      	   ^^
 //│ res: (nil & ListBase[nothing]) | error
 
-def Nil = Nil (ListBase (Seq { size = 0 }))
+def Nil = Nil { size = 0 }
 //│ Nil: nil & ListBase[nothing]
 
-def Cons head tail =
+// FIXME
+Cons 1 Nil
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.29: 	Cons 1 Nil
+//│ ║        	^^^^^^
+//│ ╟── expression of type `1` does not match type `{head: ?a, size: int, tail: List[?a]}`
+//│ ║  l.29: 	Cons 1 Nil
+//│ ╙──      	     ^
+//│ /!!!\ Uncaught error: scala.MatchError: ({head: α10, size: int, tail: List[α10]},|Some(([[α12]] -> α13))|None) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:179)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:121)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:192)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:124)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:121)
+
+// In the old inheritance semantics, this used to be required:
+def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
+//│ Cons_old: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
+
+def Cons head tail =
+  Cons { size = succ tail.size; head; tail }
 //│ Cons: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
 
 Nil: ListBase[anything]
@@ -66,23 +91,23 @@ d.tail.size
 d.tail.head
 d.tail.tail
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.66: 	d.tail.head
+//│ ║  l.91: 	d.tail.head
 //│ ║        	^
 //│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
 //│ ║  l.10: 	type List[A] = Nil | Cons[A]
 //│ ║        	               ^^^
 //│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.66: 	d.tail.head
+//│ ║  l.91: 	d.tail.head
 //│ ╙──      	^
 //│ res: 2 | 1 | error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.67: 	d.tail.tail
+//│ ║  l.92: 	d.tail.tail
 //│ ║        	^
 //│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
 //│ ║  l.10: 	type List[A] = Nil | Cons[A]
 //│ ║        	               ^^^
 //│ ╟── but it flows into field selection with expected type `{tail: ?a}`
-//│ ║  l.67: 	d.tail.tail
+//│ ║  l.92: 	d.tail.tail
 //│ ╙──      	^
 //│ res: List[1 | 2] | error
 

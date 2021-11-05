@@ -28,3 +28,23 @@ id
 //│ ╙──     	^^^
 //│ res: error
 
+
+
+1: 1 & int: { x: int; y: string }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.33: 	1: 1 & int: { x: int; y: string }
+//│ ║        	^
+//│ ╟── expression of type `1 & int` does not match type `{x: int, y: string}`
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.33: 	1: 1 & int: { x: int; y: string }
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^
+//│ res: {x: int, y: string}
+
+1: 1 & int: { x: int; y: string } | string
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.35: 	1: 1 & int: { x: int; y: string } | string
+//│ ║        	^
+//│ ╙── expression of type `1 & int` does not match type `{x: int, y: string} | string`
+//│ res: {x: int, y: string} | string
+
+
