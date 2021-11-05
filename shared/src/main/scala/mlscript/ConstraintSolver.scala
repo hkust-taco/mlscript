@@ -235,7 +235,7 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         }
         lhs_rhs match {
           case (ExtrType(true), _) => ()
-          case (_, ExtrType(false)) => ()
+          case (_, ExtrType(false) | RecordType(Nil)) => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0)(raise, Nil)

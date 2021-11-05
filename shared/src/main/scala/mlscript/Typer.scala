@@ -144,26 +144,44 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
         val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
         val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
-        def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeDef]): Bool = trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
+        var fields = SortedMap.empty[Str, SimpleType]
+        def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
+            (implicit travsersed: Set[TypeDef]): Bool =
+              trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
           case PrimType(_, _) => true
           case TypeRef(td, _) if travsersed(td) =>
             err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
             false
-          case tr @ TypeRef(td, targs) => checkCycle(tr.expand)(travsersed + td)
-          case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
+          case tr @ TypeRef(td, targs) => checkCycleComputeFields(tr.expand, computeFields)(travsersed + td)
+          case ComposedType(_, l, r) => checkCycleComputeFields(l, computeFields) && checkCycleComputeFields(r, computeFields)
           case tv: TypeVariable => true
           case _: FunctionType => true
-          case NegType(u) => checkCycle(u)
-          case _: RecordType | _: ExtrType => true
-          case p: ProxyType => checkCycle(p.underlying)
+          case NegType(u) => checkCycleComputeFields(u, computeFields)
+          case RecordType(fs) =>
+            fs.foreach(f => fields += f._1 -> (fields.getOrElse(f._1, TopType) & f._2))
+            true
+          case _: ExtrType => true
+          case p: ProxyType => checkCycleComputeFields(p.underlying, computeFields)
           case _ => ??? // TODO
         }}()
         val rightParents = td.kind match {
-          case Als => checkCycle(body_ty)(Set.single(td))
+          case Als => checkCycleComputeFields(body_ty, computeFields = false)(Set.single(td))
           case Cls | Trt =>
+            val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
+              // case PrimType(Var("string"), _) => true // Q: always?
               case PrimType(_, _) => true // Q: always?
-              case TypeRef(_, _) => true // Q: always?
+              case tr @ TypeRef(td, _) =>
+                td.kind match {
+                  case Cls =>
+                    parentsClasses.isEmpty || {
+                      err(msg"cannot inherit from ${tr.defn.nme
+                          } as this type already inherits from ${parentsClasses.head.defn.nme}",
+                        prov.loco)
+                      false
+                    } tap (_ => parentsClasses += tr)
+                  case Trt | Als => checkParents(tr.expand)
+                }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
               case ComposedType(true, l, r) =>
                 err(msg"cannot inherit from a type union", prov.loco)
@@ -181,9 +199,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case p: ProxyType => checkParents(p.underlying)
               case _ => ??? // TODO
             }
-            checkParents(body_ty) && checkCycle(body_ty)(Set.single(td)) && {
+            checkParents(body_ty) &&
+                checkCycleComputeFields(body_ty, computeFields = td.kind === Cls)(Set.single(td)) && {
               val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
-              val ctor = PolymorphicType(0, FunctionType(body_ty, nomTag & body_ty)(noProv/*FIXME*/))
+              val ctor = PolymorphicType(0, FunctionType(RecordType(fields.toList)(noProv), nomTag & body_ty)(noProv/*FIXME*/))
               ctx += n.name -> ctor
               true
             }

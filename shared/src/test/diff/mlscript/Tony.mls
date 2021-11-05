@@ -33,7 +33,7 @@ foo 1
 //│ res: nothing | (1 & ~{value: nothing}) | (1 & ~some)
 
 def fn = foo None
-//│ fn: nothing | ((anything -> none) & ~{value: nothing}) | ((anything -> none) & ~some)
+//│ fn: nothing | (({} -> none) & ~{value: nothing}) | (({} -> none) & ~some)
 
 // :d
 fn{} // foo None {}

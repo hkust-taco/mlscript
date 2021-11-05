@@ -1,0 +1,71 @@
+
+trait A: { x: int }
+trait B: { y: string }
+class C: { x: 0 | 1 }
+//│ Defined trait A
+//│ Defined trait B
+//│ Defined class C
+
+class D: C & A & B
+//│ Defined class D
+
+error: A & B
+//│ res: A & B
+
+:e
+def dv = D{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.16: 	def dv = D{}
+//│ ║        	         ^^^
+//│ ╟── expression of type `anything` does not match type `{x: (0 & int) | (1 & int), y: string}`
+//│ ║  l.16: 	def dv = D{}
+//│ ╙──      	          ^^
+//│ dv: (d & ((C & A) & B)) | error
+
+def dv = D { x = 0; y = "hello" }
+//│ dv: d & ((C & A) & B)
+
+// FIXME currently this should actually worked
+:e
+dv: nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.30: 	dv: nothing
+//│ ║        	^^
+//│ ╟── expression of type `d & ((C & A) & B)` does not match type `nothing`
+//│ ║  l.25: 	def dv = D { x = 0; y = "hello" }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.30: 	dv: nothing
+//│ ║        	^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.30: 	dv: nothing
+//│ ╙──      	    ^^^^^^^
+//│ res: nothing
+
+// TODO support unrelated trait mixing
+dv: A & B: nothing
+//│ res: nothing
+
+
+trait Indirect: C
+//│ Defined trait Indirect
+
+class E: Indirect
+//│ Defined class E
+
+:e
+E{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.57: 	E{}
+//│ ║        	^^^
+//│ ╟── expression of type `anything` does not have field 'x'
+//│ ║  l.57: 	E{}
+//│ ╙──      	 ^^
+//│ res: (e & Indirect) | error
+
+def ev = E { x = 1 }
+ev: C
+//│ ev: e & Indirect
+//│ res: C
+
+

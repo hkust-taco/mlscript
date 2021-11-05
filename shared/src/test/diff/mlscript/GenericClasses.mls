@@ -35,7 +35,7 @@ res.value
 //│ ╙──      	^^^
 //│ res: error | int
 
-// FIXME properly check:
+:e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
 //│ ║  l.39: 	42: Option[int, int]

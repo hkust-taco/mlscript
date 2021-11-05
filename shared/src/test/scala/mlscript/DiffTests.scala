@@ -14,7 +14,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   private val files = ls.rec(dir).filter(_.isFile)
   
-  files.foreach { file => val fileName = file.baseName; test(fileName) {
+  private val validExt = Set("fun", "mls")
+  
+  files.foreach { file => val fileName = file.baseName; if (validExt(file.ext)) test(fileName) {
     
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
