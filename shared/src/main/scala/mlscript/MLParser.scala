@@ -32,11 +32,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
   def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
-  def const[_: P]: P[Term] =
+  def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
-  def subtermNoSel[_: P]: P[Term] = P( parens | record | const | variable )
+  def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ident).rep ).map {
     case (st, sels) => sels.foldLeft(st)(Sel) }
   def record[_: P]: P[Rcd] = locate(P(
@@ -88,7 +88,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def tyDecl[_: P]: P[TypeDef] =
     P((tyKind ~/ tyName ~ tyParams).flatMap {
-      case (k @ (Cls | Trt), id, ts) => ":" ~ ty map (bod => TypeDef(k, id, ts, bod))
+      case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? map (bod => TypeDef(k, id, ts, bod.getOrElse(Top)))
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
     })
   def tyParams[_: P]: P[Ls[Str]] =
@@ -103,7 +103,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // Note: field removal types are not supposed to be explicitly used by programmers,
   //    and they won't work in negative positions,
   //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
-  def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
+  def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | litTy | parTy) ~ ("\\" ~ variable).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)
   }
@@ -116,6 +116,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
+  def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   
   def toplvl[_: P]: P[TopLevel] =
     P( defDecl | tyDecl | term )

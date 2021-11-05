@@ -232,6 +232,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
+      case Literal(lit) => PrimType(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
       case Primitive(name) =>
         vars.get(name) orElse
           typeNamed(ty, name).flatMap(td =>

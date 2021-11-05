@@ -45,7 +45,7 @@ type Test2 = { x: int }
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected ":":1:12, found "= { x: int" at l.47:12: class Test = { x: int }
+//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.47:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }

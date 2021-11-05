@@ -84,7 +84,9 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
           N
         case (RhsBases(_, _, _), _) => N
         case (f @ RhsField(_, _), p: PrimType) => S(RhsBases(p::Nil, N, S(f)))
-        case (f @ RhsField(_, _), _) => S(RhsBases(Nil, S(that), S(f)))
+        case (f @ RhsField(_, _), _) =>
+          // S(RhsBases(Nil, S(that), S(f)))
+          N // can't merge a record and a function -> it's the same as Top
       }
       def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
         case RhsBot => S(RhsField(that._1, that._2))
@@ -96,8 +98,8 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     }
     case class RhsField(name: Str, ty: SimpleType) extends RhsNf
     case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
-      require(!bty.exists(_.isInstanceOf[PrimType]))
-      require(bty.isEmpty || f.isEmpty)
+      require(!bty.exists(_.isInstanceOf[PrimType]), this)
+      require(bty.isEmpty || f.isEmpty, this)
       // TODO improve type: should make (bty, f) an either...
       override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
     }

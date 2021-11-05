@@ -20,10 +20,13 @@ def res = case testVal of
   }
 //│ res: 1 | 1
 
-// TODO support:
 res: 1
+//│ res: 1
+
+// TODO lit pats
+:pe
 case res of { 1 -> "ok" }
-//│ /!\ Parse error: Expected end-of-input:1:4, found ": 1;case r" at l.24:4: res: 1
+//│ /!\ Parse error: Expected "}":1:15, found "1 -> \"ok\" " at l.28:15: case res of { 1 -> "ok" }
 
 // TODO simplify this monster:
 def res = case testVal of

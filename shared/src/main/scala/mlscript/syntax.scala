@@ -99,9 +99,10 @@ sealed abstract class NullaryType                        extends Type
 
 case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
+final case class Literal(lit: Lit)                       extends NullaryType
 
-final case class Primitive(name: Str)                      extends NullaryType
-final class TypeVar(val nameHint: Str, val hash: Int)      extends NullaryType {
+final case class Primitive(name: Str)                    extends NullaryType
+final class TypeVar(val nameHint: Str, val hash: Int)    extends NullaryType {
   override def toString: Str = s"$nameHint:$hash"
 }
 
