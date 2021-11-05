@@ -90,6 +90,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "discard" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "add" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "div" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
       "error" -> BotType,
       "+" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
       "<" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
@@ -516,34 +517,35 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case _ =>
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
-    case Case(cls, bod, rest) =>
-      ctx.tyDefs.get(cls.name) match {
-      case None =>
-        err("type identifier not found: " + cls.name, cls.toLoc)(raise, noProv /*FIXME*/)
-        val e = PrimType(ErrTypeId, Set.empty)(noProv)
-        ((e -> e) :: Nil) -> e
-      case Some(td) =>
-      // TODO check td is a class
-      if (td.kind === Als) err(msg"can only match on classes and traits", cls.toLoc)(raise, noProv /*FIXME*/)
+    case Case(pat, bod, rest) =>
+      val patTy = pat match {
+        case lit: Lit =>
+          PrimType(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
+        case Var(nme) =>
+          ctx.tyDefs.get(nme) match {
+            case None =>
+              err("type identifier not found: " + nme, pat.toLoc)(raise, noProv /*FIXME*/)
+              val e = PrimType(ErrTypeId, Set.empty)(noProv)
+              return ((e -> e) :: Nil) -> e
+            case Some(td) =>
+              // TODO check td is a class (or also support traits?)
+              if (td.kind === Als) err(msg"can only match on classes and traits",
+                pat.toLoc)(raise, noProv /*FIXME*/)
+              clsNameToNomTag(td)(tp(pat.toLoc, "type pattern"), ctx)
+          }
+      }
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
           val tv = freshVar(tp(v.toLoc, "refined scrutinee"))
           newCtx += v.name -> tv
           val bod_ty = typeTerm(bod)(newCtx, raise)
-          // (ComposedType(false, PrimType(Var(cls.name))(noProv // FIXME
-          // ), tv)(noProv), bod_ty, typeArms(scrutVar, rest))
-          (clsNameToNomTag(td)(noProv // FIXME
-          , ctx) -> tv, bod_ty, typeArms(scrutVar, rest))
+          (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
           val bod_ty = typeTerm(bod)(newCtx, raise)
-          (clsNameToNomTag(td)(noProv // FIXME
-          // (NomTag(cls)(noProv // FIXME
-          // (AppliedType(cls, Nil)(noProv // FIXME
-          , ctx) -> TopType, bod_ty, typeArms(scrutVar, rest))
+          (patTy -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
-      }
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Str] -> SimpleType])

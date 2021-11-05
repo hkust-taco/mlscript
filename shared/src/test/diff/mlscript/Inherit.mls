@@ -71,7 +71,10 @@ f (c: Parent)
 //│ ╟── but it flows into argument with expected type `child`
 //│ ║  l.64: 	f (c: Parent)
 //│ ║        	   ^
-//│ ╟── Note: constraint arises from reference:
+//│ ╟── Note: constraint arises from type pattern:
+//│ ║  l.56: 	  | Child -> x.name
+//│ ║        	    ^^^^^
+//│ ╟── from reference:
 //│ ║  l.55: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: string | error

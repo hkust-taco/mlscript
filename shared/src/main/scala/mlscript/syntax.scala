@@ -53,7 +53,7 @@ final case class With(trm: Term, fieldNme: Str, fieldVal: Term)      extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
-final case class Case(clsNme: Primitive, body: Term, rest: CaseBranches) extends CaseBranches
+final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
 final case object NoCases extends CaseBranches
 
