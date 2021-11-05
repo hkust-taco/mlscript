@@ -85,3 +85,33 @@ res 1
 def funny = fun f -> case f of { Some -> f f }
 //│ funny: nothing -> nothing
 
+:p
+class Foo[A]: { x: A }
+    method Map[B]: (A -> B) -> B
+class Bar[A]: Foo[A]
+    method Map f = Bar Foo { x = f this.x }
+//│ Parsed: class Foo[A]: {x: A}; class Bar[A]: Foo[A];
+//│ Desugared: class Foo[A]: {x: A}
+//│ Desugared: class Bar[A]: Foo[A]
+//│ Defined class Foo
+//│ Defined class Bar
+
+:e
+:p
+def a = Bar { x = 1 }
+a.(Foo.Map)(fun x -> x)
+//│ Parsed: def a: (Bar {x: 1}); (a.Foo.Map (x => x));
+//│ Desugared: def a: (Bar {x: 1})
+//│ Desugared: (a.Foo.Map (x => x))
+//│ a: bar & {x: 1}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.100: 	a.(Foo.Map)(fun x -> x)
+//│ ║         	^
+//│ ╟── expression of type `bar & {x: ?a | 1}` does not match type `{Foo.Map: ?b}`
+//│ ║  l.99: 	def a = Bar { x = 1 }
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{Foo.Map: ?c}`
+//│ ║  l.100: 	a.(Foo.Map)(fun x -> x)
+//│ ╙──       	^
+//│ res: error
+

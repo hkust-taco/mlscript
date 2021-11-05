@@ -12,7 +12,7 @@ import mlscript.utils._, shorthands._
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   val keywords = Set(
-    "def", "class", "trait", "type",
+    "def", "class", "trait", "type", "method",
     "let", "rec", "in", "fun", "with",
     "if", "then", "else", "match", "case", "of",
     "_")
@@ -41,7 +41,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def variable[_: P]: P[Var] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ident).rep ).map {
+  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( ident | ("(" ~/ ident ~ "." ~ ident ~ ")").map{ case (prt, id) => s"${prt}.${id}" })).rep ).map {
     case (st, sels) => sels.foldLeft(st)(Sel) }
   def record[_: P]: P[Rcd] = locate(P(
       "{" ~/ (ident ~ "=" ~ term map L.apply).|(ident map R.apply).rep(sep = ";") ~ "}"
@@ -92,11 +92,19 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def tyDecl[_: P]: P[TypeDef] =
     P((tyKind ~/ tyName ~ tyParams).flatMap {
-      case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? map (bod => TypeDef(k, id, ts, bod.getOrElse(Top)))
+      case (k @ (Cls | Trt), id, ts) => ((":" ~ ty).? ~ mthDecl(id).rep.map(_.toList) map {
+        case (bod, ms) => TypeDef(k, id, ts, bod.getOrElse(Top), ms)
+      })
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
     })
   def tyParams[_: P]: P[Ls[Primitive]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
+  def mthDecl[_: P](prt: Primitive): P[MethodDef] = 
+    P((kw("method") ~ ident ~ tyParams ~ ":" ~/ ty map {
+      case (id, ts, t) => MethodDef(true, prt, id, ts, R(t))
+    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ ident ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
+      case (rec, id, ts, ps, bod) => MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
+    }))
   
   def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))

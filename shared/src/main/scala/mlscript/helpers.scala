@@ -119,11 +119,11 @@ trait DeclImpl extends Located { self: Decl =>
     case _: TypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + showBody
+    case TypeDef(Als, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b) => s"rec def $n"
     case Def(false, n, b) => s"def $n"
-    case TypeDef(k, n, tps, b) =>
+    case TypeDef(k, n, tps, b, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
   }
 }
@@ -410,7 +410,7 @@ trait StatementImpl extends Located { self: Statement =>
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
     case d @ Def(_, n, b) => d.body :: Nil
-    case TypeDef(kind, nme, tparams, body) => nme :: tparams ::: body :: Nil
+    case TypeDef(kind, nme, tparams, body, _) => nme :: tparams ::: body :: Nil
   }
   
   
