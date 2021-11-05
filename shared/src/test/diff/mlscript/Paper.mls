@@ -13,13 +13,13 @@ class Cons[A]: Some[A] & { tail: List[A] }
 
 // TODO will be no longer needed with new class ctors
 def Cons{value; tail} = Cons(Some{value} with {tail})
-//│ Cons: {tail: List['a], value: 'a} -> cons & (Some['a] & {tail: List['a]})
+//│ Cons: {tail: 'a & List['b], value: 'c} -> (cons & (Some['b | ('c & 'c)] & {tail: List['b | ('c & 'c)]})) & {tail: 'a, value: 'c & 'c}
 
 rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> 'b) -> ((cons & {tail: 'c, value: 'a}) | ((none & anything) & ~cons)) as 'c -> (cons & (Some['b] & {tail: List['b]})) | none
+//│ map2: ('a -> 'b) -> ((cons & {tail: 'c, value: 'a}) | ((none & anything) & ~cons)) as 'c -> (((cons & (Some[(nothing & ('b & 'b)) | ('b & 'b)] & {tail: List[(nothing & ('b & 'b)) | ('b & 'b)]})) & {tail: 'd, value: 'b & 'b}) | (none & {})) as 'd
 
 
 
@@ -44,7 +44,7 @@ fun x -> safeDiv 1 x
 //│ res: ~0 & int -> int
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: ((int & ~0 & int) | (anything & ~int)) -> int | none
+//│ res: ((int & ~0 & int) | (anything & ~int)) -> int | (none & {})
 
 // TOOD mayeb we shouldn't refine x's type here...
 fun (x: int) -> safeDiv 1 x
@@ -54,7 +54,7 @@ def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> Option[int]
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> ((0 & anything) | (~0 & int & ~0)) -> none | (some & {value: int})  <:  f: int -> int -> Option[int]
+//│ int -> ((0 & anything) | (~0 & int & ~0)) -> (none & {}) | ((some & {value: int}) & {value: int})  <:  f: int -> int -> Option[int]
 
 tryDiv 1 1
 tryDiv 1 0

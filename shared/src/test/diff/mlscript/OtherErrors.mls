@@ -42,7 +42,7 @@ id
 
 1: 1 & int: { x: int; y: string } | string
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.35: 	1: 1 & int: { x: int; y: string } | string
+//│ ║  l.43: 	1: 1 & int: { x: int; y: string } | string
 //│ ║        	^
 //│ ╙── expression of type `1 & int` does not match type `{x: int, y: string} | string`
 //│ res: {x: int, y: string} | string

@@ -6,7 +6,7 @@ class Child: Parent & { age: int }
 //│ Defined class Child
 
 def p = Parent{ name = "Bob" }
-//│ p: parent & {name: string}
+//│ p: (parent & {name: string}) & {name: "Bob"}
 
 p: Parent
 //│ res: Parent
@@ -16,22 +16,22 @@ def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent & {name: string}` does not match type `{age: int, name: string}`
+//│ ╟── expression of type `(parent & {name: string}) & {name: ?a | "Bob"}` does not match type `{age: ?b & int, name: ?c & string}`
 //│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
-//│ c: (child & (Parent & {age: int})) | error
+//│ c: ((child & (Parent & {age: int})) & {age: nothing, name: string & "Bob"}) | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
-//│ c: child & (Parent & {age: int})
+//│ c: (child & (Parent & {age: int})) & {age: 123, name: string & "Bob"}
 
 c: Parent
 //│ res: Parent
 
 c.name
-//│ res: string
+//│ res: string & (string & "Bob")
 
 c: { name: 'a }
-//│ res: {name: string}
+//│ res: {name: string & (string & "Bob")}
 
 c: { name: string }
 //│ res: {name: string}
@@ -43,7 +43,7 @@ def f x = case x of {
 //│ f: parent & {name: 'a} -> 'a
 
 f c
-//│ res: string
+//│ res: string & (string & "Bob")
 
 f (c: Parent)
 //│ res: string
@@ -55,7 +55,7 @@ def f x = case x of {
 //│ f: child & {name: 'a} -> 'a
 
 f c
-//│ res: string
+//│ res: string & (string & "Bob")
 
 :e
 f (c: Parent)
@@ -84,7 +84,7 @@ def f x = case x of {
 //│ f: ((parent & {name: 'a}) | (anything & ~parent)) -> 'a | ""
 
 f c
-//│ res: string | ""
+//│ res: (string & (string & "Bob")) | ""
 
 f (c: Parent)
 //│ res: string | ""
@@ -97,7 +97,7 @@ def f x = case x of {
 //│ f: ((parent & {name: 'a}) | ((child & {name: 'b}) & ~parent)) -> 'a | 'b
 
 f c
-//│ res: string | nothing
+//│ res: (string & (string & "Bob")) | nothing
 
 f (c: Parent)
 //│ res: string | nothing

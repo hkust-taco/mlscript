@@ -10,13 +10,13 @@ def foo x = case x of
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
-//│ t: test & {value: int}
+//│ t: (test & {value: int}) & {value: 0}
 
 foo Test
 //│ res: nothing | 1
 
 foo t
-//│ res: int | 1
+//│ res: (int & 0) | 1
 
 
 class Toast: { name: string }
@@ -33,7 +33,7 @@ bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: int} -> test & {value: int}` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
+//│ ╟── expression of type `{value: ?a & int} -> (test & {value: int}) & {value: ?a}` does not match type `(test & ?b & {value: ?c}) | ((toast & ?d & {name: ?e}) & ~test)`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:

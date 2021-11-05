@@ -202,7 +202,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             checkParents(body_ty) &&
                 checkCycleComputeFields(body_ty, computeFields = td.kind === Cls)(Set.single(td)) && {
               val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
-              val ctor = PolymorphicType(0, FunctionType(RecordType(fields.toList)(noProv), nomTag & body_ty)(noProv/*FIXME*/))
+              val fieldsRefined = RecordType(fields.iterator.map(f => f._1 -> freshVar(noProv)(1).tap(_.upperBounds ::= f._2)).toList)(noProv)
+              val ctor = PolymorphicType(0, FunctionType(fieldsRefined, nomTag & body_ty & fieldsRefined)(noProv/*FIXME*/))
               ctx += n.name -> ctor
               true
             }

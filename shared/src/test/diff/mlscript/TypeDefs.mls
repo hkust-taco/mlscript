@@ -3,10 +3,10 @@ class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: int} -> test1 & {x: int}
+//│ res: {x: 'a & int} -> (test1 & {x: int}) & {x: 'a}
 
 Test1 { x = 123 }
-//│ res: test1 & {x: int}
+//│ res: (test1 & {x: int}) & {x: 123}
 
 :e
 Test1 { x = "oops" }
@@ -16,21 +16,21 @@ Test1 { x = "oops" }
 //│ ╟── expression of type `"oops"` does not match type `int`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
-//│ ╟── but it flows into record literal with expected type `{x: int}`
+//│ ╟── but it flows into record literal with expected type `{x: ?a & int}`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	      ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.2: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: (test1 & {x: int}) | error
+//│ res: ((test1 & {x: int}) & {x: "oops"}) | error
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: int -> test1 & {x: int}
+//│ Test1: 'a & int -> (test1 & {x: int}) & {x: 'a}
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: int -> test11 & {x: int}
+//│ Test11: 'a & int -> (test11 & {x: int}) & {x: 'a}
 
 
 :e

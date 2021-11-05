@@ -2,7 +2,7 @@
 class Person: { name: string; age: int }
 def Person = fun n -> fun a -> Person { name = n; age = a }
 //│ Defined class Person
-//│ Person: string -> int -> person & {age: int, name: string}
+//│ Person: 'a & string -> 'b & int -> (person & {age: int, name: string}) & {age: 'b, name: 'a}
 
 class Animal: {}
 //│ Defined class Animal
@@ -22,13 +22,13 @@ test: (Person & {age: int} | Animal) -> int
 //│ res: ((Person & {age: int}) | Animal) -> int
 
 def a = Animal{}
-//│ a: animal
+//│ a: animal & {}
 
 a: {}
 //│ res: anything
 
 def p = Person "Bob" 42
-//│ p: person & {age: int, name: string}
+//│ p: (person & {age: int, name: string}) & {age: 42, name: "Bob"}
 
 p: { age: int }
 //│ res: {age: int}
@@ -37,7 +37,7 @@ test a
 //│ res: nothing | 0
 
 test p
-//│ res: int | 0
+//│ res: (int & 42) | 0
 
 1: int
 //│ res: int

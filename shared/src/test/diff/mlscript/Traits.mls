@@ -17,13 +17,13 @@ def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.16: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{x: (0 & int) | (1 & int), y: string}`
+//│ ╟── expression of type `anything` does not match type `{x: ?a & ((0 & int) | (1 & int)), y: ?b & string}`
 //│ ║  l.16: 	def dv = D{}
 //│ ╙──      	          ^^
-//│ dv: (d & ((C & A) & B)) | error
+//│ dv: ((d & ((C & A) & B)) & {x: nothing, y: nothing}) | error
 
 def dv = D { x = 0; y = "hello" }
-//│ dv: d & ((C & A) & B)
+//│ dv: (d & ((C & A) & B)) & {x: 0, y: "hello"}
 
 // FIXME currently this should actually worked
 :e
@@ -31,7 +31,7 @@ dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.30: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `d & ((C & A) & B)` does not match type `nothing`
+//│ ╟── expression of type `(d & ((C & A) & B)) & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
 //│ ║  l.25: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -61,11 +61,11 @@ E{}
 //│ ╟── expression of type `anything` does not have field 'x'
 //│ ║  l.57: 	E{}
 //│ ╙──      	 ^^
-//│ res: (e & Indirect) | error
+//│ res: ((e & Indirect) & {x: nothing}) | error
 
 def ev = E { x = 1 }
 ev: C
-//│ ev: e & Indirect
+//│ ev: (e & Indirect) & {x: 1}
 //│ res: C
 
 

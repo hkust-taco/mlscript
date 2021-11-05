@@ -10,42 +10,42 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: ((some & {value: 42})\payload & {payload: 23}) | none
+//│ arg: (((some & {value: 42}) & {value: 42})\payload & {payload: 23}) | (none & {})
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | (none & ~some) | (none & ~{payload: 23}) | ((({payload: 23} & some) & {value: 42}\payload) & ~{payload: 23}) | (((some & {value: 42})\payload & {payload: 23}) & ~some) | ((({payload: 23} & some) & {value: 42}\payload) & ~{value: 42}) | (none & ~{value: 42})
+//│ res: int | ((((some & {value: 42}) & {value: 42})\payload & {payload: 23}) & ~some) | (((({payload: 23} & some) & {value: 42}\payload) & {value: 42}\payload) & ~{value: 42 & 42}) | (none & ~{payload: 23}) | (({} & none) & ~some) | (((({payload: 23} & some) & {value: 42}\payload) & {value: 42}\payload) & ~{payload: 23}) | (none & ~{value: 42 & 42})
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: (some & {value: 42}) | none
+//│ arg: ((some & {value: 42}) & {value: 42}) | (none & {})
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
+//│ res: (42 & 42) | (none & ~{value: 42 & 42}) | (({} & none) & ~some) | ((some & {value: 42 & 42}) & ~{value: 42 & 42}) | (({value: 42 & 42} & some) & ~some)
 
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((some & {value: 'a}) | ('b & ~some)) -> 'a | 'b
 
 foo arg
-//│ res: 42 | (none & ~{value: 42}) | (none & ~some) | ((some & {value: 42}) & ~{value: 42}) | (({value: 42} & some) & ~some)
+//│ res: (42 & 42) | (none & ~{value: 42 & 42}) | (({} & none) & ~some) | ((some & {value: 42 & 42}) & ~{value: 42 & 42}) | (({value: 42 & 42} & some) & ~some)
 
 foo 1
 //│ res: nothing | (1 & ~{value: nothing}) | (1 & ~some)
 
 def fn = foo None
-//│ fn: nothing | (({} -> none) & ~{value: nothing}) | (({} -> none) & ~some)
+//│ fn: nothing | (({} -> none & {}) & ~{value: nothing}) | (({} -> none & {}) & ~some)
 
 // :d
 fn{} // foo None {}
-//│ res: none
+//│ res: none & {}
 
 // :d
 foo (None{})
-//│ res: nothing | (none & ~{value: nothing}) | (none & ~some)
+//│ res: nothing | (none & ~{value: nothing}) | (({} & none) & ~some)
 
 
 fun f -> flatMap3 f arg
-//│ res: ((none & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) | ((some & {value: 42}) & ~((none & ~some) | (({value: 42} & some) & ~some) & ~some)) -> 'a) -> 'a | (none & ~some) | (({value: 42} & some) & ~some)
+//│ res: (((none & {}) & ~((({} & none) & ~some) | (({value: 42 & 42} & some) & ~some) & ~some)) | (((some & {value: 42}) & {value: 42}) & ~((({} & none) & ~some) | (({value: 42 & 42} & some) & ~some) & ~some)) -> 'a) -> 'a | (({} & none) & ~some) | (({value: 42 & 42} & some) & ~some)
 
 
 
@@ -60,7 +60,7 @@ foo 1
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> 'a | none
+//│ simpler: (1 -> 'a) -> 'a | (none & {})
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ simpler: ('a -> 'b) -> ((some & 'a) | ((none & 'c) & ~some)) -> 'b | 'c

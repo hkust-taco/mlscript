@@ -31,7 +31,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent1 & {name: string}` does not match type `parent2`
+//│ ╟── expression of type `(parent1 & {name: string}) & {name: ?a | "A"}` does not match type `parent2`
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: Crazy[parent1 & {name: string}] & (parent1 & {name: string})
+//│ d: Crazy[(parent1 & {name: string}) & {name: "Bob"}] & ((parent1 & {name: string}) & {name: "Bob"})
 
 d: nothing
 //│ res: nothing

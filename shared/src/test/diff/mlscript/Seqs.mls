@@ -20,20 +20,20 @@ Nil{}
 //│ ╟── expression of type `anything` does not have field 'size'
 //│ ║  l.16: 	Nil{}
 //│ ╙──      	   ^^
-//│ res: (nil & ListBase[nothing]) | error
+//│ res: ((nil & ListBase[nothing]) & {size: nothing}) | error
 
 def Nil = Nil { size = 0 }
-//│ Nil: nil & ListBase[nothing]
+//│ Nil: (nil & ListBase[nothing]) & {size: 0}
 
 // FIXME
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?a, size: int, tail: List[?a]}`
+//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: ?c & int, tail: ?d & List[?b]}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
-//│ /!!!\ Uncaught error: scala.MatchError: ({head: α10, size: int, tail: List[α10]},|Some(([[α12]] -> α13))|None) (of class scala.Tuple2)
+//│ /!!!\ Uncaught error: scala.MatchError: ({head: (α20 & α19), size: (int & α21), tail: (List[α20] & α22)},|Some(([[α24]] -> α26))|None) (of class scala.Tuple2)
 //│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:179)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
@@ -48,66 +48,47 @@ Cons 1 Nil
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
+//│ Cons_old: 'a -> 'b & List['c] & {size: int} -> (cons & (ListBase['c | 'a] & {head: 'c | 'a, tail: List['c | 'a]})) & {head: 'a, size: int & (int & int), tail: 'b}
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> List['a] & {size: int} -> cons & (ListBase['a] & {head: 'a, tail: List['a]})
+//│ Cons: 'a -> 'b & List['c] & {size: int} -> (cons & (ListBase['c | 'a] & {head: 'c | 'a, tail: List['c | 'a]})) & {head: 'a, size: int, tail: 'b}
 
 Nil: ListBase[anything]
 //│ res: ListBase[anything]
 
 def c = Cons 1 Nil
-//│ c: cons & (ListBase[1] & {head: 1, tail: List[1]})
+//│ c: (cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}}
 
 c: ListBase[int]
 //│ res: ListBase[int]
 
 c.head
-//│ res: 1
+//│ res: 1 & 1
 
 c.tail
-//│ res: List[1]
+//│ res: List[1] & ((nil & ListBase[nothing]) & {size: 0})
 
 c.size
-//│ res: int
+//│ res: int & int
 
 def d = Cons 2 c
-//│ d: cons & (ListBase[1 | 2] & {head: 1 | 2, tail: List[1 | 2]})
+//│ d: (cons & (ListBase[(1 & 1) | 2] & {head: (1 & 1) | 2, tail: List[(1 & 1) | 2]})) & {head: 2, size: int, tail: (cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}}}
 
 d.head
-//│ res: 2 | 1
+//│ res: (1 & 1) | 2 & 2
 
 d.size
-//│ res: int
+//│ res: int & int
 
 d.tail
-//│ res: List[1 | 2]
+//│ res: List[(1 & 1) | 2] & ((cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}})
 
 d.tail.size
-//│ res: int
+//│ res: int & int
 
-:e
 d.tail.head
 d.tail.tail
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.91: 	d.tail.head
-//│ ║        	^
-//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{head: ?a}`
-//│ ║  l.10: 	type List[A] = Nil | Cons[A]
-//│ ║        	               ^^^
-//│ ╟── but it flows into field selection with expected type `{head: ?a}`
-//│ ║  l.91: 	d.tail.head
-//│ ╙──      	^
-//│ res: 2 | 1 | error
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.92: 	d.tail.tail
-//│ ║        	^
-//│ ╟── expression of type `nil & ListBase[nothing]` does not match type `{tail: ?a}`
-//│ ║  l.10: 	type List[A] = Nil | Cons[A]
-//│ ║        	               ^^^
-//│ ╟── but it flows into field selection with expected type `{tail: ?a}`
-//│ ║  l.92: 	d.tail.tail
-//│ ╙──      	^
-//│ res: List[1 | 2] | error
+//│ res: ((1 & 1) | 2 & 1) & 1
+//│ res: (List[(1 & 1) | 2] & List[1]) & ((nil & ListBase[nothing]) & {size: 0})
 

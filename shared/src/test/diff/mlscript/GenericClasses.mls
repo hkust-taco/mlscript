@@ -2,17 +2,17 @@
 class None: {}
 def None = None{}
 //│ Defined class None
-//│ None: none
+//│ None: none & {}
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> some & {value: 'a}
+//│ Some: 'a -> (some & {value: 'a}) & {value: 'a}
 
 Some 42
 (Some 42).value
-//│ res: some & {value: 42}
-//│ res: 42
+//│ res: (some & {value: 42}) & {value: 42}
+//│ res: 42 & 42
 
 type Option[A] = Some[A] | None
 //│ Defined type Option
