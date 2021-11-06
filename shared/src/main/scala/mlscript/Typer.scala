@@ -122,17 +122,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
-    val newDefs = newDefs0.map { td =>
+    val newDefs = newDefs0.flatMap { td =>
       implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
       val n = td.nme
-      allDefs.get(n.name).foreach { other =>
-        err(msg"Type '$n' is already defined.", td.nme.toLoc)
-      }
-      if (!n.name.head.isUpper) err(
-        msg"Type names must start with a capital letter", n.toLoc)
       val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, baseClassesOf(td), td.toLoc)
-      allDefs += n.name -> td1
-      td1
+      if (!n.name.head.isUpper) {
+        err(msg"Type names must start with a capital letter", n.toLoc)
+        Nil
+      } else if (allDefs.get(n.name).exists { other =>
+        err(msg"Type '$n' is already defined.", td.nme.toLoc)
+        true
+      }) {
+        Nil
+      } else {
+        allDefs += n.name -> td1
+        td1 :: Nil
+      }
     }
     import ctx.{tyDefs => oldDefs}
     // implicit val newCtx = ctx.copy(tyDefs = newDefs)

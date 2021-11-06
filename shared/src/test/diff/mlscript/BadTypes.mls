@@ -4,14 +4,21 @@ class oops: { x: int }
 //│ ╔══[ERROR] Type names must start with a capital letter
 //│ ║  l.3: 	class oops: { x: int }
 //│ ╙──     	      ^^^^
-//│ Defined class oops
 
 :e
 type oops = int
-//│ ╔══[ERROR] Type 'oops' is already defined.
-//│ ║  l.10: 	type oops = int
-//│ ╙──      	     ^^^^
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.10: 	type oops = int
+//│ ║  l.9: 	type oops = int
+//│ ╙──     	     ^^^^
+
+class Oops: { x: int }
+//│ Defined class Oops
+
+:e
+type Oops = int
+//│ ╔══[ERROR] Type 'Oops' is already defined.
+//│ ║  l.18: 	type Oops = int
 //│ ╙──      	     ^^^^
 
+type Yay = Oops
+//│ Defined type Yay
