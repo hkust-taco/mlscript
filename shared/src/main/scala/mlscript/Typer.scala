@@ -129,10 +129,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       if (!n.name.head.isUpper) {
         err(msg"Type names must start with a capital letter", n.toLoc)
         Nil
-      } else if (allDefs.get(n.name).exists { other =>
+      } else if (allDefs.isDefinedAt(n.name)) {
         err(msg"Type '$n' is already defined.", td.nme.toLoc)
-        true
-      }) {
         Nil
       } else {
         allDefs += n.name -> td1
