@@ -256,7 +256,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
-                    tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                    tps.map(tp => tp -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
                 ctx += nme -> ty_sch
                 declared += nme -> ty_sch
                 val exp = getType(ty_sch)

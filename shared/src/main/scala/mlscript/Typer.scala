@@ -24,14 +24,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     nme: Primitive,
     tparams: List[Primitive],
     body: Type,
+    mths: Map[Str, MethodDef],
     baseClasses: Set[Var],
     toLoc: Opt[Loc],
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[Var]): Set[Var] =
       baseClasses.map(v => Var(v.name.toList.mapHead(_.toLower).mkString)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
-          ctx.tyDefs(v.name).allBaseClasses(ctx)(traversed + v))
+          ctx.tyDefs.getOrElse(v.name, ctx.tyDefs("nothing")).allBaseClasses(ctx)(traversed + v))
   }
+  case class MethodDef(
+    rec: Bool,
+    nme: Primitive,
+    tparams: List[Primitive],
+    rhs: Term \/ Type,
+  )
   
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
     def +=(b: Binding): Unit = env += b
@@ -74,14 +81,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, Primitive("int"), Nil, Top, Set.single(Var("number")), N) ::
-    TypeDef(Cls, Primitive("number"), Nil, Top, Set.empty, N) ::
-    TypeDef(Cls, Primitive("bool"), Nil, Top, Set.empty, N) ::
-    TypeDef(Cls, Primitive("true"), Nil, Top, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, Primitive("false"), Nil, Top, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
-    TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
-    TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::
+    TypeDef(Cls, Primitive("int"), Nil, Top, Map.empty, Set.single(Var("number")), N) ::
+    TypeDef(Cls, Primitive("number"), Nil, Top, Map.empty, Set.empty, N) ::
+    TypeDef(Cls, Primitive("bool"), Nil, Top, Map.empty, Set.empty, N) ::
+    TypeDef(Cls, Primitive("true"), Nil, Top, Map.empty, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, Primitive("false"), Nil, Top, Map.empty, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, Primitive("string"), Nil, Top, Map.empty, Set.empty, N) ::
+    TypeDef(Als, Primitive("anything"), Nil, Top, Map.empty, Set.empty, N) ::
+    TypeDef(Als, Primitive("nothing"), Nil, Bot, Map.empty, Set.empty, N) ::
     Nil
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
@@ -145,8 +152,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case _ => Set.empty // TODO TupleType?
     }
   
+  def targsMapOf(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Primitive, SimpleType]): Map[Primitive, SimpleType] = ty match {
+    case Inter(l, r) => targsMapOf(l) ++ targsMapOf(r)
+    case AppliedType(b, ts) => ctx.tyDefs.get(b.name).fold(Map.empty[Primitive, SimpleType]) {
+      td => td.tparams.zip(ts.map(typeType(_))).toMap
+    }
+    case _ => Map.empty
+  }
+
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
+    var allEnv = ctx.env.clone
     val newDefs = newDefs0.map { td =>
       implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
       val n = td.nme
@@ -155,19 +171,49 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       }
       if (!n.name.head.isUpper) err(
         msg"Type names must start with a capital letter", n.toLoc)
-      val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, baseClassesOf(td), td.toLoc)
+      val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, 
+        td.mths.map(md => md.nme.name -> MethodDef(md.rec, md.nme, md.tparams, md.rhs)).toMap,
+        baseClassesOf(td), td.toLoc)
       allDefs += n.name -> td1
       td1
     }
     import ctx.{tyDefs => oldDefs}
     // implicit val newCtx = ctx.copy(tyDefs = newDefs)
-    ctx.copy(tyDefs = allDefs) |> { implicit ctx =>
+    ctx.copy(env = allEnv, tyDefs = allDefs) |> { implicit ctx =>
+      val newEnv = newDefs0.flatMap { td =>
+        implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
+        val n = td.nme
+        val dummyTargs = td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
+        val targsMap: Map[Primitive, SimpleType] = td.tparams.zip(dummyTargs).toMap
+        // val targsMap1 = targsMap ++ targsMapOf(td.body)(ctx.nextLevel, raise, targsMap)
+        val newBindings = MutMap.empty[Str, TypeScheme]
+        td.mths.map { md =>
+          if (!md.nme.name.head.isUpper)
+            err(msg"Method names must start with a capital letter", md.nme.toLoc)
+          if (newBindings.isDefinedAt(s"${n.name}.${md.nme.name}"))
+            err(msg"Method '${n}.${md.nme}' is already defined.", md.nme.toLoc)
+          md match {
+            case mlscript.MethodDef(rec, prt, nme, tparams, L(term)) =>
+              val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
+              val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
+              newBindings += s"${prt.name}.${nme.name}" ->
+                typeLetRhs(rec, nme.name, term)(ctx.nest.nextLevel, raise)
+            case mlscript.MethodDef(rec, prt, nme, tparams, R(ty)) =>
+              val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
+              val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
+              newBindings += s"${prt.name}.${nme.name}" ->
+                PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, targsMap ++ targsMap2))
+          }
+        }
+        allEnv ++= newBindings
+        newBindings.valuesIterator
+      }
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
         val n = td.nme
         val dummyTargs =
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
-        val targsMap: Map[Str, SimpleType] = td.tparams.map(_.name).zip(dummyTargs).toMap
+        val targsMap: Map[Primitive, SimpleType] = td.tparams.zip(dummyTargs).toMap
         val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, targsMap)
         var fields = SortedMap.empty[Str, SimpleType]
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
@@ -271,10 +317,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         if (rightParents && checkRegular(body_ty)(Map(n.name -> dummyTargs)))
           td.nme.name -> td :: Nil
         else Nil
-      })
-    }
+      }, env = ctx.env ++ newDefs.flatMap { td =>
+        td.mths.valuesIterator.map { md =>
+          def cons(mt: TypeScheme, n: Str) = {
+            val refinedMt = mt.instantiate(ctx.lvl + 2)
+            val bcs = td.allBaseClasses(ctx)(Set.single(Var(td.nme.name)))
+              .flatMap(v => ctx.tyDefs.get(v.name.head.toUpper.toString + v.name.tail))
+            val abcs = bcs.filter(_.mths.get(n) match { case S(MethodDef(_, _, _, R(_))) => true case _ => false })
+            def ss(mt: TypeScheme, amt: TypeScheme)(implicit raise: Raise, prov: TypeProvenance) = amt match {
+              case pt: PolymorphicType => constrain(refinedMt, pt.copy(level = 0).rigidify)(raise, prov)
+              case st: SimpleType => constrain(refinedMt, st)(raise, prov)
+            }
+            abcs.foreach { bc =>
+              val prov = tp(bc.mths(n).rhs.fold(_.toLoc, _.toLoc), "method declaration")
+              ss(mt, ctx.env.getOrElse(s"${bc.nme.name}.${n}", PolymorphicType(0, BotType)))(raise, prov)
+            }
+            PolymorphicType(1, refinedMt)
+          }
+          s"${td.nme.name}.${md.nme.name}" -> 
+            cons(ctx.env.getOrElse(s"${td.nme.name}.${md.nme.name}", PolymorphicType(0, TopType)), md.nme.name)
+        }
+      }
+    )}
   }
-  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+  // TODO record provenances!
+  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Primitive, SimpleType]): SimpleType = {
     val typeType = ()
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
@@ -294,12 +361,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           else ComposedType(true, rec(lhs), rec(rhs)) _
         )(tp(ty.toLoc, "union type"))
       case Neg(t) => NegType(rec(t))(tp(ty.toLoc, "type negation"))
-      case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
+      case Record(fs) => RecordType.mk(fs.map { nt =>
+          if (nt._1.head.isUpper)
+            err(msg"Field identifiers must start with a small letter", nt._2.toLoc)(raise, noProv)
+          nt._1 -> rec(nt._2)
+        })(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
-      case Primitive(name) =>
+      case t@Primitive(name) =>
         val tpr = tp(ty.toLoc, "type reference")
-        vars.get(name) orElse
+        vars.get(t) orElse
           typeNamed(ty, name).flatMap(td =>
             if (td.tparams.nonEmpty) {
               err(msg"Type $name takes parameters", ty.toLoc)(raise, tpr)
@@ -430,7 +501,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(tp(v.toLoc, "wildcard"))
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
-        implicit val vars: Map[Str, SimpleType] = Map.empty
+        implicit val vars: Map[Primitive, SimpleType] = Map.empty
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern) trm_ty else ty_ty
@@ -454,7 +525,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case App(App(Var("&"), lhs), rhs) =>
         typeTerm(lhs) & (typeTerm(rhs), prov)
       case Rcd(fs) => // TODO rm: no longer used?
-        RecordType.mk(fs.map { case (n, t) => (n, typeTerm(t)) })(tp(term.toLoc, "record literal"))
+        RecordType.mk(fs.map { case (n, t) => 
+            if (n.head.isUpper)
+              err(msg"Field identifiers must start with a small letter", term.toLoc)(raise, noProv)
+            (n, typeTerm(t))
+          })(tp(term.toLoc, "record literal"))
       case tup: Tup =>
         typeTerms(tup :: Nil, false, Nil)
       case Bra(false, trm: Blk) => typeTerm(trm)

@@ -1,0 +1,118 @@
+class Foo[A]: { x: A }
+    method Map[B]: (A -> B) -> A
+class Bar[A]: Foo[A]
+    rec method Map f = f Map (fun x -> Map)
+class Derp: Foo[bool]
+    method Map f = true
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.2: 	    method Map[B]: (A -> B) -> A
+//│ ║       	                    ^^^^^^^^^^^^
+//│ ╟── expression of type `(?b & (?c | ?a -> ((?d -> ?c | ?a) -> ?e) & ?f) & ?g -> ?e) as ?a` does not match type `_α25`
+//│ ║  l.4: 	    rec method Map f = f Map (fun x -> Map)
+//│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.2: 	    method Map[B]: (A -> B) -> A
+//│ ║       	                    ^^^^^^^^^^^^
+//│ ╟── expression of type `_α26` is not a function
+//│ ╟── but it flows into function type of type `_α25 -> _α26`
+//│ ║  l.2: 	    method Map[B]: (A -> B) -> A
+//│ ║       	                    ^^^^^^
+//│ ╟── which does not match type `(?b | ((?a -> ((?c -> ?a) -> ?d) & ?e) & ?f -> ?d)) as ?a -> ?g & (((?c -> (?b | ((?a -> ?h) & ?f -> ?d)) as ?a) -> ?d) & ?e) as ?h`
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.4: 	    rec method Map f = f Map (fun x -> Map)
+//│ ╙──     	                       ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.2: 	    method Map[B]: (A -> B) -> A
+//│ ║       	                    ^^^^^^^^^^^^
+//│ ╟── expression of type `true` does not match type `_α57`
+//│ ║  l.6: 	    method Map f = true
+//│ ╙──     	                   ^^^^
+//│ Defined class Foo
+//│ Defined class Bar
+//│ Defined class Derp
+
+Foo.Map
+Bar.Map
+Derp.Map
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.34: 	Foo.Map
+//│ ║        	^^^
+//│ ╙── expression of type `{x: ?a} -> foo & {x: ?a}` does not have field 'Map'
+//│ res: error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.35: 	Bar.Map
+//│ ║        	^^^
+//│ ╙── expression of type `{x: ?a} -> bar & {x: ?a}` does not have field 'Map'
+//│ res: error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.36: 	Derp.Map
+//│ ║        	^^^^
+//│ ╙── expression of type `{x: bool & ?a} -> derp & {x: ?a}` does not have field 'Map'
+//│ res: error
+
+def a = Foo { x = 1 }
+a.(Foo.Map)(fun x -> x)
+//│ a: foo & {x: 1}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.54: 	a.(Foo.Map)(fun x -> x)
+//│ ║        	^
+//│ ╟── expression of type `foo & {x: ?a | 1}` does not match type `{Foo.Map: ?b}`
+//│ ║  l.53: 	def a = Foo { x = 1 }
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{Foo.Map: ?c}`
+//│ ║  l.54: 	a.(Foo.Map)(fun x -> x)
+//│ ╙──      	^
+//│ res: error
+
+class bar[A, B]: Foo[A] & { Y: B; z: int }
+    method identity z = z
+    method identity z = z
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.67: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Method names must start with a capital letter
+//│ ║  l.68: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] Method names must start with a capital letter
+//│ ║  l.69: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] Method 'bar.identity' is already defined.
+//│ ║  l.69: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.67: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	                               ^
+//│ Defined class bar
+
+class Fooo[A, B]: { x: A; y: B }
+    method Fun[C]: (A -> B -> C) -> (A -> B -> C)
+//│ Defined class Fooo
+
+class Barr: Fooo[int, bool]
+    method Fun[C] f = f
+//│ Defined class Barr
+
+// Fooo -> PolymorphicType(0,({x: α8', y: α9'} -> ((fooo<> & {x: α6', y: α7'}) & {x: α8', y: α9'})))
+// Fooo.Fun -> PolymorphicType(1,((α3' -> (α4' -> α10'')) -> (α3' -> (α4' -> α10''))))
+// Barr -> PolymorphicType(0,({x: α2', y: α3'} -> ((barr<fooo> & Fooo[int,bool]) & {x: α2', y: α3'})))
+// Barr.Fun -> PolymorphicType(1,(α4'' -> [α4'']))
+
+Fooo.Fun
+Barr.Fun
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.100: 	Fooo.Fun
+//│ ║         	^^^^
+//│ ╙── expression of type `{x: ?a, y: ?b} -> fooo & {x: ?a, y: ?b}` does not have field 'Fun'
+//│ res: error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.101: 	Barr.Fun
+//│ ║         	^^^^
+//│ ╙── expression of type `{x: int & ?a, y: bool & ?b} -> barr & {x: ?a, y: ?b}` does not have field 'Fun'
+//│ res: error
+
+//TODO: - apply targs in ss (long map chain?)
+//      - pass vars to typeLetRhs
+//      - references between methods (shodowing)
+//      - this
+//      - calls
+//      - ConstraintSolver.constrain.annoyingImpl missing cases?

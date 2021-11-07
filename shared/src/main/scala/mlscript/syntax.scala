@@ -21,12 +21,12 @@ final case class TypeDef(
 final case class MethodDef(
   rec: Bool,
   prt: Primitive,
-  nme: Str,
+  nme: Primitive,
   tparams: List[Primitive],
   rhs: Term \/ Type,
 ) extends Located {
   val body: Located = rhs.fold(identity, identity)
-  val children: Ls[Located] = body :: Nil
+  val children: Ls[Located] = nme :: body :: Nil
 }
 
 sealed abstract class TypeDefKind(val str: Str)
