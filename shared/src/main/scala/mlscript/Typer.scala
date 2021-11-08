@@ -35,6 +35,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   case class MethodDef(
     rec: Bool,
+    prt: Primitive,
     nme: Primitive,
     tparams: List[Primitive],
     rhs: Term \/ Type,
@@ -172,26 +173,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       if (!n.name.head.isUpper) err(
         msg"Type names must start with a capital letter", n.toLoc)
       val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, 
-        td.mths.map(md => md.nme.name -> MethodDef(md.rec, md.nme, md.tparams, md.rhs)).toMap,
+        td.mths.map(md => md.nme.name -> MethodDef(md.rec, md.prt, md.nme, md.tparams, md.rhs)).toMap,
         baseClassesOf(td), td.toLoc)
       allDefs += n.name -> td1
       td1
     }
+    val dummyTargs: MutMap[Primitive, List[SimpleType]] = MutMap.empty
+    val targsMap: MutMap[Primitive, Map[Primitive, SimpleType]] = MutMap.empty
     import ctx.{tyDefs => oldDefs}
     // implicit val newCtx = ctx.copy(tyDefs = newDefs)
     ctx.copy(env = allEnv, tyDefs = allDefs) |> { implicit ctx =>
       val newEnv = newDefs0.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
         val n = td.nme
-        val dummyTargs = td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
-        val targsMap: Map[Primitive, SimpleType] = td.tparams.zip(dummyTargs).toMap
-        // val targsMap1 = targsMap ++ targsMapOf(td.body)(ctx.nextLevel, raise, targsMap)
+        dummyTargs += td.nme -> td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
+        targsMap += td.nme -> td.tparams.zip(dummyTargs(td.nme)).toMap
+        // val targsMap1 = targsMap(td.nme) ++ targsMapOf(td.body)(ctx.nextLevel, raise, targsMap)
         val newBindings = MutMap.empty[Str, TypeScheme]
         td.mths.map { md =>
           if (!md.nme.name.head.isUpper)
             err(msg"Method names must start with a capital letter", md.nme.toLoc)
           if (newBindings.isDefinedAt(s"${n.name}.${md.nme.name}"))
-            err(msg"Method '${n}.${md.nme}' is already defined.", md.nme.toLoc)
+            err(msg"Method '${n}.${md.nme.name}' is already defined.", md.nme.toLoc)
           md match {
             case mlscript.MethodDef(rec, prt, nme, tparams, L(term)) =>
               val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
@@ -202,7 +205,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
               val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
               newBindings += s"${prt.name}.${nme.name}" ->
-                PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, targsMap ++ targsMap2))
+                PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, targsMap(td.nme) ++ targsMap2))
           }
         }
         allEnv ++= newBindings
@@ -211,10 +214,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
         val n = td.nme
-        val dummyTargs =
-          td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
-        val targsMap: Map[Primitive, SimpleType] = td.tparams.zip(dummyTargs).toMap
-        val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, targsMap)
+        val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, targsMap(td.nme))
         var fields = SortedMap.empty[Str, SimpleType]
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
             (implicit travsersed: Set[TypeDef]): Bool =
@@ -305,7 +305,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                   err(msg"Type definition is not regular: it occurs within itself as ${
                   expandType(tr, true).show
                   }, but is defined as ${
-                  expandType(TypeRef(defn, dummyTargs)(noProv, ctx), true).show
+                  expandType(TypeRef(defn, dummyTargs(td.nme))(noProv, ctx), true).show
                   }", td.toLoc)(raise, noProv)
                 false
               } else true
@@ -314,7 +314,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
-        if (rightParents && checkRegular(body_ty)(Map(n.name -> dummyTargs)))
+        if (rightParents && checkRegular(body_ty)(Map(n.name -> dummyTargs(td.nme))))
           td.nme.name -> td :: Nil
         else Nil
       }, env = ctx.env ++ newDefs.flatMap { td =>
@@ -323,7 +323,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val refinedMt = mt.instantiate(ctx.lvl + 2)
             val bcs = td.allBaseClasses(ctx)(Set.single(Var(td.nme.name)))
               .flatMap(v => ctx.tyDefs.get(v.name.head.toUpper.toString + v.name.tail))
-            val abcs = bcs.filter(_.mths.get(n) match { case S(MethodDef(_, _, _, R(_))) => true case _ => false })
+            val abcs = bcs.filter(_.mths.get(n) match { case S(MethodDef(_, _, _, _, R(_))) => true case _ => false })
             def ss(mt: TypeScheme, amt: TypeScheme)(implicit raise: Raise, prov: TypeProvenance) = amt match {
               case pt: PolymorphicType => constrain(refinedMt, pt.copy(level = 0).rigidify)(raise, prov)
               case st: SimpleType => constrain(refinedMt, st)(raise, prov)

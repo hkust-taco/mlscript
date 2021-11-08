@@ -7,14 +7,14 @@ class Derp: Foo[bool]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `(?b & (?c | ?a -> ((?d -> ?c | ?a) -> ?e) & ?f) & ?g -> ?e) as ?a` does not match type `_α25`
+//│ ╟── expression of type `(?b & (?c | ?a -> ((?d -> ?c | ?a) -> ?e) & ?f) & ?g -> ?e) as ?a` does not match type `_α23`
 //│ ║  l.4: 	    rec method Map f = f Map (fun x -> Map)
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `_α26` is not a function
-//│ ╟── but it flows into function type of type `_α25 -> _α26`
+//│ ╟── expression of type `_α24` is not a function
+//│ ╟── but it flows into function type of type `_α23 -> _α24`
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^
 //│ ╟── which does not match type `(?b | ((?a -> ((?c -> ?a) -> ?d) & ?e) & ?f -> ?d)) as ?a -> ?g & (((?c -> (?b | ((?a -> ?h) & ?f -> ?d)) as ?a) -> ?d) & ?e) as ?h`
@@ -24,7 +24,7 @@ class Derp: Foo[bool]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `true` does not match type `_α57`
+//│ ╟── expression of type `true` does not match type `_α55`
 //│ ║  l.6: 	    method Map f = true
 //│ ╙──     	                   ^^^^
 //│ Defined class Foo
