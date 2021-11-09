@@ -22,10 +22,16 @@ abstract class TyperHelpers { self: Typer =>
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   // Shadow Predef functions with debugging-flag-enabled ones:
-  def println(msg: => Any): Unit = if (dbg) emitDbg(" " * indent + msg)
+  def println(msg: => Any): Unit = if (dbg) emitDbg("| " * indent + msg)
   
   def dbg_assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
+  
+  
+  def recordUnion(fs1: Ls[Str -> SimpleType], fs2: Ls[Str -> SimpleType]): Ls[Str -> SimpleType] = {
+    val fs2m = fs2.toMap
+    fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }
+  }
   
   trait SimpleTypeImpl { self: SimpleType =>
     
@@ -39,8 +45,7 @@ abstract class TyperHelpers { self: Typer =>
       
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
-        val fs2m = fs2.toMap
-        RecordType(fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) })(prov)
+        RecordType(recordUnion(fs1, fs2))(prov)
       case _ if !swapped => that | (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => TopType
@@ -68,6 +73,53 @@ abstract class TyperHelpers { self: Typer =>
         // meaning negated records are basically bottoms.
       case _ => NegType(this)(prov)
     }
+    
+    // TODO for composed types and negs, should better first normalize the inequation
+    def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    trace(s"? $this <: $that") {
+    (this === that) || ((this, that) match {
+      case (RecordType(Nil), _) => TopType <:< that
+      case (_, RecordType(Nil)) => this <:< TopType
+      case (pt1 @ PrimType(id1, ps1), pt2 @ PrimType(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
+      case (FunctionType(l1, r1), FunctionType(l2, r2)) => l2 <:< l1 && r1 <:< r2
+      case (_: FunctionType, _) | (_, _: FunctionType) => false
+      case (ComposedType(true, l, r), _) => l <:< that && r <:< that
+      case (_, ComposedType(false, l, r)) => that <:< l && that <:< r
+      case (ComposedType(false, l, r), _) => l <:< that || r <:< that
+      case (_, ComposedType(true, l, r)) => that <:< l || that <:< r
+      case (RecordType(fs1), RecordType(fs2)) =>
+        fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
+      case (_: RecordType, _: PrimType) | (_: PrimType, _: RecordType) => false
+      case (_: TypeVariable, _) | (_, _: TypeVariable)
+        if cache.contains(this -> that)
+        => cache(this -> that)
+      case (tv: TypeVariable, _) =>
+        cache(this -> that) = true
+        val tmp = tv.upperBounds.exists(_ <:< that)
+        cache(this -> that) = tmp
+        tmp
+      case (_, tv: TypeVariable) =>
+        cache(this -> that) = true
+        val tmp = tv.lowerBounds.exists(this <:< _)
+        cache(this -> that) = tmp
+        tmp
+      case (ProxyType(und), _) => und <:< that
+      case (_, ProxyType(und)) => this <:< und
+      case (_, NegType(und)) => (this & und) <:< BotType
+      case (NegType(und), _) => TopType <:< (that | und)
+      case (_, ExtrType(false)) => true
+      case (ExtrType(true), _) => true
+      case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
+      case (_: TypeRef, _) | (_, _: TypeRef) =>
+        false // TODO try to expand them (this requires populating the cache because of recursive types)
+      case (_: Without, _) | (_, _: Without)
+        | (_: VarType, _) | (_, _: VarType)
+        | (_: AppType, _) | (_, _: AppType)
+        | (_: TupleType, _) | (_, _: TupleType)
+        => false // don't even try
+      case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
+    })
+    }(r => s"! $r")
     
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // sometimes behind a single negation,
@@ -204,14 +256,14 @@ abstract class TyperHelpers { self: Typer =>
       ).mkString(", ")
     
     def expPos: Type = (this
-      |> (compactType(_, true))
+      |> (canonicalizeType(_, true))
       |> (simplifyType(_, true, removePolarVars = false))
-      |> (expandCompactType(_, true))
+      |> (expandType(_, true))
     )
     def expNeg: Type = (this
-      |> (compactType(_, false))
+      |> (canonicalizeType(_, false))
       |> (simplifyType(_, false, removePolarVars = false))
-      |> (expandCompactType(_, false))
+      |> (expandType(_, false))
     )
     
   }

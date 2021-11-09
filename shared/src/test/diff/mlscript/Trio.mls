@@ -11,16 +11,16 @@ def foo x = case x of {
   | B -> x.fB
   | C -> x.fC
   }
-//│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | (((c & {fC: 'c}) & ~b) & ~a))) -> 'a | ('b | 'c)
+//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
 
 def arg: A | B | C
-//│ arg: (A | B) | C
+//│ arg: a & {fA: int} | b & {fB: string} | c & {fC: bool}
 
 foo arg
-//│ res: int | (string | bool)
+//│ res: int | string | bool
 
 foo (arg with { fC = true })
-//│ res: int | (string | bool)
+//│ res: int | string | bool
 
 
 def foo x = case x of {
@@ -28,17 +28,17 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: ((a & {fA: int, payload: int}) | (((b & {fB: 'a}) & ~a) | (((c & {fC: 'b, payload: 'c}) & ~b) & ~a))) -> int | ('a | {l: 'b, r: 'c})
+//│ foo: a & {payload: int, fA: int} | b & {fB: 'a} | c & {payload: 'b, fC: 'c} -> int | 'a | {l: 'c, r: 'b}
 
 :e
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.34: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `(a & {fA: int}) & (~((b & ?a | ((({fA: int} & a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a)) & ~a)) & ~a) & ~(((c & ?b | (((a & {fA: int}) & a) & ~a) | ((~a & (a & {fA: int})) & ~{fB: ?c}) | (({fA: int} & a) & (~b & ~a))) & ~b) & ~a))` does not match type `{payload: ?d & int}`
+//│ ╟── expression of type `a & {fA: int}` does not match type `{payload: int & ?a}`
 //│ ║  l.16: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `(a & ?e & {fA: ?f & int, payload: ?d & int}) | (((b & ?a & {fB: ?c}) & ~a) | (((c & ?b & {fC: ?g, payload: ?h}) & ~b) & ~a))`
+//│ ╟── but it flows into reference with expected type `a & {payload: int & ?b, fA: int & ?c} & ?d | b & {fB: ?e} & ?f | c & {payload: ?g, fC: ?h} & ?i`
 //│ ║  l.34: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -47,8 +47,8 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.26: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: (int | (string | {l: bool, r: nothing})) | error
+//│ res: int | string | {l: bool, r: nothing} | error
 
 foo (arg with { payload = 1 })
-//│ res: int | (string | {l: bool, r: 1})
+//│ res: int | string | {l: bool, r: 1}
 

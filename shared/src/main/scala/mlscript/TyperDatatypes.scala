@@ -73,6 +73,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {
+    def empty = RecordType(Nil)(noProv)
     def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
@@ -102,7 +103,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"~(${negated})"
   }
   
-  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends SimpleType {
+  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends BaseType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
   }

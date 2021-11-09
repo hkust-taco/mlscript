@@ -20,75 +20,79 @@ Nil{}
 //│ ╟── expression of type `anything` does not have field 'size'
 //│ ║  l.16: 	Nil{}
 //│ ╙──      	   ^^
-//│ res: ((nil & ListBase[nothing]) & {size: nothing}) | error
+//│ res: nil & {size: nothing} | error
 
 def Nil = Nil { size = 0 }
-//│ Nil: (nil & ListBase[nothing]) & {size: 0}
+//│ Nil: nil & {size: 0}
 
 // FIXME
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: ?c & int, tail: ?d & List[?b]}`
+//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: int & ?c, tail: nil & {size: int} & ?d | (cons & {head: ?b, size: int, tail: ?f & (nil & {size: int} | ?e)}) as ?e & ?d}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
-//│ /!!!\ Uncaught error: scala.MatchError: ({head: (α20 & α19), size: (int & α21), tail: (List[α20] & α22)},|Some(([[α24]] -> α26))|None) (of class scala.Tuple2)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:179)
+//│ /!!!\ Uncaught error: scala.MatchError: ({head: (α24 & α23), size: (int & α25), tail: (List[α24] & α26)},|Some(([[α39]] -> α41))|None) (of class scala.Tuple2)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:105)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:121)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:192)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:50)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:47)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:118)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:124)
-//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:121)
+//│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:50)
+//│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:47)
+
+// TODO: figure out why the overcomplicated type!!
+Cons
+//│ res: {head: 'a & 'b, size: int & 'c, tail: nil & {size: int} & 'd | (cons & {head: 'b, size: int, tail: 'f & (nil & {size: int} | 'e)}) as 'e & 'd} -> cons & {head: 'b & 'a, size: int & 'c, tail: nil & {size: int} & 'd | (cons & {head: 'b, size: int, tail: 'h | nil & {size: int} | 'g}) as 'g & 'd}
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> 'b & List['c] & {size: int} -> (cons & (ListBase['c | 'a] & {head: 'c | 'a, tail: List['c | 'a]})) & {head: 'a, size: int & (int & int), tail: 'b}
+//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> 'b & List['c] & {size: int} -> (cons & (ListBase['c | 'a] & {head: 'c | 'a, tail: List['c | 'a]})) & {head: 'a, size: int, tail: 'b}
+//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
 
 Nil: ListBase[anything]
-//│ res: ListBase[anything]
+//│ res: listBase & {size: int}
 
 def c = Cons 1 Nil
-//│ c: (cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}}
+//│ c: cons & {head: 1, size: int, tail: nil & {size: 0}}
 
 c: ListBase[int]
-//│ res: ListBase[int]
+//│ res: listBase & {size: int}
 
 c.head
-//│ res: 1 & 1
+//│ res: 1
 
 c.tail
-//│ res: List[1] & ((nil & ListBase[nothing]) & {size: 0})
+//│ res: nil & {size: 0}
 
 c.size
-//│ res: int & int
+//│ res: int
 
 def d = Cons 2 c
-//│ d: (cons & (ListBase[(1 & 1) | 2] & {head: (1 & 1) | 2, tail: List[(1 & 1) | 2]})) & {head: 2, size: int, tail: (cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}}}
+//│ d: cons & {head: 1 | 2, size: int, tail: cons & {head: 1, size: int, tail: nil & {size: 0}}}
 
 d.head
-//│ res: (1 & 1) | 2 & 2
+//│ res: 1 | 2
 
 d.size
-//│ res: int & int
+//│ res: int
 
 d.tail
-//│ res: List[(1 & 1) | 2] & ((cons & (ListBase[1] & {head: 1, tail: List[1]})) & {head: 1, size: int, tail: (nil & ListBase[nothing]) & {size: 0}})
+//│ res: cons & {head: 1, size: int, tail: nil & {size: 0}}
 
 d.tail.size
-//│ res: int & int
+//│ res: int
 
 d.tail.head
 d.tail.tail
-//│ res: ((1 & 1) | 2 & 1) & 1
-//│ res: (List[(1 & 1) | 2] & List[1]) & ((nil & ListBase[nothing]) & {size: 0})
+//│ res: 2 | 1
+//│ res: nil & {size: 0}
 

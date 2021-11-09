@@ -35,7 +35,7 @@ let e = if _ then l else r
 
 :e // TODO
 e as Either Int String
-//│ ╔══[ERROR] Unsupported pattern shape(class mlscript.App):
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.37: 	e as Either Int String
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^
 //│ res: error

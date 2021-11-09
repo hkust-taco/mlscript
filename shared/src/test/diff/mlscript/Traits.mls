@@ -1,3 +1,4 @@
+// TODO properly implement traits – currently they're just like classes
 
 trait A: { x: int }
 trait B: { y: string }
@@ -10,35 +11,35 @@ class D: C & A & B
 //│ Defined class D
 
 error: A & B
-//│ res: A & B
+//│ res: nothing
 
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.16: 	def dv = D{}
+//│ ║  l.17: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{x: ?a & ((0 & int) | (1 & int)), y: ?b & string}`
-//│ ║  l.16: 	def dv = D{}
+//│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
+//│ ║  l.17: 	def dv = D{}
 //│ ╙──      	          ^^
-//│ dv: ((d & ((C & A) & B)) & {x: nothing, y: nothing}) | error
+//│ dv: error
 
 def dv = D { x = 0; y = "hello" }
-//│ dv: (d & ((C & A) & B)) & {x: 0, y: "hello"}
+//│ dv: nothing
 
-// FIXME currently this should actually worked
+// FIXME currently this should actually work
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.30: 	dv: nothing
+//│ ║  l.31: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `(d & ((C & A) & B)) & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
-//│ ║  l.25: 	def dv = D { x = 0; y = "hello" }
+//│ ╟── expression of type `nothing` does not match type `nothing`
+//│ ║  l.26: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.30: 	dv: nothing
+//│ ║  l.31: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.30: 	dv: nothing
+//│ ║  l.31: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 
@@ -56,16 +57,16 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.57: 	E{}
+//│ ║  l.58: 	E{}
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.57: 	E{}
+//│ ║  l.58: 	E{}
 //│ ╙──      	 ^^
-//│ res: ((e & Indirect) & {x: nothing}) | error
+//│ res: e & {x: nothing} | error
 
 def ev = E { x = 1 }
 ev: C
-//│ ev: (e & Indirect) & {x: 1}
-//│ res: C
+//│ ev: e & {x: 1}
+//│ res: c & {x: 0 | 1}
 
 

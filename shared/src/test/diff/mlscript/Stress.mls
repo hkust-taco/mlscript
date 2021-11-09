@@ -27,7 +27,7 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | ((((c & {fC: 'c}) & ~b) & ~a) | (((((d & {fD: 'd}) & ~c) & ~b) & ~a) | ((((((e & {fE: 'e}) & ~d) & ~c) & ~b) & ~a) | (((((((f & {fF: 'f}) & ~e) & ~d) & ~c) & ~b) & ~a) | ((((((((g & {fG: 'g}) & ~f) & ~e) & ~d) & ~c) & ~b) & ~a) | ((((((((h & {fH: 'h}) & ~g) & ~f) & ~e) & ~d) & ~c) & ~b) & ~a)))))))) -> 'a | ('b | ('c | ('d | ('e | ('f | ('g | 'h))))))
+//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} | e & {fE: 'a} | f & {fF: 'a} | g & {fG: 'a} | h & {fH: 'a} -> 'a
 //│ constrain calls: 26
 //│ annoying  calls: 0
 
@@ -57,9 +57,9 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ((a & {fA: 'a}) | ((b & {fB: 'b}) & ~a)) -> 'a | 'b
-//│ arg: A[int] | B[int]
-//│ res: int | int
+//│ foo: a & {fA: 'a} | b & {fB: 'a} -> 'a
+//│ arg: a & {fA: int} | b & {fB: int}
+//│ res: int
 //│ constrain calls: 43
 //│ annoying  calls: 80
 
@@ -74,9 +74,9 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | (((c & {fC: 'c}) & ~b) & ~a))) -> 'a | ('b | 'c)
-//│ arg: (A[int] | B[int]) | C[int]
-//│ res: int | (int | int)
+//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
+//│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int}
+//│ res: int
 //│ constrain calls: 138
 //│ annoying  calls: 442
 
@@ -92,21 +92,21 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | ((((c & {fC: 'c}) & ~b) & ~a) | ((((d & {fD: 'd}) & ~c) & ~b) & ~a)))) -> 'a | ('b | ('c | 'd))
-//│ arg: ((A[int] | B[int]) | C[int]) | D[int]
-//│ res: int | (int | (int | int))
+//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} -> 'a
+//│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int} | d & {fD: int}
+//│ res: int
 //│ constrain calls: 501
 //│ annoying  calls: 2257
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
-//│ res: int | (int | (int | int))
+//│ res: int
 //│ constrain calls: 464
 //│ annoying  calls: 2423
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
-//│ res: int | (int | (int | int))
+//│ res: int
 //│ constrain calls: 464
 //│ annoying  calls: 2506
 

@@ -140,4 +140,14 @@ package object utils {
   
   def checkless[A, B](pf: Paf[A, B]): A => B = pf
   
+  
+  def closeOver[A](xs: Set[A])(f: A => Set[A]): Set[A] =
+    closeOverCached(Set.empty, xs)(f)
+  def closeOverCached[A](done: Set[A], todo: Set[A])(f: A => Set[A]): Set[A] =
+    if (todo.isEmpty) done else {
+      val newDone = done ++ todo
+      closeOverCached(newDone, todo.flatMap(f) -- newDone)(f)
+    }
+  
+  
 }

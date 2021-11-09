@@ -9,7 +9,7 @@ let id = x => x
 //│ id: 'a -> 'a
 
 let twice = f => x => f (f x)
-//│ twice: ('a | 'b -> 'a) -> 'b -> 'a
+//│ twice: ('a -> 'b & 'a) -> 'a -> 'b
 
 let object1 = { x: 42, y: id }
 //│ object1: {x: 42, y: 'a -> 'a}
@@ -19,11 +19,11 @@ let object2 = { x: 17, y: false }
 
 let pick_an_object = b =>
   if b then object1 else object2
-//│ pick_an_object: bool -> {x: 42 | 17, y: bool | ('a -> 'a)}
+//│ pick_an_object: bool -> {x: 42 | 17, y: ('a -> 'a) | bool}
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> {self: 'b, thing: 'a} as 'b
+//│ recursive_monster: 'a -> {thing: 'a, self: 'b} as 'b
 
 
 
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: {head: 0, tail: {head: 1, tail: 'a}} as 'a | {head: int, tail: {head: int, tail: 'b} as 'b}}
+//│ produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a}} as 'a}
 //│ res: bool -> int
 
 let consume2 =

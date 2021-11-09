@@ -6,7 +6,7 @@ let f = x =>
 let h = y =>
   succ / f y
 let mkArg = a => {prop: a}
-//│ f: {prop: 'a & int} -> 'a
+//│ f: {prop: int & 'a} -> 'a
 //│ h: {prop: int} -> int
 //│ mkArg: 'a -> {prop: 'a}
 
@@ -19,7 +19,7 @@ h / mkArg false
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into application with expected type `{prop: ?a & int}`
+//│ ╟── but it flows into application with expected type `{prop: int & ?a}`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	    ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -65,11 +65,11 @@ let arg2 = {fld: arg}
 let i = y =>
   succ / f y.fld
 let test = x => y => if x.prop then i x else y
-//│ f: {prop: 'a & int} -> 'a
+//│ f: {prop: int & 'a} -> 'a
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> 'a | int
+//│ test: {prop: bool, fld: {prop: int}} -> 'a -> int | 'a
 
 :e
 :verbose
@@ -80,7 +80,7 @@ test arg2
 //│ ╟── expression of type `bool` does not match type `int`
 //│ ║  l.63: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{fld: ?a & {prop: ?b & int}}`
+//│ ╟── but it flows into reference with expected type `{fld: {prop: int & ?a & ?a & ?a} & ?b}`
 //│ ║  l.76: 	test arg2
 //│ ║        	     ^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -104,5 +104,5 @@ test arg2
 //│ ╟── from argument:
 //│ ║  l.67: 	let test = x => y => if x.prop then i x else y
 //│ ╙──      	                                      ^
-//│ res: error | ('a -> 'a | int)
+//│ res: ('a -> int | 'a) | error
 

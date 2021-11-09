@@ -75,7 +75,7 @@ let pred = n => 0 < n
 //│ pred: int -> bool
 
 let g = x => if pred x then x else f false
-//│ g: 'a & int -> 'a | 1 | 0
+//│ g: int & 'a -> 'a | 1 | 0
 
 g 3
 //│ res: 1 | 0 | 3
@@ -84,7 +84,7 @@ g / succ 3
 //│ res: int
 
 x => if x then x else f false
-//│ res: 'a & bool -> 'a | 1 | 0
+//│ res: bool & 'a -> 'a | 1 | 0
 
 res false
 //│ res: 1 | 0 | bool
@@ -118,10 +118,20 @@ let take1 (x: 1) = 1
 //│ take0: (x: 0,) -> 0
 //│ take1: (x: 1,) -> 1
 
-// TODO should try to the coerce into tuple earlier... avoid inferring y <: (x: ...)
+// FIXME later
 let takeWhat y = if y < 0 then take0 y else take1 y
-//│ takeWhat: int & (x: 1 & 0,) -> 0 | 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:31)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:45)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:131)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$8(NormalForms.scala:180)
+//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:180)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$6(NormalForms.scala:177)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:177)
 
 let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
-//│ takeWhat: 1 & 0 -> 0 | 1
+//│ takeWhat: nothing -> 0 | 1
 

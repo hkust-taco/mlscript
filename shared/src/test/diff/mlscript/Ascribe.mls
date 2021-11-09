@@ -23,7 +23,7 @@ class Foo[A]: { field: A }
 //│ Defined class Foo
 
 def foo(f: Foo['a]) = f.field
-//│ foo: Foo[anything] & {field: 'a} -> 'a
+//│ foo: foo & {field: 'a} -> 'a
 
 
 (succ 1): int
