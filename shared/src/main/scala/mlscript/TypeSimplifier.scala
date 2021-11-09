@@ -8,253 +8,168 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
-  // Compact types representation, useful for simplification:
-  
-  /** Depending on whether it occurs in positive or negative position,
-   * this represents either a union or an intersection, respectively,
-   * of different type components.  */
-  case class CompactType(
-    vars: Set[TypeVariable],
-    prims: BaseTypes,
-    rec: Option[SortedMap[Str, CompactType]],
-    tup: Option[List[Opt[Str] -> CompactType]],
-    fun: Option[(CompactType, CompactType)])
-  extends CompactTypeOrBaseType with CompactTypeOrVariable {
-    override def toString = List(vars, prims.underlying,
-      rec.map(_.map(fs => fs._1 + ": " + fs._2).mkString("{",", ","}")),
-      fun.map(lr => lr._1.toString + " -> " + lr._2),
-    ).flatten.mkString("‹", ", ", "›")
-  }
-  object CompactType {
-    val empty: CompactType = CompactType(Set.empty, BaseTypes.empty, None, None, None)
-    def merge(pol: Boolean)(lhs: CompactType, rhs: CompactType): CompactType = {
-      val rec = mergeOptions(lhs.rec, rhs.rec) { (lhs, rhs) =>
-        if (pol) lhs.flatMap { case (k, v) => rhs.get(k).map(k -> merge(pol)(v, _)) }
-        else mergeSortedMap(lhs, rhs)(merge(pol)) }
-      val tup = mergeOptionsFlat(lhs.tup, rhs.tup) { (lhs, rhs) =>
-        if (lhs.size =/= rhs.size) N
-        else S(lhs.zip(rhs).map { case ((n0, t0), (n1, t1)) =>
-          n0.orElse(n1) -> merge(pol)(t0, t1) // TODO return Nothing if the field names differ?
-        })
-      }
-      val fun = mergeOptions(lhs.fun, rhs.fun){
-        case ((l0,r0), (l1,r1)) => (merge(!pol)(l0, l1), merge(pol)(r0, r1)) }
-      CompactType(lhs.vars ++ rhs.vars, (lhs.prims ++ rhs.prims)(pol), rec, tup, fun)
-    }
-  }
-  
-  sealed abstract class CompactTypeOrBaseType
-  
-  sealed abstract class CompactBaseType extends CompactTypeOrBaseType with CompactTypeOrVariable {
-    def widen: CompactTypeOrBaseType
-  }
-  case class CompactVarType(vt: VarType, sign: CompactType) extends CompactBaseType {
-    def widen: CompactTypeOrBaseType = sign
-  }
-  case class CompactAppType(lhs: CompactType, args: Ls[CompactType]) extends CompactBaseType {
-    def widen: CompactTypeOrBaseType =
-      lhs.fun.fold(this: CompactTypeOrBaseType)(_._2) // Q: also try to retrieve it from rec bounds?
-  }
-  case class CompactPrimType(prim: PrimType) extends CompactBaseType {
-    lazy val widen: CompactPrimType = CompactPrimType(prim.widenPrim)
-  }
-  
-  class BaseTypes private(val underlying: Set[CompactBaseType]) {
-    def ++ (that: BaseTypes)(pol: Bool): BaseTypes = {
-      var cur = underlying
-      // println(s"[$pol]++ $this $that")
-      if (pol) that.underlying.foreach {
-        case prim @ CompactPrimType(PrimType(_: Lit, _)) =>
-          if (!cur.contains(prim.widen)) cur += prim
-        case prim @ CompactPrimType(PrimType(_: Var, _)) =>
-          cur = cur.filterNot(_.widen === prim) + prim
-        case app @ CompactAppType(lhs, args) =>
-          cur = cur.filterNot(_.widen === app) + app // TODO what if widen returns a CompactType?!
-        case vt @ CompactVarType(_, sign) =>
-          cur = cur.filterNot(_.widen === vt) + vt // TODO what if widen returns a CompactType?!
-      } else that.underlying.foreach {
-        case prim @ CompactPrimType(PrimType(l0: Lit, _)) =>
-          if (cur.collectFirst {
-            case CompactPrimType(PrimType(l1: Lit, _)) if l1 =/= l0 =>
-          }.isDefined)
-            // return ... // TODO return Nothing, when we have a repr for it...
-            ()
-          if (cur.forall(_.widen =/= prim)) cur += prim
-        case prim @ CompactPrimType(PrimType(_: Var, _)) =>
-          if (cur.forall(_.widen =/= prim)) cur += prim
-        case app @ CompactAppType(lhs, args) =>
-          cur = cur.filterNot(app.widen === _) + app // TODO what if widen returns a CompactType?!
-        case vt @ CompactVarType(_, sign) =>
-          cur = cur.filterNot(vt.widen === _) + vt // TODO what if widen returns a CompactType?!
-      }
-      // println(s"== $cur")
-      new BaseTypes(cur)
-    }
-    override def equals(that: Any): Boolean = that match {
-      case ps: BaseTypes => ps.underlying === underlying
-      case _ => false
-    }
-    override def hashCode: Int = underlying.hashCode
-    override def toString: Str = underlying.mkString("{",",","}")
-  }
-  object BaseTypes {
-    val empty: BaseTypes = new BaseTypes(Set.empty)
-    def single(prim: PrimType): BaseTypes = new BaseTypes(Set.single(CompactPrimType(prim)))
-    def single(app: CompactAppType): BaseTypes = new BaseTypes(Set.single(app))
-    def single(vt: CompactVarType): BaseTypes = new BaseTypes(Set.single(vt))
-    def apply(pol: Bool)(prims: CompactBaseType*): BaseTypes = (empty ++ new BaseTypes(Set.from(prims)))(pol)
-  }
-  
-  case class CompactTypeScheme(term: CompactType, recVars: Map[TypeVariable, CompactType])
-  
-  
-  // Simplification:
-  
-  // It is best to convert inferred types into compact types so we merge the bounds of inferred variables
-  //   e.g., transform the bounds {x: A}, {x: B; y: C} into {x: A ∧ B; y: C}
-  // This will allow for more precise co-occurrence analysis and hash-consing down the line.
-  
-  /** Convert an inferred SimpleType into the CompactType representation for simplification. */
-  def compactType(ty: SimpleType, pol: Bool = true): CompactTypeScheme = {
-    import CompactType.{empty, merge}, empty.{copy => ct}
+  def canonicalizeType(ty: SimpleType, pol: Bool = true): SimpleType = {
+    type PolarType = (DNF, Boolean)
     
-    val recursive = MutMap.empty[PolarVariable, TypeVariable]
-    var recVars = SortedMap.empty[TypeVariable, CompactType](Ordering by (_.uid))
+    val recursive = MutMap.empty[PolarType, TypeVariable]
     
-    // `parents` remembers the variables whose bounds are being compacted,
-    //    so as to remove spurious cycles such as ?a <: ?b and ?b <: ?a,
-    //    which do not correspond to actual recursive types.
-    def go(ty: SimpleType, pol: Boolean, parents: Set[TypeVariable])
-          (implicit inProcess: Set[(TypeVariable, Boolean)]): CompactType = ty match {
-      case p: PrimType => ct(prims = BaseTypes.single(p))
-      case TypeRef(td, targs) =>
-        ct(prims = BaseTypes single CompactAppType(
-          ct(prims = BaseTypes single PrimType(Var(td.nme.name), Set.empty/*FIXME*/)(noProv)),
-          targs.map(go(_, pol, Set.empty)))) // FIXME variance!
-      case vt: VarType => ct(prims = BaseTypes.single(CompactVarType(vt, go(vt.sign, pol, parents))))
-      case NegType(ty) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var("~"), Set.empty/*FIXME*/)(noProv))
-        ct(prims = BaseTypes single CompactAppType(base, go(ty, pol, Set.empty) :: Nil))
-      case ExtrType(pol) => // FIXME tmp hack
-        ct(prims = BaseTypes single PrimType(Var(if (pol) "nothing" else "anything"), Set.empty/*FIXME*/)(noProv))
-      case ProxyType(und) => go(und, pol, parents)
-      case FunctionType(l, r) =>
-        ct(fun = Some(go(l, !pol, Set.empty) -> go(r, pol, Set.empty)))
-      case ComposedType(p, l, r) => // FIXME tmp hack
-        val base = ct(prims = BaseTypes single PrimType(Var(if (p) "|" else "&"), Set.empty/*FIXME*/)(noProv))
-        ct(prims = BaseTypes single CompactAppType(base, go(l, pol, parents) :: go(r, pol, parents) :: Nil))
-      case Without(b, ns) =>
-        val base = ct(prims = BaseTypes single PrimType(Var(ns.map("\\"+_).mkString), Set.empty/*FIXME*/)(noProv))
-        ct(prims = BaseTypes single CompactAppType(base, go(b, pol, parents) :: Nil))
-      case a @ AppType(lhs, args) =>
-        ct(prims = BaseTypes single CompactAppType(go(lhs, pol, Set.empty), args.map(go(_, pol, Set.empty))))
-      case RecordType(fs) =>
-        ct(rec = Some(SortedMap from fs.iterator.map(f => f._1 -> go(f._2, pol, Set.empty))))
-      case TupleType(fs) =>
-        ct(tup = Some(fs.map(f => f._1 -> go(f._2, pol, Set.empty))))
-      case tv: TypeVariable =>
-        val bounds = if (pol) tv.lowerBounds else tv.upperBounds
-        val tv_pol = tv -> pol
-        if (inProcess.contains(tv_pol))
-          if (parents(tv)) ct() // we have a spurious cycle: ignore the bound
-          else ct(vars = Set(recursive.getOrElseUpdate(tv_pol, freshVar(tv.prov)(0))))
-        else (inProcess + (tv -> pol)) pipe { implicit inProcess =>
-          val bound = bounds.map(b => go(b, pol, parents + tv))
-            .foldLeft[CompactType](ct(vars = Set(tv)))(merge(pol))
-          recursive.get(tv_pol) match {
-            case Some(v) =>
-              recVars += v -> bound
-              ct(vars = Set(v))
-            case None => bound
+    val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    
+    val allVars = ty.getVars
+    def renew(tv: TypeVariable): TypeVariable =
+      renewed.getOrElseUpdate(tv,
+        freshVar(noProv)(0) tap { fv => println(s"Renewed $tv ~> $fv") })
+    
+    def goDeep(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): SimpleType =
+      go1(go0(ty, pol), pol)
+    
+    // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
+    def go0(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): DNF = 
+    trace(s"ty[$pol] $ty") {
+      val visited = MutSet.empty[TypeVariable]
+      var dnf = DNF.mk(ty, pol)
+      var changed = true
+      while (changed) {
+        println(s"iter: $dnf")
+        changed = false
+        // TODO pretty inefficient... could probably do better
+        dnf = dnf.cs.iterator.map { c =>
+          val toGo = c.vars.filterNot(visited)
+          toGo.iterator.flatMap { tv =>
+            visited += tv
+            changed = true
+            if (pol) tv.lowerBounds else tv.upperBounds
+          }.map(DNF.mk(_, pol)).foldLeft(DNF(c::Nil))(DNF.merge(pol))
+        }.foldLeft(DNF.extr(false))(_ | _)
+      }
+      dnf
+    }(r => s"-> $r")
+    
+    // Merge the bounds of all type variables of the given DNF, and traverse the result
+    def go1(ty: DNF, pol: Boolean)
+        (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
+      if (ty.isBot) ty.toType else {
+        val pty = ty -> pol
+        if (inProcess.contains(pty))
+          recursive.getOrElseUpdate(pty, freshVar(noProv)(0))
+        else {
+          (inProcess + pty) pipe { implicit inProcess =>
+            val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
+              def adapt(pol: Bool)(l: LhsNf): LhsNf = l match {
+                case LhsRefined(b, RecordType(fs)) => LhsRefined(
+                  b.map {
+                    case ft @ FunctionType(l, r) =>
+                      FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
+                    case wo @ Without(b, ns) =>
+                      Without(goDeep(b, pol), ns)(noProv)
+                    case ft @ TupleType(fs) =>
+                      TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                    case AppType(lhs, args) =>
+                      AppType(goDeep(lhs, pol), args.map(goDeep(_, pol)))(noProv) // FIXME variances
+                    case vt @ VarType(vi, sign, isa) => VarType(vi, goDeep(sign, pol), isa)(vt.prov)
+                    case pt: PrimType => pt
+                  },
+                  RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                )
+                case LhsTop => LhsTop
+              }
+              def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
+                case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
+                case RhsBases(prims, bty, f) =>
+                  RhsBases(prims, bty.flatMap(goDeep(_, pol) match {
+                    case bt: BaseType => S(bt)
+                    case ExtrType(true) => N
+                    // case _ => ??? // TODO
+                  })
+                  , f.map(f => RhsField(f.name, goDeep(f.ty, pol))))
+                case RhsBot => RhsBot
+              }
+              Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(!pol)(rnf), nvars.map(renew))
+            })
+            val adapted = res.toType
+            recursive.get(pty) match {
+              case Some(v) =>
+                val bs = if (pol) v.lowerBounds else v.upperBounds
+                if (bs.isEmpty) { // it's possible we have already set the bounds in a sibling call
+                  if (pol) v.lowerBounds ::= adapted else v.upperBounds ::= adapted
+                }
+                v
+              case None => adapted
+            }
           }
         }
       }
+    }(r => s"~> $r")
     
-    CompactTypeScheme(go(ty, pol, Set.empty)(Set.empty), recVars)
+    goDeep(ty, pol)(Set.empty)
+    
   }
   
   
-  // Idea: if a type var 'a always occurs positively (resp. neg) along with some 'b AND vice versa,
-  //      this means that the two are undistinguishable, and they can therefore be unified.
-  //    Ex: ('a & 'b) -> ('a, 'b) is the same as 'a -> ('a, 'a)
-  //    Ex: ('a & 'b) -> 'b -> ('a, 'b) is NOT the same as 'a -> 'a -> ('a, 'a)
-  //      there is no value of 'a that can make 'a -> 'a -> ('a, 'a) <: (a & b) -> b -> (a, b) work
-  //      we'd require 'a :> b | a & b <: a & b, which are NOT valid bounds!
-  //    Ex: 'a -> 'b -> 'a | 'b is the same as 'a -> 'a -> 'a
-  //    Justification: the other var 'b can always be taken to be 'a & 'b (resp. a | b)
-  //      without loss of gen. Indeed, on the pos side we'll have 'a <: 'a & 'b and 'b <: 'a & 'b
-  //      and on the neg side, we'll always have 'a and 'b together, i.e., 'a & 'b
-  
-  // Additional idea: remove variables which always occur both positively AND negatively together
-  //      with some other type.
-  //    This would arise from constraints such as: 'a :> Int <: 'b and 'b <: Int
-  //      (contraints which basically say 'a =:= 'b =:= Int)
-  //    Ex: 'a ∧ Int -> 'a ∨ Int is the same as Int -> Int
-  //    Currently, we only do this for primitive types PrimType.
-  //    In principle it could be done for functions and records, too.
-  //    Note: conceptually, this idea subsumes the simplification that removes variables occurring
-  //        exclusively in positive or negative positions.
-  //      Indeed, if 'a never occurs positively, it's like it always occurs both positively AND
-  //      negatively along with the type Bot, so we can replace it with Bot.
-  
-  /** Simplifies a CompactTypeScheme by performing a co-occurrence analysis on the type variables. */
-  def simplifyType(cty: CompactTypeScheme, pol: Bool = true, removePolarVars: Bool = true): CompactTypeScheme = {
+  def simplifyType(st: SimpleType, pol: Bool = true, removePolarVars: Bool = true): SimpleType = {
     
-    // State accumulated during the analysis phase:
-    var allVars = SortedSet.from(cty.recVars.keysIterator)(Ordering by (-_.uid))
-    var recVars = SortedMap.empty[TypeVariable, () => CompactType](Ordering by (_.uid))
-    val coOccurrences: MutMap[(Boolean, TypeVariable), MutSet[CompactTypeOrVariable]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Boolean, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    
+    val analyzed = MutSet.empty[PolarVariable]
+    
+    def analyze(st: SimpleType, pol: Boolean): Unit = st match {
+      case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
+      case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
+      case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
+      case AppType(lhs, args) => analyze(lhs, pol); args.foreach(analyze(_, pol)) // FIXME variances
+      case VarType(_, sign, _) => analyze(sign, pol)
+      case tv: TypeVariable =>
+        println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
+        coOccurrences(pol -> tv) = MutSet(tv)
+        processBounds(tv, pol)
+      case PrimType(_, _) | ExtrType(_) => ()
+      case ct: ComposedType =>
+        val newOccs = MutSet.empty[SimpleType]
+        def go(st: SimpleType): Unit = st match {
+          case ComposedType(p, l, r) =>
+            println(s">> $pol $l $r")
+            if (p === pol) { go(l); go(r) }
+            else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
+          case _: BaseType => newOccs += st; analyze(st, pol)
+          case tv: TypeVariable => newOccs += st; processBounds(tv, pol)
+          case _ => analyze(st, pol)
+        }
+        go(ct)
+        newOccs.foreach {
+          case tv: TypeVariable =>
+            println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+            coOccurrences.get(pol -> tv) match {
+              case Some(os) => os.filterInPlace(newOccs) // computes the intersection
+              case None => coOccurrences(pol -> tv) = newOccs
+            }
+          case _ => ()
+        }
+      case NegType(und) => analyze(und, !pol)
+      case ProxyType(underlying) => analyze(underlying, pol)
+      case tr @ TypeRef(defn, targs) => analyze(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case Without(base, names) => analyze(base, pol)
+    }
+    def processBounds(tv: TV, pol: Bool) = {
+      if (!analyzed(tv -> pol)) {
+        analyzed(tv -> pol) = true
+        (if (pol) tv.lowerBounds else tv.upperBounds).foreach(analyze(_, pol))
+      }
+    }
+    
+    analyze(st, pol)
+    
+    println(s"[occs] ${coOccurrences}")
     
     // This will be filled up after the analysis phase, to influence the reconstruction phase:
     val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
     
-    // Traverses the type, performing the analysis, and returns a thunk to reconstruct it later:
-    def go(ty: CompactType, pol: Boolean): () => CompactType = {
-      ty.vars.foreach { tv =>
-        allVars += tv
-        val newOccs = LinkedHashSet.from[CompactTypeOrVariable](ty.vars.iterator ++ ty.prims.underlying)
-        coOccurrences.get(pol -> tv) match {
-          case Some(os) => os.filterInPlace(newOccs) // computes the intersection
-          case None => coOccurrences(pol -> tv) = newOccs
-        }
-        cty.recVars.get(tv).foreach { b => // if `tv` is recursive, process its bound `b` too
-          if (!recVars.contains(tv)) {
-            lazy val goLater: () => CompactType = {
-              // Make sure to register `tv` before recursing, to avoid an infinite recursion:
-              recVars += tv -> (() => goLater())
-              go(b, pol)
-            }; goLater
-          }; ()
-        }
-      }
-      val prims_ = ty.prims.underlying.iterator.map {
-        case cp: CompactPrimType => () => cp
-        case CompactVarType(vt, sign) =>
-          val sign_ = go(sign, pol)
-          () => CompactVarType(vt, sign_())
-        case CompactAppType(lhs, args) =>
-          val lhs_ = go(lhs, pol)
-          val args_ = args.map(go(_, pol))
-          () => CompactAppType(lhs_(), args_.map(_()))
-      }.toList
-      val rec_ = ty.rec.map(_.map(f => f._1 -> go(f._2, pol)))
-      val tup_ = ty.tup.map(_.map(f => f._1 -> go(f._2, pol)))
-      val fun_ = ty.fun.map(lr => go(lr._1, !pol) -> go(lr._2, pol))
-      () => {
-        val newVars = ty.vars.flatMap { case tv => varSubst get tv match {
-          case Some(Some(tv2)) => tv2 :: Nil
-          case Some(None) => Nil
-          case None => tv :: Nil
-        }}
-        CompactType(newVars, BaseTypes(pol)(prims_.map(_()): _*),
-          rec_.map(r => r.map(f => f._1 -> f._2())),
-          tup_.map(r => r.map(f => f._1 -> f._2())),
-          fun_.map(lr => lr._1() -> lr._2()))
-      }
-    }
-    val gone = go(cty.term, pol)
-    println(s"[occ] ${coOccurrences}")
-    println(s"[rec] ${recVars.keySet}")
+    val allVars = st.getVars
+    val recVars = MutSet.from(
+      allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
+    
+    println(s"[vars] ${allVars}")
+    println(s"[bounds] ${st.showBounds}")
+    println(s"[rec] ${recVars}")
     
     // Simplify away those non-recursive variables that only occur in positive or negative positions:
     allVars.foreach { case v0 => if (!recVars.contains(v0)) {
@@ -262,13 +177,9 @@ trait TypeSimplifier { self: Typer =>
         case (Some(_), None) | (None, Some(_)) =>
           if (removePolarVars) {
             println(s"[!] $v0")
-            varSubst += v0 -> None; ()
-          } else {
-            // The rest of simplifyType expects all remaining non-rec variables to occur both positively and negatively
-            coOccurrences.getOrElseUpdate(true -> v0, MutSet(v0))
-            coOccurrences.getOrElseUpdate(false -> v0, MutSet(v0))
-          }
-        case occ => dbg_assert(occ =/= (None, None))
+            varSubst += v0 -> None
+          }; ()
+        case occ => assert(occ =/= (None, None), s"$v0 has no occurrences...")
       }
     }}
     // Unify equivalent variables based on polar co-occurrence analysis:
@@ -290,21 +201,37 @@ trait TypeSimplifier { self: Typer =>
               //  consider that if we merge v and w in `(v & w) -> v & x -> w -> x`
               //  we get `v -> v & x -> v -> x`
               //  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
-              recVars.get(w) match {
-                case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
-                  dbg_assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
-                  recVars -= w // w is merged into v, so we forget about it
-                  val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
-                  // and record the new recursive bound for v:
-                  recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
-                case None => // `w` is NOT recursive
-                  val wCoOcss = coOccurrences((!pol) -> w)
-                  // ^ this must be defined otherwise we'd already have simplified away the non-rec variable
-                  coOccurrences((!pol) -> v).filterInPlace(t => t === v || wCoOcss(t))
-                  // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
+              // recVars.get(w) match {
+              //   case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
+              if (recVars.contains(w)) { // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
+                assert(w.lowerBounds.isEmpty || w.upperBounds.isEmpty)
+                val (pol, b_w) = (w.lowerBounds, w.upperBounds) match {
+                  case (Nil, b) => false -> b
+                  case (b, Nil) => true -> b
+                  case _ => die
+                }
+                assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
+                recVars -= w // w is merged into v, so we forget about it
+                val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
+                // and record the new recursive bound for v:
+                // recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
+                if (pol) v.lowerBounds :::= b_w
+                else v.upperBounds :::= b_w
+              } else { // `w` is NOT recursive
+                /* 
+                val wCoOcss = coOccurrences((!pol) -> w)
+                // ^ this must be defined otherwise we'd already have simplified away the non-rec variable
+                coOccurrences((!pol) -> v).filterInPlace(t => t === v || wCoOcss(t))
+                // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
+                */
+                // When removePolarVars is enabled, wCoOcss/vCoOcss may not be defined:
+                for {
+                  wCoOcss <- coOccurrences.get((!pol) -> w)
+                  vCoOcss <- coOccurrences.get((!pol) -> v)
+                } vCoOcss.filterInPlace(t => t === v || wCoOcss(t))
               }
             }; ()
-          case atom: CompactPrimType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
+          case atom: BaseType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
             varSubst += v -> None; ()
           case _ =>
         }
@@ -312,56 +239,43 @@ trait TypeSimplifier { self: Typer =>
     }}
     println(s"[sub] ${varSubst.map(k => k._1.toString + " -> " + k._2).mkString(", ")}")
     
-    CompactTypeScheme(gone(), recVars.view.mapValues(_()).toMap)
-  }
-  
-  /** Expands a CompactTypeScheme into a Type while performing hash-consing
-   * to tie recursive type knots a bit tighter, when possible. */
-  def expandCompactType(cty: CompactTypeScheme, pol: Bool = true): Type = {
-    def go(ty: CompactTypeOrVariable, pol: Boolean)
-          (implicit inProcess: Map[(CompactTypeOrVariable, Boolean), () => TypeVar]): Type = {
-      inProcess.get(ty -> pol) match { // Note: we use pat-mat instead of `foreach` to avoid non-local return
-        case Some(t) =>
-          val res = t()
-          println(s"REC[$pol] $ty -> $res")
-          return res
-        case None => ()
-      }
-      var isRecursive = false
-      lazy val v = {
-        isRecursive = true
-        (ty match {
-          case tv: TypeVariable => tv
-          case _ => new TypeVariable(0, Nil, Nil)(noProv)
-        }).asTypeVar
-      }
-      val res = inProcess + (ty -> pol -> (() => v)) pipe { implicit inProcess =>
-        ty match {
-          case tv: TypeVariable => cty.recVars.get(tv).fold(tv.asTypeVar: Type)(go(_, pol))
-          case CompactType(vars, prims, rec, tup, fun) =>
-            val (extr, mrg) = if (pol) (Bot, Union) else (Top, Inter)
-            (vars.iterator.map(go(_, pol)).toList
-              ::: prims.underlying.iterator.map {
-                case CompactPrimType(PrimType(id, bcs)) => Primitive(id.idStr)
-                case CompactAppType(lhs @ CompactType(vs, cs, r, t, f), targs) =>
-                  (cs.underlying.toList, vs.size) match {
-                    case (CompactPrimType(PrimType(Var(id), bcs)) :: Nil, 0) if id.head.isLetter && targs.nonEmpty =>
-                      AppliedType(Primitive(id), targs.map(go(_, pol)))
-                    case _ =>
-                      targs.map(go(_, pol)).foldLeft(go(lhs, pol))(Applied(_, _))
-                  }
-                case CompactVarType(vt, sign) => Primitive(vt.vi.v.name) // FIXME do sthg else for higher levels?
-              }.toList
-              ::: rec.map(fs => Record(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
-              ::: tup.map(fs => Tuple(fs.toList.map(f => f._1 -> go(f._2, pol)))).toList
-              ::: fun.map(lr => Function(go(lr._1, !pol), go(lr._2, pol))).toList
-            ).reduceOption(mrg).getOrElse(extr)
+    
+    val renewals = MutMap.empty[TypeVariable, TypeVariable]
+    
+    def transform(st: SimpleType, pol: Boolean): SimpleType = st match {
+      case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
+      case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
+      case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
+      case AppType(lhs, args) => AppType(transform(lhs, !pol), args.map(transform(_, pol)))(st.prov) // FIXME variances
+      case VarType(vi, sign, isAlias) => VarType(vi, transform(sign, pol), isAlias)(st.prov)
+      case PrimType(_, _) | ExtrType(_) => st
+      case tv: TypeVariable =>
+        varSubst.get(tv) match {
+          case S(S(ty)) => transform(ty, pol)
+          case S(N) => ExtrType(pol)(noProv)
+          case N =>
+            var wasDefined = true
+            val res = renewals.getOrElseUpdate(tv, {
+              wasDefined = false
+              val nv = freshVar(noProv)(0)
+              println(s"Renewed $tv ~> $nv")
+              nv
+            })
+            if (!wasDefined) {
+              res.lowerBounds = tv.lowerBounds.map(transform(_, true))
+              res.upperBounds = tv.upperBounds.map(transform(_, false))
+            }
+            res
         }
-      }
-      if (isRecursive) Recursive(v, res) else res
+      case ty @ ComposedType(true, l, r) => transform(l, pol) | transform(r, pol)
+      case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
+      case NegType(und) => transform(und, !pol).neg()
+      case ProxyType(underlying) => transform(underlying, pol)
+      case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case wo @ Without(base, names) => Without(transform(base, pol), names)(wo.prov)
     }
-    go(cty.term, pol)(Map.empty)
+    transform(st, pol)
+    
   }
-  
   
 }

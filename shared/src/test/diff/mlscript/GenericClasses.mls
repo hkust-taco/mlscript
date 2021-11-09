@@ -2,25 +2,25 @@
 class None: {}
 def None = None{}
 //│ Defined class None
-//│ None: none & {}
+//│ None: none
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> (some & {value: 'a}) & {value: 'a}
+//│ Some: 'a -> some & {value: 'a}
 
 Some 42
 (Some 42).value
-//│ res: (some & {value: 42}) & {value: 42}
-//│ res: 42 & 42
+//│ res: some & {value: 42}
+//│ res: 42
 
 type Option[A] = Some[A] | None
 //│ Defined type Option
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: Option[int]
-//│ res: Option[int]
+//│ res: some & {value: int} | none
+//│ res: some & {value: int} | none
 
 :e
 res.value
@@ -43,9 +43,9 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `Some[int] | None`
+//│ ╟── expression of type `42` does not match type `some & {value: int} | none`
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: Option[int]
+//│ res: some & {value: int} | none
 

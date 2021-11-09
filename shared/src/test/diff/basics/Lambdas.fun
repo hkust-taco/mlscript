@@ -20,10 +20,10 @@ let id = v => v
 //│ id: 'a -> 'a
 
 f => f f
-//│ res: 'a & ('a -> 'b) -> 'b
+//│ res: ('a -> 'b) & 'a -> 'b
 
 f => id f id f id
-//│ res: 'a & (('b -> 'b) -> 'a -> ('c -> 'c) -> 'd) -> 'd
+//│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd) & 'b -> 'd
 
 :pe
 let oops = hu(h
@@ -54,7 +54,7 @@ let f x y z = { log x; if y < z then y else z }
 //│ f: int -> int
 //│ f: int -> int -> int
 //│ f: bool -> 'a -> 'a -> 'a
-//│ f: anything -> 'a & int -> 'a & int -> 'a
+//│ f: anything -> int & 'a -> int & 'a -> 'a
 
 // TODO
 // let f (x: int) = x + 1
@@ -95,7 +95,7 @@ f (x: 42, y: 43)
 //│ ╟── expression of type `(x: 42, y: 43,)` does not match type `int`
 //│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	   ^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `(x: ?a & int,)`
+//│ ╟── but it flows into argument with expected type `(x: int & ?a,)`
 //│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	  ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:

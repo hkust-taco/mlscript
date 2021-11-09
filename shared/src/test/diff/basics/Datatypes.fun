@@ -30,35 +30,29 @@ Bool
 True
 //│ res: Bool
 //│ res: True
+
+// FIXME later
 :e // FIXME
 True as Bool
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.34: 	True as Bool
-//│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `False`
-//│ ║  l.23: 	  True
-//│ ║        	  ^^^^
-//│ ╟── but it flows into reference with expected type `Bool`
-//│ ║  l.34: 	True as Bool
-//│ ║        	^^^^
-//│ ╟── Note: constraint arises from data symbol:
-//│ ║  l.24: 	  False
-//│ ║        	  ^^^^^
-//│ ╟── from data type symbol:
-//│ ║  l.22: 	data type Bool of
-//│ ║        	          ^^^^
-//│ ╟── from reference:
-//│ ║  l.34: 	True as Bool
-//│ ╙──      	        ^^^^
-//│ res: Bool
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:32)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:45)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:131)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$8(NormalForms.scala:180)
+//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:180)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$6(NormalForms.scala:177)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:177)
 
 // TODO treat the ending curly-blocks as bodies (not params)?
 data type List of
   Nil { T: Nothing }
   Cons head tail { T: head | tail.T }
-//│ List: Nil {T: 'a} | Cons 'b 'c {T: 'd}
-//│ Nil: {T: 'a & nothing} -> {T: 'a}
-//│ Cons: 'a -> 'b & {T: anything} -> {T: 'c & ('a | anything)} -> {T: 'c, head: 'a, tail: 'b}
+//│ List: Nil {T: nothing} | Cons nothing nothing {T: nothing}
+//│ Nil: {T: nothing} -> {T: nothing}
+//│ Cons: 'a -> {T: anything} & 'b -> {T: 'c} -> {T: 'c, head: 'a, tail: 'b}
 
 // TODO also try the one-line version:
 // data type List of Nil { T: Nothing }, Cons head tail { T: head | tail.T }
@@ -67,7 +61,7 @@ data type List of
 data type List a of // FIXME param type becomes 'anything'
   Nil
   Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
-//│ List: anything -> Nil | Cons (head: 'a,) (tail: 'b,)
+//│ List: anything -> Nil | Cons (head: nothing,) (tail: nothing,)
 //│ Nil: anything
 //│ Cons: (head: 'a,) -> (tail: 'b,) -> {head: 'a, tail: 'b}
 
@@ -90,27 +84,27 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ║  l.85: 	not (Cons 42 Nil).head
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ║  l.85: 	not (Cons 42 Nil).head
 //│ ║        	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.91: 	not (Cons 42 Nil).head
+//│ ║  l.85: 	not (Cons 42 Nil).head
 //│ ╙──      	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.104: 	(Cons 4).head
-//│ ║         	        ^^^^^
+//│ ║  l.98: 	(Cons 4).head
+//│ ║        	        ^^^^^
 //│ ╟── expression of type `(tail: ?a,) -> {head: ?b | 4, tail: ?a}` does not have field 'head'
-//│ ║  l.69: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
+//│ ║  l.63: 	  Cons (head: a) (tail: List a) // FIXME type of 'tail'; absence of type "a"
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied expression:
-//│ ║  l.104: 	(Cons 4).head
-//│ ╙──       	 ^^^^
+//│ ║  l.98: 	(Cons 4).head
+//│ ╙──      	 ^^^^
 //│ res: error
 
 // FIXME
@@ -121,7 +115,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.122: 	let List.head = () // ...
+//│ ║  l.116: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

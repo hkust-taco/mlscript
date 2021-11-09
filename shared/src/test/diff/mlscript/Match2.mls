@@ -6,17 +6,17 @@ def foo x = case x of
   { Test -> x.value
   | _ -> 1
   }
-//│ foo: ((test & {value: 'a}) | (anything & ~test)) -> 'a | 1
+//│ foo: test & {value: 'a} | ~test -> 'a | 1
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
-//│ t: (test & {value: int}) & {value: 0}
+//│ t: test & {value: 0}
 
 foo Test
-//│ res: nothing | 1
+//│ res: 1
 
 foo t
-//│ res: (int & 0) | 1
+//│ res: 0 | 1
 
 
 class Toast: { name: string }
@@ -26,51 +26,51 @@ def bar x = case x of
   { Test -> x.value
   | Toast -> x.name
   }
-//│ bar: ((test & {value: 'a}) | ((toast & {name: 'b}) & ~test)) -> 'a | 'b
+//│ bar: test & {value: 'a} | toast & {name: 'a} -> 'a
 
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: ?a & int} -> (test & {value: int}) & {value: ?a}` does not match type `(test & ?b & {value: ?c}) | ((toast & ?d & {name: ?e}) & ~test)`
+//│ ╟── expression of type `{value: int & ?a} -> test & {value: int & ?a}` does not match type `test & {value: ?b} & ?c | toast & {name: ?d} & ?e`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.25: 	def bar x = case x of
 //│ ╙──      	                 ^
-//│ res: (nothing | nothing) | error
+//│ res: error
 
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.45: 	bar "ops"
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `"ops"` does not match type `(test & ?a & {value: ?b}) | ((toast & ?c & {name: ?d}) & ~test)`
+//│ ╟── expression of type `"ops"` does not match type `test & {value: ?a} & ?b | toast & {name: ?c} & ?d`
 //│ ║  l.45: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.25: 	def bar x = case x of
 //│ ╙──      	                 ^
-//│ res: (nothing | nothing) | error
+//│ res: error
 
 
 def baz x = case x of
   { Test -> x
   | Toast -> x
   }
-//│ baz: ((test & 'a) | ((toast & 'b) & ~test)) -> 'a | 'b
+//│ baz: test & 'a | toast & 'a -> 'a
 
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.65: 	baz "oops"
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `(test & ?a) | ((toast & ?b) & ~test)`
+//│ ╟── expression of type `"oops"` does not match type `test & ?a | toast & ?b`
 //│ ║  l.65: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.58: 	def baz x = case x of
 //│ ╙──      	                 ^
-//│ res: (("oops" & ~((toast & ("oops" & ~test)) & ~test)) | ("oops" & ~test)) | error
+//│ res: "oops" | error
 

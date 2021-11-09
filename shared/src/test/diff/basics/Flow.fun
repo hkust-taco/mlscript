@@ -7,7 +7,7 @@ data R x
 // TODO flow-type
 :e
 let f x = if x is L y then y else 0
-//│ ╔══[ERROR] Unsupported pattern shape(class mlscript.App):
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.9: 	let f x = if x is L y then y else 0
 //│ ╙──     	                  ^^^
 //│ ╔══[ERROR] identifier not found: y

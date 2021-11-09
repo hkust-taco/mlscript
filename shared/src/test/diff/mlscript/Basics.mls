@@ -67,7 +67,10 @@ def f x y z = add x y
 
 :e
 def f (x y z) = add x y
-//│ ╔══[ERROR] Unsupported pattern shape(class mlscript.App):
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.69: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
+
+f 1
+//│ res: int

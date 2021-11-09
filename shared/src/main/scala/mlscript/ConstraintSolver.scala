@@ -8,7 +8,7 @@ import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
 
-class ConstraintSolver extends TyperDatatypes { self: Typer =>
+class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   
   private var constrainCalls = 0
@@ -30,80 +30,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
     
     type ConCtx = Ls[Ls[SimpleType -> SimpleType]]
     
-    
-    sealed abstract class LhsNf {
-      def toTypes: Ls[SimpleType] = toType :: Nil
-      def toType: SimpleType = this match {
-        case LhsRefined(N, r) => r
-        case LhsRefined(S(b), RecordType(Nil)) => b
-        case LhsRefined(S(b), r) => b & r
-        case LhsTop => TopType
-      }
-      def & (that: BaseType): Opt[LhsNf] = (this, that) match {
-        case (LhsTop, _) => S(LhsRefined(S(that), RecordType(Nil)(noProv)))
-        case (LhsRefined(b1, r1), _) =>
-          ((b1, that) match {
-            case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
-              println(s"!GLB! ${p0.glb(p1)}")
-              p0.glb(p1)
-            case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
-            case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
-            case (S(TupleType(fs0)), TupleType(fs1)) => ???
-            case (S(VarType(_, _, _)), VarType(_, _, _)) => ???
-            case (S(_), _) => N
-            case (N, _) => S(that)
-          }) map { b => LhsRefined(S(b), r1) }
-      }
-      def & (that: RecordType): LhsNf = this match {
-        case LhsTop => LhsRefined(N, that)
-        case LhsRefined(b1, r1) =>
-          LhsRefined(b1, RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/))
-      }
-    }
-    case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf {
-      override def toString: Str = s"${base.getOrElse("")}${reft}"
-    }
-    case object LhsTop extends LhsNf
-    
-    sealed abstract class RhsNf {
-      def toTypes: Ls[SimpleType] = toType :: Nil
-      def toType: SimpleType = this match {
-        case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
-        case RhsBases(ps, b, f) => ps.foldLeft(b.getOrElse(BotType) | f.fold(BotType:SimpleType)(_.toType))(_ | _)
-        case RhsBot => BotType
-      }
-      def | (that: BaseType): Opt[RhsNf] = (this, that) match {
-        case (RhsBot, p: PrimType) => S(RhsBases(p::Nil,N,N))
-        case (RhsBot, _) => S(RhsBases(Nil,S(that),N))
-        case (RhsBases(ps, b, f), p: PrimType) =>
-          S(RhsBases(if (ps.contains(p)) ps else p :: ps , b, f))
-        case (RhsBases(ps, N, f), _) => S(RhsBases(ps, S(that), f))
-        case (RhsBases(_, S(TupleType(_)), f), TupleType(_)) =>
-          // ??? // TODO
-          err("TODO handle tuples", prov.loco)
-          N
-        case (RhsBases(_, _, _), _) => N
-        case (f @ RhsField(_, _), p: PrimType) => S(RhsBases(p::Nil, N, S(f)))
-        case (f @ RhsField(_, _), _) =>
-          // S(RhsBases(Nil, S(that), S(f)))
-          N // can't merge a record and a function -> it's the same as Top
-      }
-      def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
-        case RhsBot => S(RhsField(that._1, that._2))
-        case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
-        case RhsBases(p, b, N) => S(RhsBases(p, b, S(RhsField(that._1, that._2))))
-        case RhsBases(p, b, S(RhsField(n1, t1))) if n1 === that._1 => S(RhsBases(p, b, S(RhsField(n1, t1 | that._2))))
-        case _: RhsField | _: RhsBases => N
-      }
-    }
-    case class RhsField(name: Str, ty: SimpleType) extends RhsNf
-    case class RhsBases(prims: Ls[PrimType], bty: Opt[BaseType], f: Opt[RhsField]) extends RhsNf {
-      require(!bty.exists(_.isInstanceOf[PrimType]), this)
-      require(bty.isEmpty || f.isEmpty, this)
-      // TODO improve type: should make (bty, f) an either...
-      override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
-    }
-    case object RhsBot extends RhsNf
     
     def mkCase[A](str: Str)(k: Str => A)(implicit dbgHelp: Str): A = {
       val newStr = dbgHelp + "." + str
@@ -158,6 +84,11 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
         case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
         
+        case (Without(b: TypeVariable, ns) :: ls, rs) => rec(b, mkRhs(ls).without(ns))
+        case (Without(NegType(b: TypeVariable), ns) :: ls, rs) => rec(b, NegType(mkRhs(ls).without(ns))(noProv))
+        case (Without(_, _) :: ls, rs) => lastWords(s"`pushPosWithout` should have removed this Without")
+        case (ls, Without(_, _) :: rs) => lastWords(s"unexpected Without in negative position not at the top level")
+          
         case ((l: BaseType) :: ls, rs) => annoying(ls, done_ls & l getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
         case (ls, (r: BaseType) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
@@ -168,11 +99,6 @@ class ConstraintSolver extends TyperDatatypes { self: Typer =>
         case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
-          
-        case (Without(b: TypeVariable, ns) :: ls, rs) => rec(b, mkRhs(ls).without(ns))
-        case (Without(NegType(b: TypeVariable), ns) :: ls, rs) => rec(b, NegType(mkRhs(ls).without(ns))(noProv))
-        case (Without(_, _) :: ls, rs) => lastWords(s"`pushPosWithout` should have removed this Without")
-        case (ls, Without(_, _) :: rs) => lastWords(s"unexpected Without in negative position not at the top level")
           
         case (Nil, Nil) =>
           def fail = reportError(doesntMatch(ctx.head.head._2))

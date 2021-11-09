@@ -450,7 +450,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Blk((s: Term) :: Nil) => typeTerm(s)
       case Blk(Nil) => UnitType
       case pat if ctx.inPattern =>
-        err(msg"Unsupported pattern shape(${pat.getClass.toString()}):", pat.toLoc)(raise, ttp(pat))
+        err(msg"Unsupported pattern shape${
+          if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise, ttp(pat))
       case Lam(pat, body) =>
         val newBindings = mutable.Map.empty[Str, TypeVariable]
         val newCtx = ctx.nest
@@ -645,34 +646,59 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
   def expandType(st: SimpleType, polarity: Bool = true): Type = {
-    val recursive = mutable.Map.empty[PolarVariable, TypeVar]
-    def go(st: SimpleType, polarity: Boolean)(inProcess: Set[PolarVariable]): Type = st match {
-      case tv: TypeVariable =>
-        val tv_pol = tv -> polarity
-        if (inProcess.contains(tv_pol))
-          recursive.getOrElseUpdate(tv_pol, freshVar(tv.prov)(0).asTypeVar)
-        else {
+    
+    // TODO improve/simplify? (take inspiration from other impls?)
+    //    see: duplication of recursive.get(st_pol) logic
+    
+    val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
+    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
+      val st_pol = st -> polarity
+      if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov)(0).asTypeVar)
+      else (inProcess + st_pol) pipe { implicit inProcess => st match {
+        case tv: TypeVariable =>
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
-          val boundTypes = bounds.map(go(_, polarity)(inProcess + tv_pol))
-          val mrg = if (polarity) Union else Inter
-          val res = boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
-          recursive.get(tv_pol).fold(res)(Recursive(_, res))
-        }
-      case vt: VarType => Primitive(vt.vi.v.name) // TODO disambiguate homonyms...
-      case FunctionType(l, r) => Function(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
-      case ComposedType(true, l, r) => Union(go(l, polarity)(inProcess), go(r, polarity)(inProcess))
-      case ComposedType(false, l, r) => Inter(go(l, polarity)(inProcess), go(r, polarity)(inProcess))
-      case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
-      case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
-      case AppType(fun, args) => args.map(go(_, polarity)(inProcess)).foldLeft(go(fun, polarity)(inProcess))(Applied(_, _))
-      case NegType(_) => ??? // TODO
-      case ExtrType(_) => ??? // TODO
-      case ProxyType(und) => go(und, polarity)(inProcess)
-      case PrimType(n, _) => Primitive(n.idStr)
-      case TypeRef(td, Nil) => Primitive(td.nme.name)
-      case TypeRef(td, targs) =>
-        AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))
-    }
+          val bound =
+            if (polarity) bounds.foldLeft(BotType: SimpleType)(_ | _)
+            else bounds.foldLeft(TopType: SimpleType)(_ & _)
+          if (inProcess(bound -> polarity))
+            recursive.getOrElseUpdate(bound -> polarity, freshVar(st.prov)(0).asTypeVar)
+          else {
+            val boundTypes = bounds.map(go(_, polarity))
+            val mrg = if (polarity) Union else Inter
+            recursive.get(st_pol) match {
+              case Some(variable) =>
+                Recursive(variable, boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
+              case None => boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
+            }
+          }
+        case _ =>
+          val res = st match {
+            case vt: VarType => Primitive(vt.vi.v.name) // TODO disambiguate homonyms...
+            case FunctionType(l, r) => Function(go(l, !polarity), go(r, polarity))
+            case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
+            case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
+            case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
+            case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
+            case AppType(fun, args) => args.map(go(_, polarity)).foldLeft(go(fun, polarity))(Applied(_, _))
+            case NegType(t) => Applied(Primitive("~"), expandType(t))
+            case ExtrType(true) => Bot
+            case ExtrType(false) => Top
+            case ProxyType(und) => go(und, polarity)
+            case PrimType(n, _) => Primitive(n.idStr)
+            case TypeRef(td, Nil) => Primitive(td.nme.name)
+            case TypeRef(td, targs) =>
+              AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))
+            case Without(base, names) => Rem(expandType(base, polarity), names.toList.map(Var))
+            case _: TypeVariable => die
+          }
+          recursive.get(st_pol) match {
+            case Some(variable) =>
+              Recursive(variable, res)
+            case None => res
+          }
+      }
+    }}
+    
     go(st, polarity)(Set.empty)
   }
   

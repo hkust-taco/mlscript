@@ -3,7 +3,7 @@ data Test a b
 //│ Test: 'a -> 'b -> {a: 'a, b: 'b}
 
 data Person(name: string, age: int)
-//│ Person: (name: 'a & string, age: 'b & int,) -> {age: 'b, name: 'a}
+//│ Person: (name: string & 'a, age: int & 'b,) -> {age: 'b, name: 'a}
 
 let p = Person("Bob", 42)
 //│ p: Person ("Bob", 42,)
@@ -15,7 +15,7 @@ foo p
 
 // TODO why not simplified?
 let bar (q: Person _) = q.age
-//│ bar: (q: Person (name: 'a & string, age: 'b & int,) & {age: 'c},) -> 'c
+//│ bar: (q: Person (name: string & 'a, age: int & 'b,) & {age: 'c},) -> 'c
 
 bar p
 //│ res: 42
@@ -53,7 +53,7 @@ bar {age: 1} // TODO B/E
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	bar {age: 1} // TODO B/E
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `?a & (name: ?b & string, age: ?c & int,) -> {age: 1}` does not match type `Person`
+//│ ╟── expression of type `(name: string & ?a, age: int & ?b,) & ?c -> {age: 1}` does not match type `Person`
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from data symbol:
@@ -65,14 +65,14 @@ bar {age: 1} // TODO B/E
 //│ res: 1 | error
 
 let fake-p = { name: "Bob", age: 42 }
-//│ fake-p: {age: 42, name: "Bob"}
+//│ fake-p: {name: "Bob", age: 42}
 
 :e // TODO B/E
 bar fake-p
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	bar fake-p
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `?a & (name: ?b & string, age: ?c & int,) -> {age: 42, name: "Bob"}` does not match type `Person`
+//│ ╟── expression of type `(name: string & ?a, age: int & ?b,) & ?c -> {name: "Bob", age: 42}` does not match type `Person`
 //│ ║  l.17: 	let bar (q: Person _) = q.age
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from data symbol:
@@ -85,7 +85,7 @@ bar fake-p
 
 data Wine(name: string, age: int)
 let w = Wine("Côtes du Rhône", 3)
-//│ Wine: (name: 'a & string, age: 'b & int,) -> {age: 'b, name: 'a}
+//│ Wine: (name: string & 'a, age: int & 'b,) -> {age: 'b, name: 'a}
 //│ w: Wine ("Côtes du Rhône", 3,)
 
 :e
@@ -94,10 +94,10 @@ bar (q: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.92: 	bar w
 //│ ║        	^^^^^
-//│ ╟── expression of type `(name: ?a & string, age: ?b & int,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
+//│ ╟── expression of type `(name: string & ?a, age: int & ?b & ?b,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
 //│ ║  l.86: 	data Wine(name: string, age: int)
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
+//│ ╟── but it flows into reference with expected type `(q: Person ((name: string & ?c, age: int & ?d,) & ?e) & {age: ?f} & ?g,)`
 //│ ║  l.92: 	bar w
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from data symbol:
@@ -110,10 +110,10 @@ bar (q: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.93: 	bar (q: w)
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `(name: ?a & string, age: ?b & int,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
+//│ ╟── expression of type `(name: string & ?a, age: int & ?b & ?b,) -> {age: ?b | 3, name: ?a | "Côtes du Rhône"}` does not match type `Person`
 //│ ║  l.86: 	data Wine(name: string, age: int)
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `(q: ?c & Person (?d & (name: ?e & string, age: ?f & int,)) & {age: ?g},)`
+//│ ╟── but it flows into argument with expected type `(q: Person ((name: string & ?c, age: int & ?d,) & ?e) & {age: ?f} & ?g,)`
 //│ ║  l.93: 	bar (q: w)
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from data symbol:
@@ -127,5 +127,5 @@ bar (q: w)
 // TODO simplify: `{age: int}` is included in `Person _`!
 // TODO in fact, maybe we shouldn't infer more than user annotations in parameter types...
 let bar2 (q: Person _) = succ q.age
-//│ bar2: (q: Person (name: 'a & string, age: 'b & int,) & {age: int},) -> int
+//│ bar2: (q: Person (name: string & 'a, age: int & 'b,) & {age: int},) -> int
 

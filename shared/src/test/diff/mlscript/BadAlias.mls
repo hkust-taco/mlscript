@@ -37,7 +37,7 @@ type B = Oops
 //│ ╔══[ERROR] type identifier not found: Oops
 //│ ║  l.29: 	type B = Oops
 //│ ╙──      	         ^^^^
-//│ res: B
+//│ res: nothing
 
 :e
 type NonReg[A] = { x: NonReg[NonReg[A]] }
@@ -98,5 +98,5 @@ type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ res: 42
 
 42: Id[int]
-//│ res: Id[int]
+//│ res: int
 

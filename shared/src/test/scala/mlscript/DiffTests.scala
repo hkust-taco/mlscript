@@ -16,7 +16,25 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   private val validExt = Set("fun", "mls")
   
-  files.foreach { file => val fileName = file.baseName; if (validExt(file.ext)) test(fileName) {
+  private val focused = Set(
+    "Repro",
+    // "RecursiveTypes",
+    // "Simple",
+    // "Inherit",
+    // "Basics",
+    // "Paper",
+    // "Negations",
+    // "RecFuns",
+    // "With",
+    // "Annoying",
+    // "Tony",
+  )
+  private def filter(name: Str): Bool =
+    true ||
+      focused(name)
+  
+  files.foreach { file => val fileName = file.baseName
+      if (validExt(file.ext) && filter(fileName)) test(fileName) {
     
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
@@ -184,11 +202,24 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty)
               else {
-                val com = typer.compactType(wty)
-                if (mode.dbg) output(s"Compact type before simplification: ${com}")
-                val sim = typer.simplifyType(com)
-                if (mode.dbg) output(s"Compact type after simplification: ${sim}")
-                val exp = typer.expandCompactType(sim)
+                val cty = typer.canonicalizeType(wty)
+                if (mode.dbg) output(s"Canon: ${cty}")
+                if (mode.dbg) output(s" where: ${cty.showBounds}")
+                val sim = typer.simplifyType(cty)
+                if (mode.dbg) output(s"Type after simplification: ${sim}")
+                if (mode.dbg) output(s" where: ${sim.showBounds}")
+                // val exp = typer.expandType(sim)
+                
+                // TODO: would be better toa void having to do a second pass,
+                // but would require more work:
+                val reca = typer.canonicalizeType(sim)
+                if (mode.dbg) output(s"Recanon: ${reca}")
+                if (mode.dbg) output(s" where: ${reca.showBounds}")
+                val resim = typer.simplifyType(reca)
+                if (mode.dbg) output(s"Resimplified: ${resim}")
+                if (mode.dbg) output(s" where: ${resim.showBounds}")
+                val exp = typer.expandType(resim)
+                
                 exp
               }
             }

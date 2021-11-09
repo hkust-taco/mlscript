@@ -1,24 +1,24 @@
 class Left[A]: { value: A }
 def Left value = Left{ value }
 //│ Defined class Left
-//│ Left: 'a -> (left & {value: 'a}) & {value: 'a}
+//│ Left: 'a -> left & {value: 'a}
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
 //│ Defined class Right
-//│ Right: 'a -> (right & {value: 'a}) & {value: 'a}
+//│ Right: 'a -> right & {value: 'a}
 
 def testVal = if true then Left 1 else Right 2
-//│ testVal: ((left & {value: 1}) & {value: 1}) | ((right & {value: 2}) & {value: 2})
+//│ testVal: left & {value: 1} | right & {value: 2}
 
 testVal.value
-//│ res: (2 & 2) | (1 & 1)
+//│ res: 2 | 1
 
 def res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
-//│ res: (1 & 1) | 1
+//│ res: 1
 
 res: 1
 //│ res: 1
@@ -26,10 +26,9 @@ res: 1
 case res of { 1 -> "ok" }
 //│ res: "ok"
 
-// TODO simplify this monster:
 def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
-//│ res: (((right & {value: 2}) & {value: 2}) & ~((right & (({value: 2 & 2} & right) & ~left) | (({value: 1 & 1} & left) & ~left)) & ~left)) | (((left & {value: 1}) & {value: 1}) & ~((right & (({value: 2 & 2} & right) & ~left) | (({value: 1 & 1} & left) & ~left)) & ~left)) | 1
+//│ res: left & {value: 1} | 1
 

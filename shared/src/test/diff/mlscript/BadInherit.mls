@@ -14,13 +14,13 @@ class Child: Parent1 & Parent2
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
 //│ Defined type Child
-//│ Child: (Parent1 & Parent2) -> Child
+//│ Child: nothing -> nothing
 
 def f(x:Child) = x.name
-//│ f: Child & {name: 'a} -> 'a
+//│ f: nothing -> nothing
 
 def f(x:Child) = x: nothing
-//│ f: nothing & Child -> nothing
+//│ f: nothing -> nothing
 
 :pe
 def c = Child(Parent1{name="A"} with Parent2{name="B"})
@@ -31,13 +31,13 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(parent1 & {name: string}) & {name: ?a | "A"}` does not match type `parent2`
+//│ ╟── expression of type `parent1 & {name: string & ?a | "A"}` does not match type `parent2`
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.15: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	                      ^^^^^^^
-//│ c: Child | error
+//│ c: error
 
 :e
 type Sly1 = Parent2
@@ -64,21 +64,21 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> Crazy['a] & 'a
+//│ Crazy: 'a -> crazy & {name: 'a} & 'a
 
 Crazy
-//│ res: 'a -> Crazy['a] & 'a
+//│ res: 'a -> crazy & {name: 'a} & 'a
 
-def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: Crazy[{age: 42, name: "Bob"}] & {age: 42, name: "Bob"}
+def c = Crazy({ name = "Bob"; age = 42 })  // TODO why does the `crazy` tag disappear?
+//│ c: {name: "Bob", age: 42}
 
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.76: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{age: 42, name: "Bob"}` does not match type `~(crazy & {name: ?b & ~?a}) as ?a`
-//│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~{name: ?a | {name: "Bob", age: 42}} & ~crazy`
+//│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })  // TODO why does the `crazy` tag disappear?
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
 //│ ║  l.76: 	c: nothing
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: Crazy[(parent1 & {name: string}) & {name: "Bob"}] & ((parent1 & {name: string}) & {name: "Bob"})
+//│ d: parent1 & {name: "Bob"}
 
 d: nothing
 //│ res: nothing
@@ -163,7 +163,7 @@ class String
 //│ Defined class String
 
 "1" : String
-//│ res: String
+//│ res: string
 
 
 

@@ -49,11 +49,19 @@ object Main {
             val wty = ty.instantiate(0).widenVar
             println(s"Typed as: $wty")
             println(s" where: ${wty.showBounds}")
-            val com = typer.compactType(wty)
-            println(s"Compact type before simplification: ${com}")
-            val sim = typer.simplifyType(com)
-            println(s"Compact type after simplification: ${sim}")
-            val exp = typer.expandCompactType(sim)
+            val cty = typer.canonicalizeType(wty)
+            println(s"Canon: ${cty}")
+            println(s" where: ${cty.showBounds}")
+            val sim = typer.simplifyType(cty)
+            println(s"Type after simplification: ${sim}")
+            println(s" where: ${sim.showBounds}")
+            val reca = typer.canonicalizeType(sim)
+            println(s"Recanon: ${reca}")
+            println(s" where: ${reca.showBounds}")
+            val resim = typer.simplifyType(reca)
+            println(s"Resimplified: ${resim}")
+            println(s" where: ${resim.showBounds}")
+            val exp = typer.expandType(resim)
             exp
           }
           def formatError(culprit: Str, err: TypeError): Str = {
