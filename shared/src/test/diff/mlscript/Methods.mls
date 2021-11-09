@@ -7,14 +7,14 @@ class Derp: Foo[bool]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `(?b & (?c | ?a -> ((?d -> ?c | ?a) -> ?e) & ?f) & ?g -> ?e) as ?a` does not match type `_α23`
+//│ ╟── expression of type `(?b & (?c | ?a -> ((?d -> ?c | ?a) -> ?e) & ?f) & ?g -> ?e) as ?a` does not match type `_α30`
 //│ ║  l.4: 	    rec method Map f = f Map (fun x -> Map)
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `_α24` is not a function
-//│ ╟── but it flows into function type of type `_α23 -> _α24`
+//│ ╟── expression of type `_α31` is not a function
+//│ ╟── but it flows into function type of type `_α30 -> _α31`
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^
 //│ ╟── which does not match type `(?b | ((?a -> ((?c -> ?a) -> ?d) & ?e) & ?f -> ?d)) as ?a -> ?g & (((?c -> (?b | ((?a -> ?h) & ?f -> ?d)) as ?a) -> ?d) & ?e) as ?h`
@@ -24,7 +24,7 @@ class Derp: Foo[bool]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.2: 	    method Map[B]: (A -> B) -> A
 //│ ║       	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `true` does not match type `_α55`
+//│ ╟── expression of type `true` does not match type `_α69`
 //│ ║  l.6: 	    method Map f = true
 //│ ╙──     	                   ^^^^
 //│ Defined class Foo
@@ -35,17 +35,17 @@ Foo.Map
 Bar.Map
 Derp.Map
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.34: 	Foo.Map
+//│ ║  l.40: 	Foo.Map
 //│ ║        	^^^
 //│ ╙── expression of type `{x: ?a} -> foo & {x: ?a}` does not have field 'Map'
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.35: 	Bar.Map
+//│ ║  l.41: 	Bar.Map
 //│ ║        	^^^
 //│ ╙── expression of type `{x: ?a} -> bar & {x: ?a}` does not have field 'Map'
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.36: 	Derp.Map
+//│ ║  l.42: 	Derp.Map
 //│ ║        	^^^^
 //│ ╙── expression of type `{x: bool & ?a} -> derp & {x: ?a}` does not have field 'Map'
 //│ res: error
@@ -54,13 +54,13 @@ def a = Foo { x = 1 }
 a.(Foo.Map)(fun x -> x)
 //│ a: foo & {x: 1}
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.54: 	a.(Foo.Map)(fun x -> x)
+//│ ║  l.60: 	a.(Foo.Map)(fun x -> x)
 //│ ║        	^
 //│ ╟── expression of type `foo & {x: ?a | 1}` does not match type `{Foo.Map: ?b}`
-//│ ║  l.53: 	def a = Foo { x = 1 }
+//│ ║  l.59: 	def a = Foo { x = 1 }
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{Foo.Map: ?c}`
-//│ ║  l.54: 	a.(Foo.Map)(fun x -> x)
+//│ ║  l.60: 	a.(Foo.Map)(fun x -> x)
 //│ ╙──      	^
 //│ res: error
 
@@ -68,20 +68,20 @@ class bar[A, B]: Foo[A] & { Y: B; z: int }
     method identity z = z
     method identity z = z
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.67: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ║  l.73: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
 //│ ╙──      	      ^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.73: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	                               ^
 //│ ╔══[ERROR] Method names must start with a capital letter
-//│ ║  l.68: 	    method identity z = z
+//│ ║  l.74: 	    method identity z = z
 //│ ╙──      	           ^^^^^^^^
 //│ ╔══[ERROR] Method names must start with a capital letter
-//│ ║  l.69: 	    method identity z = z
+//│ ║  l.75: 	    method identity z = z
 //│ ╙──      	           ^^^^^^^^
 //│ ╔══[ERROR] Method 'bar.identity' is already defined.
-//│ ║  l.69: 	    method identity z = z
+//│ ║  l.75: 	    method identity z = z
 //│ ╙──      	           ^^^^^^^^
-//│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.67: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
-//│ ╙──      	                               ^
 //│ Defined class bar
 
 class Fooo[A, B]: { x: A; y: B }
@@ -100,12 +100,12 @@ class Barr: Fooo[int, bool]
 Fooo.Fun
 Barr.Fun
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.100: 	Fooo.Fun
+//│ ║  l.106: 	Fooo.Fun
 //│ ║         	^^^^
 //│ ╙── expression of type `{x: ?a, y: ?b} -> fooo & {x: ?a, y: ?b}` does not have field 'Fun'
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.101: 	Barr.Fun
+//│ ║  l.107: 	Barr.Fun
 //│ ║         	^^^^
 //│ ╙── expression of type `{x: int & ?a, y: bool & ?b} -> barr & {x: ?a, y: ?b}` does not have field 'Fun'
 //│ res: error
