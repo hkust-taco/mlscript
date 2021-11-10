@@ -69,8 +69,8 @@ def Crazy: 'a -> (Crazy['a] & 'a)
 Crazy
 //│ res: 'a -> crazy & {name: 'a} & 'a
 
-def c = Crazy({ name = "Bob"; age = 42 })  // TODO why does the `crazy` tag disappear?
-//│ c: {name: "Bob", age: 42}
+def c = Crazy({ name = "Bob"; age = 42 })
+//│ c: crazy & {name: "Bob" & {name: "Bob", age: 42}, age: 42}
 
 :e
 c: nothing
@@ -78,7 +78,7 @@ c: nothing
 //│ ║  l.76: 	c: nothing
 //│ ║        	^
 //│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~{name: ?a | {name: "Bob", age: 42}} & ~crazy`
-//│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })  // TODO why does the `crazy` tag disappear?
+//│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
 //│ ║  l.76: 	c: nothing
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: parent1 & {name: "Bob"}
+//│ d: nothing
 
 d: nothing
 //│ res: nothing

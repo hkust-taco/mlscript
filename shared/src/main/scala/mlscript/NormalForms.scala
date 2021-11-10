@@ -24,7 +24,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (LhsRefined(b1, r1), _) =>
         ((b1, that) match {
           case (S(p0 @ PrimType(pt0, ps0)), p1 @ PrimType(pt1, ps1)) =>
-            println(s"!GLB! ${p0.glb(p1)}")
+            println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
           case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
           case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
@@ -55,7 +55,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   case class LhsRefined(base: Opt[BaseType], reft: RecordType) extends LhsNf {
     override def toString: Str = s"${base.getOrElse("")}${reft}"
   }
-  case object LhsTop extends LhsNf
+  case object LhsTop extends LhsNf {
+    override def toString: Str = "⊤"
+  }
   
   
   sealed abstract class RhsNf {
@@ -111,7 +113,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     // TODO improve type: should make (bty, f) an either...
     override def toString: Str = s"${prims.mkString("|")}|$bty|$f"
   }
-  case object RhsBot extends RhsNf
+  case object RhsBot extends RhsNf {
+    override def toString: Str = "⊥"
+  }
   
   
   
@@ -145,6 +149,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       }
       case _ => N
     }
+    override def toString: Str =
+      (Iterator(lnf).filter(_ =/= LhsTop) ++ vars
+        ++ (Iterator(rnf).filter(_ =/= RhsBot) ++ nvars).map("~"+_)).mkString("∧")
   }
   object Conjunct {
     def of(tvs: Set[TypeVariable]): Conjunct = Conjunct(LhsTop, tvs, RhsBot, Set.empty)
@@ -162,6 +169,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def | (that: Disjunct): Opt[Disjunct] =
       S(Disjunct(rnf | that.rnf getOrElse (return N), vars | that.vars,
         lnf & that.lnf getOrElse (return N), nvars | that.nvars))
+    override def toString: Str =
+      (Iterator(rnf).filter(_ =/= RhsBot) ++ vars
+        ++ (Iterator(lnf).filter(_ =/= LhsTop) ++ nvars).map("~"+_)).mkString("∨")
   }
   object Disjunct {
     def of(tvs: Set[TypeVariable]): Disjunct = Disjunct(RhsBot, tvs, LhsTop, Set.empty)
@@ -196,6 +206,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // }(r => s"go!! $r")
       DNF(go(cs, Nil, that))
     }
+    override def toString: Str = s"DNF(${cs.mkString(" | ")})"
   }
   object DNF {
     def of(lnf: LhsNf): DNF = DNF(Conjunct(lnf, Set.empty, RhsBot, Set.empty) :: Nil)
@@ -223,6 +234,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // TODO try to merge it with the others if possible
       CNF(that :: ds)
     def | (that: Disjunct): CNF = CNF(ds.flatMap(_ | that))
+    override def toString: Str = s"CNF(${ds.mkString(" & ")})"
   }
   object CNF {
     def of(rnf: RhsNf): CNF = CNF(Disjunct(rnf, Set.empty, LhsTop, Set.empty) :: Nil)

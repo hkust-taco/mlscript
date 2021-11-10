@@ -28,6 +28,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "With",
     // "Annoying",
     // "Tony",
+    // "Lists",
+    // "Traits",
   )
   private def filter(name: Str): Bool =
     true ||

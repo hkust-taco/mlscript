@@ -38,13 +38,13 @@ True as Bool
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
 //│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:32)
 //│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:45)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:131)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$8(NormalForms.scala:180)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:135)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$8(NormalForms.scala:190)
 //│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:180)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$6(NormalForms.scala:177)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:190)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$6(NormalForms.scala:187)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:177)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:187)
 
 // TODO treat the ending curly-blocks as bodies (not params)?
 data type List of

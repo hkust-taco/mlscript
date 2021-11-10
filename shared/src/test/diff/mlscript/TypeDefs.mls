@@ -22,15 +22,15 @@ Test1 { x = "oops" }
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.2: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: test1 & {x: "oops"} | error
+//│ res: test1 & {x: nothing} | error
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: int & 'a -> test1 & {x: 'a}
+//│ Test1: int & 'a -> test1 & {x: int & 'a}
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: int & 'a -> test11 & {x: 'a}
+//│ Test11: int & 'a -> test11 & {x: int & 'a}
 
 
 :e

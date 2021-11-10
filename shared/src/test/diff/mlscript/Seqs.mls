@@ -52,11 +52,11 @@ Cons
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
+//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {head: 'd, size: int, tail: 'e & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: nil & {size: int} & 'b | (cons & {head: 'd | 'a, size: int, tail: 'g | nil & {size: int} | 'f}) as 'f & 'b}
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
+//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {head: 'd, size: int, tail: 'e & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: nil & {size: int} & 'b | (cons & {head: 'd | 'a, size: int, tail: 'g | nil & {size: int} | 'f}) as 'f & 'b}
 
 Nil: ListBase[anything]
 //│ res: listBase & {size: int}
@@ -77,10 +77,10 @@ c.size
 //│ res: int
 
 def d = Cons 2 c
-//│ d: cons & {head: 1 | 2, size: int, tail: cons & {head: 1, size: int, tail: nil & {size: 0}}}
+//│ d: cons & {head: 2, size: int, tail: cons & {head: 1, size: int, tail: nil & {size: 0}}}
 
 d.head
-//│ res: 1 | 2
+//│ res: 2
 
 d.size
 //│ res: int
@@ -93,6 +93,6 @@ d.tail.size
 
 d.tail.head
 d.tail.tail
-//│ res: 2 | 1
+//│ res: 1
 //│ res: nil & {size: 0}
 

@@ -26,23 +26,25 @@ trait TypeSimplifier { self: Typer =>
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
     def go0(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): DNF = 
     trace(s"ty[$pol] $ty") {
-      val visited = MutSet.empty[TypeVariable]
-      var dnf = DNF.mk(ty, pol)
-      var changed = true
-      while (changed) {
-        println(s"iter: $dnf")
-        changed = false
-        // TODO pretty inefficient... could probably do better
-        dnf = dnf.cs.iterator.map { c =>
-          val toGo = c.vars.filterNot(visited)
-          toGo.iterator.flatMap { tv =>
-            visited += tv
-            changed = true
-            if (pol) tv.lowerBounds else tv.upperBounds
-          }.map(DNF.mk(_, pol)).foldLeft(DNF(c::Nil))(DNF.merge(pol))
-        }.foldLeft(DNF.extr(false))(_ | _)
-      }
-      dnf
+      
+      // TODO should we also coalesce nvars? is it bad if we don't?
+      def rec(dnf: DNF, done: Set[TV]): DNF = dnf.cs.iterator.map { c =>
+        val vs = c.vars.filterNot(done)
+        vs.map { tv =>
+          println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
+          val b =
+            if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
+            else tv.upperBounds.foldLeft(tv:ST)(_ & _)
+          // println(s"b $b")
+          val bd = rec(DNF.mk(b, pol), done + tv)
+          // println(s"bd $bd")
+          bd
+        }
+        .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
+      }.foldLeft(DNF.extr(false))(_ | _)
+      
+      rec(DNF.mk(ty, pol), Set.empty)
+      
     }(r => s"-> $r")
     
     // Merge the bounds of all type variables of the given DNF, and traverse the result

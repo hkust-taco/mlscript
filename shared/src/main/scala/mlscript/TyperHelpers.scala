@@ -76,7 +76,7 @@ abstract class TyperHelpers { self: Typer =>
     
     // TODO for composed types and negs, should better first normalize the inequation
     def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
-    trace(s"? $this <: $that") {
+    // trace(s"? $this <: $that") {
     (this === that) || ((this, that) match {
       case (RecordType(Nil), _) => TopType <:< that
       case (_, RecordType(Nil)) => this <:< TopType
@@ -119,7 +119,7 @@ abstract class TyperHelpers { self: Typer =>
         => false // don't even try
       case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
     })
-    }(r => s"! $r")
+    // }(r => s"! $r")
     
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // sometimes behind a single negation,
