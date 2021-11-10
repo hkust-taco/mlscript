@@ -292,33 +292,33 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           td.nme.name -> td :: Nil
         else Nil
       }, env = {
-        ctx.env ++ newDefs.flatMap { td =>
-          val newEnv = newDefs0.flatMap { td =>
-            implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
-            val n = td.nme
-            // val targsMap1 = targsMap(td.nme) ++ targsMapOf(td.body)(ctx.nextLevel, raise, targsMap)
-            val newBindings = MutMap.empty[Str, TypeScheme]
-            td.mths.map { md =>
-              if (!md.nme.name.head.isUpper)
-                err(msg"Method names must start with a capital letter", md.nme.toLoc)
-              if (newBindings.isDefinedAt(s"${n.name}.${md.nme.name}"))
-                err(msg"Method '${n}.${md.nme.name}' is already defined.", md.nme.toLoc)
-              md match {
-                case mlscript.MethodDef(rec, prt, nme, tparams, L(term)) =>
-                  val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
-                  val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
-                  newBindings += s"${prt.name}.${nme.name}" ->
-                    typeLetRhs(rec, nme.name, term)(ctx.nest.nextLevel, raise)
-                case mlscript.MethodDef(rec, prt, nme, tparams, R(ty)) =>
-                  val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
-                  val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
-                  newBindings += s"${prt.name}.${nme.name}" ->
-                    PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, targsMap(td.nme) ++ targsMap2))
-              }
+        val newEnv = newDefs0.flatMap { td =>
+          implicit val prov: TypeProvenance = tp(td.toLoc, "data definition")
+          val n = td.nme
+          // val targsMap1 = targsMap(td.nme) ++ targsMapOf(td.body)(ctx.nextLevel, raise, targsMap)
+          val newBindings = MutMap.empty[Str, TypeScheme]
+          td.mths.map { md =>
+            if (!md.nme.name.head.isUpper)
+              err(msg"Method names must start with a capital letter", md.nme.toLoc)
+            if (newBindings.isDefinedAt(s"${n.name}.${md.nme.name}"))
+              err(msg"Method '${n}.${md.nme.name}' is already defined.", md.nme.toLoc)
+            md match {
+              case mlscript.MethodDef(rec, prt, nme, tparams, L(term)) =>
+                val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
+                val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
+                newBindings += s"${prt.name}.${nme.name}" ->
+                  typeLetRhs(rec, nme.name, term)(ctx.nest.nextLevel, raise, targsMap(td.nme) ++ targsMap2)
+              case mlscript.MethodDef(rec, prt, nme, tparams, R(ty)) =>
+                val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
+                val targsMap2: Map[Primitive, SimpleType] = tparams.zip(dummyTargs2).toMap
+                newBindings += s"${prt.name}.${nme.name}" ->
+                  PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, targsMap(td.nme) ++ targsMap2))
             }
-            allEnv ++= newBindings
-            newBindings.valuesIterator
           }
+          allEnv ++= newBindings
+          newBindings.valuesIterator
+        }
+        ctx.env ++ newDefs.flatMap { td =>
           td.mths.valuesIterator.map { md =>
             def cons(mt: TypeScheme, n: Str) = {
               val refinedMt = mt.instantiate(ctx.lvl + 2)
@@ -440,14 +440,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** Infer the type of a let binding right-hand side. */
   def typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType = {
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Primitive, SimpleType] = Map.empty): PolymorphicType = {
     val res = if (isrec) {
       val e_ty = freshVar(TypeProvenance(rhs.toLoc, "let-bound value"))(lvl + 1)
       ctx += nme -> e_ty
-      val ty = typeTerm(rhs)(ctx.nextLevel, raise)
+      val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe))
       e_ty
-    } else typeTerm(rhs)(ctx.nextLevel, raise)
+    } else typeTerm(rhs)(ctx.nextLevel, raise, vars)
     PolymorphicType(lvl, res)
   }
   
@@ -482,7 +482,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Primitive, SimpleType] = Map.empty): SimpleType
         = trace(s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
     implicit val prov: TypeProvenance = ttp(term)
     
@@ -503,7 +503,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(tp(v.toLoc, "wildcard"))
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
-        implicit val vars: Map[Primitive, SimpleType] = Map.empty
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern) trm_ty else ty_ty
