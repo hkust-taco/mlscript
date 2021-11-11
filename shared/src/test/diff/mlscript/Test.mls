@@ -2,7 +2,7 @@
 class Person: { name: string; age: int }
 def Person = fun n -> fun a -> Person { name = n; age = a }
 //│ Defined class Person
-//│ Person: string & 'a -> int & 'b -> person & {name: string & 'a, age: int & 'b}
+//│ Person: string & 'a -> int & 'b -> person & {name: 'a, age: 'b}
 
 class Animal: {}
 //│ Defined class Animal

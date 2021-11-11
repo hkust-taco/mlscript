@@ -33,7 +33,7 @@ Cons 1 Nil
 //│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: int & ?c, tail: nil & {size: int} & ?d | (cons & {head: ?b, size: int, tail: ?f & (nil & {size: int} | ?e)}) as ?e & ?d}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
-//│ /!!!\ Uncaught error: scala.MatchError: ({head: (α24 & α23), size: (int & α25), tail: (List[α24] & α26)},|Some(([[α39]] -> α41))|None) (of class scala.Tuple2)
+//│ /!!!\ Uncaught error: scala.MatchError: ({head: α23, size: α25, tail: α26},|Some(([[α39]] -> α41))|None) (of class scala.Tuple2)
 //│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:105)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
@@ -45,18 +45,17 @@ Cons 1 Nil
 //│ 	at: mlscript.ConstraintSolver.annoyingImpl$1(ConstraintSolver.scala:50)
 //│ 	at: mlscript.ConstraintSolver.annoying$1(ConstraintSolver.scala:47)
 
-// TODO: figure out why the overcomplicated type!!
 Cons
-//│ res: {head: 'a & 'b, size: int & 'c, tail: nil & {size: int} & 'd | (cons & {head: 'b, size: int, tail: 'f & (nil & {size: int} | 'e)}) as 'e & 'd} -> cons & {head: 'b & 'a, size: int & 'c, tail: nil & {size: int} & 'd | (cons & {head: 'b, size: int, tail: 'h | nil & {size: int} | 'g}) as 'g & 'd}
+//│ res: {head: 'a, size: int & 'b, tail: nil & {size: int} & 'c | (cons & {head: anything, size: int, tail: 'e & (nil & {size: int} | 'd)}) as 'd & 'c} -> cons & {head: 'a, size: 'b, tail: 'c}
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {head: 'd, size: int, tail: 'e & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: nil & {size: int} & 'b | (cons & {head: 'd | 'a, size: int, tail: 'g | nil & {size: int} | 'f}) as 'f & 'b}
+//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {head: 'd, size: int, tail: 'e & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: nil & {size: int} & 'b | (cons & {head: 'd | 'a, size: int, tail: 'g | nil & {size: int} | 'f}) as 'f & 'b}
+//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {head: anything, size: int, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {head: 'a, size: int, tail: 'b}
 
 Nil: ListBase[anything]
 //│ res: listBase & {size: int}

@@ -31,7 +31,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent1 & {name: string & ?a | "A"}` does not match type `parent2`
+//│ ╟── expression of type `parent1 & {name: ?a | "A"}` does not match type `parent2`
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -153,9 +153,30 @@ class Cycle: N[Cycle]
 class D: int
 //│ Defined class D
 
-add (D 1) 2
+add (D{}) 2
 //│ res: int
 
+
+// TODO forbid
+class E: 1
+//│ Defined class E
+
+:e
+E{}: 1
+E{}: int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.165: 	E{}: 1
+//│ ║         	^^^
+//│ ╙── expression of type `e` does not match type `1`
+//│ res: 1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.166: 	E{}: int
+//│ ║         	^^^
+//│ ╟── expression of type `e` does not match type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.166: 	E{}: int
+//│ ╙──       	     ^^^
+//│ res: int
 
 
 // TODO forbid

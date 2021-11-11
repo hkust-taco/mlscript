@@ -6,18 +6,18 @@ type List[A] = Nil | Cons[A]
 //│ Defined class Cons
 //│ Defined type List
 
-def originalCons = Cons  // TODO type should be more reasonable...
-//│ originalCons: {head: 'a & 'b, tail: nil & 'c | (cons & {head: 'b, tail: 'e & (nil | 'd)}) as 'd & 'c} -> cons & {head: 'b & 'a, tail: nil & 'c | (cons & {head: 'b, tail: 'g | nil | 'f}) as 'f & 'c}
+def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
+//│ originalCons: {head: 'a, tail: nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b} -> cons & {head: 'a, tail: 'b}
 
 def Nil = Nil {}
 //│ Nil: nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> nil & 'b | (cons & {head: 'd, tail: 'e & (nil | 'c)}) as 'c & 'b -> cons & {head: 'a, tail: nil & 'b | (cons & {head: 'd | 'a, tail: 'g | nil | 'f}) as 'f & 'b}
+//│ Cons: 'a -> nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b -> cons & {head: 'a, tail: 'b}
 
 
 Cons 2
-//│ res: nil & 'a | (cons & {head: 'c, tail: 'd & (nil | 'b)}) as 'b & 'a -> cons & {head: 2, tail: nil & 'a | (cons & {head: 'c | 2, tail: 'f | nil | 'e}) as 'e & 'a}
+//│ res: nil & 'a | (cons & {head: anything, tail: 'c & (nil | 'b)}) as 'b & 'a -> cons & {head: 2, tail: 'a}
 
 def c = Cons 2 Nil
 //│ c: cons & {head: 2, tail: nil}
@@ -55,7 +55,7 @@ res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.54: 	res.tail.head
 //│ ║        	^^^
-//│ ╟── expression of type `nil` does not match type `~nil | {tail: ?a}`
+//│ ╟── expression of type `nil` does not match type `{tail: ?a}`
 //│ ║  l.12: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?b}`

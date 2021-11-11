@@ -33,7 +33,7 @@ bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: int & ?a} -> test & {value: int & ?a}` does not match type `test & {value: ?b} & ?c | toast & {name: ?d} & ?e`
+//│ ╟── expression of type `{value: int & ?a} -> test & {value: ?a}` does not match type `test & {value: ?b} & ?c | toast & {name: ?d} & ?e`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:

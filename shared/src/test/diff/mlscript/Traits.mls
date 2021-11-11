@@ -10,36 +10,40 @@ class C: { x: 0 | 1 }
 class D: C & A & B
 //│ Defined class D
 
+D
+//│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> d & {x: 'a, y: 'b}
+
 error: A & B
 //│ res: nothing
 
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.17: 	def dv = D{}
+//│ ║  l.20: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
-//│ ║  l.17: 	def dv = D{}
+//│ ║  l.20: 	def dv = D{}
 //│ ╙──      	          ^^
-//│ dv: error
+//│ dv: d & {x: nothing, y: nothing} | error
 
 def dv = D { x = 0; y = "hello" }
-//│ dv: nothing
+//│ dv: d & {x: 0, y: "hello"}
 
-// FIXME currently this should actually work
+// Note: this does not go through because the system assumes the inehritance hierarchy is sound,
+// while it's not because of the current wrong handling of traits
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.31: 	dv: nothing
+//│ ║  l.35: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `nothing` does not match type `nothing`
-//│ ║  l.26: 	def dv = D { x = 0; y = "hello" }
+//│ ╟── expression of type `d & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
+//│ ║  l.29: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.31: 	dv: nothing
+//│ ║  l.35: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.31: 	dv: nothing
+//│ ║  l.35: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 
@@ -57,10 +61,10 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.58: 	E{}
+//│ ║  l.62: 	E{}
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.58: 	E{}
+//│ ║  l.62: 	E{}
 //│ ╙──      	 ^^
 //│ res: e & {x: nothing} | error
 
