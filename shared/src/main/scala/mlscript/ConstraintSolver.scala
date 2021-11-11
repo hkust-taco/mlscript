@@ -127,7 +127,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(N, r), RhsBases(pts, N, N)) => fail
+            case (LhsRefined(N, r), RhsBases(pts, N | S(_: FunctionType), N)) => fail
             case (LhsRefined(S(b), r), RhsBases(pts, _, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
           }
