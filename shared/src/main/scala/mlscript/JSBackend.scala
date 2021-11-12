@@ -127,9 +127,9 @@ class JSBackend {
   // Translate consecutive case branches into a list of if statements.
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
-      case Case(Primitive(className), body, rest) =>
+    case Case(className, body, rest) =>
         new JSIfStmt(
-          new JSInstanceOf(new JSIdent(name), new JSIdent(className)),
+          new JSInstanceOf(new JSIdent(name), new JSIdent(className.idStr)),
           Ls(new JSReturnStmt(translateTerm(body)))
         ) :: translateCaseBranch(name, rest)
       case Wildcard(body) => Ls(new JSReturnStmt(translateTerm(body)))
@@ -156,13 +156,16 @@ class JSBackend {
           case Als => new JSComment(s"// type alias $name")
         }
       }
-      .concat(pgrm.defs.map { case Def(isRecursive, name, body) =>
-        val translatedBody = translateTerm(body)
-        val tempName = getTemporaryName(name)
-        if (tempName =/= name) {
-          letLhsAliasMap += name -> tempName
-        }
-        new JSConstDecl(tempName, translatedBody)
+      .concat(pgrm.defs.map {
+        case Def(isRecursive, name, L(body)) =>
+          val translatedBody = translateTerm(body)
+          val tempName = getTemporaryName(name)
+          if (tempName =/= name) {
+            letLhsAliasMap += name -> tempName
+          }
+          new JSConstDecl(tempName, translatedBody)
+        case Def(isRecursive, name, R(body)) =>
+          ???
       })
     SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
   }

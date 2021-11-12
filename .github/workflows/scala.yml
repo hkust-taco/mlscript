@@ -2,9 +2,9 @@ name: Scala CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ mlscript ]
   pull_request:
-    branches: [ master ]
+    branches: [ mlscript ]
 
 jobs:
   build:

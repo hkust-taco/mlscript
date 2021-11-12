@@ -49,6 +49,7 @@ h1, p{
     /* color: #cacaca; */
     color: #efefef;
     font-size: 14px;
+    overflow: auto;
 }
 #mlscript-input {
     resize: none;

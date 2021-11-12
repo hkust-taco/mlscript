@@ -1,0 +1,47 @@
+
+def a = 1
+def b = 2
+def c = 3
+//│ a: 1
+//│ b: 2
+//│ c: 3
+
+if true then if true then a else b else a
+//│ res: 1 | 2
+
+if true then if true then id a else id b else a
+//│ res: 1 | 2
+
+class Foo[A]: { field: A }
+class Bar: {}
+//│ Defined class Foo
+//│ Defined class Bar
+
+def foo = Foo { field = id 1 }
+//│ foo: foo & {field: 1}
+
+(if true then foo else { field = 2 }).field
+//│ res: 2 | 1
+
+Foo { field = id 1 }
+//│ res: foo & {field: 1}
+
+def test x = case x of { Bar -> 1 | Foo -> 2 }
+//│ test: bar | foo -> 1 | 2
+
+test foo
+//│ res: 1 | 2
+
+def test x = case x of { Bar -> 1 | Foo -> x.field }
+//│ test: bar | foo & {field: 'a} -> 1 | 'a
+
+test foo
+//│ res: 1
+
+test (Foo { field = 2 })
+//│ res: 1 | 2
+
+def test x = case x of { Foo -> x.field | _ -> 1 }
+//│ test: foo & {field: 'a} | ~foo -> 'a | 1
+
+

@@ -171,9 +171,9 @@ class JSGenerator {
 
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[Str] =
     branch match {
-      case Case(Primitive(className), body, rest) =>
+      case Case(className, body, rest) =>
         (
-          s"if ($name instanceof $className) {" +
+          s"if ($name instanceof ${className.idStr}) {" +
             s"return ${translateTerm(body)};" +
             s"}"
         ) :: translateCaseBranch(name, rest)
@@ -212,9 +212,12 @@ class JSGenerator {
         case Als => s"// type alias $name" :: Nil
       }
     }
-    .concat(pgrm.defs.map { case Def(isRecursive, name, body) =>
-      val translatedBody = translateTerm(body)
-      s"let ${getTemporaryName(name)} = $translatedBody"
+    .concat(pgrm.defs.map {
+      case Def(isRecursive, name, L(body)) =>
+        val translatedBody = translateTerm(body)
+        s"let ${getTemporaryName(name)} = $translatedBody"
+      case Def(isRecursive, name, R(body)) =>
+        ???
     })
 
   private def getTemporaryName(name: Str): Str = (name #:: LazyList

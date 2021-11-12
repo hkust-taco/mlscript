@@ -16,15 +16,15 @@ data type Either L R of
 //│ ║  l.5: 	  Right R
 //│ ╙──     	        ^
 //│ Either: error -> error -> Left error | Right error
-//│ Left: error -> {}
-//│ Right: error -> {}
+//│ Left: error -> anything
+//│ Right: error -> anything
 
 data type Either (L: _) (R: _) of
   Left L
   Right R
 //│ Either: (L: 'a,) -> (R: 'b,) -> Left 'a | Right 'b
-//│ Left: anything -> {}
-//│ Right: anything -> {}
+//│ Left: anything -> anything
+//│ Right: anything -> anything
 
 let l = Left 1
 let r = Right "ok"
@@ -35,16 +35,10 @@ let e = if _ then l else r
 
 :e // TODO
 e as Either Int String
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.37: 	e as Either Int String
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(L: ?a | int,)` does not match type `int`
-//│ ║  l.22: 	data type Either (L: _) (R: _) of
-//│ ║        	                  ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.37: 	e as Either Int String
-//│ ╙──      	            ^^^
-//│ res: Either int string
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^
+//│ res: error
 
 // TODO
 // e as (_: Either Int String)
@@ -53,9 +47,9 @@ e as Either Int String
 :e
 e as Either
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.54: 	e as Either
+//│ ║  l.48: 	e as Either
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `{}` is not a function
+//│ ╟── expression of type `anything` is not a function
 //│ ║  l.23: 	  Left L
 //│ ║        	  ^^^^^^
 //│ ╟── Note: constraint arises from data type definition:

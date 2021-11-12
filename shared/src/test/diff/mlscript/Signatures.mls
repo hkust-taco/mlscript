@@ -1,0 +1,10 @@
+
+def foo: int -> (string -> anything)
+//│ foo: int -> string -> anything
+
+def foo: int -> string -> anything
+//│ foo: int -> string -> anything
+
+def foo: (int -> string) -> anything
+//│ foo: (int -> string) -> anything
+

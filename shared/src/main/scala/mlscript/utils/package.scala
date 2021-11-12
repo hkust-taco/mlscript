@@ -117,6 +117,10 @@ package object utils {
     def tailOption: Opt[Ls[A]] = if (ls.isEmpty) N else S(ls.tail)
     def headOr(els: => A): A = if (ls.isEmpty) els else ls.head
     def tailOr(els: => Ls[A]): Ls[A] = if (ls.isEmpty) els else ls.tail
+    def mapHead(f: A => A): Ls[A] = ls match {
+      case h :: t => f(h) :: t
+      case Nil => Nil
+    }
   }
   
   implicit final class OptionHelpers[A](opt: Opt[A]) {
@@ -135,5 +139,15 @@ package object utils {
   def spuriousWarning: Nothing = lastWords("Case was reached that was thought to be unreachable.")
   
   def checkless[A, B](pf: Paf[A, B]): A => B = pf
+  
+  
+  def closeOver[A](xs: Set[A])(f: A => Set[A]): Set[A] =
+    closeOverCached(Set.empty, xs)(f)
+  def closeOverCached[A](done: Set[A], todo: Set[A])(f: A => Set[A]): Set[A] =
+    if (todo.isEmpty) done else {
+      val newDone = done ++ todo
+      closeOverCached(newDone, todo.flatMap(f) -- newDone)(f)
+    }
+  
   
 }

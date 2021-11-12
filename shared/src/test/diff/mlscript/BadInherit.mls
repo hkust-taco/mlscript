@@ -1,0 +1,190 @@
+
+class Parent1: { name: string }
+//│ Defined class Parent1
+
+class Parent2: { name: int }
+//│ Defined class Parent2
+
+:e
+class Child: Parent1 & Parent2
+//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ║  l.9: 	class Child: Parent1 & Parent2
+//│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+type Child = Parent1 & Parent2
+def Child: (Parent1 & Parent2) -> Child
+//│ Defined type Child
+//│ Child: nothing -> nothing
+
+def f(x:Child) = x.name
+//│ f: nothing -> nothing
+
+def f(x:Child) = x: nothing
+//│ f: nothing -> nothing
+
+:pe
+def c = Child(Parent1{name="A"} with Parent2{name="B"})
+//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.26:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
+
+:e
+def c = Child(Parent1{name="A"})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.30: 	def c = Child(Parent1{name="A"})
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `parent1 & {name: ?a | "A"}` does not match type `parent2`
+//│ ║  l.30: 	def c = Child(Parent1{name="A"})
+//│ ║        	              ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.15: 	def Child: (Parent1 & Parent2) -> Child
+//│ ╙──      	                      ^^^^^^^
+//│ c: error
+
+:e
+type Sly1 = Parent2
+class Child2: Parent1 & Sly1
+//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ║  l.44: 	class Child2: Parent1 & Sly1
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
+//│ Defined type Sly1
+
+:e
+type Sly2[A] = A
+class Child2: Sly2[Parent1] & Parent2
+//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ║  l.52: 	class Child2: Sly2[Parent1] & Parent2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Defined type Sly2
+
+:e
+class Crazy[A]: A & { name: A }
+//│ ╔══[ERROR] cannot inherit from a type variable
+//│ ║  l.59: 	class Crazy[A]: A & { name: A }
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+class Crazy[A]: { name: A }
+def Crazy: 'a -> (Crazy['a] & 'a)
+//│ Defined class Crazy
+//│ Crazy: 'a -> crazy & {name: 'a} & 'a
+
+Crazy
+//│ res: 'a -> crazy & {name: 'a} & 'a
+
+def c = Crazy({ name = "Bob"; age = 42 })
+//│ c: crazy & {name: "Bob" & {name: "Bob", age: 42}, age: 42}
+
+:e
+c: nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.76: 	c: nothing
+//│ ║        	^
+//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~{name: ?a | {name: "Bob", age: 42}} & ~crazy`
+//│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.76: 	c: nothing
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.76: 	c: nothing
+//│ ╙──      	   ^^^^^^^
+//│ res: nothing
+
+def d = Crazy(Parent1{name = "Bob"})
+//│ d: nothing
+
+d: nothing
+//│ res: nothing
+
+
+:e
+class Stupid: Parent1 | Parent2
+//│ ╔══[ERROR] cannot inherit from a type union
+//│ ║  l.99: 	class Stupid: Parent1 | Parent2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
+:e
+class Stupid: Parent1 -> Parent2
+//│ ╔══[ERROR] cannot inherit from a function type
+//│ ║  l.104: 	class Stupid: Parent1 -> Parent2
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+:e
+class Stupid: ~Parent1
+//│ ╔══[ERROR] cannot inherit from a type negation
+//│ ║  l.109: 	class Stupid: ~Parent1
+//│ ╙──       	      ^^^^^^^^^^^^^^^^
+
+:e // TODO don't report several times
+class Cycle1: Cycle2
+class Cycle2: Cycle1
+type Stutter = Cycle1
+//│ ╔══[ERROR] illegal cycle involving type Cycle1
+//│ ║  l.115: 	class Cycle1: Cycle2
+//│ ╙──       	      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] illegal cycle involving type Cycle2
+//│ ║  l.116: 	class Cycle2: Cycle1
+//│ ╙──       	      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] illegal cycle involving type Cycle1
+//│ ║  l.117: 	type Stutter = Cycle1
+//│ ╙──       	     ^^^^^^^^^^^^^^^^
+
+:e
+def c = Cycle1 error
+c: Cycle1
+//│ ╔══[ERROR] identifier not found: Cycle1
+//│ ║  l.129: 	def c = Cycle1 error
+//│ ╙──       	        ^^^^^^
+//│ c: error
+//│ ╔══[ERROR] type identifier not found: Cycle1
+//│ ║  l.130: 	c: Cycle1
+//│ ╙──       	   ^^^^^^
+//│ res: error
+
+
+type N[A] = ~A
+//│ Defined type N
+
+:e
+class Cycle: N[Cycle]
+//│ ╔══[ERROR] cannot inherit from a type negation
+//│ ║  l.145: 	class Cycle: N[Cycle]
+//│ ╙──       	      ^^^^^^^^^^^^^^^
+
+
+
+// TODO forbid
+class D: int
+//│ Defined class D
+
+add (D{}) 2
+//│ res: int
+
+
+// TODO forbid
+class E: 1
+//│ Defined class E
+
+:e
+E{}: 1
+E{}: int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.165: 	E{}: 1
+//│ ║         	^^^
+//│ ╙── expression of type `e` does not match type `1`
+//│ res: 1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.166: 	E{}: int
+//│ ║         	^^^
+//│ ╟── expression of type `e` does not match type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.166: 	E{}: int
+//│ ╙──       	     ^^^
+//│ res: int
+
+
+// TODO forbid
+class String
+//│ Defined class String
+
+"1" : String
+//│ res: string
+
+
+

@@ -1,0 +1,102 @@
+
+:e
+type A = A
+//│ ╔══[ERROR] illegal cycle involving type A
+//│ ║  l.3: 	type A = A
+//│ ╙──     	     ^^^^^
+
+:e
+"oops": A
+//│ ╔══[ERROR] type identifier not found: A
+//│ ║  l.9: 	"oops": A
+//│ ╙──     	        ^
+//│ res: "oops"
+
+:e
+add res 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.16: 	add res 1
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `"oops"` does not match type `int`
+//│ ║  l.9: 	"oops": A
+//│ ║       	^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.16: 	add res 1
+//│ ╙──      	    ^^^
+//│ res: error | int
+
+:e
+type B = Oops
+//│ ╔══[ERROR] type identifier not found: Oops
+//│ ║  l.29: 	type B = Oops
+//│ ╙──      	         ^^^^
+//│ Defined type B
+
+:e // TODO should probaby not report the error again
+42: B
+//│ ╔══[ERROR] type identifier not found: Oops
+//│ ║  l.29: 	type B = Oops
+//│ ╙──      	         ^^^^
+//│ res: nothing
+
+:e
+type NonReg[A] = { x: NonReg[NonReg[A]] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[NonReg['a]], but is defined as NonReg['a]
+//│ ║  l.43: 	type NonReg[A] = { x: NonReg[NonReg[A]] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+type B = NonReg[A]
+//│ ╔══[ERROR] Type 'B' is already defined.
+//│ ║  l.49: 	type B = NonReg[A]
+//│ ╙──      	     ^
+//│ ╔══[ERROR] type identifier not found: NonReg
+//│ ║  l.49: 	type B = NonReg[A]
+//│ ╙──      	         ^^^^^^^^^
+
+:e
+type NonReg[A] = { x: NonReg[int] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['a]
+//│ ║  l.58: 	type NonReg[A] = { x: NonReg[int] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
+42: NonReg[int]
+//│ ╔══[ERROR] type identifier not found: NonReg
+//│ ║  l.64: 	42: NonReg[int]
+//│ ╙──      	    ^^^^^^^^^^^
+//│ res: 42
+
+:e
+type NonReg[A] = { x: NonReg[int] }
+type RefToNongReg[A] = { x: NonReg[A] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['a]
+//│ ║  l.71: 	type NonReg[A] = { x: NonReg[int] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+type Reg[A] = Reg[A] -> Reg[A]
+//│ Defined type Reg
+
+
+type Id[A] = A
+//│ Defined type Id
+
+// Our regularity check for now is very syntactic:
+:e
+type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg[Id['a]], but is defined as FalseNeg['a]
+//│ ║  l.87: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+:e
+42: Id
+//│ ╔══[ERROR] Type Id takes parameters
+//│ ║  l.94: 	42: Id
+//│ ╙──      	    ^^
+//│ res: 42
+
+42: Id[int]
+//│ res: int
+

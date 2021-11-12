@@ -61,11 +61,16 @@ def z = add x y
 //│ ╙──      	^
 //│ res: error
 
-:p
 def f x y z = add x y 
-//│ Parsed: Def(false,f,(x => (y => (z => ((add x) y)))));
 //│ f: int -> int -> anything -> int
 
 
+:e
 def f (x y z) = add x y
-//│ f: anything -> int
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.69: 	def f (x y z) = add x y
+//│ ╙──      	       ^^^^^
+//│ f: error -> int
+
+f 1
+//│ res: int

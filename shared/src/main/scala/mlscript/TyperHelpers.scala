@@ -22,15 +22,171 @@ abstract class TyperHelpers { self: Typer =>
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   // Shadow Predef functions with debugging-flag-enabled ones:
-  def println(msg: => Any): Unit = if (dbg) emitDbg(" " * indent + msg)
+  def println(msg: => Any): Unit = if (dbg) emitDbg("| " * indent + msg)
   
   def dbg_assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
+  
+  def recordUnion(fs1: Ls[Str -> SimpleType], fs2: Ls[Str -> SimpleType]): Ls[Str -> SimpleType] = {
+    val fs2m = fs2.toMap
+    fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }
+  }
+  
   trait SimpleTypeImpl { self: SimpleType =>
     
-    def | (that: SimpleType): SimpleType = ComposedType(true, this, that)(noProv)
-    def & (that: SimpleType): SimpleType = ComposedType(false, this, that)(noProv)
+    def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+      case (TopType, _) => TopType
+      case (BotType, _) => that
+      
+      // These were wrong! During constraint solving it's important to keep them!
+      // case (_: RecordType, _: PrimType | _: FunctionType) => TopType
+      // case (_: FunctionType, _: PrimType | _: RecordType) => TopType
+      
+      case (_: RecordType, _: FunctionType) => TopType
+      case (RecordType(fs1), RecordType(fs2)) =>
+        RecordType(recordUnion(fs1, fs2))(prov)
+      case _ if !swapped => that | (this, prov, swapped = true)
+      case (`that`, _) => this
+      case (NegType(`that`), _) => TopType
+      case _ => ComposedType(true, that, this)(prov)
+    }
+    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+      case (TopType, _) => that
+      case (BotType, _) => BotType
+      case (ComposedType(true, l, r), _) => l & that | r & that
+      case (_: PrimType, _: FunctionType) => BotType
+      case (RecordType(fs1), RecordType(fs2)) =>
+        RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
+      case _ if !swapped => that & (this, prov, swapped = true)
+      case (`that`, _) => this
+      case (NegType(`that`), _) => BotType
+      case _ => ComposedType(false, that, this)(prov)
+    }
+    def neg(prov: TypeProvenance = noProv, force: Bool = false): SimpleType = this match {
+      case ExtrType(b) => ExtrType(!b)(noProv)
+      case ComposedType(true, l, r) => l.neg() & r.neg()
+      case ComposedType(false, l, r) if force => l.neg() | r.neg()
+      case NegType(n) => n
+      // case _: RecordType => BotType // Only valid in positive positions!
+        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+        // meaning negated records are basically bottoms.
+      case _ => NegType(this)(prov)
+    }
+    
+    // TODO for composed types and negs, should better first normalize the inequation
+    def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    // trace(s"? $this <: $that") {
+    (this === that) || ((this, that) match {
+      case (RecordType(Nil), _) => TopType <:< that
+      case (_, RecordType(Nil)) => this <:< TopType
+      case (pt1 @ PrimType(id1, ps1), pt2 @ PrimType(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
+      case (FunctionType(l1, r1), FunctionType(l2, r2)) => l2 <:< l1 && r1 <:< r2
+      case (_: FunctionType, _) | (_, _: FunctionType) => false
+      case (ComposedType(true, l, r), _) => l <:< that && r <:< that
+      case (_, ComposedType(false, l, r)) => that <:< l && that <:< r
+      case (ComposedType(false, l, r), _) => l <:< that || r <:< that
+      case (_, ComposedType(true, l, r)) => that <:< l || that <:< r
+      case (RecordType(fs1), RecordType(fs2)) =>
+        fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
+      case (_: RecordType, _: PrimType) | (_: PrimType, _: RecordType) => false
+      case (_: TypeVariable, _) | (_, _: TypeVariable)
+        if cache.contains(this -> that)
+        => cache(this -> that)
+      case (tv: TypeVariable, _) =>
+        cache(this -> that) = true
+        val tmp = tv.upperBounds.exists(_ <:< that)
+        cache(this -> that) = tmp
+        tmp
+      case (_, tv: TypeVariable) =>
+        cache(this -> that) = true
+        val tmp = tv.lowerBounds.exists(this <:< _)
+        cache(this -> that) = tmp
+        tmp
+      case (ProxyType(und), _) => und <:< that
+      case (_, ProxyType(und)) => this <:< und
+      case (_, NegType(und)) => (this & und) <:< BotType
+      case (NegType(und), _) => TopType <:< (that | und)
+      case (_, ExtrType(false)) => true
+      case (ExtrType(true), _) => true
+      case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
+      case (_: TypeRef, _) | (_, _: TypeRef) =>
+        false // TODO try to expand them (this requires populating the cache because of recursive types)
+      case (_: Without, _) | (_, _: Without)
+        | (_: VarType, _) | (_, _: VarType)
+        | (_: AppType, _) | (_, _: AppType)
+        | (_: TupleType, _) | (_, _: TupleType)
+        => false // don't even try
+      case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
+    })
+    // }(r => s"! $r")
+    
+    // Sometimes, Without types are temporarily pushed to the RHS of constraints,
+    // sometimes behind a single negation,
+    // just for the time of massaging the constraint through a type variable.
+    // So it's important we only push and simplify Without types only in _positive_ position!
+    def without(names: Set[Str]): SimpleType = if (names.isEmpty) this else this match {
+      case Without(b, ns) => Without(b, ns ++ names)(this.prov)
+      case _ => Without(this, names)(noProv)
+    }
+    def without(name: Str): SimpleType = 
+      without(Set.single(name))
+    
+    def withoutPos(names: Set[Str]): SimpleType = this match {
+      case Without(b, ns) => Without(b, ns ++ names)(this.prov)
+      case t @ FunctionType(l, r) => t
+      case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
+      case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
+      case a @ AppType(f, as) => ???
+      case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
+      case t @ TupleType(fs) => t
+      case vt: VarType => ???
+      case n @ NegType(_ : PrimType | _: FunctionType | _: RecordType) => n
+      case n @ NegType(nt) if (nt match {
+        case _: ComposedType | _: ExtrType | _: NegType => true
+        // case c: ComposedType => c.pol
+        // case _: ExtrType | _: NegType => true
+        case _ => false
+      }) => nt.neg(n.prov, force = true).withoutPos(names)
+      case e @ ExtrType(_) => e // valid? -> seems we could go both ways, but this way simplifies constraint solving
+      // case e @ ExtrType(false) => e
+      case p @ ProxyType(und) => ProxyType(und.withoutPos(names))(p.prov)
+      case p @ PrimType(_, _) => p
+      case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
+    }
+    def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
+      case tr: TypeRef => tr.expand.unwrapAll
+      case u => u
+    }
+    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
+      case ExtrType(b) => ExtrType(!b)(noProv)
+      case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
+      case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
+      case NegType(n) => f(n).withProv(p)
+      case tr: TypeRef => tr.expand.negNormPos(f, p)
+      case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
+        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
+        // meaning negated records are basically bottoms.
+      case rw => NegType(f(rw))(p)
+    }
+    def withProvOf(ty: SimpleType): ProxyType = withProv(ty.prov)
+    def withProv(p: TypeProvenance): ProxyType = ProxyType(this)(p)
+    def pushPosWithout(implicit raise: Raise): SimpleType = this match {
+      case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
+      case Without(b, ns) => b.unwrapAll.withoutPos(ns) match {
+        case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
+        case Without(NegType(nt), ns) => nt.negNormPos(_.pushPosWithout, nt.prov).withoutPos(ns) match {
+          case rw @ Without(NegType(nt), ns) =>
+            nt match {
+              case _: TypeVariable | _: PrimType | _: RecordType => rw
+              case _ => lastWords(s"$this  $rw  (${nt.getClass})")
+            }
+          case rw => rw
+        }
+        case rw => rw
+      }
+      case _ => this
+    }
     
     def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
       case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)
@@ -74,7 +230,9 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case PrimType(_) => Nil
+      case PrimType(_, _) => Nil
+      case TypeRef(d, ts) => ts
+      case Without(b, ns) => b :: Nil
     }
     
     def getVars: Set[TypeVariable] = {
@@ -98,14 +256,14 @@ abstract class TyperHelpers { self: Typer =>
       ).mkString(", ")
     
     def expPos: Type = (this
-      |> (compactType(_, true))
+      |> (canonicalizeType(_, true))
       |> (simplifyType(_, true, removePolarVars = false))
-      |> (expandCompactType(_, true))
+      |> (expandType(_, true))
     )
     def expNeg: Type = (this
-      |> (compactType(_, false))
+      |> (canonicalizeType(_, false))
       |> (simplifyType(_, false, removePolarVars = false))
-      |> (expandCompactType(_, false))
+      |> (expandType(_, false))
     )
     
   }

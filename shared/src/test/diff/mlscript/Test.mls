@@ -2,7 +2,7 @@
 class Person: { name: string; age: int }
 def Person = fun n -> fun a -> Person { name = n; age = a }
 //│ Defined class Person
-//│ Person: string -> int -> Person & {age: int, name: string}
+//│ Person: string & 'a -> int & 'b -> person & {name: 'a, age: 'b}
 
 class Animal: {}
 //│ Defined class Animal
@@ -11,33 +11,34 @@ def test = fun x -> case x of
   { Person -> x.age
   | Animal -> 0
   }
-//│ test: ((Person & {age: 'a}) | (((Animal & anything) | (nothing & neg Animal)) & neg Person)) -> 'a | (0 | nothing)
+//│ test: person & {age: 'a} | animal -> 'a | 0
 
 // TODO simplify type to : test: Person & {age: 'a} | Animal -> 'a | 0
 
-// TOOD support tyvars
-:pe
 test: Person & {age: 'a} | Animal -> 'a | 0
-//│ /!\ Parse error: Expected "}":1:17, found "age: 'a} |" at l.20:17: test: Person & {age: 'a} | Animal -> 'a | 0
+//│ res: person & {name: string, age: 0} | (animal -> 0) | 0
 
 test: (Person & {age: int} | Animal) -> int
-//│ res: ((Person & {age: int}) | Animal) -> int
+//│ res: person & {name: string, age: int} | animal -> int
 
 def a = Animal{}
-//│ a: Animal & {}
+//│ a: animal
 
 a: {}
-//│ res: {}
+//│ res: anything
 
 def p = Person "Bob" 42
-//│ p: Person & {age: int, name: string}
+//│ p: person & {name: "Bob", age: 42}
 
 p: { age: int }
 //│ res: {age: int}
 
 test a
-//│ res: nothing | (0 | nothing)
+//│ res: 0
 
 test p
-//│ res: int | (0 | nothing)
+//│ res: 42 | 0
+
+1: int
+//│ res: int
 

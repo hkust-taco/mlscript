@@ -1,0 +1,54 @@
+
+class A: { fA: int }
+class B: { fB: string }
+class C: { fC: bool }
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  }
+//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
+
+def arg: A | B | C
+//│ arg: a & {fA: int} | b & {fB: string} | c & {fC: bool}
+
+foo arg
+//│ res: int | string | bool
+
+foo (arg with { fC = true })
+//│ res: int | string | bool
+
+
+def foo x = case x of {
+  | A -> add x.fA x.payload
+  | B -> x.fB
+  | C -> { l = x.fC; r = x.payload }
+  }
+//│ foo: a & {payload: int, fA: int} | b & {fB: 'a} | c & {payload: 'b, fC: 'c} -> int | 'a | {l: 'c, r: 'b}
+
+:e
+foo arg
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.34: 	foo arg
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `a & {fA: int}` does not match type `{payload: int & ?a}`
+//│ ║  l.16: 	def arg: A | B | C
+//│ ║        	         ^
+//│ ╟── but it flows into reference with expected type `a & {payload: int & ?b, fA: int & ?c} & ?d | b & {fB: ?e} & ?f | c & {payload: ?g, fC: ?h} & ?i`
+//│ ║  l.34: 	foo arg
+//│ ║        	    ^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.27: 	  | A -> add x.fA x.payload
+//│ ║        	                  ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.26: 	def foo x = case x of {
+//│ ╙──      	                 ^
+//│ res: int | string | {l: bool, r: nothing} | error
+
+foo (arg with { payload = 1 })
+//│ res: int | string | {l: bool, r: 1}
+

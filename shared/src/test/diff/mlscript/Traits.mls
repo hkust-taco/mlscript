@@ -1,0 +1,76 @@
+// TODO properly implement traits – currently they're just like classes
+
+trait A: { x: int }
+trait B: { y: string }
+class C: { x: 0 | 1 }
+//│ Defined trait A
+//│ Defined trait B
+//│ Defined class C
+
+class D: C & A & B
+//│ Defined class D
+
+D
+//│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> d & {x: 'a, y: 'b}
+
+error: A & B
+//│ res: nothing
+
+:e
+def dv = D{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	def dv = D{}
+//│ ║        	         ^^^
+//│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
+//│ ║  l.20: 	def dv = D{}
+//│ ╙──      	          ^^
+//│ dv: d & {x: nothing, y: nothing} | error
+
+def dv = D { x = 0; y = "hello" }
+//│ dv: d & {x: 0, y: "hello"}
+
+// Note: this does not go through because the system assumes the inehritance hierarchy is sound,
+// while it's not because of the current wrong handling of traits
+:e
+dv: nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.35: 	dv: nothing
+//│ ║        	^^
+//│ ╟── expression of type `d & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
+//│ ║  l.29: 	def dv = D { x = 0; y = "hello" }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.35: 	dv: nothing
+//│ ║        	^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.35: 	dv: nothing
+//│ ╙──      	    ^^^^^^^
+//│ res: nothing
+
+// TODO support unrelated trait mixing
+dv: A & B: nothing
+//│ res: nothing
+
+
+trait Indirect: C
+//│ Defined trait Indirect
+
+class E: Indirect
+//│ Defined class E
+
+:e
+E{}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.62: 	E{}
+//│ ║        	^^^
+//│ ╟── expression of type `anything` does not have field 'x'
+//│ ║  l.62: 	E{}
+//│ ╙──      	 ^^
+//│ res: e & {x: nothing} | error
+
+def ev = E { x = 1 }
+ev: C
+//│ ev: e & {x: 1}
+//│ res: c & {x: 0 | 1}
+
+

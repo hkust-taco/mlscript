@@ -100,11 +100,19 @@ object Main {
       val wty = ty.instantiate(0).widenVar
       println(s"Typed as: $wty")
       println(s" where: ${wty.showBounds}")
-      val com = typer.compactType(wty)
-      println(s"Compact type before simplification: ${com}")
-      val sim = typer.simplifyType(com)
-      println(s"Compact type after simplification: ${sim}")
-      val exp = typer.expandCompactType(sim)
+      val cty = typer.canonicalizeType(wty)
+      println(s"Canon: ${cty}")
+      println(s" where: ${cty.showBounds}")
+      val sim = typer.simplifyType(cty)
+      println(s"Type after simplification: ${sim}")
+      println(s" where: ${sim.showBounds}")
+      val reca = typer.canonicalizeType(sim)
+      println(s"Recanon: ${reca}")
+      println(s" where: ${reca.showBounds}")
+      val resim = typer.simplifyType(reca)
+      println(s"Resimplified: ${resim}")
+      println(s" where: ${resim.showBounds}")
+      val exp = typer.expandType(resim)
       exp
     }
     def formatError(culprit: Str, err: TypeError): Str = {
@@ -209,13 +217,16 @@ object Main {
       val d = decls.head
       decls = decls.tail
       try d match {
-        case d @ Def(isrec, nme, rhs) =>
-          val errProv = TypeProvenance(rhs.toLoc, "let-bound value")
+        case d @ Def(isrec, nme, L(rhs)) =>
+          val errProv = TypeProvenance(rhs.toLoc, "def definition")
           val ty = typeLetRhs(isrec, nme, rhs)
           ctx += nme -> ty
           println(s"Typed `${d.nme}` as: $ty")
           println(s" where: ${ty.instantiate(0).showBounds}")
           res ++= formatBinding(d.nme, ty)
+        case d @ Def(isrec, nme, R(rhs)) =>
+          val errProv = TypeProvenance(rhs.toLoc, "def signature")
+          ??? // TODO
         case s: Statement =>
           val errProv =
             TypeProvenance(s.toLoc, "expression in statement position")
@@ -250,4 +261,7 @@ object Main {
 
     res.toString -> errorOccurred
   }
+
+  private def underline(fragment: Str): Str =
+      s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
 }

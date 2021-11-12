@@ -22,6 +22,7 @@ abstract class TypeImpl extends Located { self: Type =>
   
   private def parensIf(str: String, cnd: Boolean): String = if (cnd) "(" + str + ")" else str
   def showIn(ctx: ShowCtx, outerPrec: Int): String = this match {
+  // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
     case Bot => "nothing"
     case Primitive(name) => name
@@ -32,12 +33,17 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
     case Applied(Applied(Primitive(op), l), r) if !op.head.isLetter =>
       parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
+    case Applied(Primitive(op), t) if op.head === '\\' =>
+      s"${t.showIn(ctx, 90)}$op"
+    case Applied(Primitive("~"), t) =>
+      s"~${t.showIn(ctx, 100)}"
     case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
-    case AppliedType(n, args) => s"$n[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
+    case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
   }
   
   def children: List[Type] = this match {
@@ -49,6 +55,8 @@ abstract class TypeImpl extends Located { self: Type =>
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
+    case AppliedType(n, ts) => ts
+    case Rem(b, _) => b :: Nil
   }
   
 }
@@ -56,15 +64,15 @@ abstract class TypeImpl extends Located { self: Type =>
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
-     val allVars = tys.iterator.toList.flatMap(_.typeVarsList).distinct
-     ShowCtx(allVars.zipWithIndex.map {
-        case (tv, idx) =>
-          def nme = {
-            assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
-            ('a' + idx).toChar.toString
-          }
-          tv -> (pre + nme)
-      }.toMap, debug)
+    val allVars = tys.iterator.toList.flatMap(_.typeVarsList).distinct
+    ShowCtx(allVars.zipWithIndex.map {
+      case (tv, idx) =>
+        def nme = {
+          assert(idx <= 'z' - 'a', "TODO handle case of not enough chars")
+          ('a' + idx).toChar.toString
+        }
+        tv -> (pre + nme)
+    }.toMap, debug)
   }
 }
 
@@ -82,7 +90,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def children: Ls[Located] = self match {
-    case Def(rec, nme, body) => body :: Nil
+    case d @ Def(rec, nme, _) => d.body :: Nil
     case TypeDef(kind, nme, tparams, body) => nme :: body :: Nil
   }
   def show: Str = showHead + (this match {
@@ -152,6 +160,14 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c"
   }
   
+}
+
+trait LitImpl { self: Lit =>
+  def baseClass: Var = this match {
+    case _: IntLit => Var("int")
+    case _: StrLit => Var("string")
+    case _: DecLit => Var("number")
+  }
 }
 
 trait VarImpl { self: Var =>

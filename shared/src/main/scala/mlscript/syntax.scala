@@ -21,8 +21,14 @@ sealed trait TopLevel
 sealed trait OtherTopLevel extends TopLevel with Located
 
 sealed abstract class Decl extends TopLevel with DeclImpl
-final case class Def(rec: Bool, nme: Str, body: Term) extends Decl with OtherTopLevel
-final case class TypeDef(kind: TypeDefKind, nme: Primitive, tparams: List[Str], body: Type) extends Decl
+final case class Def(rec: Bool, nme: Str, rhs: Term \/ Type) extends Decl with OtherTopLevel
+  { val body = rhs.fold(identity, identity) }
+final case class TypeDef(
+  kind: TypeDefKind,
+  nme: Primitive,
+  tparams: List[Str],
+  body: Type,
+) extends Decl
 
 sealed abstract class TypeDefKind(val str: Str)
 case object Cls extends TypeDefKind("class")
@@ -30,7 +36,7 @@ case object Trt extends TypeDefKind("trait")
 case object Als extends TypeDefKind("type")
 
 sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
-sealed abstract class Lit                                            extends SimpleTerm
+sealed abstract class Lit                                            extends SimpleTerm with LitImpl
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
@@ -47,7 +53,7 @@ final case class With(trm: Term, fieldNme: Str, fieldVal: Term)      extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
-final case class Case(clsNme: Primitive, body: Term, rest: CaseBranches) extends CaseBranches
+final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
 final case object NoCases extends CaseBranches
 
@@ -86,15 +92,17 @@ final case class Applied(lhs: Type, rhs: Type)           extends Type
 final case class Record(fields: Ls[Str -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Str] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
+final case class AppliedType(base: Primitive, targs: List[Type]) extends Type
+final case class Rem(base: Type, names: Ls[Var])         extends Type
 
 sealed abstract class NullaryType                        extends Type
 
 case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
+final case class Literal(lit: Lit)                       extends NullaryType
 
-final case class Primitive(name: Str)                      extends NullaryType
-final case class AppliedType(base: Primitive, targs: List[Type]) extends NullaryType
-final class TypeVar(val nameHint: Str, val hash: Int)      extends NullaryType {
+final case class Primitive(name: Str)                    extends NullaryType
+final class TypeVar(val nameHint: Str, val hash: Int)    extends NullaryType {
   override def toString: Str = s"$nameHint:$hash"
 }
 

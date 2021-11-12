@@ -1,0 +1,17 @@
+
+:e
+class oops: { x: int }
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.3: 	class oops: { x: int }
+//│ ╙──     	      ^^^^
+//│ Defined class oops
+
+:e
+type oops = int
+//│ ╔══[ERROR] Type 'oops' is already defined.
+//│ ║  l.10: 	type oops = int
+//│ ╙──      	     ^^^^
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.10: 	type oops = int
+//│ ╙──      	     ^^^^
+

@@ -1,6 +1,6 @@
 
 let empty = {}
-//│ empty: {}
+//│ empty: anything
 
 1
 (1)
@@ -61,7 +61,7 @@ r.w
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.59: 	empty.w
 //│ ║        	     ^^
-//│ ╟── expression of type `{}` does not have field 'w'
+//│ ╟── expression of type `anything` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
 //│ ╟── but it flows into reference with expected type `{w: ?a}`
@@ -83,7 +83,7 @@ let rec sumHeads = x => x.head + sumHeads x.tail
 //│ sumHeads: {head: int, tail: 'a} as 'a -> int
 
 let rec ouroboros = {head: 0, tail: ouroboros, eyes: {l: 1, r: 2}}
-//│ ouroboros: {eyes: {l: 1, r: 2}, head: 0, tail: 'a} as 'a
+//│ ouroboros: {head: 0, tail: 'a, eyes: {l: 1, r: 2}} as 'a
 
 sumHeads ouroboros
 //│ res: int

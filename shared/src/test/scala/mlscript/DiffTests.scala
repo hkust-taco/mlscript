@@ -14,7 +14,29 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   private val files = ls.rec(dir).filter(_.isFile)
   
-  files.foreach { file => val fileName = file.baseName; test(fileName) {
+  private val validExt = Set("fun", "mls")
+  
+  private val focused = Set(
+    "Repro",
+    // "RecursiveTypes",
+    // "Simple",
+    // "Inherit",
+    // "Basics",
+    // "Paper",
+    // "Negations",
+    // "RecFuns",
+    // "With",
+    // "Annoying",
+    // "Tony",
+    // "Lists",
+    // "Traits",
+  )
+  private def filter(name: Str): Bool =
+    true ||
+      focused(name)
+  
+  files.foreach { file => val fileName = file.baseName
+      if (validExt(file.ext) && filter(fileName)) test(fileName) {
     
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
@@ -28,13 +50,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
+    var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false)
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -53,6 +76,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
+          case "stats" => mode.copy(stats = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case _ =>
@@ -98,6 +122,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
             if (mode.dbg) typer.resetState()
+            if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
@@ -142,7 +167,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                       val pre = s"$shownLineNum: "
                       val curLine = loc.origin.fph.lines(l - 1)
                       output(prepre + pre + "\t" + curLine)
-                      out.print(outputMarker + (if (isLast) "╙──" else prepre) + " " * pre.length + "\t" + " " * (c - 1))
+                      out.print(outputMarker
+                        + (if (isLast && l =:= endLineNum) "╙──" else prepre)
+                        + " " * pre.length + "\t" + " " * (c - 1))
                       val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
                       while (c < lastCol) { out.print('^'); c += 1 }
                       out.println
@@ -162,9 +189,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             
             val raise: typer.Raise = d => report(d :: Nil)
             
+            val oldCtx = ctx
             ctx = typer.processTypeDefs(p.typeDefs)(ctx, raise)
             
-            p.typeDefs.foreach(td => output(s"Defined " + td.kind.str + " " + td.nme.name))
+            p.typeDefs.foreach(td =>
+              if (ctx.tyDefs.contains(td.nme.name)
+                  && !oldCtx.tyDefs.contains(td.nme.name))
+                  // ^ it may not end up being defined if there's an error
+                output(s"Defined " + td.kind.str + " " + td.nme.name))
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.instantiate(0).widenVar
@@ -172,11 +204,24 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty)
               else {
-                val com = typer.compactType(wty)
-                if (mode.dbg) output(s"Compact type before simplification: ${com}")
-                val sim = typer.simplifyType(com)
-                if (mode.dbg) output(s"Compact type after simplification: ${sim}")
-                val exp = typer.expandCompactType(sim)
+                val cty = typer.canonicalizeType(wty)
+                if (mode.dbg) output(s"Canon: ${cty}")
+                if (mode.dbg) output(s" where: ${cty.showBounds}")
+                val sim = typer.simplifyType(cty)
+                if (mode.dbg) output(s"Type after simplification: ${sim}")
+                if (mode.dbg) output(s" where: ${sim.showBounds}")
+                // val exp = typer.expandType(sim)
+                
+                // TODO: would be better toa void having to do a second pass,
+                // but would require more work:
+                val reca = typer.canonicalizeType(sim)
+                if (mode.dbg) output(s"Recanon: ${reca}")
+                if (mode.dbg) output(s" where: ${reca.showBounds}")
+                val resim = typer.simplifyType(reca)
+                if (mode.dbg) output(s"Resimplified: ${resim}")
+                if (mode.dbg) output(s" where: ${resim.showBounds}")
+                val exp = typer.expandType(resim)
+                
                 exp
               }
             }
@@ -199,11 +244,32 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                       output(s"res: ${exp.show}")
                     }
                 }
-              case Def(isrec, nme, rhs) =>
-                val ty_sch = typer.typeLetRhs(isrec, nme, rhs)(ctx, raise)
+              case Def(isrec, nme, R(rhs)) =>
+                val ty_sch = typer.PolymorphicType(0,
+                  typer.typeType(rhs)(ctx.nextLevel, raise, Map.empty))
                 ctx += nme -> ty_sch
+                declared += nme -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
+              case d @ Def(isrec, nme, L(rhs)) =>
+                val ty_sch = typer.typeLetRhs(isrec, nme, rhs)(ctx, raise)
+                val exp = getType(ty_sch)
+                declared.get(nme) match {
+                  case N =>
+                    ctx += nme -> ty_sch
+                    output(s"$nme: ${exp.show}")
+                  case S(sign) =>
+                    ctx += nme -> sign
+                    val sign_exp = getType(sign)
+                    output(s"${exp.show}  <:  f: ${sign_exp.show}")
+                    typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                }
+            }
+            
+            if (mode.stats) {
+              val (co, an) = typer.stats
+              output(s"constrain calls: " + co)
+              output(s"annoying  calls: " + an)
             }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)

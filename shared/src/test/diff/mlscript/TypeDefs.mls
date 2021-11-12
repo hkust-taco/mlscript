@@ -1,45 +1,43 @@
 
-// FIXME
 class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: int} -> Test1 & {x: int}
+//│ res: {x: int & 'a} -> test1 & {x: 'a}
 
 Test1 { x = 123 }
-//│ res: Test1 & {x: int}
+//│ res: test1 & {x: 123}
 
 :e
 Test1 { x = "oops" }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `int`
-//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
-//│ ╟── but it flows into record literal with expected type `{x: int}`
-//│ ║  l.13: 	Test1 { x = "oops" }
+//│ ╟── but it flows into record literal with expected type `{x: int & ?a}`
+//│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	      ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.3: 	class Test1: { x: int }
+//│ ║  l.2: 	class Test1: { x: int }
 //│ ╙──     	                  ^^^
-//│ res: (Test1 & {x: int}) | error
+//│ res: test1 & {x: "oops"} | error
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: int -> Test1 & {x: int}
+//│ Test1: int & 'a -> test1 & {x: 'a}
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: int -> Test11 & {x: int}
+//│ Test11: int & 'a -> test11 & {x: 'a}
 
 
 :e
 type Test1 = { x: int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
-//│ ║  l.38: 	type Test1 = { x: int }
+//│ ║  l.37: 	type Test1 = { x: int }
 //│ ╙──      	     ^^^^^
-//│ Defined type Test1
 
 // FIXME
 type Test2 = { x: int }
@@ -47,11 +45,11 @@ type Test2 = { x: int }
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected ":":1:12, found "= { x: int" at l.49:12: class Test = { x: int }
+//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.47:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.53:10: type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.51:10: type Test: { x: int }
 
 // FIXME
 type Test3 = int -> int
@@ -73,13 +71,11 @@ type T = int
 type T = int
 type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.73: 	type T = int
+//│ ║  l.71: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.74: 	type T = int
+//│ ║  l.72: 	type T = int
 //│ ╙──      	     ^
-//│ Defined type T
-//│ Defined type T
 
 :e
 type TypeA = int
@@ -88,37 +84,40 @@ def foo = 1
 foo 42
 //│ Defined type TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.86: 	foo 42
+//│ ║  l.82: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ foo: 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	foo 42
+//│ ║  l.84: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` is not a function
-//│ ║  l.87: 	def foo = 1
+//│ ║  l.83: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.88: 	foo 42
+//│ ║  l.84: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 
 42: TypeA
-//│ res: TypeA
+//│ res: int
 
+:e
 type TypeOops = TypeOops
 type TypeB = TypeC
 def test = fun x -> (x: TypeB)
 test 42
 type TypeC = TypeA
-//│ Defined type TypeOops
+//│ ╔══[ERROR] illegal cycle involving type TypeOops
+//│ ║  l.106: 	type TypeOops = TypeOops
+//│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type TypeB
 //│ Defined type TypeC
-//│ test: TypeB -> TypeB
-//│ res: TypeB
+//│ test: int -> int
+//│ res: int
 
 
-// FIXME:
+// FIXME? maybe x's type should be upcasted in the body
 def test = fun (x: TypeB) -> x
-//│ test: TypeB -> nothing
+//│ test: int & 'a -> 'a
 

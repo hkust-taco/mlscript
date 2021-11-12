@@ -1,0 +1,50 @@
+:AllowTypeErrors
+
+// Multiline error:
+id
+  id
+  id
+  3 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.4: 	id
+//│ ║       	^^
+//│ ║  l.5: 	  id
+//│ ║       	^^^^
+//│ ║  l.6: 	  id
+//│ ║       	^^^^
+//│ ║  l.7: 	  3 2
+//│ ║       	^^^^^
+//│ ╟── expression of type `3` is not a function
+//│ ║  l.7: 	  3 2
+//│ ║       	  ^
+//│ ╟── but it flows into application with expected type `2 -> ?a`
+//│ ║  l.4: 	id
+//│ ║       	^^
+//│ ║  l.5: 	  id
+//│ ║       	^^^^
+//│ ║  l.6: 	  id
+//│ ║       	^^^^
+//│ ║  l.7: 	  3 2
+//│ ╙──     	^^^
+//│ res: error
+
+
+
+1: 1 & int: { x: int; y: string }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.33: 	1: 1 & int: { x: int; y: string }
+//│ ║        	^
+//│ ╟── expression of type `1` does not match type `{x: int, y: string}`
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.33: 	1: 1 & int: { x: int; y: string }
+//│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^
+//│ res: {x: int, y: string}
+
+1: 1 & int: { x: int; y: string } | string
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.43: 	1: 1 & int: { x: int; y: string } | string
+//│ ║        	^
+//│ ╙── expression of type `1` does not match type `{x: int, y: string} | string`
+//│ res: {x: int, y: string} | string
+
+

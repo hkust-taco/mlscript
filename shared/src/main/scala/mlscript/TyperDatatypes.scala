@@ -26,7 +26,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
    *  (by convention, those variables of level greater than `level` are considered quantified). */
   case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
     val prov: TypeProvenance = body.prov
-    def instantiate(implicit lvl: Int) = freshenAbove(level, body)
+    def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
+    def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
   /** A type without universally quantified type variables. */
@@ -38,7 +39,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type ST = SimpleType
   
-  sealed abstract class ConstructedType extends SimpleType
   sealed abstract class BaseType extends SimpleType
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends BaseType {
@@ -46,17 +46,36 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs -> $rhs)"
   }
   
+  // TODO remove or dedup with TypeRef...
   case class AppType(lhs: SimpleType, args: Ls[SimpleType])(val prov: TypeProvenance) extends BaseType {
     require(args.nonEmpty)
     lazy val level: Int = (lhs :: args).maxBy(_.level).level
     override def toString = s"($lhs${args.map(" " + _).mkString})"
   }
   
-  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends ConstructedType {
+  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+    // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
-      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l,r) => ComposedType(false, l, r)(noProv)))
+      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
+    def mergeAllFields(fs: Iterable[Str -> SimpleType]): RecordType = {
+      val res = mutable.SortedMap.empty[Str, SimpleType]
+      fs.foreach(f => res.get(f._1) match {
+        case N => res(f._1) = f._2
+        case S(ty) => res(f._1) = ty & f._2
+      })
+      RecordType(res.toList)(prov)
+    }
+    def addFields(fs: Ls[Str -> SimpleType]): RecordType = {
+      val shadowing = fs.iterator.map(_._1).toSet
+      RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
+    }
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
+  }
+  object RecordType {
+    def empty = RecordType(Nil)(noProv)
+    def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+      if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
   case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends BaseType {
@@ -72,6 +91,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
   case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = 0
+    override def toString = if (pol) "⊥" else "⊤"
   }
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
@@ -80,7 +100,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = negated.level
-    override def toString = s"(not ${negated})"
+    override def toString = s"~(${negated})"
+  }
+  
+  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends BaseType {
+    def level: Int = base.level
+    override def toString = s"${base}\\${names.mkString("-")}"
   }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */
@@ -96,25 +121,39 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
   
-  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, ctx: Ctx) extends SimpleType {
+  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
     assert(targs.size === defn.tparams.size)
-    def level: Int = 0
+    def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
       if (defn.kind === Als) body_ty
-      else ComposedType(false, PrimType(Var(defn.nme.name))(noProv/*TODO*/), body_ty)(noProv)
+      else clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
     }
+    override def toString =
+      if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"
   }
   
-  case class PrimType(id: SimpleTerm)(val prov: TypeProvenance) extends BaseType {
-    def widenPrim: PrimType = id match {
+  case class PrimType(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType {
+    def widenPrim: PrimType = id match { // FIXME rm
       case _: IntLit => IntType
       case _: StrLit => StrType
       case _: DecLit => DecType
       case _ => this
     }
+    lazy val parentsST = parents.map(identity[SimpleTerm]) // TODO inefficient... improve
+    def glb(that: PrimType): Opt[PrimType] =
+      if (that.id === this.id) S(this)
+      else if (that.parentsST.contains(this.id)) S(that)
+      else if (this.parentsST.contains(that.id)) S(this)
+      else N
+    def lub(that: PrimType): Set[PrimType] = // TODO rm? it's unused
+      if (that.id === this.id) Set.single(that)
+      else if (that.parentsST.contains(this.id)) Set.single(this)
+      else if (this.parentsST.contains(that.id)) Set.single(that)
+      // else this.parentsST.union(that.parentsST)
+      else Set(this, that)
     def level: Int = 0
-    override def toString = id.idStr
+    override def toString = id.idStr+s"<${parents.mkString(",")}>"
   }
   
   sealed trait Variable extends SimpleType

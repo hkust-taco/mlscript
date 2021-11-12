@@ -1,0 +1,118 @@
+
+def rcd = { x = 1 }
+//│ rcd: {x: 1}
+
+rcd.x
+//│ res: 1
+
+rcd with { y = 2 }
+//│ res: {x: 1, y: 2}
+
+add res.x res.y
+//│ res: int
+
+rcd with { x = "oops" }
+//│ res: {x: "oops"}
+
+res.x
+//│ res: "oops"
+
+id rcd with { x = "oops" }
+//│ res: {x: "oops"}
+
+res.x
+//│ res: "oops"
+
+
+def rcd = { }
+//│ rcd: anything
+
+id rcd with { x = "oops" }
+//│ res: {x: "oops"}
+
+res.x
+//│ res: "oops"
+
+
+def f r = r with { x = "oops" }
+//│ f: 'a -> 'a\x & {x: "oops"}
+
+f rcd
+//│ res: {x: "oops"}
+
+f (rcd with { y = 2 })
+//│ res: {x: "oops", y: 2}
+
+
+def f a b = if true then a else b
+//│ f: 'a -> 'a -> 'a
+
+def f a b = (if true then a else b) with { x = "oops" }
+//│ f: 'a -> 'a -> 'a\x & {x: "oops"}
+
+def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
+//│ f: {x: anything} & 'a -> 'a -> 'a\x & {x: "oops"}
+
+
+({ name = "Bob" } with { age = 123 }).age
+//│ res: 123
+
+({ name = "Bob" } with { age = 123 }).name
+//│ res: "Bob"
+
+({ name = "Bob" } with { name = 123 }).name
+//│ res: 123
+
+
+def getf { f } = f
+//│ getf: {f: 'a} -> 'a
+
+def foo x =
+  let xf = x with { f = 42 }
+  in getf xf
+//│ foo: (~{f: 42} | {f: 'a})\f -> 'a
+
+foo 123
+//│ res: 42
+
+def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
+//│ fooManual: (~{f: 42} | {f: 'a})\f -> 'a
+
+fooManual 123
+//│ res: 42
+
+def foo x =
+  let xf = x with { f = 42 }
+  in add (getf xf) (getf x)
+//│ foo: (~{f: 42} | {f: int})\f & {f: int} -> int
+
+def foo x =
+  let xf = x with { f = 42 }
+  in { l = getf xf; r = getf x; s = x }
+//│ foo: (~{f: 42} | {f: 'a})\f & {f: 'b} & 'c -> {l: 'a, r: 'b, s: 'c}
+
+:e
+foo 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.95: 	foo 42
+//│ ║        	^^^^^^
+//│ ╟── expression of type `42` does not have field 'f'
+//│ ║  l.95: 	foo 42
+//│ ║        	    ^^
+//│ ╟── Note: constraint arises from record literal:
+//│ ║  l.67: 	def getf { f } = f
+//│ ║        	         ^^^^^
+//│ ╟── from argument:
+//│ ║  l.91: 	  in { l = getf xf; r = getf x; s = x }
+//│ ╙──      	                             ^
+//│ res: {l: 42, r: nothing, s: 42} | error
+
+def r = foo (42 with { f = 1 })
+//│ r: {l: 42, r: 1, s: 42 & {f: 1}}
+
+r.s.f
+//│ res: 1
+
+add r.s 1
+//│ res: int
+
