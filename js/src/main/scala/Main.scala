@@ -1,6 +1,5 @@
 import scala.util.Try
 import scala.scalajs.js.annotation.JSExportTopLevel
-import scala.scalajs.js.eval;
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
@@ -8,6 +7,8 @@ import mlscript.utils._
 import mlscript._
 import mlscript.utils.shorthands._
 import scala.util.matching.Regex
+import scala.scalajs.js
+import scala.collection.immutable
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -25,7 +26,7 @@ object Main {
   def update(str: String): Unit = {
     // println(s"Input: $str")
     val target = document.querySelector("#mlscript-output")
-    target.innerHTML = Try {
+    val tryRes = Try[Str] {
       import fastparse._
       import fastparse.Parsed.{Success, Failure}
       import mlscript.{MLParser, TypeError, Origin}
@@ -41,27 +42,82 @@ object Main {
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(pgrm, index) =>
           println(s"Parsed: $pgrm")
-          val (typeCheckResult, hasError) = checkingProgramType(pgrm)
-          if (hasError) { typeCheckResult }
-          else {
-            val backend = new JSBackend()
-            val lines = backend(pgrm)
-            val code = lines.mkString("\n")
-            val sb = new StringBuilder
-            sb ++= typeCheckResult
-            sb ++= htmlLineBreak + "<font color=\"LightBlue\">res</font> = "
-            try sb ++= eval(code).toString catch {
-              case _: Throwable =>
-                sb ++= "<font color=\"red\">Runtime error occurred.</font>"
+          val (typeCheckResult, errorResult) = checkingProgramType(pgrm)
+          errorResult match {
+            case Some(typeCheckResult) => typeCheckResult
+            case None => {
+              val backend = new JSBackend()
+              val lines = backend(pgrm)
+              // I know this is very hacky but using `asIntanceOf` is painful.
+              // TODO: pretty print JavaScript values in a less hacky way.
+              // Maybe I can add a global function for reporting results.
+              val code = s"""(() => {
+                |  let [defs, exprs] = (() => {
+                |    ${lines.mkString("\n")}
+                |  })();
+                |  for (const key of Object.keys(defs)) {
+                |    defs[key] = prettyPrint(defs[key]);
+                |  }
+                |  exprs = exprs.map(prettyPrint);
+                |  return { defs, exprs };
+                |  function prettyPrint(value) {
+                |    switch (typeof value) {
+                |      case "function":
+                |        return value.toString();
+                |      default:
+                |        return JSON.stringify(value, undefined, 2);
+                |    }
+                |  }
+                |})()""".stripMargin
+              // Collect evaluation results.
+              var defResults = new collection.mutable.HashMap[Str, Str]
+              var exprResults: Ls[Str] = Nil
+              val sb = new StringBuilder
+              try {
+                val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
+                results.get("defs") match {
+                  case S(defs) =>
+                    defs.asInstanceOf[js.Dictionary[Str]] foreach {
+                      case (key, value) => defResults += key -> value
+                    }
+                }
+                results.get("exprs") match {
+                  case S(exprs) =>
+                    exprResults = exprs.asInstanceOf[js.Array[Str]].toList
+                }
+              } catch {
+                case e: Throwable =>
+                  sb ++= "<font color=\"red\">Runtime error occurred.</font>"
+                  sb ++= htmlLineBreak + e.getMessage
+              }
+              // Iterate type and assemble something like:
+              // `val <name>: <type> = <value>`
+              typeCheckResult foreach { case (name, ty) =>
+                val res = name match {
+                  case S(name) => defResults get name
+                  case N =>
+                    exprResults match {
+                      case head :: next => {
+                        exprResults = next
+                        S(head)
+                      }
+                      case immutable.Nil => N
+                    }
+                }
+                sb ++= s"""<b>
+                  |  <font color="#93a1a1">val </font>
+                  |  <font color="LightGreen">${name getOrElse "res"}</font>: 
+                  |  <font color="LightBlue">$ty</font>
+                  |</b> = ${res getOrElse "<font color=\"gray\">no value</font>"}
+                  |$htmlLineBreak""".stripMargin
+              }
+              sb.toString
             }
-            sb ++= htmlLineBreak
-            sb ++= lines
-              .map(replaceLeadingSpaces)
-              .mkString(htmlLineBreak, htmlLineBreak, "")
-            sb.toString
           }
       }
-    }.fold(
+    }
+
+    target.innerHTML = tryRes.fold[Str](
       err =>
         s"""
       <font color="Red">
@@ -83,7 +139,7 @@ object Main {
       case N         => line
     }
 
-  def checkingProgramType(pgrm: Pgrm): Str -> Bool = {
+  def checkingProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
@@ -93,6 +149,7 @@ object Main {
     import typer._
 
     val res = new collection.mutable.StringBuilder
+    val results = new collection.mutable.ArrayBuffer[Option[Str] -> Str]
     val stopAtFirstError = true
     var errorOccurred = false
 
@@ -224,6 +281,7 @@ object Main {
           println(s"Typed `${d.nme}` as: $ty")
           println(s" where: ${ty.instantiate(0).showBounds}")
           res ++= formatBinding(d.nme, ty)
+          results append S(d.nme) -> getType(ty).show
         case d @ Def(isrec, nme, R(rhs)) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
           ??? // TODO
@@ -237,6 +295,7 @@ object Main {
               binds.foreach { case (nme, pty) =>
                 ctx += nme -> pty
                 res ++= formatBinding(nme, pty)
+                results append S(nme) -> getType(pty).show
               }
             case L(pty) =>
               val exp = getType(pty)
@@ -244,6 +303,7 @@ object Main {
                 val nme = "res"
                 ctx += nme -> pty
                 res ++= formatBinding(nme, pty)
+                results append N -> getType(pty).show
               }
           }
       } catch {
@@ -259,9 +319,9 @@ object Main {
       }
     }
 
-    res.toString -> errorOccurred
+    results.toList -> (if (errorOccurred) S(res.toString) else N)
   }
 
   private def underline(fragment: Str): Str =
-      s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
+    s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
 }

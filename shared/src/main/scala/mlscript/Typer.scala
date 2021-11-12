@@ -85,6 +85,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     Map(
       "true" -> BoolType,
       "false" -> BoolType,
+      "document" -> BotType,
+      "window" -> BotType,
       "not" -> fun(BoolType, BoolType)(noProv),
       "succ" -> fun(IntType, IntType)(noProv),
       "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),

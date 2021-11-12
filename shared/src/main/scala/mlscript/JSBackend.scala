@@ -127,7 +127,7 @@ class JSBackend {
   // Translate consecutive case branches into a list of if statements.
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
-    case Case(className, body, rest) =>
+      case Case(className, body, rest) =>
         new JSIfStmt(
           new JSInstanceOf(new JSIdent(name), new JSIdent(className.idStr)),
           Ls(new JSReturnStmt(translateTerm(body)))
@@ -146,27 +146,61 @@ class JSBackend {
     }
 
   def apply(pgrm: Pgrm): Ls[Str] = {
-    val stmts: Ls[JSStmt] = pgrm.typeDefs
-      .map { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
-        kind match {
-          case Cls =>
-            classNames += name
-            translateClassDeclaration(name, actualType)
-          case Trt => new JSComment(s"// trait $name")
-          case Als => new JSComment(s"// type alias $name")
-        }
-      }
-      .concat(pgrm.defs.map {
-        case Def(isRecursive, name, L(body)) =>
-          val translatedBody = translateTerm(body)
-          val tempName = getTemporaryName(name)
-          if (tempName =/= name) {
-            letLhsAliasMap += name -> tempName
+    val defResultObjName = getTemporaryName("defs")
+    val exprResultObjName = getTemporaryName("exprs")
+    val stmts: Ls[JSStmt] =
+      JSConstDecl(defResultObjName, JSRecord(Nil)) ::
+        JSConstDecl(exprResultObjName, JSArray(Nil)) ::
+        pgrm.typeDefs
+          .map { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
+            kind match {
+              case Cls =>
+                classNames += name
+                translateClassDeclaration(name, actualType)
+              case Trt => new JSComment(s"// trait $name")
+              case Als => new JSComment(s"// type alias $name")
+            }
           }
-          new JSConstDecl(tempName, translatedBody)
-        case Def(isRecursive, name, R(body)) =>
-          ???
-      })
+          // Generate something like:
+          // ```js
+          // const name = <expr>;
+          // defs.name = name;
+          // ```
+          .concat(pgrm.defs.flatMap {
+            case Def(isRecursive, name, L(body)) =>
+              val translatedBody = translateTerm(body)
+              val tempName = getTemporaryName(name)
+              if (tempName =/= name) {
+                letLhsAliasMap += name -> tempName
+              }
+              new JSConstDecl(tempName, translatedBody) ::
+                new JSExprStmt(
+                  JSAssignExpr(
+                    JSMember(JSIdent(defResultObjName), name),
+                    JSIdent(tempName)
+                  )
+                ) :: Nil
+            case Def(isRecursive, name, R(body)) =>
+              ???
+          })
+          // Generate something like `exprs.push(<expr>)`.
+          .concat(pgrm.statements.zipWithIndex.map {
+            case (term: Term, index) =>
+              new JSExprStmt(
+                JSInvoke(
+                  JSMember(JSIdent(exprResultObjName), "push"),
+                  translateTerm(term)
+                )
+              )
+            case _ => ???
+          })
+          .concat(
+            JSReturnStmt(
+              JSArray(
+                JSIdent(defResultObjName) :: JSIdent(exprResultObjName) :: Nil
+              )
+            ) :: Nil
+          )
     SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
   }
 

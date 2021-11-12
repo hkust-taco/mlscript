@@ -30,20 +30,21 @@ object SourceLine {
 }
 
 class SourceCode(val lines: Ls[SourceLine]) {
-  /**
-    * Concat two parts of source code vertically.
-    * "1 \\ 2" + "3 \\ 4" == "1 \\ 2 \\ 3 \\ 4"
+
+  /** Concat two parts of source code vertically. "1 \\ 2" + "3 \\ 4" == "1 \\ 2
+    * \\ 3 \\ 4"
     *
-    * @param that another part of source code
+    * @param that
+    *   another part of source code
     * @return
     */
   def +(that: SourceCode): SourceCode = new SourceCode(lines ++ that.lines)
 
-  /**
-    * Concat two parts of source code horizontally.
-    * "1 \\ 2" ++ "3 \\ 4" == "1 \\ 2 3 \\ 4"
+  /** Concat two parts of source code horizontally. "1 \\ 2" ++ "3 \\ 4" == "1
+    * \\ 2 3 \\ 4"
     *
-    * @param that another part of source code
+    * @param that
+    *   another part of source code
     * @return
     */
   def ++(that: SourceCode): SourceCode = that.lines match {
@@ -95,6 +96,18 @@ class SourceCode(val lines: Ls[SourceLine]) {
             ::: Ls(SourceLine.from(")"))
         )
     }
+  // Surround the source code with braces in a array style.
+  def array: SourceCode =
+    lines.length match {
+      case 0 => SourceCode.from("[]")
+      case 1 => new SourceCode(lines map { _.between("[", "]") })
+      case _ =>
+        new SourceCode(
+          SourceLine.from("[")
+            :: lines.map({ _.indented.withPostfix(",") })
+            ::: Ls(SourceLine.from("]"))
+        )
+    }
   // Surround the source code with braces in a record style.
   def record: SourceCode =
     lines.length match {
@@ -103,8 +116,9 @@ class SourceCode(val lines: Ls[SourceLine]) {
       case _ =>
         new SourceCode(
           SourceLine.from("{")
-            :: lines.map({ _.indented })
-            ::: Ls(SourceLine.from("}"))
+            :: lines.map({ _.indented.withPostfix(",") })
+            ::: SourceLine.from("}")
+            :: Nil
         )
     }
   // Surround the source code with braces in a block style.
@@ -140,6 +154,12 @@ abstract class JSCode {
 abstract class JSExpr extends JSCode {
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
   def precedence: Int
+}
+
+final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
+  def precedence: Int = 3
+  def toSourceCode: SourceCode =
+    lhs.toSourceCode ++ SourceCode.from(" = ") ++ rhs.toSourceCode
 }
 
 final case class JSPlaceholderExpr() extends JSExpr {
@@ -285,6 +305,15 @@ final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
     )
 }
 
+final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
+  // Precedence of literals is zero.
+  override def precedence: Int = 22
+  // Make
+  override def toSourceCode: SourceCode = SourceCode
+    .concat(items map { _.toSourceCode })
+    .array
+}
+
 final case class JSRecord(entries: Ls[(Str, JSExpr)]) extends JSExpr {
   // Precedence of literals is zero.
   override def precedence: Int = 22
@@ -305,6 +334,10 @@ object JSMember {
 }
 
 abstract class JSStmt extends JSCode
+
+final case class JSExprStmt(expr: JSExpr) extends JSStmt {
+  def toSourceCode: SourceCode = expr.toSourceCode ++ SourceCode.semicolon
+}
 
 // A single if statement without else clauses
 final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt]) extends JSStmt {
