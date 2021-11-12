@@ -1,5 +1,6 @@
 import scala.util.Try
 import scala.scalajs.js.annotation.JSExportTopLevel
+import scala.scalajs.js.eval;
 import org.scalajs.dom
 import org.scalajs.dom.document
 import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
@@ -44,10 +45,20 @@ object Main {
           if (hasError) { typeCheckResult }
           else {
             val backend = new JSBackend()
-            typeCheckResult + backend
-              .apply(pgrm)
+            val lines = backend(pgrm)
+            val code = lines.mkString("\n")
+            val sb = new StringBuilder
+            sb ++= typeCheckResult
+            sb ++= htmlLineBreak + "<font color=\"LightBlue\">res</font> = "
+            try sb ++= eval(code).toString catch {
+              case _: Throwable =>
+                sb ++= "<font color=\"red\">Runtime error occurred.</font>"
+            }
+            sb ++= htmlLineBreak
+            sb ++= lines
               .map(replaceLeadingSpaces)
               .mkString(htmlLineBreak, htmlLineBreak, "")
+            sb.toString
           }
       }
     }.fold(
