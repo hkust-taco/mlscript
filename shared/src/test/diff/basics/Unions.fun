@@ -7,7 +7,7 @@ let f(x: 0 | 1) = succ x
 //│ f: (x: 0 | 1,) -> int
 
 let f(x) = x as 0 | 1
-//│ f: 0 | 1 -> 0 | 1
+//│ f: (0 | 1) -> (0 | 1)
 
 f 1
 f 0
@@ -126,11 +126,11 @@ h(0)
 //│ g: (x: int,) -> int
 //│ res: int
 //│ res: int
-//│ h: 0 | 1 -> int
+//│ h: (0 | 1) -> int
 //│ res: int
 
 let foo(r: { v: 0 } | { v: 1 }) = if r.v < 1 then r.v else 2
-//│ foo: (r: {v: 0 & 'a | 1 & 'a},) -> 'a | 2
+//│ foo: (r: {v: 0 & 'a | 1 & 'a},) -> ('a | 2)
 
 foo({ v: 0 })
 foo({ v: 1 })
@@ -138,10 +138,10 @@ foo({ v: 1 })
 //│ res: 2 | 1
 
 x => foo(x)
-//│ res: (r: {v: 0 & 'a | 1 & 'a},) -> 2 | 'a
+//│ res: (r: {v: 0 & 'a | 1 & 'a},) -> (2 | 'a)
 
 x => foo { v: x }
-//│ res: 0 & 'a | 1 & 'a -> 2 | 'a
+//│ res: (0 & 'a | 1 & 'a) -> (2 | 'a)
 
 
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
@@ -167,9 +167,9 @@ bar(_, 1)
 x => bar(x, x) // TODO simplify better
 x => bar(1, x)
 x => bar(x, 0)
-//│ res: int & 'a -> 'a
-//│ res: 'a -> 'a | 1
-//│ res: int & 'a -> 0 | 'a
+//│ res: (int & 'a) -> 'a
+//│ res: 'a -> ('a | 1)
+//│ res: (int & 'a) -> (0 | 'a)
 
 // :e
 bar(_, _)
@@ -184,20 +184,20 @@ x => bar(bar(0, x), 0)
 x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
-//│ res: int & 'a -> 0 | 'a
-//│ res: int & 'a -> 0 | 'a
-//│ res: int & 'a -> 'a | 0
-//│ res: int & 'a -> 0 | 'a
+//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (int & 'a) -> ('a | 0)
+//│ res: (int & 'a) -> (0 | 'a)
 
 // :e
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
-//│ res: int & 'a -> 0 | 'a | 1
+//│ res: (int & 'a) -> (0 | 'a | 1)
 //│ res: (int & 'a, int & 'a,) -> 'a
 
 // :e // TODO delay tricky constraints for later (instead of eager) resolution:
 (x, y) => bar(bar(x, y), 0)
-//│ res: (int & 'a, int & 'a,) -> 0 | 'a
+//│ res: (int & 'a, int & 'a,) -> (0 | 'a)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
@@ -233,9 +233,9 @@ x => baz(x, 0)
 x => baz(0, x)
 x => baz(x, x)
 (x, y) => baz(x, y)
-//│ res: int & 'a -> 0 | 'a
-//│ res: 'a -> 'a | 0
-//│ res: int & 'a -> 'a
+//│ res: (int & 'a) -> (0 | 'a)
+//│ res: 'a -> ('a | 0)
+//│ res: (int & 'a) -> 'a
 //│ res: (int & 'a, 'a,) -> 'a
 
 
@@ -271,15 +271,15 @@ x => baz(1, x)
 x => baz(x, 1)
 //│ res: 0
 //│ res: 1
-//│ res: 'a -> 'a | 0
-//│ res: 'a -> 'a | 1
-//│ res: int & 'a -> 1 | 'a
+//│ res: 'a -> ('a | 0)
+//│ res: 'a -> ('a | 1)
+//│ res: (int & 'a) -> (1 | 'a)
 
 // :e
 x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
-//│ res: int & 'a -> 0 | 'a
-//│ res: int & 'a -> 'a
+//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (int & 'a) -> 'a
 //│ res: (int & 'a, 'a,) -> 'a
 

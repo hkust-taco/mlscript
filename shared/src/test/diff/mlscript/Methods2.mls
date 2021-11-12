@@ -6,7 +6,7 @@ class Option[A]
 class Some[A]: Option[A] & { payload: A }
     method Get = this.payload
 //│ Defined class Some
-//│ Defined Some.Get: some & {payload: 'a} -> 'a
+//│ Defined Some.Get: (some & {payload: 'a}) -> 'a
 
 class None[A]: Option[A]
     method Get = error
@@ -39,9 +39,9 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons
-//│ Defined Cons.Size: cons & {head: anything, tail: list} -> int
-//│ Defined Cons.HeadOption: cons & {head: 'a, tail: list} -> some & {payload: 'a}
-//│ Defined Cons.Map: cons & {head: 'a, tail: list} -> ('a -> 'b) -> cons & {head: 'b, tail: list}
+//│ Defined Cons.Size: (cons & {head: anything, tail: list}) -> int
+//│ Defined Cons.HeadOption: (cons & {head: 'a, tail: list}) -> (some & {payload: 'a})
+//│ Defined Cons.Map: (cons & {head: 'a, tail: list}) -> ('a -> 'b) -> (cons & {head: 'b, tail: list})
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│ l: cons & {head: 0, tail: cons & {head: 1, tail: nil}}

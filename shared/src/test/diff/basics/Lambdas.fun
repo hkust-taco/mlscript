@@ -20,10 +20,10 @@ let id = v => v
 //│ id: 'a -> 'a
 
 f => f f
-//│ res: ('a -> 'b) & 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 
 f => id f id f id
-//│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd) & 'b -> 'd
+//│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd & 'b) -> 'd
 
 :pe
 let oops = hu(h
@@ -54,7 +54,7 @@ let f x y z = { log x; if y < z then y else z }
 //│ f: int -> int
 //│ f: int -> int -> int
 //│ f: bool -> 'a -> 'a -> 'a
-//│ f: anything -> int & 'a -> int & 'a -> 'a
+//│ f: anything -> (int & 'a) -> (int & 'a) -> 'a
 
 // TODO
 // let f (x: int) = x + 1

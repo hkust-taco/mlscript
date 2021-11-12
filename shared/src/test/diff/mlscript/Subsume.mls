@@ -113,7 +113,7 @@ def id n = add n 1
 //│ ╟── expression of type `int` does not match type `'a`
 //│ ║  l.99: 	def id n = add n 1
 //│ ║        	           ^^^^^^^
-//│ ╟── but it flows into function of type `int & ?a -> ?b | int`
+//│ ╟── but it flows into function of type `(int & ?a) -> (?b | int)`
 //│ ║  l.99: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
 //│ ╟── which does not match type `'a -> 'a`
@@ -123,7 +123,7 @@ def id n = add n 1
 
 :e
 def id (x: int) = x
-//│ int & 'a -> 'a  <:  id: 'a -> 'a
+//│ (int & 'a) -> 'a  <:  id: 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.125: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
@@ -137,18 +137,18 @@ def id (x: int) = x
 
 
 def f: (int & 'a) -> 'a
-//│ f: int & 'a -> 'a
+//│ f: (int & 'a) -> 'a
 
 def impl a = a a
-//│ impl: ('a -> 'b) & 'a -> 'b
+//│ impl: ('a -> 'b & 'a) -> 'b
 
 :e
 def f = impl
-//│ ('a -> 'b) & 'a -> 'b  <:  f: int & 'a -> 'a
+//│ ('a -> 'b & 'a) -> 'b  <:  f: (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.146: 	def f = impl
 //│ ║         	        ^^^^
-//│ ╟── expression of type `int & 'a` does not match type `?a | int & 'a -> ?b`
+//│ ╟── expression of type `int & 'a` does not match type `(?a | int & 'a) -> ?b`
 //│ ║  l.139: 	def f: (int & 'a) -> 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -161,19 +161,19 @@ f 1
 
 def f: (int & 'a) -> (int & 'a) -> 'a 
 def f a b = if gt a b then a else b
-//│ f: int & 'a -> int & 'a -> 'a
-//│ int & 'a -> int & 'a -> 'a  <:  f: int & 'a -> int & 'a -> 'a
+//│ f: (int & 'a) -> (int & 'a) -> 'a
+//│ (int & 'a) -> (int & 'a) -> 'a  <:  f: (int & 'a) -> (int & 'a) -> 'a
 
 f 1 
-//│ res: int & 'a -> 'a | 1
+//│ res: (int & 'a) -> ('a | 1)
 
 :e
 def f a b = if gt a b then a else b b // mistake!
-//│ int & 'a -> nothing -> 'a  <:  f: int & 'a -> int & 'a -> 'a
+//│ (int & 'a) -> nothing -> 'a  <:  f: (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.171: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & 'a` does not match type `?a | int & 'a -> ?b`
+//│ ╟── expression of type `int & 'a` does not match type `(?a | int & 'a) -> ?b`
 //│ ║  l.162: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                      ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -181,7 +181,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^^^
 
 f 1 
-//│ res: int & 'a -> 'a | 1
+//│ res: (int & 'a) -> ('a | 1)
 
 res 2
 //│ res: 2 | 1
@@ -190,18 +190,18 @@ res 2
 :e
 def g: (int & 'a) -> 'a
 def g a = add a 1
-//│ g: int & 'a -> 'a
-//│ int -> int  <:  g: int & 'a -> 'a
+//│ g: (int & 'a) -> 'a
+//│ int -> int  <:  g: (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.192: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
 //│ ║  l.192: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
-//│ ╟── but it flows into function of type `int & ?a -> ?b | int`
+//│ ╟── but it flows into function of type `(int & ?a) -> (?b | int)`
 //│ ║  l.192: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
-//│ ╟── which does not match type `int & 'a -> 'a`
+//│ ╟── which does not match type `(int & 'a) -> 'a`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.191: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^

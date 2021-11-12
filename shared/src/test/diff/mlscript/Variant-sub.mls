@@ -5,18 +5,18 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: 'a -> some & {v: 'a}
+//│ Some: 'a -> (some & {v: 'a})
 //│ None: none
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | _ -> opt }
-//│ flatMap: ('a -> 'b) -> some & {v: 'a} | 'b & ~some -> 'b
+//│ flatMap: ('a -> 'b) -> (some & {v: 'a} | 'b & ~some) -> 'b
 
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
 flatMap f "oops"
-//│ f: 'a -> some & {v: 'a}
+//│ f: 'a -> (some & {v: 'a})
 //│ res: some & {v: 1}
 //│ res: some & {v: nothing} | none
 //│ res: some & {v: nothing} | "oops"
@@ -53,7 +53,7 @@ rec def evalOpt x = case x of {
         Some (add l r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (lit & {v: int} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a}) as 'a -> some & {v: int} | noneBecause & {reason: string}
+//│ evalOpt: (lit & {v: int} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a} as 'a) -> (some & {v: int} | noneBecause & {reason: string})
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: some & {v: int} | noneBecause & {reason: string}

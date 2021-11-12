@@ -11,13 +11,13 @@ def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ('a -> 'b) -> some & {value: 'a} | none -> 'b | none
+//│ flatMap: ('a -> 'b) -> (some & {value: 'a} | none) -> ('b | none)
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ('a -> 'b) -> some & {value: 'a} | 'b & ~some -> 'b
+//│ flatMap2: ('a -> 'b) -> (some & {value: 'a} | 'b & ~some) -> 'b
 
 def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> some & 'a | 'b & ~some -> 'b
+//│ flatMap3: ('a -> 'b) -> (some & 'a | 'b & ~some) -> 'b
 
 
 
@@ -33,13 +33,13 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> 'b) -> (cons & {tail: 'c, value: 'a} | none) as 'c -> (cons & {tail: 'd, value: 'b} | none) as 'd
+//│ map2: ('a -> 'b) -> (cons & {tail: 'c, value: 'a} | none as 'c) -> (cons & {tail: 'd, value: 'b} | none as 'd)
 
 
 
 
 def safeDiv x (y: ~0) = div x y
-//│ safeDiv: int -> int & ~0 -> int
+//│ safeDiv: int -> (int & ~0) -> int
 
 :e
 safeDiv 1 0
@@ -55,20 +55,20 @@ safeDiv 1 0
 //│ res: int | error
 
 fun x -> safeDiv 1 x
-//│ res: int & ~0 -> int
+//│ res: (int & ~0) -> int
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: int & ~0 | ~int -> int | none
+//│ res: (int & ~0 | ~int) -> (int | none)
 
 // TOOD mayeb we shouldn't refine x's type here...
 fun (x: int) -> safeDiv 1 x
-//│ res: int & ~0 -> int
+//│ res: (int & ~0) -> int
 
 def tryDiv: int -> int -> Option[int]
-//│ tryDiv: int -> int -> some & {value: int} | none
+//│ tryDiv: int -> int -> (some & {value: int} | none)
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> 0 | int & ~0 -> none | some & {value: int}  <:  tryDiv: int -> int -> some & {value: int} | none
+//│ int -> (0 | int & ~0) -> (none | some & {value: int})  <:  tryDiv: int -> int -> (some & {value: int} | none)
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1

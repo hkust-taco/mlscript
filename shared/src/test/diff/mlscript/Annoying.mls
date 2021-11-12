@@ -17,7 +17,7 @@ def foo: (~ 'a \ x) -> 'a -> 'a
 //│ foo: ~'a\x -> 'a -> 'a
 
 foo 1
-//│ res: 'a & ~1 -> 'a
+//│ res: ('a & ~1) -> 'a
 
 def foo: (~ 'a \ x) -> 'a
 //│ foo: anything -> nothing
@@ -56,7 +56,7 @@ def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 
 :e
 def test x = case x of { int -> x.f | _ -> x.x }
-//│ int & {f: 'a} | {x: 'a} & ~int -> 'a  <:  test: anything -> nothing
+//│ (int & {f: 'a} | {x: 'a} & ~int) -> 'a  <:  test: anything -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -113,7 +113,7 @@ class C: { }
 //│ Defined class C
 
 def test: (A & { a: 'a } | B & { b: 'a } | C & { c: 'a }) -> 'a
-//│ test: a & {a: 'a} | b & {b: 'a} | c & {c: 'a} -> 'a
+//│ test: (a & {a: 'a} | b & {b: 'a} | c & {c: 'a}) -> 'a
 
 test (error: A & { a: int })
 test (error: B & { b: int })
@@ -140,7 +140,7 @@ test (error: B & { c: int })
 
 
 def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
-//│ test: a & {y: 'b, x: 'a} | b & {y: 'b, x: 'a} | c & {y: 'b, x: 'a} -> {l: 'a, r: 'b}
+//│ test: (a & {y: 'b, x: 'a} | b & {y: 'b, x: 'a} | c & {y: 'b, x: 'a}) -> {l: 'a, r: 'b}
 
 test (error: A & { x: int; y: string })
 test (error: B & { x: int; y: string })
@@ -167,7 +167,7 @@ test (error: A & { x: int })
 
 
 def test: (A & { xA: 'a; yA: 'b } | B & { xB: 'a; yB: 'b } | C & { xC: 'a; yC: 'b }) -> { l: 'a; r: 'b }
-//│ test: a & {yA: 'b, xA: 'a} | b & {xB: 'a, yB: 'b} | c & {yC: 'b, xC: 'a} -> {l: 'a, r: 'b}
+//│ test: (a & {yA: 'b, xA: 'a} | b & {xB: 'a, yB: 'b} | c & {yC: 'b, xC: 'a}) -> {l: 'a, r: 'b}
 
 test (error: A & { xA: int; yA: string })
 test (error: B & { xB: int; yB: string })

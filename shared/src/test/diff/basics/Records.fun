@@ -80,7 +80,7 @@ r.w
 //│ res: error
 
 let rec sumHeads = x => x.head + sumHeads x.tail
-//│ sumHeads: {head: int, tail: 'a} as 'a -> int
+//│ sumHeads: ({head: int, tail: 'a} as 'a) -> int
 
 let rec ouroboros = {head: 0, tail: ouroboros, eyes: {l: 1, r: 2}}
 //│ ouroboros: {head: 0, tail: 'a, eyes: {l: 1, r: 2}} as 'a

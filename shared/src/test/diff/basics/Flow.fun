@@ -9,8 +9,8 @@ data R x
 //│ Desugared: def R: [x] -> x -> R[x]
 //│ Defined class L
 //│ Defined class R
-//│ L: 'a -> l & {x: 'a}
-//│ R: 'a -> r & {x: 'a}
+//│ L: 'a -> (l & {x: 'a})
+//│ R: 'a -> (r & {x: 'a})
 
 // TODO flow-type
 :e
@@ -21,7 +21,7 @@ let f x = if x is L y then y else 0
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.17: 	let f x = if x is L y then y else 0
 //│ ╙──      	                           ^
-//│ f: error -> error | 0
+//│ f: error -> (error | 0)
 
 // TODO
 // true and false

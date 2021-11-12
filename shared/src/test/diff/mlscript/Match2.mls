@@ -6,7 +6,7 @@ def foo x = case x of
   { Test -> x.value
   | _ -> 1
   }
-//│ foo: test & {value: 'a} | ~test -> 'a | 1
+//│ foo: (test & {value: 'a} | ~test) -> ('a | 1)
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
@@ -26,14 +26,14 @@ def bar x = case x of
   { Test -> x.value
   | Toast -> x.name
   }
-//│ bar: test & {value: 'a} | toast & {name: 'a} -> 'a
+//│ bar: (test & {value: 'a} | toast & {name: 'a}) -> 'a
 
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: int & ?a} -> test & {value: ?a}` does not match type `test & {value: ?b} & ?c | toast & {name: ?d} & ?e`
+//│ ╟── expression of type `{value: int & ?a} -> (test & {value: ?a})` does not match type `test & {value: ?b} & ?c | toast & {name: ?d} & ?e`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,7 +59,7 @@ def baz x = case x of
   { Test -> x
   | Toast -> x
   }
-//│ baz: test & 'a | toast & 'a -> 'a
+//│ baz: (test & 'a | toast & 'a) -> 'a
 
 :e
 baz "oops"

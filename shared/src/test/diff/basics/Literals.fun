@@ -69,13 +69,13 @@ false as 1
 //│ res: 1
 
 let f = b => if b then 0 else 1
-//│ f: bool -> 0 | 1
+//│ f: bool -> (0 | 1)
 
 let pred = n => 0 < n
 //│ pred: int -> bool
 
 let g = x => if pred x then x else f false
-//│ g: int & 'a -> 'a | 1 | 0
+//│ g: (int & 'a) -> ('a | 1 | 0)
 
 g 3
 //│ res: 1 | 0 | 3
@@ -84,7 +84,7 @@ g / succ 3
 //│ res: int
 
 x => if x then x else f false
-//│ res: bool & 'a -> 'a | 1 | 0
+//│ res: (bool & 'a) -> ('a | 1 | 0)
 
 res false
 //│ res: 1 | 0 | false
@@ -133,5 +133,5 @@ let takeWhat y = if y < 0 then take0 y else take1 y
 //│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:200)
 
 let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
-//│ takeWhat: nothing -> 0 | 1
+//│ takeWhat: nothing -> (0 | 1)
 

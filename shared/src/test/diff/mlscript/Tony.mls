@@ -6,7 +6,7 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> some & 'a | 'b & ~some -> 'b
+//│ flatMap3: ('a -> 'b) -> (some & 'a | 'b & ~some) -> 'b
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
@@ -24,7 +24,7 @@ flatMap3 (fun x -> x.value) arg
 
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: some & {value: 'a} | 'a & ~some -> 'a
+//│ foo: (some & {value: 'a} | 'a & ~some) -> 'a
 
 foo arg
 //│ res: 42 | none
@@ -45,13 +45,13 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: (none & ~'a | some & {value: 42} -> 'a) -> 'a | none
+//│ res: ((none & ~'a | some & {value: 42}) -> 'a) -> ('a | none)
 
 
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: some & 'a | 'a & ~some -> 'a
+//│ foo: (some & 'a | 'a & ~some) -> 'a
 
 foo 1
 //│ res: 1
@@ -60,13 +60,13 @@ foo 1
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> 'a | none
+//│ simpler: (1 -> 'a) -> ('a | none)
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> some & 'a | none & 'b -> 'b
+//│ simpler: ('a -> 'b) -> (some & 'a | none & 'b) -> 'b
 
 simpler (fun x -> x.value)
-//│ res: some & {value: 'a} | none & 'a -> 'a
+//│ res: (some & {value: 'a} | none & 'a) -> 'a
 
 :e
 res 1

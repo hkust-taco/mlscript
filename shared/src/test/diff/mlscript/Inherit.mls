@@ -40,7 +40,7 @@ c: { name: string }
 def f x = case x of {
   | Parent -> x.name
   }
-//│ f: parent & {name: 'a} -> 'a
+//│ f: (parent & {name: 'a}) -> 'a
 
 f c
 //│ res: "Bob"
@@ -52,7 +52,7 @@ f (c: Parent)
 def f x = case x of {
   | Child -> x.name
   }
-//│ f: child & {name: 'a} -> 'a
+//│ f: (child & {name: 'a}) -> 'a
 
 f c
 //│ res: "Bob"
@@ -81,7 +81,7 @@ def f x = case x of {
   | Parent -> x.name
   | _ -> ""
   }
-//│ f: parent & {name: 'a} | ~parent -> 'a | ""
+//│ f: (parent & {name: 'a} | ~parent) -> ('a | "")
 
 f c
 //│ res: "Bob" | ""
@@ -94,7 +94,7 @@ def f x = case x of {
   | Parent -> x.name
   | Child -> x.name
   }
-//│ f: parent & {name: 'a} -> 'a
+//│ f: (parent & {name: 'a}) -> 'a
 
 f c
 //│ res: "Bob"

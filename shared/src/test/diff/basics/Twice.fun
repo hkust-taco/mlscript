@@ -1,12 +1,12 @@
 
 let twice f x = f / f x
-//│ twice: ('a -> 'b & 'a) -> 'a -> 'b
+//│ twice: ('a -> ('b & 'a)) -> 'a -> 'b
 
 twice(x => x + 1)
 //│ res: int -> int
 
 twice twice
-//│ res: ('a -> 'a & 'b) -> 'a -> 'b
+//│ res: ('a -> ('a & 'b)) -> 'a -> 'b
 
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)
@@ -17,10 +17,10 @@ let f = x => 1, x
 //  because function types would effectively become non-mergeable without losing precsion...
 // (I found this example while reading the HN thread: https://news.ycombinator.com/item?id=13783237)
 twice f
-//│ res: 'a -> (1, 'c | 'a | 'b,) as 'b
+//│ res: 'a -> ((1, 'c | 'a | 'b,) as 'b)
 
 twice / x => x, x
-//│ res: 'a -> ('c | 'a | 'b, 'c | 'a | 'b,) as 'b
+//│ res: 'a -> (('c | 'a | 'b, 'c | 'a | 'b,) as 'b)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }

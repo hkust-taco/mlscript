@@ -3,7 +3,7 @@ class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: int & 'a} -> test1 & {x: 'a}
+//│ res: {x: int & 'a} -> (test1 & {x: 'a})
 
 Test1 { x = 123 }
 //│ res: test1 & {x: 123}
@@ -25,12 +25,12 @@ Test1 { x = "oops" }
 //│ res: test1 & {x: "oops"} | error
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: int & 'a -> test1 & {x: 'a}
+//│ Test1: (int & 'a) -> (test1 & {x: 'a})
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: int & 'a -> test11 & {x: 'a}
+//│ Test11: (int & 'a) -> (test11 & {x: 'a})
 
 
 :e
@@ -119,7 +119,7 @@ type TypeC = TypeA
 
 // FIXME? maybe x's type should be upcasted in the body
 def test = fun (x: TypeB) -> x
-//│ test: int & 'a -> 'a
+//│ test: (int & 'a) -> 'a
 
 
 
@@ -159,20 +159,20 @@ id: Runaway2
 //│ ╟── expression of type `{x: ?a -> ?a}` is not a function
 //│ ║  l.128: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference of type `({x: ?a0 -> ?a0} -> ({x: ?a1 -> ?a1} -> ?b) as ?b) & ?c -> ?c | {x: ?a2 -> ?a2}`
+//│ ╟── but it flows into reference of type `({x: ?a0 -> ?a0} -> ({x: ?a1 -> ?a1} -> ?b as ?b) & ?c) -> (?c | {x: ?a2 -> ?a2})`
 //│ ║  l.155: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── which does not match type `({x: ?a3 -> ?a3} -> ?d) as ?d`
+//│ ╟── which does not match type `{x: ?a3 -> ?a3} -> ?d as ?d`
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.151: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
 //│ ║  l.155: 	id: Runaway2
 //│ ╙──       	    ^^^^^^^^
-//│ res: ({x: 'a -> 'a} -> 'b) as 'b
+//│ res: {x: 'a -> 'a} -> 'b as 'b
 
 error: Runaway2
-//│ res: ({x: 'a -> 'a} -> 'b) as 'b
+//│ res: {x: 'a -> 'a} -> 'b as 'b
 
 :e
 error: {x: int} -> nothing : Runaway2
@@ -185,8 +185,8 @@ error: {x: int} -> nothing : Runaway2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.178: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
-//│ res: ({x: 'a -> 'a} -> 'b) as 'b
+//│ res: {x: 'a -> 'a} -> 'b as 'b
 
 error: {x: 'x -> 'x} -> nothing : Runaway2
-//│ res: ({x: 'a -> 'a} -> 'b) as 'b
+//│ res: {x: 'a -> 'a} -> 'b as 'b
 

@@ -50,7 +50,7 @@ T A
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
-//│ res: (anything -> a) & t | error
+//│ res: anything -> a & t | error
 
 :e
 T (B {})

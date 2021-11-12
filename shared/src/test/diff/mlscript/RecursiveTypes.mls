@@ -1,93 +1,93 @@
 
 // From Simple-sub tests:
 let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
-//│ res: (anything -> anything -> anything -> anything -> anything -> anything -> 'a) as 'a
+//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
 
 
 
 rec def l a = l
-//│ l: (anything -> 'a) as 'a
+//│ l: anything -> 'a as 'a
 
 if true then l else l
-//│ res: (anything -> 'a) as 'a
+//│ res: anything -> 'a as 'a
 
 
 
 rec def l a a a = l
-//│ l: (anything -> anything -> anything -> 'a) as 'a
+//│ l: anything -> anything -> anything -> 'a as 'a
 
 
 rec def r a a = l
-//│ r: (anything -> anything -> anything -> 'a) as 'a
+//│ r: anything -> anything -> anything -> 'a as 'a
 
 rec def r a a = l
-//│ r: (anything -> anything -> anything -> 'a) as 'a
+//│ r: anything -> anything -> anything -> 'a as 'a
 
 
 rec def r a a = r
-//│ r: (anything -> anything -> 'a) as 'a
+//│ r: anything -> anything -> 'a as 'a
 
 
 if true then l else r
-//│ res: (anything -> anything -> anything -> anything -> anything -> anything -> 'a) as 'a
+//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
 
 if true then l else r
-//│ res: (anything -> anything -> anything -> anything -> anything -> anything -> 'a) as 'a
+//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
 
 
 
 rec def l (a: int) (a: int) = l
 rec def r (a: bool) (a: bool) (a: bool) = r
-//│ l: (int -> int -> 'a) as 'a
-//│ r: (bool -> bool -> bool -> 'a) as 'a
+//│ l: int -> int -> 'a as 'a
+//│ r: bool -> bool -> bool -> 'a as 'a
 
 if true then l else r
-//│ res: (nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a) as 'a
+//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
 
 if true then l else r
-//│ res: (nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a) as 'a
+//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
 
 if true then (fun x -> add x 1) else (fun y -> not y)
-//│ res: nothing -> int | bool
+//│ res: nothing -> (int | bool)
 
 if true then (fun x -> add x 1) else (fun y -> not y)
-//│ res: nothing -> int | bool
+//│ res: nothing -> (int | bool)
 
 
 
 rec def l (a: int) (a: bool) = l
 rec def r (a: int) (a: bool) (a: bool) = r
-//│ l: (int -> bool -> 'a) as 'a
-//│ r: (int -> bool -> bool -> 'a) as 'a
+//│ l: int -> bool -> 'a as 'a
+//│ r: int -> bool -> bool -> 'a as 'a
 
 if true then l else r
-//│ res: (int -> bool -> nothing -> nothing -> nothing -> bool -> 'a) as 'a
+//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
 
 if true then l else r
-//│ res: (int -> bool -> nothing -> nothing -> nothing -> bool -> 'a) as 'a
+//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
 
 
 
 rec def l (a: int) b = if true then l else b
 rec def r (a: int) b c = if true then r else if true then b else c
-//│ l: (int -> 'b | ('c -> 'a | 'c)) as 'a
-//│ r: (int -> 'b | ('c -> 'c -> 'a | 'c)) as 'a
+//│ l: int -> ('b | 'c -> ('a | 'c)) as 'a
+//│ r: int -> ('b | 'c -> 'c -> ('a | 'c)) as 'a
 
 if true then l else r
-//│ res: (int -> 'b | ('c & 'd -> (int & 'e -> (int & 'c -> (int & 'd -> 'c & 'e -> 'a | 'c | 'd | 'e) | 'c) | 'd | 'e) | 'c)) as 'a
+//│ res: int -> ('b | ('c & 'd) -> ((int & 'e) -> ((int & 'c) -> ((int & 'd) -> ('c & 'e) -> ('a | 'c | 'd | 'e) | 'c) | 'd | 'e) | 'c)) as 'a
 
 if true then l else r
-//│ res: (int -> 'b | ('c & 'd -> (int & 'e -> (int & 'c -> (int & 'd -> 'c & 'e -> 'a | 'c | 'd | 'e) | 'c) | 'd | 'e) | 'c)) as 'a
+//│ res: int -> ('b | ('c & 'd) -> ((int & 'e) -> ((int & 'c) -> ((int & 'd) -> ('c & 'e) -> ('a | 'c | 'd | 'e) | 'c) | 'd | 'e) | 'c)) as 'a
 
 
 
 rec def l (a: int) (b: int) = l
-//│ l: (int -> int -> 'a) as 'a
+//│ l: int -> int -> 'a as 'a
 
 rec def r (a: int) (b: int) (c: int) = r
-//│ r: (int -> int -> int -> 'a) as 'a
+//│ r: int -> int -> int -> 'a as 'a
 
 if true then l else r
-//│ res: (int -> int -> int -> int -> int -> int -> 'a) as 'a
+//│ res: int -> int -> int -> int -> int -> int -> 'a as 'a
 
 

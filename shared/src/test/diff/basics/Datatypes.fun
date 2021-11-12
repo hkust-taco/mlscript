@@ -62,7 +62,7 @@ data type Bool2 of True2 & False2
 //│ ╙──      	                           ^^^^^^
 //│ Defined type Bool2
 //│ Defined class &
-//│ &: 'a -> 'b -> & & {True2: 'a, False2: 'b}
+//│ &: 'a -> 'b -> (& & {True2: 'a, False2: 'b})
 
 data type Bool3 of
   True3; False3
@@ -137,7 +137,7 @@ data type List a of
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: nil
-//│ Cons: (head: 'a,) -> (tail: (nil | cons & {head: 'a, tail: 'b}) as 'b,) -> (cons & {head: 'a, tail: 'd | nil | 'c}) as 'c
+//│ Cons: (head: 'a,) -> (tail: nil | cons & {head: 'a, tail: 'b} as 'b,) -> (cons & {head: 'a, tail: 'd | nil | 'c} as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -154,7 +154,7 @@ data type Ls of LsA a
 //│ ╙──       	                    ^
 //│ Defined type Ls
 //│ Defined class LsA
-//│ LsA: 'a -> lsA & {a: 'a}
+//│ LsA: 'a -> (lsA & {a: 'a})
 
 :p
 data type Ls2 of LsA2 `a
@@ -164,7 +164,7 @@ data type Ls2 of LsA2 `a
 //│ Desugared: def LsA2: [] -> 'a -> LsA2[]
 //│ Defined type Ls2
 //│ Defined class LsA2
-//│ LsA2: anything -> lsA2 & {`a: nothing}
+//│ LsA2: anything -> (lsA2 & {`a: nothing})
 
 Nil
 Cons
@@ -172,10 +172,10 @@ Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
 //│ res: nil
-//│ res: (head: 'a,) -> (tail: (nil | cons & {head: 'a, tail: 'b}) as 'b,) -> (cons & {head: 'a, tail: 'd | nil | 'c}) as 'c
-//│ res: (tail: (nil | cons & {head: 'b, tail: 'a}) as 'a,) -> (cons & {head: 'b | 1, tail: 'd | nil | 'c}) as 'c
-//│ res: (cons & {head: 2, tail: 'b | nil | 'a}) as 'a
-//│ res: (cons & {head: 2 | 1, tail: 'b | nil | 'a}) as 'a
+//│ res: (head: 'a,) -> (tail: nil | cons & {head: 'a, tail: 'b} as 'b,) -> (cons & {head: 'a, tail: 'd | nil | 'c} as 'c)
+//│ res: (tail: nil | cons & {head: 'b, tail: 'a} as 'a,) -> (cons & {head: 'b | 1, tail: 'd | nil | 'c} as 'c)
+//│ res: cons & {head: 2, tail: 'b | nil | 'a} as 'a
+//│ res: cons & {head: 2 | 1, tail: 'b | nil | 'a} as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -202,7 +202,7 @@ not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.201: 	(Cons 4).head
 //│ ║         	        ^^^^^
-//│ ╟── expression of type `(tail: (nil | cons & {head: ?b, tail: ?a}) as ?a,) -> (cons & {head: ?b | 4, tail: ?d | nil | ?c}) as ?c` does not have field 'head'
+//│ ╟── expression of type `(tail: nil | cons & {head: ?b, tail: ?a} as ?a,) -> (cons & {head: ?b | 4, tail: ?d | nil | ?c} as ?c)` does not have field 'head'
 //│ ║  l.127: 	data type List a of
 //│ ║         	               ^^^^
 //│ ║  l.128: 	  Nil
@@ -219,7 +219,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `2` does not match type `(nil | cons & {head: ?b, tail: ?a}) as ?a`
+//│ ╟── expression of type `2` does not match type `nil | cons & {head: ?b, tail: ?a} as ?a`
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
@@ -228,7 +228,7 @@ Cons 1 2
 //│ ╟── from applied type reference:
 //│ ║  l.129: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: (cons & {head: 1, tail: 'b | nil | 'a}) as 'a | error
+//│ res: (cons & {head: 1, tail: 'b | nil | 'a} as 'a) | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

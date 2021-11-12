@@ -64,10 +64,10 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> crazy & {name: 'a} & 'a
+//│ Crazy: 'a -> (crazy & {name: 'a} & 'a)
 
 Crazy
-//│ res: 'a -> crazy & {name: 'a} & 'a
+//│ res: 'a -> (crazy & {name: 'a} & 'a)
 
 def c = Crazy({ name = "Bob"; age = 42 })
 //│ c: crazy & {name: "Bob" & {name: "Bob", age: 42}, age: 42}

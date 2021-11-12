@@ -563,7 +563,7 @@ x => h / succ x
 //│ ╟── from argument:
 //│ ║  l.499: 	  succ / f y
 //│ ╙──       	           ^
-//│ res: int -> int | error
+//│ res: int -> (int | error)
 
 :e
 let mkArg2 = a => {prop: succ a}
@@ -618,7 +618,7 @@ i arg
 //│ res: int | error
 
 let test x y = if x.prop then i x else y
-//│ test: {prop: bool, fld: {prop: int}} -> 'a -> int | 'a
+//│ test: {prop: bool, fld: {prop: int}} -> 'a -> (int | 'a)
 
 :e
 test arg2
@@ -640,7 +640,7 @@ test arg2
 //│ ╟── from argument:
 //│ ║  l.620: 	let test x y = if x.prop then i x else y
 //│ ╙──       	                                ^
-//│ res: ('a -> int | 'a) | error
+//│ res: 'a -> (int | 'a) | error
 
 let mkArg = a => {prop: a}
 h / mkArg 1

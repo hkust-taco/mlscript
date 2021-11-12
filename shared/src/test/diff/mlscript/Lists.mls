@@ -7,17 +7,17 @@ type List[A] = Nil | Cons[A]
 //│ Defined type List
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
-//│ originalCons: {head: 'a, tail: nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b} -> cons & {head: 'a, tail: 'b}
+//│ originalCons: {head: 'a, tail: nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)} as 'c) & 'b} -> (cons & {head: 'a, tail: 'b})
 
 def Nil = Nil {}
 //│ Nil: nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b -> cons & {head: 'a, tail: 'b}
+//│ Cons: 'a -> (nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)} as 'c) & 'b) -> (cons & {head: 'a, tail: 'b})
 
 
 Cons 2
-//│ res: nil & 'a | (cons & {head: anything, tail: 'c & (nil | 'b)}) as 'b & 'a -> cons & {head: 2, tail: 'a}
+//│ res: (nil & 'a | (cons & {head: anything, tail: 'c & (nil | 'b)} as 'b) & 'a) -> (cons & {head: 2, tail: 'a})
 
 def c = Cons 2 Nil
 //│ c: cons & {head: 2, tail: nil}
@@ -67,11 +67,11 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b -> cons & {head: 'a, tail: 'b}
+//│ Cons: 'a -> (nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)} as 'c) & 'b) -> (cons & {head: 'a, tail: 'b})
 
 
 Cons 2
-//│ res: nil & 'a | (cons & {head: anything, tail: 'c & (nil | 'b)}) as 'b & 'a -> cons & {head: 2, tail: 'a}
+//│ res: (nil & 'a | (cons & {head: anything, tail: 'c & (nil | 'b)} as 'b) & 'a) -> (cons & {head: 2, tail: 'a})
 
 Cons 2 Nil
 //│ res: cons & {head: 2, tail: nil}
@@ -84,10 +84,10 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	Cons 1 res
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `2` does not match type `(nil | cons & {head: ?b, tail: ?a}) as ?a`
+//│ ╟── expression of type `2` does not match type `nil | cons & {head: ?b, tail: ?a} as ?a`
 //│ ║  l.76: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `(nil | cons & {head: ?d, tail: ?c}) as ?c`
+//│ ╟── but it flows into reference with expected type `nil | cons & {head: ?d, tail: ?c} as ?c`
 //│ ║  l.83: 	Cons 1 res
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -128,7 +128,7 @@ Cons 1 (id res)
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
-//│ Cons: 'a -> cons & {head: 'a, tail: nil}
+//│ Cons: 'a -> (cons & {head: 'a, tail: nil})
 
 Cons 1
 //│ res: cons & {head: 1, tail: nil}
@@ -146,12 +146,12 @@ c.head
 
 def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
-//│ c: 'a -> (nil | cons & {head: 'a, tail: 'b}) as 'b -> (nil | cons & {head: 'a, tail: 'c}) as 'c
-//│ res: (nil | cons & {head: 1 | 2, tail: 'a}) as 'a
+//│ c: 'a -> (nil | cons & {head: 'a, tail: 'b} as 'b) -> (nil | cons & {head: 'a, tail: 'c} as 'c)
+//│ res: nil | cons & {head: 1 | 2, tail: 'a} as 'a
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
-//│ c: 'a -> nil & 'l | (cons & {head: anything, tail: 'c & (nil | 'b)}) as 'b & 'l -> cons & {head: 'a, tail: nil & 'l | (cons & {head: anything, tail: 'e | nil | 'd}) as 'd & 'l}
+//│ c: 'a -> (nil & 'l | (cons & {head: anything, tail: 'c & (nil | 'b)} as 'b) & 'l) -> (cons & {head: 'a, tail: nil & 'l | (cons & {head: anything, tail: 'e | nil | 'd} as 'd) & 'l})
 //│ res: cons & {head: 1, tail: cons & {head: 2, tail: nil}}
 
 

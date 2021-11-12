@@ -4,7 +4,7 @@ trait MyTrait[A]: { value: A }
 
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: {value: 'a} & myTrait | ~myTrait -> 'a | 0
+//│ test1: ({value: 'a} & myTrait | ~myTrait) -> ('a | 0)
 
 :e
 test1 1
@@ -39,7 +39,7 @@ test1 (C1 { value = 1 })
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ test2: {value: 'a} & myTrait | {default: 'a} & ~myTrait -> 'a
+//│ test2: ({value: 'a} & myTrait | {default: 'a} & ~myTrait) -> 'a
 
 :e
 test2 1

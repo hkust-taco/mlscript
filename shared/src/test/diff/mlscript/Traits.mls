@@ -27,7 +27,7 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> d & {y: 'b, x: 'a}
+//│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> (d & {y: 'b, x: 'a})
 
 error: A & B
 //│ res: {y: string, x: int} & a & b

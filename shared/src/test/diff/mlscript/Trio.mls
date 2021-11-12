@@ -11,7 +11,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> x.fC
   }
-//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
+//│ foo: (a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a}) -> 'a
 
 def arg: A | B | C
 //│ arg: a & {fA: int} | b & {fB: string} | c & {fC: bool}
@@ -28,7 +28,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: a & {fA: int, payload: int} | b & {fB: 'a} | c & {fC: 'b, payload: 'c} -> int | 'a | {l: 'b, r: 'c}
+//│ foo: (a & {fA: int, payload: int} | b & {fB: 'a} | c & {fC: 'b, payload: 'c}) -> (int | 'a | {l: 'b, r: 'c})
 
 :e
 foo arg

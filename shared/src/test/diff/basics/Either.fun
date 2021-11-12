@@ -12,8 +12,8 @@ data type Either l r of
 //│ Defined type Either
 //│ Defined class Left
 //│ Defined class Right
-//│ Left: 'a -> left & {l: 'a}
-//│ Right: 'a -> right & {r: 'a}
+//│ Left: 'a -> (left & {l: 'a})
+//│ Right: 'a -> (right & {r: 'a})
 
 :e
 data type Either2 (l: _) (r: _) of
@@ -34,8 +34,8 @@ data type Either2 (l: _) (r: _) of
 //│ Defined type Either2
 //│ Defined class Left2
 //│ Defined class Right2
-//│ Left2: 'a -> left2 & {l: 'a}
-//│ Right2: 'a -> right2 & {r: 'a}
+//│ Left2: 'a -> (left2 & {l: 'a})
+//│ Right2: 'a -> (right2 & {r: 'a})
 
 let l = Left 1
 let r = Right "ok"

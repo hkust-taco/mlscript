@@ -27,7 +27,7 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} | e & {fE: 'a} | f & {fF: 'a} | g & {fG: 'a} | h & {fH: 'a} -> 'a
+//│ foo: (a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} | e & {fE: 'a} | f & {fF: 'a} | g & {fG: 'a} | h & {fH: 'a}) -> 'a
 //│ constrain calls: 26
 //│ annoying  calls: 0
 
@@ -57,7 +57,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: a & {fA: 'a} | b & {fB: 'a} -> 'a
+//│ foo: (a & {fA: 'a} | b & {fB: 'a}) -> 'a
 //│ arg: a & {fA: int} | b & {fB: int}
 //│ res: int
 //│ constrain calls: 43
@@ -74,7 +74,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
+//│ foo: (a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a}) -> 'a
 //│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int}
 //│ res: int
 //│ constrain calls: 105
@@ -92,7 +92,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} -> 'a
+//│ foo: (a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a}) -> 'a
 //│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int} | d & {fD: int}
 //│ res: int
 //│ constrain calls: 272

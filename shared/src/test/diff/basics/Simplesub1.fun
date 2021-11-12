@@ -23,10 +23,10 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> 'b & 'a) -> 'a -> 'b
+//│ res: ('a -> ('b & 'a)) -> 'a -> 'b
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> 'b & 'a) -> 'a -> 'b
+//│ twice: ('a -> ('b & 'a)) -> 'a -> 'b
 
 
 
@@ -49,7 +49,7 @@ x => y => z => if x then y else z
 //│ res: bool -> 'a -> 'a -> 'a
 
 x => y => if x then y else x
-//│ res: bool & 'a -> 'a -> 'a
+//│ res: (bool & 'a) -> 'a -> 'a
 
 :e
 succ true
@@ -72,7 +72,7 @@ x => succ (not x)
 //│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
-//│ res: bool -> int | error
+//│ res: bool -> (int | error)
 
 :e
 (x => not x.f) { f: 123 }
@@ -101,7 +101,7 @@ x => succ (not x)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ╙──      	                ^^^^^
-//│ res: ({u: anything} -> bool) | error
+//│ res: {u: anything} -> bool | error
 
 
 
@@ -159,23 +159,23 @@ x => { a: x }.b
 
 
 x => x x
-//│ res: ('a -> 'b) & 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 
 x => x x x
-//│ res: ('a -> 'a -> 'b) & 'a -> 'b
+//│ res: ('a -> 'a -> 'b & 'a) -> 'b
 
 x => y => x y x
-//│ res: ('a -> 'b -> 'c) & 'b -> 'a -> 'c
+//│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
 
 x => y => x x y
-//│ res: ('a -> 'b -> 'c) & 'a -> 'b -> 'c
+//│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
 (x => x x) (x => x x)
 //│ res: nothing
 
 
 x => {l: x x, r: x }
-//│ res: ('a -> 'b) & 'a -> {l: 'b, r: 'a}
+//│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
 
 
 // From https://github.com/stedolan/mlsub
@@ -185,18 +185,18 @@ x => {l: x x, r: x }
 
 // Z combinator:
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: (('a -> 'b) -> ('a -> 'b) & 'c) -> 'c
+//│ res: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 
 // Function that takes arbitrarily many arguments:
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (anything -> 'a) as 'a
+//│ res: anything -> (anything -> 'a as 'a)
 
 
 let rec trutru = g => trutru (g true)
-//│ trutru: (true -> 'a) as 'a -> nothing
+//│ trutru: (true -> 'a as 'a) -> nothing
 
 i => if ((i i) true) then true else true
-//│ res: ('a -> true -> bool) & 'a -> true
+//│ res: ('a -> true -> bool & 'a) -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -214,13 +214,13 @@ y => (let f = x => x; {a: f y, b: f true})
 //│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: (true | 0 -> 'a) -> {a: 'a, b: 'a}
+//│ res: ((true | 0) -> 'a) -> {a: 'a, b: 'a}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
-//│ res: int & 'a -> {a: 'a, b: int}
+//│ res: (int & 'a) -> {a: 'a, b: int}
 
 
 
@@ -228,12 +228,12 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: {u: 'a} as 'a -> nothing
+//│ f: ({u: 'a} as 'a) -> nothing
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> {thing: 'a, self: 'b} as 'b
+//│ recursive_monster: 'a -> ({thing: 'a, self: 'b} as 'b)
 
 
 
@@ -244,7 +244,7 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 //│ res: {a: 'a, b: 'a} as 'a
 
 (let rec x = v => {a: x v, b: x v}; x)
-//│ res: anything -> {a: 'a, b: 'a} as 'a
+//│ res: anything -> ({a: 'a, b: 'a} as 'a)
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
@@ -261,42 +261,42 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: 0
 
 (x => (let y = (x x); 0))
-//│ res: ('a -> anything) & 'a -> 0
+//│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> 'c & 'a & 'b) as 'a -> 'b
+//│ res: ('b -> ('c & 'a & 'b) as 'a) -> 'b
 
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: ('b | ('b -> 'a)) as 'a
+//│ res: 'b | 'b -> 'a as 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: (('b -> 'a) & 'b) as 'a -> nothing
+//│ res: ('b -> 'a & 'b as 'a) -> nothing
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a) & 'c -> 'b
+//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: ('b -> 'c | 'b | 'a) as 'a
+//│ res: 'b -> ('c | 'b | 'a) as 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: ('b -> 'c | 'b | 'a) as 'a
+//│ res: 'b -> ('c | 'b | 'a) as 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: ('b -> 'c | {u: 'b | 'a, v: 'd} as 'd) as 'a
+//│ res: 'b -> ('c | ({u: 'b | 'a, v: 'd} as 'd)) as 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: ('b -> 'c | {u: 'd, v: 'b | 'a} as 'd) as 'a
+//│ res: 'b -> ('c | ({u: 'd, v: 'b | 'a} as 'd)) as 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: (('a -> anything) & 'b -> 'b) as 'a
+//│ res: ('a -> anything & 'b) -> 'b as 'a
 
 (x => (let y = (x x.v); 0))
-//│ res: ('a -> anything) & {v: 'a} -> 0
+//│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: ('b -> 'c | 'b | 'a) as 'a
-//│ res: ('b | ({u: 'c} & 'b -> 'd | 'c | 'a)) as 'a
+//│ x: 'b -> ('c | 'b | 'a) as 'a
+//│ res: 'b | ({u: 'c} & 'b) -> ('d | 'c | 'a) as 'a
 

@@ -7,7 +7,7 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> some & {value: 'a}
+//│ Some: 'a -> (some & {value: 'a})
 
 Some 42
 (Some 42).value

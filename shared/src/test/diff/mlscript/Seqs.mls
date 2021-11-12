@@ -30,28 +30,28 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: int & ?c, tail: nil & {size: int} & ?d | (cons & {size: int, head: ?b, tail: ?f & (nil & {size: int} | ?e)}) as ?e & ?d}`
+//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: int & ?c, tail: nil & {size: int} & ?d | (cons & {size: int, head: ?b, tail: ?f & (nil & {size: int} | ?e)} as ?e) & ?d}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `cons & {size: ?a, head: ?b, tail: ?c}` does not match type `?d | nil & {size: ?e | 0} -> ?f`
+//│ ╟── expression of type `cons & {size: ?a, head: ?b, tail: ?c}` does not match type `(?d | nil & {size: ?e | 0}) -> ?f`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 
 Cons
-//│ res: {head: 'a, size: int & 'b, tail: nil & {size: int} & 'c | (cons & {size: int, head: anything, tail: 'e & (nil & {size: int} | 'd)}) as 'd & 'c} -> cons & {size: 'b, head: 'a, tail: 'c}
+//│ res: {head: 'a, size: int & 'b, tail: nil & {size: int} & 'c | (cons & {size: int, head: anything, tail: 'e & (nil & {size: int} | 'd)} as 'd) & 'c} -> (cons & {size: 'b, head: 'a, tail: 'c})
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> nil & {size: int} & 'b | (cons & {size: int, head: anything, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {size: int, head: 'a, tail: 'b}
+//│ Cons_old: 'a -> (nil & {size: int} & 'b | (cons & {size: int, head: anything, tail: 'd & (nil & {size: int} | 'c)} as 'c) & 'b) -> (cons & {size: int, head: 'a, tail: 'b})
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> nil & {size: int} & 'b | (cons & {size: int, head: anything, tail: 'd & (nil & {size: int} | 'c)}) as 'c & 'b -> cons & {size: int, head: 'a, tail: 'b}
+//│ Cons: 'a -> (nil & {size: int} & 'b | (cons & {size: int, head: anything, tail: 'd & (nil & {size: int} | 'c)} as 'c) & 'b) -> (cons & {size: int, head: 'a, tail: 'b})
 
 Nil: ListBase[anything]
 //│ res: listBase & {size: int}
