@@ -5,28 +5,18 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[TopLevel]) {
-  val (typeDefs: Ls[TypeDef], otherTops: Ls[OtherTopLevel]) = tops.partitionMap {
-    case td: TypeDef => L(td)
-    case ot: OtherTopLevel => R(ot)
-  }
-  val (defs: Ls[Def], statements: Ls[Statement]) = otherTops.partitionMap {
-    case td: Def => L(td)
-    case s: Statement => R(s)
-  }
-  override def toString = tops.map("" + _ + ";").mkString(" ")
+final case class Pgrm(tops: Ls[TopLevel]) extends PgrmImpl
+
+sealed trait TopLevel extends Located
+
+sealed abstract class Decl extends TopLevel with Statement with DesugaredStatement with DeclImpl
+final case class Def(rec: Bool, nme: Str, rhs: Term \/ PolyType) extends Decl {
+  val body: Located = rhs.fold(identity, identity)
 }
-
-sealed trait TopLevel
-sealed trait OtherTopLevel extends TopLevel with Located
-
-sealed abstract class Decl extends TopLevel with DeclImpl
-final case class Def(rec: Bool, nme: Str, rhs: Term \/ Type) extends Decl with OtherTopLevel
-  { val body = rhs.fold(identity, identity) }
 final case class TypeDef(
   kind: TypeDefKind,
   nme: Primitive,
-  tparams: List[Str],
+  tparams: List[Primitive],
   body: Type,
 ) extends Decl
 
@@ -68,17 +58,12 @@ sealed abstract class SimpleTerm extends Term {
   }
 }
 
-sealed trait Statement extends StatementImpl with OtherTopLevel
-final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
-final case class DataDefn(body: Term) extends Statement
-final case class DatatypeDefn(head: Term, body: Term) extends Statement
+sealed trait Statement extends TopLevel with StatementImpl
+final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
+final case class DataDefn(body: Term)                     extends Statement
+final case class DatatypeDefn(head: Term, body: Term)     extends Statement
 
-sealed trait DesugaredStatement extends DesugaredStatementImpl
-final case class LetDesug(isRec: Bool, v: Var, rhs: Term)(val original: LetS) extends DesugaredStatement
-final case class DatatypeDesug(head: Var, params: Ls[Term], cases: Ls[DataDesug])(val original: DatatypeDefn)
-  extends DesugaredStatement
-final case class DataDesug(head: Var, params: Ls[Term])(val original: Term)
-  extends DesugaredStatement
+sealed trait DesugaredStatement extends DesugaredStatementImpl with TopLevel
 
 
 // Types
@@ -105,4 +90,6 @@ final case class Primitive(name: Str)                    extends NullaryType
 final class TypeVar(val nameHint: Str, val hash: Int)    extends NullaryType {
   override def toString: Str = s"$nameHint:$hash"
 }
+
+final case class PolyType(targs: Ls[Primitive], body: Type) extends PolyTypeImpl
 

@@ -22,7 +22,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   case class TypeDef(
     kind: TypeDefKind,
     nme: Primitive,
-    tparams: List[Str],
+    tparams: List[Primitive],
     body: Type,
     baseClasses: Set[Var],
     toLoc: Opt[Loc],
@@ -159,7 +159,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val n = td.nme
         val dummyTargs =
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
-        val targsMap: Map[Str, SimpleType] = td.tparams.zip(dummyTargs).toMap
+        val targsMap: Map[Str, SimpleType] = td.tparams.map(_.name).zip(dummyTargs).toMap
         val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
         var fields = SortedMap.empty[Str, SimpleType]
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
@@ -263,7 +263,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def rec(ty: Type)(implicit ctx: Ctx): SimpleType = ty match {
       case Top => TopType
       case Bot => BotType
-      case Tuple(fields) => ??? // TODO
+      case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
       case Inter(lhs, rhs) => rec(lhs) & rec(rhs)
       case Union(lhs, rhs) => rec(lhs) | rec(rhs)
       case Applied(Primitive("~"), rhs) => NegType(rec(rhs))(tp(ty.toLoc, "type negation"))
@@ -304,47 +304,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise): SimpleType =
     typeTerm(pat)(ctx.copy(inPattern = true), raise)
   
-  def typeData(d: DataDesug)(implicit ctx: Ctx, raise: Raise): VarType -> Ls[SimpleType] = {
-    val newCtx = ctx.nest
-    val params_ty = d.params.map(typePattern(_)(newCtx, raise))
-    val appProv = tp(d.original.toLoc, "data definition")
-    val newBindings = newCtx.env.view.mapValues(_.instantiate) // FIXME level?
-    val refinedBase = RecordType.mk(newBindings.toList.sortBy(_._1))(appProv)
-    val ty = params_ty.foldRight(refinedBase: SimpleType)(_.abs(_)(appProv))
-    VarType(new VarIdentity(lvl - 1, d.head), ty, false)(tp(d.head.toLoc, "data symbol")) -> params_ty
-  }
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
         (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
-    case LetDesug(isrec, v @ ValidVar(nme), rhs) =>
+    case Def(isrec, nme, L(rhs)) => // TODO reject R(..)
       val ty_sch = typeLetRhs(isrec, nme, rhs)
       ctx += nme -> ty_sch
       R(nme -> ty_sch :: Nil)
-    case d @ DataDesug(v @ ValidVar(nme), params) =>
-      val (vt, params_ty) = typeData(d)(ctx.nextLevel, raise)
-      val bind = nme -> PolymorphicType(lvl, vt)
-      R(bind :: Nil)
-    case d @ DatatypeDesug(v @ ValidVar(nme), params, cases) => ctx.nextLevel |> { implicit ctx =>
-      val vProv = tp(v.toLoc, "data type symbol")
-      val appProv = tp(d.original.toLoc, "data type definition")
-      val base_tv = freshVar(vProv)
-      val params_ty = params.map(typePattern(_))
-      ctx += nme -> base_tv
-      val newCtx = ctx
-      val caseBindings = mutable.ListBuffer.empty[Binding]
-      val cases_ty = cases.map { case c @ DataDesug(v @ ValidVar(nme), params) =>
-        val (vt, params_ty) = typeData(c)(newCtx.nextLevel, raise)
-        caseBindings += nme -> PolymorphicType(lvl, vt) // FIXME is the quantification correct?
-        val applied_ty = params_ty.foldLeft(vt: SimpleType)(_.app(_)(appProv))
-        applied_ty
-      }
-      val ty = new TypeVariable(lvl, cases_ty, cases_ty)(appProv) // FIXME!!
-      val fty = params_ty.foldRight(ty: SimpleType)(_.abs(_)(appProv))
-      val vty = VarType(new VarIdentity(lvl, v), fty, true)(vProv)
-      constrain(fty, base_tv)(raise, appProv)
-      // constrain(base_tv, fty)(raise, appProv) // TODO what we need here is a union in negative position...
-      R(nme -> PolymorphicType(lvl, vty) :: caseBindings.toList)
-    }
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -367,6 +333,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             prov = TypeProvenance(t.toLoc, t.describe))
       }
       L(PolymorphicType(0, ty))
+    case _ =>
+      err(msg"Illegal position for this ${s.describe} statement.", s.toLoc)(raise, noProv)
+      R(Nil)
   }
   
   /** Infer the type of a let binding right-hand side. */
@@ -643,8 +612,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case s :: sts =>
       val (diags, desug) = s.desugared
       diags.foreach(raise)
-      val newBindings = typeStatement(desug, allowPure = false)
-      ctx ++= newBindings.getOrElse(Nil)
+      val newBindings = desug.flatMap(typeStatement(_, allowPure = false).toOption)
+      ctx ++= newBindings.flatten
       typeTerms(sts, rcd, fields)
     case Nil =>
       if (rcd) {

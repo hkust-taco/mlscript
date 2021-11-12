@@ -42,6 +42,7 @@ object Main {
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(pgrm, index) =>
           println(s"Parsed: $pgrm")
+          val (diags, (typeDefs, stmts)) = pgrm.desugared
           val (typeCheckResult, errorResult) = checkProgramType(pgrm)
           errorResult match {
             case Some(typeCheckResult) => typeCheckResult
@@ -123,7 +124,8 @@ object Main {
       <font color="Red">
       Unexpected error: ${err}${
           err.printStackTrace
-          err
+          // err.getStackTrace().map(s"$htmlLineBreak$htmlWhiteSpace$htmlWhiteSpace at " + _).mkString
+          ""
         }</font>""",
       identity
     )
@@ -134,6 +136,8 @@ object Main {
   private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
 
   def checkProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
+    val (diags, (typeDefs, stmts)) = pgrm.desugared
+    
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
@@ -256,14 +260,14 @@ object Main {
 
     implicit val raise: Raise = throw _
     implicit var ctx: Ctx =
-      try processTypeDefs(pgrm.typeDefs)(Ctx.init, raise)
+      try processTypeDefs(typeDefs)(Ctx.init, raise)
       catch {
         case err: TypeError =>
           res ++= formatError("class definitions", err)
           Ctx.init
       }
 
-    var decls = pgrm.otherTops
+    var decls = stmts
     while (decls.nonEmpty) {
       val d = decls.head
       decls = decls.tail
@@ -279,12 +283,10 @@ object Main {
         case d @ Def(isrec, nme, R(rhs)) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
           ??? // TODO
-        case s: Statement =>
+        case s: DesugaredStatement =>
           val errProv =
             TypeProvenance(s.toLoc, "expression in statement position")
-          val (diags, desug) = s.desugared
-          // report(diags) // TODO!!
-          typer.typeStatement(desug, allowPure = true) match {
+          typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>
                 ctx += nme -> pty
@@ -304,9 +306,8 @@ object Main {
         case err: TypeError =>
           if (stopAtFirstError) decls = Nil
           val culprit = d match {
-            case Def(isrec, nme, rhs)       => "def " + nme
-            case LetS(isrec, Var(nme), rhs) => "let " + nme
-            case _: Statement               => "statement"
+            case Def(isrec, nme, rhs)  => "def " + nme
+            case _: DesugaredStatement => "statement"
           }
           res ++= report(err)
           errorOccurred = true

@@ -1,42 +1,51 @@
 
-:e
+:p
 data type Either L R of
   Left L
   Right R
-//│ ╔══[ERROR] identifier not found: L
-//│ ║  l.3: 	data type Either L R of
-//│ ╙──     	                 ^
-//│ ╔══[ERROR] identifier not found: R
-//│ ║  l.3: 	data type Either L R of
-//│ ╙──     	                   ^
-//│ ╔══[ERROR] identifier not found: L
-//│ ║  l.4: 	  Left L
-//│ ╙──     	       ^
-//│ ╔══[ERROR] identifier not found: R
-//│ ║  l.5: 	  Right R
-//│ ╙──     	        ^
-//│ Either: error -> error -> Left error | Right error
-//│ Left: error -> anything
-//│ Right: error -> anything
+//│ Parsed: data type ((Either L) R) of (Left L); (Right R);;
+//│ Desugared: type Either[L, R] = Left[L, R] | Right[L, R]
+//│ Desugared: class Left[L, R]: {L: L}
+//│ Desugared: class Right[L, R]: {R: R}
+//│ Desugared: def Left: [L, R] -> L -> Left[L, R]
+//│ Desugared: def Right: [L, R] -> R -> Right[L, R]
+//│ Defined type Either
+//│ Defined class Left
+//│ Defined class Right
+//│ Left: 'a -> left & {L: 'a}
+//│ Right: 'a -> right & {R: 'a}
 
-data type Either (L: _) (R: _) of
-  Left L
-  Right R
-//│ Either: (L: 'a,) -> (R: 'b,) -> Left 'a | Right 'b
-//│ Left: anything -> anything
-//│ Right: anything -> anything
+:e
+data type Either2 (L: _) (R: _) of
+  Left2 L
+  Right2 R
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((L: _,);)
+//│ ║  l.19: 	data type Either2 (L: _) (R: _) of
+//│ ╙──      	                  ^^^^^^
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((R: _,);)
+//│ ║  l.19: 	data type Either2 (L: _) (R: _) of
+//│ ╙──      	                         ^^^^^^
+//│ ╔══[ERROR] type identifier not found: L
+//│ ╙──
+//│ ╔══[ERROR] type identifier not found: R
+//│ ╙──
+//│ Defined type Either2
+//│ Defined class Left2
+//│ Defined class Right2
+//│ Left2: 'a -> left2 & {L: 'a}
+//│ Right2: 'a -> right2 & {R: 'a}
 
 let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
-//│ l: Left 1
-//│ r: Right "ok"
-//│ e: Left 1 | Right "ok"
+//│ l: left & {L: 1}
+//│ r: right & {R: "ok"}
+//│ e: left & {L: 1} | right & {R: "ok"}
 
 :e // TODO
 e as Either Int String
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.37: 	e as Either Int String
+//│ ║  l.46: 	e as Either Int String
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -46,22 +55,9 @@ e as Either Int String
 
 :e
 e as Either
-//│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.48: 	e as Either
-//│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `anything` is not a function
-//│ ║  l.23: 	  Left L
-//│ ║        	  ^^^^^^
-//│ ╟── Note: constraint arises from data type definition:
-//│ ║  l.22: 	data type Either (L: _) (R: _) of
-//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.23: 	  Left L
-//│ ║        	^^^^^^^^
-//│ ║  l.24: 	  Right R
-//│ ║        	^^^^^^^^^
-//│ ╟── from applied expression:
-//│ ║  l.29: 	let l = Left 1
-//│ ╙──      	        ^^^^
-//│ res: Either
+//│ ╔══[ERROR] identifier not found: Either
+//│ ║  l.57: 	e as Either
+//│ ╙──      	     ^^^^^^
+//│ res: error
 
 

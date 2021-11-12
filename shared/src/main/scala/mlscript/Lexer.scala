@@ -16,7 +16,7 @@ object Lexer {
   def nonewlinewscomment[_: P] = P( (CharsWhileIn(" ") | Lexer.comment | "\\\n").rep )
   
   def identifier[_: P]: P[String] =
-    P( (letter|"_") ~ (letter | digit | "_" | "-" | "'" | "!" | "?").rep ).!.filter(!keywordList.contains(_))
+    P( (letter|"_"|"`") ~ (letter | digit | "_" | "-" | "'" | "!" | "?").rep ).!.filter(!keywordList.contains(_))
   def letter[_: P]     = P( lowercase | uppercase )
   def lowercase[_: P]  = P( CharIn("a-z") )
   def uppercase[_: P]  = P( CharIn("A-Z") )

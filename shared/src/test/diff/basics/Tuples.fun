@@ -37,6 +37,7 @@ let t = x: 1, y: 2, z: 3
 :e
 (1, true, "hey").2
 //│ Parsed: (((1, true, "hey",);) 0.2);
+//│ Desugared: (((1, true, "hey",);) 0.2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^^^
@@ -54,7 +55,7 @@ let not-tup = (
   2
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.53: 	  1
+//│ ║  l.54: 	  1
 //│ ╙──      	  ^
 //│ not-tup: 2
 
@@ -64,7 +65,7 @@ let tup = (
   2
 )
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.64: 	  2
+//│ ║  l.65: 	  2
 //│ ╙──      	  ^
 //│ tup: 2
 
@@ -74,7 +75,7 @@ let tup =
   2,
   3
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.75: 	  3
+//│ ║  l.76: 	  3
 //│ ╙──      	  ^
 //│ tup: 3
 

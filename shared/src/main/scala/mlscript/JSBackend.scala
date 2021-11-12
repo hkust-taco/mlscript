@@ -143,12 +143,13 @@ class JSBackend {
     }
 
   def apply(pgrm: Pgrm): Ls[Str] = {
+    val (diags, (typeDefs, otherStmts)) = pgrm.desugared
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     val stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
-        pgrm.typeDefs
+        typeDefs
           .map { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
             kind match {
               case Cls =>
@@ -163,7 +164,7 @@ class JSBackend {
           // const name = <expr>;
           // defs.name = name;
           // ```
-          .concat(pgrm.defs.flatMap {
+          .concat(otherStmts.flatMap {
             case Def(isRecursive, name, L(body)) =>
               val translatedBody = translateTerm(body)
               val tempName = getTemporaryName(name)
@@ -179,9 +180,10 @@ class JSBackend {
                 ) :: Nil
             case Def(isRecursive, name, R(body)) =>
               ???
+            case _: Term | _: TypeDef => Nil
           })
           // Generate something like `exprs.push(<expr>)`.
-          .concat(pgrm.statements.zipWithIndex.map {
+          .concat(otherStmts.zipWithIndex.collect {
             case (term: Term, index) =>
               new JSExprStmt(
                 JSInvoke(
@@ -189,7 +191,6 @@ class JSBackend {
                   translateTerm(term)
                 )
               )
-            case _ => ???
           })
           .concat(
             JSReturnStmt(

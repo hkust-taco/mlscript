@@ -75,8 +75,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def expr[_: P]: P[Term] = P( term ~ End )
   
   def defDecl[_: P]: P[Def] =
-    P((kw("def") ~ ident ~ ":" ~/ ty map {
-      case (id, t) => Def(true, id, R(t))
+    P((kw("def") ~ ident ~ tyParams ~ ":" ~/ ty map {
+      case (id, tps, t) => Def(true, id, R(PolyType(tps, t)))
     }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ ident ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
     }))
@@ -91,8 +91,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? map (bod => TypeDef(k, id, ts, bod.getOrElse(Top)))
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
     })
-  def tyParams[_: P]: P[Ls[Str]] =
-    ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatMap(_.map(_.name)))
+  def tyParams[_: P]: P[Ls[Primitive]] =
+    ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
   
   def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))

@@ -181,10 +181,14 @@ E{}: int
 
 // TODO forbid
 class String
+class Bool
 //│ Defined class String
+//│ Defined class Bool
 
 "1" : String
+true : Bool
 //│ res: string
+//│ res: bool
 
 
 

@@ -1,0 +1,21 @@
+type Boolean = True | False
+class True
+class False
+def True: True
+def False: False
+//│ Defined type Boolean
+//│ Defined class True
+//│ Defined class False
+//│ True: true
+//│ False: false
+
+True: Boolean
+//│ res: true | false
+
+:e
+Boolean
+//│ ╔══[ERROR] identifier not found: Boolean
+//│ ║  l.16: 	Boolean
+//│ ╙──      	^^^^^^^
+//│ res: error
+

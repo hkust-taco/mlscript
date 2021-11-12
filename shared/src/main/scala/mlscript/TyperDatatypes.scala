@@ -125,7 +125,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     assert(targs.size === defn.tparams.size)
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
-      val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
+      val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.map(_.name).zip(targs).toMap)
       if (defn.kind === Als) body_ty
       else clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
     }

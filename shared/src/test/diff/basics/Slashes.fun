@@ -22,15 +22,16 @@ x => succ / succ / x + 1
 :p
 foo / x => succ / succ / x
 //│ Parsed: (foo (x => (succ (succ x))));
+//│ Desugared: (foo (x => (succ (succ x))))
 //│ res: int
 
 :e
 foo / foo / x => succ / succ / x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.28: 	foo / foo / x => succ / succ / x
+//│ ║  l.29: 	foo / foo / x => succ / succ / x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` is not a function
-//│ ║  l.28: 	foo / foo / x => succ / succ / x
+//│ ║  l.29: 	foo / foo / x => succ / succ / x
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.7: 	let foo = f => f 1
@@ -40,7 +41,7 @@ foo / foo / x => succ / succ / x
 :e
 foo / foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.41: 	foo / foo
+//│ ║  l.42: 	foo / foo
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `1` is not a function
 //│ ║  l.7: 	let foo = f => f 1
