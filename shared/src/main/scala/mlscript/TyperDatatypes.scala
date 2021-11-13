@@ -73,7 +73,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {
-    def empty = RecordType(Nil)(noProv)
+    def empty: RecordType = RecordType(Nil)(noProv)
     def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }

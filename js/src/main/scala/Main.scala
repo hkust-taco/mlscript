@@ -23,6 +23,7 @@ object Main {
         update(elt.value)
     }
   }
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   def update(str: String): Unit = {
     // println(s"Input: $str")
     val target = document.querySelector("#mlscript-output")
@@ -76,14 +77,12 @@ object Main {
               val sb = new StringBuilder
               try {
                 val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
-                results.get("defs") match {
-                  case S(defs) =>
+                results.get("defs").foreach { defs =>
                     defs.asInstanceOf[js.Dictionary[Str]] foreach {
                       case (key, value) => defResults += key -> value
                     }
                 }
-                results.get("exprs") match {
-                  case S(exprs) =>
+                results.get("exprs").foreach { exprs =>
                     exprResults = exprs.asInstanceOf[js.Array[Str]].toList
                 }
               } catch {
