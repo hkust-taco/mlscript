@@ -113,8 +113,6 @@ abstract class TyperHelpers { self: Typer =>
       case (_: TypeRef, _) | (_, _: TypeRef) =>
         false // TODO try to expand them (this requires populating the cache because of recursive types)
       case (_: Without, _) | (_, _: Without)
-        | (_: VarType, _) | (_, _: VarType)
-        | (_: AppType, _) | (_, _: AppType)
         | (_: TupleType, _) | (_, _: TupleType)
         => false // don't even try
       case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
@@ -137,10 +135,8 @@ abstract class TyperHelpers { self: Typer =>
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
-      case a @ AppType(f, as) => ???
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
       case t @ TupleType(fs) => t
-      case vt: VarType => ???
       case n @ NegType(_ : PrimType | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
@@ -188,30 +184,12 @@ abstract class TyperHelpers { self: Typer =>
       case _ => this
     }
     
-    def app(that: SimpleType)(prov: TypeProvenance): SimpleType = this match {
-      case AppType(lhs, args) => AppType(lhs, args :+ that)(prov)
-      case FunctionType(lhs, rhs) =>
-        // Note: we assume that `lhs` has already been constrained to take `args` as arguments
-        rhs
-      case _ => AppType(this, that :: Nil)(prov)
-    }
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
     
-    def widenVar: SimpleType = this match {
-      case vt: VarType => vt.sign
-      case _ => this
-    }
     def widen: SimpleType = this match {
-      case vt: VarType => vt.sign
       case pt: PrimType => pt.widenPrim
       case _ => this
-    }
-    
-    def isInjective: Bool = this match {
-      case vt: VarType => true // TODO also support non-injective ones!
-      case ProxyType(und) => und.isInjective
-      case _ => false
     }
     
     def unwrapProxies: SimpleType = this match {
@@ -221,10 +199,8 @@ abstract class TyperHelpers { self: Typer =>
     
     def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
-      case vt: VarType => vt.sign :: Nil
       case FunctionType(l, r) => l :: r :: Nil
       case ComposedType(_, l, r) => l :: r :: Nil
-      case AppType(lhs, args) => lhs :: args
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)
       case NegType(n) => n :: Nil

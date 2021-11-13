@@ -66,9 +66,6 @@ trait TypeSimplifier { self: Typer =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
                       TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
-                    case AppType(lhs, args) =>
-                      AppType(goDeep(lhs, pol), args.map(goDeep(_, pol)))(noProv) // FIXME variances
-                    case vt @ VarType(vi, sign, isa) => VarType(vi, goDeep(sign, pol), isa)(vt.prov)
                     case pt: PrimType => pt
                   },
                   RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
@@ -118,8 +115,6 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
-      case AppType(lhs, args) => analyze(lhs, pol); args.foreach(analyze(_, pol)) // FIXME variances
-      case VarType(_, sign, _) => analyze(sign, pol)
       case tv: TypeVariable =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
@@ -248,8 +243,6 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
-      case AppType(lhs, args) => AppType(transform(lhs, !pol), args.map(transform(_, pol)))(st.prov) // FIXME variances
-      case VarType(vi, sign, isAlias) => VarType(vi, transform(sign, pol), isAlias)(st.prov)
       case PrimType(_, _) | ExtrType(_) => st
       case tv: TypeVariable =>
         varSubst.get(tv) match {

@@ -208,7 +208,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 output(s"Defined " + td.kind.str + " " + td.nme.name))
             
             def getType(ty: typer.TypeScheme): Type = {
-              val wty = ty.instantiate(0).widenVar
+              val wty = ty.instantiate(0)
               if (mode.dbg) output(s"Typed as: $wty")
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty)

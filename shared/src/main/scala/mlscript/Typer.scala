@@ -372,7 +372,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
         ctx.parent.dlof(_.get(v.name))(N).map(_.instantiate(0).unwrapProxies) |>? {
-          case S(_: VarType | PrimType(Var(v.name), _)) =>
+          case S(PrimType(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
               s"if not, give your future readers a break and use another name :^)", v.toLoc)
@@ -459,9 +459,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val fun_ty = mkProxy(f_ty, appProv)
         val resTy = con(fun_ty, FunctionType(arg_ty, res)(prov), res)
         val raw_fun_ty = fun_ty.unwrapProxies
-        if (raw_fun_ty.isInstanceOf[VarType] || raw_fun_ty.isInstanceOf[AppType]) // TODO more principled
-          (fun_ty app arg_ty)(appProv)
-        else resTy
+        resTy
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)
@@ -659,13 +657,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           }
         case _ =>
           val res = st match {
-            case vt: VarType => Primitive(vt.vi.v.name) // TODO disambiguate homonyms...
             case FunctionType(l, r) => Function(go(l, !polarity), go(r, polarity))
             case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
             case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
-            case AppType(fun, args) => args.map(go(_, polarity)).foldLeft(go(fun, polarity))(Applied(_, _))
             case NegType(t) => Applied(Primitive("~"), expandType(t))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top

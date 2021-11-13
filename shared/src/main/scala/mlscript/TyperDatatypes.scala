@@ -46,13 +46,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs -> $rhs)"
   }
   
-  // TODO remove or dedup with TypeRef...
-  case class AppType(lhs: SimpleType, args: Ls[SimpleType])(val prov: TypeProvenance) extends BaseType {
-    require(args.nonEmpty)
-    lazy val level: Int = (lhs :: args).maxBy(_.level).level
-    override def toString = s"($lhs${args.map(" " + _).mkString})"
-  }
-  
   case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
@@ -156,30 +149,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = id.idStr+s"<${parents.mkString(",")}>"
   }
   
-  sealed trait Variable extends SimpleType
-  
-  /** Currently, we consider that a VarType may be extruded/freshened but yet still retain its identity.
-   *    This is to support the use case of, for instance, a data definition D of type `forall 'a; 'a -> {}`
-   *    which we actually want to type as `forall 'a; VarType(D, 'a -> {})`
-   *    for simplicity (instead of `VarType(D, forall 'a; 'a -> {})`)
-   *      Indeed, this avoids the need for impredicativity (which for now is not supported)
-   *      and even if we supported impredicativity it would likely result in fewer variable instantiations
-   *      down the line, while being just as general (at least, as long as we don't instantiate variables on reference).
-  */
-  final class VarIdentity(val lvl: Int, val v: Var)
-  case class VarType(vi: VarIdentity, sign: SimpleType, isAlias: Bool)(val prov: TypeProvenance)
-      extends BaseType with Variable {
-    def level: Int = vi.lvl max sign.level
-    override def toString = s"${vi.v}@${prov.loco.getOrElse(die).spanStart}"
-  }
-  
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
    *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
       val level: Int,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
-  )(val prov: TypeProvenance) extends SimpleType with Variable with CompactTypeOrVariable {
+  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar("α", uid)
     override def toString: String = "α" + uid + "'" * level

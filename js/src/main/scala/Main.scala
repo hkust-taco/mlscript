@@ -158,7 +158,7 @@ object Main {
     var errorOccurred = false
 
     def getType(ty: typer.TypeScheme): Type = {
-      val wty = ty.instantiate(0).widenVar
+      val wty = ty.instantiate(0)
       println(s"Typed as: $wty")
       println(s" where: ${wty.showBounds}")
       val cty = typer.canonicalizeType(wty)

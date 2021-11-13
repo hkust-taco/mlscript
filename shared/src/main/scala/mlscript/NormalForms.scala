@@ -27,9 +27,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
           case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) => S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
-          case (S(AppType(l0, as0)), AppType(l1, as1)) => ???
           case (S(TupleType(fs0)), TupleType(fs1)) => ???
-          case (S(VarType(_, _, _)), VarType(_, _, _)) => ???
           case (S(_), _) => N
           case (N, _) => S(that)
         }) map { b => LhsRefined(S(b), r1) }

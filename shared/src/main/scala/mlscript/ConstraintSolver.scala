@@ -189,8 +189,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
-          case (vt: VarType, wt: VarType) if vt.vi === wt.vi => () // Q: do not constr the sign?
-          case (_, vt: VarType) if vt.isAlias => rec(lhs, vt.sign)
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
@@ -206,7 +204,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, r, outerProv.orElse(S(lhs.prov)))
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
-          case (vt: VarType, _) => rec(vt.sign, rhs)
           case (_, TupleType(f :: Nil)) =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ PrimType(ErrTypeId, _), FunctionType(l1, r1)) =>
@@ -215,18 +212,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (FunctionType(l0, r0), err @ PrimType(ErrTypeId, _)) =>
             rec(err, l0)
             rec(r0, err)
-          case (AppType(fun0, args0), AppType(fun1, args1)) if fun0.isInjective && fun1.isInjective =>
-            rec(fun0, fun1)
-            if (args0.size =/= args1.size) ??? // TODO: compute baseType args, accounting for class inheritance
-            else args0.lazyZip(args1).foreach(rec(_, _))
-          case (_, a @ AppType(fun, arg :: Nil)) =>
-            rec(FunctionType(arg, lhs)(fun.prov), fun)(raise, Nil) // disregard error context?
-            // TODO make reporting better... should forget about the function expansion if it doesn't work out!
-          case (_, AppType(fun, args)) => lastWords(s"$rhs") // TODO
-          case (AppType(fun, arg :: Nil), _) =>
-            rec(fun, FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // disregard error context?
-          case (AppType(fun, args :+ arg), _) =>
-            rec(AppType(fun, args)(lhs.prov), FunctionType(arg, rhs)(lhs.prov))(raise, Nil) // Q: disregard error context?
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs)
           case (err @ PrimType(ErrTypeId, _), RecordType(fs1)) =>
@@ -383,11 +368,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
-      (implicit cache: MutMap[Variable, Variable] = MutMap.empty): SimpleType =
+      (implicit cache: MutMap[TV, TV] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
-      case a @ AppType(f, as) => AppType(extrude(f, lvl, !pol), as.map(extrude(_, lvl, pol)))(a.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
@@ -400,9 +384,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol)) }
         nv
       })
-      case vt: VarType => cache.getOrElse(vt, VarType(
-        if (vt.vi.lvl <= lvl) vt.vi
-        else new VarIdentity(lvl, vt.vi.v), extrude(vt.sign, lvl, pol), vt.isAlias)(vt.prov))
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
@@ -423,7 +404,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   // Note: maybe this and `extrude` should be merged?
   def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false)(implicit lvl: Int): SimpleType = {
-    val freshened = MutMap.empty[Variable, SimpleType]
+    val freshened = MutMap.empty[TV, SimpleType]
     def freshen(ty: SimpleType): SimpleType = if (ty.level <= lim) ty else ty match {
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
@@ -446,13 +427,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
           v
       }
-      case vt: VarType => VarType(
-        if (vt.vi.lvl > lim) new VarIdentity(lvl, vt.vi.v)
-        else vt.vi, freshen(vt.sign), vt.isAlias
-      )(vt.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
-      case a @ AppType(lhs, args) => AppType(freshen(lhs), args.map(freshen))(a.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
