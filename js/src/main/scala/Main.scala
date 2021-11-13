@@ -65,10 +65,14 @@ object Main {
                 |  return { defs, exprs };
                 |  function prettyPrint(value) {
                 |    switch (typeof value) {
+                |      case "number":
+                |      case "boolean":
                 |      case "function":
                 |        return value.toString();
+                |      case "string":
+                |        return '\"' + value + '\"';
                 |      default:
-                |        return JSON.stringify(value, undefined, 2);
+                |        return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
                 |    }
                 |  }
                 |})()""".stripMargin
@@ -88,8 +92,10 @@ object Main {
                 }
               } catch {
                 case e: Throwable =>
-                  sb ++= "<font color=\"red\">Runtime error occurred.</font>"
+                  sb ++= "<font color=\"red\">Runtime error occurred:</font>"
                   sb ++= htmlLineBreak + e.getMessage
+                  sb ++= htmlLineBreak
+                  sb ++= htmlLineBreak
               }
               // Iterate type and assemble something like:
               // `val <name>: <type> = <value>`

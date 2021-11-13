@@ -15,14 +15,16 @@ def Left value = Left{ value }
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
+
 def testVal = if true then Left 1 else Right 2
 def res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
+
 def zero = 0
 def bruh = "Bruh"
-def two = add 1 1
+def two = add 1 zero
 def lambda = fun x -> x
 def simpleLet = let i = 0 in add i 1
 def f x y = add x y
