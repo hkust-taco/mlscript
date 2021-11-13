@@ -118,7 +118,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
   def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   
-  def toplvl[_: P]: P[TopLevel] =
+  def toplvl[_: P]: P[Statement] =
     P( defDecl | tyDecl | term )
   def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
   def topLevelSep[_: P]: P[Unit] = ";"

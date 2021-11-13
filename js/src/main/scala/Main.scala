@@ -44,6 +44,7 @@ object Main {
         case Success(pgrm, index) =>
           println(s"Parsed: $pgrm")
           val (diags, (typeDefs, stmts)) = pgrm.desugared
+          // report(diags) // TODO... currently the MLParser does not report any in desugaring so this is fine
           val (typeCheckResult, errorResult) = checkProgramType(pgrm)
           errorResult match {
             case Some(typeCheckResult) => typeCheckResult

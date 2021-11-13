@@ -5,12 +5,10 @@ import mlscript.utils._, shorthands._
 
 // Terms
 
-final case class Pgrm(tops: Ls[TopLevel]) extends PgrmImpl
+final case class Pgrm(tops: Ls[Statement]) extends PgrmImpl
 
-sealed trait TopLevel extends Located
-
-sealed abstract class Decl extends TopLevel with Statement with DesugaredStatement with DeclImpl
-final case class Def(rec: Bool, nme: Str, rhs: Term \/ PolyType) extends Decl {
+sealed abstract class Decl extends DesugaredStatement with DeclImpl
+final case class Def(rec: Bool, nme: Str, rhs: Term \/ PolyType) extends Decl with Terms {
   val body: Located = rhs.fold(identity, identity)
 }
 final case class TypeDef(
@@ -25,7 +23,7 @@ case object Cls extends TypeDefKind("class")
 case object Trt extends TypeDefKind("trait")
 case object Als extends TypeDefKind("type")
 
-sealed abstract class Term                                           extends Statement with DesugaredStatement with TermImpl
+sealed abstract class Term                                           extends Terms with TermImpl
 sealed abstract class Lit                                            extends SimpleTerm with LitImpl
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
@@ -58,12 +56,14 @@ sealed abstract class SimpleTerm extends Term {
   }
 }
 
-sealed trait Statement extends TopLevel with StatementImpl
+sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
 final case class DataDefn(body: Term)                     extends Statement
 final case class DatatypeDefn(head: Term, body: Term)     extends Statement
 
-sealed trait DesugaredStatement extends DesugaredStatementImpl with TopLevel
+sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
+
+sealed trait Terms extends DesugaredStatement
 
 
 // Types

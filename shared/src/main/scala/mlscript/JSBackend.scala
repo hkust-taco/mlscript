@@ -23,12 +23,9 @@ class JSBackend {
   val letLhsAliasMap: HashMap[Str, Str] = HashMap()
 
   // I just realized `Statement` is unused.
-  def translateStatement(stmt: Statement): JSStmt = stmt match {
-    case LetS(isRec, pat, rhs) => {
-      var (code, ids) = translateLetPattern(pat)
-      new JSLetDecl(code, translateTerm(rhs))
-    }
-    case _ => ???
+  def translateStatement(stmt: DesugaredStatement): JSStmt = stmt match {
+    case t: Term => JSExprStmt(translateTerm(t))
+    case _: Def | _: TypeDef => ??? // TODO
   }
 
   // This returns (codeFragment, declaredVariables)
@@ -104,7 +101,7 @@ class JSBackend {
     case Let(isRec, name, value, body) =>
       new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
     case Blk(stmts) =>
-      new JSImmEvalFn(Right(stmts map { translateStatement(_) }))
+      new JSImmEvalFn(Right(stmts flatMap (_.desugared._2) map { translateStatement(_) }))
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
@@ -180,7 +177,7 @@ class JSBackend {
                 ) :: Nil
             case Def(isRecursive, name, R(body)) =>
               ???
-            case _: Term | _: TypeDef => Nil
+            case _: Term => Nil
           })
           // Generate something like `exprs.push(<expr>)`.
           .concat(otherStmts.zipWithIndex.collect {

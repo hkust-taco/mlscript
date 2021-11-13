@@ -86,16 +86,15 @@ abstract class PolyTypeImpl extends Located { self: PolyType =>
 // Auxiliary definitions for terms
 
 trait PgrmImpl { self: Pgrm =>
-  lazy val desugared: (Ls[Diagnostic] -> (Ls[TypeDef], Ls[DesugaredStatement])) = {
+  lazy val desugared: (Ls[Diagnostic] -> (Ls[TypeDef], Ls[Terms])) = {
     val diags = Buffer.empty[Diagnostic]
-    val res = tops.flatMap {
-      case s: Statement =>
+    val res = tops.flatMap { s =>
         val (ds, d) = s.desugared
         diags ++= ds
         d
     }.partitionMap {
       case td: TypeDef => L(td)
-      case ot: DesugaredStatement => R(ot)
+      case ot: Terms => R(ot)
     }
     diags.toList -> res
   }
@@ -121,10 +120,6 @@ trait DeclImpl extends Located { self: Decl =>
     case _: Def => "definition"
     case _: TypeDef => "type declaration"
   }
-  override def children: Ls[Located] = self match {
-    case d @ Def(rec, nme, _) => d.body :: Nil
-    case TypeDef(kind, nme, tparams, body) => nme :: tparams ::: body :: Nil
-  }
   def show: Str = showHead + (this match {
     case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
@@ -137,7 +132,6 @@ trait DeclImpl extends Located { self: Decl =>
 
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
-  override def children: Ls[Located] = super[StatementImpl].children
   
   def describe: Str = this match {
     case Bra(true, Tup(_ :: _ :: _) | Tup((S(_), _) :: _) | Blk(_)) => "record"
@@ -317,8 +311,8 @@ trait StatementImpl extends Located { self: Statement =>
       (diags ::: diags2 ::: diags3) -> (TypeDef(Als, Primitive(v.name), targs,
           dataDefs.map(td => AppliedType(td.nme, td.tparams)).reduceOption(Union).getOrElse(Bot)
         ).withLocOf(hd) :: cs)
-    case t: Term => Nil -> (t::Nil)
-    case d: Decl => Nil -> (d::Nil)
+    case t: Term => Nil -> (t :: Nil)
+    case d: Decl => Nil -> (d :: Nil)
   }
   import Message._
   protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
