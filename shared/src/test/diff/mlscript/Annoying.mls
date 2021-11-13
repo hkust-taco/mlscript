@@ -60,7 +60,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: _α50} & ~?a | int & {x: _α50}` does not match type `{f: ?b}`
+//│ ╟── expression of type `{x: _α52} & ~?a | int & {x: _α52}` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                             ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -72,7 +72,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{y: _α50} & ~int` does not match type `{x: ?a}`
+//│ ╟── expression of type `{y: _α52} & ~int` does not match type `{x: ?a}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -84,7 +84,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{y: _α50} & ~?a | int & {y: _α50}` does not match type `{f: ?b}`
+//│ ╟── expression of type `{y: _α52} & ~?a | int & {y: _α52}` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

@@ -71,7 +71,7 @@ def boom = 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.69: 	def boom = 1
 //│ ║        	           ^
-//│ ╙── expression of type `1` does not match type `_α24`
+//│ ╙── expression of type `1` does not match type `_α26`
 
 
 
@@ -98,20 +98,20 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╟── expression of type `_α70` does not match type `int`
+//│ ╟── expression of type `_α72` does not match type `int`
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.96: 	def id n = add n 1
 //│ ╙──      	               ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `_α70`
+//│ ╟── expression of type `int` does not match type `_α72`
 //│ ║  l.96: 	def id n = add n 1
 //│ ║        	           ^^^^^^^
 //│ ╟── but it flows into function of type `int & ?a -> ?b | int`
 //│ ║  l.96: 	def id n = add n 1
 //│ ║        	       ^^^^^^^^^^^
-//│ ╙── which does not match type `_α70 -> _α70`
+//│ ╙── which does not match type `_α72 -> _α72`
 
 :e
 def id (x: int) = x
@@ -119,7 +119,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.117: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
-//│ ╟── expression of type `_α87` does not match type `int`
+//│ ╟── expression of type `_α89` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.117: 	def id (x: int) = x
 //│ ╙──       	           ^^^
