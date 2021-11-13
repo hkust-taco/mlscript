@@ -62,7 +62,14 @@ class JSBackend {
   }
 
   private def builtinFnOpMap =
-    immutable.HashMap("add" -> "+", "sub" -> "-", "mul" -> "*", "div" -> "/")
+    immutable.HashMap("add" -> "+", "sub" -> "-", "mul" -> "*", "div" -> "/",
+      "lt" -> "<",
+      "le" -> "<=",
+      "gt" -> ">",
+      "ge" -> ">=",
+      "eq" -> "==",
+      "ne" -> "!=",
+    )
 
   def translateTerm(term: Term): JSExpr = term match {
     case Var(name) =>
@@ -175,8 +182,7 @@ class JSBackend {
                     JSIdent(tempName)
                   )
                 ) :: Nil
-            case Def(isRecursive, name, R(body)) =>
-              ???
+            case Def(isRecursive, name, R(body)) => Nil
             case _: Term => Nil
           })
           // Generate something like `exprs.push(<expr>)`.

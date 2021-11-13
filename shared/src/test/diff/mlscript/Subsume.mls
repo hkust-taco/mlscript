@@ -125,3 +125,59 @@ def id (x: int) = x
 //│ ╙──       	           ^^^
 
 
+
+def f: (int & 'a) -> 'a
+//│ f: int & 'a -> 'a
+
+def impl a = a a
+//│ impl: ('a -> 'b) & 'a -> 'b
+
+// FIXME: problem is solver assumes rigid vars are disjoint from other types
+:e
+// :d
+def f = impl
+//│ ('a -> 'b) & 'a -> 'b  <:  f: int & 'a -> 'a
+
+f 1 
+//│ res: 1
+
+
+def f: (int & 'a) -> (int & 'a) -> 'a 
+def f a b = if gt a b then a else b
+//│ f: int & 'a -> int & 'a -> 'a
+//│ int & 'a -> int & 'a -> 'a  <:  f: int & 'a -> int & 'a -> 'a
+
+f 1 
+//│ res: int & 'a -> 'a | 1
+
+// FIXME
+// :e
+def f a b = if gt a b then a else b b // mistake!
+//│ int & 'a -> nothing -> 'a  <:  f: int & 'a -> int & 'a -> 'a
+
+f 1 
+//│ res: int & 'a -> 'a | 1
+
+res 2
+//│ res: 1 | 2
+
+
+:e
+def g: (int & 'a) -> 'a
+def g a = add a 1
+//│ g: int & 'a -> 'a
+//│ int -> int  <:  f: int & 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.167: 	def g a = add a 1
+//│ ║         	      ^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `_α228`
+//│ ║  l.167: 	def g a = add a 1
+//│ ║         	          ^^^^^^^
+//│ ╟── but it flows into function of type `int & ?a -> ?b | int`
+//│ ║  l.167: 	def g a = add a 1
+//│ ║         	      ^^^^^^^^^^^
+//│ ╟── which does not match type `nothing -> _α228`
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.166: 	def g: (int & 'a) -> 'a
+//│ ╙──       	        ^^^
+

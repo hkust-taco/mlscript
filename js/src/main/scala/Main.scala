@@ -272,6 +272,7 @@ object Main {
           res ++= formatError("class definitions", err)
           Ctx.init
       }
+    var declared: Map[Str, typer.PolymorphicType] = Map.empty
 
     var decls = stmts
     while (decls.nonEmpty) {
@@ -279,16 +280,25 @@ object Main {
       decls = decls.tail
       try d match {
         case d @ Def(isrec, nme, L(rhs)) =>
-          val errProv = TypeProvenance(rhs.toLoc, "def definition")
-          val ty = typeLetRhs(isrec, nme, rhs)
-          ctx += nme -> ty
-          println(s"Typed `${d.nme}` as: $ty")
-          println(s" where: ${ty.instantiate(0).showBounds}")
-          res ++= formatBinding(d.nme, ty)
-          results append S(d.nme) -> getType(ty).show
-        case d @ Def(isrec, nme, R(rhs)) =>
+          val ty_sch = typeLetRhs(isrec, nme, rhs)(ctx, raise)
+          val inst = ty_sch.instantiate(0)
+          println(s"Typed `$nme` as: $inst")
+          println(s" where: ${inst.showBounds}")
+          val exp = getType(ty_sch)
+          ctx += nme -> ty_sch
+          declared.get(nme).foreach { sign =>
+            // ctx += nme -> sign  // override with less precise declared type?
+            subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
+          }
+          res ++= formatBinding(d.nme, ty_sch)
+          results append S(d.nme) -> (getType(ty_sch).show)
+        case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
-          ??? // TODO
+          val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
+            tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
+          ctx += nme -> ty_sch
+          declared += nme -> ty_sch
+          results append S(d.nme) -> getType(ty_sch).show
         case s: DesugaredStatement =>
           val errProv =
             TypeProvenance(s.toLoc, "expression in statement position")

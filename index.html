@@ -24,6 +24,11 @@ def test x = case x of
 def tmp = test (if true then Left 1 else Right 2)
 
 case tmp of { int -> tmp | string -> 0 }
+
+def f: (int & 'a) -> (int & 'a) -> 'a
+def f a b = if gt a b then a else b
+
+f 1 2
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

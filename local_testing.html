@@ -27,7 +27,11 @@ def bruh = "Bruh"
 def two = add 1 zero
 def lambda = fun x -> x
 def simpleLet = let i = 0 in add i 1
-def f x y = add x y
+
+def f: (int & 'a) -> (int & 'a) -> 'a
+def f a b = if gt a b then a else b
+
+f 1 2
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

@@ -375,7 +375,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }
   
   
-  def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)(implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
+  def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
+      (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
     constrain(ty_sch.instantiate, sign.rigidify)
   }
   

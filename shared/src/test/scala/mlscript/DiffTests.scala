@@ -17,7 +17,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   private val validExt = Set("fun", "mls")
   
   private val focused = Set(
-    "Repro",
+    // "Repro",
     // "RecursiveTypes",
     // "Simple",
     // "Inherit",
@@ -30,6 +30,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "Tony",
     // "Lists",
     // "Traits",
+    "Subsume",
   )
   private def filter(name: Str): Bool =
     true ||
@@ -237,7 +238,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             stmts.foreach {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
-                  typer.typeType(rhs)(ctx.nextLevel, raise, tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                  typer.typeType(rhs)(ctx.nextLevel, raise,
+                    tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
                 ctx += nme -> ty_sch
                 declared += nme -> ty_sch
                 val exp = getType(ty_sch)
