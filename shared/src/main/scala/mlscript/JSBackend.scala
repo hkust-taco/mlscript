@@ -6,9 +6,6 @@ import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
 
-// TODO: should I turn this into a class?
-// Becasue type information for each run is local.
-// Otherwise I could clear for each `apply`.
 class JSBackend {
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
@@ -36,10 +33,10 @@ class JSBackend {
 
   // This returns (codeFragment, declaredVariables)
   def translateLetPattern(t: Term): Str -> Ls[Str] = t match {
-    // f x ==> function (x) { }
+    // fun x -> ... ==> function (x) { ... }
     // should returns ("x", ["x"])
     case Var(name) => name -> Ls(name)
-    // f { x, y } ==> function ({ x, y }) { }
+    // fun { x, y } -> ... ==> function ({ x, y }) { ... }
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) => {
       // $ means an insertion point
@@ -56,7 +53,7 @@ class JSBackend {
           }
       }
     }
-    // `def f x y` => `App(Var(x), Var(y))`
+    // `fun x y -> ...` => `App(Var(x), Var(y))`
     case App(init, Var(last)) =>
       val (code, vars) = translateLetPattern(init)
       s"$code, $last" -> (vars ::: List(last))
@@ -88,7 +85,7 @@ class JSBackend {
     // Binary expressions.
     case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
       JSBinary(
-        builtinFnOpMap.get(name).get,
+        builtinFnOpMap(name),
         translateTerm(left),
         translateTerm(right)
       )

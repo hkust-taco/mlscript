@@ -42,7 +42,7 @@ object Main {
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(pgrm, index) =>
           println(s"Parsed: $pgrm")
-          val (typeCheckResult, errorResult) = checkingProgramType(pgrm)
+          val (typeCheckResult, errorResult) = checkProgramType(pgrm)
           errorResult match {
             case Some(typeCheckResult) => typeCheckResult
             case None => {
@@ -133,13 +133,7 @@ object Main {
   private val htmlWhiteSpace = "&nbsp;"
   private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
 
-  private def replaceLeadingSpaces(line: Str): Str =
-    splitLeadingSpaces.findFirstMatchIn(line) match {
-      case S(result) => htmlWhiteSpace * result.group(1).size + result.group(2)
-      case N         => line
-    }
-
-  def checkingProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
+  def checkProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
