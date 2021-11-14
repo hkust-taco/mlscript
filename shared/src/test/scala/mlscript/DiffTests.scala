@@ -17,6 +17,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   private val validExt = Set("fun", "mls")
   
   private val focused = Set(
+    "Ascribe",
     // "Repro",
     // "RecursiveTypes",
     // "Simple",
@@ -30,7 +31,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "Tony",
     // "Lists",
     // "Traits",
-    "Subsume",
+    // "Subsume",
   )
   private def filter(name: Str): Bool =
     true ||

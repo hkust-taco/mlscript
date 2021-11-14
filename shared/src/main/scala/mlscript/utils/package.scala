@@ -150,4 +150,8 @@ package object utils {
     }
   
   
+  object empty {
+    def unapply(it: Iterable[Any]): Bool = it.isEmpty
+  }
+  
 }

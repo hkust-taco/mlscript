@@ -55,10 +55,10 @@ res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.54: 	res.tail.head
 //│ ║        	^^^
-//│ ╟── expression of type `nil` does not match type `{tail: ?a}`
+//│ ╟── expression of type `nil` does not have field 'tail'
 //│ ║  l.12: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
-//│ ╟── but it flows into reference with expected type `{tail: ?b}`
+//│ ╟── but it flows into reference with expected type `{tail: ?a}`
 //│ ║  l.54: 	res.tail.head
 //│ ╙──      	^^^
 //│ res: error

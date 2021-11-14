@@ -39,9 +39,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type ST = SimpleType
   
-  sealed abstract class BaseType extends SimpleType
+  sealed abstract class BaseTypeOrTag extends SimpleType
+  sealed abstract class BaseType extends BaseTypeOrTag
+  sealed abstract class MiscBaseType extends BaseType
   
-  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends BaseType {
+  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = lhs.level max rhs.level
     override def toString = s"($lhs -> $rhs)"
   }
@@ -71,7 +73,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
-  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends BaseType {
+  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toRecord: RecordType =
       RecordType(
@@ -96,7 +98,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"~(${negated})"
   }
   
-  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends BaseType {
+  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends MiscBaseType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
   }
@@ -114,32 +116,34 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
   
-  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])(val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
+  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])
+      (val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
     assert(targs.size === defn.tparams.size)
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.map(_.name).zip(targs).toMap)
-      if (defn.kind === Als) body_ty
-      else clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
+      defn.kind match {
+        case Als => body_ty
+        case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
+        case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
+      }
     }
     override def toString =
       if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"
   }
   
-  case class PrimType(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType {
-    def widenPrim: PrimType = id match { // FIXME rm
-      case _: IntLit => IntType
-      case _: StrLit => StrType
-      case _: DecLit => DecType
-      case _ => this
-    }
+  sealed trait ObjectTag extends BaseTypeOrTag {
+    val id: SimpleTerm
+  }
+  
+  case class ClassTag(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType with ObjectTag {
     lazy val parentsST = parents.map(identity[SimpleTerm]) // TODO inefficient... improve
-    def glb(that: PrimType): Opt[PrimType] =
+    def glb(that: ClassTag): Opt[ClassTag] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)
       else if (this.parentsST.contains(that.id)) S(this)
       else N
-    def lub(that: PrimType): Set[PrimType] = // TODO rm? it's unused
+    def lub(that: ClassTag): Set[ClassTag] = // TODO rm? it's unused
       if (that.id === this.id) Set.single(that)
       else if (that.parentsST.contains(this.id)) Set.single(this)
       else if (this.parentsST.contains(that.id)) Set.single(that)
@@ -147,6 +151,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       else Set(this, that)
     def level: Int = 0
     override def toString = id.idStr+s"<${parents.mkString(",")}>"
+  }
+  
+  case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag {
+    def level: Int = 0
+    override def toString = id.idStr
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.

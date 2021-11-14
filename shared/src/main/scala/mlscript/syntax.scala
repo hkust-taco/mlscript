@@ -19,8 +19,9 @@ final case class TypeDef(
 ) extends Decl
 
 sealed abstract class TypeDefKind(val str: Str)
-case object Cls extends TypeDefKind("class")
-case object Trt extends TypeDefKind("trait")
+sealed trait ObjDefKind
+case object Cls extends TypeDefKind("class") with ObjDefKind
+case object Trt extends TypeDefKind("trait") with ObjDefKind
 case object Als extends TypeDefKind("type")
 
 sealed abstract class Term                                           extends Terms with TermImpl

@@ -58,7 +58,7 @@ trait TypeSimplifier { self: Typer =>
           (inProcess + pty) pipe { implicit inProcess =>
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
               def adapt(pol: Bool)(l: LhsNf): LhsNf = l match {
-                case LhsRefined(b, RecordType(fs)) => LhsRefined(
+                case LhsRefined(b, ts, RecordType(fs)) => LhsRefined(
                   b.map {
                     case ft @ FunctionType(l, r) =>
                       FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
@@ -66,21 +66,26 @@ trait TypeSimplifier { self: Typer =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
                       TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
-                    case pt: PrimType => pt
+                    case pt: ClassTag => pt
                   },
+                  ts,
                   RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
                 )
                 case LhsTop => LhsTop
               }
               def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
                 case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
-                case RhsBases(prims, bty, f) =>
-                  RhsBases(prims, bty.flatMap(goDeep(_, pol) match {
-                    case bt: BaseType => S(bt)
-                    case ExtrType(true) => N
-                    // case _ => ??? // TODO
+                case RhsBases(prims, bf) =>
+                  // TODO refactor to handle goDeep not returning something else...
+                  RhsBases(prims, bf match {
+                    case N => N
+                    case S(L(bt)) => goDeep(bt, pol) match {
+                      case bt: MiscBaseType => S(L(bt))
+                      case ExtrType(true) => N
+                      case _ => ???
+                    }
+                    case S(R(r)) => S(R(RhsField(r.name, goDeep(r.ty, pol))))
                   })
-                  , f.map(f => RhsField(f.name, goDeep(f.ty, pol))))
                 case RhsBot => RhsBot
               }
               Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(!pol)(rnf), nvars.map(renew))
@@ -119,7 +124,7 @@ trait TypeSimplifier { self: Typer =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
         processBounds(tv, pol)
-      case PrimType(_, _) | ExtrType(_) => ()
+      case _: ObjectTag | ExtrType(_) => ()
       case ct: ComposedType =>
         val newOccs = MutSet.empty[SimpleType]
         def go(st: SimpleType): Unit = st match {
@@ -243,7 +248,7 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
-      case PrimType(_, _) | ExtrType(_) => st
+      case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
         varSubst.get(tv) match {
           case S(S(ty)) => transform(ty, pol)
