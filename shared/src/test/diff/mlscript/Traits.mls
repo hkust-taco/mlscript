@@ -7,6 +7,19 @@ class C: { x: 0 | 1 }
 //│ Defined trait B
 //│ Defined class C
 
+A { x = 1 }
+//│ res: {x: 1} & a
+
+:e
+A {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.14: 	A {}
+//│ ║        	^^^^
+//│ ╟── expression of type `anything` does not have field 'x'
+//│ ║  l.14: 	A {}
+//│ ╙──      	  ^^
+//│ res: {x: nothing} & a | error
+
 class D: C & A & B
 //│ Defined class D
 
@@ -14,41 +27,49 @@ D
 //│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> d & {x: 'a, y: 'b}
 
 error: A & B
-//│ res: nothing
+//│ res: {x: int, y: string} & a & b
 
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	def dv = D{}
+//│ ║  l.33: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
-//│ ║  l.20: 	def dv = D{}
+//│ ║  l.33: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: d & {x: nothing, y: nothing} | error
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: d & {x: 0, y: "hello"}
 
-// Note: this does not go through because the system assumes the inehritance hierarchy is sound,
-// while it's not because of the current wrong handling of traits
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.35: 	dv: nothing
+//│ ║  l.46: 	dv: nothing
 //│ ║        	^^
 //│ ╟── expression of type `d & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
-//│ ║  l.29: 	def dv = D { x = 0; y = "hello" }
+//│ ║  l.42: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.35: 	dv: nothing
+//│ ║  l.46: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.35: 	dv: nothing
+//│ ║  l.46: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 
-// TODO support unrelated trait mixing
+dv: A & B
+//│ res: {x: int, y: string} & a & b
+
+:e
 dv: A & B: nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.65: 	dv: A & B: nothing
+//│ ║        	^^
+//│ ╟── expression of type `{x: int, y: string} & a & b` does not match type `nothing`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	dv: A & B: nothing
+//│ ╙──      	           ^^^^^^^
 //│ res: nothing
 
 
@@ -61,10 +82,10 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	E{}
+//│ ║  l.83: 	E{}
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.62: 	E{}
+//│ ║  l.83: 	E{}
 //│ ╙──      	 ^^
 //│ res: e & {x: nothing} | error
 

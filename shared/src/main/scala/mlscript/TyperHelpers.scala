@@ -52,10 +52,10 @@ abstract class TyperHelpers { self: Typer =>
       case _ => ComposedType(true, that, this)(prov)
     }
     def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
-      case (TopType, _) => that
+      case (TopType | RecordType(Nil), _) => that
       case (BotType, _) => BotType
       case (ComposedType(true, l, r), _) => l & that | r & that
-      case (_: PrimType, _: FunctionType) => BotType
+      case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
       case _ if !swapped => that & (this, prov, swapped = true)
@@ -80,7 +80,7 @@ abstract class TyperHelpers { self: Typer =>
     (this === that) || ((this, that) match {
       case (RecordType(Nil), _) => TopType <:< that
       case (_, RecordType(Nil)) => this <:< TopType
-      case (pt1 @ PrimType(id1, ps1), pt2 @ PrimType(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
+      case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
       case (FunctionType(l1, r1), FunctionType(l2, r2)) => l2 <:< l1 && r1 <:< r2
       case (_: FunctionType, _) | (_, _: FunctionType) => false
       case (ComposedType(true, l, r), _) => l <:< that && r <:< that
@@ -89,7 +89,7 @@ abstract class TyperHelpers { self: Typer =>
       case (_, ComposedType(true, l, r)) => that <:< l || that <:< r
       case (RecordType(fs1), RecordType(fs2)) =>
         fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
-      case (_: RecordType, _: PrimType) | (_: PrimType, _: RecordType) => false
+      case (_: RecordType, _: ClassTag) | (_: ClassTag, _: RecordType) => false
       case (_: TypeVariable, _) | (_, _: TypeVariable)
         if cache.contains(this -> that)
         => cache(this -> that)
@@ -137,7 +137,7 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
       case t @ TupleType(fs) => t
-      case n @ NegType(_ : PrimType | _: FunctionType | _: RecordType) => n
+      case n @ NegType(_ : ClassTag | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
         // case c: ComposedType => c.pol
@@ -147,7 +147,7 @@ abstract class TyperHelpers { self: Typer =>
       case e @ ExtrType(_) => e // valid? -> seems we could go both ways, but this way simplifies constraint solving
       // case e @ ExtrType(false) => e
       case p @ ProxyType(und) => ProxyType(und.withoutPos(names))(p.prov)
-      case p @ PrimType(_, _) => p
+      case p: ObjectTag => p
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
     }
     def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
@@ -174,7 +174,7 @@ abstract class TyperHelpers { self: Typer =>
         case Without(NegType(nt), ns) => nt.negNormPos(_.pushPosWithout, nt.prov).withoutPos(ns) match {
           case rw @ Without(NegType(nt), ns) =>
             nt match {
-              case _: TypeVariable | _: PrimType | _: RecordType => rw
+              case _: TypeVariable | _: ClassTag | _: RecordType => rw
               case _ => lastWords(s"$this  $rw  (${nt.getClass})")
             }
           case rw => rw
@@ -186,11 +186,6 @@ abstract class TyperHelpers { self: Typer =>
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
-    
-    def widen: SimpleType = this match {
-      case pt: PrimType => pt.widenPrim
-      case _ => this
-    }
     
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
@@ -206,7 +201,7 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil
-      case PrimType(_, _) => Nil
+      case _: ObjectTag => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
     }

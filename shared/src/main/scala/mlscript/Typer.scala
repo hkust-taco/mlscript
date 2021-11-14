@@ -59,11 +59,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   val TopType: ExtrType = ExtrType(false)(noProv)
   val BotType: ExtrType = ExtrType(true)(noProv)
-  val UnitType: PrimType = PrimType(Var("unit"), Set.empty)(noProv)
-  val BoolType: PrimType = PrimType(Var("bool"), Set.empty)(noProv)
-  val IntType: PrimType = PrimType(Var("int"), Set.single(Var("number")))(noProv)
-  val DecType: PrimType = PrimType(Var("number"), Set.empty)(noProv)
-  val StrType: PrimType = PrimType(Var("string"), Set.empty)(noProv)
+  val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noProv)
+  val BoolType: ClassTag = ClassTag(Var("bool"), Set.empty)(noProv)
+  val IntType: ClassTag = ClassTag(Var("int"), Set.single(Var("number")))(noProv)
+  val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noProv)
+  val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noProv)
   
   val ErrTypeId: SimpleTerm = Var("error")
   
@@ -123,7 +123,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   
   def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType =
-    PrimType(Var(td.nme.name.head.toLower.toString + td.nme.name.tail), td.allBaseClasses(ctx)(Set.single(Var(td.nme.name))))(prov)
+    ClassTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail),
+      td.allBaseClasses(ctx)(Set.single(Var(td.nme.name))))(prov)
+  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType =
+    TraitTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail))(prov)
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
     if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)
@@ -165,29 +168,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
             (implicit travsersed: Set[TypeDef]): Bool =
               trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
-          case PrimType(_, _) => true
+          case _: ObjectTag => true
           case TypeRef(td, _) if travsersed(td) =>
             err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
             false
           case tr @ TypeRef(td, targs) => checkCycleComputeFields(tr.expand, computeFields)(travsersed + td)
           case ComposedType(_, l, r) => checkCycleComputeFields(l, computeFields) && checkCycleComputeFields(r, computeFields)
           case tv: TypeVariable => true
-          case _: FunctionType => true
+          case _: FunctionType | _: TupleType => true
           case NegType(u) => checkCycleComputeFields(u, computeFields)
           case RecordType(fs) =>
             fs.foreach(f => fields += f._1 -> (fields.getOrElse(f._1, TopType) & f._2))
             true
           case _: ExtrType => true
           case p: ProxyType => checkCycleComputeFields(p.underlying, computeFields)
-          case _ => ??? // TODO
+          case Without(base, _) => checkCycleComputeFields(base, computeFields)
         }}()
         val rightParents = td.kind match {
           case Als => checkCycleComputeFields(body_ty, computeFields = false)(Set.single(td))
-          case Cls | Trt =>
+          // case k @ (Cls | Trt) =>
+          case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
               // case PrimType(Var("string"), _) => true // Q: always?
-              case PrimType(_, _) => true // Q: always?
+              case _: ObjectTag => true // Q: always?
               case tr @ TypeRef(td, _) =>
                 td.kind match {
                   case Cls =>
@@ -212,13 +216,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case _: NegType =>
                 err(msg"cannot inherit from a type negation", prov.loco)
                 false
+              case _: TupleType =>
+                err(msg"cannot inherit from a tuple type", prov.loco)
+                false
+              case _: Without =>
+                err(msg"cannot inherit from a field removal type", prov.loco)
+                false
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
-              case _ => ??? // TODO
             }
             checkParents(body_ty) &&
-                checkCycleComputeFields(body_ty, computeFields = td.kind === Cls)(Set.single(td)) && {
-              val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
+                checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) && {
+              val nomTag = k match {
+                case Cls => clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
+                case Trt => trtNameToNomTag(td)(noProv/*FIXME*/, ctx)
+              }
               val fieldsRefined = RecordType(fields.iterator.map(f => f._1 -> freshVar(noProv)(1).tap(_.upperBounds ::= f._2)).toList)(noProv)
               val ctor = PolymorphicType(0, FunctionType(fieldsRefined, nomTag & fieldsRefined)(noProv/*FIXME*/))
               ctx += n.name -> ctor
@@ -270,7 +282,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
-      case Literal(lit) => PrimType(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
+      case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
       case Primitive(name) =>
         vars.get(name) orElse
           typeNamed(ty, name).flatMap(td =>
@@ -372,7 +384,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
         ctx.parent.dlof(_.get(v.name))(N).map(_.instantiate(0).unwrapProxies) |>? {
-          case S(PrimType(Var(v.name), _)) =>
+          case S(ClassTag(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
               s"if not, give your future readers a break and use another name :^)", v.toLoc)
@@ -420,7 +432,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case lit: Lit => PrimType(lit, Set.single(lit.baseClass))(prov)
+      case lit: Lit => ClassTag(lit, Set.single(lit.baseClass))(prov)
       case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
@@ -525,12 +537,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case Case(pat, bod, rest) =>
       val patTy = pat match {
         case lit: Lit =>
-          PrimType(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
+          ClassTag(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
         case Var(nme) =>
           ctx.tyDefs.get(nme) match {
             case None =>
               err("type identifier not found: " + nme, pat.toLoc)(raise, noProv /*FIXME*/)
-              val e = PrimType(ErrTypeId, Set.empty)(noProv)
+              val e = ClassTag(ErrTypeId, Set.empty)(noProv)
               return ((e -> e) :: Nil) -> e
             case Some(td) =>
               // TODO check td is a class (or also support traits?)
@@ -666,7 +678,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case ProxyType(und) => go(und, polarity)
-            case PrimType(n, _) => Primitive(n.idStr)
+            case tag: ObjectTag => Primitive(tag.id.idStr)
             case TypeRef(td, Nil) => Primitive(td.nme.name)
             case TypeRef(td, targs) =>
               AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))

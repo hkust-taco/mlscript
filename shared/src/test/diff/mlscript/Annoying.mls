@@ -52,11 +52,11 @@ v0: int
 
 // def test: (int | { x: 'a } | { y: 'a }) -> 'a
 def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
-//│ test: {} -> nothing
+//│ test: anything -> nothing
 
 :e
 def test x = case x of { int -> x.f | _ -> x.x }
-//│ int & {f: 'a} | {x: 'a} & ~int -> 'a  <:  f: {} -> nothing
+//│ int & {f: 'a} | {x: 'a} & ~int -> 'a  <:  f: anything -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
