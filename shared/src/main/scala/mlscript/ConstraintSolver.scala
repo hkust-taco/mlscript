@@ -411,7 +411,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = ClassTag(Var("_"+freshVar(tv.prov).toString), Set.empty)(noProv/*TODO*/)
+          val v = TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
           freshened += tv -> v
           // TODO support bounds on rigidified variables (intersect/union them in):
           assert(tv.lowerBounds.isEmpty)
