@@ -132,11 +132,16 @@ def f: (int & 'a) -> 'a
 def impl a = a a
 //│ impl: ('a -> 'b) & 'a -> 'b
 
-// FIXME: problem is solver assumes rigid vars are disjoint from other types
 :e
-// :d
 def f = impl
 //│ ('a -> 'b) & 'a -> 'b  <:  f: int & 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.136: 	def f = impl
+//│ ║         	        ^^^^
+//│ ╟── expression of type `int & _α127` does not match type `?a | int & _α127 -> ?b`
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.132: 	def impl a = a a
+//│ ╙──       	             ^^^
 
 f 1 
 //│ res: 1
@@ -150,10 +155,16 @@ def f a b = if gt a b then a else b
 f 1 
 //│ res: int & 'a -> 'a | 1
 
-// FIXME
-// :e
+:e
 def f a b = if gt a b then a else b b // mistake!
 //│ int & 'a -> nothing -> 'a  <:  f: int & 'a -> int & 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.159: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int & _α202` does not match type `?a | int & _α202 -> ?b`
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.159: 	def f a b = if gt a b then a else b b // mistake!
+//│ ╙──       	                                  ^^^
 
 f 1 
 //│ res: int & 'a -> 'a | 1
@@ -168,16 +179,16 @@ def g a = add a 1
 //│ g: int & 'a -> 'a
 //│ int -> int  <:  f: int & 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.167: 	def g a = add a 1
+//│ ║  l.178: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `_α228`
-//│ ║  l.167: 	def g a = add a 1
+//│ ╟── expression of type `int` does not match type `_α236`
+//│ ║  l.178: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── but it flows into function of type `int & ?a -> ?b | int`
-//│ ║  l.167: 	def g a = add a 1
+//│ ║  l.178: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
-//│ ╟── which does not match type `nothing -> _α228`
+//│ ╟── which does not match type `int & _α236 -> _α236`
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.166: 	def g: (int & 'a) -> 'a
+//│ ║  l.177: 	def g: (int & 'a) -> 'a
 //│ ╙──       	        ^^^
 
