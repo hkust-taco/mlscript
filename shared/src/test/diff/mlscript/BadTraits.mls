@@ -1,0 +1,92 @@
+class A
+class B
+//│ Defined class A
+//│ Defined class B
+
+// Okay to define, but impossible to instantiate:
+trait T: A & B
+//│ Defined trait T
+
+:e
+T {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.11: 	T {}
+//│ ║        	^^^^
+//│ ╟── expression of type `anything` does not match type `a`
+//│ ║  l.11: 	T {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	trait T: A & B
+//│ ╙──     	         ^
+//│ res: t | error
+
+def a = A{}
+//│ a: a
+
+:e
+T a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.27: 	T a
+//│ ║        	^^^
+//│ ╟── expression of type `a` does not match type `b`
+//│ ║  l.23: 	def a = A{}
+//│ ║        	        ^^^
+//│ ╟── but it flows into reference with expected type `b`
+//│ ║  l.27: 	T a
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	trait T: A & B
+//│ ╙──     	             ^
+//│ res: a & t | error
+
+:e
+T A
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.43: 	T A
+//│ ║        	^^^
+//│ ╟── expression of type `anything -> a` does not match type `a`
+//│ ║  l.43: 	T A
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	trait T: A & B
+//│ ╙──     	         ^
+//│ res: (anything -> a) & t | error
+
+:e
+T (B {})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.56: 	T (B {})
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `b` does not match type `a`
+//│ ║  l.56: 	T (B {})
+//│ ║        	   ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	trait T: A & B
+//│ ╙──     	         ^
+//│ res: b & t | error
+
+def t = T error
+//│ t: nothing
+
+t: nothing
+//│ res: nothing
+
+type Als = A & B
+//│ Defined type Als
+
+t: Als
+//│ res: nothing
+
+
+:e
+class D0: T
+//│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
+//│ ║  l.82: 	class D0: T
+//│ ╙──      	      ^^^^^
+
+:e
+class D1: B & T
+//│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
+//│ ║  l.88: 	class D1: B & T
+//│ ╙──      	      ^^^^^^^^^
+

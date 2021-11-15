@@ -1,5 +1,3 @@
-// TODO properly implement traits – currently they're just like classes
-
 trait A: { x: int }
 trait B: { y: string }
 class C: { x: 0 | 1 }
@@ -7,18 +5,23 @@ class C: { x: 0 | 1 }
 //│ Defined trait B
 //│ Defined class C
 
+
 A { x = 1 }
 //│ res: {x: 1} & a
 
 :e
 A {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.14: 	A {}
+//│ ║  l.13: 	A {}
 //│ ║        	^^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.14: 	A {}
-//│ ╙──      	  ^^
-//│ res: {x: nothing} & a | error
+//│ ║  l.13: 	A {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.1: 	trait A: { x: int }
+//│ ╙──     	         ^^^^^^^^^^
+//│ res: a | error
+
 
 class D: C & A & B
 //│ Defined class D
@@ -32,10 +35,10 @@ error: A & B
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.33: 	def dv = D{}
+//│ ║  l.36: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
-//│ ║  l.33: 	def dv = D{}
+//│ ║  l.36: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: d & {x: nothing, y: nothing} | error
 
@@ -45,16 +48,16 @@ def dv = D { x = 0; y = "hello" }
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.46: 	dv: nothing
+//│ ║  l.49: 	dv: nothing
 //│ ║        	^^
 //│ ╟── expression of type `d & {x: ?a | 0, y: ?b | "hello"}` does not match type `nothing`
-//│ ║  l.42: 	def dv = D { x = 0; y = "hello" }
+//│ ║  l.45: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.46: 	dv: nothing
+//│ ║  l.49: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.46: 	dv: nothing
+//│ ║  l.49: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 
@@ -64,11 +67,11 @@ dv: A & B
 :e
 dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.65: 	dv: A & B: nothing
+//│ ║  l.68: 	dv: A & B: nothing
 //│ ║        	^^
 //│ ╟── expression of type `{x: int, y: string} & a & b` does not match type `nothing`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.65: 	dv: A & B: nothing
+//│ ║  l.68: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
 
@@ -82,10 +85,10 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	E{}
+//│ ║  l.86: 	E{}
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.83: 	E{}
+//│ ║  l.86: 	E{}
 //│ ╙──      	 ^^
 //│ res: e & {x: nothing} | error
 
@@ -94,4 +97,60 @@ ev: C
 //│ ev: e & {x: 1}
 //│ res: c & {x: 0 | 1}
 
+
+trait T1: C & A
+//│ Defined trait T1
+
+:e
+def t = T1 (A { x = 1 })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.105: 	def t = T1 (A { x = 1 })
+//│ ║         	        ^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: 1}` does not match type `~a | c`
+//│ ║  l.105: 	def t = T1 (A { x = 1 })
+//│ ║         	              ^^^^^^^^^
+//│ ╟── but it flows into application with expected type `c & {x: 0 | 1}`
+//│ ║  l.105: 	def t = T1 (A { x = 1 })
+//│ ║         	            ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.101: 	trait T1: C & A
+//│ ╙──       	          ^
+//│ t: {x: 1} & t1 & a | error
+
+def t = T1 (A (C { x = 1 }))
+//│ t: c & {x: 1} & t1 & a
+
+class CA: C & A
+//│ Defined class CA
+
+def t = T1 (CA { x = 1 })
+//│ t: cA & {x: 1} & t1
+
+
+class C1: B & T1 & { y: "hi" | "hello" }
+//│ Defined class C1
+
+:e
+def c1 = C1 { }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.134: 	def c1 = C1 { }
+//│ ║         	         ^^^^^^
+//│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: "hi" & ?b | "hello" & ?b}`
+//│ ║  l.134: 	def c1 = C1 { }
+//│ ╙──       	            ^^^
+//│ c1: c1 & {x: nothing, y: nothing} | error
+
+def c1 = C1 { x = 1; y = "hi" }
+//│ c1: c1 & {x: 1, y: "hi"}
+
+c1: T1
+//│ res: c & {x: 0 | 1} & t1 & a
+
+c1: A
+//│ res: {x: int} & a
+
+c1.x
+c1.y
+//│ res: 1
+//│ res: "hi"
 
