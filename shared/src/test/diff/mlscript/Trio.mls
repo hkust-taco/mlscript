@@ -20,7 +20,7 @@ foo arg
 //│ res: int | string | bool
 
 foo (arg with { fC = true })
-//│ res: int | string | bool
+//│ res: int | string | true
 
 
 def foo x = case x of {

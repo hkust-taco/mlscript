@@ -32,6 +32,38 @@ def f: (int & 'a) -> (int & 'a) -> 'a
 def f a b = if gt a b then a else b
 
 f 1 2
+
+def test x = case x of
+  { Left -> x.value
+  | Right -> "nope"
+  }
+
+def tmp = test (if true then Left 1 else Right 2)
+
+case tmp of { int -> tmp | string -> 0 }
+
+def test2 x = case x of
+  { int -> x
+  | bool -> x
+  | string -> x
+  }
+test2 1
+test2 true
+test2 "a"
+
+def test3 x = case x of
+  { 1 -> true
+  | true -> true
+  | "a" -> true
+  | _ -> false
+  }
+test3 1
+test3 true
+test3 "a"
+test3 2
+test3 false
+test3 "oops"
+test3 {}
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

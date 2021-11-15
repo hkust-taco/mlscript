@@ -16,7 +16,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── expression of type `false` does not match type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── but it flows into application with expected type `{prop: int & ?a}`
@@ -45,7 +45,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.44: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── expression of type `false` does not match type `int`
 //│ ║  l.44: 	(x => succ x) false
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:

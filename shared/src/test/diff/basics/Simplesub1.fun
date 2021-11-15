@@ -34,7 +34,7 @@ let twice = f => x => f (f x)
 
 
 true
-//│ res: bool
+//│ res: true
 
 not true
 //│ res: bool
@@ -56,7 +56,7 @@ succ true
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── expression of type `true` does not match type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
 //│ res: int | error
@@ -95,7 +95,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `bool` is not a function
+//│ ╟── expression of type `false` is not a function
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	                        ^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -138,7 +138,7 @@ if true then { a: 1, b: true } else { b: false, c: 42 }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{ a: 123, b: true }.c
 //│ ║        	                   ^^
-//│ ╟── expression of type `{a: 123, b: bool}` does not have field 'c'
+//│ ╟── expression of type `{a: 123, b: true}` does not have field 'c'
 //│ ║  l.+1: 	{ a: 123, b: true }.c
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ res: error
@@ -193,10 +193,10 @@ x => {l: x x, r: x }
 
 
 let rec trutru = g => trutru (g true)
-//│ trutru: (bool -> 'a) as 'a -> nothing
+//│ trutru: (true -> 'a) as 'a -> nothing
 
 i => if ((i i) true) then true else true
-//│ res: ('a -> bool -> bool) & 'a -> bool
+//│ res: ('a -> true -> bool) & 'a -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -208,16 +208,16 @@ i => if ((i i) true) then true else true
 
 let f = x => x; {a: f 0, b: f true}
 //│ f: 'a -> 'a
-//│ res: {a: 0, b: bool}
+//│ res: {a: 0, b: true}
 
 y => (let f = x => x; {a: f y, b: f true})
-//│ res: 'a -> {a: 'a, b: bool}
+//│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: (bool | 0 -> 'a) -> {a: 'a, b: 'a}
+//│ res: (true | 0 -> 'a) -> {a: 'a, b: 'a}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
-//│ res: 'a -> {a: 'a, b: bool}
+//│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 //│ res: int & 'a -> {a: 'a, b: int}

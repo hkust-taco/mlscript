@@ -7,7 +7,7 @@
 
 // TODO literal booleans
 true
-//│ res: bool
+//│ res: true
 
 1 as Int
 "hello" as String
@@ -40,17 +40,17 @@ false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.37: 	1 as true
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `1` does not match type `bool`
+//│ ╟── expression of type `1` does not match type `true`
 //│ ║  l.37: 	1 as true
 //│ ║        	^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.37: 	1 as true
 //│ ╙──      	     ^^^^
-//│ res: bool
+//│ res: true
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── expression of type `true` does not match type `int`
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -60,7 +60,7 @@ false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.39: 	false as 1
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `1`
+//│ ╟── expression of type `false` does not match type `1`
 //│ ║  l.39: 	false as 1
 //│ ║        	^^^^^
 //│ ╟── Note: constraint arises from integer literal:
@@ -87,7 +87,7 @@ x => if x then x else f false
 //│ res: bool & 'a -> 'a | 1 | 0
 
 res false
-//│ res: 1 | 0 | bool
+//│ res: 1 | 0 | false
 
 let rec f = n =>
   if pred n then n else f (n + 1)
@@ -105,13 +105,13 @@ f false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.104: 	f false
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── expression of type `false` does not match type `int`
 //│ ║  l.104: 	f false
 //│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.93: 	  if pred n then n else f (n + 1)
 //│ ╙──      	                           ^
-//│ res: bool | int | error
+//│ res: false | int | error
 
 let take0 (x: 0) = 0
 let take1 (x: 1) = 1

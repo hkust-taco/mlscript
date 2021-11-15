@@ -76,6 +76,7 @@ object Main {
                 |    }
                 |  }
                 |})()""".stripMargin
+              println("Running code: " + code)
               // Collect evaluation results.
               var defResults = new collection.mutable.HashMap[Str, Str]
               var exprResults: Ls[Str] = Nil

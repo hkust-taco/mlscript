@@ -61,6 +61,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val BotType: ExtrType = ExtrType(true)(noProv)
   val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noProv)
   val BoolType: ClassTag = ClassTag(Var("bool"), Set.empty)(noProv)
+  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(Var("bool")))(noProv)
+  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(Var("bool")))(noProv)
   val IntType: ClassTag = ClassTag(Var("int"), Set.single(Var("number")))(noProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noProv)
@@ -75,6 +77,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Cls, Primitive("int"), Nil, Top, Set.single(Var("number")), N) ::
     TypeDef(Cls, Primitive("number"), Nil, Top, Set.empty, N) ::
     TypeDef(Cls, Primitive("bool"), Nil, Top, Set.empty, N) ::
+    TypeDef(Cls, Primitive("true"), Nil, Top, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, Primitive("false"), Nil, Top, Set.single(Var("bool")), N) ::
     TypeDef(Cls, Primitive("string"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("anything"), Nil, Top, Set.empty, N) ::
     TypeDef(Als, Primitive("nothing"), Nil, Bot, Set.empty, N) ::
@@ -83,8 +87,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
     Map(
-      "true" -> BoolType,
-      "false" -> BoolType,
+      "true" -> TrueType,
+      "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
       "not" -> fun(BoolType, BoolType)(noProv),

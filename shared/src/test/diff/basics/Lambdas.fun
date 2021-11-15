@@ -2,7 +2,7 @@
 let a = succ
 let x = true
 //│ a: int -> int
-//│ x: bool
+//│ x: true
 
 x => add (a x)
 //│ res: int -> int -> int

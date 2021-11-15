@@ -81,7 +81,7 @@ def id: 'a -> 'a
 id 1
 id true
 //│ res: 1
-//│ res: bool
+//│ res: true
 
 def id x = x
 //│ 'a -> 'a  <:  f: 'a -> 'a
@@ -89,7 +89,7 @@ def id x = x
 id 1
 id true
 //│ res: 1
-//│ res: bool
+//│ res: true
 
 
 :e

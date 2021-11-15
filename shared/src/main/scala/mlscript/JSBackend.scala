@@ -129,8 +129,23 @@ class JSBackend {
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
       case Case(className, body, rest) =>
+        val scrut = new JSIdent(name)
         new JSIfStmt(
-          new JSInstanceOf(new JSIdent(name), new JSIdent(className.idStr)),
+          className match {
+            case Var("int") =>
+              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
+            case Var("bool") =>
+              JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
+            case Var(s @ ("true" | "false")) =>
+              JSBinary("==", scrut, JSLit(s))
+            case Var("string") =>
+              // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
+              JSBinary("==", JSMember(scrut, "constructor"), JSLit("String"))
+            case Var(clsName) =>
+              JSInstanceOf(scrut, JSIdent(clsName))
+            case lit: Lit =>
+              JSBinary("==", scrut, JSLit(lit.idStr))
+          },
           Ls(new JSReturnStmt(translateTerm(body)))
         ) :: translateCaseBranch(name, rest)
       case Wildcard(body) => Ls(new JSReturnStmt(translateTerm(body)))

@@ -10,7 +10,7 @@ def False: False
 //│ False: false
 
 True: Boolean
-//│ res: true | false
+//│ res: bool
 
 :e
 Boolean
