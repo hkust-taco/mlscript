@@ -190,17 +190,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
-              // case PrimType(Var("string"), _) => true // Q: always?
-              case _: ObjectTag => true // Q: always?
-              case tr @ TypeRef(td, _) =>
-                td.kind match {
+              // case ClassTag(Var("string"), _) => true // Q: always?
+              case _: ObjectTag => true // Q: always? // FIXME actually no
+              case tr @ TypeRef(td2, _) =>
+                td2.kind match {
                   case Cls =>
-                    parentsClasses.isEmpty || {
-                      err(msg"cannot inherit from ${tr.defn.nme
-                          } as this type already inherits from ${parentsClasses.head.defn.nme}",
-                        prov.loco)
-                      false
-                    } tap (_ => parentsClasses += tr)
+                    if (td.kind is Cls) {
+                      parentsClasses.isEmpty || {
+                        err(msg"${td.kind.str} $n cannot inherit from class ${tr.defn.nme
+                            } as it already inherits from class ${parentsClasses.head.defn.nme}",
+                          prov.loco)
+                        false
+                      } tap (_ => parentsClasses += tr)
+                    } else checkParents(tr.expand)
                   case Trt | Als => checkParents(tr.expand)
                 }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
@@ -227,12 +229,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             }
             checkParents(body_ty) &&
                 checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) && {
-              val nomTag = k match {
-                case Cls => clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
-                case Trt => trtNameToNomTag(td)(noProv/*FIXME*/, ctx)
+              val ctor = k match {
+                case Cls =>
+                  val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
+                  val fieldsRefined = RecordType(fields.iterator.map(f => f._1 -> freshVar(noProv)(1).tap(_.upperBounds ::= f._2)).toList)(noProv)
+                  PolymorphicType(0, FunctionType(fieldsRefined, nomTag & fieldsRefined)(noProv/*FIXME*/))
+                case Trt =>
+                  val nomTag = trtNameToNomTag(td)(noProv/*FIXME*/, ctx)
+                  val tv = freshVar(noProv)(1)
+                  tv.upperBounds ::= body_ty
+                  PolymorphicType(0, FunctionType(tv, tv & nomTag)(noProv/*FIXME*/))
               }
-              val fieldsRefined = RecordType(fields.iterator.map(f => f._1 -> freshVar(noProv)(1).tap(_.upperBounds ::= f._2)).toList)(noProv)
-              val ctor = PolymorphicType(0, FunctionType(fieldsRefined, nomTag & fieldsRefined)(noProv/*FIXME*/))
               ctx += n.name -> ctor
               true
             }

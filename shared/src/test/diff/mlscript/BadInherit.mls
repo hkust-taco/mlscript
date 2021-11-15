@@ -7,7 +7,7 @@ class Parent2: { name: int }
 
 :e
 class Child: Parent1 & Parent2
-//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ╔══[ERROR] class Child cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -42,7 +42,7 @@ def c = Child(Parent1{name="A"})
 :e
 type Sly1 = Parent2
 class Child2: Parent1 & Sly1
-//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ╔══[ERROR] class Child2 cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.44: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type Sly1
@@ -50,7 +50,7 @@ class Child2: Parent1 & Sly1
 :e
 type Sly2[A] = A
 class Child2: Sly2[Parent1] & Parent2
-//│ ╔══[ERROR] cannot inherit from Parent2 as this type already inherits from Parent1
+//│ ╔══[ERROR] class Child2 cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.52: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type Sly2
