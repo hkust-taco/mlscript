@@ -250,7 +250,7 @@ object JSBinary {
       "instanceof" -> 12,
       "==" -> 11,
       "&&" -> 7,
-      "||" -> 7,
+      "||" -> 7
     )
 }
 
@@ -382,16 +382,19 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
-final case class JSClassDecl(name: Str, fields: Ls[Str]) extends JSStmt {
-  def toSourceCode: SourceCode =
-    if (fields.isEmpty) { SourceCode.from(s"class $name {}") }
+final case class JSClassDecl(name: Str, fields: Ls[Str], base: Opt[Str] = N)
+    extends JSStmt {
+  def toSourceCode: SourceCode = {
+    val ext = (base map { case name => s"extends $name " }).getOrElse("")
+    if (fields.isEmpty) { SourceCode.from(s"class $name $ext{}") }
     else {
       new SourceCode(
-        Ls(s"class $name {", "  constructor(fields) {") ::: fields.map {
+        Ls(s"class $name $ext{", "  constructor(fields) {") ::: fields.map {
           case name => s"    this.$name = fields.$name"
         } ::: Ls("  }", "}") map { new SourceLine(_) }
       )
     }
+  }
 }
 
 final case class JSComment(text: Str) extends JSStmt {

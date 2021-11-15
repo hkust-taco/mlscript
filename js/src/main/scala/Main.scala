@@ -42,7 +42,6 @@ object Main {
           "Parse error: " + extra.trace().msg +
             s" at line $lineNum:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(pgrm, index) =>
-          println(s"Parsed: $pgrm")
           val (diags, (typeDefs, stmts)) = pgrm.desugared
           // report(diags) // TODO... currently the MLParser does not report any in desugaring so this is fine
           val (typeCheckResult, errorResult) = checkProgramType(pgrm)
@@ -76,7 +75,6 @@ object Main {
                 |    }
                 |  }
                 |})()""".stripMargin
-              println("Running code: " + code)
               // Collect evaluation results.
               var defResults = new collection.mutable.HashMap[Str, Str]
               var exprResults: Ls[Str] = Nil

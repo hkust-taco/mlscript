@@ -24,7 +24,7 @@ class JSBackend {
 
   // I just realized `Statement` is unused.
   def translateStatement(stmt: DesugaredStatement): JSStmt = stmt match {
-    case t: Term => JSExprStmt(translateTerm(t))
+    case t: Term             => JSExprStmt(translateTerm(t))
     case _: Def | _: TypeDef => ??? // TODO
   }
 
@@ -62,13 +62,17 @@ class JSBackend {
   }
 
   private def builtinFnOpMap =
-    immutable.HashMap("add" -> "+", "sub" -> "-", "mul" -> "*", "div" -> "/",
+    immutable.HashMap(
+      "add" -> "+",
+      "sub" -> "-",
+      "mul" -> "*",
+      "div" -> "/",
       "lt" -> "<",
       "le" -> "<=",
       "gt" -> ">",
       "ge" -> ">=",
       "eq" -> "==",
-      "ne" -> "!=",
+      "ne" -> "!="
     )
 
   def translateTerm(term: Term): JSExpr = term match {
@@ -108,7 +112,9 @@ class JSBackend {
     case Let(isRec, name, value, body) =>
       new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
     case Blk(stmts) =>
-      new JSImmEvalFn(Right(stmts flatMap (_.desugared._2) map { translateStatement(_) }))
+      new JSImmEvalFn(Right(stmts flatMap (_.desugared._2) map {
+        translateStatement(_)
+      }))
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
@@ -155,7 +161,12 @@ class JSBackend {
   // TODO: add field definitions
   def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
     actualType match {
+      // `class A` ==> `class A {}`
+      case Top => new JSClassDecl(name, Nil)
+      // `class A { <items> }` ==> `class A { constructor(fields) { <items> } }`
       case Record(fields) => new JSClassDecl(name, fields map { _._1 })
+      // `class B: A` ==> `class B extends A {}`
+      case Primitive(base) => new JSClassDecl(name, Nil, S(base))
       // I noticed `class Fun[A]: A -> A` is okay.
       // But I have no idea about how to do it.
       case _ => ???
@@ -198,17 +209,16 @@ class JSBackend {
                   )
                 ) :: Nil
             case Def(isRecursive, name, R(body)) => Nil
-            case _: Term => Nil
+            case _: Term                         => Nil
           })
           // Generate something like `exprs.push(<expr>)`.
-          .concat(otherStmts.zipWithIndex.collect {
-            case (term: Term, index) =>
-              new JSExprStmt(
-                JSInvoke(
-                  JSMember(JSIdent(exprResultObjName), "push"),
-                  translateTerm(term)
-                )
+          .concat(otherStmts.zipWithIndex.collect { case (term: Term, index) =>
+            new JSExprStmt(
+              JSInvoke(
+                JSMember(JSIdent(exprResultObjName), "push"),
+                translateTerm(term)
               )
+            )
           })
           .concat(
             JSReturnStmt(
