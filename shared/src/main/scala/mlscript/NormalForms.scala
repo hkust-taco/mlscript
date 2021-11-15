@@ -91,6 +91,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         N
       case (RhsBases(ps, S(L(bt))), _)
         => if (that === bt) S(this) else ??? // TODO
+      case (RhsBases(ps, bf), tt: TraitTag) =>
+        S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf))
       case (RhsBases(_, _), _) => // FIXME should properly consider possible base types here...
         println(s"TODO ?! $this $that")
         // ???

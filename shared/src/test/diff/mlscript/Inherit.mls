@@ -68,7 +68,7 @@ f (c: Parent)
 //│ ╟── but it flows into argument with expected type `child`
 //│ ║  l.61: 	f (c: Parent)
 //│ ║        	   ^
-//│ ╟── Note: constraint arises from type pattern:
+//│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.53: 	  | Child -> x.name
 //│ ║        	    ^^^^^
 //│ ╟── from reference:

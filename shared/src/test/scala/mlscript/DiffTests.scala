@@ -32,6 +32,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "Lists",
     "Traits",
     "BadTraits",
+    "TraitMatching",
     // "Subsume",
   )
   private def filter(name: Str): Bool =

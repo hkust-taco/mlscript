@@ -553,9 +553,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               return ((e -> e) :: Nil) -> e
             case Some(td) =>
               // TODO check td is a class (or also support traits?)
-              if (td.kind === Als) err(msg"can only match on classes and traits",
-                pat.toLoc)(raise, noProv /*FIXME*/)
-              clsNameToNomTag(td)(tp(pat.toLoc, "type pattern"), ctx)
+              td.kind match {
+                case Als => err(msg"can only match on classes and traits",
+                  pat.toLoc)(raise, noProv /*FIXME*/)
+                case Cls =>
+                  clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
+                case Trt =>
+                  trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
+              }
           }
       }
       val newCtx = ctx.nest
