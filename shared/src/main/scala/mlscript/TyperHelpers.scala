@@ -89,7 +89,7 @@ abstract class TyperHelpers { self: Typer =>
       case (_, ComposedType(true, l, r)) => that <:< l || that <:< r
       case (RecordType(fs1), RecordType(fs2)) =>
         fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
-      case (_: RecordType, _: ClassTag) | (_: ClassTag, _: RecordType) => false
+      case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
       case (_: TypeVariable, _) | (_, _: TypeVariable)
         if cache.contains(this -> that)
         => cache(this -> that)
@@ -114,6 +114,7 @@ abstract class TyperHelpers { self: Typer =>
         false // TODO try to expand them (this requires populating the cache because of recursive types)
       case (_: Without, _) | (_, _: Without)
         | (_: TupleType, _) | (_, _: TupleType)
+        | (_: TraitTag, _) | (_, _: TraitTag)
         => false // don't even try
       case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
     })
