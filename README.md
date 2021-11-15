@@ -1,7 +1,11 @@
 # MLscript
 
-An playground for type system experimentation,
-focused on functional programming, dependent types, and subtyping.
+What would TypeScript look like if it had been designed with type inference and soundness in mind?
+
+We provide one possible answer in MLscript, an object-oriented and functional programming language with records, generic classes, mix-in traits, first-class unions and intersections, instance matching, and ML-style principal type inference.
+These features can be used to implement expressive class hierarchies as well as extensible sums and products.
+
+MLscript supports union, intersection, and complement (or negation) connectives, making sure they form a Boolean algebra, and add enough structure to derive a sound and complete type inference algorithm.
 
 
 ## Running the tests
@@ -12,18 +16,7 @@ In the terminal, run `sbt mlscriptJVM/test`.
 
 ## Running the demo locally
 
-To run the demo on your computer, first change the line in `index.html` from:
-```html
-<script type="text/javascript" src="bin/mlscript-opt.js"></script>
-```
-to:
-```html
-<script type="text/javascript" src="js/target/scala-2.13/mlscript-fastopt.js"></script>
-```
-
-And then compile the project with `sbt fastOptJS`.
-
-Finally, open the file `index.html` in your browser.
+To run the demo on your computer, compile the project with `sbt fastOptJS`, then open the `local_testing.html` file in your browser.
 
 You can make changes to the type inference code
 in `shared/src/main/scala/mlscript`,
