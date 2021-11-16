@@ -104,6 +104,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "le" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
       "gt" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
       "ge" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "concat" -> fun(StrType, fun(StrType, StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)
         PolymorphicType(0, fun(v, fun(v, BoolType)(noProv))(noProv))

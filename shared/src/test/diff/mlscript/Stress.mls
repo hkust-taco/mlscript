@@ -61,7 +61,7 @@ foo arg
 //│ arg: a & {fA: int} | b & {fB: int}
 //│ res: int
 //│ constrain calls: 43
-//│ annoying  calls: 80
+//│ annoying  calls: 78
 
 
 // ====== 3 ====== //
@@ -77,8 +77,8 @@ foo arg
 //│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} -> 'a
 //│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int}
 //│ res: int
-//│ constrain calls: 138
-//│ annoying  calls: 442
+//│ constrain calls: 105
+//│ annoying  calls: 301
 
 
 // ====== 4 ====== //
@@ -95,20 +95,20 @@ foo arg
 //│ foo: a & {fA: 'a} | b & {fB: 'a} | c & {fC: 'a} | d & {fD: 'a} -> 'a
 //│ arg: a & {fA: int} | b & {fB: int} | c & {fC: int} | d & {fD: int}
 //│ res: int
-//│ constrain calls: 501
-//│ annoying  calls: 2257
+//│ constrain calls: 272
+//│ annoying  calls: 997
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
-//│ constrain calls: 464
-//│ annoying  calls: 2423
+//│ constrain calls: 244
+//│ annoying  calls: 1000
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
-//│ constrain calls: 464
-//│ annoying  calls: 2506
+//│ constrain calls: 244
+//│ annoying  calls: 1000
 
 
 // ====== 5 ====== //

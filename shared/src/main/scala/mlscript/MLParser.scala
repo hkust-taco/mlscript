@@ -31,6 +31,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ident[_: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
+  def termOrAssign[_: P]: P[Statement] = P( term ~ ("=" ~ term).? ).map {
+    case (expr, N) => expr
+    case (pat, S(bod)) => LetS(false, pat, bod)
+  }
   def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
@@ -119,8 +123,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   
   def toplvl[_: P]: P[Statement] =
-    P( defDecl | tyDecl | term )
-  def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
+    P( defDecl | tyDecl | termOrAssign )
+  def pgrm[_: P]: P[Pgrm] = P( (";".rep ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
   def topLevelSep[_: P]: P[Unit] = ";"
   
   private var curHash = 0

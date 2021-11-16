@@ -184,6 +184,7 @@ abstract class TyperHelpers { self: Typer =>
       }
       case _ => this
     }
+    def normalize(pol: Bool): ST = DNF.mk(this, pol = pol).toType
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
