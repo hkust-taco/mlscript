@@ -72,7 +72,7 @@ class JSBackend {
       "gt" -> ">",
       "ge" -> ">=",
       "eq" -> "==",
-      "ne" -> "!="
+      "ne" -> "!=",
     )
 
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
