@@ -397,11 +397,10 @@ final case class JSClassDecl(
         val inheritedFields = baseCls.fields.filterNot { case name =>
           fieldsSet contains name
         }
-        val items = baseCls.fields.map(x => s"$x: fields.$x").mkString(", ")
         val prologue =
           s"class $name extends ${baseCls.name} {" ::
             "  constructor(fields) {" ::
-            s"    super({ $items });" ::
+            "    super(fields);" ::
             Nil
         SourceCode.fromLines(
           prologue ::: inits ::: epilogue
