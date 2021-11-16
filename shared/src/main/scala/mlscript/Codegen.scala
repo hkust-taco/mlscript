@@ -179,8 +179,6 @@ final case class JSImmEvalFn(
     body: Either[JSExpr, Ls[JSStmt]],
     argument: JSExpr
 ) extends JSExpr {
-  def this(body: Either[JSExpr, Ls[JSStmt]]) =
-    this("", body, new JSPlaceholderExpr())
   def precedence: Int = 22
   def toSourceCode: SourceCode = {
     (SourceCode.from(s"function ($name) ") ++ (body match {

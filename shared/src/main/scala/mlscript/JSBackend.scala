@@ -81,17 +81,17 @@ class JSBackend {
     case Var(name) =>
       if (classNames.contains(name)) {
         letLhsAliasMap.get(name) match {
-          case N        => new JSIdent(name, true)
-          case S(alias) => new JSIdent(alias, false)
+          case N        => JSIdent(name, true)
+          case S(alias) => JSIdent(alias, false)
         }
       } else {
-        new JSIdent(name)
+        JSIdent(name)
       }
     // TODO: need scope to track variables
     // so that we can rename reserved words
     case Lam(lhs, rhs) =>
       val (paramCode, declaredVars) = translateLetPattern(lhs)
-      new JSArrowFn(paramCode, translateTerm(rhs))
+      JSArrowFn(paramCode, translateTerm(rhs))
     // Binary expressions.
     case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
       JSBinary(
@@ -101,35 +101,39 @@ class JSBackend {
       )
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
-      new JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+      JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => new JSInvoke(translateTerm(lhs), translateTerm(rhs))
+    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
     case Rcd(fields) =>
-      new JSRecord(fields map { case (key, value) =>
+      JSRecord(fields map { case (key, value) =>
         key -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
-      new JSMember(translateTerm(receiver), fieldName)
+      JSMember(translateTerm(receiver), fieldName)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
+      JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
     case Blk(stmts) =>
-      new JSImmEvalFn(Right(stmts flatMap (_.desugared._2) map {
-        translateStatement(_)
-      }))
+      JSImmEvalFn(
+        "",
+        Right(stmts flatMap (_.desugared._2) map {
+          translateStatement(_)
+        }),
+        new JSPlaceholderExpr()
+      )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
       val body = translateCaseBranch(parameter, cases)
-      new JSImmEvalFn(parameter, Right(body), argument)
+      JSImmEvalFn(parameter, Right(body), argument)
     }
     case IntLit(value) => {
       val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
-      new JSLit(if (useBigInt) { value.toString }
+      JSLit(if (useBigInt) { value.toString }
       else { value.toString + "n" })
     }
-    case DecLit(value) => new JSLit(value.toString)
-    case StrLit(value) => new JSLit(JSLit.makeStringLiteral(value))
+    case DecLit(value) => JSLit(value.toString)
+    case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     case _             => ???
   }
 
@@ -137,8 +141,8 @@ class JSBackend {
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
       case Case(className, body, rest) =>
-        val scrut = new JSIdent(name)
-        new JSIfStmt(
+        val scrut = JSIdent(name)
+        JSIfStmt(
           className match {
             case Var("int") =>
               JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
@@ -154,24 +158,24 @@ class JSBackend {
             case lit: Lit =>
               JSBinary("==", scrut, JSLit(lit.idStr))
           },
-          Ls(new JSReturnStmt(translateTerm(body)))
+          Ls(JSReturnStmt(translateTerm(body)))
         ) :: translateCaseBranch(name, rest)
-      case Wildcard(body) => Ls(new JSReturnStmt(translateTerm(body)))
-      case NoCases        => Ls(new JSThrowStmt())
+      case Wildcard(body) => Ls(JSReturnStmt(translateTerm(body)))
+      case NoCases        => Ls(JSThrowStmt())
     }
 
   // TODO: add field definitions
   def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
     actualType match {
       // `class A` ==> `class A {}`
-      case Top => new JSClassDecl(name, Nil)
+      case Top => JSClassDecl(name, Nil)
       // `class A { <items> }` ==> `class A { constructor(fields) { <items> } }`
-      case Record(fields) => new JSClassDecl(name, fields map { _._1 })
+      case Record(fields) => JSClassDecl(name, fields map { _._1 })
       // `class B: A` ==> `class B extends A {}`
       case Primitive(clsName) =>
         nameClsMap get clsName match {
           case N      => ???
-          case S(cls) => new JSClassDecl(name, Nil, S(cls))
+          case S(cls) => JSClassDecl(name, Nil, S(cls))
         }
       // I noticed `class Fun[A]: A -> A` is okay.
       // But I have no idea about how to do it.
@@ -194,8 +198,8 @@ class JSBackend {
                 val cls = translateClassDeclaration(name, actualType)
                 nameClsMap += name -> cls
                 cls
-              case Trt => new JSComment(s"// trait $name")
-              case Als => new JSComment(s"// type alias $name")
+              case Trt => JSComment(s"// trait $name")
+              case Als => JSComment(s"// type alias $name")
             }
           }
           // Generate something like:
@@ -210,8 +214,8 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              new JSConstDecl(tempName, translatedBody) ::
-                new JSExprStmt(
+              JSConstDecl(tempName, translatedBody) ::
+                JSExprStmt(
                   JSAssignExpr(
                     JSMember(JSIdent(defResultObjName), name),
                     JSIdent(tempName)
@@ -222,7 +226,7 @@ class JSBackend {
           })
           // Generate something like `exprs.push(<expr>)`.
           .concat(otherStmts.zipWithIndex.collect { case (term: Term, index) =>
-            new JSExprStmt(
+            JSExprStmt(
               JSInvoke(
                 JSMember(JSIdent(exprResultObjName), "push"),
                 translateTerm(term)
