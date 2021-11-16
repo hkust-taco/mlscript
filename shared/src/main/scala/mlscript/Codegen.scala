@@ -388,10 +388,18 @@ final case class JSClassDecl(name: Str, fields: Ls[Str], base: Opt[Str] = N)
     val ext = (base map { case name => s"extends $name " }).getOrElse("")
     if (fields.isEmpty) { SourceCode.from(s"class $name $ext{}") }
     else {
+      val prologue =
+        s"class $name $ext{" ::
+          "  constructor(fields) {" ::
+          (if (base.isEmpty)
+             "    super();" :: Nil
+           else
+             Nil)
+      val inits = fields map { case name =>
+        s"    this.$name = fields.$name"
+      }
       new SourceCode(
-        Ls(s"class $name $ext{", "  constructor(fields) {") ::: fields.map {
-          case name => s"    this.$name = fields.$name"
-        } ::: Ls("  }", "}") map { new SourceLine(_) }
+        prologue ::: inits ::: ("  }" :: "}" :: Nil) map SourceLine.from
       )
     }
   }
