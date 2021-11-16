@@ -382,27 +382,42 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
-final case class JSClassDecl(name: Str, fields: Ls[Str], base: Opt[Str] = N)
-    extends JSStmt {
+final case class JSClassDecl(
+    val name: Str,
+    fields: Ls[Str],
+    base: Opt[JSClassDecl] = N
+) extends JSStmt {
   def toSourceCode: SourceCode = {
-    val ext = (base map { case name => s"extends $name " }).getOrElse("")
-    if (fields.isEmpty) { SourceCode.from(s"class $name $ext{}") }
-    else {
-      val prologue =
-        s"class $name $ext{" ::
-          "  constructor(fields) {" ::
-          (if (base.isEmpty)
-             "    super();" :: Nil
-           else
-             Nil)
-      val inits = fields map { case name =>
-        s"    this.$name = fields.$name"
-      }
-      new SourceCode(
-        prologue ::: inits ::: ("  }" :: "}" :: Nil) map SourceLine.from
-      )
+    val inits = fields map { case name =>
+      s"    this.$name = fields.$name;"
+    }
+    val epilogue = "  }" :: "}" :: Nil
+    base match {
+      case Some(baseCls) =>
+        val inheritedFields = baseCls.fields.filterNot { case name =>
+          fieldsSet contains name
+        }
+        val items = baseCls.fields.map(x => s"$x: fields.$x").mkString(", ")
+        val prologue =
+          s"class $name extends ${baseCls.name} {" ::
+            "  constructor(fields) {" ::
+            s"    super({ $items });" ::
+            Nil
+        SourceCode.fromLines(
+          prologue ::: inits ::: epilogue
+        )
+      case None =>
+        fields match {
+          case Nil => SourceCode.from(s"class $name {}")
+          case _ =>
+            SourceCode.fromLines(
+              (s"class $name {" ::
+                "  constructor(fields) {" :: Nil) ::: inits ::: epilogue
+            )
+        }
     }
   }
+  private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 
 final case class JSComment(text: Str) extends JSStmt {

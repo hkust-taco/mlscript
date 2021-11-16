@@ -75,6 +75,8 @@ class JSBackend {
       "ne" -> "!="
     )
 
+  private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
+
   def translateTerm(term: Term): JSExpr = term match {
     case Var(name) =>
       if (classNames.contains(name)) {
@@ -166,13 +168,18 @@ class JSBackend {
       // `class A { <items> }` ==> `class A { constructor(fields) { <items> } }`
       case Record(fields) => new JSClassDecl(name, fields map { _._1 })
       // `class B: A` ==> `class B extends A {}`
-      case Primitive(base) => new JSClassDecl(name, Nil, S(base))
+      case Primitive(clsName) =>
+        nameClsMap get clsName match {
+          case N      => ???
+          case S(cls) => new JSClassDecl(name, Nil, S(cls))
+        }
       // I noticed `class Fun[A]: A -> A` is okay.
       // But I have no idea about how to do it.
       case _ => ???
     }
 
   def apply(pgrm: Pgrm): Ls[Str] = {
+
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
@@ -184,7 +191,9 @@ class JSBackend {
             kind match {
               case Cls =>
                 classNames += name
-                translateClassDeclaration(name, actualType)
+                val cls = translateClassDeclaration(name, actualType)
+                nameClsMap += name -> cls
+                cls
               case Trt => new JSComment(s"// trait $name")
               case Als => new JSComment(s"// type alias $name")
             }
