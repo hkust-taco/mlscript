@@ -165,6 +165,7 @@ class JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
+    val definedNames = collection.mutable.HashSet[Str]()
     val stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
@@ -190,7 +191,12 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              new JSConstDecl(tempName, translatedBody) ::
+              (if (definedNames contains tempName) {
+                JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody))
+              } else {
+                definedNames += tempName
+                JSLetDecl(tempName, translatedBody)
+              }) ::
                 new JSExprStmt(
                   JSAssignExpr(
                     JSMember(JSIdent(defResultObjName), name),
