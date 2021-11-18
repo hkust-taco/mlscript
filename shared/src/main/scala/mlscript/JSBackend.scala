@@ -164,7 +164,23 @@ class JSBackend {
       case NoCases        => Ls(JSThrowStmt())
     }
 
-  // TODO: add field definitions
+  // This function collects two things:
+  // 1. fields from a series of intersection of records,
+  // 2. name of the base class.
+  // Only one base class is allowed. Only `Primitive` and `Record` is allowed.
+  private def expandRecordInter(ty: Type): (Ls[Str], Opt[Str]) = ty match {
+    case Record(fields) => fields.map(_._1) -> N
+    case Primitive(name) => Nil -> Opt(name)
+    case Inter(Record(entries), ty) => 
+      val (fields, cls) = expandRecordInter(ty)
+      entries.map(_._1) ++ fields -> cls
+    case Inter(ty, Record(entries)) =>
+      val (fields, cls) = expandRecordInter(ty)
+      fields ++ entries.map(_._1) -> cls
+    case _ =>
+      ???
+  }
+
   def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
     actualType match {
       // `class A` ==> `class A {}`
@@ -174,11 +190,20 @@ class JSBackend {
       // `class B: A` ==> `class B extends A {}`
       case Primitive(clsName) =>
         nameClsMap get clsName match {
-          case N      => ???
+          case N      => throw new Error(s"Class $clsName is not defined.")
           case S(cls) => JSClassDecl(name, Nil, S(cls))
         }
+      case ty: Inter =>
+        val (fields, clsNmeOpt) = expandRecordInter(ty)
+        clsNmeOpt match {
+          case N => JSClassDecl(name, fields.distinct, N)
+          case S(clsNme) => nameClsMap get clsNme match {
+            case N      => throw new Error(s"Class $clsNme is not defined.")
+            case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
+          }
+        }
       // I noticed `class Fun[A]: A -> A` is okay.
-      // But I have no idea about how to do it.
+      // But it is not achievable in JavaScript.
       case _ => ???
     }
 
