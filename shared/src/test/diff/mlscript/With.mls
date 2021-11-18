@@ -102,7 +102,7 @@ foo 42
 //│ ╟── Note: constraint arises from record literal:
 //│ ║  l.67: 	def getf { f } = f
 //│ ║        	         ^^^^^
-//│ ╟── from argument:
+//│ ╟── from reference:
 //│ ║  l.91: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──      	                             ^
 //│ res: error | {l: 42, r: nothing, s: 42}

@@ -84,7 +84,7 @@ def bar1 = foo
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.6: 	class Derived2[C, D]: Base1[{ c: C; d: D }]
 //│ ║       	                            ^^^^^^^^^^^^^^
-//│ ╟── from argument:
+//│ ╟── from reference:
 //│ ║  l.22: 	  | Base1 -> b.M1 x
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -96,7 +96,7 @@ def bar1 = foo
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.6: 	class Derived2[C, D]: Base1[{ c: C; d: D }]
 //│ ║       	                            ^^^^^^^^^^^^^^
-//│ ╟── from argument:
+//│ ╟── from reference:
 //│ ║  l.22: 	  | Base1 -> b.M1 x
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] Type mismatch in def definition:

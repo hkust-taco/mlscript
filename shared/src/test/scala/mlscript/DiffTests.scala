@@ -66,6 +66,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     def output(str: String) = out.println(outputMarker + str)
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
+      override def funkyTuples = file.ext =:= "fun"
       override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init

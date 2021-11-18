@@ -6,8 +6,6 @@ import fastparse._, fastparse.ScalaWhitespace._
 import mlscript.utils._, shorthands._
 import mlscript.Lexer._
 
-// TODO: empty lines
-
 /** Parser for an ML-style input syntax, used in the legacy `ML*` tests. */
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
@@ -22,6 +20,15 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // NOTE: due to bug in fastparse, the parameter should be by-name!
   def locate[_:P, L <: Located](tree: => P[L]): P[L] = (Index ~~ tree ~~ Index).map {
     case (i0, n, i1) => n.withLoc(i0, i1, origin)
+  }
+  
+  def toParams(t: Term): Tup = t match {
+    case t: Tup => t
+    case _ => Tup((N, t) :: Nil)
+  }
+  def toParamsTy(t: Type): Tuple = t match {
+    case t: Tuple => t
+    case _ => Tuple((N, t) :: Nil)
   }
   
   def letter[_: P]     = P( lowercase | uppercase )
@@ -40,7 +47,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
-  def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
+  def parens[_: P]: P[Term] = P( "(" ~/ term.rep(0, ",") ~ ",".!.? ~ ")" ).map {
+    case (Seq(t), N) => Bra(false, t)
+    case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
+  }
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")").map {
       case (prt, id) => Var(s"${prt}.${id}")
@@ -52,11 +62,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     ).map { fs =>
       Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> id }.toList)
     })
-  def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(nb._1, nb._2))
+  def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2))
   def let[_: P]: P[Term] = locate(P(
       kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ term.rep ~ "=" ~ term ~ kw("in") ~ term
     ) map {
-      case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(i, acc)), bod)
+      case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(toParams(i), acc)), bod)
     })
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
@@ -66,7 +76,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def withs[_: P]: P[Term] = P( binops ~ (kw("with") ~ record).rep ).map {
     case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
-  def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
+  def mkApp(lhs: Term, rhs: Term): Term = App(lhs, toParams(rhs))
+  def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
   def _match[_: P]: P[CaseOf] =
     P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled)
   def matchArms[_: P]: P[CaseBranches] = P(
@@ -109,7 +120,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
               else {
                 remaining = remaining.tail
                 val rhs = climb(prec + 1, next)
-                result = App(App(Var(op).withLoc(off0, off1, origin), result), rhs)
+                result = App(App(Var(op).withLoc(off0, off1, origin), toParams(result)), toParams(rhs))
                 true
               }
           }
@@ -137,7 +148,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     P((kw("def") ~ ident ~ tyParams ~ ":" ~/ ty map {
       case (id, tps, t) => Def(true, id, R(PolyType(tps, t)))
     }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ ident ~ subterm.rep ~ "=" ~ term map {
-      case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
+      case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))))
     }))
   
   def tyKind[_: P]: P[TypeDefKind] = (kw("class") | kw("trait") | kw("type")).! map {
@@ -161,7 +172,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   def mthDef[_: P](prt: TypeName): P[L[MethodDef[Left[Term, Type]]]] = 
     P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
-      case (rec, id, ts, ps, bod) => L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc)))))
+      case (rec, id, ts, ps, bod) =>
+        L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc)))))
     })
   
   def ty[_: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
@@ -170,7 +182,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyNoAs[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
   def tyNoInter[_: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
-    case (l, S(r)) => Function(l, r)
+    case (l, S(r)) => Function(toParamsTy(l), r)
     case (l, N) => l
   }
   // Note: field removal types are not supposed to be explicitly used by programmers,
