@@ -229,9 +229,10 @@ trait LitImpl { self: Lit =>
   }
 }
 
-trait VarImpl { self: Var =>
+trait VarImpl extends Ordered[Var] { self: Var =>
   def isPatVar: Bool =
     name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
+  def compare(that: Var): Int = this.name compare that.name
 }
 
 trait Located {
@@ -338,14 +339,14 @@ trait StatementImpl extends Located { self: Statement =>
           val (diags1, v, args) = desugDefnPattern(t, Nil)
           allDiags ++= diags1
           val tparams = Buffer.from(baseTargs)
-          val fields = SortedMutMap.empty[Str, Type]
+          val fields = SortedMutMap.empty[Var, Type]
           def getFields(t: Term): Ls[Type] = t match {
             case v: Var =>
               // TOOD check not already defined
               val tp = baseTargs.find(_.name === v.name).getOrElse(
                 if (v.name.startsWith("`")) new TypeVar(v.name.tail, 0) // FIXME should not renew every time!
                 else Primitive(v.name) tap (tparams += _))
-              fields += v.name -> tp
+              fields += v -> tp
               tp :: Nil
             case Blk((t: Term)::Nil) => getFields(t)
             case Blk(_) => ??? // TODO proper error

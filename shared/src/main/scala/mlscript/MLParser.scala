@@ -41,15 +41,15 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def variable[_: P]: P[Var] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = P( "(" ~/ term ~ ")" )
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( ident | ("(" ~/ ident ~ "." ~ ident ~ ")").map {
-      case (prt, id) => s"${prt}.${id}"
-    })).rep ).map {
+  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")").map {
+      case (prt, id) => Var(s"${prt}.${id}")
+    }))).rep ).map {
       case (st, sels) => sels.foldLeft(st)(Sel)
     }
   def record[_: P]: P[Rcd] = locate(P(
-      "{" ~/ (ident ~ "=" ~ term map L.apply).|(ident map R.apply).rep(sep = ";") ~ "}"
+      "{" ~/ (variable ~ "=" ~ term map L.apply).|(variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs =>
-      Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> Var(id) }.toList)
+      Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> id }.toList)
     })
   def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(nb._1, nb._2))
   def let[_: P]: P[Term] = locate(P(
@@ -129,7 +129,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => getVar(id))), ignoreIfSet = true)
   def rcd[_: P]: P[Record] =
-    locate(P( "{" ~/ (ident ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
+    locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
   def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   

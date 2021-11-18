@@ -28,7 +28,7 @@ abstract class TyperHelpers { self: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
-  def recordUnion(fs1: Ls[Str -> SimpleType], fs2: Ls[Str -> SimpleType]): Ls[Str -> SimpleType] = {
+  def recordUnion(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] = {
     val fs2m = fs2.toMap
     fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }
   }
@@ -124,14 +124,14 @@ abstract class TyperHelpers { self: Typer =>
     // sometimes behind a single negation,
     // just for the time of massaging the constraint through a type variable.
     // So it's important we only push and simplify Without types only in _positive_ position!
-    def without(names: Set[Str]): SimpleType = if (names.isEmpty) this else this match {
+    def without(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
     }
-    def without(name: Str): SimpleType = 
+    def without(name: Var): SimpleType = 
       without(Set.single(name))
     
-    def withoutPos(names: Set[Str]): SimpleType = this match {
+    def withoutPos(names: Set[Var]): SimpleType = this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)

@@ -48,20 +48,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs -> $rhs)"
   }
   
-  case class RecordType(fields: List[(String, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+  case class RecordType(fields: List[(Var, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
-    def mergeAllFields(fs: Iterable[Str -> SimpleType]): RecordType = {
-      val res = mutable.SortedMap.empty[Str, SimpleType]
+    def mergeAllFields(fs: Iterable[Var -> SimpleType]): RecordType = {
+      val res = mutable.SortedMap.empty[Var, SimpleType]
       fs.foreach(f => res.get(f._1) match {
         case N => res(f._1) = f._2
         case S(ty) => res(f._1) = ty & f._2
       })
       RecordType(res.toList)(prov)
     }
-    def addFields(fs: Ls[Str -> SimpleType]): RecordType = {
+    def addFields(fs: Ls[Var -> SimpleType]): RecordType = {
       val shadowing = fs.iterator.map(_._1).toSet
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
@@ -69,15 +69,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   object RecordType {
     def empty: RecordType = RecordType(Nil)(noProv)
-    def mk(fields: List[(String, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+    def mk(fields: List[(Var, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
-  case class TupleType(fields: List[Opt[Str] -> SimpleType])(val prov: TypeProvenance) extends MiscBaseType {
+  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toRecord: RecordType =
       RecordType(
-        fields.zipWithIndex.map { case ((_, t), i) => ("_"+(i+1), t) } ::: // TODO dedup fields!
+        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
         fields.collect { case (S(n), t) => (n, t) }
       )(prov)
     override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2}").mkString(", ")})"
@@ -98,7 +98,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"~(${negated})"
   }
   
-  case class Without(base: SimpleType, names: Set[Str])(val prov: TypeProvenance) extends MiscBaseType {
+  case class Without(base: SimpleType, names: Set[Var])(val prov: TypeProvenance) extends MiscBaseType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
   }
@@ -121,7 +121,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     assert(targs.size === defn.tparams.size)
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
-      val body_ty = typeType(defn.body)(ctx, raise, defn.tparams.zip(targs).toMap)
+      val body_ty = typeType(defn.body)(ctx, raise, vars = defn.tparams.map(_.name).zip(targs).toMap)
       defn.kind match {
         case Als => body_ty
         case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty

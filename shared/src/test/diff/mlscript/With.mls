@@ -6,7 +6,7 @@ rcd.x
 //│ res: 1
 
 rcd with { y = 2 }
-//│ res: {x: 1, y: 2}
+//│ res: {y: 2, x: 1}
 
 add res.x res.y
 //│ res: int
@@ -41,7 +41,7 @@ f rcd
 //│ res: {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: {x: "oops", y: 2}
+//│ res: {y: 2, x: "oops"}
 
 
 def f a b = if true then a else b
@@ -118,14 +118,14 @@ add r.s 1
 
 
 {} with { x = 1 } with { y = 2 }
-//│ res: {x: 1, y: 2}
+//│ res: {y: 2, x: 1}
 
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.124: 	res.z
 //│ ║         	^^^
-//│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
+//│ ╟── expression of type `{y: 2, x: 1}` does not match type `{z: ?a}`
 //│ ║  l.120: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?b}`

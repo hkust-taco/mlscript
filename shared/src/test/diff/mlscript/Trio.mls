@@ -28,7 +28,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: a & {payload: int, fA: int} | b & {fB: 'a} | c & {payload: 'b, fC: 'c} -> int | 'a | {l: 'c, r: 'b}
+//│ foo: a & {fA: int, payload: int} | b & {fB: 'a} | c & {fC: 'b, payload: 'c} -> int | 'a | {l: 'b, r: 'c}
 
 :e
 foo arg
@@ -38,7 +38,7 @@ foo arg
 //│ ╟── expression of type `a & {fA: int}` does not match type `{payload: int & ?a}`
 //│ ║  l.16: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `a & {payload: int & ?b, fA: int & ?c} & ?d | b & {fB: ?e} & ?f | c & {payload: ?g, fC: ?h} & ?i`
+//│ ╟── but it flows into reference with expected type `a & {fA: int & ?b, payload: int & ?c} & ?d | b & {fB: ?e} & ?f | c & {fC: ?g, payload: ?h} & ?i`
 //│ ║  l.34: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:

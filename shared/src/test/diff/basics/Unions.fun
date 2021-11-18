@@ -145,7 +145,7 @@ x => foo { v: x }
 
 
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
-//│ bar: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, 1,) & {_1: int & 'a, _2: 'a},) -> 'a
+//│ bar: (r: (0, 0,) & {_2: 'a, _1: int & 'a} | (1, 1,) & {_2: 'a, _1: int & 'a},) -> 'a
 
 // :e
 bar(0, 1)
@@ -201,7 +201,7 @@ x => bar(bar(x, 1), 0)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: {_1: int & 'a, _2: 'a},) -> 'a
+//│ baz: (r: {_2: 'a, _1: int & 'a},) -> 'a
 
 :e
 baz(0)
@@ -211,7 +211,7 @@ baz(0)
 //│ ╟── expression of type `0` does not have field '_2'
 //│ ║  l.207: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_1: int & ?a & ?a, _2: ?b} & ?c | {_1: int & ?a & ?a, _2: ?b} & ?c & ?d,)`
+//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_2: ?a, _1: int & ?b & ?b} & ?c | {_2: ?a, _1: int & ?b & ?b} & ?c & ?d,)`
 //│ ║  l.207: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -240,7 +240,7 @@ x => baz(x, x)
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, anything,) & {_1: int & 'a, _2: 'a},) -> 'a
+//│ baz: (r: (0, 0,) & {_2: 'a, _1: int & 'a} | (1, anything,) & {_2: 'a, _1: int & 'a},) -> 'a
 
 :e
 baz(0)
@@ -251,7 +251,7 @@ baz(0, 1)
 //│ ╟── expression of type `0` does not have field '_2'
 //│ ║  l.246: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_1: int & ?a & ?a, _2: ?b} & ?c | (1, ?d,) & {_1: int & ?a & ?a, _2: ?b} & ?c,)`
+//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_2: ?a, _1: int & ?b & ?b} & ?c | (1, ?d,) & {_2: ?a, _1: int & ?b & ?b} & ?c,)`
 //│ ║  l.246: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:

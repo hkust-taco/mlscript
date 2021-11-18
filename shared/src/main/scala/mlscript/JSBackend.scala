@@ -40,7 +40,7 @@ class JSBackend {
       fields.foldLeft[Str -> Ls[Str]]("{ $ }" -> List.empty) {
         case ((code, names), (key, value)) =>
           value match {
-            case Var(_) => code.replace("$", s"$key, ") -> (names :+ key)
+            case Var(_) => code.replace("$", s"$key, ") -> (names :+ key.name)
             case rcd: Rcd => {
               val (subCode, subNames) = translateLetPattern(rcd)
               code.replace("$", s"$key: ${subCode}, ") -> (names ++ subNames)
@@ -100,10 +100,10 @@ class JSBackend {
     case App(lhs, rhs) => new JSInvoke(translateTerm(lhs), translateTerm(rhs))
     case Rcd(fields) =>
       new JSRecord(fields map { case (key, value) =>
-        key -> translateTerm(value)
+        key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
-      new JSMember(translateTerm(receiver), fieldName)
+      new JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
       new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
@@ -155,7 +155,7 @@ class JSBackend {
   // TODO: add field definitions
   def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
     actualType match {
-      case Record(fields) => new JSClassDecl(name, fields map { _._1 })
+      case Record(fields) => new JSClassDecl(name, fields map { _._1.name })
       // I noticed `class Fun[A]: A -> A` is okay.
       // But I have no idea about how to do it.
       case _ => ???

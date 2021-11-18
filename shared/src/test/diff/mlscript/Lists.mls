@@ -95,7 +95,10 @@ Cons 1 res
 //│ ║       	               ^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
-//│ ╙──     	                                ^^^^^^^
+//│ ║       	                                ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.69: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ╙──      	                                          ^^^^
 //│ res: cons & {head: 1, tail: 2} | error
 
 // Here there used to be a loss of precision in the older with-field approach.

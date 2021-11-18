@@ -146,6 +146,9 @@ class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type negation
 //│ ║  l.145: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: Cycle
+//│ ║  l.145: 	class Cycle: N[Cycle]
+//│ ╙──       	               ^^^^^
 
 
 
@@ -165,16 +168,16 @@ class E: 1
 E{}: 1
 E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	E{}: 1
+//│ ║  l.168: 	E{}: 1
 //│ ║         	^^^
 //│ ╙── expression of type `e` does not match type `1`
 //│ res: 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.166: 	E{}: int
+//│ ║  l.169: 	E{}: int
 //│ ║         	^^^
 //│ ╟── expression of type `e` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.166: 	E{}: int
+//│ ║  l.169: 	E{}: int
 //│ ╙──       	     ^^^
 //│ res: int
 
@@ -194,7 +197,7 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.195: 	class Weird: {} | {}
+//│ ║  l.198: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 

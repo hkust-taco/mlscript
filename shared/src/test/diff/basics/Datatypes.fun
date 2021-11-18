@@ -33,6 +33,28 @@ data type Bool2 of True2 & False2
 //│ ╙──
 //│ ╔══[ERROR] type identifier not found: False2
 //│ ╙──
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                           ^^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                   ^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                           ^^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                   ^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                           ^^^^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.25: 	data type Bool2 of True2 & False2
+//│ ╙──      	                   ^^^^^
+//│ ╔══[ERROR] type identifier not found: True2
+//│ ╙──
+//│ ╔══[ERROR] type identifier not found: False2
+//│ ╙──
 //│ Defined type Bool2
 //│ Defined class &
 //│ &: 'a -> 'b -> & & {True2: 'a, False2: 'b}
@@ -57,7 +79,7 @@ data type Bool4 of
 :e
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.58: 	Boolean
+//│ ║  l.80: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 
@@ -68,24 +90,24 @@ True
 True as Boolean
 True : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.68: 	True as Boolean
+//│ ║  l.90: 	True as Boolean
 //│ ╙──      	        ^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.69: 	True : Boolean
+//│ ║  l.91: 	True : Boolean
 //│ ╙──      	       ^^^^^^^
 //│ res: (True: error,)
 
 :e // Maybe we shouldn't interpret capitalized identifiers as field names...
 True : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.80: 	True : Boolean
-//│ ╙──      	       ^^^^^^^
+//│ ║  l.102: 	True : Boolean
+//│ ╙──       	       ^^^^^^^
 //│ res: (True: error,)
 
 :pe
 (True) : Boolean
-//│ /!\ Parse error: Expected end-of-input:1:8, found ": Boolean\n" at l.87:8: (True) : Boolean
+//│ /!\ Parse error: Expected end-of-input:1:8, found ": Boolean\n" at l.109:8: (True) : Boolean
 
 
 // TODO treat the ending curly-blocks as bodies (not params)?
@@ -119,6 +141,8 @@ data type Ls of LsA a
 //│ Desugared: type Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
 //│ Desugared: def LsA: [a] -> a -> LsA[a]
+//│ ╔══[ERROR] type identifier not found: a
+//│ ╙──
 //│ ╔══[ERROR] type identifier not found: a
 //│ ╙──
 //│ Defined type Ls
@@ -156,39 +180,39 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.157: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.157: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.157: 	not (Cons 42 Nil).head
+//│ ║  l.181: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.170: 	(Cons 4).head
+//│ ║  l.194: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── expression of type `(tail: (nil | cons & {head: ?b, tail: ?a}) as ?a,) -> (cons & {head: ?b | 4, tail: ?d | nil | ?c}) as ?c` does not have field 'head'
-//│ ║  l.100: 	data type List a of
+//│ ║  l.122: 	data type List a of
 //│ ║         	               ^
 //│ ╟── but it flows into receiver with expected type `{head: ?e}`
-//│ ║  l.170: 	(Cons 4).head
+//│ ║  l.194: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.183: 	Cons 1 2
+//│ ║  l.207: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `2` does not match type `(nil | cons & {head: ?b, tail: ?a}) as ?a`
-//│ ║  l.183: 	Cons 1 2
+//│ ║  l.207: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.100: 	data type List a of
+//│ ║  l.122: 	data type List a of
 //│ ╙──       	               ^
 //│ res: (cons & {head: 1, tail: 'b | nil | 'a}) as 'a | error
 
@@ -196,7 +220,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.197: 	let List.head = () // ...
+//│ ║  l.221: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

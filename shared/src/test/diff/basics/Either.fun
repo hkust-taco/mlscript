@@ -1,46 +1,46 @@
 
 :p
-data type Either L R of
-  Left L
-  Right R
-//│ Parsed: data type ((Either L) R) of (Left L); (Right R);;
-//│ Desugared: type Either[L, R] = Left[L, R] | Right[L, R]
-//│ Desugared: class Left[L, R]: {L: L}
-//│ Desugared: class Right[L, R]: {R: R}
-//│ Desugared: def Left: [L, R] -> L -> Left[L, R]
-//│ Desugared: def Right: [L, R] -> R -> Right[L, R]
+data type Either l r of
+  Left l
+  Right r
+//│ Parsed: data type ((Either l) r) of (Left l); (Right r);;
+//│ Desugared: type Either[l, r] = Left[l, r] | Right[l, r]
+//│ Desugared: class Left[l, r]: {l: l}
+//│ Desugared: class Right[l, r]: {r: r}
+//│ Desugared: def Left: [l, r] -> l -> Left[l, r]
+//│ Desugared: def Right: [l, r] -> r -> Right[l, r]
 //│ Defined type Either
 //│ Defined class Left
 //│ Defined class Right
-//│ Left: 'a -> left & {L: 'a}
-//│ Right: 'a -> right & {R: 'a}
+//│ Left: 'a -> left & {l: 'a}
+//│ Right: 'a -> right & {r: 'a}
 
 :e
-data type Either2 (L: _) (R: _) of
-  Left2 L
-  Right2 R
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((L: _,);)
-//│ ║  l.19: 	data type Either2 (L: _) (R: _) of
+data type Either2 (l: _) (r: _) of
+  Left2 l
+  Right2 r
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((l: _,);)
+//│ ║  l.19: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                  ^^^^^^
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((R: _,);)
-//│ ║  l.19: 	data type Either2 (L: _) (R: _) of
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((r: _,);)
+//│ ║  l.19: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
-//│ ╔══[ERROR] type identifier not found: L
+//│ ╔══[ERROR] type identifier not found: l
 //│ ╙──
-//│ ╔══[ERROR] type identifier not found: R
+//│ ╔══[ERROR] type identifier not found: r
 //│ ╙──
 //│ Defined type Either2
 //│ Defined class Left2
 //│ Defined class Right2
-//│ Left2: 'a -> left2 & {L: 'a}
-//│ Right2: 'a -> right2 & {R: 'a}
+//│ Left2: 'a -> left2 & {l: 'a}
+//│ Right2: 'a -> right2 & {r: 'a}
 
 let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
-//│ l: left & {L: 1}
-//│ r: right & {R: "ok"}
-//│ e: left & {L: 1} | right & {R: "ok"}
+//│ l: left & {l: 1}
+//│ r: right & {r: "ok"}
+//│ e: left & {l: 1} | right & {r: "ok"}
 
 :e // TODO
 e as Either Int String
