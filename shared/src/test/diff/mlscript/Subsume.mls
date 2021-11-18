@@ -118,7 +118,7 @@ def id n = add n 1
 //│ ╟── expression of type `'a` does not match type `int`
 //│ ║  l.91: 	def id: 'a -> 'a
 //│ ║        	        ^^
-//│ ╟── Note: constraint arises from argument:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.111: 	def id n = add n 1
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in def definition:

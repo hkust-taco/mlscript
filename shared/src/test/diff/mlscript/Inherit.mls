@@ -65,7 +65,7 @@ f (c: Parent)
 //│ ╟── expression of type `Parent` does not match type `Child`
 //│ ║  l.61: 	f (c: Parent)
 //│ ║        	      ^^^^^^
-//│ ╟── but it flows into argument with expected type `Child`
+//│ ╟── but it flows into argument with expected type `(?a,)`
 //│ ║  l.61: 	f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from class pattern:

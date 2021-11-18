@@ -19,6 +19,8 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   lazy val nextLevel = new Parser(origin: Origin, indent + 1, recordLocations)
   
+  def toParams(t: Term) = t
+  
   def UnitLit = Tup(Nil)
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -89,9 +91,9 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def lams[_: P]: P[Term] = P( commas ~ (("/".! | "=>".!) ~/ (expr | suite) | "".! ~ suite).? ).map(checkless {
     case (trm, N) => trm
-    case (trm, S(("", rest))) => App(trm, rest)
-    case (trm, S(("/", rest))) => App(trm, rest)
-    case (trm, S(("=>", rest))) => Lam(trm, rest)
+    case (trm, S(("", rest))) => App(trm, toParams(rest))
+    case (trm, S(("/", rest))) => App(trm, toParams(rest))
+    case (trm, S(("=>", rest))) => Lam(toParams(trm), rest)
   }).opaque("applied expressions")
   
   // TODO support spreads ""...xs""
@@ -169,7 +171,7 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   //      bar
   //    baz      // outer app, uses this suite...
   def apps[_: P]: P[Term] = P( atomOrSelect.rep(1) ~ suite.? ).map {
-    case (as, ao) => (as ++ ao.toList).reduceLeft(App(_, _))
+    case (as, ao) => (as ++ ao.toList).reduceLeft((f, a) => App(f, toParams(a)))
   }
   
   def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ NAME ~~ Index).rep).map {

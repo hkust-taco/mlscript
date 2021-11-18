@@ -1,0 +1,115 @@
+
+def foo(a, b, c) = add a (add b c)
+foo(1, 2, 3)
+foo(1, 2, 3,)
+//│ foo: (int, int, int,) -> int
+//│ res: int
+//│ res: int
+
+def bar() = 1
+bar()
+bar(,)
+//│ bar: () -> 1
+//│ res: 1
+//│ res: 1
+
+def bar(x) = x
+bar(1)
+bar(1,)
+//│ bar: 'a -> 'a
+//│ res: 1
+//│ res: 1
+
+def bar(x,) = x
+bar(1)
+bar(1,)
+//│ bar: 'a -> 'a
+//│ res: 1
+//│ res: 1
+
+def bar(x, y) = add x y
+bar(1, 2)
+bar(1, 2,)
+//│ bar: (int, int,) -> int
+//│ res: int
+//│ res: int
+
+:e
+bar((1, 2))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.38: 	bar((1, 2))
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ║  l.38: 	bar((1, 2))
+//│ ║        	     ^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.30: 	def bar(x, y) = add x y
+//│ ╙──      	        ^^^^
+//│ res: error | int
+
+def bar((x, y)) = add x y
+bar((1, 2))
+//│ bar: (int, int,) -> int
+//│ res: int
+
+:p
+f = fun (x, y) -> add x y
+f(1, 2)
+//│ Parsed: let f = ((x, y,) => ((add (x,)) (y,))); (f (1, 2,));
+//│ Desugared: def f: ((x, y,) => ((add (x,)) (y,)))
+//│ Desugared: (f (1, 2,))
+//│ f: (int, int,) -> int
+//│ res: int
+
+:e
+f((1, 2))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.65: 	f((1, 2))
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ║  l.65: 	f((1, 2))
+//│ ║        	   ^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.56: 	f = fun (x, y) -> add x y
+//│ ╙──      	         ^^^^
+//│ res: error | int
+
+:e
+r = (1, 2)
+f r
+//│ r: (1, 2,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.79: 	f r
+//│ ║        	^^^
+//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ║  l.79: 	f r
+//│ ║        	  ^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.56: 	f = fun (x, y) -> add x y
+//│ ╙──      	         ^^^^
+//│ res: error | int
+
+:p
+f = fun ((x, y)) -> add x y
+f((1, 2))
+//│ Parsed: let f = ((((x, y,)),) => ((add (x,)) (y,))); (f (((1, 2,)),));
+//│ Desugared: def f: ((((x, y,)),) => ((add (x,)) (y,)))
+//│ Desugared: (f (((1, 2,)),))
+//│ f: (int, int,) -> int
+//│ res: int
+
+:e
+f(1, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.102: 	f(1, 2)
+//│ ║         	^^^^^^
+//│ ╟── expression of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ║  l.102: 	f(1, 2)
+//│ ╙──       	  ^^^^
+//│ res: error | int
+
+r = (1, 2)
+f r
+//│ r: (1, 2,)
+//│ res: int
+
