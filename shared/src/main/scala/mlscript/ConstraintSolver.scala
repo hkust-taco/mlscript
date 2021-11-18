@@ -137,9 +137,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case S(nt1) => rec(nt1._2, t2)
                 case N => fail
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType)))) => fail
+            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) => fail
+            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
+            if b.fields.size === ty.fields.size
+            =>
+              (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _))
+            case (LhsRefined(S(b: TupleType), ts, r), _) => fail
+            case (LhsRefined(N, ts, r), RhsBases(pts, S(L(x)))) =>
+              lastWords(s"TODO ${done_ls} <: ${done_rs} (${x.getClass})") // TODO
             case (LhsRefined(S(b), ts, r), RhsBases(pts, _)) =>
               lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
+            case _ =>
+              lastWords(s"TODO ${done_ls} <: ${done_rs} (${done_ls.getClass} ${done_rs.getClass})") // TODO
           }
           
       }
@@ -216,7 +225,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, r, outerProv.orElse(S(lhs.prov)))
           case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
           case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
-          case (_, TupleType(f :: Nil)) =>
+          case (_, TupleType(f :: Nil)) if funkyTuples =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
             rec(l1, err)
@@ -225,7 +234,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(err, l0)
             rec(r0, err)
           case (tup: TupleType, _: RecordType) =>
-            rec(tup.toRecord, rhs)
+            rec(tup.toRecord, rhs) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>

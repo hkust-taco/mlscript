@@ -60,7 +60,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a})) -> 'a
 //│ arg: A[int] | B[int]
 //│ res: int
-//│ constrain calls: 43
+//│ constrain calls: 44
 //│ annoying  calls: 78
 
 
@@ -77,7 +77,7 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a})) -> 'a
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
-//│ constrain calls: 105
+//│ constrain calls: 106
 //│ annoying  calls: 301
 
 
@@ -95,19 +95,19 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a})) -> 'a
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
-//│ constrain calls: 272
+//│ constrain calls: 273
 //│ annoying  calls: 993
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
-//│ constrain calls: 244
+//│ constrain calls: 245
 //│ annoying  calls: 996
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
-//│ constrain calls: 244
+//│ constrain calls: 245
 //│ annoying  calls: 996
 
 

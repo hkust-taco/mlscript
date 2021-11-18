@@ -53,7 +53,7 @@ rec def evalOpt x = case x of {
       Some x.v
   | Neg ->
       // flatMap (fun s -> Some (neg x.sub)) (evalOpt x.sub)
-      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+      flatMap (fun s -> Some (negate s)) (evalOpt x.sub)
   | Var ->
       // None with {err = concat "free var: " x.nme}
       NoneBecause {reason = concat "free var: " x.nme}

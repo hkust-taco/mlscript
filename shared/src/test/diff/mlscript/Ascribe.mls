@@ -11,7 +11,7 @@
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.6: 	"hello": 'a -> 'a
 //│ ╙──     	         ^^^^^^^^
-//│ res: error -> error
+//│ res: 'a -> ('a | error)
 
 { name = "Bob" } : { name: 'a }
 //│ res: {name: "Bob"}

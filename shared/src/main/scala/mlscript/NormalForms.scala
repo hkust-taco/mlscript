@@ -34,7 +34,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             p0.glb(p1)
           case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
-          case (S(TupleType(fs0)), TupleType(fs1)) => ???
+          case (S(TupleType(fs0)), TupleType(fs1)) if fs0.size === fs1.size =>
+            S(TupleType(tupleIntersection(fs0, fs1))(noProv))
           case (S(_), _) => N
           case (N, _) => S(that)
         }) map { b => LhsRefined(S(b), ts, r1) }

@@ -132,7 +132,7 @@ test (error: B & { c: int })
 //│ ╟── expression of type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.128: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
+//│ ╟── but it flows into argument with expected type `(A & {a: ?a} | B & {b: ?a} | C & {c: ?a},)`
 //│ ║  l.128: 	test (error: B & { c: int })
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -159,7 +159,7 @@ test (error: A & { x: int })
 //│ ╟── expression of type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.155: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `A & {x: ?a0, y: ?b} | B & {x: ?a0, y: ?b} | C & {x: ?a0, y: ?b}`
+//│ ╟── but it flows into argument with expected type `(A & {x: ?a0, y: ?b} | B & {x: ?a0, y: ?b} | C & {x: ?a0, y: ?b},)`
 //│ ║  l.155: 	test (error: A & { x: int })
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from union type:
