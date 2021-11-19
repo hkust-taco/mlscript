@@ -21,31 +21,37 @@ Bar.Map
 Derp.Map
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.19: 	Foo.Map
-//│ ║        	^^^
-//│ ╙── expression of type `{x: ?a} -> foo & {x: ?a}` does not have field 'Map'
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `{x: ?a} -> foo & {x: ?a}` does not have field 'Map'
+//│ ║  l.19: 	Foo.Map
+//│ ╙──      	^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.20: 	Bar.Map
-//│ ║        	^^^
-//│ ╙── expression of type `{x: ?a} -> bar & {x: ?a}` does not have field 'Map'
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `{x: ?a} -> bar & {x: ?a}` does not have field 'Map'
+//│ ║  l.20: 	Bar.Map
+//│ ╙──      	^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.21: 	Derp.Map
-//│ ║        	^^^^
-//│ ╙── expression of type `{x: bool & ?a} -> derp & {x: ?a}` does not have field 'Map'
+//│ ║        	^^^^^^^^
+//│ ╟── expression of type `{x: bool & ?a} -> derp & {x: ?a}` does not have field 'Map'
+//│ ║  l.21: 	Derp.Map
+//│ ╙──      	^^^^
 //│ res: error
 
 def a = Foo { x = 1 }
 a.(Foo.Map)(fun x -> x)
 //│ a: foo & {x: 1}
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.39: 	a.(Foo.Map)(fun x -> x)
-//│ ║        	^
+//│ ║  l.45: 	a.(Foo.Map)(fun x -> x)
+//│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `foo & {x: ?a | 1}` does not match type `{Foo.Map: ?b}`
-//│ ║  l.38: 	def a = Foo { x = 1 }
+//│ ║  l.44: 	def a = Foo { x = 1 }
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{Foo.Map: ?c}`
-//│ ║  l.39: 	a.(Foo.Map)(fun x -> x)
+//│ ║  l.45: 	a.(Foo.Map)(fun x -> x)
 //│ ╙──      	^
 //│ res: error
 
@@ -53,13 +59,13 @@ class bar[A, B]: Foo[A] & { Y: B; z: int }
     method identity z = z
     method identity z = z
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.52: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ║  l.58: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
 //│ ╙──      	      ^^^
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.52: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ║  l.58: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
 //│ ╙──      	                            ^
 //│ ╔══[ERROR] Method names must start with a capital letter
-//│ ║  l.54: 	    method identity z = z
+//│ ║  l.60: 	    method identity z = z
 //│ ╙──      	           ^^^^^^^^
 //│ Defined class bar
 
@@ -68,7 +74,7 @@ class Fooo[A, B]: { x: A; y: B }
 //│ Defined class Fooo
 
 class Barr: Fooo[int, bool]
-    method Fun[C] f = f
+    method Fun f = f
 //│ Defined class Barr
 
 // Fooo -> PolymorphicType(0,({x: α8', y: α9'} -> ((fooo<> & {x: α6', y: α7'}) & {x: α8', y: α9'})))
@@ -79,29 +85,53 @@ class Barr: Fooo[int, bool]
 Fooo.Fun
 Barr.Fun
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.79: 	Fooo.Fun
-//│ ║        	^^^^
-//│ ╙── expression of type `{x: ?a, y: ?b} -> fooo & {y: ?b, x: ?a}` does not have field 'Fun'
+//│ ║  l.85: 	Fooo.Fun
+//│ ║        	^^^^^^^^
+//│ ╟── expression of type `{x: ?a, y: ?b} -> fooo & {y: ?b, x: ?a}` does not have field 'Fun'
+//│ ║  l.85: 	Fooo.Fun
+//│ ╙──      	^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.80: 	Barr.Fun
-//│ ║        	^^^^
-//│ ╙── expression of type `{x: int & ?a, y: bool & ?b} -> barr & {y: ?b, x: ?a}` does not have field 'Fun'
+//│ ║  l.86: 	Barr.Fun
+//│ ║        	^^^^^^^^
+//│ ╟── expression of type `{x: int & ?a, y: bool & ?b} -> barr & {y: ?b, x: ?a}` does not have field 'Fun'
+//│ ║  l.86: 	Barr.Fun
+//│ ╙──      	^^^^
 //│ res: error
 
-//TODO: - apply targs in ss (long map chain?)
-//      - references between methods (shodowing)
-//      - this
+//TODO: - references between methods (shodowing)
 //      - calls
-//      - bounds on rigidified variables?
 //      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 class Fo[A, B]: { x: A; y: B }
-    method Left = { x = x; y = y } : { x: A }
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.100: 	    method Left = { x = x; y = y } : { x: A }
-//│ ╙──       	                        ^
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.100: 	    method Left = { x = x; y = y } : { x: A }
-//│ ╙──       	                               ^
+    method Left = { x = this.x; y = this.y } : { x: A }
 //│ Defined class Fo
+
+def this = fun x -> fun y -> add x y
+this 42 42
+//│ this: int -> int -> int
+//│ res: int
+
+:e
+class Ba: Fo[int, int]
+    method Sum = this this.x this.y
+    method Funny = this 42 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.117: 	    method Sum = this this.x this.y
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╟── expression of type `fo & {y: int, x: int}` does not match type `?a | int -> ?b`
+//│ ║  l.116: 	class Ba: Fo[int, int]
+//│ ║         	          ^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?c | int -> ?d`
+//│ ║  l.117: 	    method Sum = this this.x this.y
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.118: 	    method Funny = this 42 42
+//│ ║         	                   ^^^^^^^
+//│ ╟── expression of type `fo & {y: int, x: int}` does not match type `42 -> ?a`
+//│ ║  l.116: 	class Ba: Fo[int, int]
+//│ ║         	          ^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `42 -> ?b`
+//│ ║  l.118: 	    method Funny = this 42 42
+//│ ╙──       	                   ^^^^
+//│ Defined class Ba

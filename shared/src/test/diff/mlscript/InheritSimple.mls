@@ -15,7 +15,7 @@ def c = Child(p)
 c.name
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.15: 	c.name
-//│ ║        	^
+//│ ║        	^^^^^^
 //│ ╟── expression of type `child` does not have field 'name'
 //│ ║  l.11: 	def c = Child(p)
 //│ ║        	        ^^^^^^^

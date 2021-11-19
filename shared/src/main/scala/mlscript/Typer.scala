@@ -310,13 +310,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val tn = td.nme
         val decls = MutMap.empty[Str, PolymorphicType]
         val defs = MutMap.empty[Str, PolymorphicType]
+        val thisCtx = ctx.nest.nextLevel
+        thisCtx += "this" -> typeType(td.body)(thisCtx, _ => (), S((tn.name, N)))
         td.mthDecls.valuesIterator.foreach { case MethodDef(rec, prt, nme, tparams, R(ty), loc) =>
             implicit val prov: TypeProvenance = tp(loc, "method declaration")
             val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 2))
             allTargsMaps(tn.name) += nme.name -> tparams.map(_.name).zip(dummyTargs2).toMap
             if (!nme.name.head.isUpper)
               err(msg"Method names must start with a capital letter", loc)
-            decls += nme.name -> PolymorphicType(1, typeType(ty)(ctx.nest.nextLevel, raise, S((tn.name, S(nme.name)))))
+            decls += nme.name -> PolymorphicType(1, typeType(ty)(thisCtx, raise, S((tn.name, S(nme.name)))))
           case _ => ???
         }
         td.mthDefs.valuesIterator.foreach { case MethodDef(rec, prt, nme, tparams, L(term), loc) =>
@@ -327,7 +329,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               err(msg"Method names must start with a capital letter", nme.toLoc)
             if (defs.isDefinedAt(nme.name))
               err(msg"Method '${tn}.${nme.name}' is already defined.", nme.toLoc)
-            defs += nme.name -> typeLetRhs(rec, nme.name, term)(ctx.nest.nextLevel, raise, S((tn.name, S(nme.name))))
+            defs += nme.name -> typeLetRhs(rec, nme.name, term)(thisCtx, raise, S((tn.name, S(nme.name))))
           case _ => ???
         }
         newMthDecls += tn.name -> 

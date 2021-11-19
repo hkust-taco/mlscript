@@ -43,7 +43,7 @@ foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.27: 	  | A -> add x.fA x.payload
-//│ ║        	                  ^
+//│ ║        	                  ^^^^^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.26: 	def foo x = case x of {
 //│ ╙──      	                 ^

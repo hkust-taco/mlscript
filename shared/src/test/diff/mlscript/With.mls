@@ -124,7 +124,7 @@ add r.s 1
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.124: 	res.z
-//│ ║         	^^^
+//│ ║         	^^^^^
 //│ ╟── expression of type `{y: 2, x: 1}` does not match type `{z: ?a}`
 //│ ║  l.120: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -16,7 +16,7 @@ test1 1
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ ║       	                                     ^
+//│ ║       	                                     ^^^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
@@ -51,7 +51,7 @@ test2 1
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                                    ^
+//│ ║        	                                                    ^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
@@ -67,7 +67,7 @@ test2 { value = 1 }
 //│ ║        	      ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                                    ^
+//│ ║        	                                                    ^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
@@ -97,7 +97,7 @@ test2 (C2 { default = "oops" })
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                     ^
+//│ ║        	                                     ^^^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
@@ -120,7 +120,7 @@ test2 c2
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ ║        	                                     ^
+//│ ║        	                                     ^^^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.41: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
