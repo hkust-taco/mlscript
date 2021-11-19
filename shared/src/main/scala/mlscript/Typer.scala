@@ -168,7 +168,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val dummyTargs =
           td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
         val targsMap: Map[Str, SimpleType] = td.tparams.map(_.name).zip(dummyTargs).toMap
-        val body_ty = typeType(td.body)(ctx.nextLevel, raise, targsMap)
+        val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, targsMap)
         var fields = SortedMap.empty[Str, SimpleType]
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
             (implicit travsersed: Set[TypeDef]): Bool =
@@ -275,7 +275,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     }
   }
   // TODO record provenances!
-  def typeType(ty: Type)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
+  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     val typeType = ()
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
@@ -288,8 +288,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Top => TopType
       case Bot => BotType
       case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
-      case Inter(lhs, rhs) => rec(lhs) & rec(rhs)
-      case Union(lhs, rhs) => rec(lhs) | rec(rhs)
+      case Inter(lhs, rhs) => if (simplify) rec(lhs) & rec(rhs)
+          else ComposedType(false, rec(lhs), rec(rhs))(noProv)
+      case Union(lhs, rhs) => if (simplify) rec(lhs) | rec(rhs)
+          else ComposedType(true, rec(lhs), rec(rhs))(noProv)
       case Applied(Primitive("~"), rhs) => NegType(rec(rhs))(tp(ty.toLoc, "type negation"))
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
