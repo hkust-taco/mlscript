@@ -164,14 +164,44 @@ class JSBackend {
       case NoCases        => Ls(JSThrowStmt())
     }
 
+  private val resolvedAliases = collection.mutable.HashMap[Str, Str]()
+
+  private def resolveAliases(typeDefs: Ls[TypeDef]) = {
+    val relations = collection.immutable.HashMap.from(typeDefs flatMap {
+      case TypeDef(Als, Primitive(alias), _, Primitive(name)) =>
+        S(alias -> name)
+      case _ => N
+    })
+    resolvedAliases.addAll(
+      Ls.from(relations flatMap { case (s, t) => s :: t :: Nil }).distinct map {
+        name =>
+          val visited = HashSet.empty[Str]
+          var current = name
+          while (!visited.contains(current)) {
+            visited += current
+            relations.get(current) match {
+              case N =>
+              case S(alias) =>
+                current = alias
+            }
+          }
+          name -> current
+      }
+    )
+  }
+
   // This function collects two things:
   // 1. fields from a series of intersection of records,
   // 2. name of the base class.
   // Only one base class is allowed. Only `Primitive` and `Record` is allowed.
   private def expandRecordInter(ty: Type): (Ls[Str], Opt[Str]) = ty match {
     case Record(fields) => fields.map(_._1) -> N
-    case Primitive(name) => Nil -> Opt(name)
-    case Inter(Record(entries), ty) => 
+    case Primitive(name) =>
+      resolvedAliases get name match {
+        case S(realName) => Nil -> Opt(realName)
+        case N           => throw new Exception(s"unresolved alias: $name")
+      }
+    case Inter(Record(entries), ty) =>
       val (fields, cls) = expandRecordInter(ty)
       entries.map(_._1) ++ fields -> cls
     case Inter(ty, Record(entries)) =>
@@ -205,19 +235,27 @@ class JSBackend {
       // `class A { <items> }` ==> `class A { constructor(fields) { <items> } }`
       case Record(fields) => JSClassDecl(name, fields map { _._1 })
       // `class B: A` ==> `class B extends A {}`
-      case Primitive(clsName) =>
-        nameClsMap get clsName match {
-          case N      => throw new Error(s"Class $clsName is not defined.")
-          case S(cls) => JSClassDecl(name, Nil, S(cls))
+      case Primitive(baseName) =>
+        resolvedAliases get baseName match {
+          case S(resolvedBaseName) =>
+            nameClsMap get resolvedBaseName match {
+              case N =>
+                throw new Error(s"Class $resolvedBaseName is not defined.")
+              case S(cls) => JSClassDecl(name, Nil, S(cls))
+            }
+          case N => throw new Exception(s"unresolved alias: $baseName")
         }
+      // `class C: A & { <items> }` ==>
+      // `class C extends A { constructor(fields) { <items> } }`
       case ty: Inter =>
         val (fields, clsNmeOpt) = expandRecordInter(ty)
         clsNmeOpt match {
           case N => JSClassDecl(name, fields.distinct, N)
-          case S(clsNme) => nameClsMap get clsNme match {
-            case N      => throw new Error(s"Class $clsNme is not defined.")
-            case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
-          }
+          case S(clsNme) =>
+            nameClsMap get clsNme match {
+              case N      => throw new Error(s"Class $clsNme is not defined.")
+              case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
+            }
         }
       // I noticed `class Fun[A]: A -> A` is okay.
       // But it is not achievable in JavaScript.
@@ -227,6 +265,7 @@ class JSBackend {
   def apply(pgrm: Pgrm): Ls[Str] = {
 
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
+    resolveAliases(typeDefs)
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     val stmts: Ls[JSStmt] =
