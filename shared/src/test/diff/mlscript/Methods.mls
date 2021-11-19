@@ -1,137 +1,74 @@
-class Foo[A]: { x: A }
-    method Map[B]: (A -> B) -> A
-class Bar[A]: Foo[A]
-    method Map[B]: B -> A
-    rec method Map f = f Map (fun x -> Map)
-class Derp: Bar[bool]
-    method Map f = true
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.5: 	    rec method Map f = f Map (fun x -> Map)
-//│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α26` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.5: 	    rec method Map f = f Map (fun x -> Map)
-//│ ╙──     	                       ^^^^^
-//│ Defined class Foo
-//│ Defined class Bar
-//│ Defined class Derp
+//TODO: - references between methods (shodowing)
+//      - calls
+//      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
-Foo.Map
-Bar.Map
-Derp.Map
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.19: 	Foo.Map
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `{x: ?a} -> foo & {x: ?a}` does not have field 'Map'
-//│ ║  l.19: 	Foo.Map
-//│ ╙──      	^^^
-//│ res: error
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.20: 	Bar.Map
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `{x: ?a} -> bar & {x: ?a}` does not have field 'Map'
-//│ ║  l.20: 	Bar.Map
-//│ ╙──      	^^^
-//│ res: error
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.21: 	Derp.Map
-//│ ║        	^^^^^^^^
-//│ ╟── expression of type `{x: bool & ?a} -> derp & {x: ?a}` does not have field 'Map'
-//│ ║  l.21: 	Derp.Map
-//│ ╙──      	^^^^
-//│ res: error
-
-def a = Foo { x = 1 }
-a.(Foo.Map)(fun x -> x)
-//│ a: foo & {x: 1}
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.45: 	a.(Foo.Map)(fun x -> x)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `foo & {x: ?a | 1}` does not match type `{Foo.Map: ?b}`
-//│ ║  l.44: 	def a = Foo { x = 1 }
-//│ ║        	        ^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{Foo.Map: ?c}`
-//│ ║  l.45: 	a.(Foo.Map)(fun x -> x)
-//│ ╙──      	^
-//│ res: error
-
-class bar[A, B]: Foo[A] & { Y: B; z: int }
-    method identity z = z
-    method identity z = z
-//│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.58: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
-//│ ╙──      	      ^^^
-//│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.58: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
-//│ ╙──      	                            ^
-//│ ╔══[ERROR] Method names must start with a capital letter
-//│ ║  l.60: 	    method identity z = z
-//│ ╙──      	           ^^^^^^^^
-//│ Defined class bar
 
 class Fooo[A, B]: { x: A; y: B }
     method Fun[C]: (A -> B -> C) -> (A -> B -> C)
 //│ Defined class Fooo
+//│ Declared Fooo.Fun: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 
 class Barr: Fooo[int, bool]
     method Fun f = f
 //│ Defined class Barr
+//│ Defined Barr.Fun: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
 
 // Fooo -> PolymorphicType(0,({x: α8', y: α9'} -> ((fooo<> & {x: α6', y: α7'}) & {x: α8', y: α9'})))
 // Fooo.Fun -> PolymorphicType(1,((α3' -> (α4' -> α10'')) -> (α3' -> (α4' -> α10''))))
 // Barr -> PolymorphicType(0,({x: α2', y: α3'} -> ((barr<fooo> & Fooo[int,bool]) & {x: α2', y: α3'})))
 // Barr.Fun -> PolymorphicType(1,(α4'' -> [α4'']))
 
+// TODO impl
+:e
 Fooo.Fun
 Barr.Fun
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.85: 	Fooo.Fun
-//│ ║        	^^^^^^^^
-//│ ╟── expression of type `{x: ?a, y: ?b} -> fooo & {y: ?b, x: ?a}` does not have field 'Fun'
-//│ ║  l.85: 	Fooo.Fun
-//│ ╙──      	^^^^
-//│ res: error
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.86: 	Barr.Fun
-//│ ║        	^^^^^^^^
-//│ ╟── expression of type `{x: int & ?a, y: bool & ?b} -> barr & {y: ?b, x: ?a}` does not have field 'Fun'
-//│ ║  l.86: 	Barr.Fun
-//│ ╙──      	^^^^
-//│ res: error
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:625)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:673)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:481)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20(DiffTests.scala:286)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20$adapted(DiffTests.scala:263)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:263)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:327)
 
-//TODO: - references between methods (shodowing)
-//      - calls
-//      - ConstraintSolver.constrain.annoyingImpl missing cases?
+f = Fooo{x=1;y=2}
+//│ f: fooo & {y: 2, x: 1}
+
+// TODO impl
+:e
+f.Foo
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$11(Typer.scala:628)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:436)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:628)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:673)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:481)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20(DiffTests.scala:286)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20$adapted(DiffTests.scala:263)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+
+
 
 class Fo[A, B]: { x: A; y: B }
     method Left = { x = this.x; y = this.y } : { x: A }
 //│ Defined class Fo
+//│ Defined Fo.Left: {x: nothing}
 
 def this = fun x -> fun y -> add x y
 this 42 42
 //│ this: int -> int -> int
 //│ res: int
 
-:e
-class Ba: Fo[int, int]
-    method Sum = this this.x this.y
-    method Funny = this 42 42
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.117: 	    method Sum = this this.x this.y
-//│ ║         	                 ^^^^^^^^^^^
-//│ ╟── expression of type `fo & {y: int, x: int}` does not match type `?a | int -> ?b`
-//│ ║  l.116: 	class Ba: Fo[int, int]
-//│ ║         	          ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?c | int -> ?d`
-//│ ║  l.117: 	    method Sum = this this.x this.y
-//│ ╙──       	                 ^^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	    method Funny = this 42 42
-//│ ║         	                   ^^^^^^^
-//│ ╟── expression of type `fo & {y: int, x: int}` does not match type `42 -> ?a`
-//│ ║  l.116: 	class Ba: Fo[int, int]
-//│ ║         	          ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `42 -> ?b`
-//│ ║  l.118: 	    method Funny = this 42 42
-//│ ╙──       	                   ^^^^
-//│ Defined class Ba
+
+class Simple[A]
+    method Get: A
+//│ Defined class Simple
+//│ Declared Simple.Get: nothing
+
+
+

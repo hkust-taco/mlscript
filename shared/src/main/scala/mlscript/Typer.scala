@@ -24,28 +24,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     nme: Primitive,
     tparams: List[Primitive],
     body: Type,
-    mthDecls: Map[Str, MethodDef],
-    mthDefs: Map[Str, MethodDef],
+    mthDecls: Map[Str, MethodDef[Right[Term, Type]]],
+    mthDefs: Map[Str, MethodDef[Left[Term, Type]]],
     baseClasses: Set[Var],
     toLoc: Opt[Loc],
   ) {
     def allBaseClasses(ctx: Ctx)(implicit traversed: Set[Var]): Set[Var] =
       baseClasses.map(v => Var(v.name.toList.mapHead(_.toLower).mkString)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
-          ctx.tyDefs.getOrElse(v.name, ctx.tyDefs("nothing")).allBaseClasses(ctx)(traversed + v))
+          ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
   }
-  case class MethodDef(
+  case class MethodDef[RHS <: Term \/ Type](
     rec: Bool,
     prt: Primitive,
     nme: Primitive,
     tparams: List[Primitive],
-    rhs: Term \/ Type,
+    rhs: RHS,
     toLoc: Opt[Loc]
   )
   
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef],
-    mthDecls: Map[Str, Map[Str, PolymorphicType]], mthDefs: Map[Str, Map[Str, PolymorphicType]],
-    targsMaps: MutMap[Str, MutMap[Str, Map[Str, TypeVariable]]]) {
+      mthDecls: Map[Str, Map[Str, PolymorphicType]], mthDefs: Map[Str, Map[Str, PolymorphicType]],
+      targsMaps: MutMap[Str, MutMap[Str, Map[Str, TypeVariable]]]) {
     def +=(b: Binding): Unit = env += b
     def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeScheme] = env.get(name) orElse parent.dlof(_.get(name))(N)
@@ -182,10 +182,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       if (!n.name.head.isUpper) err(
         msg"Type names must start with a capital letter", n.toLoc)
       val td1 = TypeDef(td.kind, td.nme, td.tparams, td.body, 
-        td.mths.filter(_.rhs.isRight)
-          .map(md => md.nme.name -> MethodDef(md.rec, md.prt, md.nme, md.tparams, md.rhs, md.toLoc)).toMap,
-        td.mths.filter(_.rhs.isLeft)
-          .map(md => md.nme.name -> MethodDef(md.rec, md.prt, md.nme, md.tparams, md.rhs, md.toLoc)).toMap,
+        td.mths.collect { case md @ mlscript.MethodDef(rec, prt, nme, tparams, rhs: Right[Term, Type]) =>
+          nme.name -> MethodDef(rec, prt, nme, tparams, rhs, md.toLoc )}.toMap,
+        td.mths.collect { case md @ mlscript.MethodDef(rec, prt, nme, tparams, rhs: Left[Term, Type]) =>
+          nme.name -> MethodDef(rec, prt, nme, tparams, rhs, md.toLoc )}.toMap,
         baseClassesOf(td), td.toLoc)
       allDefs += n.name -> td1
       td1
@@ -319,7 +319,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             if (!nme.name.head.isUpper)
               err(msg"Method names must start with a capital letter", loc)
             decls += nme.name -> PolymorphicType(1, typeType(ty)(thisCtx, raise, S((tn.name, S(nme.name)))))
-          case _ => ???
         }
         td.mthDefs.valuesIterator.foreach { case MethodDef(rec, prt, nme, tparams, L(term), loc) =>
             implicit val prov: TypeProvenance = tp(loc, "method definition")
@@ -330,7 +329,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             if (defs.isDefinedAt(nme.name))
               err(msg"Method '${tn}.${nme.name}' is already defined.", nme.toLoc)
             defs += nme.name -> typeLetRhs(rec, nme.name, term)(thisCtx, raise, S((tn.name, S(nme.name))))
-          case _ => ???
         }
         newMthDecls += tn.name -> 
           ((td.baseClasses.flatMap(t => newMthDecls.getOrElse(t.name, Map.empty))).toMap ++ decls.toMap)
@@ -372,7 +370,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             implicit val prov: TypeProvenance = tp(loc, "method declaration")
             val mt = decls(nme.name)
             td.baseClasses.foreach(bc => newMthDecls.get(bc.name).foreach(_.get(nme.name).foreach(ss(mt, _))))
-          case _ => ???
         }
         td.mthDefs.valuesIterator.foreach { case MethodDef(rec, prt, nme, tparams, L(term), loc) =>
             implicit val prov: TypeProvenance = tp(loc, "method definition")
@@ -388,7 +385,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 }
               })
             }
-          case _ => ???
         }
         newEnv ++= defs.map{ case mn -> mt => s"${tn.name}.${mn}" -> mt } ++
           decls.map{ case mn -> mt => s"${tn.name}.${mn}" -> mt }
@@ -398,7 +394,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   }
   // TODO record provenances!
   def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise,
-    lookup: Option[(Str, Option[Str])] = N, vars: Map[Str, SimpleType] = Map.empty): SimpleType = {
+      lookup: Option[(Str, Option[Str])] = N, vars: Map[Str, SimpleType] = Map.empty): SimpleType = {
     val typeType = ()
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
@@ -624,6 +620,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val resTy = con(fun_ty, FunctionType(arg_ty, res)(prov), res)
         val raw_fun_ty = fun_ty.unwrapProxies
         resTy
+      case Sel(Var(name), fieldName) if name.headOption.exists(_.isUpper) =>
+        ??? // TODO
+      case Sel(obj, ident) if ident.name.headOption.exists(_.isUpper) =>
+        val o_ty = typeTerm(obj)
+        val mtd_ty = ctx.env.getOrElse(ident.name, ??? // TODO
+          ).instantiate
+        val res = freshVar(prov)
+        con(mtd_ty, FunctionType(o_ty, res)(prov), res)
       case Sel(obj, name) =>
         val o_ty = typeTerm(obj)
         val res = freshVar(prov)

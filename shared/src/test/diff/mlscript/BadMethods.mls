@@ -1,0 +1,81 @@
+:AllowTypeErrors
+
+class Foo[A]: { x: A }
+    method Map[B]: (A -> B) -> A
+class Bar[A]: Foo[A]
+    method Map[B]: B -> A
+    rec method Map f = f Map (fun x -> Map)
+class Derp: Bar[bool]
+    method Map f = true
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
+//│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `_α26` is not a function
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
+//│ ╙──     	                       ^^^^^
+//│ Defined class Foo
+//│ Declared Foo.Map: (nothing -> anything) -> nothing
+//│ Defined class Bar
+//│ Defined Bar.Map: anything -> nothing
+//│ Defined class Derp
+//│ Defined Derp.Map: anything -> nothing
+
+// FIXME
+Foo.Map
+Bar.Map
+Derp.Map
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:625)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:673)
+//│ 	at: mlscript.Typer.typeStatement(Typer.scala:481)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20(DiffTests.scala:286)
+//│ 	at: mlscript.DiffTests.$anonfun$new$20$adapted(DiffTests.scala:263)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:263)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:327)
+
+def a = Foo { x = 1 }
+a.(Foo.Map)(fun x -> x)
+//│ a: foo & {x: 1}
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.41: 	a.(Foo.Map)(fun x -> x)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── expression of type `foo & {x: ?a | 1}` does not match type `?b -> ?c`
+//│ ║  l.40: 	def a = Foo { x = 1 }
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?d -> ?e`
+//│ ║  l.41: 	a.(Foo.Map)(fun x -> x)
+//│ ║        	^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.4: 	    method Map[B]: (A -> B) -> A
+//│ ╙──     	                    ^^^^^^
+//│ res: error
+
+class bar[A, B]: Foo[A] & { Y: B; z: int }
+    method identity z = z
+    method identity z = z
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.57: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.57: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	                            ^
+//│ ╔══[ERROR] Method names must start with a capital letter
+//│ ║  l.59: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ Defined class bar
+//│ Defined bar.identity: 'a -> 'a
+
+
+class Ba: Fo[int, int]
+    method Sum = this this.x this.y
+    method Funny = this 42 42
+//│ ╔══[ERROR] type identifier not found: Fo
+//│ ║  l.73: 	class Ba: Fo[int, int]
+//│ ╙──      	          ^^^^^^^^^^^^
+//│ ╔══[ERROR] cannot inherit from a type variable
+//│ ║  l.73: 	class Ba: Fo[int, int]
+//│ ╙──      	      ^^^^^^^^^^^^^^^^
