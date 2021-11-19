@@ -177,6 +177,23 @@ class JSBackend {
     case Inter(ty, Record(entries)) =>
       val (fields, cls) = expandRecordInter(ty)
       fields ++ entries.map(_._1) -> cls
+    case Inter(ty1, ty2) =>
+      val (fields1, cls1) = expandRecordInter(ty1)
+      val (fields2, cls2) = expandRecordInter(ty2)
+      (cls1, cls2) match {
+        case (N, N) =>
+          fields1 ++ fields2 -> N
+        case (N, S(cls)) =>
+          fields1 ++ fields2 -> S(cls)
+        case (S(cls), N) =>
+          fields1 ++ fields2 -> S(cls)
+        case (S(cls1), S(cls2)) =>
+          if (cls1 === cls2) {
+            fields1 ++ fields2 -> S(cls1)
+          } else {
+            throw new Exception(s"Cannot have two base classes: $cls1, $cls2")
+          }
+      }
     case _ =>
       ???
   }
