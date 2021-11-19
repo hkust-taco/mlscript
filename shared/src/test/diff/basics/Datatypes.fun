@@ -186,14 +186,17 @@ Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `2` does not match type `(nil | cons & {head: ?b, tail: ?a}) as ?a`
 //│ ║  l.183: 	Cons 1 2
-//│ ╙──       	       ^
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.100: 	data type List a of
+//│ ╙──       	               ^
 //│ res: (cons & {head: 1, tail: 'b | nil | 'a}) as 'a | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.194: 	let List.head = () // ...
+//│ ║  l.197: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

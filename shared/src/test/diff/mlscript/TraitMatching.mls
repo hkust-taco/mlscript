@@ -152,6 +152,11 @@ strawman: ~{ value: anything }
 //│ ║  l.150: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `c2 & {default: string} & ~myTrait` does not match type `~{value: anything}`
+//│ ║  l.140: 	def strawman: C2 & ~MyTrait[anything]
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `~{value: anything}`
+//│ ║  l.150: 	strawman: ~{ value: anything }
+//│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.150: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^

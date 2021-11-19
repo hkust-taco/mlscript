@@ -38,7 +38,7 @@ final case class Bra(rcd: Bool, trm: Term)                           extends Ter
 final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
-final case class With(trm: Term, fieldNme: Str, fieldVal: Term)      extends Term
+final case class With(trm: Term, fields: Rcd)                        extends Term
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl

@@ -280,30 +280,33 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
       val res = ctx.tyDefs.get(name)
       if (res.isEmpty)
-        err("type identifier not found: " + name, ty.toLoc)(raise, noProv /*FIXME*/);
+        err("type identifier not found: " + name, ty.toLoc)(raise, tp(ty.toLoc, "missing type"));
       res
     }
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def rec(ty: Type)(implicit ctx: Ctx): SimpleType = ty match {
-      case Top => TopType
-      case Bot => BotType
+      case Top => ExtrType(false)(tp(ty.toLoc, "top type"))
+      case Bot => ExtrType(true)(tp(ty.toLoc, "bottom type"))
       case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
-      case Inter(lhs, rhs) => if (simplify) rec(lhs) & rec(rhs)
-          else ComposedType(false, rec(lhs), rec(rhs))(noProv)
-      case Union(lhs, rhs) => if (simplify) rec(lhs) | rec(rhs)
-          else ComposedType(true, rec(lhs), rec(rhs))(noProv)
+      case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
+          else ComposedType(false, rec(lhs), rec(rhs)) _
+        )(tp(ty.toLoc, "intersection type"))
+      case Union(lhs, rhs) => (if (simplify) rec(lhs) | (rec(rhs), _: TypeProvenance)
+          else ComposedType(true, rec(lhs), rec(rhs)) _
+        )(tp(ty.toLoc, "union type"))
       case Applied(Primitive("~"), rhs) => NegType(rec(rhs))(tp(ty.toLoc, "type negation"))
       case Applied(lhs, rhs) => ??? // TODO
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
       case Primitive(name) =>
+        val tpr = tp(ty.toLoc, "type reference")
         vars.get(name) orElse
           typeNamed(ty, name).flatMap(td =>
             if (td.tparams.nonEmpty) {
-              err(msg"Type $name takes parameters", ty.toLoc)(raise, noProv /*FIXME*/)
+              err(msg"Type $name takes parameters", ty.toLoc)(raise, tpr)
               N
-            } else S(TypeRef(td, Nil)(tp(ty.toLoc, "type reference"), ctx))
+            } else S(TypeRef(td, Nil)(tpr, ctx))
           ) getOrElse freshVar(noProv) // TODO use ty's prov
       case tv: TypeVar =>
         localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil)(tp(ty.toLoc, "type variable")))
@@ -512,11 +515,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val r_ty = typePattern(r)(newCtx, raise) // TODO make these bindings flow
         con(l_ty, r_ty, TopType)
         BoolType
-      case With(t, n, v) =>
+      case With(t, rcd) =>
         val t_ty = typeTerm(t)
-        val v_ty = typeTerm(v)
-        (t_ty without n) &
-          RecordType.mk(n -> v_ty :: Nil)(noProv) // TODO maybe With should take a Rcd and we'd use its type with prov here
+        val rcd_ty = typeTerm(rcd)
+        (t_ty without rcd.fields.iterator.map(_._1).toSet) & (rcd_ty, prov)
       case CaseOf(s, cs) =>
         val s_ty = typeTerm(s)
         val (tys, cs_ty) = typeArms(s |>? {
@@ -524,9 +526,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case Asc(v: Var, _) => v
         }, cs)
         val req = tys.foldRight(BotType: SimpleType) {
-          case ((a_ty, tv), req) =>
-            a_ty & tv | req & a_ty.neg(noProv // FIXME
-              )
+          case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
         }
         con(s_ty, req, cs_ty)
     }
@@ -537,8 +537,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
     case Wildcard(b) =>
-      val fv = freshVar(noProv // FIXME
-      )
+      val fv = freshVar(tp(arms.toLoc, "wildcard pattern"))
       val newCtx = ctx.nest
       scrutVar match {
         case Some(v) =>
@@ -553,20 +552,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case lit: Lit =>
           ClassTag(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
         case Var(nme) =>
+          val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
             case None =>
-              err("type identifier not found: " + nme, pat.toLoc)(raise, noProv /*FIXME*/)
-              val e = ClassTag(ErrTypeId, Set.empty)(noProv)
+              err("type identifier not found: " + nme, pat.toLoc)(raise, tpr)
+              val e = ClassTag(ErrTypeId, Set.empty)(tpr)
               return ((e -> e) :: Nil) -> e
             case Some(td) =>
-              // TODO check td is a class (or also support traits?)
               td.kind match {
-                case Als => err(msg"can only match on classes and traits",
-                  pat.toLoc)(raise, noProv /*FIXME*/)
-                case Cls =>
-                  clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
-                case Trt =>
-                  trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
+                case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise, tpr)
+                case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
+                case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
               }
           }
       }

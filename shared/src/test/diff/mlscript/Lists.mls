@@ -90,7 +90,10 @@ Cons 1 res
 //│ ╟── but it flows into reference with expected type `(nil | cons & {head: ?d, tail: ?c}) as ?c`
 //│ ║  l.83: 	Cons 1 res
 //│ ║        	       ^^^
-//│ ╟── Note: constraint arises from applied type reference:
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.4: 	type List[A] = Nil | Cons[A]
+//│ ║       	               ^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ╙──     	                                ^^^^^^^
 //│ res: cons & {head: 1, tail: 2} | error

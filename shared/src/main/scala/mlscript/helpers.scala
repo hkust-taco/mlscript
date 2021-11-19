@@ -159,7 +159,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(xs) => "tuple expression"
     case Bind(l, r) => "'as' binding"
     case Test(l, r) => "'is' test"
-    case With(t, n, v) =>  "`with` extension"
+    case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "case of" 
   }
   
@@ -184,7 +184,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
     case Bind(l, r) => s"($l as $r)"
     case Test(l, r) => s"($l is $r)"
-    case With(t, n, v) =>  s"$t with {$n = $v}"
+    case With(t, fs) =>  s"$t with $fs"
     case CaseOf(s, c) => s"case $s of $c"
   }
   
@@ -411,7 +411,7 @@ trait StatementImpl extends Located { self: Statement =>
     case _: Lit => Nil
     case Bind(l, r) => l :: r :: Nil
     case Test(l, r) => l :: r :: Nil
-    case With(t, n, v) => t :: v :: Nil
+    case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
     case d @ Def(_, n, b) => d.body :: Nil
     case TypeDef(kind, nme, tparams, body) => nme :: tparams ::: body :: Nil
@@ -436,7 +436,13 @@ trait BlkImpl { self: Blk =>
   
 }
 
-trait CaseBranchesImpl { self: CaseBranches =>
+trait CaseBranchesImpl extends Located { self: CaseBranches =>
+  
+  def children: List[Located] = this match {
+    case Case(pat, body, rest) => pat :: body :: rest :: Nil
+    case Wildcard(body) => body :: Nil
+    case NoCases => Nil
+  }
   
   def iterator: Ite[Case] = this match {
     case c: Case => Ite.single(c) ++ c.rest.iterator
