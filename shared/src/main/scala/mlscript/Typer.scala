@@ -257,9 +257,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               if (tys =/= targs) {
                 if (defn.nme.name === td.nme.name)
                   err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr).show
+                  expandType(tr, true).show
                   }, but is defined as ${
-                  expandType(TypeRef(defn, dummyTargs)(noProv, ctx)).show
+                  expandType(TypeRef(defn, dummyTargs)(noProv, ctx), true).show
                   }", td.toLoc)(raise, noProv)
                 false
               } else true
@@ -274,7 +274,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       })
     }
   }
-  // TODO record provenances!
   def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType = {
     val typeType = ()
     def typeNamed(ty: Type, name: Str): Opt[TypeDef] = {
@@ -294,8 +293,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Union(lhs, rhs) => (if (simplify) rec(lhs) | (rec(rhs), _: TypeProvenance)
           else ComposedType(true, rec(lhs), rec(rhs)) _
         )(tp(ty.toLoc, "union type"))
-      case Applied(Primitive("~"), rhs) => NegType(rec(rhs))(tp(ty.toLoc, "type negation"))
-      case Applied(lhs, rhs) => ??? // TODO
+      case Neg(t) => NegType(rec(t))(tp(ty.toLoc, "type negation"))
       case Record(fs) => RecordType.mk(fs.map(nt => nt._1 -> rec(nt._2)))(tp(ty.toLoc, "record type"))
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
@@ -656,7 +654,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, polarity: Bool = true): Type = {
+  def expandType(st: SimpleType, polarity: Bool): Type = {
     
     // TODO improve/simplify? (take inspiration from other impls?)
     //    see: duplication of recursive.get(st_pol) logic
@@ -689,11 +687,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
             case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
-            case NegType(t) => Applied(Primitive("~"), expandType(t))
+            case NegType(t) => Neg(expandType(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case ProxyType(und) => go(und, polarity)
-            case tag: ObjectTag => Primitive(tag.id.idStr)
+            case tag: ObjectTag => tag.id match {
+              case Var(n) => Primitive(n)
+              case lit: Lit => Literal(lit)
+            }
             case TypeRef(td, Nil) => Primitive(td.nme.name)
             case TypeRef(td, targs) =>
               AppliedType(Primitive(td.nme.name), targs.map(expandType(_, polarity)))

@@ -198,4 +198,10 @@ class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
+class A
+type Id[T] = T
+class B: Id[A]
+//│ Defined class A
+//│ Defined type Id
+//│ Defined class B
 
