@@ -298,7 +298,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val tn = td.nme
         val decls = MutMap.empty[Str, PolymorphicType]
         val defs = MutMap.empty[Str, PolymorphicType]
-        val thisCtx = ctx.nest.nextLevel
+        val thisCtx = ctx.nest
         thisCtx += "this" -> TypeRef(td, td.tparams.map(p => allTargsMaps(tn.name)("")(p.name)))(prov, thisCtx)
         td.mthDecls.foreach { case md @ MethodDef(rec, prt, nme, tparams, R(ty)) =>
             implicit val prov: TypeProvenance = tp(md.toLoc, "method declaration")
