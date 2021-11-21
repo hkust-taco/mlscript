@@ -396,7 +396,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
       case _: ClassTag | _: TraitTag => ty
-      // case TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol))) // FIXME pol...
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol)))(tr.prov, tr.ctx) // FIXME pol...
     }
   
   

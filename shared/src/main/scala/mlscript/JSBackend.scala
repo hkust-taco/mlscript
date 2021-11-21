@@ -169,7 +169,7 @@ class JSBackend {
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
-          .map { case TypeDef(kind, Primitive(name), typeParams, actualType, _) =>
+          .map { case TypeDef(kind, Primitive(name), typeParams, actualType, _, _) => // TODO: handle methods
             kind match {
               case Cls =>
                 classNames += name

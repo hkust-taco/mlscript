@@ -95,19 +95,22 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def tyDecl[_: P]: P[TypeDef] =
     P((tyKind ~/ tyName ~ tyParams).flatMap {
-      case (k @ (Cls | Trt), id, ts) => ((":" ~ ty).? ~ mthDecl(id).rep.map(_.toList) map {
-        case (bod, ms) => TypeDef(k, id, ts, bod.getOrElse(Top), ms)
-      })
+      case (k @ (Cls | Trt), id, ts) => (":" ~ ty).? ~ (mthDecl(id) | mthDef(id)).rep.map(_.toList) map {
+        case (bod, ms) => TypeDef(k, id, ts, bod.getOrElse(Top), 
+          ms.collect { case R(md) => md }, ms.collect{ case L(md) => md })
+      }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
     })
   def tyParams[_: P]: P[Ls[Primitive]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
-  def mthDecl[_: P](prt: Primitive): P[MethodDef] = 
-    P((kw("method") ~ tyName ~ tyParams ~ ":" ~/ ty map {
-      case (id, ts, t) => MethodDef(true, prt, id, ts, R(t))
-    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
-      case (rec, id, ts, ps, bod) => MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc))))
-    }))
+  def mthDecl[_: P](prt: Primitive): P[R[MethodDef[Right[Term, Type]]]] = 
+    P(kw("method") ~ tyName ~ tyParams ~ ":" ~/ ty map {
+      case (id, ts, t) => R(MethodDef[Right[Term, Type]](true, prt, id, ts, R(t)))
+    })
+  def mthDef[_: P](prt: Primitive): P[L[MethodDef[Left[Term, Type]]]] = 
+    P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
+      case (rec, id, ts, ps, bod) => L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc)))))
+    })
   
   def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))

@@ -1,74 +1,91 @@
 //TODO: - references between methods (shodowing)
-//      - calls
+//      - implicit calls
+//      - ConstraintSolver.extrude TypeRef polarity
 //      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 
-class Fooo[A, B]: { x: A; y: B }
+class Foo[A, B]: { x: A; y: B }
     method Fun[C]: (A -> B -> C) -> (A -> B -> C)
-//│ Defined class Fooo
-//│ Declared Fooo.Fun: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
+//│ Defined class Foo
+//│ Declared Foo.Fun: foo & {y: 'a, x: 'b} -> ('b -> 'a -> 'c) -> 'b -> 'a -> 'c
 
-class Barr: Fooo[int, bool]
+class Bar: Foo[int, bool]
     method Fun f = f
-//│ Defined class Barr
-//│ Defined Barr.Fun: ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
+//│ Defined class Bar
+//│ Defined Bar.Fun: bar & {y: bool, x: int} -> 'a -> 'a
 
-// Fooo -> PolymorphicType(0,({x: α8', y: α9'} -> ((fooo<> & {x: α6', y: α7'}) & {x: α8', y: α9'})))
-// Fooo.Fun -> PolymorphicType(1,((α3' -> (α4' -> α10'')) -> (α3' -> (α4' -> α10''))))
-// Barr -> PolymorphicType(0,({x: α2', y: α3'} -> ((barr<fooo> & Fooo[int,bool]) & {x: α2', y: α3'})))
-// Barr.Fun -> PolymorphicType(1,(α4'' -> [α4'']))
+Foo.Fun
+Bar.Fun
+//│ res: foo & {y: 'a, x: 'b} -> ('b -> 'a -> 'c) -> 'b -> 'a -> 'c
+//│ res: bar & {y: bool, x: int} -> 'a -> 'a
 
-// TODO impl
-:e
-Fooo.Fun
-Barr.Fun
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:625)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:673)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:481)
-//│ 	at: mlscript.DiffTests.$anonfun$new$20(DiffTests.scala:286)
-//│ 	at: mlscript.DiffTests.$anonfun$new$20$adapted(DiffTests.scala:263)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:263)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:327)
+f = Foo { x = 1; y = 2 }
+//│ f: foo & {y: 2, x: 1}
 
-f = Fooo{x=1;y=2}
-//│ f: fooo & {y: 2, x: 1}
+f.(Foo.Fun)
+//│ res: ('a | 1 -> 'b | 2 -> 'c) -> 'a -> 'b -> 'c
+
+Foo.Fun f
+//│ res: ('a | 1 -> 'b | 2 -> 'c) -> 'a -> 'b -> 'c
 
 // TODO impl
 :e
-f.Foo
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$11(Typer.scala:628)
-//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:436)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$1(Typer.scala:628)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:17)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:673)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:481)
-//│ 	at: mlscript.DiffTests.$anonfun$new$20(DiffTests.scala:286)
-//│ 	at: mlscript.DiffTests.$anonfun$new$20$adapted(DiffTests.scala:263)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+f.Fun
+//│ ╔══[ERROR] Method Fun not found
+//│ ║  l.33: 	f.Fun
+//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.33: 	f.Fun
+//│ ║        	^^^^^
+//│ ╟── expression of type `foo & {y: ?a | 2, x: ?b | 1}` does not match type `{Fun: ?c}`
+//│ ║  l.22: 	f = Foo { x = 1; y = 2 }
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{Fun: ?d}`
+//│ ║  l.33: 	f.Fun
+//│ ╙──      	^
+//│ res: error
 
 
 
-class Fo[A, B]: { x: A; y: B }
+
+class Asc[A, B]: { x: A; y: B }
     method Left = { x = this.x; y = this.y } : { x: A }
-//│ Defined class Fo
-//│ Defined Fo.Left: {x: nothing}
+    method Right2 = this : { y: B }
+//│ Defined class Asc
+//│ Defined Asc.Left: asc & {y: anything, x: 'a} -> {x: 'a}
+//│ Defined Asc.Right2: asc & {y: 'a, x: anything} -> {y: 'a}
 
-def this = fun x -> fun y -> add x y
-this 42 42
-//│ this: int -> int -> int
-//│ res: int
+
 
 
 class Simple[A]
     method Get: A
 //│ Defined class Simple
-//│ Declared Simple.Get: nothing
+//│ Declared Simple.Get: simple -> nothing
+
+class Simple2[A]: { a: A }
+    method Get: A
+//│ Defined class Simple2
+//│ Declared Simple2.Get: simple2 & {a: 'a} -> 'a
 
 
 
+
+class AbstractPair[A, B]: { x: A; y: B }
+    method Test: (A -> B -> bool) -> bool
+    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ Defined class AbstractPair
+//│ Declared AbstractPair.Test: abstractPair & {y: 'a, x: 'b} -> ('b -> 'a -> bool) -> bool
+//│ Declared AbstractPair.Map: abstractPair & {y: 'a, x: 'b} -> ('b -> 'c) -> ('a -> 'd) -> abstractPair & {y: 'd, x: 'c}
+
+class Pair[A, B]: AbstractPair[A, B]
+    method Test(f: A -> B -> bool) = f this.x this.y
+    method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ Defined class Pair
+//│ Defined Pair.Test: pair & {y: 'a, x: 'b} -> ('b -> 'a -> bool & 'c) -> 'c
+//│ Defined Pair.Map: pair & {y: 'a, x: 'b} -> ('b -> 'c) -> ('a -> 'd) -> pair & {y: 'd, x: 'c}
+
+class True[A, B]: Pair[A, B]
+    method Test f = true
+//│ Defined class True
+//│ Defined True.Test: true & {y: anything, x: anything} -> anything -> true

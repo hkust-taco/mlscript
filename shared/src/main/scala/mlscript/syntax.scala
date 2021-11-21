@@ -16,14 +16,15 @@ final case class TypeDef(
   nme: Primitive,
   tparams: List[Primitive],
   body: Type,
-  mths: List[MethodDef] = Nil,
+  mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
+  mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
 ) extends Decl
-final case class MethodDef(
+final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
   prt: Primitive,
   nme: Primitive,
   tparams: List[Primitive],
-  rhs: Term \/ Type,
+  rhs: RHS,
 ) extends Located {
   val body: Located = rhs.fold(identity, identity)
   val children: Ls[Located] = nme :: body :: Nil
