@@ -8,7 +8,7 @@ class Bar[A]: Foo[A]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α24` is not a function
+//│ ╟── expression of type `_α25` is not a function
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ╙──     	                       ^^^^^
@@ -51,6 +51,44 @@ class bar[A, B]: Foo[A] & { Y: B; z: int }
 
 
 
+class ImplicitCall[A]: { x: A }
+    method Fun = this.x
+//│ Defined class ImplicitCall
+//│ Defined ImplicitCall.Fun: implicitCall & {x: 'a} -> 'a
+
+i = ImplicitCall { x = "stonks" }
+i.Fun
+//│ i: implicitCall & {x: "stonks"}
+//│ res: "stonks"
+
+class NoMoreImplicitCall
+    method Fun = "not stonks"
+//│ Defined class NoMoreImplicitCall
+//│ Defined NoMoreImplicitCall.Fun: noMoreImplicitCall -> "not stonks"
+
+i.Fun
+//│ ╔══[ERROR] Implicit call of Fun is disabled
+//│ ║  l.69: 	i.Fun
+//│ ║        	  ^^^
+//│ ╟── Defined by ImplicitCall
+//│ ║  l.54: 	class ImplicitCall[A]: { x: A }
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── Defined by NoMoreImplicitCall
+//│ ║  l.64: 	class NoMoreImplicitCall
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.69: 	i.Fun
+//│ ║        	^^^^^
+//│ ╟── expression of type `implicitCall & {x: ?a | "stonks"}` does not match type `{Fun: ?b}`
+//│ ║  l.59: 	i = ImplicitCall { x = "stonks" }
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{Fun: ?c}`
+//│ ║  l.69: 	i.Fun
+//│ ╙──      	^
+//│ res: error
+
+
+
 
 def this = fun x -> fun y -> add x y
 this 42 42
@@ -61,23 +99,23 @@ class BadThis: { x: int; y: int }
     method Sum = this this.x this.y
     method Funny = this 42 42
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.61: 	    method Sum = this this.x this.y
+//│ ║  l.99: 	    method Sum = this this.x this.y
 //│ ║        	                 ^^^^^^^^^^^
 //│ ╟── expression of type `badThis & {y: int, x: int}` does not match type `?a | int -> ?b`
-//│ ║  l.60: 	class BadThis: { x: int; y: int }
+//│ ║  l.98: 	class BadThis: { x: int; y: int }
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?c | int -> ?d`
-//│ ║  l.61: 	    method Sum = this this.x this.y
+//│ ║  l.99: 	    method Sum = this this.x this.y
 //│ ╙──      	                 ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	    method Funny = this 42 42
-//│ ║        	                   ^^^^^^^
+//│ ║  l.100: 	    method Funny = this 42 42
+//│ ║         	                   ^^^^^^^
 //│ ╟── expression of type `badThis & {y: int, x: int}` does not match type `42 -> ?a`
-//│ ║  l.60: 	class BadThis: { x: int; y: int }
+//│ ║  l.98: 	class BadThis: { x: int; y: int }
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `42 -> ?b`
-//│ ║  l.62: 	    method Funny = this 42 42
-//│ ╙──      	                   ^^^^
+//│ ║  l.100: 	    method Funny = this 42 42
+//│ ╙──       	                   ^^^^
 //│ Defined class BadThis
 //│ Defined BadThis.Sum: badThis & {y: int, x: int} -> error
 //│ Defined BadThis.Funny: badThis & {y: int, x: int} -> error
@@ -96,38 +134,38 @@ class BadPair[A, B]: AbstractPair[A, B]
     method Test f = f this.x this.x
     method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.97: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α245` does not match type `_α246`
-//│ ║  l.97: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
-//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into function of type `?a -> ?b | badPair & {y: ?c | _α245, x: ?d | _α245}`
-//│ ║  l.97: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
-//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which does not match type `(?e -> _α246) -> abstractPair & {y: _α246, x: _α245}`
+//│ ║  l.135: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `_α296` does not match type `_α298`
+//│ ║  l.135: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into function of type `?a -> ?b | badPair & {y: ?c | _α296, x: ?d | _α296}`
+//│ ║  l.135: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which does not match type `(_α297 -> _α298) -> abstractPair & {y: _α298, x: _α296}`
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.88: 	class AbstractPair[A, B]: { x: A; y: B }
-//│ ║        	                          ^^^^^^^^^^^^^^
+//│ ║  l.126: 	class AbstractPair[A, B]: { x: A; y: B }
+//│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.90: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
-//│ ╙──      	                                              ^^^^^^^^^^^^^^^^^^
+//│ ║  l.128: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
 //│ Defined class BadPair
 //│ Defined BadPair.Test: badPair & {y: anything, x: 'a} -> ('a -> 'a -> 'b) -> 'b
 //│ Defined BadPair.Map: badPair & {y: anything, x: 'a} -> ('a -> 'b) -> anything -> badPair & {y: 'b, x: 'b}
 
 bp = BadPair { x = 42; y = true }
-bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else 0)
+bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ bp: badPair & {y: true, x: 42}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.119: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else 0)
+//│ ║  l.157: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.118: 	bp = BadPair { x = 42; y = true }
+//│ ║  l.156: 	bp = BadPair { x = 42; y = true }
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.119: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else 0)
+//│ ║  l.157: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╙──       	                                         ^
-//│ res: 42 | 0 | error
+//│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
@@ -135,6 +173,6 @@ BadPair.(BadPair.Map)
 //│ BadPair: badPair & {y: 0, x: 42}
 //│ res: badPair & {y: anything, x: 'a} -> ('a -> 'b) -> anything -> badPair & {y: 'b, x: 'b}
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
-//│ ║  l.134: 	BadPair.(BadPair.Map)
+//│ ║  l.172: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ res: (42 -> 'a) -> anything -> badPair & {y: 'a, x: 'a}

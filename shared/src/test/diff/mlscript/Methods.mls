@@ -1,6 +1,9 @@
-//TODO: - references between methods (shodowing)
-//      - implicit calls
-//      - ConstraintSolver.extrude TypeRef polarity
+//TODO: - ConstraintSolver.extrude TypeRef polarity
+//      - ConstraintSolver.freshenAbove.freshen bounds on rigidified variables?
+//          Currently it has a half-assed implementation taking care of bounds on one side only.
+//          Bounds are only added to variables to be potentially regidified when constraining the `this` argument of methods.
+//          By inspecting the bounds in every execution of the branch, it seems that the bounds are all variables with
+//              no bounds themselves, which is equivalent to having no bounds. So this may not be necessary at all.
 //      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 
@@ -28,22 +31,24 @@ f.(Foo.Fun)
 Foo.Fun f
 //│ res: ('a | 1 -> 'b | 2 -> 'c) -> 'a -> 'b -> 'c
 
-// TODO impl
-:e
 f.Fun
-//│ ╔══[ERROR] Method Fun not found
-//│ ║  l.33: 	f.Fun
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.33: 	f.Fun
-//│ ║        	^^^^^
-//│ ╟── expression of type `foo & {y: ?a | 2, x: ?b | 1}` does not match type `{Fun: ?c}`
-//│ ║  l.22: 	f = Foo { x = 1; y = 2 }
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{Fun: ?d}`
-//│ ║  l.33: 	f.Fun
-//│ ╙──      	^
-//│ res: error
+//│ res: ('a | 1 -> 'b | 2 -> 'c) -> 'a -> 'b -> 'c
+
+g = Bar { x = 42; y = true }
+//│ g: bar & {y: true, x: 42}
+
+g.(Foo.Fun)
+g.(Bar.Fun)
+//│ res: ('a | 42 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
+//│ res: 'a -> 'a
+
+Foo.Fun g
+Bar.Fun g
+//│ res: ('a | 42 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
+//│ res: 'a -> 'a
+
+g.Fun
+//│ res: ('a | 42 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
 
 
 
@@ -87,5 +92,35 @@ class Pair[A, B]: AbstractPair[A, B]
 
 class True[A, B]: Pair[A, B]
     method Test f = true
+    method True = this.Test (fun x -> error)
 //│ Defined class True
 //│ Defined True.Test: true & {y: anything, x: anything} -> anything -> true
+//│ Defined True.True: true & {y: anything, x: anything} -> true
+
+class True2[A, B]: Pair[A, B]
+    method Test: anything -> bool
+    method True = this.Test (fun x -> error)
+    method Test f = true
+//│ Defined class True2
+//│ Declared True2.Test: true2 & {y: anything, x: anything} -> anything -> true
+//│ Defined True2.True: true2 & {y: anything, x: anything} -> bool
+//│ Defined True2.Test: true2 & {y: anything, x: anything} -> anything -> true
+
+p = Pair { x = 42; y = true }
+p.(Pair.Map) (fun x -> mul x 2) (fun x -> not x)
+p.(Pair.Test) (fun x -> fun y -> if (y) then gt x 0 else y)
+(p.(Pair.Map) (fun x -> mul x 2) (fun x -> not x)).(Pair.Test) (fun x -> fun y -> if (y) then gt x 0 else y)
+//│ p: pair & {y: true, x: 42}
+//│ res: pair & {y: bool, x: int}
+//│ res: bool
+//│ res: bool
+
+t = True { x = "foo"; y = false }
+t.(True.True)
+//│ t: true & {y: false, x: "foo"}
+//│ res: true
+
+t = True2 { x = "bar"; y = false }
+t.(True2.True)
+//│ t: true2 & {y: false, x: "bar"}
+//│ res: bool
