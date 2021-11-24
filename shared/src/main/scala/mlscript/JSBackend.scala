@@ -164,52 +164,114 @@ class JSBackend {
       case NoCases        => Ls(JSThrowStmt())
     }
 
-  private val resolvedAliases = collection.mutable.HashMap[Str, Str]()
+  private val typeAliasMap =
+    collection.mutable.HashMap[Str, Ls[Str] -> Type]()
 
-  private def resolveAliases(typeDefs: Ls[TypeDef]) = {
-    val relations = collection.immutable.HashMap.from(typeDefs flatMap {
-      case TypeDef(Als, Primitive(alias), _, Primitive(name)) =>
-        S(alias -> name)
-      case _ => N
-    })
-    resolvedAliases.addAll(
-      Ls.from(relations flatMap { case (s, t) => s :: t :: Nil }).distinct map {
-        name =>
-          val visited = HashSet.empty[Str]
-          var current = name
-          while (!visited.contains(current)) {
-            visited += current
-            relations.get(current) match {
-              case N =>
-              case S(alias) =>
-                current = alias
+  // This function evaluates something like `T[A, B]`.
+  private def applyTypeAlias(name: Str, targs: Ls[Type]): Type =
+    typeAliasMap get name match {
+      case S(tparams -> body) =>
+        if (targs.length === tparams.length) {
+          val subs = collection.immutable.HashMap(
+            tparams zip targs map { case (k, v) => k -> v }: _*
+          )
+          substitute(body, subs)
+        } else {
+          throw new Error(
+            s"expect ${tparams.length} arguments but provided ${targs.length}"
+          )
+        }
+      case N => throw new Error(s"type $name is not defined")
+    }
+
+  // This function evaluates a type, removing all `AppliedType`s.
+  private def substitute(
+      body: Type,
+      subs: collection.immutable.HashMap[Str, Type] =
+        collection.immutable.HashMap.empty
+  ): Type = {
+    println(s"substitute $body")
+    body match {
+      case Applied(lhs, rhs) =>
+        val subsLhs = substitute(lhs, subs)
+        val subsRhs = substitute(rhs, subs)
+        if (subsLhs === lhs && subsRhs === rhs) {
+          body
+        } else {
+          Applied(subsLhs, subsRhs)
+        }
+      // Question: substitute arguments or the result?
+      case AppliedType(Primitive(name), targs) =>
+        applyTypeAlias(name, targs map { substitute(_, subs) })
+      case Function(lhs, rhs) =>
+        Function(substitute(lhs, subs), substitute(rhs, subs))
+      case Inter(lhs, rhs) =>
+        Inter(substitute(lhs, subs), substitute(rhs, subs))
+      case Record(fields) =>
+        Record(fields map { case (k, v) => k -> substitute(v, subs) })
+      case Union(lhs, rhs) =>
+        Union(substitute(lhs, subs), substitute(rhs, subs))
+      case Tuple(fields) =>
+        Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
+      case Primitive(name) =>
+        subs get name match {
+          case N =>
+            typeAliasMap get name match {
+              case N              => Primitive(name)
+              case S(Nil -> body) => substitute(body, subs)
+              case S(tparams -> _) =>
+                throw new Error(
+                  s"type $name expects ${tparams.length} type parameters but nothing provided"
+                )
             }
-          }
-          name -> current
-      }
-    )
+          case S(ty) => ty
+        }
+      // For `Bot`, `Literal`, and `Top`, we don't need to substitute.
+      case _ => body
+    }
   }
 
   // This function collects two things:
   // 1. fields from a series of intersection of records,
   // 2. name of the base class.
-  // Only one base class is allowed. Only `Primitive` and `Record` is allowed.
-  private def expandRecordInter(ty: Type): (Ls[Str], Opt[Str]) = ty match {
+  // Only one base class is allowed.
+  private def getBaseClassAndFields(ty: Type): (Ls[Str], Opt[Str]) = ty match {
+    // `class A` ==> `class A {}`
+    case Top => Nil -> N
+    // `class A { <items> }` ==>
+    // `class A { constructor(fields) { <items> } }`
     case Record(fields) => fields.map(_._1) -> N
+    // `class B: A` ==> `class B extends A {}`
+    // If `A` is a type alias, it is replaced by its real type.
+    // Otherwise just use the name.
     case Primitive(name) =>
-      resolvedAliases get name match {
-        case S(realName) => Nil -> Opt(realName)
-        case N           => throw new Exception(s"unresolved alias: $name")
+      typeAliasMap get name match {
+        // The base class is not a type alias.
+        case N => Nil -> S(name)
+        // The base class is a type alias with no parameters.
+        // Good, just make sure all term is evaluated.
+        case S(Nil -> body) => getBaseClassAndFields(substitute(body))
+        // The base class is a type alias with parameters.
+        // Oops, we don't support this.
+        case S(tparams -> _) =>
+          throw new Error(
+            s"type $name expects ${tparams.length} type parameters but nothing provided"
+          )
       }
+    // `class C: { <items> } & A` ==>
+    // `class C extends A { constructor(fields) { <items> } }`
     case Inter(Record(entries), ty) =>
-      val (fields, cls) = expandRecordInter(ty)
+      val (fields, cls) = getBaseClassAndFields(ty)
       entries.map(_._1) ++ fields -> cls
+    // `class C: { <items> } & A` ==>
+    // `class C extends A { constructor(fields) { <items> } }`
     case Inter(ty, Record(entries)) =>
-      val (fields, cls) = expandRecordInter(ty)
+      val (fields, cls) = getBaseClassAndFields(ty)
       fields ++ entries.map(_._1) -> cls
+    // `class C: <X> & <Y>`: resolve X and Y respectively.
     case Inter(ty1, ty2) =>
-      val (fields1, cls1) = expandRecordInter(ty1)
-      val (fields2, cls2) = expandRecordInter(ty2)
+      val (fields1, cls1) = getBaseClassAndFields(ty1)
+      val (fields2, cls2) = getBaseClassAndFields(ty2)
       (cls1, cls2) match {
         case (N, N) =>
           fields1 ++ fields2 -> N
@@ -224,48 +286,43 @@ class JSBackend {
             throw new Exception(s"Cannot have two base classes: $cls1, $cls2")
           }
       }
-    case _ =>
-      ???
+    // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
+    // For applied types such as `Id[T]`, evaluate them before translation.
+    // Do not forget to evaluate type arguments first.
+    case AppliedType(Primitive(base), targs) =>
+      getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
+    // There is some other possibilities such as `class Fun[A]: A -> A`.
+    // But it is not achievable in JavaScript.
+    case _ => ???
   }
 
-  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
-    actualType match {
-      // `class A` ==> `class A {}`
-      case Top => JSClassDecl(name, Nil)
-      // `class A { <items> }` ==> `class A { constructor(fields) { <items> } }`
-      case Record(fields) => JSClassDecl(name, fields map { _._1 })
-      // `class B: A` ==> `class B extends A {}`
-      case Primitive(baseName) =>
-        resolvedAliases get baseName match {
-          case S(resolvedBaseName) =>
-            nameClsMap get resolvedBaseName match {
-              case N =>
-                throw new Error(s"Class $resolvedBaseName is not defined.")
-              case S(cls) => JSClassDecl(name, Nil, S(cls))
-            }
-          case N => throw new Exception(s"unresolved alias: $baseName")
+  // Translate MLscript class declaration to JavaScript class declaration.
+  // First, we will analyze its fields and base class name.
+  // Then, we will check if the base class exists.
+  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl = {
+    getBaseClassAndFields(actualType) match {
+      // Case 1: no base class, just fields.
+      case fields -> N => JSClassDecl(name, fields.distinct, N)
+      // Case 2: has a base class and fields.
+      case fields -> S(clsNme) =>
+        nameClsMap get clsNme match {
+          case N      => throw new Error(s"Class $clsNme is not defined.")
+          case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
         }
-      // `class C: A & { <items> }` ==>
-      // `class C extends A { constructor(fields) { <items> } }`
-      case ty: Inter =>
-        val (fields, clsNmeOpt) = expandRecordInter(ty)
-        clsNmeOpt match {
-          case N => JSClassDecl(name, fields.distinct, N)
-          case S(clsNme) =>
-            nameClsMap get clsNme match {
-              case N      => throw new Error(s"Class $clsNme is not defined.")
-              case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
-            }
-        }
-      // I noticed `class Fun[A]: A -> A` is okay.
-      // But it is not achievable in JavaScript.
-      case _ => ???
     }
+  }
 
   def apply(pgrm: Pgrm): Ls[Str] = {
-
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
-    resolveAliases(typeDefs)
+
+    // Collect type aliases into a map so we can evaluate them.
+    typeDefs foreach {
+      case TypeDef(Als, Primitive(name), tparams, body) =>
+        val tnames = tparams map { case Primitive(nme) => nme }
+        typeAliasMap(name) = tnames -> body
+      case _ => ()
+    }
+
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     val stmts: Ls[JSStmt] =
@@ -279,8 +336,8 @@ class JSBackend {
                 val cls = translateClassDeclaration(name, actualType)
                 nameClsMap += name -> cls
                 cls
-              case Trt => JSComment(s"// trait $name")
-              case Als => JSComment(s"// type alias $name")
+              case Trt => JSComment(s"trait $name")
+              case Als => JSComment(s"type alias $name")
             }
           }
           // Generate something like:
