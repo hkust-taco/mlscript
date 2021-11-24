@@ -1,9 +1,4 @@
 //TODO: - ConstraintSolver.extrude TypeRef polarity
-//      - ConstraintSolver.freshenAbove.freshen bounds on rigidified variables?
-//          Currently it has a half-assed implementation taking care of bounds on one side only.
-//          Bounds are only added to variables to be potentially regidified when constraining the `this` argument of methods.
-//          By inspecting the bounds in every execution of the branch, it seems that the bounds are all variables with
-//              no bounds themselves, which is equivalent to having no bounds. So this may not be necessary at all.
 //      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 
@@ -49,6 +44,11 @@ Bar.Fun g
 
 g.Fun
 //│ res: ('a | 42 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
+
+h = Bar { x = 43; y = true }
+h.Fun
+//│ h: bar & {y: true, x: 43}
+//│ res: ('a | 43 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
 
 
 

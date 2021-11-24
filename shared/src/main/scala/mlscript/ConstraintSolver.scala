@@ -420,16 +420,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = if (tv.lowerBounds.nonEmpty)
-              tv.lowerBounds.foldLeft[SimpleType](TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv))(
-                (x, y) => ComposedType(true, x, freshen(y))(noProv))
-            else if (tv.upperBounds.nonEmpty)
-              tv.upperBounds.foldLeft[SimpleType](TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv))(
-                (x, y) => ComposedType(false, x, freshen(y))(noProv))
-            else TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
+          val v = TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
           freshened += tv -> v
-          // TODO support both bounds on rigidified variables (intersect/union them in):
-          assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty)
+          // TODO support bounds on rigidified variables (intersect/union them in):
+          assert(tv.lowerBounds.isEmpty)
+          assert(tv.upperBounds.isEmpty)
           v
         case None =>
           val v = freshVar(tv.prov)
