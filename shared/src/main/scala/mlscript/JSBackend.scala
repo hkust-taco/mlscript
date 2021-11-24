@@ -190,7 +190,6 @@ class JSBackend {
       subs: collection.immutable.HashMap[Str, Type] =
         collection.immutable.HashMap.empty
   ): Type = {
-    println(s"substitute $body")
     body match {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
