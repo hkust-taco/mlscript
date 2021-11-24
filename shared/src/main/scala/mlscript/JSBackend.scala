@@ -5,7 +5,6 @@ import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
-import mlscript.Applied
 
 class JSBackend {
   // For integers larger than this value, use BigInt notation.
@@ -193,10 +192,8 @@ class JSBackend {
   ): Type = {
     println(s"substitute $body")
     body match {
-      case Applied(Primitive("~"), ty) =>
-        Applied(Primitive("~"), substitute(ty, subs))
-      // Also `???` in `Typer`, ignore for now.
-      case Applied(_, _) => ???
+      case Neg(ty) =>
+        Neg(substitute(ty, subs))
       // Question: substitute arguments or the result?
       case AppliedType(Primitive(name), targs) =>
         applyTypeAlias(name, targs map { substitute(_, subs) })
