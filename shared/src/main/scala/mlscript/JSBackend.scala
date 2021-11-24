@@ -192,14 +192,10 @@ class JSBackend {
   ): Type = {
     println(s"substitute $body")
     body match {
-      case Applied(lhs, rhs) =>
-        val subsLhs = substitute(lhs, subs)
-        val subsRhs = substitute(rhs, subs)
-        if (subsLhs === lhs && subsRhs === rhs) {
-          body
-        } else {
-          Applied(subsLhs, subsRhs)
-        }
+      case Applied(Primitive("~"), ty) =>
+        Applied(Primitive("~"), substitute(ty, subs))
+      // Also `???` in `Typer`, ignore for now.
+      case Applied(_, _) => ???
       // Question: substitute arguments or the result?
       case AppliedType(Primitive(name), targs) =>
         applyTypeAlias(name, targs map { substitute(_, subs) })
