@@ -5,6 +5,7 @@ import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
+import mlscript.Applied
 
 class JSBackend {
   // For integers larger than this value, use BigInt notation.
