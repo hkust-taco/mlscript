@@ -174,7 +174,7 @@ object Main {
       val resim = typer.simplifyType(reca)
       println(s"Resimplified: ${resim}")
       println(s" where: ${resim.showBounds}")
-      val exp = typer.expandType(resim)
+      val exp = typer.expandType(resim, true)
       exp
     }
     def formatError(culprit: Str, err: TypeError): Str = {

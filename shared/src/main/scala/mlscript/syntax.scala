@@ -38,7 +38,7 @@ final case class Bra(rcd: Bool, trm: Term)                           extends Ter
 final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
-final case class With(trm: Term, fieldNme: Str, fieldVal: Term)      extends Term
+final case class With(trm: Term, fields: Rcd)                        extends Term
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
@@ -74,11 +74,11 @@ sealed abstract class Type extends TypeImpl
 final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
-final case class Applied(lhs: Type, rhs: Type)           extends Type
 final case class Record(fields: Ls[Str -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Str] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: Primitive, targs: List[Type]) extends Type
+final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 
 sealed abstract class NullaryType                        extends Type

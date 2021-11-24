@@ -191,4 +191,17 @@ true : Bool
 //│ res: bool
 
 
+:e
+class Weird: {} | {}
+//│ ╔══[ERROR] cannot inherit from a type union
+//│ ║  l.195: 	class Weird: {} | {}
+//│ ╙──       	      ^^^^^^^^^^^^^^
+
+
+class A
+type Id[T] = T
+class B: Id[A]
+//│ Defined class A
+//│ Defined type Id
+//│ Defined class B
 

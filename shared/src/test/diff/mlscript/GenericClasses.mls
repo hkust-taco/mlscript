@@ -44,7 +44,10 @@ res.value
 //│ ║  l.39: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── expression of type `42` does not match type `some & {value: int} | none`
-//│ ╟── Note: constraint arises from applied type reference:
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.17: 	type Option[A] = Some[A] | None
+//│ ║        	                 ^^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ res: some & {value: int} | none

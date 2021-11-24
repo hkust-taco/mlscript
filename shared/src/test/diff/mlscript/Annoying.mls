@@ -129,7 +129,13 @@ test (error: B & { c: int })
 //│ ║         	^^^^^^^^^^^
 //│ ╟── expression of type `b & {c: int}` does not match type `a & {a: ?a} | b & {b: ?a} | c & {c: ?a}`
 //│ ║  l.126: 	test (error: B & { c: int })
-//│ ╙──       	      ^^^^^
+//│ ║         	             ^^^^^^^^^^^^^^
+//│ ╟── but it flows into argument with expected type `a & {a: ?b} | b & {b: ?b} | c & {c: ?b}`
+//│ ║  l.126: 	test (error: B & { c: int })
+//│ ║         	      ^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.115: 	def test: (A & { a: 'a } | B & { b: 'a } | C & { c: 'a }) -> 'a
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 
@@ -146,11 +152,17 @@ test (error: C & { x: int; y: string })
 :e
 test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.147: 	test (error: A & { x: int })
+//│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^
 //│ ╟── expression of type `a & {x: int}` does not match type `a & {x: ?a, y: ?b} | b & {x: ?a, y: ?b} | c & {x: ?a, y: ?b}`
-//│ ║  l.147: 	test (error: A & { x: int })
-//│ ╙──       	      ^^^^^
+//│ ║  l.153: 	test (error: A & { x: int })
+//│ ║         	             ^^^^^^^^^^^^^^
+//│ ╟── but it flows into argument with expected type `a & {x: ?c, y: ?d} | b & {x: ?c, y: ?d} | c & {x: ?c, y: ?d}`
+//│ ║  l.153: 	test (error: A & { x: int })
+//│ ║         	      ^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.142: 	def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {l: int, r: nothing} | error
 
 
@@ -180,14 +192,17 @@ v.x
 :e
 negInt: A | { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.181: 	negInt: A | { x: 'a }
+//│ ║  l.193: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
 //│ ╟── expression of type `~int` does not match type `a | {x: ?a}`
-//│ ║  l.168: 	def negInt: ~int
+//│ ║  l.180: 	def negInt: ~int
 //│ ║         	            ^^^^
 //│ ╟── but it flows into reference with expected type `a | {x: ?b}`
-//│ ║  l.181: 	negInt: A | { x: 'a }
-//│ ╙──       	^^^^^^
+//│ ║  l.193: 	negInt: A | { x: 'a }
+//│ ║         	^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.193: 	negInt: A | { x: 'a }
+//│ ╙──       	        ^^^^^^^^^^^^^
 //│ res: a | {x: nothing}
 
 v: A | { x: 'a }
@@ -224,11 +239,14 @@ funny.x
 :e
 (error: { x: int }): int | string
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.225: 	(error: { x: int }): int | string
+//│ ║  l.240: 	(error: { x: int }): int | string
 //│ ║         	 ^^^^^
 //│ ╟── expression of type `{x: int}` does not match type `int | string`
-//│ ║  l.225: 	(error: { x: int }): int | string
-//│ ╙──       	        ^^^^^^^^^^
+//│ ║  l.240: 	(error: { x: int }): int | string
+//│ ║         	        ^^^^^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.240: 	(error: { x: int }): int | string
+//│ ╙──       	                     ^^^^^^^^^^^^
 //│ res: int | string
 
 

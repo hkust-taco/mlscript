@@ -31,13 +31,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs(n)}"
     case Function(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
-    case Applied(Applied(Primitive(op), l), r) if !op.head.isLetter =>
-      parensIf(l.showIn(ctx, 11) + " " + op + " " + r.showIn(ctx, 11), outerPrec >= 11)
-    case Applied(Primitive(op), t) if op.head === '\\' =>
-      s"${t.showIn(ctx, 90)}$op"
-    case Applied(Primitive("~"), t) =>
-      s"~${t.showIn(ctx, 100)}"
-    case Applied(l, r) => parensIf(l.showIn(ctx, 32) + " " + r.showIn(ctx, 32), outerPrec > 32)
+    case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(Primitive("true"), Primitive("false")) | Union(Primitive("false"), Primitive("true")) =>
@@ -46,13 +40,15 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
-    case _ => ??? // TODO
+    case Literal(IntLit(n)) => n.toString
+    case Literal(DecLit(n)) => n.toString
+    case Literal(StrLit(s)) => "\"" + s + "\""
   }
   
   def children: List[Type] = this match {
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
-    case Applied(l, r) => l :: r :: Nil
+    case Neg(b) => b :: Nil
     case Record(fs) => fs.map(_._2)
     case Tuple(fs) => fs.map(_._2)
     case Union(l, r) => l :: r :: Nil
@@ -159,7 +155,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Tup(xs) => "tuple expression"
     case Bind(l, r) => "'as' binding"
     case Test(l, r) => "'is' test"
-    case With(t, n, v) =>  "`with` extension"
+    case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "case of" 
   }
   
@@ -184,7 +180,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
     case Bind(l, r) => s"($l as $r)"
     case Test(l, r) => s"($l is $r)"
-    case With(t, n, v) =>  s"$t with {$n = $v}"
+    case With(t, fs) =>  s"$t with $fs"
     case CaseOf(s, c) => s"case $s of $c"
   }
   
@@ -411,7 +407,7 @@ trait StatementImpl extends Located { self: Statement =>
     case _: Lit => Nil
     case Bind(l, r) => l :: r :: Nil
     case Test(l, r) => l :: r :: Nil
-    case With(t, n, v) => t :: v :: Nil
+    case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
     case d @ Def(_, n, b) => d.body :: Nil
     case TypeDef(kind, nme, tparams, body) => nme :: tparams ::: body :: Nil
@@ -436,7 +432,13 @@ trait BlkImpl { self: Blk =>
   
 }
 
-trait CaseBranchesImpl { self: CaseBranches =>
+trait CaseBranchesImpl extends Located { self: CaseBranches =>
+  
+  def children: List[Located] = this match {
+    case Case(pat, body, rest) => pat :: body :: rest :: Nil
+    case Wildcard(body) => body :: Nil
+    case NoCases => Nil
+  }
   
   def iterator: Ite[Case] = this match {
     case c: Case => Ite.single(c) ++ c.rest.iterator

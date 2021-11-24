@@ -63,6 +63,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
+    val allStatements = mutable.Buffer.empty[DesugaredStatement]
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def emitDbg(str: String): Unit = output(str)
     }
@@ -227,7 +228,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               val wty = ty.instantiate(0)
               if (mode.dbg) output(s"Typed as: $wty")
               if (mode.dbg) output(s" where: ${wty.showBounds}")
-              if (mode.noSimplification) typer.expandType(wty)
+              if (mode.noSimplification) typer.expandType(wty, true)
               else {
                 val cty = typer.canonicalizeType(wty)
                 if (mode.dbg) output(s"Canon: ${cty}")
@@ -245,7 +246,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val resim = typer.simplifyType(reca)
                 if (mode.dbg) output(s"Resimplified: ${resim}")
                 if (mode.dbg) output(s" where: ${resim.showBounds}")
-                val exp = typer.expandType(resim)
+                val exp = typer.expandType(resim, true)
                 
                 exp
               }

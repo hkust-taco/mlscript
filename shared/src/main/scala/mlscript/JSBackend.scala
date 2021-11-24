@@ -397,8 +397,8 @@ object JSBackend {
     case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(...)"
     case Test(trm, ty)               => s"Test(...)"
-    case With(trm, fieldNme, fieldVal) =>
-      s"With(${inspectTerm(trm)}, $fieldNme, ${inspectTerm(fieldVal)})"
+    case With(trm, fields) =>
+      s"With(${inspectTerm(trm)}, ${inspectTerm(fields)})"
     case CaseOf(trm, cases) =>
       def inspectCaseBranches(br: CaseBranches): Str = br match {
         case Case(clsNme, body, rest) =>
