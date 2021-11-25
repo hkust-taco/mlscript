@@ -167,24 +167,21 @@ class JSBackend {
   private val typeAliasMap =
     collection.mutable.HashMap[Str, Ls[Str] -> Type]()
 
-  // This function evaluates something like `T[A, B]`.
+  // This function normalizes something like `T[A, B]`.
   private def applyTypeAlias(name: Str, targs: Ls[Type]): Type =
     typeAliasMap get name match {
       case S(tparams -> body) =>
-        if (targs.length === tparams.length) {
-          val subs = collection.immutable.HashMap(
+        assert(targs.length === tparams.length, targs -> tparams)
+        substitute(
+          body,
+          collection.immutable.HashMap(
             tparams zip targs map { case (k, v) => k -> v }: _*
           )
-          substitute(body, subs)
-        } else {
-          throw new Error(
-            s"expect ${tparams.length} arguments but provided ${targs.length}"
-          )
-        }
+        )
       case N => throw new Error(s"type $name is not defined")
     }
 
-  // This function evaluates a type, removing all `AppliedType`s.
+  // This function normalizes a type, removing all `AppliedType`s.
   private def substitute(
       body: Type,
       subs: collection.immutable.HashMap[Str, Type] =
@@ -219,8 +216,12 @@ class JSBackend {
             }
           case S(ty) => ty
         }
-      // For `Bot`, `Literal`, and `Top`, we don't need to substitute.
-      case _ => body
+      case Bot => body
+      case Literal(_) => body
+      case Top => body
+      case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
+      case Rem(ty, fields) => Rem(substitute(ty, subs), fields)
+      case _: TypeVar => body
     }
   }
 
@@ -242,7 +243,7 @@ class JSBackend {
         // The base class is not a type alias.
         case N => Nil -> S(name)
         // The base class is a type alias with no parameters.
-        // Good, just make sure all term is evaluated.
+        // Good, just make sure all term is normalized.
         case S(Nil -> body) => getBaseClassAndFields(substitute(body))
         // The base class is a type alias with parameters.
         // Oops, we don't support this.
@@ -280,8 +281,8 @@ class JSBackend {
           }
       }
     // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
-    // For applied types such as `Id[T]`, evaluate them before translation.
-    // Do not forget to evaluate type arguments first.
+    // For applied types such as `Id[T]`, normalize them before translation.
+    // Do not forget to normalize type arguments first.
     case AppliedType(Primitive(base), targs) =>
       getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
     // There is some other possibilities such as `class Fun[A]: A -> A`.
@@ -308,7 +309,7 @@ class JSBackend {
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // Collect type aliases into a map so we can evaluate them.
+    // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
       case TypeDef(Als, Primitive(name), tparams, body) =>
         val tnames = tparams map { case Primitive(nme) => nme }
