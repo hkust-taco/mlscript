@@ -15,9 +15,16 @@ def flatMap = fun f -> fun opt ->
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
+flatMap f "oops"
 //│ f: 'a -> some & {v: 'a}
 //│ res: some & {v: 1}
 //│ res: some & {v: nothing} | none
+//│ res: some & {v: nothing} | "oops"
+
+class NoneBecause: { reason: string }
+flatMap f (NoneBecause { reason = "uh uh" })
+//│ Defined class NoneBecause
+//│ res: some & {v: nothing} | noneBecause & {reason: "uh uh"}
 
 type Expr = Lit | Neg | Var | Plus
 class Lit: {v: int}
@@ -30,15 +37,15 @@ class Plus: {lhs: Expr; rhs: Expr}
 //│ Defined class Var
 //│ Defined class Plus
 
-// :d
 rec def evalOpt x = case x of {
   | Lit ->
       Some x.v
   | Neg ->
       // flatMap (fun s -> Some (neg x.sub)) (evalOpt x.sub)
-      flatMap (fun s -> Some (neg s)) (evalOpt x.sub)
+      flatMap (fun s -> Some (sub 0 s)) (evalOpt x.sub)
   | Var ->
-      None with {err = concat "free var: " x.nme}
+      // None with {err = concat "free var: " x.nme}
+      NoneBecause {reason = concat "free var: " x.nme}
       // None
   | Plus ->
       flatMap (fun l -> flatMap (fun r ->
@@ -46,8 +53,7 @@ rec def evalOpt x = case x of {
         Some (add l r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (lit & {v: int} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a}) as 'a -> some & {v: int} | none & {err: string}
+//│ evalOpt: (lit & {v: int} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a}) as 'a -> some & {v: int} | noneBecause & {reason: string}
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: some & {v: int} | none & {err: string}
-
+//│ res: some & {v: int} | noneBecause & {reason: string}
