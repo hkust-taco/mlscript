@@ -24,7 +24,7 @@ class JSBackend {
 
   // I just realized `Statement` is unused.
   def translateStatement(stmt: DesugaredStatement): JSStmt = stmt match {
-    case t: Term => JSExprStmt(translateTerm(t))
+    case t: Term             => JSExprStmt(translateTerm(t))
     case _: Def | _: TypeDef => ??? // TODO
   }
 
@@ -62,7 +62,11 @@ class JSBackend {
   }
 
   private def builtinFnOpMap =
-    immutable.HashMap("add" -> "+", "sub" -> "-", "mul" -> "*", "div" -> "/",
+    immutable.HashMap(
+      "add" -> "+",
+      "sub" -> "-",
+      "mul" -> "*",
+      "div" -> "/",
       "lt" -> "<",
       "le" -> "<=",
       "gt" -> ">",
@@ -71,21 +75,23 @@ class JSBackend {
       "ne" -> "!=",
     )
 
+  private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
+
   def translateTerm(term: Term): JSExpr = term match {
     case Var(name) =>
       if (classNames.contains(name)) {
         letLhsAliasMap.get(name) match {
-          case N        => new JSIdent(name, true)
-          case S(alias) => new JSIdent(alias, false)
+          case N        => JSIdent(name, true)
+          case S(alias) => JSIdent(alias, false)
         }
       } else {
-        new JSIdent(name)
+        JSIdent(name)
       }
     // TODO: need scope to track variables
     // so that we can rename reserved words
     case Lam(lhs, rhs) =>
       val (paramCode, declaredVars) = translateLetPattern(lhs)
-      new JSArrowFn(paramCode, translateTerm(rhs))
+      JSArrowFn(paramCode, translateTerm(rhs))
     // Binary expressions.
     case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
       JSBinary(
@@ -95,33 +101,39 @@ class JSBackend {
       )
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
-      new JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+      JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => new JSInvoke(translateTerm(lhs), translateTerm(rhs))
+    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
     case Rcd(fields) =>
-      new JSRecord(fields map { case (key, value) =>
+      JSRecord(fields map { case (key, value) =>
         key -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
-      new JSMember(translateTerm(receiver), fieldName)
+      JSMember(translateTerm(receiver), fieldName)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      new JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
+      JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
     case Blk(stmts) =>
-      new JSImmEvalFn(Right(stmts flatMap (_.desugared._2) map { translateStatement(_) }))
+      JSImmEvalFn(
+        "",
+        Right(stmts flatMap (_.desugared._2) map {
+          translateStatement(_)
+        }),
+        new JSPlaceholderExpr()
+      )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
       val body = translateCaseBranch(parameter, cases)
-      new JSImmEvalFn(parameter, Right(body), argument)
+      JSImmEvalFn(parameter, Right(body), argument)
     }
     case IntLit(value) => {
       val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
-      new JSLit(if (useBigInt) { value.toString }
+      JSLit(if (useBigInt) { value.toString }
       else { value.toString + "n" })
     }
-    case DecLit(value) => new JSLit(value.toString)
-    case StrLit(value) => new JSLit(JSLit.makeStringLiteral(value))
+    case DecLit(value) => JSLit(value.toString)
+    case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     case _             => ???
   }
 
@@ -129,8 +141,8 @@ class JSBackend {
   def translateCaseBranch(name: Str, branch: CaseBranches): Ls[JSStmt] =
     branch match {
       case Case(className, body, rest) =>
-        val scrut = new JSIdent(name)
-        new JSIfStmt(
+        val scrut = JSIdent(name)
+        JSIfStmt(
           className match {
             case Var("int") =>
               JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
@@ -146,23 +158,161 @@ class JSBackend {
             case lit: Lit =>
               JSBinary("==", scrut, JSLit(lit.idStr))
           },
-          Ls(new JSReturnStmt(translateTerm(body)))
+          Ls(JSReturnStmt(translateTerm(body)))
         ) :: translateCaseBranch(name, rest)
-      case Wildcard(body) => Ls(new JSReturnStmt(translateTerm(body)))
-      case NoCases        => Ls(new JSThrowStmt())
+      case Wildcard(body) => Ls(JSReturnStmt(translateTerm(body)))
+      case NoCases        => Ls(JSThrowStmt())
     }
 
-  // TODO: add field definitions
-  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl =
-    actualType match {
-      case Record(fields) => new JSClassDecl(name, fields map { _._1 })
-      // I noticed `class Fun[A]: A -> A` is okay.
-      // But I have no idea about how to do it.
-      case _ => ???
+  private val typeAliasMap =
+    collection.mutable.HashMap[Str, Ls[Str] -> Type]()
+
+  // This function normalizes something like `T[A, B]`.
+  private def applyTypeAlias(name: Str, targs: Ls[Type]): Type =
+    typeAliasMap get name match {
+      case S(tparams -> body) =>
+        assert(targs.length === tparams.length, targs -> tparams)
+        substitute(
+          body,
+          collection.immutable.HashMap(
+            tparams zip targs map { case (k, v) => k -> v }: _*
+          )
+        )
+      case N => throw new Error(s"type $name is not defined")
     }
+
+  // This function normalizes a type, removing all `AppliedType`s.
+  private def substitute(
+      body: Type,
+      subs: collection.immutable.HashMap[Str, Type] =
+        collection.immutable.HashMap.empty
+  ): Type = {
+    body match {
+      case Neg(ty) =>
+        Neg(substitute(ty, subs))
+      case AppliedType(Primitive(name), targs) =>
+        applyTypeAlias(name, targs map { substitute(_, subs) })
+      case Function(lhs, rhs) =>
+        Function(substitute(lhs, subs), substitute(rhs, subs))
+      case Inter(lhs, rhs) =>
+        Inter(substitute(lhs, subs), substitute(rhs, subs))
+      case Record(fields) =>
+        Record(fields map { case (k, v) => k -> substitute(v, subs) })
+      case Union(lhs, rhs) =>
+        Union(substitute(lhs, subs), substitute(rhs, subs))
+      case Tuple(fields) =>
+        Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
+      case Primitive(name) =>
+        subs get name match {
+          case N =>
+            typeAliasMap get name match {
+              case N              => Primitive(name)
+              case S(Nil -> body) => substitute(body, subs)
+              case S(tparams -> _) =>
+                throw new Error(
+                  s"type $name expects ${tparams.length} type parameters but nothing provided"
+                )
+            }
+          case S(ty) => ty
+        }
+      case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
+      case Rem(ty, fields) => Rem(substitute(ty, subs), fields)
+      case Bot | Top | _: Literal | _: TypeVar => body
+    }
+  }
+
+  // This function collects two things:
+  // 1. fields from a series of intersection of records,
+  // 2. name of the base class.
+  // Only one base class is allowed.
+  private def getBaseClassAndFields(ty: Type): (Ls[Str], Opt[Str]) = ty match {
+    // `class A` ==> `class A {}`
+    case Top => Nil -> N
+    // `class A { <items> }` ==>
+    // `class A { constructor(fields) { <items> } }`
+    case Record(fields) => fields.map(_._1) -> N
+    // `class B: A` ==> `class B extends A {}`
+    // If `A` is a type alias, it is replaced by its real type.
+    // Otherwise just use the name.
+    case Primitive(name) =>
+      typeAliasMap get name match {
+        // The base class is not a type alias.
+        case N => Nil -> S(name)
+        // The base class is a type alias with no parameters.
+        // Good, just make sure all term is normalized.
+        case S(Nil -> body) => getBaseClassAndFields(substitute(body))
+        // The base class is a type alias with parameters.
+        // Oops, we don't support this.
+        case S(tparams -> _) =>
+          throw new Error(
+            s"type $name expects ${tparams.length} type parameters but nothing provided"
+          )
+      }
+    // `class C: { <items> } & A` ==>
+    // `class C extends A { constructor(fields) { <items> } }`
+    case Inter(Record(entries), ty) =>
+      val (fields, cls) = getBaseClassAndFields(ty)
+      entries.map(_._1) ++ fields -> cls
+    // `class C: { <items> } & A` ==>
+    // `class C extends A { constructor(fields) { <items> } }`
+    case Inter(ty, Record(entries)) =>
+      val (fields, cls) = getBaseClassAndFields(ty)
+      fields ++ entries.map(_._1) -> cls
+    // `class C: <X> & <Y>`: resolve X and Y respectively.
+    case Inter(ty1, ty2) =>
+      val (fields1, cls1) = getBaseClassAndFields(ty1)
+      val (fields2, cls2) = getBaseClassAndFields(ty2)
+      (cls1, cls2) match {
+        case (N, N) =>
+          fields1 ++ fields2 -> N
+        case (N, S(cls)) =>
+          fields1 ++ fields2 -> S(cls)
+        case (S(cls), N) =>
+          fields1 ++ fields2 -> S(cls)
+        case (S(cls1), S(cls2)) =>
+          if (cls1 === cls2) {
+            fields1 ++ fields2 -> S(cls1)
+          } else {
+            throw new Exception(s"Cannot have two base classes: $cls1, $cls2")
+          }
+      }
+    // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
+    // For applied types such as `Id[T]`, normalize them before translation.
+    // Do not forget to normalize type arguments first.
+    case AppliedType(Primitive(base), targs) =>
+      getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
+    // There is some other possibilities such as `class Fun[A]: A -> A`.
+    // But it is not achievable in JavaScript.
+    case _ => ???
+  }
+
+  // Translate MLscript class declaration to JavaScript class declaration.
+  // First, we will analyze its fields and base class name.
+  // Then, we will check if the base class exists.
+  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl = {
+    getBaseClassAndFields(actualType) match {
+      // Case 1: no base class, just fields.
+      case fields -> N => JSClassDecl(name, fields.distinct, N)
+      // Case 2: has a base class and fields.
+      case fields -> S(clsNme) =>
+        nameClsMap get clsNme match {
+          case N      => throw new Error(s"Class $clsNme is not defined.")
+          case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
+        }
+    }
+  }
 
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
+
+    // Collect type aliases into a map so we can normalize them.
+    typeDefs foreach {
+      case TypeDef(Als, Primitive(name), tparams, body) =>
+        val tnames = tparams map { case Primitive(nme) => nme }
+        typeAliasMap(name) = tnames -> body
+      case _ => ()
+    }
+
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     val stmts: Ls[JSStmt] =
@@ -173,9 +323,11 @@ class JSBackend {
             kind match {
               case Cls =>
                 classNames += name
-                translateClassDeclaration(name, actualType)
-              case Trt => new JSComment(s"// trait $name")
-              case Als => new JSComment(s"// type alias $name")
+                val cls = translateClassDeclaration(name, actualType)
+                nameClsMap += name -> cls
+                cls
+              case Trt => JSComment(s"trait $name")
+              case Als => JSComment(s"type alias $name")
             }
           }
           // Generate something like:
@@ -190,25 +342,24 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              new JSConstDecl(tempName, translatedBody) ::
-                new JSExprStmt(
+              JSConstDecl(tempName, translatedBody) ::
+                JSExprStmt(
                   JSAssignExpr(
                     JSMember(JSIdent(defResultObjName), name),
                     JSIdent(tempName)
                   )
                 ) :: Nil
             case Def(isRecursive, name, R(body)) => Nil
-            case _: Term => Nil
+            case _: Term                         => Nil
           })
           // Generate something like `exprs.push(<expr>)`.
-          .concat(otherStmts.zipWithIndex.collect {
-            case (term: Term, index) =>
-              new JSExprStmt(
-                JSInvoke(
-                  JSMember(JSIdent(exprResultObjName), "push"),
-                  translateTerm(term)
-                )
+          .concat(otherStmts.zipWithIndex.collect { case (term: Term, index) =>
+            JSExprStmt(
+              JSInvoke(
+                JSMember(JSIdent(exprResultObjName), "push"),
+                translateTerm(term)
               )
+            )
           })
           .concat(
             JSReturnStmt(

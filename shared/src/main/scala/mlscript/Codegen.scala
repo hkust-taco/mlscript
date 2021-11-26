@@ -179,8 +179,6 @@ final case class JSImmEvalFn(
     body: Either[JSExpr, Ls[JSStmt]],
     argument: JSExpr
 ) extends JSExpr {
-  def this(body: Either[JSExpr, Ls[JSStmt]]) =
-    this("", body, new JSPlaceholderExpr())
   def precedence: Int = 22
   def toSourceCode: SourceCode = {
     (SourceCode.from(s"function ($name) ") ++ (body match {
@@ -382,16 +380,41 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
-final case class JSClassDecl(name: Str, fields: Ls[Str]) extends JSStmt {
-  def toSourceCode: SourceCode =
-    if (fields.isEmpty) { SourceCode.from(s"class $name {}") }
-    else {
-      new SourceCode(
-        Ls(s"class $name {", "  constructor(fields) {") ::: fields.map {
-          case name => s"    this.$name = fields.$name"
-        } ::: Ls("  }", "}") map { new SourceLine(_) }
-      )
+final case class JSClassDecl(
+    val name: Str,
+    fields: Ls[Str],
+    base: Opt[JSClassDecl] = N
+) extends JSStmt {
+  def toSourceCode: SourceCode = {
+    val inits = fields map { case name =>
+      s"    this.$name = fields.$name;"
     }
+    val epilogue = "  }" :: "}" :: Nil
+    base match {
+      case Some(baseCls) =>
+        val inheritedFields = baseCls.fields.filterNot { case name =>
+          fieldsSet contains name
+        }
+        val prologue =
+          s"class $name extends ${baseCls.name} {" ::
+            "  constructor(fields) {" ::
+            "    super(fields);" ::
+            Nil
+        SourceCode.fromLines(
+          prologue ::: inits ::: epilogue
+        )
+      case None =>
+        fields match {
+          case Nil => SourceCode.from(s"class $name {}")
+          case _ =>
+            SourceCode.fromLines(
+              (s"class $name {" ::
+                "  constructor(fields) {" :: Nil) ::: inits ::: epilogue
+            )
+        }
+    }
+  }
+  private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 
 final case class JSComment(text: Str) extends JSStmt {
