@@ -31,6 +31,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ident[_: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
   
+  def termOrAssign[_: P]: P[Statement] = P( term ~ ("=" ~ term).? ).map {
+    case (expr, N) => expr
+    case (pat, S(bod)) => LetS(false, pat, bod)
+  }
   def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
@@ -57,7 +61,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)
   }
   def withs[_: P]: P[Term] = P( apps ~ (kw("with") ~ record).rep ).map {
-    case (as, ws) => ws.foldLeft(as)((acc, w) => w.fields.foldLeft(acc)((acc1, fv) => With(acc1, fv._1, fv._2)))
+    case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
   def _match[_: P]: P[CaseOf] =
@@ -65,10 +69,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def matchArms[_: P]: P[CaseBranches] = P(
     ((lit | variable) ~ "->" ~ term ~ matchArms2).map {
       case (t, b, rest) => Case(t, b, rest)
-    } | (kw("_") ~ "->" ~ term).?.map {
+    } | locate((kw("_") ~ "->" ~ term).?.map {
       case None => NoCases
       case Some(b) => Wildcard(b)
-    }
+    })
   )
   def matchArms2[_: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
   
@@ -110,7 +114,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ctor[_: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
     case (tname, targs) => AppliedType(tname, targs.toList)
   }) | tyNeg | tyName | tyVar //| const.map(Const) // TODO
-  def tyNeg[_: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Applied(Primitive("~"), t) }))
+  def tyNeg[_: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Neg(t) }))
   def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => getVar(id))), ignoreIfSet = true)
   def rcd[_: P]: P[Record] =
@@ -119,8 +123,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   
   def toplvl[_: P]: P[Statement] =
-    P( defDecl | tyDecl | term )
-  def pgrm[_: P]: P[Pgrm] = P( ("" ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
+    P( defDecl | tyDecl | termOrAssign )
+  def pgrm[_: P]: P[Pgrm] = P( (";".rep ~ toplvl ~ topLevelSep.rep).rep.map(_.toList) ~ End ).map(Pgrm)
   def topLevelSep[_: P]: P[Unit] = ";"
   
   private var curHash = 0

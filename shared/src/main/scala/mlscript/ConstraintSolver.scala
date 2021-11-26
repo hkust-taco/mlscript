@@ -44,8 +44,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
-        annoyingImpl(ls.mapHead(_.pushPosWithout), done_ls, rs, done_rs)
+        
+        // TODO to improve performance, avoid re-normalizing already-normalized types!!
+        annoyingImpl(ls.mapHead(_.normalize(true)), done_ls, rs, done_rs)
+        
+        // TODO strenghten normalization in negative position and use the following instead:
+        // annoyingImpl(ls.mapHead(_.normalize(true)), done_ls, rs.mapHead(_.normalize(false)), done_rs)
       }
+    
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
@@ -56,7 +62,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
         tys.reduceOption(_ & _).getOrElse(TopType)
       }
-      (ls.mapHead(_.pushPosWithout), rs) match {
+      (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls))

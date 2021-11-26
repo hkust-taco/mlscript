@@ -1,0 +1,53 @@
+class None: {}
+class Some[A]: { v: A }
+//│ Defined class None
+//│ Defined class Some
+
+def Some v = Some{v}
+def None = None{}
+//│ Some: 'a -> some & {v: 'a}
+//│ None: none
+
+def flatMap = fun f -> fun opt ->
+  case opt of { Some -> f opt.v | _ -> opt }
+//│ flatMap: ('a -> 'b) -> some & {v: 'a} | 'b & ~some -> 'b
+
+f x = Some x
+flatMap f (Some 1)
+flatMap f None
+//│ f: 'a -> some & {v: 'a}
+//│ res: some & {v: 1}
+//│ res: some & {v: nothing} | none
+
+type Expr = Lit | Neg | Var | Plus
+class Lit: {v: int}
+class Neg: {sub: Expr}
+class Var: {nme: string}
+class Plus: {lhs: Expr; rhs: Expr}
+//│ Defined type Expr
+//│ Defined class Lit
+//│ Defined class Neg
+//│ Defined class Var
+//│ Defined class Plus
+
+// :d
+rec def evalOpt x = case x of {
+  | Lit ->
+      Some x.v
+  | Neg ->
+      // flatMap (fun s -> Some (neg x.sub)) (evalOpt x.sub)
+      flatMap (fun s -> Some (neg s)) (evalOpt x.sub)
+  | Var ->
+      None with {err = concat "free var: " x.nme}
+      // None
+  | Plus ->
+      flatMap (fun l -> flatMap (fun r ->
+        // Some (add x.lhs x.rhs)
+        Some (add l r)
+      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+  }
+//│ evalOpt: (lit & {v: int} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a}) as 'a -> some & {v: int} | none & {err: string}
+
+evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
+//│ res: some & {v: int} | none & {err: string}
+

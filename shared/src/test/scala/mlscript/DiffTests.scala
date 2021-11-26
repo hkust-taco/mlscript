@@ -16,7 +16,21 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   private val validExt = Set("fun", "mls")
   
-  private val focused = Set(
+  // Aggregate unstaged modified files to only run the tests on them, if there are any
+  private val modified: Set[Str] =
+    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
+      println(" [git] " + gitStr)
+      val prefix = gitStr.take(2)
+      val filePath = gitStr.drop(3)
+      val fileName = RelPath(filePath).baseName
+      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+    }.toSet catch {
+      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+      Set.empty
+    }
+  
+  // Allow overriding which specific tests to run, soemtimes easier for development:
+  private val focused = Set[Str](
     // "Ascribe",
     // "Repro",
     // "RecursiveTypes",
@@ -30,14 +44,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "Annoying",
     // "Tony",
     // "Lists",
-    "Traits",
-    "BadTraits",
-    "TraitMatching",
+    // "Traits",
+    // "BadTraits",
+    // "TraitMatching",
     // "Subsume",
   )
   private def filter(name: Str): Bool =
-    true ||
-      focused(name)
+    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
   
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
@@ -50,6 +63,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
+    val allStatements = mutable.Buffer.empty[DesugaredStatement]
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def emitDbg(str: String): Unit = output(str)
     }
@@ -214,7 +228,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               val wty = ty.instantiate(0)
               if (mode.dbg) output(s"Typed as: $wty")
               if (mode.dbg) output(s" where: ${wty.showBounds}")
-              if (mode.noSimplification) typer.expandType(wty)
+              if (mode.noSimplification) typer.expandType(wty, true)
               else {
                 val cty = typer.canonicalizeType(wty)
                 if (mode.dbg) output(s"Canon: ${cty}")
@@ -232,7 +246,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val resim = typer.simplifyType(reca)
                 if (mode.dbg) output(s"Resimplified: ${resim}")
                 if (mode.dbg) output(s" where: ${resim.showBounds}")
-                val exp = typer.expandType(resim)
+                val exp = typer.expandType(resim, true)
                 
                 exp
               }
@@ -314,8 +328,5 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
-  
-  try os.proc("git", "status", "--porcelain", dir).call().out.lines().foreach(l => println(" [git] " + l))
-  catch { case err: Throwable => System.err.println("git command failed with: " + err) }
   
 }
