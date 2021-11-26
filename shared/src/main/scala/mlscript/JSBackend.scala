@@ -190,7 +190,6 @@ class JSBackend {
     body match {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
-      // Question: substitute arguments or the result?
       case AppliedType(Primitive(name), targs) =>
         applyTypeAlias(name, targs map { substitute(_, subs) })
       case Function(lhs, rhs) =>
@@ -216,12 +215,9 @@ class JSBackend {
             }
           case S(ty) => ty
         }
-      case Bot => body
-      case Literal(_) => body
-      case Top => body
       case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
       case Rem(ty, fields) => Rem(substitute(ty, subs), fields)
-      case _: TypeVar => body
+      case Bot | Top | _: Literal | _: TypeVar => body
     }
   }
 
