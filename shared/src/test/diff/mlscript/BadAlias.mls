@@ -65,7 +65,7 @@ type NonReg[A] = { x: NonReg[int] }
 //│ ╔══[ERROR] type identifier not found: NonReg
 //│ ║  l.64: 	42: NonReg[int]
 //│ ╙──      	    ^^^^^^^^^^^
-//│ res: 42
+//│ res: error
 
 :e
 type NonReg[A] = { x: NonReg[int] }

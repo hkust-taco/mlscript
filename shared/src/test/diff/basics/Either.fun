@@ -26,9 +26,11 @@ data type Either2 (l: _) (r: _) of
 //│ ║  l.19: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] type identifier not found: l
-//│ ╙──
+//│ ║  l.20: 	  Left2 l
+//│ ╙──      	        ^
 //│ ╔══[ERROR] type identifier not found: r
-//│ ╙──
+//│ ║  l.21: 	  Right2 r
+//│ ╙──      	         ^
 //│ Defined type Either2
 //│ Defined class Left2
 //│ Defined class Right2
@@ -45,7 +47,7 @@ let e = if _ then l else r
 :e // TODO
 e as Either Int String
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.46: 	e as Either Int String
+//│ ║  l.48: 	e as Either Int String
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -56,7 +58,7 @@ e as Either Int String
 :e
 e as Either
 //│ ╔══[ERROR] identifier not found: Either
-//│ ║  l.57: 	e as Either
+//│ ║  l.59: 	e as Either
 //│ ╙──      	     ^^^^^^
 //│ res: error
 

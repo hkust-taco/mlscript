@@ -8,7 +8,7 @@ class Bar[A]: Foo[A]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α33` is not a function
+//│ ╟── expression of type `B` is not a function
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ╙──     	                       ^^^^^
@@ -120,7 +120,7 @@ class BadSelf[A]: { x: A }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.119: 	    method F = this.x 42
 //│ ║         	               ^^^^^^^^^
-//│ ╟── expression of type `_α212` is not a function
+//│ ╟── expression of type `_α210` is not a function
 //│ ║  l.119: 	    method F = this.x 42
 //│ ╙──       	               ^^^^^^
 //│ Defined class BadSelf
@@ -144,7 +144,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.143: 	    method Get: B
 //│ ║         	           ^^^^^^
-//│ ╙── expression of type `_α258` does not match type `_α257`
+//│ ╙── expression of type `_α256` does not match type `_α255`
 //│ Defined class Simple3
 //│ Declared Simple3.Get: simple3 & {a: anything} -> nothing
 
@@ -156,7 +156,7 @@ class AbstractPair[A, B]: { x: A; y: B }
     method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ Defined class AbstractPair
 //│ Declared AbstractPair.Test: abstractPair & {y: 'a, x: 'b} -> ('b -> 'a -> bool) -> bool
-//│ Declared AbstractPair.Map: abstractPair & {y: 'a, x: 'b} -> ('b -> 'c) -> ('a -> 'd) -> abstractPair & {y: 'd, x: 'c}
+//│ Declared AbstractPair.Map: abstractPair & {y: 'a, x: 'b} -> ('b -> 'C) -> ('a -> 'D) -> abstractPair & {y: 'D, x: 'C}
 
 class BadPair[A, B]: AbstractPair[A, B]
     method Test f = f this.x this.x
@@ -164,19 +164,19 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.162: 	    method Test f = f this.x this.x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α337` does not match type `_α338`
+//│ ╟── expression of type `_α335` does not match type `_α336`
 //│ ║  l.162: 	    method Test f = f this.x this.x
 //│ ╙──       	                             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α367` does not match type `_α368`
+//│ ╟── expression of type `C` does not match type `D`
 //│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into function of type `?a -> ?b | badPair & {y: ?c | _α367, x: ?d | _α367}`
+//│ ╟── but it flows into function of type `?a -> ?b | badPair & {y: ?c | C, x: ?d | C}`
 //│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which does not match type `(_α338 -> _α368) -> abstractPair & {y: _α368, x: _α367}`
+//│ ╟── which does not match type `(_α336 -> D) -> abstractPair & {y: D, x: C}`
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.154: 	class AbstractPair[A, B]: { x: A; y: B }
 //│ ║         	                          ^^^^^^^^^^^^^^
@@ -330,4 +330,12 @@ class Class3B: Type3A
 //│ Defined class Class3A
 //│ Declared Class3A.MtdA: Class3A['a] -> 'a
 //│ Defined type Type3A
+
+
+:e
+Oops.M
+//│ ╔══[ERROR] Method M not found
+//│ ║  l.336: 	Oops.M
+//│ ╙──       	^^^^^^
+//│ res: error
 

@@ -178,11 +178,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (prim: ClassTag, _) if rhs === prim => ()
           case (prim: ClassTag, ClassTag(id:Var, _)) if prim.parents.contains(id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_, S(prov)))
+            val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            val newBound = outerProv.fold(lhs)(ProxyType(lhs)(_, S(prov)))
+            val newBound = outerProv.fold(lhs)(ProxyType(lhs)(_))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
@@ -262,7 +262,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val (lhs_rhs @ (lhs, rhs)) = ctx.head.head
       val failure = error
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
-      println(s"CTX: ${ctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}]"))}")
+      println(s"CTX: ${ctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
       
       val detailedContext =
         if (explainErrors)
@@ -302,7 +302,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val tighestLocatedRHS = ctx.flatMap { subCtx =>
         subCtx.flatMap { case (l, r) =>
-          val considered = (true, r, r.prov) :: r.ctxProv.dlof((false, r, _) :: Nil)(Nil)
+          val considered = (true, r, r.prov) :: Nil
           considered.filter { case (isMainProv, _, p) =>
             p.loco =/= prov.loco && (p.loco match {
               case Some(loco) =>
@@ -420,14 +420,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = TraitTag(Var("_"+freshVar(tv.prov).toString))(noProv/*TODO*/)
+          val v = TraitTag(Var(
+            tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
           freshened += tv -> v
           // TODO support bounds on rigidified variables (intersect/union them in):
           assert(tv.lowerBounds.isEmpty)
           assert(tv.upperBounds.isEmpty)
           v
         case None =>
-          val v = freshVar(tv.prov)
+          val v = freshVar(tv.prov, tv.nameHint)
           freshened += tv -> v
           // v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           // v.upperBounds = tv.upperBounds.mapConserve(freshen)

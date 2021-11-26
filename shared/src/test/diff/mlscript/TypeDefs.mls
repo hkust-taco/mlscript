@@ -129,7 +129,7 @@ type Lol = { x: 'a -> 'a }
 //│ Defined type Lol
 
 error: Lol -> Lol
-//│ res: {x: 'a -> 'a} -> {x: 'b -> 'b}
+//│ res: {x: 'a -> 'a} -> {x: 'a0 -> 'a0}
 
 { x = id } : Lol
 //│ res: {x: 'a -> 'a}
@@ -159,20 +159,20 @@ id: Runaway2
 //│ ╟── expression of type `{x: ?a -> ?a}` is not a function
 //│ ║  l.128: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference of type `({x: ?b -> ?b} -> ({x: ?d -> ?d} -> ?c) as ?c) & ?e -> ?e | {x: ?f -> ?f}`
+//│ ╟── but it flows into reference of type `({x: ?a0 -> ?a0} -> ({x: ?a1 -> ?a1} -> ?b) as ?b) & ?c -> ?c | {x: ?a2 -> ?a2}`
 //│ ║  l.155: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── which does not match type `({x: ?h -> ?h} -> ?g) as ?g`
+//│ ╟── which does not match type `({x: ?a3 -> ?a3} -> ?d) as ?d`
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.151: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
 //│ ║  l.155: 	id: Runaway2
 //│ ╙──       	    ^^^^^^^^
-//│ res: ({x: 'b -> 'b} -> 'a) as 'a
+//│ res: ({x: 'a -> 'a} -> 'b) as 'b
 
 error: Runaway2
-//│ res: ({x: 'b -> 'b} -> 'a) as 'a
+//│ res: ({x: 'a -> 'a} -> 'b) as 'b
 
 :e
 error: {x: int} -> nothing : Runaway2
@@ -181,12 +181,12 @@ error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
 //│ ║  l.128: 	type Lol = { x: 'a -> 'a }
-//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.178: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
-//│ res: ({x: 'b -> 'b} -> 'a) as 'a
+//│ res: ({x: 'a -> 'a} -> 'b) as 'b
 
 error: {x: 'x -> 'x} -> nothing : Runaway2
-//│ res: ({x: 'b -> 'b} -> 'a) as 'a
+//│ res: ({x: 'a -> 'a} -> 'b) as 'b
 

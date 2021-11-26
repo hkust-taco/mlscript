@@ -214,6 +214,6 @@ class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
 //│ ║  l.214: 	class Class3B: Class3A & 'a
-//│ ╙──       	      ^^^^^^^^^^^^^^^^
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

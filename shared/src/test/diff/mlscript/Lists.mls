@@ -151,7 +151,7 @@ c 1 (c 2 Nil)
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
-//│ c: 'a -> nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)}) as 'c & 'b -> cons & {head: 'a, tail: nil & 'b | (cons & {head: anything, tail: 'f | nil | 'e}) as 'e & 'b}
+//│ c: 'a -> nil & 'l | (cons & {head: anything, tail: 'c & (nil | 'b)}) as 'b & 'l -> cons & {head: 'a, tail: nil & 'l | (cons & {head: anything, tail: 'e | nil | 'd}) as 'd & 'l}
 //│ res: cons & {head: 1, tail: cons & {head: 2, tail: nil}}
 
 

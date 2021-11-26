@@ -7,7 +7,10 @@
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.6: 	"hello": 'a -> 'a
 //│ ║       	^^^^^^^
-//│ ╙── expression of type `"hello"` is not a function
+//│ ╟── expression of type `"hello"` is not a function
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.6: 	"hello": 'a -> 'a
+//│ ╙──     	         ^^^^^^^^
 //│ res: error -> error
 
 { name = "Bob" } : { name: 'a }

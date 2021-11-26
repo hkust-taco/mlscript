@@ -18,7 +18,7 @@ trait TypeSimplifier { self: Typer =>
     val allVars = ty.getVars
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
-        freshVar(noProv)(0) tap { fv => println(s"Renewed $tv ~> $fv") })
+        freshVar(noProv, tv.nameHint)(0) tap { fv => println(s"Renewed $tv ~> $fv") })
     
     def goDeep(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): SimpleType =
       go1(go0(ty, pol), pol)
@@ -257,7 +257,7 @@ trait TypeSimplifier { self: Typer =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
               wasDefined = false
-              val nv = freshVar(noProv)(0)
+              val nv = freshVar(noProv, tv.nameHint)(0)
               println(s"Renewed $tv ~> $nv")
               nv
             })

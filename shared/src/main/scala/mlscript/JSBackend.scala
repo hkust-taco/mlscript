@@ -190,7 +190,7 @@ class JSBackend {
     body match {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
-      case AppliedType(Primitive(name), targs) =>
+      case AppliedType(TypeName(name), targs) =>
         applyTypeAlias(name, targs map { substitute(_, subs) })
       case Function(lhs, rhs) =>
         Function(substitute(lhs, subs), substitute(rhs, subs))
@@ -202,11 +202,11 @@ class JSBackend {
         Union(substitute(lhs, subs), substitute(rhs, subs))
       case Tuple(fields) =>
         Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
-      case Primitive(name) =>
+      case TypeName(name) =>
         subs get name match {
           case N =>
             typeAliasMap get name match {
-              case N              => Primitive(name)
+              case N              => TypeName(name)
               case S(Nil -> body) => substitute(body, subs)
               case S(tparams -> _) =>
                 throw new Error(
@@ -234,7 +234,7 @@ class JSBackend {
     // `class B: A` ==> `class B extends A {}`
     // If `A` is a type alias, it is replaced by its real type.
     // Otherwise just use the name.
-    case Primitive(name) =>
+    case TypeName(name) =>
       typeAliasMap get name match {
         // The base class is not a type alias.
         case N => Nil -> S(name)
@@ -279,7 +279,7 @@ class JSBackend {
     // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
     // For applied types such as `Id[T]`, normalize them before translation.
     // Do not forget to normalize type arguments first.
-    case AppliedType(Primitive(base), targs) =>
+    case AppliedType(TypeName(base), targs) =>
       getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
@@ -307,8 +307,8 @@ class JSBackend {
 
     // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
-      case TypeDef(Als, Primitive(name), tparams, body, _, _) =>
-        val tnames = tparams map { case Primitive(nme) => nme }
+      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+        val tnames = tparams map { case TypeName(nme) => nme }
         typeAliasMap(name) = tnames -> body
       case _ => ()
     }
@@ -321,7 +321,7 @@ class JSBackend {
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
-          .map { case TypeDef(kind, Primitive(name), typeParams, actualType, _, _) => // TODO: handle methods
+          .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, _) => // TODO: handle methods
             kind match {
               case Cls =>
                 classNames += name

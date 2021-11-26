@@ -357,7 +357,7 @@ object Main {
               }
             case L(pty) =>
               val exp = getType(pty)
-              if (exp =/= Primitive("unit")) {
+              if (exp =/= TypeName("unit")) {
                 val nme = "res"
                 ctx += nme -> pty
                 res ++= formatBinding(nme, pty)

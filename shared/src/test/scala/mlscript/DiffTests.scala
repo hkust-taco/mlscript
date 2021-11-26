@@ -280,7 +280,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                   case S(sign) =>
                     ctx += nme -> sign
                     val sign_exp = getType(sign)
-                    output(s"${exp.show}  <:  f: ${sign_exp.show}")
+                    output(s"${exp.show}  <:  $nme: ${sign_exp.show}")
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                 }
               case desug: DesugaredStatement =>
@@ -293,7 +293,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     }
                   case L(pty) =>
                     val exp = getType(pty)
-                    if (exp =/= Primitive("unit")) {
+                    if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
                     }

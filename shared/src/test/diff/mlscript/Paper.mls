@@ -68,7 +68,7 @@ def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> some & {value: int} | none
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> 0 | int & ~0 -> none | some & {value: int}  <:  f: int -> int -> some & {value: int} | none
+//│ int -> 0 | int & ~0 -> none | some & {value: int}  <:  tryDiv: int -> int -> some & {value: int} | none
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1

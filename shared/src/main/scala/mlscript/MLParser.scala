@@ -19,8 +19,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
-  def locate[_:P, L <: Located](tree: => P[L], ignoreIfSet: Bool = false): P[L] = (Index ~~ tree ~~ Index).map {
-    case (i0, n, i1) => if (!ignoreIfSet || n.toLoc.isDefined) n.withLoc(i0, i1, origin) else n
+  def locate[_:P, L <: Located](tree: => P[L]): P[L] = (Index ~~ tree ~~ Index).map {
+    case (i0, n, i1) => n.withLoc(i0, i1, origin)
   }
   
   def letter[_: P]     = P( lowercase | uppercase )
@@ -101,13 +101,13 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod))
     })
-  def tyParams[_: P]: P[Ls[Primitive]] =
+  def tyParams[_: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
-  def mthDecl[_: P](prt: Primitive): P[R[MethodDef[Right[Term, Type]]]] = 
+  def mthDecl[_: P](prt: TypeName): P[R[MethodDef[Right[Term, Type]]]] = 
     P(kw("method") ~ tyName ~ tyParams ~ ":" ~/ ty map {
       case (id, ts, t) => R(MethodDef[Right[Term, Type]](true, prt, id, ts, R(t)))
     })
-  def mthDef[_: P](prt: Primitive): P[L[MethodDef[Left[Term, Type]]]] = 
+  def mthDef[_: P](prt: TypeName): P[L[MethodDef[Left[Term, Type]]]] = 
     P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
       case (rec, id, ts, ps, bod) => L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc)))))
     })
@@ -129,8 +129,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (tname, targs) => AppliedType(tname, targs.toList)
   }) | tyNeg | tyName | tyVar //| const.map(Const) // TODO
   def tyNeg[_: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Neg(t) }))
-  def tyName[_: P]: P[Primitive] = locate(P(ident map Primitive))
-  def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => getVar(id))), ignoreIfSet = true)
+  def tyName[_: P]: P[TypeName] = locate(P(ident map TypeName))
+  def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
@@ -147,9 +147,6 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     curHash = res + 1
     res
   }
-  private val vars = mutable.Map.empty[Str, TypeVar]
-  def getVar(nme: Str): TypeVar = vars.getOrElseUpdate(nme,
-    new TypeVar(nme, nextHash))
   
 }
 object MLParser {

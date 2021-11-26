@@ -13,17 +13,17 @@ final case class Def(rec: Bool, nme: Str, rhs: Term \/ PolyType) extends Decl wi
 }
 final case class TypeDef(
   kind: TypeDefKind,
-  nme: Primitive,
-  tparams: List[Primitive],
+  nme: TypeName,
+  tparams: List[TypeName],
   body: Type,
   mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
   mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
 ) extends Decl
 final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
-  prt: Primitive,
-  nme: Primitive,
-  tparams: List[Primitive],
+  prt: TypeName,
+  nme: TypeName,
+  tparams: List[TypeName],
   rhs: RHS,
 ) extends Located {
   val body: Located = rhs.fold(identity, identity)
@@ -89,7 +89,7 @@ final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Var -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Type])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
-final case class AppliedType(base: Primitive, targs: List[Type]) extends Type
+final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 
@@ -99,10 +99,13 @@ case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
 final case class Literal(lit: Lit)                       extends NullaryType
 
-final case class Primitive(name: Str)                    extends NullaryType
-final class TypeVar(val nameHint: Str, val hash: Int)    extends NullaryType {
-  override def toString: Str = s"$nameHint:$hash"
+final case class TypeName(name: Str)                    extends NullaryType
+
+final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType {
+  require(nameHint.isEmpty || identifier.isLeft)
+  // ^ The better data structure to represent this would be an EitherOrBoth
+  override def toString: Str = identifier.fold("α" + _, identity)
 }
 
-final case class PolyType(targs: Ls[Primitive], body: Type) extends PolyTypeImpl
+final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
 

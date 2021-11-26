@@ -33,7 +33,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** A type without universally quantified type variables. */
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance
-    def ctxProv: Opt[TypeProvenance] = N
     def level: Int
     def instantiate(implicit lvl: Int) = this
   }
@@ -104,7 +103,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** The sole purpose of ProxyType is to store additional type provenance info. */
-  case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance, override val ctxProv: Opt[TypeProvenance] = N)
+  case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance)
       extends SimpleType {
     def level: Int = underlying.level
     
@@ -164,16 +163,17 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val level: Int,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
+      val nameHint: Opt[Str] = N
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
-    lazy val asTypeVar = new TypeVar("α", uid)
-    override def toString: String = "α" + uid + "'" * level
+    lazy val asTypeVar = new TypeVar(L(uid), nameHint)
+    override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
     override def hashCode: Int = uid
   }
   type TV = TypeVariable
   private var freshCount = 0
-  def freshVar(p: TypeProvenance)(implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, Nil, Nil)(p)
+  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N)(implicit lvl: Int): TypeVariable =
+    new TypeVariable(lvl, Nil, Nil, nameHint)(p)
   def resetState(): Unit = {
     freshCount = 0
   }
