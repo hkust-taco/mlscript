@@ -1,4 +1,5 @@
-//TODO: - ConstraintSolver.extrude TypeRef polarity
+//TODO: - Rewrite cases for Sel in typeTerm
+//      - ConstraintSolver.extrude TypeRef polarity
 //      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 
@@ -49,6 +50,27 @@ h = Bar { x = 43; y = true }
 h.Fun
 //│ h: bar & {y: true, x: 43}
 //│ res: ('a | 43 -> 'b | true -> 'c) -> 'a -> 'b -> 'c
+
+
+
+
+class Wrapper[A]: { x: A }
+    method Apply[B]: (A -> B) -> B
+//│ Defined class Wrapper
+//│ Declared Wrapper.Apply: wrapper & {x: 'a} -> ('a -> 'b) -> 'b
+
+class IntWrapper: Wrapper[int]
+    method Apply f = f this.x
+//│ Defined class IntWrapper
+//│ Defined IntWrapper.Apply: intWrapper & {x: int} -> (int -> 'a) -> 'a
+
+class Psyduck[B]: Wrapper[B]
+    method Apply[A]: (B -> A) -> A
+    method Apply f = f this.x
+//│ Defined class Psyduck
+//│ Declared Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> 'b
+//│ Defined Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> 'b
+
 
 
 
@@ -107,11 +129,18 @@ class True2[A, B]: Pair[A, B]
 //│ Defined True2.Test: true2 & {y: anything, x: anything} -> anything -> true
 
 p = Pair { x = 42; y = true }
-p.(Pair.Map) (fun x -> mul x 2) (fun x -> not x)
-p.(Pair.Test) (fun x -> fun y -> if (y) then gt x 0 else y)
-(p.(Pair.Map) (fun x -> mul x 2) (fun x -> not x)).(Pair.Test) (fun x -> fun y -> if (y) then gt x 0 else y)
+fx = fun x -> mul x 2
+fy = fun x -> not x
+ft = fun x -> fun y -> if (y) then gt x 0 else y
 //│ p: pair & {y: true, x: 42}
-//│ res: pair & {y: bool, x: int}
+//│ fx: int -> int
+//│ fy: bool -> bool
+//│ ft: int -> bool -> bool
+
+p.Map fx fy
+p.Test ft
+(p.Map fx fy).Test ft
+//│ res: abstractPair & {y: bool, x: int}
 //│ res: bool
 //│ res: bool
 

@@ -635,25 +635,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val raw_fun_ty = fun_ty.unwrapProxies
         resTy
       case Sel(obj: Var, fieldName) if obj.name.headOption.exists(_.isUpper) && ctx.tyDefs.isDefinedAt(obj.name) && 
-          ctx.env.isDefinedAt(s"${obj.name}.${fieldName.name}") =>
-        ctx.env(s"${obj.name}.${fieldName.name}").instantiate
+          ctx.contains(s"${obj.name}.${fieldName.name}") =>
+        ctx.get(s"${obj.name}.${fieldName.name}").get.instantiate
       case Sel(obj, fieldName) if fieldName.name.headOption.exists(_.isUpper) && 
-          ctx.env.isDefinedAt(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name) =>
+          ctx.contains(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name) =>
         obj match {
           case Var(name) if name.headOption.exists(_.isUpper) =>
             err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
           case _ =>
         }
         val o_ty = typeTerm(obj)
-        val mtd_ty = ctx.env(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name)
+        val mtd_ty = ctx.get(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name).get
         val res = freshVar(prov)
         con(mtd_ty.instantiate, FunctionType(o_ty, res)(prov), res)
       case Sel(obj, fieldName) =>
         obj match {
-            case Var(name) if name.headOption.exists(_.isUpper) =>
-              err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-            case _ =>
-          }
+          case Var(name) if name.headOption.exists(_.isUpper) =>
+            err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
+          case _ =>
+        }
         if (fieldName.name.headOption.exists(_.isUpper))
           if (ctx.methodBase.isDefinedAt(fieldName.name))
             err(msg"Implicit call of ${fieldName.name} is disabled" -> fieldName.toLoc ::

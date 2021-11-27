@@ -1,0 +1,77 @@
+class Option[A]
+    method Get: A
+//│ Defined class Option
+//│ Declared Option.Get: option -> nothing
+
+class Some[A]: Option[A] & { payload: A }
+    method Get = this.payload
+//│ Defined class Some
+//│ Defined Some.Get: some & {payload: 'a} -> 'a
+
+class None[A]: Option[A]
+    method Get = error
+//│ Defined class None
+//│ Defined None.Get: none -> nothing
+
+
+
+
+class List[A]
+    method Size: int
+    method HeadOption: Option[A]
+    method Map[B]: (A -> B) -> List[B]
+//│ Defined class List
+//│ Declared List.Size: list -> int
+//│ Declared List.HeadOption: list -> option
+//│ Declared List.Map: list -> (nothing -> anything) -> list
+
+class Nil[A]: List[A]
+    method Size = 0
+    method HeadOption = None {}
+    method Map[B] f = Nil {}
+//│ Defined class Nil
+//│ Defined Nil.Size: nil -> 0
+//│ Defined Nil.HeadOption: nil -> none
+//│ Defined Nil.Map: nil -> anything -> nil
+
+class Cons[A]: List[A] & { head: A; tail: List[A] }
+    method Size = succ this.tail.Size
+    method HeadOption = Some { payload = this.head }
+    method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
+//│ Defined class Cons
+//│ Defined Cons.Size: cons & {head: anything, tail: list} -> int
+//│ Defined Cons.HeadOption: cons & {head: 'a, tail: list} -> some & {payload: 'a}
+//│ Defined Cons.Map: cons & {head: 'a, tail: list} -> ('a -> 'b) -> cons & {head: 'b, tail: list}
+
+l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
+//│ l: cons & {head: 0, tail: cons & {head: 1, tail: nil}}
+
+l.Size
+//│ res: int
+
+l.Map (fun x -> mul x 2)
+//│ res: list
+
+o = l.HeadOption
+//│ o: option
+
+// Idiomatic definition for proper matching: `type Option[A] = Some[A] | None[A]`
+:e
+case o of {
+    Some -> o.Get | None -> 0 }
+//│ ╔══[ERROR] Type mismatch in case of:
+//│ ║  l.60: 	case o of {
+//│ ║        	     ^^^^^^
+//│ ║  l.61: 	    Some -> o.Get | None -> 0 }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `option` does not match type `some & ?a | none & ?b`
+//│ ║  l.21: 	    method HeadOption: Option[A]
+//│ ║        	                       ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `some & ?c | none & ?d`
+//│ ║  l.60: 	case o of {
+//│ ╙──      	     ^
+//│ res: 0
+
+case o of {
+    Some -> o.Get | None -> 0 | Option -> error }
+//│ res: 0
