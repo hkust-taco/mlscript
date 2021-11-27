@@ -55,22 +55,43 @@ h.Fun
 
 
 class Wrapper[A]: { x: A }
-    method Apply[B]: (A -> B) -> B
+    method Apply[B]: (A -> B) -> Wrapper[B]
 //│ Defined class Wrapper
-//│ Declared Wrapper.Apply: wrapper & {x: 'a} -> ('a -> 'b) -> 'b
+//│ Declared Wrapper.Apply: wrapper & {x: 'a} -> ('a -> 'b) -> wrapper & {x: 'b}
 
 class IntWrapper: Wrapper[int]
-    method Apply f = f this.x
+    method Apply f = Wrapper { x = f this.x }
 //│ Defined class IntWrapper
-//│ Defined IntWrapper.Apply: intWrapper & {x: int} -> (int -> 'a) -> 'a
+//│ Defined IntWrapper.Apply: intWrapper & {x: int} -> (int -> 'a) -> wrapper & {x: 'a}
 
 class Psyduck[B]: Wrapper[B]
-    method Apply[A]: (B -> A) -> A
-    method Apply f = f this.x
+    method Apply[A]: (B -> A) -> Psyduck[A]
+    method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck
-//│ Declared Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> 'b
-//│ Defined Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> 'b
+//│ Declared Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> psyduck & {x: 'b}
+//│ Defined Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> psyduck & {x: 'b}
 
+// TODO: checkRegular returns false?
+:e
+class WrapperWrapper[A]: Wrapper[Wrapper[A]]
+    method Apply2[B]: (B -> A) -> WrapperWrapper[B]
+    method Apply2 f = WrapperWrapper { x = this.x.Apply f }
+//│ ╔══[ERROR] type identifier not found: WrapperWrapper
+//│ ║  l.77: 	    method Apply2[B]: (B -> A) -> WrapperWrapper[B]
+//│ ╙──      	                                  ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.78: 	    method Apply2 f = WrapperWrapper { x = this.x.Apply f }
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `_α414` does not match type `_α426`
+
+WrapperWrapper { x = Psyduck { x = 0 } }
+//│ res: wrapperWrapper & {x: psyduck & {x: 0}}
+
+res.Apply2 (fun x -> mul x 2)
+//│ res: wrapperWrapper & {x: wrapper & {x: int}}
+
+Wrapper
+//│ res: {x: 'a} -> wrapper & {x: 'a}
 
 
 
