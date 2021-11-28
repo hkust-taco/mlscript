@@ -174,3 +174,18 @@ t = True2 { x = "bar"; y = false }
 t.(True2.True)
 //│ t: true2 & {y: false, x: "bar"}
 //│ res: bool
+
+
+class Class1A[A]
+    method MtdA: A
+trait Trait1A[B]
+    method MtdA: B
+class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
+    method MtdA = "b"
+//│ Defined class Class1A
+//│ Declared Class1A.MtdA: class1A -> nothing
+//│ Defined trait Trait1A
+//│ Declared Trait1A.MtdA: trait1A -> nothing
+//│ Defined class Class1B
+//│ Defined Class1B.MtdA: class1B & trait1A -> "b"
+

@@ -264,7 +264,7 @@ class ClassC: ClassA
 //│ Defined ClassC.MtdA: classC -> 43
 
 // FIXME this should be an error
-:e
+// :e
 class ClassD: ClassA
     method MtdA: int
 class ClassE: ClassD
@@ -276,4 +276,35 @@ class ClassE: ClassD
 
 (ClassE{}).MtdA // typed as 42!
 //│ res: 42
+
+
+// FIXME should raise error
+// :e
+class Class2A[A]
+    method MtdA: A
+trait Trait2A[B]
+    method MtdA: B
+class Class2B: Class2A[int] & Trait2A[string]
+    method MtdA = "ok"
+//│ Defined class Class2A
+//│ Declared Class2A.MtdA: class2A -> nothing
+//│ Defined trait Trait2A
+//│ Declared Trait2A.MtdA: trait2A -> nothing
+//│ Defined class Class2B
+//│ Defined Class2B.MtdA: class2B & trait2A -> "ok"
+
+
+// FIXME should raise error
+// :e
+:ns // TODO: investigate weird type of `Class3B.MtdA` without `:ns`
+class Class3A[A]
+    method MtdA: A
+type Type3A = Class3A[string]
+class Class3B: Type3A
+    method MtdA = 1
+//│ Defined class Class3A
+//│ Declared Class3A.MtdA: Class3A['a] -> 'a
+//│ Defined type Type3A
+//│ Defined class Class3B
+//│ Defined Class3B.MtdA: Class3B -> 1
 
