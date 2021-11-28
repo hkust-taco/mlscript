@@ -20,4 +20,4 @@ jobs:
     - name: Run tests
       run: sbt test
     - name: Check no changes
-      run: git diff-files --quiet
+      run: git diff-files -p --exit-code
