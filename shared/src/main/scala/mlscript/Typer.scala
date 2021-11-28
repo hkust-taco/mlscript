@@ -297,7 +297,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case None => checkRegular(tr.expand)(reached + (defn.nme.name -> targs))
             case Some(tys) =>
               // TODO less syntactic check...
-              if (tys =/= targs) {
+              if (defn.nme === td.nme && tys =/= targs) {
                 if (defn.nme.name === td.nme.name)
                   err(msg"Type definition is not regular: it occurs within itself as ${
                   expandType(tr, true).show
