@@ -84,8 +84,8 @@ object Main {
               try {
                 val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
                 results.get("defs").foreach { defs =>
-                  defs.asInstanceOf[js.Dictionary[Str]] foreach {
-                    case (key, value) => defResults += key -> value
+                  defs.asInstanceOf[js.Dictionary[Str]] foreach { case (key, value) =>
+                    defResults += key -> value
                   }
                 }
                 results.get("exprs").foreach { exprs =>
@@ -119,7 +119,7 @@ object Main {
                     }
                     // Get the evaluation results.
                     defResults get realName
-                  // This type definition is a expression. (No name)
+                  // This type definition is an expression. (No name)
                   case N =>
                     exprResults match {
                       case head :: next => {
@@ -161,7 +161,7 @@ object Main {
 
   def checkProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
     val (diags, (typeDefs, stmts)) = pgrm.desugared
-
+    
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
@@ -306,24 +306,14 @@ object Main {
           ctx += nme -> ty_sch
           declared.get(nme).foreach { sign =>
             // ctx += nme -> sign  // override with less precise declared type?
-            subsume(ty_sch, sign)(
-              ctx,
-              raise,
-              TypeProvenance(d.toLoc, "def definition")
-            )
+            subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
           }
           res ++= formatBinding(d.nme, ty_sch)
           results append S(d.nme) -> (getType(ty_sch).show)
         case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
-          val ty_sch = PolymorphicType(
-            0,
-            typeType(rhs)(
-              ctx.nextLevel,
-              raise,
-              tps.map(tp => tp.name -> freshVar(noProv /*FIXME*/ )(1)).toMap
-            )
-          )
+          val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
+             tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme) -> getType(ty_sch).show
