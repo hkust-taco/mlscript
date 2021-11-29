@@ -100,25 +100,12 @@ object Main {
               }
               // Iterate type and assemble something like:
               // `val <name>: <type> = <value>`
-              val nameShadowingCount = new collection.mutable.HashMap[Str, Int]
+              val resolveShadowName = new ShadowNameResolver
               typeCheckResult foreach { case (name, ty) =>
                 val res = name match {
                   // This type definition is a `def`.
                   case S(name) =>
-                    // If the name is shadowing another name,
-                    // we have to construct the real name.
-                    val realName = nameShadowingCount get name match {
-                      // It is a shaowing name.
-                      case Some(count) =>
-                        nameShadowingCount += name -> (count + 1)
-                        s"$name@$count"
-                      // This is the first time we meet this name.
-                      case None =>
-                        nameShadowingCount += name -> 1
-                        name
-                    }
-                    // Get the evaluation results.
-                    defResults get realName
+                    defResults get resolveShadowName(name)
                   // This type definition is an expression. (No name)
                   case N =>
                     exprResults match {

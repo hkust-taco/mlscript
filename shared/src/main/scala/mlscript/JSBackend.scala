@@ -316,7 +316,7 @@ class JSBackend {
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     // This hash map counts how many times a name has been used.
-    val nameShadowingCount = collection.mutable.HashMap[Str, Int]()
+    val resolveShadowName = new ShadowNameResolver
     val stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
@@ -344,29 +344,35 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              // Name shadowing.
-              nameShadowingCount get name match {
-                // We need save the value in a new name.
-                case Some(count) =>
-                  nameShadowingCount += tempName -> (count + 1)
-                  JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody)) ::
-                    JSExprStmt(
-                      JSAssignExpr(
-                        // We use @ because it is not valid in identifiers.
-                        JSMember(JSIdent(defResultObjName), s"$name@$count"),
-                        JSIdent(tempName)
-                      )
-                    ) :: Nil
-                // The name had been never used before.
-                case None =>
-                  nameShadowingCount += tempName -> 1
-                  JSLetDecl(tempName, translatedBody) ::
-                    JSExprStmt(
-                      JSAssignExpr(
-                        JSMember(JSIdent(defResultObjName), name),
-                        JSIdent(tempName)
-                      )
-                    ) :: Nil
+              // 
+              val shadowedName = resolveShadowName(tempName)
+              if (shadowedName === tempName) {
+                // Declare the name, assign and record the value.
+                // ```
+                // let <tempName> = <expr>;
+                // defs.<name> = <tempName>;
+                // ```
+                JSLetDecl(tempName, translatedBody) ::
+                  JSExprStmt(
+                    JSAssignExpr(
+                      JSMember(JSIdent(defResultObjName), name),
+                      JSIdent(tempName)
+                    )
+                  ) :: Nil
+              } else {
+                // Re-assign and record the value as a new name:
+                // ```
+                // <tempName> = <expr>;
+                // defs["<name>@<number of shadow>"] = <tempName>;
+                // ```
+                JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody)) ::
+                  JSExprStmt(
+                    JSAssignExpr(
+                      // We use @ because it is not valid in identifiers.
+                      JSMember(JSIdent(defResultObjName), shadowedName),
+                      JSIdent(tempName)
+                    )
+                  ) :: Nil
               }
             case Def(isRecursive, name, R(body)) => Nil
             case _: Term                         => Nil
