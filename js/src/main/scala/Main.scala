@@ -49,57 +49,23 @@ object Main {
           errorResult match {
             case Some(typeCheckResult) => typeCheckResult
             case None => {
-              val backend = new JSBackend()
-              val lines = backend(pgrm)
-              // I know this is very hacky but using `asIntanceOf` is painful.
-              // TODO: pretty print JavaScript values in a less hacky way.
-              // Maybe I can add a global function for reporting results.
-              val code = s"""(() => {
-                |  let [defs, exprs] = (() => {
-                |    ${lines.mkString("\n")}
-                |  })();
-                |  for (const key of Object.keys(defs)) {
-                |    defs[key] = prettyPrint(defs[key]);
-                |  }
-                |  exprs = exprs.map(prettyPrint);
-                |  return { defs, exprs };
-                |  function prettyPrint(value) {
-                |    switch (typeof value) {
-                |      case "number":
-                |      case "boolean":
-                |      case "function":
-                |        return value.toString();
-                |      case "string":
-                |        return '\"' + value + '\"';
-                |      default:
-                |        return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
-                |    }
-                |  }
-                |})()""".stripMargin
-              println("Running code: " + code)
-              // Collect evaluation results.
-              var defResults = new collection.mutable.HashMap[Str, Str]
-              var exprResults: Ls[Str] = Nil
+              // We're going write two parts to this `StringBuilder`:
+              // 1. Errors from code generation, execution;
+              // 2. Types of definitions and expressions.
               val sb = new StringBuilder
-              try {
-                val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
-                results.get("defs").foreach { defs =>
-                    defs.asInstanceOf[js.Dictionary[Str]] foreach {
-                      case (key, value) => defResults += key -> value
-                    }
+              // If code generation succeeds, run the generated code.
+              // If it fails, write down the error message.
+              // The code here is a bit verbose.
+              var (defResults, exprResults, error) =
+                generateRuntimeCode(pgrm) match {
+                  case R(code) => executeCode(code)
+                  case L(error) =>
+                    (collection.mutable.HashMap[Str, Str](), Nil, error)
                 }
-                results.get("exprs").foreach { exprs =>
-                    exprResults = exprs.asInstanceOf[js.Array[Str]].toList
-                }
-              } catch {
-                case e: Throwable =>
-                  sb ++= "<font color=\"red\">Runtime error occurred:</font>"
-                  sb ++= htmlLineBreak + e.getMessage
-                  sb ++= htmlLineBreak
-                  sb ++= htmlLineBreak
-              }
+              sb ++= error
               // Iterate type and assemble something like:
-              // `val <name>: <type> = <value>`
+              // `val <name>: <type> = <value>`.
+              // If the value is not found, write `<no value>`.
               typeCheckResult foreach { case (name, ty) =>
                 val res = name match {
                   case S(name) => defResults get name
@@ -138,13 +104,88 @@ object Main {
     )
   }
 
+  // Returns `Right[Str]` if successful, `Left[Str]` if not.
+  private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
+    try {
+      val lines = (new JSBackend())(pgrm)
+      val code = s"""(() => {
+                    |  let [defs, exprs] = (() => {
+                    |    ${lines.mkString("\n")}
+                    |  })();
+                    |  for (const key of Object.keys(defs)) {
+                    |    defs[key] = prettyPrint(defs[key]);
+                    |  }
+                    |  exprs = exprs.map(prettyPrint);
+                    |  return { defs, exprs };
+                    |  function prettyPrint(value) {
+                    |    switch (typeof value) {
+                    |      case "number":
+                    |      case "boolean":
+                    |      case "function":
+                    |        return value.toString();
+                    |      case "string":
+                    |        return '\"' + value + '\"';
+                    |      default:
+                    |        return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
+                    |    }
+                    |  }
+                    |})()""".stripMargin
+      println("Running code: " + code)
+      R(code)
+    } catch {
+      case e: Throwable =>
+        val sb = new StringBuilder()
+        sb ++= "<font color=\"red\">Code generation crashed:</font>"
+        sb ++= htmlLineBreak + e.getMessage
+        sb ++= htmlLineBreak
+        sb ++= htmlLineBreak
+        L(sb.toString)
+    }
+  }
+
+  // Execute the generated code.
+  // We extract this function because there is some boilerplate code.
+  // It returns a tuple of three items:
+  // 1. results of definitions;
+  // 2. results of expressions;
+  // 3. error message (if has).
+  private def executeCode(
+      code: Str
+  ): (collection.mutable.HashMap[Str, Str], Ls[Str], Str) = {
+    // Collect evaluation results.
+    var defResults = new collection.mutable.HashMap[Str, Str]
+    var exprResults: Ls[Str] = Nil
+    var sb = new StringBuilder()
+    try {
+      // I know this is very hacky but using `asIntanceOf` is painful.
+      // TODO: pretty print JavaScript values in a less hacky way.
+      // Maybe I can add a global function for reporting results.
+      val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
+      results.get("defs").foreach { defs =>
+        defs.asInstanceOf[js.Dictionary[Str]] foreach { case (key, value) =>
+          defResults += key -> value
+        }
+      }
+      results.get("exprs").foreach { exprs =>
+        exprResults = exprs.asInstanceOf[js.Array[Str]].toList
+      }
+    } catch {
+      case e: Throwable =>
+        sb ++= "<font color=\"red\">Runtime error occurred:</font>"
+        sb ++= htmlLineBreak + e.getMessage
+        sb ++= htmlLineBreak
+        sb ++= htmlLineBreak
+    }
+    (defResults, exprResults, sb.toString)
+  }
+
   private val htmlLineBreak = "<br />"
   private val htmlWhiteSpace = "&nbsp;"
   private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
 
   def checkProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
     val (diags, (typeDefs, stmts)) = pgrm.desugared
-    
+
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
