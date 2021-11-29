@@ -58,8 +58,8 @@ object Main {
               // The code here is a bit verbose.
               var (defResults, exprResults, error) =
                 generateRuntimeCode(pgrm) match {
-                  case Left(code) => executeCode(code)
-                  case Right(error) =>
+                  case R(code) => executeCode(code)
+                  case L(error) =>
                     (collection.mutable.HashMap[Str, Str](), Nil, error)
                 }
               sb ++= error
@@ -104,8 +104,7 @@ object Main {
     )
   }
 
-  // Extract a separated function to do this.
-  // Returns `Left[Str]` if successful, `Right[Str]` if not.
+  // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
       val lines = (new JSBackend())(pgrm)
@@ -132,7 +131,7 @@ object Main {
                     |  }
                     |})()""".stripMargin
       println("Running code: " + code)
-      Left(code)
+      R(code)
     } catch {
       case e: Throwable =>
         val sb = new StringBuilder()
@@ -140,7 +139,7 @@ object Main {
         sb ++= htmlLineBreak + e.getMessage
         sb ++= htmlLineBreak
         sb ++= htmlLineBreak
-        Right(sb.toString)
+        L(sb.toString)
     }
   }
 
@@ -331,24 +330,14 @@ object Main {
           ctx += nme -> ty_sch
           declared.get(nme).foreach { sign =>
             // ctx += nme -> sign  // override with less precise declared type?
-            subsume(ty_sch, sign)(
-              ctx,
-              raise,
-              TypeProvenance(d.toLoc, "def definition")
-            )
+            subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
           }
           res ++= formatBinding(d.nme, ty_sch)
           results append S(d.nme) -> (getType(ty_sch).show)
         case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
-          val ty_sch = PolymorphicType(
-            0,
-            typeType(rhs)(
-              ctx.nextLevel,
-              raise,
-              tps.map(tp => tp.name -> freshVar(noProv /*FIXME*/ )(1)).toMap
-            )
-          )
+          val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
+            tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme) -> getType(ty_sch).show
