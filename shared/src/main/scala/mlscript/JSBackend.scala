@@ -295,16 +295,31 @@ class JSBackend {
   // Translate MLscript class declaration to JavaScript class declaration.
   // First, we will analyze its fields and base class name.
   // Then, we will check if the base class exists.
-  def translateClassDeclaration(name: Str, actualType: Type): JSClassDecl = {
+  def translateClassDeclaration(
+      name: Str,
+      actualType: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): JSClassDecl = {
+    val members = methods map { translateClassMember(_) }
     getBaseClassAndFields(actualType) match {
       // Case 1: no base class, just fields.
-      case fields -> N => JSClassDecl(name, fields.distinct, N)
+      case fields -> N => JSClassDecl(name, fields.distinct, N, members)
       // Case 2: has a base class and fields.
       case fields -> S(clsNme) =>
         nameClsMap get clsNme match {
           case N      => throw new Error(s"Class $clsNme is not defined.")
-          case S(cls) => JSClassDecl(name, fields.distinct, S(cls))
+          case S(cls) => JSClassDecl(name, fields.distinct, S(cls), members)
         }
+    }
+  }
+
+  def translateClassMember(
+      method: MethodDef[Left[Term, Type]]
+  ): JSClassMethod \/ JSClassMember = {
+    val name = method.nme.name
+    method.rhs.value match {
+      case Lam(Var(param), rhs) => L(JSClassMethod(name, param :: Nil, L(translateTerm(rhs))))
+      case term                 => R(JSClassMember(name, translateTerm(term)))
     }
   }
 
@@ -327,11 +342,11 @@ class JSBackend {
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
-          .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, _) => // TODO: handle methods
+          .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
             kind match {
               case Cls =>
                 classNames += name
-                val cls = translateClassDeclaration(name, actualType)
+                val cls = translateClassDeclaration(name, actualType, mthDefs)
                 nameClsMap += name -> cls
                 cls
               case Trt => JSComment(s"trait $name")

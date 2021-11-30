@@ -416,37 +416,61 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
+final case class JSClassMethod(
+    name: Str,
+    params: Ls[Str],
+    body: JSExpr \/ Ls[JSStmt]
+) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode.from(name) ++
+      SourceCode.from(params mkString ", ").parenthesized ++
+      SourceCode.space ++ (body match {
+        case Left(expr) => new JSReturnStmt(expr).toSourceCode
+        case Right(stmts) =>
+          stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
+      }).block
+}
+
+final case class JSClassMember(name: Str, body: JSExpr) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode.from(name) ++ SourceCode.from(" = ") ++ body.toSourceCode ++ SourceCode.semicolon
+}
+
 final case class JSClassDecl(
     val name: Str,
     fields: Ls[Str],
-    base: Opt[JSClassDecl] = N
+    base: Opt[JSClassDecl] = N,
+    methods: Ls[JSClassMethod \/ JSClassMember] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
-    val inits = fields map { case name =>
-      s"    this.$name = fields.$name;"
+    val ctor = SourceCode.fromLines(
+      "  constructor(fields) {" :: (if (base.isEmpty) {
+                                      Nil
+                                    } else {
+                                      "    super(fields);" :: Nil
+                                    }) ::: (fields map { case name =>
+        s"    this.$name = fields.$name;"
+      }) concat "  }" :: Nil
+    )
+    val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
+      x + (y match {
+        case L(method) => method.toSourceCode
+        case R(member) => member.toSourceCode
+      }).indented
     }
-    val epilogue = "  }" :: "}" :: Nil
+    val epilogue = SourceCode.fromLines("}" :: Nil)
     base match {
       case Some(baseCls) =>
-        val inheritedFields = baseCls.fields.filterNot { case name =>
-          fieldsSet contains name
-        }
-        val prologue =
-          s"class $name extends ${baseCls.name} {" ::
-            "  constructor(fields) {" ::
-            "    super(fields);" ::
-            Nil
         SourceCode.fromLines(
-          prologue ::: inits ::: epilogue
-        )
+          s"class $name extends ${baseCls.name} {" :: Nil
+        ) + ctor + methodsSourceCode + epilogue
       case None =>
-        fields match {
-          case Nil => SourceCode.from(s"class $name {}")
-          case _ =>
-            SourceCode.fromLines(
-              (s"class $name {" ::
-                "  constructor(fields) {" :: Nil) ::: inits ::: epilogue
-            )
+        if (fields.isEmpty && methods.isEmpty) {
+          SourceCode.from(s"class $name {}")
+        } else {
+          SourceCode.fromLines(
+            s"class $name {" :: Nil
+          ) + ctor + methodsSourceCode + epilogue
         }
     }
   }
