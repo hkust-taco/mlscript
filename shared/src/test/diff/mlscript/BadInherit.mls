@@ -42,7 +42,7 @@ def c = Child(Parent1{name="A"})
 :e
 type Sly1 = Parent2
 class Child2: Parent1 & Sly1
-//│ ╔══[ERROR] class Child2 cannot inherit from class Parent2 as it already inherits from class Parent1
+//│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.44: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type Sly1
@@ -50,7 +50,7 @@ class Child2: Parent1 & Sly1
 :e
 type Sly2[A] = A
 class Child2: Sly2[Parent1] & Parent2
-//│ ╔══[ERROR] class Child2 cannot inherit from class Parent2 as it already inherits from class Parent1
+//│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.52: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type Sly2
@@ -143,7 +143,7 @@ type N[A] = ~A
 
 :e
 class Cycle: N[Cycle]
-//│ ╔══[ERROR] cannot inherit from a type negation
+//│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.145: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Cycle
@@ -201,19 +201,22 @@ class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
+:e
 class A
 type Id[T] = T
 class B: Id[A]
+//│ ╔══[ERROR] cannot inherit from a type alias
+//│ ║  l.207: 	class B: Id[A]
+//│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type Id
-//│ Defined class B
 
 
 :e // TODO improve prov of the TV
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.214: 	class Class3B: Class3A & 'a
+//│ ║  l.217: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

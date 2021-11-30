@@ -250,8 +250,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                           prov.loco)
                         false
                       } tap (_ => parentsClasses += tr)
-                    } else checkParents(tr.expand)
-                  case Trt | Als => checkParents(tr.expand)
+                    } else
+                       checkParents(tr.expand)
+                  case Trt => checkParents(tr.expand)
+                  case Als => 
+                    err(msg"cannot inherit from a type alias", prov.loco)
+                    false
                 }
               case ComposedType(false, l, r) => checkParents(l) && checkParents(r)
               case ComposedType(true, l, r) =>
@@ -388,23 +392,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case pt: PolymorphicType => constrain(subst(mt, rigidSubsMap).instantiate, subst(subst(pt, subsMap), rigidSubsMap).rigidify)(raise, prov)
           case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate, subst(subst(st, subsMap), rigidSubsMap))(raise, prov)
         }
-        td.mthDecls.foreach { case md @ MethodDef(rec, prt, nme, tparams, R(ty)) =>
-            implicit val prov: TypeProvenance = tp(md.toLoc, "method declaration")
-            val mt = decls(nme.name)
-            td.baseClasses.foreach(bc => newMthDecls.get(bc.name).foreach(_.get(nme.name).foreach(ss(mt, _))))
-        }
-        td.mthDefs.foreach { case md @ MethodDef(rec, prt, nme, tparams, L(term)) =>
-            implicit val prov: TypeProvenance = tp(md.toLoc, "method definition")
-            val mt = defs(nme.name)
-            newMthDecls.get(tn.name).foreach(_.get(nme.name).foreach(ss(mt, _)))
-            td.baseClasses.foreach { bc => 
-              newMthDefs.get(bc.name).foreach(_.get(nme.name).foreach { bmt =>
-                if (!newMthDecls.get(bc.name).exists(_.isDefinedAt(nme.name))) {
-                  err(msg"Overiding method ${bc.name}.${nme.name} without explicit declaration is not allowed.", md.toLoc)
-                  ss(mt, bmt)
-                }
-              })
-            }
+        (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
+          implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
+          val mt = rhs.fold(_ => defs(nme.name), _ => decls(nme.name))
+          rhs.fold(
+            _ => newMthDecls.get(tn.name).foreach(_.get(nme.name).foreach(ss(mt, _))),
+            _ => td.baseClasses.foreach(bc => newMthDecls.get(bc.name).foreach(_.get(nme.name).foreach(ss(mt, _))))
+          )
+          td.baseClasses.foreach { bc => 
+            newMthDefs.get(bc.name).foreach(_.get(nme.name).foreach { bmt =>
+              if (!newMthDecls.get(bc.name).exists(_.isDefinedAt(nme.name))) {
+                err(msg"Overiding method ${bc.name}.${nme.name} without explicit declaration is not allowed.", md.toLoc)
+                ss(mt, bmt)
+              }
+            })
+          }
         }
         val thisTy = TypeRef(td, td.tparams.flatMap(p => ctx.getTargsMaps(tn.name, N, p.name)))(prov, ctx)
         newEnv ++= (decls ++ defs).flatMap{ case mn -> PolymorphicType(level, body) => 

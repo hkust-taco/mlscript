@@ -1,6 +1,5 @@
 //TODO: - Rewrite cases for Sel in typeTerm
 //      - ConstraintSolver.extrude TypeRef polarity
-//      - ConstraintSolver.constrain.annoyingImpl missing cases?
 
 
 class Foo[A, B]: { x: A; y: B }
@@ -71,33 +70,9 @@ class Psyduck[B]: Wrapper[B]
 //│ Declared Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> psyduck & {x: 'b}
 //│ Defined Psyduck.Apply: psyduck & {x: 'a} -> ('a -> 'b) -> psyduck & {x: 'b}
 
-// TODO: checkRegular returns false?
-:e
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
-    method Apply2[B]: (B -> A) -> WrapperWrapper[B]
+    method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.78: 	    method Apply2 f = WrapperWrapper { x = this.x.Apply f }
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `_α413` does not match type `_α425`
-//│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.78: 	    method Apply2 f = WrapperWrapper { x = this.x.Apply f }
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `_α413` does not match type `_α425`
-//│ ║  l.58: 	    method Apply[B]: (A -> B) -> Wrapper[B]
-//│ ║        	                                 ^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `wrapperWrapper & {x: wrapper & {x: _α425}}`
-//│ ║  l.78: 	    method Apply2 f = WrapperWrapper { x = this.x.Apply f }
-//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.57: 	class Wrapper[A]: { x: A }
-//│ ║        	                  ^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.76: 	class WrapperWrapper[A]: Wrapper[Wrapper[A]]
-//│ ║        	                                 ^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.77: 	    method Apply2[B]: (B -> A) -> WrapperWrapper[B]
-//│ ╙──      	                                  ^^^^^^^^^^^^^^^^^
 //│ Defined class WrapperWrapper
 //│ Declared WrapperWrapper.Apply2: wrapperWrapper & {x: wrapper & {x: 'a}} -> ('a -> 'b) -> wrapperWrapper & {x: wrapper & {x: 'b}}
 //│ Defined WrapperWrapper.Apply2: wrapperWrapper & {x: wrapper & {x: 'a}} -> ('a -> 'b) -> wrapperWrapper & {x: wrapper & {x: 'b}}
