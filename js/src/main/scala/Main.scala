@@ -66,9 +66,13 @@ object Main {
               // Iterate type and assemble something like:
               // `val <name>: <type> = <value>`.
               // If the value is not found, write `<no value>`.
+              val resolveShadowName = new ShadowNameResolver
               typeCheckResult foreach { case (name, ty) =>
                 val res = name match {
-                  case S(name) => defResults get name
+                  // This type definition is a `def`.
+                  case S(name) =>
+                    defResults get resolveShadowName(name)
+                  // This type definition is an expression. (No name)
                   case N =>
                     exprResults match {
                       case head :: next => {
@@ -337,7 +341,7 @@ object Main {
         case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
-            tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
+             tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme) -> getType(ty_sch).show

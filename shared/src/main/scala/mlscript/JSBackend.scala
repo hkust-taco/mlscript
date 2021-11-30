@@ -216,7 +216,7 @@ class JSBackend {
           case S(ty) => ty
         }
       case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
-      case Rem(ty, fields) => Rem(substitute(ty, subs), fields)
+      case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
       case Bot | Top | _: Literal | _: TypeVar => body
     }
   }
@@ -315,6 +315,8 @@ class JSBackend {
 
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
+    // This hash map counts how many times a name has been used.
+    val resolveShadowName = new ShadowNameResolver
     val stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
@@ -342,13 +344,35 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              JSConstDecl(tempName, translatedBody) ::
-                JSExprStmt(
-                  JSAssignExpr(
-                    JSMember(JSIdent(defResultObjName), name),
-                    JSIdent(tempName)
-                  )
-                ) :: Nil
+              // 
+              val shadowedName = resolveShadowName(tempName)
+              if (shadowedName === tempName) {
+                // Declare the name, assign and record the value.
+                // ```
+                // let <tempName> = <expr>;
+                // defs.<name> = <tempName>;
+                // ```
+                JSLetDecl(tempName, translatedBody) ::
+                  JSExprStmt(
+                    JSAssignExpr(
+                      JSMember(JSIdent(defResultObjName), name),
+                      JSIdent(tempName)
+                    )
+                  ) :: Nil
+              } else {
+                // Re-assign and record the value as a new name:
+                // ```
+                // <tempName> = <expr>;
+                // defs["<name>@<number of shadow>"] = <tempName>;
+                // ```
+                JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody)) ::
+                  JSExprStmt(
+                    JSAssignExpr(
+                      JSMember(JSIdent(defResultObjName), shadowedName),
+                      JSIdent(tempName)
+                    )
+                  ) :: Nil
+              }
             case Def(isRecursive, name, R(body)) => Nil
             case _: Term                         => Nil
           })
