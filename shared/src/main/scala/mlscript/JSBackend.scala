@@ -368,7 +368,6 @@ class JSBackend {
                 JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody)) ::
                   JSExprStmt(
                     JSAssignExpr(
-                      // We use @ because it is not valid in identifiers.
                       JSMember(JSIdent(defResultObjName), shadowedName),
                       JSIdent(tempName)
                     )

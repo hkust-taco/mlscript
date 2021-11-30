@@ -10,6 +10,7 @@ class ShadowNameResolver {
       // It is a shadowed name.
       case Some(count) =>
         nameShadowingCount += name -> (count + 1)
+        // We use @ because it is not valid in identifiers.
         s"$name@$count"
       // This is the first time we meet this name.
       case None =>
