@@ -178,3 +178,38 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Defined class Class1B
 //│ Defined Class1B.MtdA: class1B & trait1A -> "b"
 
+
+trait Trait2A[A]
+    method MtdB: A
+class Class2B[A, B]: Class1A[A] & Trait2A[B]
+    method MtdA: A
+    method MtdB: B
+class Class2C: Class2B[int, bool]
+    method MtdA = 42
+    method MtdB = true
+//│ Defined trait Trait2A
+//│ Declared Trait2A.MtdB: trait2A -> nothing
+//│ Defined class Class2B
+//│ Declared Class2B.MtdA: class2B & trait2A -> nothing
+//│ Declared Class2B.MtdB: class2B & trait2A -> nothing
+//│ Defined class Class2C
+//│ Defined Class2C.MtdA: class2C & trait2A -> 42
+//│ Defined Class2C.MtdB: class2C & trait2A -> true
+
+
+:e
+class Class3C: Class2C
+    method MtdA = 42
+    method MtdB = 42
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.203: 	    method MtdB = 42
+//│ ║         	           ^^^^^^^^^
+//│ ╟── expression of type `42` does not match type `bool`
+//│ ║  l.203: 	    method MtdB = 42
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.187: 	class Class2C: Class2B[int, bool]
+//│ ╙──       	                            ^^^^
+//│ Defined class Class3C
+//│ Defined Class3C.MtdA: class3C & trait2A -> 42
+//│ Defined Class3C.MtdB: class3C & trait2A -> 42

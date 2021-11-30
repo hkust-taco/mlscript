@@ -175,11 +175,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
    *  TODO: handle traits by returning a nested map
    */
   def targsAppOf(tyDef: TypeDef)(implicit ctx: Ctx, raise: Raise, lookup: Option[(Str, Option[Str])] = N,
-      vars: Map[Str, SimpleType] = Map.empty): Map[Str, SimpleType] = {
-    def rec(ty: Type): Map[Str, SimpleType] = ty match {
+      vars: Map[Str, SimpleType] = Map.empty): Map[Str, Map[Str, SimpleType]] = {
+    def rec(ty: Type): Map[Str, Map[Str, SimpleType]] = ty match {
       case Inter(l, r) => rec(l) ++ rec(r)
-      case AppliedType(b, ts) => ctx.tyDefs.get(b.name).fold(Map.empty[Str, SimpleType]) {
-        td => td.tparams.map(_.name).zip(ts.map(typeType(_)(ctx.nextLevel, raise, lookup, vars))).toMap
+      case AppliedType(Primitive(bn), ts) => ctx.tyDefs.get(bn).fold(Map(bn -> Map.empty[Str, SimpleType])) {
+        td => Map(bn -> td.tparams.map(_.name).zip(ts.map(typeType(_)(ctx.nextLevel, raise, lookup, vars))).toMap)
       }
       case Record(_) => Map.empty
       case Primitive(_) => Map.empty
@@ -205,6 +205,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       td1
     }
     import ctx.{tyDefs => oldDefs}
+    val subsMapCache = MutMap.empty[Str, Map[Str, Map[SimpleType, SimpleType]]]
+    def getSubsMap(tn: Str)(implicit ctx: Ctx): Map[Str, Map[SimpleType, SimpleType]] = subsMapCache.getOrElse(tn,
+      (ctx.tyDefs.get(tn) match {
+        case S(td) =>
+          val targsApp = targsAppOf(td)(ctx, raise, S((tn, N)))
+          td.baseClasses.flatMap { case Var(bn) => ctx.getTargsMaps(bn, N).map(bn -> _) }.map { case bn -> m =>
+            bn -> m.map[SimpleType, SimpleType] {
+              case targ -> (tv: TypeVariable) => tv -> targsApp(bn).getOrElse(targ, freshVar(noProv)(tv.level))
+              case _ => die
+            }
+          }.toMap
+        case N => Map.empty[Str, Map[SimpleType, SimpleType]]
+      }).tap(subsMapCache += tn -> _)
+    )
     /** type the body of the definition, ensure the correct types of the parents and the regularity of the definition,
      *  then register the constructor and definition to the context
      */
@@ -365,10 +379,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           thisCtx.env += "." + nme.name -> 
             PolymorphicType(bodyTy.level, FunctionType(thisTy, bodyTy.body)(prov))
         }
-        newMthDecls += tn.name -> 
-          ((td.baseClasses.flatMap(t => newMthDecls.getOrElse(t.name, Map.empty))).toMap ++ decls.toMap)
+        val subsMap = getSubsMap(tn.name)
+        newMthDecls += tn.name ->
+          ((td.baseClasses.flatMap(t => newMthDecls.getOrElse(t.name, Map.empty).view.mapValues(subst(_, subsMap(t.name)))))
+            .groupMapReduce(_._1)(_._2){ case PolymorphicType(_, body1) -> PolymorphicType(_, body2) => 
+              PolymorphicType(thisCtx.lvl, ComposedType(false, body1, body2)(prov)) } ++ decls.toMap)
         newMthDefs += tn.name ->
-          ((td.baseClasses.flatMap(t => newMthDefs.getOrElse(t.name, Map.empty))).toMap ++ defs.toMap)
+          ((td.baseClasses.flatMap(t => newMthDefs.getOrElse(t.name, Map.empty).view.mapValues(subst(_, subsMap(t.name)))))
+            .groupMapReduce(_._1)(_._2){ case PolymorphicType(_, body1) -> PolymorphicType(_, body2) => 
+              PolymorphicType(thisCtx.lvl, ComposedType(false, body1, body2)(prov)) } ++ defs.toMap)
         allEnv ++= (newMthDecls(tn.name) ++ newMthDefs(tn.name)).flatMap{ case mn -> PolymorphicType(level, body) => 
           val m_ty = PolymorphicType(level, FunctionType(thisTy, body)(prov))
           s"${tn.name}.${mn}" -> m_ty ::
@@ -404,26 +423,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case s -> (tv: TypeVariable) => tv -> freshenAbove(ctx.lvl, tv, true)
           case _ => die
         }.toMap[SimpleType, SimpleType]
-        val targsApp = targsAppOf(td)(ctx, raise, S((tn.name, N)))
-        val subsMap = td.baseClasses.flatMap(b => ctx.getTargsMaps(b.name, N)).flatten.map {
-          case targ -> (tv: TypeVariable) => tv -> targsApp.getOrElse(targ, freshVar(noProv)(tv.level))
-          case _ => die
-        }.toMap[SimpleType, SimpleType]
-        def ss(mt: PolymorphicType, amt: TypeScheme)(implicit raise: Raise, prov: TypeProvenance) = amt match {
-          case pt: PolymorphicType => constrain(subst(mt, rigidSubsMap).instantiate, subst(subst(pt, subsMap), rigidSubsMap).rigidify)(raise, prov)
-          case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate, subst(subst(st, subsMap), rigidSubsMap))(raise, prov)
+        val subsMap = getSubsMap(tn.name)
+        def ss(mt: PolymorphicType, bmt: TypeScheme, bno: Option[Str] = N)(implicit raise: Raise, prov: TypeProvenance) = bmt match {
+          case pt: PolymorphicType => constrain(subst(mt, rigidSubsMap).instantiate,
+            subst(bno.fold(pt)(bn => subst(pt, subsMap(bn))), rigidSubsMap).rigidify)(raise, prov)
+          case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate,
+            subst(bno.fold(st)(bn => subst(st, subsMap(bn))), rigidSubsMap))(raise, prov)
         }
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           val mt = rhs.fold(_ => defs(nme.name), _ => decls(nme.name))
           rhs.fold(
             _ => ctx.mthDecls.get(tn.name).foreach(_.get(nme.name).foreach(ss(mt, _))),
-            _ => td.baseClasses.foreach(bc => ctx.mthDecls.get(bc.name).foreach(_.get(nme.name).foreach(ss(mt, _))))
+            _ => td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme.name).foreach(ss(mt, _, S(bn)))) }
           )
-          td.baseClasses.foreach { bc => 
-            ctx.mthDefs.get(bc.name).foreach(_.get(nme.name).foreach { bmt =>
-              if (!ctx.mthDecls.get(bc.name).exists(_.isDefinedAt(nme.name))) {
-                err(msg"Overiding method ${bc.name}.${nme.name} without explicit declaration is not allowed.", md.toLoc)
+          td.baseClasses.foreach { case Var(bn) => 
+            ctx.mthDefs.get(bn).foreach(_.get(nme.name).foreach { bmt =>
+              if (!ctx.mthDecls.get(bn).exists(_.isDefinedAt(nme.name))) {
+                err(msg"Overiding method ${bn}.${nme.name} without explicit declaration is not allowed.", md.toLoc)
                 ss(mt, bmt)
               }
             })
