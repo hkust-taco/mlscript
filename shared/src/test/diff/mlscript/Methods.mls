@@ -1,7 +1,3 @@
-//TODO: - Rewrite cases for Sel in typeTerm
-//      - ConstraintSolver.extrude TypeRef polarity
-
-
 class Foo[A, B]: { x: A; y: B }
     method Fun[C]: (A -> B -> C) -> (A -> B -> C)
 //│ Defined class Foo

@@ -660,38 +660,39 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val resTy = con(fun_ty, FunctionType(arg_ty, res)(prov), res)
         val raw_fun_ty = fun_ty.unwrapProxies
         resTy
-      // TODO: rewrite
-      case Sel(obj: Var, fieldName) if obj.name.headOption.exists(_.isUpper) && ctx.tyDefs.isDefinedAt(obj.name) && 
-          ctx.contains(s"${obj.name}.${fieldName.name}") =>
-        ctx.get(s"${obj.name}.${fieldName.name}").get.instantiate
-      case Sel(obj, fieldName) if fieldName.name.headOption.exists(_.isUpper) && 
-          ctx.contains(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name) =>
-        obj match {
-          case Var(name) if name.headOption.exists(_.isUpper) =>
-            err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-          case _ =>
-        }
-        val o_ty = typeTerm(obj)
-        val mtd_ty = ctx.get(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name).get
-        val res = freshVar(prov)
-        con(mtd_ty.instantiate, FunctionType(o_ty, res)(prov), res)
       case Sel(obj, fieldName) =>
-        obj match {
-          case Var(name) if name.headOption.exists(_.isUpper) =>
-            err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-          case _ =>
+        def rcdSel(obj: Term, fieldName: Var) = {
+          val o_ty = typeTerm(obj)
+          val res = freshVar(prov)
+          val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
+          con(obj_ty, RecordType.mk((fieldName, res) :: Nil)(prov), res)
         }
-        if (fieldName.name.headOption.exists(_.isUpper))
-          if (ctx.methodBase.isDefinedAt(fieldName.name))
-            err(msg"Implicit call of ${fieldName.name} is disabled" -> fieldName.toLoc ::
-              ctx.tyDefs.valuesIterator.filter(td => (td.mthDecls ++ td.mthDefs).exists(_.nme.name === fieldName.name))
-                .map { td => msg"Defined by ${td.nme}" -> td.nme.toLoc }.toList)
-          else
-            err(msg"Method ${fieldName.name} not found", term.toLoc)
-        val o_ty = typeTerm(obj)
-        val res = freshVar(prov)
-        val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType.mk((fieldName, res) :: Nil)(prov), res)
+        def mthCall(obj: Term, fieldName: Var) =
+          ctx.get(if (fieldName.name.contains('.')) fieldName.name else "." + fieldName.name) match {
+            case S(mth_ty) => 
+              val o_ty = typeTerm(obj)
+              val res = freshVar(prov)
+              con(mth_ty.instantiate, FunctionType(o_ty, res)(prov), res)
+            case N =>
+              if (fieldName.name.headOption.exists(_.isUpper))
+                if (ctx.methodBase.isDefinedAt(fieldName.name))
+                  err(msg"Implicit call of ${fieldName.name} is disabled" -> fieldName.toLoc ::
+                    ctx.tyDefs.valuesIterator.filter(td => (td.mthDecls ++ td.mthDefs).exists(_.nme.name === fieldName.name))
+                      .map { td => msg"Defined by ${td.nme}" -> td.nme.toLoc }.toList)
+                else
+                  err(msg"Method ${fieldName.name} not found", term.toLoc)
+              rcdSel(obj, fieldName)
+          }
+        obj match {
+          case Var(name) if name.headOption.exists(_.isUpper) && ctx.tyDefs.isDefinedAt(name) =>
+            ctx.get(s"${name}.${fieldName.name}") match {
+              case S(mth_ty) => mth_ty.instantiate
+              case N =>
+                err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
+                mthCall(obj, fieldName)
+            }
+          case _ => mthCall(obj, fieldName)
+        }
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme, rhs)
         val newCtx = ctx.nest
