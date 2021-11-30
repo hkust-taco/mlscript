@@ -41,7 +41,7 @@ def x = 1
 x
 def y = 2
 y
-def z = add x y
+def z = x + y
 //│ x: 1
 //│ res: 1
 //│ y: 2
