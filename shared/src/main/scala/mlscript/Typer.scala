@@ -121,6 +121,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
+    val intBinOpTy = fun(IntType, fun(IntType, IntType)(noProv))(noProv)
+    val intBinPred = fun(IntType, fun(IntType, BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
@@ -130,15 +132,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "succ" -> fun(IntType, IntType)(noProv),
       "log" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
       "discard" -> PolymorphicType(0, fun(tv, UnitType)(noProv)),
-      "add" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
-      "sub" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
-      "mul" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
-      "div" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
+      "add" -> intBinOpTy,
+      "sub" -> intBinOpTy,
+      "mul" -> intBinOpTy,
+      "div" -> intBinOpTy,
       "sqrt" -> fun(IntType, IntType)(noProv),
-      "lt" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
-      "le" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
-      "gt" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
-      "ge" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "lt" -> intBinPred,
+      "le" -> intBinPred,
+      "gt" -> intBinPred,
+      "ge" -> intBinPred,
       "concat" -> fun(StrType, fun(StrType, StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)
@@ -149,8 +151,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         PolymorphicType(0, fun(v, fun(v, BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
-      "+" -> fun(IntType, fun(IntType, IntType)(noProv))(noProv),
-      "<" -> fun(IntType, fun(IntType, BoolType)(noProv))(noProv),
+      "+" -> intBinOpTy,
+      "-" -> intBinOpTy,
+      "*" -> intBinOpTy,
+      "/" -> intBinOpTy,
+      "<" -> intBinPred,
+      ">" -> intBinPred,
+      "<=" -> intBinPred,
+      ">=" -> intBinPred,
+      "==" -> intBinPred,
+      "&&" -> fun(BoolType, fun(BoolType, BoolType)(noProv))(noProv),
+      "||" -> fun(BoolType, fun(BoolType, BoolType)(noProv))(noProv),
       "id" -> {
         val v = freshVar(noProv)(1)
         PolymorphicType(0, fun(v, v)(noProv))

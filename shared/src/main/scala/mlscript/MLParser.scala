@@ -4,6 +4,7 @@ import scala.util.chaining._
 import scala.collection.mutable
 import fastparse._, fastparse.ScalaWhitespace._
 import mlscript.utils._, shorthands._
+import mlscript.Lexer._
 
 // TODO: empty lines
 
@@ -59,11 +60,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
-  def withsAsc[_: P]: P[Term] = P( withs ~ (":" ~ ty).rep ).map {
-    // case (as, N) => as
+  def withsAsc[_: P]: P[Term] = P( withs ~ (":" ~/ ty).rep ).map {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)
   }
-  def withs[_: P]: P[Term] = P( apps ~ (kw("with") ~ record).rep ).map {
+  def withs[_: P]: P[Term] = P( binops ~ (kw("with") ~ record).rep ).map {
     case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(App)) )
@@ -78,6 +78,58 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   )
   def matchArms2[_: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
+  
+  private val prec: Map[Char,Int] = List(
+    ":",
+    "|",
+    "^",
+    "&",
+    "= !",
+    "< >",
+    "+ -",
+    "* / %",
+    ".",
+  ).zipWithIndex.flatMap {
+    case (cs,i) => cs.filterNot(_ == ' ').map(_ -> i)
+  }.toMap.withDefaultValue(Int.MaxValue)
+  def precedence(op: String): Int = prec(op.head) min prec(op.last)
+  
+  // Adapted from: https://github.com/databricks/sjsonnet/blob/master/sjsonnet/src/sjsonnet/Parser.scala#L136-L180
+  def binops[_: P]: P[Term] =
+    P(apps ~ (Index ~~ operator.! ~~ Index ~/ apps).rep ~ "").map { case (pre, fs) =>
+      var remaining = fs
+      def climb(minPrec: Int, current: Term): Term = {
+        var result = current
+        while (
+          remaining.headOption match {
+            case None => false
+            case Some((off0, op, off1, next)) =>
+              val prec: Int = precedence(op)
+              if (prec < minPrec) false
+              else {
+                remaining = remaining.tail
+                val rhs = climb(prec + 1, next)
+                result = App(App(Var(op).withLoc(off0, off1, origin), result), rhs)
+                true
+              }
+          }
+        )()
+        result
+      }
+      climb(0, pre)
+    }
+  def operator[_: P]: P[Unit] = P(
+    !symbolicKeywords ~~ (!StringIn("/*", "//") ~~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
+  ).opaque("operator")
+  def symbolicKeywords[_: P] = P{
+    StringIn(
+      "|",
+      "~",
+      ";", "=>", "=", "->", "<-",
+      ":",
+      "#", "@", "\\", "\u21d2", "\u2190"
+    ) ~~ !OpChar
+  }.opaque("symbolic keywords")
   
   def expr[_: P]: P[Term] = P( term ~ End )
   
