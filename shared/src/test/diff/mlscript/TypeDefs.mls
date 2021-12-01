@@ -3,7 +3,7 @@ class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: int & 'a} -> (test1 & {x: 'a})
+//│ res: {x: int & 'x} -> (test1 & {x: 'x})
 
 Test1 { x = 123 }
 //│ res: test1 & {x: 123}
@@ -16,7 +16,7 @@ Test1 { x = "oops" }
 //│ ╟── expression of type `"oops"` does not match type `int`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
-//│ ╟── but it flows into record literal with expected type `{x: int & ?a}`
+//│ ╟── but it flows into record literal with expected type `{x: int & ?x}`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	      ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -41,7 +41,7 @@ type Test1 = { x: int }
 
 // FIXME
 type Test2 = { x: int }
-//│ Defined type Test2
+//│ Defined type alias Test2
 
 :pe
 class Test = { x: int }
@@ -53,19 +53,19 @@ type Test: { x: int }
 
 // FIXME
 type Test3 = int -> int
-//│ Defined type Test3
+//│ Defined type alias Test3
 
 // FIXME
 type Test4 = int -> int -> int
-//│ Defined type Test4
+//│ Defined type alias Test4
 
 // FIXME
 type Test5 = (int -> int) -> int
-//│ Defined type Test5
+//│ Defined type alias Test5
 
 
 type T = int
-//│ Defined type T
+//│ Defined type alias T
 
 :e
 type T = int
@@ -82,7 +82,7 @@ type TypeA = int
 foo 42
 def foo = 1
 foo 42
-//│ Defined type TypeA
+//│ Defined type alias TypeA
 //│ ╔══[ERROR] identifier not found: foo
 //│ ║  l.82: 	foo 42
 //│ ╙──      	^^^
@@ -111,8 +111,8 @@ type TypeC = TypeA
 //│ ╔══[ERROR] illegal cycle involving type TypeOops
 //│ ║  l.106: 	type TypeOops = TypeOops
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
-//│ Defined type TypeB
-//│ Defined type TypeC
+//│ Defined type alias TypeB
+//│ Defined type alias TypeC
 //│ test: int -> int
 //│ res: int
 
@@ -126,7 +126,7 @@ def test = fun (x: TypeB) -> x
 // Note: type alias definitions can contain type variables,
 //   which are refreshed on every use (every expansion) of the alias
 type Lol = { x: 'a -> 'a }
-//│ Defined type Lol
+//│ Defined type alias Lol
 
 error: Lol -> Lol
 //│ res: {x: 'a -> 'a} -> {x: 'a0 -> 'a0}
@@ -143,13 +143,13 @@ type Runaway[A] = Runaway['a]
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
-//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['a]
+//│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
 //│ ║  l.145: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 type Runaway2 = Lol -> Runaway2
-//│ Defined type Runaway2
+//│ Defined type alias Runaway2
 
 :e
 id: Runaway2

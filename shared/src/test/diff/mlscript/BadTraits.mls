@@ -72,7 +72,7 @@ t: nothing
 //│ res: nothing
 
 type Als = A & B
-//│ Defined type Als
+//│ Defined type alias Als
 
 t: Als
 //│ res: nothing

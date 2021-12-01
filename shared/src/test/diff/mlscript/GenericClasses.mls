@@ -15,7 +15,7 @@ Some 42
 //│ res: 42
 
 type Option[A] = Some[A] | None
-//│ Defined type Option
+//│ Defined type alias Option
 
 None: Option[int]
 Some 42 : Option[int]

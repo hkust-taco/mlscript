@@ -79,6 +79,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   import TypeProvenance.{apply => tp}
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
+  def originProv(loco: Opt[Loc], desc: Str): TypeProvenance = {
+    // TODO make a new sort of provenance for where types and type varianles are defined
+    // tp(loco, desc)
+    // ^ This yields unnatural errors like:
+      //│ ╟── expression of type `B` is not a function
+      //│ ║  l.6: 	    method Map[B]: B -> A
+      //│ ║       	               ^
+    // So we should keep the info but not shadow the more relevant later provenances
+    noProv
+  }
   
   val noProv: TypeProvenance = tp(N, "expression")
   
@@ -210,7 +220,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val targsApp = targsAppOf(td)(ctx, raise, S((tn, N)))
           td.baseClasses.flatMap { case Var(bn) => ctx.getTargsMaps(bn, N).map(bn -> _) }.map { case bn -> m =>
             bn -> m.map[SimpleType, SimpleType] {
-              case targ -> (tv: TypeVariable) => tv -> targsApp(bn).getOrElse(targ, freshVar(noProv)(tv.level))
+              case targ -> (tv: TypeVariable) => tv -> targsApp(bn).getOrElse(targ,
+                freshVar(noProv)(tv.level)) // Q: Is this `freshVar` legit? Seems it should never happen
               case _ => die
             }
           }.toMap
@@ -223,7 +234,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-        val dummyTargs = td.tparams.map(p => freshVar(noProv/*TODO*/)(ctx.lvl + 1))
+        val dummyTargs = td.tparams.map(p =>
+          freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter"), S(p.name))(ctx.lvl + 1))
         ctx.targsMaps += n.name -> MutMap(N -> td.tparams.map(_.name).zip(dummyTargs).toMap)
         val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, S((n.name, N)))
         var fields = SortedMap.empty[Var, SimpleType]
@@ -296,14 +308,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) && {
               val ctor = k match {
                 case Cls =>
-                  val nomTag = clsNameToNomTag(td)(noProv/*FIXME*/, ctx)
-                  val fieldsRefined = RecordType(fields.iterator.map(f => f._1 -> freshVar(noProv)(1).tap(_.upperBounds ::= f._2)).toList)(noProv)
-                  PolymorphicType(0, FunctionType(fieldsRefined, nomTag & fieldsRefined)(noProv/*FIXME*/))
+                  val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class"), ctx)
+                  val fieldsRefined = RecordType(fields.iterator.map(f =>
+                      f._1 -> freshVar(noProv, S(f._1.name))(1).tap(_.upperBounds ::= f._2)
+                    ).toList)(noProv)
+                  PolymorphicType(0, FunctionType(fieldsRefined, nomTag & fieldsRefined)(
+                    originProv(td.nme.toLoc, "class constructor")))
                 case Trt =>
-                  val nomTag = trtNameToNomTag(td)(noProv/*FIXME*/, ctx)
+                  val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait"), ctx)
                   val tv = freshVar(noProv)(1)
                   tv.upperBounds ::= body_ty
-                  PolymorphicType(0, FunctionType(tv, tv & nomTag)(noProv/*FIXME*/))
+                  PolymorphicType(0, FunctionType(tv, tv & nomTag)(originProv(td.nme.toLoc, "trait constructor")))
               }
               ctx += n.name -> ctor
               true
@@ -317,9 +332,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               if (defn.nme === td.nme && tys =/= targs) {
                 if (defn.nme.name === td.nme.name)
                   err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr, true).show
+                    expandType(tr, true).show
                   }, but is defined as ${
-                  expandType(TypeRef(defn, dummyTargs)(noProv, ctx), true).show
+                    expandType(TypeRef(defn, dummyTargs)(noProv, ctx), true).show
                   }", td.toLoc)(raise, noProv)
                 false
               } else true
@@ -359,7 +374,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           if (!ctx.targsMaps(tn.name).isDefinedAt(S(nme.name))) {
-            val dummyTargs2 = tparams.map(p => freshVar(noProv/*TODO*/, S(p.name))(ctx.lvl + 2))
+            val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
             ctx.targsMaps(tn.name) += S(nme.name) -> tparams.map(_.name).zip(dummyTargs2).toMap
           }
           if (!nme.name.head.isUpper)
@@ -486,24 +501,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               err(msg"Type $name takes parameters", ty.toLoc)(raise, tpr)
               N
             } else S(TypeRef(td, Nil)(tpr, ctx))
-          ) getOrElse freshVar(noProv) // TODO use ty's prov
+          ) getOrElse errType(noProv)
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil, tv.identifier.toOption)(noProv))
           .withProv(tp(ty.toLoc, "type variable"))
-      case AppliedType(base, targs) => typeNamed(ty, base.name) match {
-        case Some(td) =>
-          val tpnum = td.tparams.size
-          val realTargs = if (targs.size === tpnum) targs.map(rec) else {
-            err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${targs.size.toString}",
-              ty.toLoc)(raise, noProv /*FIXME*/);
-            (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv)))
-              .take(tpnum).toList
-          }
-          TypeRef(td,
-            realTargs)(tp(ty.toLoc, "applied type reference"), ctx)
-        case None => errType(noProv)
-      }
+      case AppliedType(base, targs) =>
+        val prov = tp(ty.toLoc, "applied type reference")
+        typeNamed(ty, base.name) match {
+          case Some(td) =>
+            val tpnum = td.tparams.size
+            val realTargs = if (targs.size === tpnum) targs.map(rec) else {
+              err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${
+                  targs.size.toString}", ty.toLoc)(raise, prov)
+              (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv))).take(tpnum).toList
+            }
+            TypeRef(td, realTargs)(prov, ctx)
+          case None => errType(noProv)
+        }
       case Recursive(uv, body) => ??? // TODO
       case Rem(base, fs) => Without(rec(base), fs
         .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov

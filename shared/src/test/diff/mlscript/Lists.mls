@@ -4,10 +4,10 @@ class Cons[A]: { head: A; tail: List[A] }
 type List[A] = Nil | Cons[A]
 //│ Defined class Nil
 //│ Defined class Cons
-//│ Defined type List
+//│ Defined type alias List
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
-//│ originalCons: {head: 'a, tail: nil & 'b | (cons & {head: anything, tail: 'd & (nil | 'c)} as 'c) & 'b} -> (cons & {head: 'a, tail: 'b})
+//│ originalCons: {head: 'head, tail: nil & 'tail | (cons & {head: anything, tail: 'b & (nil | 'a)} as 'a) & 'tail} -> (cons & {head: 'head, tail: 'tail})
 
 def Nil = Nil {}
 //│ Nil: nil
@@ -84,10 +84,10 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	Cons 1 res
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `2` does not match type `nil | cons & {head: ?b, tail: ?a} as ?a`
+//│ ╟── expression of type `2` does not match type `nil | cons & {head: ?A, tail: ?a} as ?a`
 //│ ║  l.76: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `nil | cons & {head: ?d, tail: ?c} as ?c`
+//│ ╟── but it flows into reference with expected type `nil | cons & {head: ?A0, tail: ?b} as ?b`
 //│ ║  l.83: 	Cons 1 res
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from union type:

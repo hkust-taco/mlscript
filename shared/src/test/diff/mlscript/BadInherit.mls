@@ -13,7 +13,7 @@ class Child: Parent1 & Parent2
 
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
-//│ Defined type Child
+//│ Defined type alias Child
 //│ Child: nothing -> nothing
 
 def f(x:Child) = x.name
@@ -31,7 +31,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent1 & {name: ?a | "A"}` does not match type `parent2`
+//│ ╟── expression of type `parent1 & {name: ?name | "A"}` does not match type `parent2`
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -45,7 +45,7 @@ class Child2: Parent1 & Sly1
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.44: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type Sly1
+//│ Defined type alias Sly1
 
 :e
 type Sly2[A] = A
@@ -53,7 +53,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.52: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type Sly2
+//│ Defined type alias Sly2
 
 :e
 class Crazy[A]: A & { name: A }
@@ -139,7 +139,7 @@ c: Cycle1
 
 
 type N[A] = ~A
-//│ Defined type N
+//│ Defined type alias N
 
 :e
 class Cycle: N[Cycle]
@@ -206,7 +206,7 @@ class B: Id[A]
 //│ ║  l.204: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
-//│ Defined type Id
+//│ Defined type alias Id
 
 
 :e // TODO improve prov of the TV

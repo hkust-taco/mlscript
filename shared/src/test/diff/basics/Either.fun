@@ -4,12 +4,12 @@ data type Either l r of
   Left l
   Right r
 //│ Parsed: data type ((Either l) r) of (Left l); (Right r);;
-//│ Desugared: type Either[l, r] = Left[l, r] | Right[l, r]
+//│ Desugared: type alias Either[l, r] = Left[l, r] | Right[l, r]
 //│ Desugared: class Left[l, r]: {l: l}
 //│ Desugared: class Right[l, r]: {r: r}
 //│ Desugared: def Left: [l, r] -> l -> Left[l, r]
 //│ Desugared: def Right: [l, r] -> r -> Right[l, r]
-//│ Defined type Either
+//│ Defined type alias Either
 //│ Defined class Left
 //│ Defined class Right
 //│ Left: 'a -> (left & {l: 'a})
@@ -31,7 +31,7 @@ data type Either2 (l: _) (r: _) of
 //│ ╔══[ERROR] type identifier not found: r
 //│ ║  l.21: 	  Right2 r
 //│ ╙──      	         ^
-//│ Defined type Either2
+//│ Defined type alias Either2
 //│ Defined class Left2
 //│ Defined class Right2
 //│ Left2: 'a -> (left2 & {l: 'a})

@@ -92,7 +92,7 @@ test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?a | "oops"} & ~?b | c2 & {default: ?a | "oops"} & myTrait` does not match type `{value: ?c}`
+//│ ╟── expression of type `c2 & {default: ?default | "oops"} & ~?a | c2 & {default: ?default | "oops"} & myTrait` does not match type `{value: ?b}`
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -112,10 +112,10 @@ test2 c2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.111: 	test2 c2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?a | "oops"} & ~?b | c2 & {default: ?a | "oops"} & myTrait` does not match type `{value: ?c}`
+//│ ╟── expression of type `c2 & {default: ?default | "oops"} & ~?a | c2 & {default: ?default | "oops"} & myTrait` does not match type `{value: ?b}`
 //│ ║  l.107: 	def c2 = C2 { value = 1; default = "oops" }
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{value: ?d} & myTrait & ?e | {default: ?f} & ?g & ~myTrait`
+//│ ╟── but it flows into reference with expected type `{value: ?c} & myTrait & ?d | {default: ?e} & ?f & ~myTrait`
 //│ ║  l.111: 	test2 c2
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from field selection:

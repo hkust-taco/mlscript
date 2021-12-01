@@ -31,7 +31,7 @@ class Lit: {v: int}
 class Neg: {sub: Expr}
 class Var: {nme: string}
 class Plus: {lhs: Expr; rhs: Expr}
-//│ Defined type Expr
+//│ Defined type alias Expr
 //│ Defined class Lit
 //│ Defined class Neg
 //│ Defined class Var

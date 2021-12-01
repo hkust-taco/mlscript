@@ -10,7 +10,7 @@ class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
 type List[A] = Nil | Cons[A]
 //│ Defined class Nil
 //│ Defined class Cons
-//│ Defined type List
+//│ Defined type alias List
 
 :e
 Nil{}
@@ -30,19 +30,19 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?a & ?b, size: int & ?c, tail: nil & {size: int} & ?d | (cons & {size: int, head: ?b, tail: ?f & (nil & {size: int} | ?e)} as ?e) & ?d}`
+//│ ╟── expression of type `1` does not match type `{head: ?head & ?A, size: int & ?size, tail: nil & {size: int} & ?tail | (cons & {size: int, head: ?A, tail: ?b & (nil & {size: int} | ?a)} as ?a) & ?tail}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `cons & {size: ?a, head: ?b, tail: ?c}` does not match type `(?d | nil & {size: ?e | 0}) -> ?f`
+//│ ╟── expression of type `cons & {size: ?size, head: ?head, tail: ?tail}` does not match type `(?a | nil & {size: ?size0 | 0}) -> ?b`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 
 Cons
-//│ res: {head: 'a, size: int & 'b, tail: nil & {size: int} & 'c | (cons & {size: int, head: anything, tail: 'e & (nil & {size: int} | 'd)} as 'd) & 'c} -> (cons & {size: 'b, head: 'a, tail: 'c})
+//│ res: {head: 'head, size: int & 'size, tail: nil & {size: int} & 'tail | (cons & {size: int, head: anything, tail: 'b & (nil & {size: int} | 'a)} as 'a) & 'tail} -> (cons & {size: 'size, head: 'head, tail: 'tail})
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =

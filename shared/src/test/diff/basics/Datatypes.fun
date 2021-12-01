@@ -2,12 +2,12 @@
 :p
 data type Boolean of True, False
 //│ Parsed: data type Boolean of True; False;;
-//│ Desugared: type Boolean = True[] | False[]
+//│ Desugared: type alias Boolean = True[] | False[]
 //│ Desugared: class True: {}
 //│ Desugared: class False: {}
 //│ Desugared: def True: [] -> True[]
 //│ Desugared: def False: [] -> False[]
-//│ Defined type Boolean
+//│ Defined type alias Boolean
 //│ Defined class True
 //│ Defined class False
 //│ True: true
@@ -24,7 +24,7 @@ Boolean
 :e
 data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of ((& True2) False2);;
-//│ Desugared: type Bool2 = &[True2, False2]
+//│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2: False2, True2: True2}
 //│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
 //│ ╔══[ERROR] Type names must start with a capital letter
@@ -60,13 +60,13 @@ data type Bool2 of True2 & False2
 //│ ╔══[ERROR] type identifier not found: False2
 //│ ║  l.25: 	data type Bool2 of True2 & False2
 //│ ╙──      	                           ^^^^^^
-//│ Defined type Bool2
+//│ Defined type alias Bool2
 //│ Defined class &
 //│ &: 'a -> 'b -> (& & {True2: 'a, False2: 'b})
 
 data type Bool3 of
   True3; False3
-//│ Defined type Bool3
+//│ Defined type alias Bool3
 //│ Defined class True3
 //│ Defined class False3
 //│ True3: true3
@@ -75,7 +75,7 @@ data type Bool3 of
 data type Bool4 of
   True4
   False4
-//│ Defined type Bool4
+//│ Defined type alias Bool4
 //│ Defined class True4
 //│ Defined class False4
 //│ True4: true4
@@ -128,12 +128,12 @@ data type List a of
   Nil
   Cons (head: a) (tail: List a)
 //│ Parsed: data type (List a) of Nil; ((Cons ((head: a,);)) ((tail: (List a),);));;
-//│ Desugared: type List[a] = Nil[a] | Cons[a]
+//│ Desugared: type alias List[a] = Nil[a] | Cons[a]
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
 //│ Desugared: def Nil: [a] -> Nil[a]
 //│ Desugared: def Cons: [a] -> (head: a,) -> (tail: List[a],) -> Cons[a]
-//│ Defined type List
+//│ Defined type alias List
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: nil
@@ -143,7 +143,7 @@ data type List a of
 :p
 data type Ls of LsA a
 //│ Parsed: data type Ls of (LsA a);;
-//│ Desugared: type Ls = LsA[a]
+//│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
 //│ Desugared: def LsA: [a] -> a -> LsA[a]
 //│ ╔══[ERROR] type identifier not found: a
@@ -152,17 +152,17 @@ data type Ls of LsA a
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.144: 	data type Ls of LsA a
 //│ ╙──       	                    ^
-//│ Defined type Ls
+//│ Defined type alias Ls
 //│ Defined class LsA
 //│ LsA: 'a -> (lsA & {a: 'a})
 
 :p
 data type Ls2 of LsA2 `a
 //│ Parsed: data type Ls2 of (LsA2 `a);;
-//│ Desugared: type Ls2 = LsA2[]
+//│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
 //│ Desugared: def LsA2: [] -> 'a -> LsA2[]
-//│ Defined type Ls2
+//│ Defined type alias Ls2
 //│ Defined class LsA2
 //│ LsA2: anything -> (lsA2 & {`a: nothing})
 

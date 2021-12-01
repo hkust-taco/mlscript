@@ -27,7 +27,7 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {x: 0 & 'a | 1 & 'a, y: string & 'b} -> (d & {y: 'b, x: 'a})
+//│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (d & {y: 'y, x: 'x})
 
 error: A & B
 //│ res: {y: string, x: int} & a & b
@@ -37,7 +37,7 @@ def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.36: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: string & ?b}`
+//│ ╟── expression of type `anything` does not match type `{x: 0 & ?x | 1 & ?x, y: string & ?y}`
 //│ ║  l.36: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: d & {y: nothing, x: nothing} | error
@@ -50,7 +50,7 @@ dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.49: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `d & {y: ?a | "hello", x: ?b | 0}` does not match type `nothing`
+//│ ╟── expression of type `d & {y: ?y | "hello", x: ?x | 0}` does not match type `nothing`
 //│ ║  l.45: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -137,7 +137,7 @@ def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
-//│ ╟── expression of type `anything` does not match type `{x: 0 & ?a | 1 & ?a, y: "hi" & ?b | "hello" & ?b}`
+//│ ╟── expression of type `anything` does not match type `{x: 0 & ?x | 1 & ?x, y: "hi" & ?y | "hello" & ?y}`
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: c1 & {y: nothing, x: nothing} | error
