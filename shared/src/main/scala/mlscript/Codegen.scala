@@ -416,11 +416,22 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
+abstract class JSClassMemberDecl extends JSStmt;
+
+final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
+  def toSourceCode: SourceCode =
+    SourceCode.from(s"get $name() ") ++ (body match {
+      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Right(stmts) =>
+        stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
+    }).block
+}
+
 final case class JSClassMethod(
     name: Str,
     params: Ls[Str],
     body: JSExpr \/ Ls[JSStmt]
-) extends JSStmt {
+) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode.from(name) ++
       SourceCode.from(params mkString ", ").parenthesized ++
@@ -431,7 +442,7 @@ final case class JSClassMethod(
       }).block
 }
 
-final case class JSClassMember(name: Str, body: JSExpr) extends JSStmt {
+final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode.from(name) ++ SourceCode.from(" = ") ++ body.toSourceCode ++ SourceCode.semicolon
 }
@@ -440,7 +451,7 @@ final case class JSClassDecl(
     val name: Str,
     fields: Ls[Str],
     base: Opt[JSClassDecl] = N,
-    methods: Ls[JSClassMethod \/ JSClassMember] = Nil
+    methods: Ls[JSClassMemberDecl] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val ctor = SourceCode.fromLines(
@@ -453,10 +464,7 @@ final case class JSClassDecl(
       }) concat "  }" :: Nil
     )
     val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
-      x + (y match {
-        case L(method) => method.toSourceCode
-        case R(member) => member.toSourceCode
-      }).indented
+      x + y.toSourceCode.indented
     }
     val epilogue = SourceCode.fromLines("}" :: Nil)
     base match {

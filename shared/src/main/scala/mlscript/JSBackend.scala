@@ -185,7 +185,13 @@ class JSBackend {
             tparams zip targs map { case (k, v) => k -> v }: _*
           )
         )
-      case N => throw new Error(s"type $name is not defined")
+      case N => 
+        if (classNames contains name) {
+          // For classes with type parameters, we just erase the type parameters.
+          TypeName(name)
+        } else {
+          throw new Error(s"type $name is not defined")
+        }
     }
 
   // This function normalizes a type, removing all `AppliedType`s.
@@ -315,11 +321,11 @@ class JSBackend {
 
   def translateClassMember(
       method: MethodDef[Left[Term, Type]]
-  ): JSClassMethod \/ JSClassMember = {
+  ): JSClassMemberDecl = {
     val name = method.nme.name
     method.rhs.value match {
-      case Lam(Var(param), rhs) => L(JSClassMethod(name, param :: Nil, L(translateTerm(rhs))))
-      case term                 => R(JSClassMember(name, translateTerm(term)))
+      case Lam(Var(param), rhs) => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
+      case term                 => JSClassGetter(name, L(translateTerm(term)))
     }
   }
 
