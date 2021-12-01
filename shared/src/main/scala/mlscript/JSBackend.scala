@@ -141,7 +141,10 @@ class JSBackend {
     }
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
-    case _             => throw new Error(s"cannot generate code for term $term")
+    // `Asc(x, ty)` <== `x: Type`
+    case Asc(trm, _) => translateTerm(trm)
+    case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
+      throw new Error(s"cannot generate code for term $term")
   }
 
   // Translate consecutive case branches into a list of if statements.
@@ -185,7 +188,7 @@ class JSBackend {
             tparams zip targs map { case (k, v) => k -> v }: _*
           )
         )
-      case N => 
+      case N =>
         if (classNames contains name) {
           // For classes with type parameters, we just erase the type parameters.
           TypeName(name)
@@ -324,8 +327,9 @@ class JSBackend {
   ): JSClassMemberDecl = {
     val name = method.nme.name
     method.rhs.value match {
-      case Lam(Var(param), rhs) => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
-      case term                 => JSClassGetter(name, L(translateTerm(term)))
+      case Lam(Var(param), rhs)         => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
+      case Lam(Asc(Var(param), _), rhs) => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
+      case term                         => JSClassGetter(name, L(translateTerm(term)))
     }
   }
 
@@ -434,7 +438,7 @@ object JSBackend {
     case App(lhs, rhs)               => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
     case Tup(fields)                 => s"Tup(...)"
     case Rcd(fields)                 => s"Rcd(...)"
-    case Sel(receiver, fieldName)    => s"Sel()"
+    case Sel(receiver, fieldName)    => s"Sel(${inspectTerm(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
     case Blk(stmts)                  => s"Blk(...)"
     case Bra(rcd, trm)               => s"Bra(...)"
