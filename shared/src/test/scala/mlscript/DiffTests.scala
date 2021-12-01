@@ -218,12 +218,6 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             val oldCtx = ctx
             ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
             
-            typeDefs.foreach(td =>
-              if (ctx.tyDefs.contains(td.nme.name)
-                  && !oldCtx.tyDefs.contains(td.nme.name))
-                  // ^ it may not end up being defined if there's an error
-                output(s"Defined " + td.kind.str + " " + td.nme.name))
-            
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.instantiate(0)
               if (mode.dbg) output(s"Typed as: $wty")
@@ -252,11 +246,26 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             }
             
+            typeDefs.foreach(td =>
+              if (ctx.tyDefs.contains(td.nme.name)
+                  && !oldCtx.tyDefs.contains(td.nme.name)) {
+                  // ^ it may not end up being defined if there's an error
+                output(s"Defined " + td.kind.str + " " + td.nme.name)
+                val ttd = ctx.tyDefs(td.nme.name)
+                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, nme, tps, rhs) =>
+                  val fullName = td.nme.name + "." + nme.name
+                  val mty = ctx.env(fullName)
+                  val res = getType(mty.instantiate(0))
+                  output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${fullName}: ${res.show}")
+                }
+              }
+            )
+            
             stmts.foreach {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
-                    tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                    vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
                 ctx += nme -> ty_sch
                 declared += nme -> ty_sch
                 val exp = getType(ty_sch)

@@ -1,0 +1,333 @@
+:AllowTypeErrors
+
+class Foo[A]: { x: A }
+    method Map[B]: (A -> B) -> A
+class Bar[A]: Foo[A]
+    method Map[B]: B -> A
+    rec method Map f = f Map (fun x -> Map)
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
+//│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `_α33` is not a function
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
+//│ ╙──     	                       ^^^^^
+//│ Defined class Foo
+//│ Declared Foo.Map: foo & {x: 'a} -> ('a -> anything) -> 'a
+//│ Defined class Bar
+//│ Declared Bar.Map: bar & {x: anything} -> (('a -> (anything -> 'a) -> 'b) -> 'b) as 'a
+//│ Defined Bar.Map: bar & {x: anything} -> (('a -> (anything -> 'a) -> 'b) -> 'b) as 'a
+
+Foo.Map
+Bar.Map
+//│ res: foo & {x: 'a} -> ('a -> anything) -> 'a
+//│ res: bar & {x: anything} -> (('a -> (anything -> 'a) -> 'b) -> 'b) as 'a
+
+
+
+
+class bar[A, B]: Foo[A] & { Y: B; z: int }
+    method identity z = z
+    method identity z = z
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.29: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	      ^^^
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.29: 	class bar[A, B]: Foo[A] & { Y: B; z: int }
+//│ ╙──      	                            ^
+//│ ╔══[ERROR] Method names must start with a capital letter
+//│ ║  l.30: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] Method names must start with a capital letter
+//│ ║  l.31: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ ╔══[ERROR] Method 'bar.identity' is already defined.
+//│ ║  l.31: 	    method identity z = z
+//│ ╙──      	           ^^^^^^^^
+//│ Defined class bar
+//│ Defined bar.identity: bar & {Y: anything, z: int, x: anything} -> 'a -> 'a
+//│ Defined bar.identity: bar & {Y: anything, z: int, x: anything} -> 'a -> 'a
+
+
+
+
+class ImplicitCall[A]: { x: A }
+    method Fun = this.x
+//│ Defined class ImplicitCall
+//│ Defined ImplicitCall.Fun: implicitCall & {x: 'a} -> 'a
+
+i = ImplicitCall { x = "stonks" }
+i.Fun
+//│ i: implicitCall & {x: "stonks"}
+//│ res: "stonks"
+
+class NoMoreImplicitCall
+    method Fun = "not stonks"
+//│ Defined class NoMoreImplicitCall
+//│ Defined NoMoreImplicitCall.Fun: noMoreImplicitCall -> "not stonks"
+
+i.Fun
+//│ ╔══[ERROR] Implicit call to method Fun is forbidden because it is ambiguous.
+//│ ║  l.69: 	i.Fun
+//│ ║        	^^^^^
+//│ ╟── Unrelated methods named Fun are defined by:
+//│ ╟── • class ImplicitCall
+//│ ║  l.54: 	class ImplicitCall[A]: { x: A }
+//│ ║        	      ^^^^^^^^^^^^
+//│ ╟── • class NoMoreImplicitCall
+//│ ║  l.64: 	class NoMoreImplicitCall
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^
+//│ res: error
+
+
+
+
+def this = fun x -> fun y -> add x y
+this 42 42
+//│ this: int -> int -> int
+//│ res: int
+
+class BadThis: { x: int; y: int }
+    method Sum = this this.x this.y
+    method Funny = this 42 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.91: 	    method Sum = this this.x this.y
+//│ ║        	                 ^^^^^^^^^^^
+//│ ╟── expression of type `badThis & {y: int, x: int}` does not match type `?a | int -> ?b`
+//│ ║  l.90: 	class BadThis: { x: int; y: int }
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?c | int -> ?d`
+//│ ║  l.91: 	    method Sum = this this.x this.y
+//│ ╙──      	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.92: 	    method Funny = this 42 42
+//│ ║        	                   ^^^^^^^
+//│ ╟── expression of type `badThis & {y: int, x: int}` does not match type `42 -> ?a`
+//│ ║  l.90: 	class BadThis: { x: int; y: int }
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `42 -> ?b`
+//│ ║  l.92: 	    method Funny = this 42 42
+//│ ╙──      	                   ^^^^
+//│ Defined class BadThis
+//│ Defined BadThis.Sum: badThis & {y: int, x: int} -> error
+//│ Defined BadThis.Funny: badThis & {y: int, x: int} -> error
+
+
+
+
+class BadSelf[A]: { x: A }
+    method F = this.x 42
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	    method F = this.x 42
+//│ ║         	               ^^^^^^^^^
+//│ ╟── expression of type `_α212` is not a function
+//│ ║  l.119: 	    method F = this.x 42
+//│ ╙──       	               ^^^^^^
+//│ Defined class BadSelf
+//│ Defined BadSelf.F: badSelf & {x: anything} -> error
+
+c = BadSelf { x = fun x -> x }
+c.F
+//│ c: badSelf & {x: 'a -> 'a}
+//│ res: error
+
+
+
+
+class Simple2[A]: { a: A }
+    method Get: A
+//│ Defined class Simple2
+//│ Declared Simple2.Get: simple2 & {a: 'a} -> 'a
+
+class Simple3[A, B]: Simple2[A]
+    method Get: B
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.143: 	    method Get: B
+//│ ║         	           ^^^^^^
+//│ ╙── expression of type `_α258` does not match type `_α257`
+//│ Defined class Simple3
+//│ Declared Simple3.Get: simple3 & {a: anything} -> nothing
+
+
+
+
+class AbstractPair[A, B]: { x: A; y: B }
+    method Test: (A -> B -> bool) -> bool
+    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ Defined class AbstractPair
+//│ Declared AbstractPair.Test: abstractPair & {y: 'a, x: 'b} -> ('b -> 'a -> bool) -> bool
+//│ Declared AbstractPair.Map: abstractPair & {y: 'a, x: 'b} -> ('b -> 'c) -> ('a -> 'd) -> abstractPair & {y: 'd, x: 'c}
+
+class BadPair[A, B]: AbstractPair[A, B]
+    method Test f = f this.x this.x
+    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.162: 	    method Test f = f this.x this.x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `_α337` does not match type `_α338`
+//│ ║  l.162: 	    method Test f = f this.x this.x
+//│ ╙──       	                             ^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `_α367` does not match type `_α368`
+//│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into function of type `?a -> ?b | badPair & {y: ?c | _α367, x: ?d | _α367}`
+//│ ║  l.163: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which does not match type `(_α338 -> _α368) -> abstractPair & {y: _α368, x: _α367}`
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.154: 	class AbstractPair[A, B]: { x: A; y: B }
+//│ ║         	                          ^^^^^^^^^^^^^^
+//│ ╟── from applied type reference:
+//│ ║  l.156: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
+//│ Defined class BadPair
+//│ Defined BadPair.Test: badPair & {y: anything, x: 'a} -> ('a -> 'a -> 'b) -> 'b
+//│ Defined BadPair.Map: badPair & {y: anything, x: 'a} -> ('a -> 'b) -> anything -> badPair & {y: 'b, x: 'b}
+
+bp = BadPair { x = 42; y = true }
+bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ bp: badPair & {y: true, x: 42}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.191: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `42` does not match type `bool`
+//│ ║  l.190: 	bp = BadPair { x = 42; y = true }
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.191: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ ╙──       	                                         ^
+//│ res: 42 | error
+
+BadPair = BadPair { x = 42; y = 0 }
+BadPair.Map
+BadPair.(BadPair.Map)
+//│ BadPair: badPair & {y: 0, x: 42}
+//│ res: badPair & {y: anything, x: 'a} -> ('a -> 'b) -> anything -> badPair & {y: 'b, x: 'b}
+//│ ╔══[ERROR] Class BadPair has no method BadPair.Map
+//│ ║  l.206: 	BadPair.(BadPair.Map)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ res: (42 -> 'a) -> anything -> badPair & {y: 'a, x: 'a}
+
+
+class ClassA
+    method MtdA = 42
+//│ Defined class ClassA
+//│ Defined ClassA.MtdA: classA -> 42
+
+:e
+class ClassB: ClassA
+    method MtdA = 43
+//│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
+//│ ║  l.222: 	    method MtdA = 43
+//│ ╙──       	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.222: 	    method MtdA = 43
+//│ ║         	           ^^^^^^^^^
+//│ ╟── expression of type `43` does not match type `42`
+//│ ║  l.222: 	    method MtdA = 43
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.216: 	    method MtdA = 42
+//│ ╙──       	                  ^^
+//│ Defined class ClassB
+//│ Defined ClassB.MtdA: classB -> 43
+
+:e
+class ClassC: ClassA
+    method MtdA: int
+    method MtdA = 43
+//│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
+//│ ║  l.240: 	    method MtdA: int
+//│ ╙──       	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.240: 	    method MtdA: int
+//│ ║         	           ^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `42`
+//│ ║  l.240: 	    method MtdA: int
+//│ ║         	                 ^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.216: 	    method MtdA = 42
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
+//│ ║  l.241: 	    method MtdA = 43
+//│ ╙──       	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.241: 	    method MtdA = 43
+//│ ║         	           ^^^^^^^^^
+//│ ╟── expression of type `43` does not match type `42`
+//│ ║  l.241: 	    method MtdA = 43
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.216: 	    method MtdA = 42
+//│ ╙──       	                  ^^
+//│ Defined class ClassC
+//│ Declared ClassC.MtdA: classC -> 43
+//│ Defined ClassC.MtdA: classC -> 43
+
+:e
+class ClassD: ClassA
+    method MtdA: int
+class ClassE: ClassD
+    method MtdA = 43
+//│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
+//│ ║  l.272: 	    method MtdA: int
+//│ ╙──       	           ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.272: 	    method MtdA: int
+//│ ║         	           ^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `42`
+//│ ║  l.272: 	    method MtdA: int
+//│ ║         	                 ^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.216: 	    method MtdA = 42
+//│ ╙──       	                  ^^
+//│ Defined class ClassD
+//│ Declared ClassD.MtdA: classD -> 42
+//│ Defined class ClassE
+//│ Defined ClassE.MtdA: classE -> 43
+
+(ClassE{}).MtdA // typed as 42!
+//│ res: 42
+
+
+:e
+class Class2A[A]
+    method MtdA: A
+trait Trait2A[B]
+    method MtdA: B
+class Class2B: Class2A[int] & Trait2A[string]
+    method MtdA = "ok"
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.302: 	    method MtdA = "ok"
+//│ ║         	           ^^^^^^^^^^^
+//│ ╟── expression of type `"ok"` does not match type `int`
+//│ ║  l.302: 	    method MtdA = "ok"
+//│ ║         	                  ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.301: 	class Class2B: Class2A[int] & Trait2A[string]
+//│ ╙──       	                       ^^^
+//│ Defined class Class2A
+//│ Declared Class2A.MtdA: class2A -> nothing
+//│ Defined trait Trait2A
+//│ Declared Trait2A.MtdA: trait2A -> nothing
+//│ Defined class Class2B
+//│ Defined Class2B.MtdA: class2B & trait2A -> "ok"
+
+
+:e
+:ns // TODO: investigate weird type of `Class3B.MtdA` without `:ns`
+class Class3A[A]
+    method MtdA: A
+type Type3A = Class3A[string]
+class Class3B: Type3A
+    method MtdA = 1
+//│ ╔══[ERROR] cannot inherit from a type alias
+//│ ║  l.325: 	class Class3B: Type3A
+//│ ╙──       	      ^^^^^^^^^^^^^^^
+//│ Defined class Class3A
+//│ Declared Class3A.MtdA: Class3A['a] -> 'a
+//│ Defined type Type3A
+

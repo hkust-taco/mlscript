@@ -201,7 +201,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/=rn) err(
-                  msg"Wrong tuple field name: found '${ln}' instead of '${rn}'", lhs.prov.loco) } } // TODO better loco
+                  msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r)
             }
           case (ComposedType(true, l, r), _) =>
@@ -244,12 +244,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 var fieldErr: Opt[Message] = N
                 fs1.foreach { case (n1, t1) =>
                   fs0.find(_._1 === n1).fold {
-                    if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1))
+                    if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1.name))
                   } { case (n0, t0) => rec(t0, t1) }
                 }
                 fieldErr
               case (_, FunctionType(_, _)) => S(msg"is not a function")
-              case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n))
+              case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n.name))
               case _ => S(doesntMatch(lhs_rhs._2))
             }
             failureOpt.foreach(f => reportError(f))
@@ -343,7 +343,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           lazy val fail = (l, r) match {
             case (RecordType(fs0), RecordType(fs1)) =>
               (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
-                doesntHaveField(n1)
+                doesntHaveField(n1.name)
               }
             case (_, FunctionType(_, _))
               if !lunw.isInstanceOf[FunctionType]
@@ -352,7 +352,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (_, RecordType((n, _) :: Nil))
               if !lunw.isInstanceOf[RecordType]
               && !lunw.isInstanceOf[TypeVariable]
-              => doesntHaveField(n)
+              => doesntHaveField(n.name)
             case _ => doesntMatch(r)
           }
           msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco ::
@@ -396,12 +396,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
       case _: ClassTag | _: TraitTag => ty
-      // case TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol))) // FIXME pol...
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol)))(tr.prov, tr.ctx) // FIXME pol...
     }
   
   
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
-    raise(TypeError((msg, loco) :: Nil))
+    err(msg -> loco :: Nil)
+  }
+  def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
+    raise(TypeError(msgs))
     errType
   }
   def errType(implicit prov: TypeProvenance): SimpleType = ClassTag(ErrTypeId, Set.empty)(prov)

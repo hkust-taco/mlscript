@@ -28,9 +28,35 @@ abstract class TyperHelpers { self: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
-  def recordUnion(fs1: Ls[Str -> SimpleType], fs2: Ls[Str -> SimpleType]): Ls[Str -> SimpleType] = {
+  def recordUnion(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] = {
     val fs2m = fs2.toMap
     fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }
+  }
+
+  def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
+    PolymorphicType(ts.level, subst(ts.body, map))
+
+  def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])(implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
+    case _ if map.isDefinedAt(ts) => map(ts)
+    case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
+    case RecordType(fields) => RecordType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
+    case TupleType(fields) => TupleType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
+    case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
+    case NegType(negated) => NegType(subst(negated, map))(ts.prov)
+    case Without(base, names) => Without(subst(base, map), names)(ts.prov)
+    case ProxyType(underlying) => ProxyType(subst(underlying, map))(ts.prov)
+    case t@TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov, t.ctx)
+    case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
+      cache += tv -> tv
+      tv
+    case tv: TypeVariable => cache.getOrElse(tv, {
+      val v = freshVar(tv.prov)(tv.level)
+      cache += tv -> v
+      v.lowerBounds = tv.lowerBounds.map(subst(_, map))
+      v.upperBounds = tv.upperBounds.map(subst(_, map))
+      v
+    })
+    case _: ObjectTag | _: ExtrType => ts
   }
   
   trait SimpleTypeImpl { self: SimpleType =>
@@ -124,14 +150,14 @@ abstract class TyperHelpers { self: Typer =>
     // sometimes behind a single negation,
     // just for the time of massaging the constraint through a type variable.
     // So it's important we only push and simplify Without types only in _positive_ position!
-    def without(names: Set[Str]): SimpleType = if (names.isEmpty) this else this match {
+    def without(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
     }
-    def without(name: Str): SimpleType = 
+    def without(name: Var): SimpleType = 
       without(Set.single(name))
     
-    def withoutPos(names: Set[Str]): SimpleType = this match {
+    def withoutPos(names: Set[Var]): SimpleType = this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)

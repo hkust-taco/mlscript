@@ -119,11 +119,11 @@ trait DeclImpl extends Located { self: Decl =>
     case _: TypeDef => "type declaration"
   }
   def show: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _) => " = "; case _ => ": " }) + showBody
+    case TypeDef(Als, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b) => s"rec def $n"
     case Def(false, n, b) => s"def $n"
-    case TypeDef(k, n, tps, b) =>
+    case TypeDef(k, n, tps, b, _, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
   }
 }
@@ -229,9 +229,10 @@ trait LitImpl { self: Lit =>
   }
 }
 
-trait VarImpl { self: Var =>
+trait VarImpl extends Ordered[Var] { self: Var =>
   def isPatVar: Bool =
     name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
+  def compare(that: Var): Int = this.name compare that.name
 }
 
 trait Located {
@@ -338,14 +339,14 @@ trait StatementImpl extends Located { self: Statement =>
           val (diags1, v, args) = desugDefnPattern(t, Nil)
           allDiags ++= diags1
           val tparams = Buffer.from(baseTargs)
-          val fields = SortedMutMap.empty[Str, Type]
+          val fields = SortedMutMap.empty[Var, Type]
           def getFields(t: Term): Ls[Type] = t match {
             case v: Var =>
               // TOOD check not already defined
               val tp = baseTargs.find(_.name === v.name).getOrElse(
                 if (v.name.startsWith("`")) new TypeVar(v.name.tail, 0) // FIXME should not renew every time!
                 else Primitive(v.name) tap (tparams += _))
-              fields += v.name -> tp
+              fields += v -> tp
               tp :: Nil
             case Blk((t: Term)::Nil) => getFields(t)
             case Blk(_) => ??? // TODO proper error
@@ -398,7 +399,7 @@ trait StatementImpl extends Located { self: Statement =>
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case Tup(fields) => fields.map(_._2)
     case Rcd(fields) => fields.map(_._2)
-    case Sel(receiver, fieldName) => receiver :: Nil
+    case Sel(receiver, fieldName) => receiver :: fieldName :: Nil
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil
     case Blk(stmts) => stmts
     case LetS(_, pat, rhs) => pat :: rhs :: Nil
@@ -410,7 +411,7 @@ trait StatementImpl extends Located { self: Statement =>
     case With(t, fs) => t :: fs :: Nil
     case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
     case d @ Def(_, n, b) => d.body :: Nil
-    case TypeDef(kind, nme, tparams, body) => nme :: tparams ::: body :: Nil
+    case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
   }
   
   

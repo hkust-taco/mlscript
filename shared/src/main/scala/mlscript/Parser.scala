@@ -96,10 +96,10 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   // TODO support spreads ""...xs""
   def commas[_: P]: P[Term] = P(
-    Index ~~ (ident ~ ":" ~ (noCommas | suite) | noCommas.map("" -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index
+    Index ~~ (NAME ~ ":" ~ (noCommas | suite) | noCommas.map(Var("") -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index
   ).map {
-    case (_, ("", x) :: Nil, N, _) => x
-    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.nonEmpty), t) }).withLoc(i0, i1, origin)
+    case (_, (Var(""), x) :: Nil, N, _) => x
+    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.name.nonEmpty), t) }).withLoc(i0, i1, origin)
   }
   
   def booleans[_: P]: P[Term] = P(binops rep (1, kw("and")) rep (1, kw("or"))) // TODO locs
@@ -172,7 +172,7 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (as, ao) => (as ++ ao.toList).reduceLeft(App(_, _))
   }
   
-  def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ ident ~~ Index).rep).map {
+  def atomOrSelect[_: P]: P[Term] = P(atom ~ (Index ~~ "." ~ NAME ~~ Index).rep).map {
     case (lhs, sels) => sels.foldLeft(lhs) {
       case (acc, (i0,str,i1)) => Sel(lhs, str).withLoc(i0, i1, origin)
     }

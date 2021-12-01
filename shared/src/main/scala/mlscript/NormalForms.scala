@@ -102,7 +102,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           // S(RhsBases(Nil, S(that), S(f)))
           N // can't merge a record and a function -> it's the same as Top
     }
-    def | (that: (Str, SimpleType)): Opt[RhsNf] = this match {
+    def | (that: (Var, SimpleType)): Opt[RhsNf] = this match {
       case RhsBot => S(RhsField(that._1, that._2))
       case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
       case RhsBases(p, N) => S(RhsBases(p, S(R(RhsField(that._1, that._2)))))
@@ -112,8 +112,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     def <:< (that: RhsNf): Bool = this.toType <:< that.toType
   }
-  case class RhsField(name: Str, ty: SimpleType) extends RhsNf
-    { def name_ty: Str -> ST = name -> ty }
+  case class RhsField(name: Var, ty: SimpleType) extends RhsNf
+    { def name_ty: Var -> ST = name -> ty }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField]) extends RhsNf {
     override def toString: Str = s"${tags.mkString("|")}|$rest"
   }

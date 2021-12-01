@@ -59,37 +59,37 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ int & {f: 'a} | {x: 'a} & ~int -> 'a  <:  f: anything -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: _α52} & ~?a | int & {x: _α52}` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                             ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	                                ^
+//│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{y: _α52} & ~int` does not match type `{x: ?a}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	                                           ^
+//│ ║        	                                           ^^^
 //│ ╟── from reference:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{y: _α52} & ~?a | int & {y: _α52}` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
-//│ ║        	                                ^
+//│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                  ^
@@ -140,7 +140,7 @@ test (error: B & { c: int })
 
 
 def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
-//│ test: a & {x: 'a, y: 'b} | b & {x: 'a, y: 'b} | c & {x: 'a, y: 'b} -> {l: 'a, r: 'b}
+//│ test: a & {y: 'a, x: 'b} | b & {y: 'a, x: 'b} | c & {y: 'a, x: 'b} -> {l: 'b, r: 'a}
 
 test (error: A & { x: int; y: string })
 test (error: B & { x: int; y: string })
@@ -154,10 +154,10 @@ test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `a & {x: int}` does not match type `a & {x: ?a, y: ?b} | b & {x: ?a, y: ?b} | c & {x: ?a, y: ?b}`
+//│ ╟── expression of type `a & {x: int}` does not match type `a & {y: ?a, x: ?b} | b & {y: ?a, x: ?b} | c & {y: ?a, x: ?b}`
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `a & {x: ?c, y: ?d} | b & {x: ?c, y: ?d} | c & {x: ?c, y: ?d}`
+//│ ╟── but it flows into argument with expected type `a & {y: ?c, x: ?d} | b & {y: ?c, x: ?d} | c & {y: ?c, x: ?d}`
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -167,7 +167,7 @@ test (error: A & { x: int })
 
 
 def test: (A & { xA: 'a; yA: 'b } | B & { xB: 'a; yB: 'b } | C & { xC: 'a; yC: 'b }) -> { l: 'a; r: 'b }
-//│ test: a & {yA: 'a, xA: 'b} | b & {yB: 'a, xB: 'b} | c & {yC: 'a, xC: 'b} -> {l: 'b, r: 'a}
+//│ test: a & {yA: 'a, xA: 'b} | b & {xB: 'b, yB: 'a} | c & {yC: 'a, xC: 'b} -> {l: 'b, r: 'a}
 
 test (error: A & { xA: int; yA: string })
 test (error: B & { xB: int; yB: string })

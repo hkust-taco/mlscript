@@ -40,7 +40,7 @@ class JSBackend {
       fields.foldLeft[Str -> Ls[Str]]("{ $ }" -> List.empty) {
         case ((code, names), (key, value)) =>
           value match {
-            case Var(_) => code.replace("$", s"$key, ") -> (names :+ key)
+            case Var(_) => code.replace("$", s"$key, ") -> (names :+ key.name)
             case rcd: Rcd => {
               val (subCode, subNames) = translateLetPattern(rcd)
               code.replace("$", s"$key: ${subCode}, ") -> (names ++ subNames)
@@ -106,10 +106,10 @@ class JSBackend {
     case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
-        key -> translateTerm(value)
+        key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
-      JSMember(translateTerm(receiver), fieldName)
+      JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
       JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
@@ -230,7 +230,7 @@ class JSBackend {
     case Top => Nil -> N
     // `class A { <items> }` ==>
     // `class A { constructor(fields) { <items> } }`
-    case Record(fields) => fields.map(_._1) -> N
+    case Record(fields) => fields.map(_._1.name) -> N
     // `class B: A` ==> `class B extends A {}`
     // If `A` is a type alias, it is replaced by its real type.
     // Otherwise just use the name.
@@ -252,12 +252,12 @@ class JSBackend {
     // `class C extends A { constructor(fields) { <items> } }`
     case Inter(Record(entries), ty) =>
       val (fields, cls) = getBaseClassAndFields(ty)
-      entries.map(_._1) ++ fields -> cls
+      entries.map(_._1.name) ++ fields -> cls
     // `class C: { <items> } & A` ==>
     // `class C extends A { constructor(fields) { <items> } }`
     case Inter(ty, Record(entries)) =>
       val (fields, cls) = getBaseClassAndFields(ty)
-      fields ++ entries.map(_._1) -> cls
+      fields ++ entries.map(_._1.name) -> cls
     // `class C: <X> & <Y>`: resolve X and Y respectively.
     case Inter(ty1, ty2) =>
       val (fields1, cls1) = getBaseClassAndFields(ty1)
@@ -307,7 +307,7 @@ class JSBackend {
 
     // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
-      case TypeDef(Als, Primitive(name), tparams, body) =>
+      case TypeDef(Als, Primitive(name), tparams, body, _, _) =>
         val tnames = tparams map { case Primitive(nme) => nme }
         typeAliasMap(name) = tnames -> body
       case _ => ()
@@ -321,7 +321,7 @@ class JSBackend {
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
-          .map { case TypeDef(kind, Primitive(name), typeParams, actualType) =>
+          .map { case TypeDef(kind, Primitive(name), typeParams, actualType, _, _) => // TODO: handle methods
             kind match {
               case Cls =>
                 classNames += name
