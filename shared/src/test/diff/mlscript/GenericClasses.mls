@@ -7,11 +7,11 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> (some & {value: 'a})
+//│ Some: 'a -> (some & {Some#A: 'A | 'a .. 'A, value: 'a})
 
 Some 42
 (Some 42).value
-//│ res: some & {value: 42}
+//│ res: some & {Some#A: 'A | 42 .. 'A, value: 42}
 //│ res: 42
 
 type Option[A] = Some[A] | None
@@ -19,8 +19,8 @@ type Option[A] = Some[A] | None
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: some & {value: int} | none
-//│ res: some & {value: int} | none
+//│ res: some & {Some#A: int, value: int} | none
+//│ res: some & {Some#A: int, value: int} | none
 
 :e
 res.value
@@ -43,12 +43,68 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `some & {value: int} | none`
+//│ ╟── expression of type `42` does not match type `some & {Some#A: int, value: int} | none`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.17: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: some & {value: int} | none
+//│ res: some & {Some#A: int, value: int} | none
+
+
+class Foo1[A]: { x: A }
+class Bar1: Foo1[int]
+//│ Defined class Foo1
+//│ Defined class Bar1
+
+Bar1
+//│ res: {x: int & 'x} -> (bar1 & {Foo1#A: nothing, x: 'x})
+
+g = Bar1 { x = 42 }
+//│ g: bar1 & {Foo1#A: nothing, x: 42}
+
+g: Foo1['a]
+//│ res: foo1 & {Foo1#A: 'a | 42 .. 'a, x: 'a | 42}
+
+res.x
+//│ res: 42
+
+g: Foo1['a]: Foo1[int]
+//│ res: foo1 & {Foo1#A: int, x: int}
+
+res.x
+//│ res: int
+
+:e
+g: Foo1['a]: Foo1[string]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.80: 	g: Foo1['a]: Foo1[string]
+//│ ║        	^
+//│ ╟── expression of type `42` does not match type `string`
+//│ ║  l.64: 	g = Bar1 { x = 42 }
+//│ ║        	               ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.80: 	g: Foo1['a]: Foo1[string]
+//│ ║        	                  ^^^^^^
+//│ ╟── from record type:
+//│ ║  l.56: 	class Foo1[A]: { x: A }
+//│ ╙──      	               ^^^^^^^^
+//│ res: foo1 & {Foo1#A: string, x: string}
+
+
+class Foo2[A]
+//│ Defined class Foo2
+
+Foo2
+//│ res: anything -> (foo2 & {Foo2#A: 'A})
+
+error: Foo2[int]
+//│ res: foo2 & {Foo2#A: int}
+
+f = fun x -> case x of { Foo2 -> x }
+//│ f: (foo2 & 'a) -> 'a
+
+f (Foo2 {})
+//│ res: foo2 & {Foo2#A: 'A}
 

@@ -64,20 +64,20 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> (crazy & {name: 'a} & 'a)
+//│ Crazy: 'a -> (crazy & {name: 'a, Crazy#A: 'a} & 'a)
 
 Crazy
-//│ res: 'a -> (crazy & {name: 'a} & 'a)
+//│ res: 'a -> (crazy & {name: 'a, Crazy#A: 'a} & 'a)
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: crazy & {name: "Bob" & {name: "Bob", age: 42}, age: 42}
+//│ c: crazy & {name: 'a | {name: "Bob", age: 42}, Crazy#A: 'a | {name: "Bob", age: 42} .. 'a} & 'a | crazy & {name: "Bob" & 'a | "Bob" & {name: "Bob", age: 42}, Crazy#A: 'a | {name: "Bob", age: 42} .. 'a, age: 42}
 
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.76: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~{name: ?a | {name: "Bob", age: 42}} & ~crazy`
+//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `anything`
 //│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: nothing
+//│ d: crazy & {name: 'a | parent1 & {name: "Bob"}, Crazy#A: 'a | parent1 & {name: "Bob"} .. 'a} & 'a
 
 d: nothing
 //│ res: nothing

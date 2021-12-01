@@ -32,8 +32,19 @@ abstract class TypeImpl extends Located { self: Type =>
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
-    case Record(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
-    case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_ + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
+    case Record(fs) => fs.map { nt =>
+      val nme = nt._1.name
+      if (nme.headOption.exists(_.isUpper)) nt._2 match {
+        case Function(Top, Bot) => s"$nme"
+        case Function(ub, lb) if lb === ub => s"$nme: ${ub.showIn(ctx, 0)}"
+        case Function(ub, Bot) => s"$nme: .. ${ub.showIn(ctx, 0)}"
+        case Function(Top, lb) => s"$nme: ${lb.showIn(ctx, 0)} .."
+        case Function(ub, lb) => s"$nme: ${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+        case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
+      }
+      else s"${nme}: ${nt._2.showIn(ctx, 0)}"
+    }.mkString("{", ", ", "}")
+    case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -191,12 +202,12 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Lam(name, rhs) => s"($name => $rhs)"
     case App(lhs, rhs) => s"($lhs $rhs)"
     case Rcd(fields) =>
-      fields.iterator.map(nv => nv._1 + ": " + nv._2).mkString("{", ", ", "}")
+      fields.iterator.map(nv => nv._1.name + ": " + nv._2).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs; $body)"
     case Tup(xs) =>
-      xs.iterator.map { case (n, t) => n.fold("")(_ + ": ") + t + "," }.mkString("(", " ", ")")
+      xs.iterator.map { case (n, t) => n.fold("")(_.name + ": ") + t + "," }.mkString("(", " ", ")")
     case Bind(l, r) => s"($l as $r)"
     case Test(l, r) => s"($l is $r)"
     case With(t, fs) =>  s"$t with $fs"

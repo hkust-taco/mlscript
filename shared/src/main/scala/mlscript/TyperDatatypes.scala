@@ -79,7 +79,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
         fields.collect { case (S(n), t) => (n, t) }
       )(prov)
-    override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2}").mkString(", ")})"
+    override def toString = s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2}").mkString(", ")})"
   }
   
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
@@ -121,10 +121,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
     def expand(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, vars = defn.tparams.map(_.name).zip(targs).toMap)
+      lazy val tparamTags = RecordType.mk(defn.tparams.lazyZip(targs).map((tp, tv) =>
+        Var(defn.nme.name+"#"+tp.name) -> FunctionType(tv, tv)(noProv)).toList)(noProv)
       defn.kind match {
         case Als => body_ty
-        case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
-        case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty
+        case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
+        case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
       }
     }
     override def toString =

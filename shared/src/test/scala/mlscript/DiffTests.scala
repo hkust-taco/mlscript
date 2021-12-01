@@ -48,6 +48,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     // "BadTraits",
     // "TraitMatching",
     // "Subsume",
+    // "Methods",
   )
   private def filter(name: Str): Bool =
     if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)

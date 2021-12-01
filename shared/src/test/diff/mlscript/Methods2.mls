@@ -1,17 +1,17 @@
 class Option[A]
     method Get: A
 //│ Defined class Option
-//│ Declared Option.Get: option -> nothing
+//│ Declared Option.Get: (option & {Option#A: 'A}) -> 'A
 
 class Some[A]: Option[A] & { payload: A }
     method Get = this.payload
 //│ Defined class Some
-//│ Defined Some.Get: (some & {payload: 'A}) -> 'A
+//│ Defined Some.Get: (some & {Some#A: 'A, Option#A: 'A, payload: 'A}) -> 'A
 
 class None[A]: Option[A]
     method Get = error
 //│ Defined class None
-//│ Defined None.Get: none -> nothing
+//│ Defined None.Get: (none & {Option#A: 'A, None#A: 'A}) -> nothing
 
 
 
@@ -21,39 +21,39 @@ class List[A]
     method HeadOption: Option[A]
     method Map[B]: (A -> B) -> List[B]
 //│ Defined class List
-//│ Declared List.Size: list -> int
-//│ Declared List.HeadOption: list -> option
-//│ Declared List.Map: list -> (nothing -> anything) -> list
+//│ Declared List.Size: (list & {List#A: 'A}) -> int
+//│ Declared List.HeadOption: (list & {List#A: 'A}) -> (option & {Option#A: 'A})
+//│ Declared List.Map: (list & {List#A: 'A}) -> ('A -> 'B) -> (list & {List#A: 'B})
 
 class Nil[A]: List[A]
     method Size = 0
     method HeadOption = None {}
     method Map[B] f = Nil {}
 //│ Defined class Nil
-//│ Defined Nil.Size: nil -> 0
-//│ Defined Nil.HeadOption: nil -> none
-//│ Defined Nil.Map: nil -> anything -> nil
+//│ Defined Nil.Size: (nil & {Nil#A: 'A, List#A: 'A}) -> 0
+//│ Defined Nil.HeadOption: (nil & {Nil#A: 'A, List#A: 'A}) -> (none & {Option#A: nothing, None#A: 'A0})
+//│ Defined Nil.Map: (nil & {Nil#A: 'A, List#A: 'A}) -> anything -> (nil & {Nil#A: 'A0, List#A: nothing})
 
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons
-//│ Defined Cons.Size: (cons & {head: anything, tail: list}) -> int
-//│ Defined Cons.HeadOption: (cons & {head: 'A, tail: list}) -> (some & {payload: 'A})
-//│ Defined Cons.Map: (cons & {head: 'A, tail: list}) -> ('A -> 'a) -> (cons & {head: 'a, tail: list})
+//│ Defined Cons.Size: (cons & {List#A: 'A, Cons#A: 'A, head: 'A, tail: list & {List#A: 'A}}) -> int
+//│ Defined Cons.HeadOption: (cons & {List#A: 'A, Cons#A: 'A, head: 'A, tail: list & {List#A: 'A}}) -> (some & {Some#A: 'a | 'A .. 'a, Option#A: nothing, payload: 'A})
+//│ Defined Cons.Map: (cons & {List#A: 'A, Cons#A: 'A, head: 'A, tail: list & {List#A: 'A}}) -> ('A -> ('a & 'b)) -> (cons & {List#A: nothing, Cons#A: 'a, head: 'b, tail: list & {List#A: 'a}})
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ l: cons & {head: 0, tail: cons & {head: 1, tail: nil}}
+//│ l: cons & {List#A: nothing, Cons#A: 'A | 0 .. 'A, head: 0, tail: cons & {List#A: nothing, Cons#A: 'A0 | 1 .. 'A0, head: 1, tail: nil & {Nil#A: 'A1, List#A: nothing}}}
 
 l.Size
 //│ res: int
 
 l.Map (fun x -> mul x 2)
-//│ res: list
+//│ res: list & {List#A: 'B | int .. 'B}
 
 o = l.HeadOption
-//│ o: option
+//│ o: option & {Option#A: 'A}
 
 // Idiomatic definition for proper matching: `type Option[A] = Some[A] | None[A]`
 :e
@@ -64,10 +64,10 @@ case o of {
 //│ ║        	     ^^^^^^
 //│ ║  l.61: 	    Some -> o.Get | None -> 0 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `option` does not match type `some & ?a | none & ?b`
+//│ ╟── expression of type `option & {Option#A: ?A}` does not match type `some & {Option#A: ?A0} & ?a | none & ?b`
 //│ ║  l.21: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `some & ?c | none & ?d`
+//│ ╟── but it flows into reference with expected type `some & {Option#A: ?A1} & ?c | none & ?d`
 //│ ║  l.60: 	case o of {
 //│ ╙──      	     ^
 //│ res: 0

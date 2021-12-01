@@ -18,13 +18,13 @@ class Bar: {}
 //│ Defined class Bar
 
 def foo = Foo { field = id 1 }
-//│ foo: foo & {field: 1}
+//│ foo: foo & {Foo#A: 'A | 1 .. 'A, field: 1}
 
 (if true then foo else { field = 2 }).field
 //│ res: 2 | 1
 
 Foo { field = id 1 }
-//│ res: foo & {field: 1}
+//│ res: foo & {Foo#A: 'A | 1 .. 'A, field: 1}
 
 def test x = case x of { Bar -> 1 | Foo -> 2 }
 //│ test: (bar | foo) -> (1 | 2)
