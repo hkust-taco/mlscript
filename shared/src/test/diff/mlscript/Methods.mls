@@ -211,9 +211,15 @@ class Class3C: Class2C
 //│ ╟── expression of type `42` does not match type `bool`
 //│ ║  l.207: 	    method MtdB = 42
 //│ ║         	                  ^^
+//│ ╟── but it flows into method definition with expected type `bool`
+//│ ║  l.207: 	    method MtdB = 42
+//│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.191: 	class Class2C: Class2B[int, bool]
-//│ ╙──       	                            ^^^^
+//│ ║         	                            ^^^^
+//│ ╟── from method declaration:
+//│ ║  l.190: 	    method MtdB: B
+//│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (class3C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
 //│ Defined Class3C.MtdB: (class3C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42

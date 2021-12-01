@@ -413,7 +413,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             term => subst(typeLetRhs(rec, nme.name, term)(thisCtx, raise, S((tn.name, S(nme.name)))), reverseRigid),
             ty => PolymorphicType(thisCtx.lvl, subst(typeType(ty)(thisCtx, raise, S((tn.name, S(nme.name)))), reverseRigid))
           )
-          rhs.fold(_ => defs, _ => decls) += nme.name -> bodyTy
+          rhs.fold(_ => defs, _ => decls) += nme.name -> (bodyTy match {
+            case PolymorphicType(level, body) => PolymorphicType(level, ProxyType(body)(prov))
+          })
           thisCtx.env += "." + nme.name -> 
             PolymorphicType(bodyTy.level, FunctionType(thisTy, bodyTy.body)(prov))
         }
@@ -467,13 +469,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate,
             subst(bno.fold(st)(bn => subst(st, subsMap(bn))), rigidSubsMap))(raise, prov)
         }
+        decls.foreach { case nme -> mt => 
+          implicit val prov: TypeProvenance = mt.prov
+          td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme).foreach(ss(mt, _, S(bn)))) }
+        }
+        defs.foreach { case nme -> mt => 
+          implicit val prov: TypeProvenance = mt.prov
+          ctx.mthDecls.get(tn.name).foreach(_.get(nme).foreach(ss(mt, _)))
+        }
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           val mt = rhs.fold(_ => defs(nme.name), _ => decls(nme.name))
-          rhs.fold(
-            _ => ctx.mthDecls.get(tn.name).foreach(_.get(nme.name).foreach(ss(mt, _))),
-            _ => td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme.name).foreach(ss(mt, _, S(bn)))) }
-          )
           td.baseClasses.foreach { case Var(bn) => 
             ctx.mthDefs.get(bn).foreach(_.get(nme.name).foreach { bmt =>
               if (!ctx.mthDecls.get(bn).exists(_.isDefinedAt(nme.name))) {
