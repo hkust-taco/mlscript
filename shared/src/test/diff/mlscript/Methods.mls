@@ -1,7 +1,9 @@
 class Foo[A, B]: { x: A; y: B }
     method Fun[C]: (A -> B -> C) -> (A -> B -> C)
+    method Fun[C, D] (f: C -> D) = f
 //│ Defined class Foo
 //│ Declared Foo.Fun: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
+//│ Defined Foo.Fun: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> (nothing -> anything & 'a) -> 'a
 
 class Bar: Foo[int, bool]
     method Fun f = f
@@ -11,7 +13,7 @@ class Bar: Foo[int, bool]
 Foo.Fun
 Bar.Fun
 //│ res: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
-//│ res: (bar & {Foo#B = bool, Foo#A = int, y: bool, x: int}) -> 'a -> 'a
+//│ res: (bar & {Foo#B = bool, Foo#A = int, y: bool, x: int}) -> (int -> bool -> 'C) -> int -> bool -> 'C
 
 f = Foo { x = 1; y = 2 }
 //│ f: foo & {Foo#B :> 'B | 2 <: 'B, Foo#A :> 'A | 1 <: 'A, y: 2, x: 1}
@@ -35,12 +37,12 @@ g = Bar { x = 42; y = true }
 g.(Foo.Fun)
 g.(Bar.Fun)
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
-//│ res: 'a -> 'a
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 
 Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
-//│ res: 'a -> 'a
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 
 g.Fun
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
@@ -54,9 +56,12 @@ h.Fun
 
 
 class Wrapper[A]: { x: A }
+    method Apply f = Wrapper { x = f this.x }
     method Apply[B]: (A -> B) -> Wrapper[B]
+    // method Apply f = Wrapper { x = f this.x }
 //│ Defined class Wrapper
 //│ Declared Wrapper.Apply: (wrapper & {Wrapper#A = 'A, x: 'A}) -> ('A -> 'B) -> (wrapper & {Wrapper#A = 'B, x: 'B})
+//│ Defined Wrapper.Apply: (wrapper & {Wrapper#A = 'A, x: 'A}) -> ('A -> ('a & 'A0)) -> (wrapper & {Wrapper#A = 'A0, x: 'a})
 
 class IntWrapper: Wrapper[int]
     method Apply f = Wrapper { x = f this.x }
@@ -67,21 +72,21 @@ class Psyduck[B]: Wrapper[B]
     method Apply[A]: (B -> A) -> Psyduck[A]
     method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck
-//│ Declared Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A = 'B0, x: 'a})
+//│ Declared Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> 'A) -> (psyduck & {Psyduck#B = 'A, Wrapper#A = 'A, x: 'A})
 //│ Defined Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A = 'B0, x: 'a})
 
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper
-//│ Declared WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'a, x: 'a}, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
+//│ Declared WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'B) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'B, x: 'B}, WrapperWrapper#A = 'B, x: wrapper & {Wrapper#A = 'B, x: 'B}})
 //│ Defined WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'a, x: 'a}, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'A | 0 <: 'A, x: 'A | 0} <: wrapper & {Wrapper#A :> 'A <: 'A | 0, x: 'A}, WrapperWrapper#A :> 'A | 0 <: 'A, x: psyduck & {Psyduck#B :> 'A | 0 <: 'A, Wrapper#A :> 'A | 0 <: 'A, x: 0}}
 
 res.Apply2 (fun x -> mul x 2)
-//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'a | int <: 'a, x: 'a | int} <: wrapper & {Wrapper#A :> 'a <: 'a | int, x: 'a}, WrapperWrapper#A :> 'a | int <: 'a, x: wrapper & {Wrapper#A :> 'a | int <: 'a, x: 'a | int}}
+//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'B | int <: 'B, x: 'B | int} <: wrapper & {Wrapper#A :> 'B <: 'B | int, x: 'B}, WrapperWrapper#A :> 'B | int <: 'B, x: wrapper & {Wrapper#A :> 'B | int <: 'B, x: 'B | int}}
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (wrapper & {Wrapper#A = 'A, x: 'x})
@@ -138,7 +143,7 @@ class True2[A, B]: Pair[A, B]
     method True = this.Test (fun x -> error)
     method Test f = true
 //│ Defined class True2
-//│ Declared True2.Test: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> anything -> true
+//│ Declared True2.Test: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> anything -> bool
 //│ Defined True2.True: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> bool
 //│ Defined True2.Test: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> anything -> true
 
@@ -206,19 +211,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.207: 	    method MtdB = 42
+//│ ║  l.212: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.207: 	    method MtdB = 42
+//│ ║  l.212: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.207: 	    method MtdB = 42
+//│ ║  l.212: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.191: 	class Class2C: Class2B[int, bool]
+//│ ║  l.196: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.190: 	    method MtdB: B
+//│ ║  l.195: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (class3C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
