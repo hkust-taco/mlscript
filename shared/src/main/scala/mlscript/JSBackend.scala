@@ -28,40 +28,49 @@ class JSBackend {
     case _: Def | _: TypeDef => ??? // TODO
   }
 
-  // This returns (codeFragment, declaredVariables)
-  def translateLetPattern(t: Term): Str -> Ls[Str] = t match {
+  /** This function translates parameter destructions in `def` declarations.
+    *
+    * The production rules of MLscript `def` parameters are:
+    *
+    * subterm ::= "(" term ")" | record | literal | identifier term ::= let | fun | ite | withsAsc |
+    * _match
+    *
+    * JavaScript supports following destruction patterns:
+    *
+    *   - Array patterns: `[x, y, ...]` where `x`, `y` are patterns.
+    *   - Object patterns: `{x: y, z: w, ...}` where `z`, `w` are patterns.
+    *   - Identifiers: an identifier binds the position to a name.
+    *
+    * This function only translate name patterns and object patterns. I was thinking if we can
+    * support literal parameter matching by merging multiple function `def`s into one.
+    *
+    * @param t
+    *   the term to translate
+    * @return
+    *   a `JSPattern` representing the pattern
+    */
+  def translatePattern(t: Term): JSPattern = t match {
     // fun x -> ... ==> function (x) { ... }
     // should returns ("x", ["x"])
-    case Var(name) => name -> Ls(name)
+    case Var(name) => JSNamePattern(name)
     // fun { x, y } -> ... ==> function ({ x, y }) { ... }
     // should returns ("{ x, y }", ["x", "y"])
-    case Rcd(fields) => {
-      // $ means an insertion point
-      fields.foldLeft[Str -> Ls[Str]]("{ $ }" -> List.empty) {
-        case ((code, names), (key, value)) =>
-          value match {
-            case Var(_) => code.replace("$", s"$key, ") -> (names :+ key.name)
-            case rcd: Rcd => {
-              val (subCode, subNames) = translateLetPattern(rcd)
-              code.replace("$", s"$key: ${subCode}, ") -> (names ++ subNames)
-            }
-            // Is there any other cases?
-            case _ => ???
-          }
-      }
-    }
-    // `fun x y -> ...` => `App(Var(x), Var(y))`
-    case App(init, Var(last)) =>
-      val (code, vars) = translateLetPattern(init)
-      s"$code, $last" -> (vars ::: List(last))
-    case _ =>
-      println(
-        s"unreachable case at translateLetPattern: ${JSBackend.inspectTerm(t)}"
-      )
-      ???
+    case Rcd(fields) =>
+      JSObjectPattern(fields map {
+        case (Var(nme), Var(als)) if nme === als => nme -> N
+        case (Var(nme), subTrm)                  => nme -> S(translatePattern(subTrm))
+      })
+    // This branch supports `def f (x: int) = x`.
+    case Asc(trm, _) => translatePattern(trm)
+    // Replace literals with wildcards.
+    case _: Lit => JSWildcardPattern()
+    // Others are not supported yet.
+    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bra | _: Bind | _: Test |
+        _: With | _: CaseOf =>
+      throw new Error(s"term $t is not a valid pattern")
   }
 
-  private def builtinFnOpMap =
+  private val builtinFnOpMap =
     immutable.HashMap(
       "add" -> "+",
       "sub" -> "-",
@@ -75,6 +84,8 @@ class JSBackend {
       "ne" -> "!=",
     )
 
+  private val binaryOps = Set.from(builtinFnOpMap.values.concat("&&" :: "||" :: Nil))
+
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
   def translateTerm(term: Term): JSExpr = term match {
@@ -87,18 +98,14 @@ class JSBackend {
       } else {
         JSIdent(name)
       }
-    // TODO: need scope to track variables
-    // so that we can rename reserved words
+    // TODO: need scope to track variables so that we can rename reserved words
     case Lam(lhs, rhs) =>
-      val (paramCode, declaredVars) = translateLetPattern(lhs)
-      JSArrowFn(paramCode, translateTerm(rhs))
+      JSArrowFn(translatePattern(lhs) :: Nil, translateTerm(rhs))
     // Binary expressions.
     case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
-      JSBinary(
-        builtinFnOpMap(name),
-        translateTerm(left),
-        translateTerm(right)
-      )
+      JSBinary(builtinFnOpMap(name), translateTerm(left), translateTerm(right))
+    case App(App(Var(op), left), right) if binaryOps contains op =>
+      JSBinary(op, translateTerm(left), translateTerm(right))
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
@@ -134,7 +141,7 @@ class JSBackend {
     }
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
-    case _             => ???
+    case _             => throw new Error(s"cannot generate code for term $term")
   }
 
   // Translate consecutive case branches into a list of if statements.
@@ -184,8 +191,7 @@ class JSBackend {
   // This function normalizes a type, removing all `AppliedType`s.
   private def substitute(
       body: Type,
-      subs: collection.immutable.HashMap[Str, Type] =
-        collection.immutable.HashMap.empty
+      subs: collection.immutable.HashMap[Str, Type] = collection.immutable.HashMap.empty
   ): Type = {
     body match {
       case Neg(ty) =>
@@ -215,8 +221,8 @@ class JSBackend {
             }
           case S(ty) => ty
         }
-      case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
-      case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
+      case Recursive(uv, ty)                   => Recursive(uv, substitute(ty, subs))
+      case Rem(ty, fields)                     => Rem(substitute(ty, subs), fields)
       case Bot | Top | _: Literal | _: TypeVar => body
     }
   }
@@ -344,7 +350,7 @@ class JSBackend {
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
-              // 
+              //
               val shadowedName = resolveShadowName(tempName)
               if (shadowedName === tempName) {
                 // Declare the name, assign and record the value.
@@ -402,11 +408,11 @@ class JSBackend {
 
 object JSBackend {
   private def inspectTerm(t: Term): Str = t match {
-    case Var(name)     => s"Var($name)"
-    case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case App(lhs, rhs) => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case Tup(fields)   => s"Tup(...)"
-    case Rcd(fields)   => s"Rcd(...)"
+    case Var(name)                   => s"Var($name)"
+    case Lam(lhs, rhs)               => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
+    case App(lhs, rhs)               => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
+    case Tup(fields)                 => s"Tup(...)"
+    case Rcd(fields)                 => s"Rcd(...)"
     case Sel(receiver, fieldName)    => s"Sel()"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
     case Blk(stmts)                  => s"Blk(...)"
