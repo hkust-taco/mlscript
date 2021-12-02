@@ -401,10 +401,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         thisCtx += "this" -> thisRigidTy
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
-          if (!ctx.targsMaps(tn.name).isDefinedAt(S(nme.name))) {
-            val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
-            ctx.targsMaps(tn.name) += S(nme.name) -> tparams.map(_.name).zip(dummyTargs2).toMap
-          }
+          val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
+          ctx.targsMaps(tn.name) += S(nme.name) -> tparams.map(_.name).zip(dummyTargs2).toMap
+          // ^ overwrites. fine for now as the maps are not used afterwards. may pass vars instead
           if (!nme.name.head.isUpper)
             err(msg"Method names must start with a capital letter", nme.toLoc)
           if (defs.isDefinedAt(nme.name))
@@ -428,7 +427,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           ((td.baseClasses.flatMap(t => newMthDefs.getOrElse(t.name, Map.empty).view.mapValues(subst(_, subsMap(t.name)))))
             .groupMapReduce(_._1)(_._2){ case PolymorphicType(_, body1) -> PolymorphicType(_, body2) => 
               PolymorphicType(thisCtx.lvl, ComposedType(false, body1, body2)(prov)) } ++ defs.toMap)
-        allEnv ++= (newMthDecls(tn.name) ++ newMthDefs(tn.name)).flatMap{ case mn -> PolymorphicType(level, body) => 
+        allEnv ++= (newMthDefs(tn.name) ++ newMthDecls(tn.name)).flatMap{ case mn -> PolymorphicType(level, body) => 
           val m_ty = PolymorphicType(level, FunctionType(thisTy, body)(prov))
           s"${tn.name}.${mn}" -> m_ty ::
             (ctx.methodBase.get(mn) match {
