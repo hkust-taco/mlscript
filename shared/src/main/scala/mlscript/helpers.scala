@@ -36,10 +36,11 @@ abstract class TypeImpl extends Located { self: Type =>
       val nme = nt._1.name
       if (nme.headOption.exists(_.isUpper)) nt._2 match {
         case Function(Top, Bot) => s"$nme"
-        case Function(ub, lb) if lb === ub => s"$nme: ${ub.showIn(ctx, 0)}"
-        case Function(ub, Bot) => s"$nme: .. ${ub.showIn(ctx, 0)}"
-        case Function(Top, lb) => s"$nme: ${lb.showIn(ctx, 0)} .."
-        case Function(ub, lb) => s"$nme: ${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+        case Function(ub, lb) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+        case Function(ub, Bot) => s"$nme <: ${ub.showIn(ctx, 0)}"
+        case Function(Top, lb) => s"$nme :> ${lb.showIn(ctx, 0)}"
+        case Function(ub, lb) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+        case Bot | Top => s"$nme"
         case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
       }
       else s"${nme}: ${nt._2.showIn(ctx, 0)}"

@@ -9,8 +9,8 @@ data R x
 //│ Desugared: def R: [x] -> x -> R[x]
 //│ Defined class L
 //│ Defined class R
-//│ L: 'a -> (l & {L#x: 'a, x: 'a})
-//│ R: 'a -> (r & {R#x: 'a, x: 'a})
+//│ L: 'a -> (l & {L#x = 'a, x: 'a})
+//│ R: 'a -> (r & {R#x = 'a, x: 'a})
 
 // TODO flow-type
 :e

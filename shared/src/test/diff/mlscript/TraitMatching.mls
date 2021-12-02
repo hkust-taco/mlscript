@@ -26,7 +26,7 @@ test1 { value = 1 }
 //│ res: 1 | 0
 
 def mt = MyTrait { value = 1 }
-//│ mt: {MyTrait#A: 'A | 1 .. 'A, value: 1} & myTrait
+//│ mt: {MyTrait#A :> 'A | 1 <: 'A, value: 1} & myTrait
 
 test1 mt
 //│ res: 1 | 0

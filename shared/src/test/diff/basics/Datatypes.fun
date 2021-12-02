@@ -136,8 +136,8 @@ data type List a of
 //│ Defined type alias List
 //│ Defined class Nil
 //│ Defined class Cons
-//│ Nil: nil & {Nil#a: 'a}
-//│ Cons: (head: 'a,) -> (tail: nil & {Nil#a: 'a} | cons & {Cons#a: 'a, head: 'a, tail: 'b} as 'b,) -> (cons & {Cons#a: 'a, head: 'a, tail: 'd | nil & {Nil#a: 'a} | 'c} as 'c)
+//│ Nil: nil & {Nil#a = 'a}
+//│ Cons: (head: 'a,) -> (tail: nil & {Nil#a = 'a} | cons & {Cons#a = 'a, head: 'a, tail: 'b} as 'b,) -> (cons & {Cons#a = 'a, head: 'a, tail: 'd | nil & {Nil#a = 'a} | 'c} as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -154,7 +154,7 @@ data type Ls of LsA a
 //│ ╙──       	                    ^
 //│ Defined type alias Ls
 //│ Defined class LsA
-//│ LsA: 'a -> (lsA & {LsA#a: 'a, a: 'a})
+//│ LsA: 'a -> (lsA & {LsA#a = 'a, a: 'a})
 
 :p
 data type Ls2 of LsA2 `a
@@ -171,11 +171,11 @@ Cons
 Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
-//│ res: nil & {Nil#a: 'a}
-//│ res: (head: 'a,) -> (tail: nil & {Nil#a: 'a} | cons & {Cons#a: 'a, head: 'a, tail: 'b} as 'b,) -> (cons & {Cons#a: 'a, head: 'a, tail: 'd | nil & {Nil#a: 'a} | 'c} as 'c)
-//│ res: (tail: nil & {Nil#a: 'b .. 'b | 1} | cons & {Cons#a: 'b .. 'b | 1, head: 'b, tail: 'a} as 'a,) -> (cons & {Cons#a: 'b | 1 .. 'b, head: 'b | 1, tail: 'd | nil & {Nil#a: 'b | 1 .. 'b} | 'c} as 'c)
-//│ res: cons & {Cons#a: 'b | 2 .. 'b, head: 'b | 2, tail: 'c | nil & {Nil#a: 'b | 2 .. 'b} | 'a} as 'a
-//│ res: cons & {Cons#a: 'b | 1 | 2 .. 'b, head: 'b | 1 | 2, tail: 'c | nil & {Nil#a: 'b | 1 | 2 .. 'b} | 'a} as 'a
+//│ res: nil & {Nil#a = 'a}
+//│ res: (head: 'a,) -> (tail: nil & {Nil#a = 'a} | cons & {Cons#a = 'a, head: 'a, tail: 'b} as 'b,) -> (cons & {Cons#a = 'a, head: 'a, tail: 'd | nil & {Nil#a = 'a} | 'c} as 'c)
+//│ res: (tail: nil & {Nil#a :> 'b <: 'b | 1} | cons & {Cons#a :> 'b <: 'b | 1, head: 'b, tail: 'a} as 'a,) -> (cons & {Cons#a :> 'b | 1 <: 'b, head: 'b | 1, tail: 'd | nil & {Nil#a :> 'b | 1 <: 'b} | 'c} as 'c)
+//│ res: cons & {Cons#a :> 'b | 2 <: 'b, head: 'b | 2, tail: 'c | nil & {Nil#a :> 'b | 2 <: 'b} | 'a} as 'a
+//│ res: cons & {Cons#a :> 'b | 1 | 2 <: 'b, head: 'b | 1 | 2, tail: 'c | nil & {Nil#a :> 'b | 1 | 2 <: 'b} | 'a} as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -202,7 +202,7 @@ not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.201: 	(Cons 4).head
 //│ ║         	        ^^^^^
-//│ ╟── expression of type `(tail: nil & {Nil#a: ?b .. ?b | 4} | cons & {Cons#a: ?b .. ?b | 4, head: ?b, tail: ?a} as ?a,) -> (cons & {Cons#a: ?b | 4 .. ?b, head: ?b | 4, tail: ?d | nil & {Nil#a: ?b | 4 .. ?b} | ?c} as ?c)` does not have field 'head'
+//│ ╟── expression of type `(tail: nil & {Nil#a :> ?b <: ?b | 4} | cons & {Cons#a :> ?b <: ?b | 4, head: ?b, tail: ?a} as ?a,) -> (cons & {Cons#a :> ?b | 4 <: ?b, head: ?b | 4, tail: ?d | nil & {Nil#a :> ?b | 4 <: ?b} | ?c} as ?c)` does not have field 'head'
 //│ ║  l.127: 	data type List a of
 //│ ║         	               ^^^^
 //│ ║  l.128: 	  Nil
@@ -219,7 +219,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `2` does not match type `nil & {Nil#a: ?b .. ?b | 1} | cons & {Cons#a: ?b .. ?b | 1, head: ?b, tail: ?a} as ?a`
+//│ ╟── expression of type `2` does not match type `nil & {Nil#a :> ?b <: ?b | 1} | cons & {Cons#a :> ?b <: ?b | 1, head: ?b, tail: ?a} as ?a`
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
@@ -228,7 +228,7 @@ Cons 1 2
 //│ ╟── from applied type reference:
 //│ ║  l.129: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: (cons & {Cons#a: 'b | 1 .. 'b, head: 'b | 1, tail: 'c | nil & {Nil#a: 'b | 1 .. 'b} | 'a} as 'a) | error
+//│ res: (cons & {Cons#a :> 'b | 1 <: 'b, head: 'b | 1, tail: 'c | nil & {Nil#a :> 'b | 1 <: 'b} | 'a} as 'a) | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

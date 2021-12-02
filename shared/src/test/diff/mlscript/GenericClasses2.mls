@@ -1,0 +1,56 @@
+
+class Foo1[A]: { x: A }
+class Bar1: Foo1[int]
+//│ Defined class Foo1
+//│ Defined class Bar1
+
+Foo1
+//│ res: {x: 'x & 'A} -> (foo1 & {Foo1#A = 'A, x: 'x})
+
+Bar1
+//│ res: {x: int & 'x} -> (bar1 & {Foo1#A, x: 'x})
+
+b = Bar1{x = 1}
+//│ b: bar1 & {Foo1#A, x: 1}
+
+:e
+b: Foo1[string]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.17: 	b: Foo1[string]
+//│ ║        	^
+//│ ╟── expression of type `1` does not match type `string`
+//│ ║  l.13: 	b = Bar1{x = 1}
+//│ ║        	             ^
+//│ ╟── but it flows into reference with expected type `foo1 & {Foo1#A = string, x: string}`
+//│ ║  l.17: 	b: Foo1[string]
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.17: 	b: Foo1[string]
+//│ ║        	        ^^^^^^
+//│ ╟── from record type:
+//│ ║  l.2: 	class Foo1[A]: { x: A }
+//│ ╙──     	               ^^^^^^^^
+//│ res: foo1 & {Foo1#A = string, x: string}
+
+
+class Foo2[A]
+  method M2: A
+class Bar2: Foo2[int] & { x: int }
+  method M2 = 1
+//│ Defined class Foo2
+//│ Declared Foo2.M2: (foo2 & {Foo2#A = 'A}) -> 'A
+//│ Defined class Bar2
+//│ Defined Bar2.M2: (bar2 & {Foo2#A = int, x: int}) -> 1
+
+b = Bar2{x = 1}
+//│ b: bar2 & {Foo2#A, x: 1}
+
+// FIXME should reject:
+// :e
+c = b: Foo2[string]
+//│ c: foo2 & {Foo2#A = string}
+
+c.M2
+//│ res: string
+
+

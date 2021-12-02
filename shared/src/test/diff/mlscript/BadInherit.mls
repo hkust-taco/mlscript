@@ -64,13 +64,13 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> (crazy & {name: 'a, Crazy#A: 'a} & 'a)
+//│ Crazy: 'a -> (crazy & {name: 'a, Crazy#A = 'a} & 'a)
 
 Crazy
-//│ res: 'a -> (crazy & {name: 'a, Crazy#A: 'a} & 'a)
+//│ res: 'a -> (crazy & {name: 'a, Crazy#A = 'a} & 'a)
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: crazy & {name: 'a | {name: "Bob", age: 42}, Crazy#A: 'a | {name: "Bob", age: 42} .. 'a} & 'a | crazy & {name: "Bob" & 'a | "Bob" & {name: "Bob", age: 42}, Crazy#A: 'a | {name: "Bob", age: 42} .. 'a, age: 42}
+//│ c: crazy & {name: 'a | {name: "Bob", age: 42}, Crazy#A :> 'a | {name: "Bob", age: 42} <: 'a} & 'a | crazy & {name: "Bob" & 'a | "Bob" & {name: "Bob", age: 42}, Crazy#A :> 'a | {name: "Bob", age: 42} <: 'a, age: 42}
 
 :e
 c: nothing
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: crazy & {name: 'a | parent1 & {name: "Bob"}, Crazy#A: 'a | parent1 & {name: "Bob"} .. 'a} & 'a
+//│ d: crazy & {name: 'a | parent1 & {name: "Bob"}, Crazy#A :> 'a | parent1 & {name: "Bob"} <: 'a} & 'a
 
 d: nothing
 //│ res: nothing

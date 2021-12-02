@@ -133,3 +133,25 @@ res.z
 //│ ╙──       	^^^
 //│ res: error
 
+
+
+// === With and classes === //
+
+class C[A]: { x: A }
+//│ Defined class C
+
+c = C{x = 1}
+//│ c: c & {C#A :> 'A | 1 <: 'A, x: 1}
+
+d = c with { x = "hi"; y = 2 }
+//│ d: c & {C#A :> 'A | 1 <: 'A, y: 2, x: "hi"}
+
+d.x
+//│ res: "hi"
+
+d: C['a]
+//│ res: c & {C#A :> 'a | 1 | "hi" <: 'a, x: 'a | 1 | "hi"}
+
+res.x
+//│ res: 1 | "hi"
+

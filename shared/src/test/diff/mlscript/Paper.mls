@@ -33,7 +33,7 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Some#A: nothing, Cons#A: 'A, tail: 'c, value: 'value} | none as 'c)
+//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Some#A, Cons#A = 'A, tail: 'c, value: 'value} | none as 'c)
 
 
 
@@ -65,14 +65,14 @@ fun (x: int) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 
 def tryDiv: int -> int -> Option[int]
-//│ tryDiv: int -> int -> (some & {Some#A: int, value: int} | none)
+//│ tryDiv: int -> int -> (some & {Some#A = int, value: int} | none)
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> (0 | int & ~0) -> (none | some & {Some#A: 'A | int .. 'A, value: int})  <:  tryDiv: int -> int -> (some & {Some#A: int, value: int} | none)
+//│ int -> (0 | int & ~0) -> (none | some & {Some#A :> 'A | int <: 'A, value: int})  <:  tryDiv: int -> int -> (some & {Some#A = int, value: int} | none)
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1
 tryDiv 1 0
-//│ res: some & {Some#A: int, value: int} | none
-//│ res: some & {Some#A: int, value: int} | none
+//│ res: some & {Some#A = int, value: int} | none
+//│ res: some & {Some#A = int, value: int} | none
 

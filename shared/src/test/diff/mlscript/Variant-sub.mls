@@ -5,7 +5,7 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: 'a -> (some & {Some#A: 'A | 'a .. 'A, v: 'a})
+//│ Some: 'a -> (some & {Some#A :> 'A | 'a <: 'A, v: 'a})
 //│ None: none
 
 def flatMap = fun f -> fun opt ->
@@ -16,15 +16,15 @@ f x = Some x
 flatMap f (Some 1)
 flatMap f None
 flatMap f "oops"
-//│ f: 'a -> (some & {Some#A: 'A | 'a .. 'A, v: 'a})
-//│ res: some & {Some#A: 'A | 1 .. 'A, v: 1}
-//│ res: some & {Some#A: 'A, v: nothing} | none
-//│ res: some & {Some#A: 'A, v: nothing} | "oops"
+//│ f: 'a -> (some & {Some#A :> 'A | 'a <: 'A, v: 'a})
+//│ res: some & {Some#A :> 'A | 1 <: 'A, v: 1}
+//│ res: some & {Some#A = 'A, v: nothing} | none
+//│ res: some & {Some#A = 'A, v: nothing} | "oops"
 
 class NoneBecause: { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
-//│ res: some & {Some#A: 'A, v: nothing} | noneBecause & {reason: "uh uh"}
+//│ res: some & {Some#A = 'A, v: nothing} | noneBecause & {reason: "uh uh"}
 
 type Expr = Lit | Neg | Var | Plus
 class Lit: {v: int}
@@ -53,7 +53,7 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (lit & {v: int & 'b} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a} as 'a) -> (some & {Some#A: 'A | 'b .. 'A, v: 'b} | some & {Some#A: 'A0 | int .. 'A0, v: int} | noneBecause & {reason: string} | some & {Some#A: 'A1 | int .. 'A1, v: int})
+//│ evalOpt: (lit & {v: int & 'b} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a} as 'a) -> (some & {Some#A :> 'A | 'b <: 'A, v: 'b} | some & {Some#A :> 'A0 | int <: 'A0, v: int} | noneBecause & {reason: string} | some & {Some#A :> 'A1 | int <: 'A1, v: int})
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: some & {Some#A: 'A | 3 | 2 .. 'A, v: 3 | 2} | some & {Some#A: 'A0 | int .. 'A0, v: int} | noneBecause & {reason: string} | some & {Some#A: 'A1 | int .. 'A1, v: int}
+//│ res: some & {Some#A :> 'A | 3 | 2 <: 'A, v: 3 | 2} | some & {Some#A :> 'A0 | int <: 'A0, v: int} | noneBecause & {reason: string} | some & {Some#A :> 'A1 | int <: 'A1, v: int}

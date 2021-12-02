@@ -10,14 +10,14 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: some & {Some#A: 'A | 42 .. 'A, payload: 23, value: 42} | none
+//│ arg: some & {Some#A :> 'A | 42 <: 'A, payload: 23, value: 42} | none
 
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | none
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: some & {Some#A: 'A | 42 .. 'A, value: 42} | none
+//│ arg: some & {Some#A :> 'A | 42 <: 'A, value: 42} | none
 
 flatMap3 (fun x -> x.value) arg
 //│ res: 42 | none
@@ -45,7 +45,7 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: ((none & ~'a | some & {Some#A: 'A | 42 .. 'A, value: 42}) -> 'a) -> ('a | none)
+//│ res: ((none & ~'a | some & {Some#A :> 'A | 42 <: 'A, value: 42}) -> 'a) -> ('a | none)
 
 
 

@@ -5,7 +5,7 @@ data Test a b
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
 //│ Defined class Test
-//│ Test: 'a -> 'b -> (test & {Test#b: 'b, a: 'a, b: 'b, Test#a: 'a})
+//│ Test: 'a -> 'b -> (test & {Test#b = 'b, a: 'a, b: 'b, Test#a = 'a})
 
 :p
 data Person(name: string, age: int)

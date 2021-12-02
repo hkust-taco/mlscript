@@ -1,0 +1,219 @@
+
+def intToString: int -> string
+def done x = case x of {}
+//│ intToString: int -> string
+//│ done: nothing -> nothing
+
+
+
+class Lit: { val: int }
+class Add[E]: { lhs: E; rhs: E }
+def lit val = Lit { val }
+def add lhs rhs = Add { lhs; rhs }
+//│ Defined class Lit
+//│ Defined class Add
+//│ lit: (int & 'a) -> (lit & {val: 'a})
+//│ add: 'a -> 'b -> (add & {Add#E :> 'E | 'b | 'a <: 'E, lhs: 'a, rhs: 'b})
+
+
+
+// def eval1: ('b -> int) -> Expr['b] -> int
+rec def eval1 k e = case e of {
+  | Lit -> e.val
+  | Add -> eval1 k e.lhs + eval1 k e.rhs
+  | _ -> k e
+  }
+//│ eval1: ('a -> int) -> (lit & {val: int} | (add & {lhs: 'c & (lit & {val: int} | 'b | 'a & ~add & ~lit), rhs: 'd & (lit & {val: int} | 'b | 'a & ~add & ~lit)} as 'b) | 'a & ~lit & ~add) -> int
+
+rec def pretty1 k e = case e of {
+  | Lit -> intToString e.val
+  | Add -> concat (pretty1 k e.lhs) (pretty1 k e.rhs)
+  | _ -> k e
+  }
+//│ pretty1: ('a -> string) -> (lit & {val: int} | (add & {lhs: 'c & (lit & {val: int} | 'b | 'a & ~add & ~lit), rhs: 'd & (lit & {val: int} | 'b | 'a & ~add & ~lit)} as 'b) | 'a & ~lit & ~add) -> string
+
+rec def prettier1 k ev e = case e of {
+  | Lit -> intToString e.val
+  | Add ->
+      let tmp = pretty1 k e.lhs
+      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+  | _ -> k e
+  }
+//│ prettier1: ('a -> string) -> ('b -> int) -> (lit & {val: int} | add & {lhs: lit & {val: int} | (add & {lhs: 'd & (lit & {val: int} | 'c | 'a & ~add & ~lit), rhs: 'e & (lit & {val: int} | 'c | 'a & ~add & ~lit)} as 'c) | 'a & ~lit & ~add, rhs: lit & {val: int} | (add & {lhs: 'g & (lit & {val: int} | 'f | 'a & ~add & ~lit), rhs: 'h & (lit & {val: int} | 'f | 'a & ~add & ~lit)} as 'f) | 'a & ~lit & ~add} & 'b | 'a & ~lit & ~add) -> string
+
+
+
+e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
+eval1 done e1
+pretty1 done e1
+prettier1 done (eval1 done) e1
+//│ e1: add & {Add#E :> 'E | add & {Add#E :> 'E0 | lit & {val: 3} | lit & {val: 2} <: 'E0, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E0 | lit & {val: 3} | lit & {val: 2} <: 'E0, lhs: lit & {val: 2}, rhs: lit & {val: 3}}}
+//│ res: int
+//│ res: string
+//│ res: string
+
+e1 = add (lit 1) (add (lit 2) (lit 3))
+eval1 done e1
+pretty1 done e1
+prettier1 done (eval1 done) e1
+//│ e1: add & {Add#E :> 'E | add & {Add#E :> 'E0 | lit & {val: 3} | lit & {val: 2} <: 'E0, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E0 | lit & {val: 3} | lit & {val: 2} <: 'E0, lhs: lit & {val: 2}, rhs: lit & {val: 3}}}
+//│ res: int
+//│ res: string
+//│ res: string
+
+
+
+class Nega[E]: { arg: E }
+def nega arg = Nega { arg }
+//│ Defined class Nega
+//│ nega: 'a -> (nega & {arg: 'a, Nega#E :> 'E | 'a <: 'E})
+
+
+
+rec def eval2 k = eval1 (fun x -> case x of {
+  | Nega -> 0 - (eval2 k x.arg)
+  | _ -> k x
+  })
+//│ eval2: ('a -> int) -> (lit & {val: int} | (add & {lhs: 'c & (lit & {val: int} | 'b | nega & {arg: 'd} | 'a & ~nega & ~add & ~lit as 'd), rhs: 'e & (lit & {val: int} | 'b | nega & {arg: 'd} | 'a & ~nega & ~add & ~lit as 'd)} as 'b) | (nega & {arg: 'g & (lit & {val: int} | (add & {lhs: 'd, rhs: 'd} as 'b) | 'f | 'a & ~nega & ~add & ~lit as 'd)} as 'f) | 'a & ~lit & ~add & ~nega) -> int
+
+
+rec def prettier2 k ev = prettier1 (fun x -> case x of {
+  | Nega -> concat "-" (prettier2 k ev x.arg)
+  | _ -> k x
+  }) ev
+//│ prettier2: ('a -> string) -> ('b -> int) -> (lit & {val: int} | add & {lhs: (lit & {val: int} | add & {lhs: 'd, rhs: 'd} | ((nega & {arg: 'g & (lit & {val: int} | add & {lhs: 'c, rhs: lit & {val: int} | (add & {lhs: 'i & (lit & {val: int} | 'h | 'e), rhs: 'j & (lit & {val: int} | 'h | 'e)} as 'h) | 'f | 'a & ~lit & ~add & ~nega} & 'b | 'e)} as 'f) | 'a & ~nega & ~add & ~lit as 'e) as 'd) as 'c, rhs: lit & {val: int} | (add & {lhs: 'k, rhs: 'k} as 'h) | ((nega & {arg: 'g & (lit & {val: int} | add & {lhs: (lit & {val: int} | add & {lhs: 'd, rhs: 'd} | 'e as 'd) as 'c, rhs: lit & {val: int} | (add & {lhs: 'k, rhs: 'k} as 'h) | 'f | 'a & ~lit & ~add & ~nega} & 'b | 'e)} as 'f) | 'a & ~nega & ~add & ~lit as 'e) as 'k} & 'b | ((nega & {arg: 'g & (lit & {val: int} | add & {lhs: (lit & {val: int} | add & {lhs: 'd, rhs: 'd} | ('f | 'a & ~nega & ~add & ~lit as 'e) as 'd) as 'c, rhs: lit & {val: int} | (add & {lhs: 'i & (lit & {val: int} | 'h | ('f | 'a & ~nega & ~add & ~lit as 'e) as 'k), rhs: 'j & (lit & {val: int} | 'h | ('f | 'a & ~nega & ~add & ~lit as 'e) as 'k)} as 'h) | 'l} & 'b | ('f | 'a & ~nega & ~add & ~lit as 'e))} as 'f) | 'a & ~lit & ~add & ~nega as 'l)) -> string
+
+
+
+eval2 done e1
+//│ res: int
+
+e2 = add (lit 1) (nega e1)
+//│ e2: add & {Add#E :> 'E | nega & {arg: add & {Add#E :> 'E0 | add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E0, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}}}, Nega#E :> 'E2 | add & {Add#E :> 'E0 | add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E0, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}}} <: 'E2} | lit & {val: 1} <: 'E, lhs: lit & {val: 1}, rhs: nega & {arg: add & {Add#E :> 'E0 | add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E0, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}}}, Nega#E :> 'E2 | add & {Add#E :> 'E0 | add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}} | lit & {val: 1} <: 'E0, lhs: lit & {val: 1}, rhs: add & {Add#E :> 'E1 | lit & {val: 3} | lit & {val: 2} <: 'E1, lhs: lit & {val: 2}, rhs: lit & {val: 3}}} <: 'E2}}
+
+eval2 done e2
+//│ res: int
+
+d2 = nega (add (lit 1) (nega (lit 1)))
+//│ d2: nega & {arg: add & {Add#E :> 'E | nega & {arg: lit & {val: 1}, Nega#E :> 'E0 | lit & {val: 1} <: 'E0} | lit & {val: 1} <: 'E, lhs: lit & {val: 1}, rhs: nega & {arg: lit & {val: 1}, Nega#E :> 'E0 | lit & {val: 1} <: 'E0}}, Nega#E :> 'E1 | add & {Add#E :> 'E | nega & {arg: lit & {val: 1}, Nega#E :> 'E0 | lit & {val: 1} <: 'E0} | lit & {val: 1} <: 'E, lhs: lit & {val: 1}, rhs: nega & {arg: lit & {val: 1}, Nega#E :> 'E0 | lit & {val: 1} <: 'E0}} <: 'E1}
+
+eval2 done d2
+//│ res: int
+
+
+prettier2 done
+//│ res: ('a -> int) -> (lit & {val: int} | add & {lhs: 'c & (lit & {val: int} | add & {lhs: 'd, rhs: 'd} | nega & {arg: 'b} as 'd), rhs: lit & {val: int} | add & {lhs: 'e, rhs: 'e} | nega & {arg: 'b} as 'e} & 'a | nega & {arg: 'b} as 'b) -> string
+
+prettier2 done (eval1 done)
+prettier2 done (eval1 done) e1
+//│ res: (lit & {val: int} | add & {lhs: lit & {val: int} | add & {lhs: 'b, rhs: 'b} as 'b, rhs: lit & {val: int} | add & {lhs: 'c, rhs: 'c} as 'c} | nega & {arg: 'a} as 'a) -> string
+//│ res: string
+
+prettier2 done (eval2 done)
+prettier2 done (eval2 done) e2
+prettier2 done (eval2 done) d2
+//│ res: (lit & {val: int} | (add & {lhs: 'c & (lit & {val: int} | add & {lhs: 'd, rhs: 'd} | (nega & {arg: 'f & (lit & {val: int} | 'b | 'e)} as 'e) as 'd), rhs: lit & {val: int} | add & {lhs: 'g, rhs: 'g} | (nega & {arg: 'f & (lit & {val: int} | 'b | 'e)} as 'e) as 'g} as 'b) | nega & {arg: 'a} as 'a) -> string
+//│ res: string
+//│ res: string
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+:ShowRelativeLineNums
+
+
+:e
+eval1 done e2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	eval1 done e2
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── expression of type `nega & {arg: ?arg | ?a | ?a | add & {Add#E :> ?E | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}} | ?h | ?i | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?h | ?i | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}}}, Nega#E :> ?E1 | ?a | ?a | add & {Add#E :> ?E | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}} | ?h | ?i | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?h | ?i | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}}} <: ?E1}` does not match type `nothing`
+//│ ║  l.91: 	e2 = add (lit 1) (nega e1)
+//│ ║        	                  ^^^^^^^
+//│ ╟── but it flows into reference with expected type `lit & {val: int & ?j} & ?k | (add & {lhs: ?m & (lit & {val: int & ?j} & ?n & ?k | ?l & ?n & ?o), rhs: ?p & (lit & {val: int & ?j} & ?q & ?k | ?l & ?q & ?o)} as ?l) & ?o`
+//│ ║  l.+1: 	eval1 done e2
+//│ ║        	           ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.3: 	def done x = case x of {}
+//│ ║       	                  ^
+//│ ╟── from argument:
+//│ ║  l.24: 	  | _ -> k e
+//│ ║        	           ^
+//│ ╟── from reference:
+//│ ║  l.21: 	rec def eval1 k e = case e of {
+//│ ║        	                         ^
+//│ ╟── from argument:
+//│ ║  l.23: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ╙──      	                                   ^^^^^
+//│ res: int | error
+
+
+:e
+prettier2 done eval1 e1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `(lit & {val: int} & ?a & ?b | (add & {lhs: ?d & (lit & {val: int} & ?e & ?b | ?c & ?e & ?f | ?e & ?g & ~lit & ~add), rhs: ?h & (lit & {val: int} & ?i & ?b | ?c & ?i & ?f | ?i & ?g & ~lit & ~add)} as ?c) & ?a & ?f | ?a & ?g & ~lit & ~add) -> int` does not match type `int`
+//│ ║  l.21: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.22: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.23: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference of type `?j | (?k -> int & ?l) -> (lit & {val: int} & ?m & ?n | (add & {lhs: ?p & (lit & {val: int} & ?q & ?n | ?o & ?q & ?r | ?q & ?k & ~lit & ~add), rhs: ?s & (lit & {val: int} & ?t & ?n | ?o & ?t & ?r | ?t & ?k & ~lit & ~add)} as ?o) & ?m & ?r | ?m & ?k & ~lit & ~add) -> int`
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	               ^^^^^
+//│ ╟── which does not match type `?u -> (int & ?v)`
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.39: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║        	            ^^^^
+//│ ╟── from argument:
+//│ ║  l.83: 	  }) ev
+//│ ║        	     ^^
+//│ ╟── from argument:
+//│ ║  l.81: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ╙──      	                                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `add & {Add#E :> ?E | ?a | ?b | add & {Add#E :> ?E0 | ?c | ?d | lit & {val: ?val | ?val | 3} | ?e | ?f | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?e | ?f | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?c | ?d | lit & {val: ?val | ?val | 3}} | ?g | ?h | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?g | ?h | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?a | ?b | add & {Add#E :> ?E0 | ?c | ?d | lit & {val: ?val | ?val | 3} | ?e | ?f | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?e | ?f | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?c | ?d | lit & {val: ?val | ?val | 3}}}` does not match type `?i -> (int & ?j)`
+//│ ║  l.55: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `lit & {val: int & ?k} & ?l | (nega & {arg: ?n & (lit & {val: int & ?k} & ?o & ?l | ?m & ?o & ?p & ?p)} as ?m) & ?p & ?p`
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	                     ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.24: 	  | _ -> k e
+//│ ║        	         ^^^
+//│ ╟── from argument:
+//│ ║  l.39: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║        	               ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.35: 	rec def prettier1 k ev e = case e of {
+//│ ╙──      	                                ^
+//│ res: error | string
+
+
+// FIXME properly report errors for:
+
+// :e
+// prettier2 done (eval1 done) e2
+
+// :e
+// prettier2 done eval2
+
+// :e
+// prettier2 done eval2 e1
+
+// :e
+// prettier2 done eval2 e2
+
+// :e
+// prettier2 done eval2 d2
+
+// :e
+// prettier2 done eval1 e2
+
