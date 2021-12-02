@@ -60,6 +60,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       getTargsMaps(cls, mth).dlof(_.get(targ) orElse parent.dlof(_.getTargsMaps(cls, mth, targ))(N))(N)
     def allBaseClassesOf(name: Str): Set[Var] = abcCache.getOrElse(name,
       tyDefs.get(name).fold(Set.empty[Var])(_.allBaseClasses(this)(Set.empty).tap(abcCache += name -> _)))
+    private val thisTyCache = MutMap.empty[Str, TypeRef]
+    def thisType(tn: Str)(implicit prov: TypeProvenance): TypeRef = thisTyCache.getOrElse(tn, {
+      val td = tyDefs(tn)
+      TypeRef(td, td.tparams.flatMap(p => getTargsMaps(tn, N, p.name)))(prov, this).tap(thisTyCache += tn -> _)
+    })
   }
   object Ctx {
     def init: Ctx = Ctx(
@@ -206,6 +211,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     }
     rec(tyDef.body)
   }
+
+  def wrapMethod(tn: Str, bodyTy: PolymorphicType)(implicit prov: TypeProvenance, ctx: Ctx): PolymorphicType =
+    PolymorphicType(bodyTy.level, FunctionType(ctx.thisType(tn), bodyTy.body)(prov))
 
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
@@ -380,7 +388,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def typeMethods(implicit ctx: Ctx): Ctx = {
       val newMthDecls = MutMap.from(ctx.mthDecls)
       val newMthDefs = MutMap.from(ctx.mthDefs)
-      newDefs.foreach { td =>
+      newDefs.filter(td => ctx.tyDefs.isDefinedAt(td.nme.name)).foreach { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val tn = td.nme
         val decls = MutMap.empty[Str, PolymorphicType]
@@ -396,9 +404,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ => die
         })
         val reverseRigid = m.toMap
-        val thisTy = TypeRef(td, td.tparams.flatMap(p => ctx.getTargsMaps(tn.name, N, p.name)))(prov, ctx)
-        val thisRigidTy = TypeRef(td, td.tparams.flatMap(p => thisCtx.getTargsMaps(tn.name, N, p.name)))(prov, thisCtx)
-        thisCtx += "this" -> thisRigidTy
+        thisCtx += "this" -> thisCtx.thisType(tn.name)
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
@@ -415,8 +421,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           rhs.fold(_ => defs, _ => decls) += nme.name -> (bodyTy match {
             case PolymorphicType(level, body) => PolymorphicType(level, ProxyType(body)(prov))
           })
-          thisCtx.env += "." + nme.name -> 
-            PolymorphicType(bodyTy.level, FunctionType(thisTy, bodyTy.body)(prov))
+          thisCtx.env += "." + nme.name -> wrapMethod(tn.name, bodyTy)
         }
         val subsMap = getSubsMap(tn.name)
         newMthDecls += tn.name ->
@@ -427,8 +432,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           ((td.baseClasses.flatMap(t => newMthDefs.getOrElse(t.name, Map.empty).view.mapValues(subst(_, subsMap(t.name)))))
             .groupMapReduce(_._1)(_._2){ case PolymorphicType(_, body1) -> PolymorphicType(_, body2) => 
               PolymorphicType(thisCtx.lvl, ComposedType(false, body1, body2)(prov)) } ++ defs.toMap)
-        allEnv ++= (newMthDefs(tn.name) ++ newMthDecls(tn.name)).flatMap{ case mn -> PolymorphicType(level, body) => 
-          val m_ty = PolymorphicType(level, FunctionType(thisTy, body)(prov))
+        allEnv ++= (newMthDefs(tn.name) ++ newMthDecls(tn.name)).flatMap{ case mn -> bodyTy => 
+          val m_ty = wrapMethod(tn.name, bodyTy)
           s"${tn.name}.${mn}" -> m_ty ::
             (ctx.methodBase.get(mn) match {
               case S(S(v)) if ctx.allBaseClassesOf(tn.name).contains(v) => Nil
@@ -452,7 +457,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     /* Perform subsumption checking on method declarations and definitions
      * by applying type arguments to method signatures of the parents and rigidifying class type variables. */
     def checkSubsume(implicit ctx: Ctx): Unit = {
-      newDefs.foreach { td =>
+      newDefs.filter(td => ctx.tyDefs.isDefinedAt(td.nme.name)).foreach { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val tn = td.nme
         val decls = ctx.mthDecls(tn.name)
