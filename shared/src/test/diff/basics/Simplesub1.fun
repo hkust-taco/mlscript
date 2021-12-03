@@ -82,7 +82,7 @@ x => succ (not x)
 //│ ╟── expression of type `123` does not match type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
-//│ ╟── but it flows into record with expected type `{f: bool & ?a}`
+//│ ╟── but it flows into record with expected type `{f: ?a}`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:

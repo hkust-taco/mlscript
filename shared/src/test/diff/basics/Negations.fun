@@ -23,10 +23,10 @@ jesus(water: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	jesus w
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `wine` does not match type `~wine`
+//│ ╟── expression of type `wine` does not match type `~Wine`
 //│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
 //│ ║        	                                 ^^^^
-//│ ╟── but it flows into reference with expected type `(water: ?a & ~wine,)`
+//│ ╟── but it flows into reference with expected type `(water: ?a,)`
 //│ ║  l.21: 	jesus w
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from application:
@@ -36,10 +36,10 @@ jesus(water: w)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	jesus(water: w)
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── expression of type `wine` does not match type `~wine`
+//│ ╟── expression of type `wine` does not match type `~Wine`
 //│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
 //│ ║        	                                 ^^^^
-//│ ╟── but it flows into argument with expected type `(water: ?a & ~wine,)`
+//│ ╟── but it flows into argument with expected type `(water: ?a,)`
 //│ ║  l.22: 	jesus(water: w)
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -59,7 +59,7 @@ jesus(water: w)
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.58: 	(0 | 1) & neg 0 as 0
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not match type `0`
+//│ ╟── expression of type `1 & ~0` does not match type `0`
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.58: 	(0 | 1) & neg 0 as 0
 //│ ╙──      	                   ^

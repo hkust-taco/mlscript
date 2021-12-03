@@ -64,10 +64,10 @@ case o of {
 //│ ║        	     ^^^^^^
 //│ ║  l.61: 	    Some -> o.Get | None -> 0 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `option & {Option#A :> ?A | 0 | 1 <: ?A}` does not match type `some & {Option#A = ?A0} & ?a | none & ?b`
+//│ ╟── expression of type `option & {Option#A = ?A}` does not match type `some & ?a | none & ?b & ~some`
 //│ ║  l.21: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `some & {Option#A = ?A1} & ?c | none & ?d`
+//│ ╟── but it flows into reference with expected type `some & ?a | none & ?b & ~some`
 //│ ║  l.60: 	case o of {
 //│ ╙──      	     ^
 //│ res: 1 | 0

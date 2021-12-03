@@ -37,7 +37,7 @@ def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.36: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{x: 0 & ?x | 1 & ?x, y: string & ?y}`
+//│ ╟── expression of type `anything` does not match type `{x: ?x, y: ?y}`
 //│ ║  l.36: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: d & {y: nothing, x: nothing} | error
@@ -50,7 +50,7 @@ dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.49: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `d & {y: ?y | "hello", x: ?x | 0}` does not match type `nothing`
+//│ ╟── expression of type `d & {x: ?x, y: ?y}` does not match type `nothing`
 //│ ║  l.45: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -69,7 +69,7 @@ dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.68: 	dv: A & B: nothing
 //│ ║        	^^
-//│ ╟── expression of type `{y: string, x: int} & a & b` does not match type `nothing`
+//│ ╟── expression of type `A & B` does not match type `nothing`
 //│ ║  l.68: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -111,7 +111,7 @@ def t = T1 (A { x = 1 })
 //│ ╟── expression of type `{x: 1}` does not match type `~a | c`
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into application with expected type `c & {x: 0 | 1}`
+//│ ╟── but it flows into application with expected type `C`
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -137,7 +137,7 @@ def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
-//│ ╟── expression of type `anything` does not match type `{x: 0 & ?x | 1 & ?x, y: "hi" & ?y | "hello" & ?y}`
+//│ ╟── expression of type `anything` does not match type `{x: ?x, y: ?y}`
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: c1 & {y: nothing, x: nothing} | error

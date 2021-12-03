@@ -60,7 +60,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: 'a} & ~?a | int & {x: 'a}` does not match type `{f: ?b}`
+//│ ╟── expression of type `{x: 'a} & ~(?a & ~int)` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                             ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -84,7 +84,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.58: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{y: 'a} & ~?a | int & {y: 'a}` does not match type `{f: ?b}`
+//│ ╟── expression of type `{y: 'a} & ~(?a & ~int)` does not match type `{f: ?b}`
 //│ ║  l.54: 	def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 //│ ║        	                                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -127,10 +127,10 @@ test (error: B & { c: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.126: 	test (error: B & { c: int })
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `b & {c: int}` does not match type `a & {a: ?a} | b & {b: ?a} | c & {c: ?a}`
+//│ ╟── expression of type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.126: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `a & {a: ?a0} | b & {b: ?a0} | c & {c: ?a0}`
+//│ ╟── but it flows into argument with expected type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.126: 	test (error: B & { c: int })
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -154,10 +154,10 @@ test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `a & {x: int}` does not match type `a & {y: ?b, x: ?a} | b & {y: ?b, x: ?a} | c & {y: ?b, x: ?a}`
+//│ ╟── expression of type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `a & {y: ?b0, x: ?a0} | b & {y: ?b0, x: ?a0} | c & {y: ?b0, x: ?a0}`
+//│ ╟── but it flows into argument with expected type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.153: 	test (error: A & { x: int })
 //│ ║         	      ^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -194,10 +194,10 @@ negInt: A | { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.193: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
-//│ ╟── expression of type `~int` does not match type `a | {x: ?a}`
+//│ ╟── expression of type `~int` does not match type `A | {x: ?a}`
 //│ ║  l.180: 	def negInt: ~int
 //│ ║         	            ^^^^
-//│ ╟── but it flows into reference with expected type `a | {x: ?a0}`
+//│ ╟── but it flows into reference with expected type `A | {x: ?a}`
 //│ ║  l.193: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
 //│ ╟── Note: constraint arises from union type:

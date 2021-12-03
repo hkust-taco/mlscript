@@ -255,14 +255,14 @@ abstract class TyperHelpers { self: Typer =>
       ).mkString(", ")
     
     def expPos: Type = (this
-      |> (canonicalizeType(_, true))
-      |> (simplifyType(_, true, removePolarVars = false))
-      |> (expandType(_, true))
+      // |> (canonicalizeType(_, true))
+      // |> (simplifyType(_, true, removePolarVars = false))
+      |> (expandType(_, true, stopAtTyVars = true))
     )
     def expNeg: Type = (this
-      |> (canonicalizeType(_, false))
-      |> (simplifyType(_, false, removePolarVars = false))
-      |> (expandType(_, false))
+      // |> (canonicalizeType(_, false))
+      // |> (simplifyType(_, false, removePolarVars = false))
+      |> (expandType(_, false, stopAtTyVars = true))
     )
     
   }

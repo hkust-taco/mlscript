@@ -16,7 +16,7 @@ def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent & {name: ?name | "Bob"}` does not match type `{age: int & ?age, name: string & ?name0}`
+//│ ╟── expression of type `parent & {name: ?name}` does not match type `{age: ?age, name: ?name0}`
 //│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: child & {name: "Bob", age: nothing} | error

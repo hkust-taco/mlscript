@@ -11,7 +11,7 @@ test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.10: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & ~?a | 1 & myTrait` does not match type `{value: ?b}`
+//│ ╟── expression of type `1 & ~(?a & ~myTrait)` does not match type `{value: ?b}`
 //│ ║  l.10: 	test1 1
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from field selection:
@@ -92,7 +92,7 @@ test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?default | "oops"} & ~?a | c2 & {default: ?default | "oops"} & myTrait` does not match type `{value: ?b}`
+//│ ╟── expression of type `c2 & {default: ?default} & ~(?a & ~myTrait)` does not match type `{value: ?b}`
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -112,10 +112,10 @@ test2 c2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.111: 	test2 c2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?default | "oops"} & ~?a | c2 & {default: ?default | "oops"} & myTrait` does not match type `{value: ?b}`
+//│ ╟── expression of type `c2 & {default: ?default} & ~(?a & ~myTrait)` does not match type `{value: ?b}`
 //│ ║  l.107: 	def c2 = C2 { value = 1; default = "oops" }
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{value: ?c} & myTrait & ?d | {default: ?e} & ?f & ~myTrait`
+//│ ╟── but it flows into reference with expected type `myTrait & ?c | ?a & ~myTrait`
 //│ ║  l.111: 	test2 c2
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -151,7 +151,7 @@ strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.150: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `c2 & {default: string} & ~myTrait` does not match type `~{value: anything}`
+//│ ╟── expression of type `C2 & ~MyTrait[anything]` does not match type `~{value: anything}`
 //│ ║  l.140: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`

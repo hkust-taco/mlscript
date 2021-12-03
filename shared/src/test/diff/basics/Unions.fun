@@ -211,7 +211,7 @@ baz(0)
 //│ ╟── expression of type `0` does not have field '_2'
 //│ ║  l.207: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_2: ?a, _1: int & ?b & ?b} & ?c | {_2: ?a, _1: int & ?b & ?b} & ?c & ?d,)`
+//│ ╟── but it flows into argument with expected type `(r: ?a,)`
 //│ ║  l.207: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -251,7 +251,7 @@ baz(0, 1)
 //│ ╟── expression of type `0` does not have field '_2'
 //│ ║  l.246: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `(r: (0, 0,) & {_2: ?a, _1: int & ?b & ?b} & ?c | (1, ?d,) & {_2: ?a, _1: int & ?b & ?b} & ?c,)`
+//│ ╟── but it flows into argument with expected type `(r: ?a,)`
 //│ ║  l.246: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:

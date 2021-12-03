@@ -16,7 +16,7 @@ Test1 { x = "oops" }
 //│ ╟── expression of type `"oops"` does not match type `int`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
-//│ ╟── but it flows into record literal with expected type `{x: int & ?x}`
+//│ ╟── but it flows into record literal with expected type `{x: ?x}`
 //│ ║  l.12: 	Test1 { x = "oops" }
 //│ ║        	      ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -159,10 +159,10 @@ id: Runaway2
 //│ ╟── expression of type `{x: ?a -> ?a}` is not a function
 //│ ║  l.128: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference of type `({x: ?a0 -> ?a0} -> ({x: ?a1 -> ?a1} -> ?b as ?b) & ?c) -> (?c | {x: ?a2 -> ?a2})`
+//│ ╟── but it flows into reference of type `?b -> ?b`
 //│ ║  l.155: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── which does not match type `{x: ?a3 -> ?a3} -> ?d as ?d`
+//│ ╟── which does not match type `Runaway2`
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.151: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^

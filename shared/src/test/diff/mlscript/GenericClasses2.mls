@@ -21,7 +21,7 @@ b: Foo1[string]
 //│ ╟── expression of type `1` does not match type `string`
 //│ ║  l.13: 	b = Bar1{x = 1}
 //│ ║        	             ^
-//│ ╟── but it flows into reference with expected type `foo1 & {Foo1#A = string, x: string}`
+//│ ╟── but it flows into reference with expected type `Foo1[string]`
 //│ ║  l.17: 	b: Foo1[string]
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:

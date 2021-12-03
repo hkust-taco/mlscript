@@ -122,7 +122,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ║        	 ^^^^^^^^^^^^
-//│ ╟── expression of type `{v: ?a | error}` does not match type `int`
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
@@ -137,7 +137,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── expression of type `{v: ?a | error}` does not match type `int`
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ╙──      	     ^^^^^^^^^^
 //│ res: int -> int | error
@@ -620,7 +620,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{v: ?a | error}` does not match type `int`
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
@@ -635,7 +635,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{v: ?a | error}` does not match type `int`
+//│ ╟── expression of type `{v: ?a}` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ╙──      	                      ^^^^^^^^^^
 //│ res: int -> int | error

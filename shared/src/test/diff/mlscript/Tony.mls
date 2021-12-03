@@ -73,7 +73,7 @@ res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.72: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `some & {value: ?a} & ?b | none & ?c`
+//│ ╟── expression of type `1` does not match type `some & ?a | none & ?b & ~some`
 //│ ║  l.72: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:

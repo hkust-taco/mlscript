@@ -202,14 +202,14 @@ not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.201: 	(Cons 4).head
 //│ ║         	        ^^^^^
-//│ ╟── expression of type `(tail: nil & {Nil#a :> ?b <: ?b | 4} | cons & {Cons#a :> ?b <: ?b | 4, head: ?b, tail: ?a} as ?a,) -> (cons & {Cons#a :> ?b | 4 <: ?b, head: ?b | 4, tail: ?d | nil & {Nil#a :> ?b | 4 <: ?b} | ?c} as ?c)` does not have field 'head'
+//│ ╟── expression of type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.127: 	data type List a of
 //│ ║         	               ^^^^
 //│ ║  l.128: 	  Nil
 //│ ║         	^^^^^
 //│ ║  l.129: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{head: ?e}`
+//│ ╟── but it flows into receiver with expected type `{head: ?b}`
 //│ ║  l.201: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
@@ -219,7 +219,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `2` does not match type `nil & {Nil#a :> ?b <: ?b | 1} | cons & {Cons#a :> ?b <: ?b | 1, head: ?b, tail: ?a} as ?a`
+//│ ╟── expression of type `2` does not match type `Nil[?a] | Cons[?a]`
 //│ ║  l.218: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:

@@ -43,7 +43,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `some & {Some#A = int, value: int} | none`
+//│ ╟── expression of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.17: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^

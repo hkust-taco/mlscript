@@ -30,13 +30,13 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?head & ?A, size: int & ?size, tail: nil & {size: int, Seq#A = nothing, ListBase#A = nothing} & ?tail | (cons & {size: int, Cons#A = ?A, ListBase#A = ?A, tail: ?b & (nil & {size: int, Seq#A = nothing, ListBase#A = nothing} | ?a), Seq#A = ?A, head: ?A} as ?a) & ?tail}`
+//│ ╟── expression of type `1` does not match type `{head: ?head, size: ?size, tail: ?tail}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `cons & {size: ?size, Cons#A = ?A, ListBase#A = ?A, tail: ?tail, Seq#A = ?A, head: ?head}` does not match type `(?a | nil & {size: ?size0 | 0, Seq#A = nothing, ListBase#A = nothing}) -> ?b`
+//│ ╟── expression of type `cons & {ListBase#A = ?A, Seq#A = ?A, head: ?head, size: ?size, tail: ?tail, Cons#A = ?A}` does not match type `?a -> ?b`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error

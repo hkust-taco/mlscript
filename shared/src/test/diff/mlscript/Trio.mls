@@ -35,10 +35,10 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.34: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `a & {fA: int}` does not match type `{payload: int & ?a}`
+//│ ╟── expression of type `a & {fA: int} & ~(b & ?a & ~a) & ~(c & ?b & ~b & ~a)` does not match type `{payload: ?c}`
 //│ ║  l.16: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `a & {fA: int & ?b, payload: int & ?c} & ?d | b & {fB: ?e} & ?f | c & {fC: ?g, payload: ?h} & ?i`
+//│ ╟── but it flows into reference with expected type `a & ?d | b & ?a & ~a | c & ?b & ~b & ~a`
 //│ ║  l.34: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:

@@ -148,7 +148,7 @@ trait TypeSimplifier { self: Typer =>
         }
       case NegType(und) => analyze(und, !pol)
       case ProxyType(underlying) => analyze(underlying, pol)
-      case tr @ TypeRef(defn, targs) => analyze(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case tr @ TypeRef(defn, targs) => analyze(tr.expand(_ => ()), pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
       case Without(base, names) => analyze(base, pol)
     }
     def processBounds(tv: TV, pol: Bool) = {
@@ -271,7 +271,7 @@ trait TypeSimplifier { self: Typer =>
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
       case NegType(und) => transform(und, !pol).neg()
       case ProxyType(underlying) => transform(underlying, pol)
-      case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // FIXME may diverge; and we should try to keep these!
       case wo @ Without(base, names) => Without(transform(base, pol), names)(wo.prov)
     }
     transform(st, pol)

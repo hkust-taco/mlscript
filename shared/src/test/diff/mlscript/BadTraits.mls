@@ -31,7 +31,7 @@ T a
 //│ ╟── expression of type `a` does not match type `b`
 //│ ║  l.23: 	def a = A{}
 //│ ║        	        ^^^
-//│ ╟── but it flows into reference with expected type `b`
+//│ ╟── but it flows into reference with expected type `B`
 //│ ║  l.27: 	T a
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:

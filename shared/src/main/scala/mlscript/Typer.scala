@@ -911,7 +911,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, polarity: Bool): Type = {
+  def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
+    val expandType = ()
     
     // TODO improve/simplify? (take inspiration from other impls?)
     //    see: duplication of recursive.get(st_pol) logic
@@ -923,6 +924,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case tv: TypeVariable => tv.nameHint
       })(0).asTypeVar)
       else (inProcess + st_pol) pipe { implicit inProcess => st match {
+        case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable =>
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
           val bound =
@@ -946,7 +948,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
             case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
-            case NegType(t) => Neg(expandType(t, !polarity))
+            case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case ProxyType(und) => go(und, polarity)
@@ -956,8 +958,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             }
             case TypeRef(td, Nil) => TypeName(td.nme.name)
             case TypeRef(td, targs) =>
-              AppliedType(TypeName(td.nme.name), targs.map(expandType(_, polarity)))
-            case Without(base, names) => Rem(expandType(base, polarity), names.toList)
+              AppliedType(TypeName(td.nme.name), targs.map(go(_, polarity)))
+            case Without(base, names) => Rem(go(base, polarity), names.toList)
             case _: TypeVariable => die
           }
           recursive.get(st_pol) match {

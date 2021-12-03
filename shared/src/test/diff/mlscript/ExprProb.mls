@@ -130,10 +130,10 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── expression of type `nega & {arg: ?arg | ?a | ?a | add & {Add#E :> ?E | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}} | ?h | ?i | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?h | ?i | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}}}, Nega#E :> ?E1 | ?a | ?a | add & {Add#E :> ?E | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}} | ?h | ?i | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?h | ?i | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?b | ?c | add & {Add#E :> ?E0 | ?d | ?e | lit & {val: ?val | ?val | 3} | ?f | ?g | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?f | ?g | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?d | ?e | lit & {val: ?val | ?val | 3}}} <: ?E1}` does not match type `nothing`
+//│ ╟── expression of type `{arg: ?arg, Nega#E = ?E} & nega & ~add & ~lit` does not match type `nothing`
 //│ ║  l.91: 	e2 = add (lit 1) (nega e1)
 //│ ║        	                  ^^^^^^^
-//│ ╟── but it flows into reference with expected type `lit & {val: int & ?j} & ?k | (add & {lhs: ?m & (lit & {val: int & ?j} & ?n & ?k | ?l & ?n & ?o), rhs: ?p & (lit & {val: int & ?j} & ?q & ?k | ?l & ?q & ?o)} as ?l) & ?o`
+//│ ╟── but it flows into reference with expected type `lit & ?a | add & ?b & ~lit | ?c & ~add & ~lit`
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	           ^^
 //│ ╟── Note: constraint arises from reference:
@@ -156,17 +156,17 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(lit & {val: int} & ?a & ?b | (add & {lhs: ?d & (lit & {val: int} & ?e & ?b | ?c & ?e & ?f | ?e & ?g & ~lit & ~add), rhs: ?h & (lit & {val: int} & ?i & ?b | ?c & ?i & ?f | ?i & ?g & ~lit & ~add)} as ?c) & ?a & ?f | ?a & ?g & ~lit & ~add) -> int` does not match type `int`
+//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.21: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.22: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ║  l.23: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference of type `?j | (?k -> int & ?l) -> (lit & {val: int} & ?m & ?n | (add & {lhs: ?p & (lit & {val: int} & ?q & ?n | ?o & ?q & ?r | ?q & ?k & ~lit & ~add), rhs: ?s & (lit & {val: int} & ?t & ?n | ?o & ?t & ?r | ?t & ?k & ~lit & ~add)} as ?o) & ?m & ?r | ?m & ?k & ~lit & ~add) -> int`
+//│ ╟── but it flows into reference of type `?e`
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	               ^^^^^
-//│ ╟── which does not match type `?u -> (int & ?v)`
+//│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.39: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║        	            ^^^^
@@ -179,10 +179,10 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `add & {Add#E :> ?E | ?a | ?b | add & {Add#E :> ?E0 | ?c | ?d | lit & {val: ?val | ?val | 3} | ?e | ?f | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?e | ?f | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?c | ?d | lit & {val: ?val | ?val | 3}} | ?g | ?h | lit & {val: ?val1 | ?val1 | 1} <: ?E, lhs: ?lhs0 | ?g | ?h | lit & {val: ?val1 | ?val1 | 1}, rhs: ?rhs0 | ?a | ?b | add & {Add#E :> ?E0 | ?c | ?d | lit & {val: ?val | ?val | 3} | ?e | ?f | lit & {val: ?val0 | ?val0 | 2} <: ?E0, lhs: ?lhs | ?e | ?f | lit & {val: ?val0 | ?val0 | 2}, rhs: ?rhs | ?c | ?d | lit & {val: ?val | ?val | 3}}}` does not match type `?i -> (int & ?j)`
+//│ ╟── expression of type `{Add#E = ?E, lhs: ?lhs, rhs: ?rhs} & add & ~(?a & ~add & ~lit) & ~lit` does not match type `?b -> ?c`
 //│ ║  l.55: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `lit & {val: int & ?k} & ?l | (nega & {arg: ?n & (lit & {val: int & ?k} & ?o & ?l | ?m & ?o & ?p & ?p)} as ?m) & ?p & ?p`
+//│ ╟── but it flows into reference with expected type `lit & ?d | add & ?e & ~lit | ?a & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
