@@ -8,10 +8,10 @@ Foo1
 //│ res: {x: 'x & 'A} -> (foo1 & {Foo1#A = 'A, x: 'x})
 
 Bar1
-//│ res: {x: int & 'x} -> (bar1 & {Foo1#A, x: 'x})
+//│ res: {x: int & 'x} -> (bar1 & {Foo1#A = int, x: 'x})
 
 b = Bar1{x = 1}
-//│ b: bar1 & {Foo1#A, x: 1}
+//│ b: bar1 & {Foo1#A = int, x: 1}
 
 :e
 b: Foo1[string]
@@ -42,15 +42,69 @@ class Bar2: Foo2[int] & { x: int }
 //│ Defined class Bar2
 //│ Defined Bar2.M2: (bar2 & {Foo2#A = int, x: int}) -> 1
 
-b = Bar2{x = 1}
-//│ b: bar2 & {Foo2#A, x: 1}
+class Bar3: Foo2[int]
+//│ Defined class Bar3
 
-// FIXME should reject:
-// :e
+:ns
+Bar2
+Bar3
+//│ res: {x: 'x & int} -> (bar2 & {Foo2#A = int, x: 'x})
+//│ res: anything -> (bar3 & {Foo2#A = int})
+
+Bar2
+Bar3
+//│ res: {x: int & 'x} -> (bar2 & {Foo2#A = int, x: 'x})
+//│ res: anything -> (bar3 & {Foo2#A = int})
+
+:e
+{A = 1}
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.60: 	{A = 1}
+//│ ╙──      	^^^^^^^
+//│ res: {A: 1}
+
+:e
+error: {A: 1}
+//│ ╔══[ERROR] Field identifiers must start with a small letter
+//│ ║  l.67: 	error: {A: 1}
+//│ ╙──      	        ^
+//│ res: {A: 1}
+
+b = Bar2{x = 1}
+//│ b: bar2 & {Foo2#A = int, x: 1}
+
+:e
 c = b: Foo2[string]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.77: 	c = b: Foo2[string]
+//│ ║        	    ^
+//│ ╟── expression of type `string` does not match type `int`
+//│ ║  l.77: 	c = b: Foo2[string]
+//│ ║        	            ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.38: 	class Bar2: Foo2[int] & { x: int }
+//│ ╙──      	                 ^^^
 //│ c: foo2 & {Foo2#A = string}
 
 c.M2
 //│ res: string
 
+d = b: Bar2
+//│ d: bar2 & {Foo2#A = int, x: int}
+
+d.M2
+//│ res: int
+
+:e
+d: Foo2[string]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.99: 	d: Foo2[string]
+//│ ║        	^
+//│ ╟── expression of type `string` does not match type `int`
+//│ ║  l.99: 	d: Foo2[string]
+//│ ║        	        ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.38: 	class Bar2: Foo2[int] & { x: int }
+//│ ╙──      	                 ^^^
+//│ res: foo2 & {Foo2#A = string}
 

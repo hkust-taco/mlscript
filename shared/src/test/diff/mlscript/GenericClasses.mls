@@ -59,16 +59,16 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Bar1
-//│ res: {x: int & 'x} -> (bar1 & {Foo1#A, x: 'x})
+//│ res: {x: int & 'x} -> (bar1 & {Foo1#A = int, x: 'x})
 
 g = Bar1 { x = 42 }
-//│ g: bar1 & {Foo1#A, x: 42}
+//│ g: bar1 & {Foo1#A = int, x: 42}
 
 g: Foo1['a]
-//│ res: foo1 & {Foo1#A :> 'a | 42 <: 'a, x: 'a | 42}
+//│ res: foo1 & {Foo1#A = int, x: int}
 
 res.x
-//│ res: 42
+//│ res: int
 
 g: Foo1['a]: Foo1[int]
 //│ res: foo1 & {Foo1#A = int, x: int}
@@ -81,9 +81,9 @@ g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.80: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── expression of type `42` does not match type `string`
-//│ ║  l.64: 	g = Bar1 { x = 42 }
-//│ ║        	               ^^
+//│ ╟── expression of type `int` does not match type `string`
+//│ ║  l.57: 	class Bar1: Foo1[int]
+//│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.80: 	g: Foo1['a]: Foo1[string]
 //│ ║        	                  ^^^^^^

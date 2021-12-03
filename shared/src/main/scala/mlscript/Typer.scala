@@ -257,7 +257,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case TypeRef(td, _) if travsersed(td) =>
             err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
             false
-          case tr @ TypeRef(td, targs) => checkCycleComputeFields(tr.expand, computeFields)(travsersed + td)
+          case tr @ TypeRef(td, targs) =>
+            if ((td.kind is Cls) && computeFields) td.tparams.lazyZip(targs).foreach{ (tp, ta) =>
+              val fieldName = Var(td.nme.name+"#"+tp.name)
+              fields += fieldName ->
+                (fields.getOrElse(fieldName, TopType) & FunctionType(ta, ta)(noProv))
+            }
+            checkCycleComputeFields(tr.expand, computeFields)(travsersed + td)
           case ComposedType(_, l, r) => checkCycleComputeFields(l, computeFields) && checkCycleComputeFields(r, computeFields)
           case tv: TypeVariable => true
           case _: FunctionType | _: TupleType => true
@@ -322,17 +328,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               val ctor = k match {
                 case Cls =>
                   val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class"), ctx)
-                  val fieldsRefined = fields.iterator.map(f => f._1 -> freshVar(noProv, 
-                        S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix 
-                      )(1).tap(_.upperBounds ::= f._2)).toList
-                  PolymorphicType(0, FunctionType(RecordType.mk(fieldsRefined.filterNot(_._1.name.headOption.exists(_.isUpper)))(noProv),
-                    nomTag & RecordType.mk(fieldsRefined ::: tparamTags)(noProv))(originProv(td.nme.toLoc, "class constructor")))
+                  val fieldsRefined = fields.iterator.map(f =>
+                    if (f._1.name.headOption.exists(_.isUpper)) f
+                    else f._1 ->
+                      freshVar(noProv,
+                        S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
+                      )(1).tap(_.upperBounds ::= f._2)
+                    ).toList
+                  PolymorphicType(0, FunctionType(
+                    RecordType.mk(fieldsRefined.filterNot(_._1.name.headOption.exists(_.isUpper)))(noProv),
+                    nomTag & RecordType.mk(
+                      fieldsRefined ::: tparamTags
+                    )(noProv))(originProv(td.nme.toLoc, "class constructor")))
                 case Trt =>
                   val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait"), ctx)
                   val tv = freshVar(noProv)(1)
                   tv.upperBounds ::= body_ty
-                  PolymorphicType(0, FunctionType(tv, tv & nomTag & RecordType.mk(tparamTags)(noProv)
-                    )(originProv(td.nme.toLoc, "trait constructor")))
+                  PolymorphicType(0, FunctionType(
+                    tv, tv & nomTag & RecordType.mk(tparamTags)(noProv)
+                  )(originProv(td.nme.toLoc, "trait constructor")))
               }
               ctx += n.name -> ctor
               true

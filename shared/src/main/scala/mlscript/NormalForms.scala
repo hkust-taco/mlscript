@@ -84,23 +84,36 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (RhsBases(ps, bf), p: ClassTag) =>
         S(RhsBases(if (ps.contains(p)) ps else p :: ps , bf))
       case (RhsBases(ps, N), that: MiscBaseType) => S(RhsBases(ps, S(L(that))))
-      case (RhsBases(_, S(L(TupleType(_)))), TupleType(_)) =>
-        // ??? // TODO
+      case (RhsBases(ps, S(L(TupleType(fs1)))), TupleType(fs2)) =>
         // err("TODO handle tuples", prov.loco)
         println("TODO handle tuples")
         N
-      case (RhsBases(ps, S(L(bt))), _)
-        => if (that === bt) S(this) else ??? // TODO
+        // TODO uncomment:
+        /* 
+        if (fs1.size =/= fs2.size) N
+        else S(RhsBases(ps, S(L(TupleType(fs1.lazyZip(fs2).map {
+          case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 | ty2)
+          case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 | ty2)
+        })(noProv)))))
+        */
+      case (RhsBases(_, S(L(_: Without))), _) | (_, _: Without) => die // Without should be handled elsewhere
+      case (RhsBases(ps, S(L(bt))), _) if (that === bt) => S(this)
+      case (RhsBases(ps, S(L(FunctionType(l0, r0)))), FunctionType(l1, r1)) =>
+        S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv)))))
       case (RhsBases(ps, bf), tt: TraitTag) =>
         S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf))
       case (RhsBases(_, _), _) => // FIXME should properly consider possible base types here...
         println(s"TODO ?! $this $that")
         // ???
         N
-      case (f @ RhsField(_, _), p: ClassTag) => S(RhsBases(p::Nil, S(R(f))))
-      case (f @ RhsField(_, _), _) =>
+      case (f @ RhsField(_, _), p: ObjectTag) => S(RhsBases(p::Nil, S(R(f))))
+      case (f @ RhsField(_, _), _: FunctionType | _: TupleType) =>
           // S(RhsBases(Nil, S(that), S(f)))
-          N // can't merge a record and a function -> it's the same as Top
+          N // can't merge a record and a function or a tuple -> it's the same as Top
+          // NOTE: in the future, if we do actually register fields in named tuples
+          //  (so their fields is not pure compiler fiction,
+          //    as it is currently and in TypeScript arrays),
+          //  we will want to revisit this...
     }
     def | (that: (Var, SimpleType)): Opt[RhsNf] = this match {
       case RhsBot => S(RhsField(that._1, that._2))

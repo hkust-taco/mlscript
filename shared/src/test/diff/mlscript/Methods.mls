@@ -27,28 +27,28 @@ f.Fun
 
 // :d
 Bar
-//│ res: {x: int & 'x, y: bool & 'y} -> (bar & {Foo#B, Foo#A, y: 'y, x: 'x})
+//│ res: {x: int & 'x, y: bool & 'y} -> (bar & {Foo#B = bool, Foo#A = int, y: 'y, x: 'x})
 
 g = Bar { x = 42; y = true }
-//│ g: bar & {Foo#B, Foo#A, y: true, x: 42}
+//│ g: bar & {Foo#B = bool, Foo#A = int, y: true, x: 42}
 
 g.(Foo.Fun)
 g.(Bar.Fun)
-//│ res: (('A | 42) -> ('B | true) -> 'C) -> 'A -> 'B -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│ res: 'a -> 'a
 
 Foo.Fun g
 Bar.Fun g
-//│ res: (('A | 42) -> ('B | true) -> 'C) -> 'A -> 'B -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│ res: 'a -> 'a
 
 g.Fun
-//│ res: (('A | 42) -> ('B | true) -> 'C) -> 'A -> 'B -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 
 h = Bar { x = 43; y = true }
 h.Fun
-//│ h: bar & {Foo#B, Foo#A, y: true, x: 43}
-//│ res: (('A | 43) -> ('B | true) -> 'C) -> 'A -> 'B -> 'C
+//│ h: bar & {Foo#B = bool, Foo#A = int, y: true, x: 43}
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 
 
 
@@ -67,21 +67,21 @@ class Psyduck[B]: Wrapper[B]
     method Apply[A]: (B -> A) -> Psyduck[A]
     method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck
-//│ Declared Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A, x: 'a})
-//│ Defined Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A, x: 'a})
+//│ Declared Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A = 'B0, x: 'a})
+//│ Defined Psyduck.Apply: (psyduck & {Psyduck#B = 'B, Wrapper#A = 'B, x: 'B}) -> ('B -> ('a & 'B0)) -> (psyduck & {Psyduck#B = 'B0, Wrapper#A = 'B0, x: 'a})
 
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper
-//│ Declared WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
-//│ Defined WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
+//│ Declared WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'a, x: 'a}, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
+//│ Defined WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'a, x: 'a}, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
 
 WrapperWrapper { x = Psyduck { x = 0 } }
-//│ res: wrapperWrapper & {Wrapper#A, WrapperWrapper#A :> 'A | 0 <: 'A, x: psyduck & {Psyduck#B :> 'B | 0 <: 'B, Wrapper#A, x: 0}}
+//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'A | 0 <: 'A, x: 'A | 0} <: wrapper & {Wrapper#A :> 'A <: 'A | 0, x: 'A}, WrapperWrapper#A :> 'A | 0 <: 'A, x: psyduck & {Psyduck#B :> 'A | 0 <: 'A, Wrapper#A :> 'A | 0 <: 'A, x: 0}}
 
 res.Apply2 (fun x -> mul x 2)
-//│ res: wrapperWrapper & {Wrapper#A, WrapperWrapper#A :> 'a | int <: 'a, x: wrapper & {Wrapper#A :> 'a | int <: 'a, x: 'a | int}}
+//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'a | int <: 'a, x: 'a | int} <: wrapper & {Wrapper#A :> 'a <: 'a | int, x: 'a}, WrapperWrapper#A :> 'a | int <: 'a, x: wrapper & {Wrapper#A :> 'a | int <: 'a, x: 'a | int}}
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (wrapper & {Wrapper#A = 'A, x: 'x})
@@ -124,7 +124,7 @@ class Pair[A, B]: AbstractPair[A, B]
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
 //│ Defined class Pair
 //│ Defined Pair.Test: (pair & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, AbstractPair#B = 'B}) -> ('A -> 'B -> (bool & 'a)) -> 'a
-//│ Defined Pair.Map: (pair & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, AbstractPair#B = 'B}) -> ('A -> ('a & 'A0)) -> ('B -> ('b & 'B0)) -> (pair & {Pair#B = 'B0, AbstractPair#A, x: 'a, Pair#A = 'A0, y: 'b, AbstractPair#B})
+//│ Defined Pair.Map: (pair & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, AbstractPair#B = 'B}) -> ('A -> ('a & 'A0)) -> ('B -> ('b & 'B0)) -> (pair & {Pair#B = 'B0, AbstractPair#A = 'A0, x: 'a, Pair#A = 'A0, y: 'b, AbstractPair#B = 'B0})
 
 class True[A, B]: Pair[A, B]
     method Test f = true
@@ -146,7 +146,7 @@ p = Pair { x = 42; y = true }
 fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
-//│ p: pair & {Pair#B :> 'B | true <: 'B, AbstractPair#A, x: 42, Pair#A :> 'A | 42 <: 'A, y: true, AbstractPair#B}
+//│ p: pair & {Pair#B :> 'B | true <: 'B, AbstractPair#A :> 'A | 42 <: 'A, x: 42, Pair#A :> 'A | 42 <: 'A, y: true, AbstractPair#B :> 'B | true <: 'B}
 //│ fx: int -> int
 //│ fy: bool -> bool
 //│ ft: int -> bool -> bool
@@ -160,12 +160,12 @@ p.Test ft
 
 t = True { x = "foo"; y = false }
 t.(True.True)
-//│ t: true & {Pair#B, AbstractPair#A, x: "foo", Pair#A, y: false, True#A :> 'A | "foo" <: 'A, True#B :> 'B | false <: 'B, AbstractPair#B}
+//│ t: true & {Pair#B :> 'B | false <: 'B, AbstractPair#A :> 'A | "foo" <: 'A, x: "foo", Pair#A :> 'A | "foo" <: 'A, y: false, True#A :> 'A | "foo" <: 'A, True#B :> 'B | false <: 'B, AbstractPair#B :> 'B | false <: 'B}
 //│ res: true
 
 t = True2 { x = "bar"; y = false }
 t.(True2.True)
-//│ t: true2 & {Pair#B, True2#B :> 'B | false <: 'B, AbstractPair#A, x: "bar", Pair#A, y: false, True2#A :> 'A | "bar" <: 'A, AbstractPair#B}
+//│ t: true2 & {Pair#B :> 'B | false <: 'B, True2#B :> 'B | false <: 'B, AbstractPair#A :> 'A | "bar" <: 'A, x: "bar", Pair#A :> 'A | "bar" <: 'A, y: false, True2#A :> 'A | "bar" <: 'A, AbstractPair#B :> 'B | false <: 'B}
 //│ res: bool
 
 

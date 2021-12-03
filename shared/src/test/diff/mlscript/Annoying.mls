@@ -254,3 +254,30 @@ funny.x
 //│ res: {x: int}
 
 
+idx = id with { x = 1 }
+//│ idx: 'a -> 'a & {x: 1}
+
+idx idx.x
+//│ res: 1
+
+def indirect i = i i.x
+//│ indirect: ('a -> 'b & {x: 'a}) -> 'b
+
+indirect idx
+//│ res: 1
+
+if true then id else idx
+//│ res: 'a -> 'a
+
+r =  if true then id with { x = "a"; y = "b" } else idx
+//│ r: 'a -> 'a & {x: "a" | 1}
+
+r r.x
+//│ res: 1 | "a"
+
+indirect r
+//│ res: 1 | "a"
+
+def takeFunOrRecord: (int -> int | { x: int }) -> int
+//│ takeFunOrRecord: anything -> int
+

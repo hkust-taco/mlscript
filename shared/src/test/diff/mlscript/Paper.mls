@@ -33,7 +33,7 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Some#A, Cons#A = 'A, tail: 'c, value: 'value} | none as 'c)
+//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Some#A = 'A, Cons#A = 'A, tail: 'c, value: 'value} | none as 'c)
 
 
 
