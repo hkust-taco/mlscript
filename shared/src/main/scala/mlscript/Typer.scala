@@ -489,6 +489,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         decls.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
           td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme).foreach(ss(mt, _, S(bn)))) }
+          if (!defs.isDefinedAt(nme))
+            ctx.env -= tn.name
         }
         defs.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
@@ -708,7 +710,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).getOrElse {
           // TODO: delay type expansion to message display and show the expected type here!
-          err("identifier not found: " + name, term.toLoc)
+          (ctx.tyDefs.get(name), ctx.mthDecls.get(name).map(_ -- ctx.mthDefs(name).keys)) match {
+            case (S(td), S(abstMths)) if abstMths.nonEmpty => err(
+              (msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
+              :: (msg"${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
+              :: abstMths.map { case mn -> mthTy => msg"method $mn is abstract" -> mthTy.prov.loco }.toList)
+            case _ => err("identifier not found: " + name, term.toLoc)
+          }
         }.instantiate
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
