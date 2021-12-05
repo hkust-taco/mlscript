@@ -241,12 +241,17 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
       alt.toSourceCode.parenthesized(alt.precedence < precedence)
 }
 
-final case class JSInvoke(callee: JSExpr, argument: JSExpr) extends JSExpr {
+final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
   def precedence: Int = 20
   def toSourceCode = {
     val body = callee.toSourceCode.parenthesized(
       callee.precedence < precedence
-    ) ++ argument.toSourceCode.parenthesized
+    ) ++ arguments.zipWithIndex
+      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+        x ++ y.toSourceCode ++ (if (i === arguments.length - 1) SourceCode.empty
+                                else SourceCode.from(", "))
+      }
+      .parenthesized
     callee match {
       case JSIdent(_, true) => SourceCode.from("new ") ++ body
       case _                => body
@@ -355,7 +360,7 @@ final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
     .array
 }
 
-final case class JSRecord(entries: Ls[(Str, JSExpr)]) extends JSExpr {
+final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   // Precedence of literals is zero.
   override def precedence: Int = 22
   // Make

@@ -110,7 +110,7 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
+    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs) :: Nil)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -143,6 +143,17 @@ class JSBackend {
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
+    // `c with { x = "hi"; y = 2 }` ==> `Object.assign(c, { x: "hi", y: 2 })`
+    // Because variables are considered to be immutable, we can just set the
+    // assignment target to the left hand side value for now. If variables will
+    // be mutable in the future, we need introduce a prelude code to do this.
+    case With(trm, Rcd(fields)) =>
+      JSInvoke(
+        JSMember(JSIdent("Object"), "assign"),
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
+          name -> translateTerm(value)
+        }) :: Nil
+      )
     case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
       throw new Error(s"cannot generate code for term $term")
   }
@@ -155,7 +166,7 @@ class JSBackend {
         JSIfStmt(
           className match {
             case Var("int") =>
-              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
+              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
             case Var("bool") =>
               JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
             case Var(s @ ("true" | "false")) =>
@@ -412,7 +423,7 @@ class JSBackend {
             JSExprStmt(
               JSInvoke(
                 JSMember(JSIdent(exprResultObjName), "push"),
-                translateTerm(term)
+                translateTerm(term) :: Nil
               )
             )
           })
