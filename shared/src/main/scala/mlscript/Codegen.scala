@@ -189,6 +189,18 @@ final case class JSNamePattern(name: Str) extends JSPattern {
 abstract class JSExpr extends JSCode {
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
   def precedence: Int
+
+  def stmt: JSExprStmt = JSExprStmt(this)
+}
+
+object JSExpr {
+  def arguments(exprs: Ls[JSExpr]): SourceCode =
+    exprs.zipWithIndex
+      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+        x ++ y.toSourceCode ++ (if (i === exprs.length - 1) SourceCode.empty
+                                else SourceCode.from(", "))
+      }
+      .parenthesized
 }
 
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
@@ -217,17 +229,17 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
 
 // IIFE: immediately invoked function expression
 final case class JSImmEvalFn(
-    name: Str,
+    params: Ls[Str],
     body: Either[JSExpr, Ls[JSStmt]],
-    argument: JSExpr
+    arguments: Ls[JSExpr]
 ) extends JSExpr {
   def precedence: Int = 22
   def toSourceCode: SourceCode = {
-    (SourceCode.from(s"function ($name) ") ++ (body match {
+    (SourceCode.from(s"function (${params mkString ", "}) ") ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
-    }).block).parenthesized ++ argument.toSourceCode.parenthesized
+    }).block).parenthesized ++ JSExpr.arguments(arguments)
   }
 }
 

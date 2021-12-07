@@ -119,20 +119,20 @@ class JSBackend {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
+      JSImmEvalFn(name :: Nil, Left(translateTerm(body)), translateTerm(value) :: Nil)
     case Blk(stmts) =>
       JSImmEvalFn(
-        "",
+        Nil,
         Right(stmts flatMap (_.desugared._2) map {
           translateStatement(_)
         }),
-        new JSPlaceholderExpr()
+        new JSPlaceholderExpr() :: Nil
       )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
       val body = translateCaseBranch(parameter, cases)
-      JSImmEvalFn(parameter, Right(body), argument)
+      JSImmEvalFn(parameter :: Nil, Right(body), argument :: Nil)
     }
     case IntLit(value) => {
       val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
@@ -143,13 +143,24 @@ class JSBackend {
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
-    // `c with { x = "hi"; y = 2 }` ==> `Object.assign(c, { x: "hi", y: 2 })`
-    // Because variables are considered to be immutable, we can just set the
-    // assignment target to the left hand side value for now. If variables will
-    // be mutable in the future, we need introduce a prelude code to do this.
+    // `c with { x = "hi"; y = 2 }`
     case With(trm, Rcd(fields)) =>
-      JSInvoke(
-        JSMember(JSIdent("Object"), "assign"),
+      val objectIdent = JSIdent("Object")
+      JSImmEvalFn(
+        "target" :: "fields" :: Nil,
+        Right(
+          JSConstDecl(
+            "copy",
+            JSInvoke(
+              JSMember(objectIdent, "assign"),
+              JSRecord(Nil) :: JSIdent("target") :: JSIdent("fields") :: Nil
+            )
+          ) :: JSInvoke(
+            JSMember(objectIdent, "setPrototypeOf"),
+            JSIdent("copy") ::
+              JSInvoke(JSMember(objectIdent, "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
+          ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
+        ),
         translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
           name -> translateTerm(value)
         }) :: Nil
