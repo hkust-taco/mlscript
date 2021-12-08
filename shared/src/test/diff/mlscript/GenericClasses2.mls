@@ -53,10 +53,10 @@ Bar3
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.51: 	Bar3
 //│ ║        	^^^^
-//│ ╟── class Bar3 is abstract:
+//│ ╟── Note that class Bar3 is abstract:
 //│ ║  l.45: 	class Bar3: Foo2[int]
 //│ ║        	      ^^^^^^^^^^^^^^^
-//│ ╟── method M2 is abstract
+//│ ╟── Hint: method M2 is abstract
 //│ ║  l.37: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error
@@ -68,10 +68,10 @@ Bar3
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.66: 	Bar3
 //│ ║        	^^^^
-//│ ╟── class Bar3 is abstract:
+//│ ╟── Note that class Bar3 is abstract:
 //│ ║  l.45: 	class Bar3: Foo2[int]
 //│ ║        	      ^^^^^^^^^^^^^^^
-//│ ╟── method M2 is abstract
+//│ ╟── Hint: method M2 is abstract
 //│ ║  l.37: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error

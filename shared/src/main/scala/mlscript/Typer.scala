@@ -700,8 +700,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           (ctx.tyDefs.get(name), ctx.mthDecls.get(name).map(_ -- ctx.mthDefs(name).keys)) match {
             case (S(td), S(abstMths)) if abstMths.nonEmpty => err(
               (msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
-              :: (msg"${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
-              :: abstMths.map { case mn -> mthTy => msg"method $mn is abstract" -> mthTy.prov.loco }.toList)
+              :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
+              :: abstMths.map { case mn -> mthTy => msg"Hint: method $mn is abstract" -> mthTy.prov.loco }.toList)
             case _ => err("identifier not found: " + name, term.toLoc)
           }
         }.instantiate

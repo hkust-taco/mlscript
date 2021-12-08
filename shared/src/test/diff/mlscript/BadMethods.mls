@@ -447,13 +447,13 @@ Test6A
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.446: 	Test6A
 //│ ║         	^^^^^^
-//│ ╟── class Test6A is abstract:
+//│ ╟── Note that class Test6A is abstract:
 //│ ║  l.432: 	class Test6A[A]
 //│ ║         	      ^^^^^^^^
-//│ ╟── method Mth6B is abstract
+//│ ╟── Hint: method Mth6B is abstract
 //│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── method Mth6A is abstract
+//│ ╟── Hint: method Mth6A is abstract
 //│ ║  l.433: 	    method Mth6A: A
 //│ ╙──       	           ^^^^^^^^
 //│ res: error
@@ -463,10 +463,10 @@ Test6B
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.462: 	Test6B
 //│ ║         	^^^^^^
-//│ ╟── trait Test6B is abstract:
+//│ ╟── Note that trait Test6B is abstract:
 //│ ║  l.435: 	trait Test6B
 //│ ║         	      ^^^^^^
-//│ ╟── method Mth6A is abstract
+//│ ╟── Hint: method Mth6A is abstract
 //│ ║  l.436: 	    method Mth6A: bool
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: error
@@ -476,13 +476,13 @@ Test6C
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.475: 	Test6C
 //│ ║         	^^^^^^
-//│ ╟── class Test6C is abstract:
+//│ ╟── Note that class Test6C is abstract:
 //│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── method Mth6B is abstract
+//│ ╟── Hint: method Mth6B is abstract
 //│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── method Mth6A is abstract
+//│ ╟── Hint: method Mth6A is abstract
 //│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
