@@ -18,6 +18,9 @@ class JSBackend {
   // This object contains all classNames.
   val classNames: HashSet[Str] = HashSet()
 
+  // All names used in `def`s.
+  val defNames: HashSet[Str] = HashSet()
+
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
   val letLhsAliasMap: HashMap[Str, Str] = HashMap()
@@ -69,6 +72,9 @@ class JSBackend {
         _: With | _: CaseOf =>
       throw new Error(s"term $t is not a valid pattern")
   }
+
+  private var hasWithConstruct = false
+  private var withConstructFnName = "withConstruct"
 
   private val builtinFnOpMap =
     immutable.HashMap(
@@ -145,22 +151,9 @@ class JSBackend {
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`
     case With(trm, Rcd(fields)) =>
-      val objectIdent = JSIdent("Object")
-      JSImmEvalFn(
-        "target" :: "fields" :: Nil,
-        Right(
-          JSConstDecl(
-            "copy",
-            JSInvoke(
-              JSMember(objectIdent, "assign"),
-              JSRecord(Nil) :: JSIdent("target") :: JSIdent("fields") :: Nil
-            )
-          ) :: JSInvoke(
-            JSMember(objectIdent, "setPrototypeOf"),
-            JSIdent("copy") ::
-              JSInvoke(JSMember(objectIdent, "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
-          ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
-        ),
+      hasWithConstruct = true
+      JSInvoke(
+        JSIdent(withConstructFnName),
         translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
           name -> translateTerm(value)
         }) :: Nil
@@ -366,11 +359,19 @@ class JSBackend {
       case _ => ()
     }
 
+    // Collect names in definitions.
+    otherStmts foreach {
+      case Def(rec, nme, rhs) => defNames += nme
+      case _                  => ()
+    }
+
+    withConstructFnName = getTemporaryName(withConstructFnName)
+
     val defResultObjName = getTemporaryName("defs")
     val exprResultObjName = getTemporaryName("exprs")
     // This hash map counts how many times a name has been used.
     val resolveShadowName = new ShadowNameResolver
-    val stmts: Ls[JSStmt] =
+    var stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
@@ -393,7 +394,10 @@ class JSBackend {
           .concat(otherStmts.flatMap {
             case Def(isRecursive, name, L(body)) =>
               val translatedBody = translateTerm(body)
-              val tempName = getTemporaryName(name)
+              // Get a name that not conflicts with class names.
+              val tempName = (name #:: LazyList
+                .from(0)
+                .map { name + _.toString }).dropWhile { classNames contains _ }.head
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
@@ -445,12 +449,25 @@ class JSBackend {
               )
             ) :: Nil
           )
+
+    // If `with` construct is used, prepend the prelude function.
+    if (hasWithConstruct) {
+      stmts = JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
+    }
+
     SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
   }
 
+  /** Get a temporary name which is not duplicated with user-defined names.
+    *
+    * @param name
+    *   the base name
+    * @return
+    *   identifier like `$name$n` where `n` is an integer
+    */
   private def getTemporaryName(name: Str): Str = (name #:: LazyList
     .from(0)
-    .map { name + _.toString }).dropWhile { classNames contains _ }.head
+    .map { name + _.toString }).dropWhile { defNames contains _ }.head
 }
 
 object JSBackend {
@@ -481,4 +498,26 @@ object JSBackend {
     case DecLit(value) => s"DecLit($value)"
     case StrLit(value) => s"StrLit($value)"
   }
+
+  /** Make a function for `with` construct.
+    *
+    * @param name
+    *   the function name
+    * @return
+    */
+  private def makeWithConstructDecl(name: Str) = JSFuncDecl(
+    name,
+    JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
+    JSConstDecl(
+      "copy",
+      JSInvoke(
+        JSMember(JSIdent("Object"), "assign"),
+        JSRecord(Nil) :: JSIdent("target") :: JSIdent("fields") :: Nil
+      )
+    ) :: JSInvoke(
+      JSMember(JSIdent("Object"), "setPrototypeOf"),
+      JSIdent("copy") ::
+        JSInvoke(JSMember(JSIdent("Object"), "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
+    ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
+  )
 }

@@ -194,6 +194,15 @@ abstract class JSExpr extends JSCode {
 }
 
 object JSExpr {
+  def params(params: Ls[JSPattern]): SourceCode =
+    params.zipWithIndex
+      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+        x ++ (y match {
+          case JSWildcardPattern() => SourceCode.from(s"_$i")
+          case pattern             => pattern.toSourceCode
+        }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode.from(", "))
+      }
+      .parenthesized
   def arguments(exprs: Ls[JSExpr]): SourceCode =
     exprs.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
@@ -431,6 +440,13 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
     SourceCode.from(
       s"const $pattern = "
     ) ++ body.toSourceCode ++ SourceCode.semicolon
+}
+
+final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode.from(s"function $name") ++ JSExpr.params(params) ++ SourceCode.space ++ body
+      .foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
+      .block
 }
 
 abstract class JSClassMemberDecl extends JSStmt;
