@@ -416,12 +416,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
           val targsMap2 = tparams.map(_.name).zip(dummyTargs2).toMap
-          // ^ overwrites. fine for now as the maps are not used afterwards. may pass vars instead
           if (!nme.name.head.isUpper)
             err(msg"Method names must start with a capital letter", nme.toLoc)
           if (defs.isDefinedAt(nme.name))
             err(msg"Method '${tn}.${nme.name}' is already defined.", nme.toLoc)
-          val bodyTy = rhs.fold( // TODO: warn about shadowing?
+          (targsMap.keySet & targsMap2.keySet).foreach { s =>
+            warn((s"Method type parameter ${targsMap2(s).nameHint.getOrElse("")}" -> targsMap2(s).prov.loco)
+              :: (s"shadows class type parameter ${td.targsMap(s).nameHint.getOrElse("")}" -> td.targsMap(s).prov.loco)
+              :: Nil map (x => Message.fromStr(x._1) -> x._2))
+          }
+          val bodyTy = rhs.fold(
             term => subst(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid),
             ty => PolymorphicType(thisCtx.lvl, subst(typeType(ty)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid))
           )
