@@ -268,6 +268,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         ctx.targsMaps += n.name -> MutMap(N -> td.tparams.map(_.name).zip(dummyTargs).toMap)
         val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, S((n.name, N)))
         var fields = SortedMap.empty[Var, SimpleType]
+        def allDeclMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDecls.get(bc.name).map(_.keySet)
+          .getOrElse(allDeclMths(ctx.tyDefs(bc.name)))) ++ td.mthDecls.map(_.nme.name)
+        def allDefMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDefs.get(bc.name).map(_.keySet)
+          .getOrElse(allDefMths(ctx.tyDefs(bc.name)))) ++ td.mthDefs.map(_.nme.name)
         def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
             (implicit travsersed: Set[TypeDef]): Bool =
               trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
@@ -343,7 +347,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case p: ProxyType => checkParents(p.underlying)
             }
             checkParents(body_ty) &&
-                checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) && {
+                checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) &&
+                ((allDeclMths(td) -- allDefMths(td)).nonEmpty || {
               val tparamTags = td.tparams.lazyZip(dummyTargs).map((tp, tv) =>
                 tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv)).toList
               val ctor = k match {
@@ -371,7 +376,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               }
               ctx += n.name -> ctor
               true
-            }
+            })
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.nme.name) match {
@@ -489,8 +494,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         decls.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
           td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme).foreach(ss(mt, _, S(bn)))) }
-          if (!defs.isDefinedAt(nme))
-            ctx.env -= tn.name
         }
         defs.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
