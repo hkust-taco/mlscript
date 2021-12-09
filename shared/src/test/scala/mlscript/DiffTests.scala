@@ -241,7 +241,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val resim = typer.simplifyType(reca)
                 if (mode.dbg) output(s"Resimplified: ${resim}")
                 if (mode.dbg) output(s" where: ${resim.showBounds}")
-                val exp = typer.expandType(resim, true)
+                val recons = typer.reconstructClassTypes(resim, true, ctx)
+                if (mode.dbg) output(s"Recons: ${recons}")
+                val exp = typer.expandType(recons, true)
                 
                 exp
               }

@@ -6,11 +6,11 @@ def foo x = case x of
   { Test -> x.value
   | _ -> 1
   }
-//│ foo: (test & {value: 'a} | ~test) -> (1 | 'a)
+//│ foo: ((Test with {value: 'a}) | ~Test) -> (1 | 'a)
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
-//│ t: test & {value: 0}
+//│ t: Test & {value: 0}
 
 foo Test
 //│ res: 1
@@ -26,14 +26,14 @@ def bar x = case x of
   { Test -> x.value
   | Toast -> x.name
   }
-//│ bar: (test & {value: 'a} | toast & {name: 'a}) -> 'a
+//│ bar: ((Test with {value: 'a}) | (Toast with {name: 'a})) -> 'a
 
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: ?value} -> (test & {value: ?value})` does not match type `test & ?a | toast & ?b & ~test`
+//│ ╟── expression of type `{value: ?value} -> (Test & {value: ?value})` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.32: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -46,7 +46,7 @@ bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.45: 	bar "ops"
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `"ops"` does not match type `test & ?a | toast & ?b & ~test`
+//│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.45: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,14 +59,14 @@ def baz x = case x of
   { Test -> x
   | Toast -> x
   }
-//│ baz: (test & 'a | toast & 'a) -> 'a
+//│ baz: (Test & 'a | Toast & 'a) -> 'a
 
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.65: 	baz "oops"
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `test & ?a | toast & ?b & ~test`
+//│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.65: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:

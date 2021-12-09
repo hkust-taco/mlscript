@@ -62,15 +62,15 @@ data type Bool2 of True2 & False2
 //│ ╙──      	                           ^^^^^^
 //│ Defined type alias Bool2
 //│ Defined class &
-//│ &: 'a -> 'b -> (& & {&#False2: 'b -> 'b, &#True2: 'a -> 'a, False2: 'b, True2: 'a})
+//│ &: 'a -> 'b -> &['a, 'b]
 
 data type Bool3 of
   True3; False3
 //│ Defined type alias Bool3
 //│ Defined class True3
 //│ Defined class False3
-//│ True3: true3
-//│ False3: false3
+//│ True3: True3
+//│ False3: False3
 
 data type Bool4 of
   True4
@@ -78,8 +78,8 @@ data type Bool4 of
 //│ Defined type alias Bool4
 //│ Defined class True4
 //│ Defined class False4
-//│ True4: true4
-//│ False4: false4
+//│ True4: True4
+//│ False4: False4
 
 :e
 Boolean
@@ -136,8 +136,8 @@ data type List a of
 //│ Defined type alias List
 //│ Defined class Nil
 //│ Defined class Cons
-//│ Nil: nil & {Nil#a = 'a}
-//│ Cons: (head: 'a,) -> (tail: cons & {Cons#a = 'a, head: 'a, tail: 'b} | nil & {Nil#a = 'a} as 'b,) -> (cons & {Cons#a = 'a, head: 'a, tail: 'd | 'c | nil & {Nil#a = 'a}} as 'c)
+//│ Nil: Nil['a]
+//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -154,7 +154,7 @@ data type Ls of LsA a
 //│ ╙──       	                    ^
 //│ Defined type alias Ls
 //│ Defined class LsA
-//│ LsA: 'a -> (lsA & {LsA#a = 'a, a: 'a})
+//│ LsA: 'a -> LsA['a]
 
 :p
 data type Ls2 of LsA2 `a
@@ -164,18 +164,18 @@ data type Ls2 of LsA2 `a
 //│ Desugared: def LsA2: [] -> 'a -> LsA2[]
 //│ Defined type alias Ls2
 //│ Defined class LsA2
-//│ LsA2: anything -> (lsA2 & {`a: nothing})
+//│ LsA2: anything -> (LsA2 with {`a: nothing})
 
 Nil
 Cons
 Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
-//│ res: nil & {Nil#a = 'a}
-//│ res: (head: 'a,) -> (tail: cons & {Cons#a = 'a, head: 'a, tail: 'b} | nil & {Nil#a = 'a} as 'b,) -> (cons & {Cons#a = 'a, head: 'a, tail: 'd | 'c | nil & {Nil#a = 'a}} as 'c)
-//│ res: (tail: cons & {Cons#a :> 1 | 'b <: 'b, head: 'b, tail: 'a} | nil & {Nil#a :> 1 | 'b <: 'b} as 'a,) -> (cons & {Cons#a :> 'b <: 1 | 'b, head: 1 | 'b, tail: 'd | 'c | nil & {Nil#a :> 'b <: 1 | 'b}} as 'c)
-//│ res: cons & {Cons#a :> 'b <: 2 | 'b, head: 2 | 'b, tail: 'c | 'a | nil & {Nil#a :> 'b <: 2 | 'b}} as 'a
-//│ res: cons & {Cons#a :> 'b <: 1 | 2 | 'b, head: 1 | 2 | 'b, tail: 'c | 'a | nil & {Nil#a :> 'b <: 1 | 2 | 'b}} as 'a
+//│ res: Nil['a]
+//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
+//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'd | 'c | Nil['b .. 1 | 'b]}) as 'c)
+//│ res: (Cons['b .. 2 | 'b] with {tail: 'c | 'a | Nil['b .. 2 | 'b]}) as 'a
+//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -228,7 +228,7 @@ Cons 1 2
 //│ ╟── from applied type reference:
 //│ ║  l.129: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: (cons & {Cons#a :> 'b <: 1 | 'b, head: 1 | 'b, tail: 'c | 'a | nil & {Nil#a :> 'b <: 1 | 'b}} as 'a) | error
+//│ res: ((Cons['b .. 1 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 'b]}) as 'a) | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

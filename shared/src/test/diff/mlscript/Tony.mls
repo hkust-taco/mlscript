@@ -6,52 +6,52 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (some & 'a | 'b & ~some) -> 'b
+//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: none | some & {Some#A :> 'A <: 42 | 'A, payload: 23, value: 42}
+//│ arg: None | (Some['A .. 42 | 'A] with {payload: 23, value: 42})
 
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | none
+//│ res: int | None
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: none | some & {Some#A :> 'A <: 42 | 'A, value: 42}
+//│ arg: None | (Some['A .. 42 | 'A] with {value: 42})
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | none
+//│ res: 42 | None
 
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: (some & {value: 'a} | 'a & ~some) -> 'a
+//│ foo: ((Some[?] with {value: 'a}) | 'a & ~some) -> 'a
 
 foo arg
-//│ res: 42 | none
+//│ res: 42 | None
 
 foo 1
 //│ res: 1
 
 def fn = foo None
-//│ fn: anything -> none
+//│ fn: anything -> None
 
 // :d
 fn{} // foo None {}
-//│ res: none
+//│ res: None
 
 // :d
 foo (None{})
-//│ res: none
+//│ res: None
 
 
 fun f -> flatMap3 f arg
-//│ res: ((none & ~'a | some & {Some#A :> 'A <: 42 | 'A, value: 42}) -> 'a) -> (none | 'a)
+//│ res: ((None & ~'a | (Some['A .. 42 | 'A] with {value: 42})) -> 'a) -> (None | 'a)
 
 
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: (some & 'a | 'a & ~some) -> 'a
+//│ foo: (Some[?] & 'a | 'a & ~some) -> 'a
 
 foo 1
 //│ res: 1
@@ -60,20 +60,20 @@ foo 1
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> (none | 'a)
+//│ simpler: (1 -> 'a) -> (None | 'a)
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> (none & 'b | some & 'a) -> 'b
+//│ simpler: ('a -> 'b) -> (None & 'b | Some[?] & 'a) -> 'b
 
 simpler (fun x -> x.value)
-//│ res: (none & 'a | some & {value: 'a}) -> 'a
+//│ res: (None & 'a | (Some[?] with {value: 'a})) -> 'a
 
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.72: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `some & ?a | none & ?b & ~some`
+//│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.72: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:

@@ -16,6 +16,20 @@ type oops = int
 //│ ╙──      	     ^^^^
 
 
+type Hello = int
+//│ Defined type alias Hello
+
+42: Hello
+//│ res: int
+
+:e
+42: hello
+//│ ╔══[ERROR] Type alias hello cannot be used as a type tag
+//│ ║  l.26: 	42: hello
+//│ ╙──      	    ^^^^^
+//│ res: error
+
+
 // TODO forbid
 aa = {a = 1; a = "oops" }
 //│ aa: {a: 1, a: "oops"}

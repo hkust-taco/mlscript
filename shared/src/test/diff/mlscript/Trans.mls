@@ -6,29 +6,29 @@ c = C{}
 //│ Defined class A
 //│ Defined class B
 //│ Defined class C
-//│ c: c
+//│ c: C
 
 c: C
-//│ res: c
+//│ res: C
 
 c: B
-//│ res: b
+//│ res: B
 
 res: A
-//│ res: a
+//│ res: A
 
 c: A
-//│ res: a
+//│ res: A
 
 a = res
-//│ a: a
+//│ a: A
 
 :e
 a: B
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.27: 	a: B
 //│ ║        	^
-//│ ╟── expression of type `a` does not match type `b`
+//│ ╟── expression of type `A` does not match type `B`
 //│ ║  l.20: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `B`
@@ -37,14 +37,14 @@ a: B
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.27: 	a: B
 //│ ╙──      	   ^
-//│ res: b
+//│ res: B
 
 :e
 a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.43: 	a: C
 //│ ║        	^
-//│ ╟── expression of type `a` does not match type `c`
+//│ ╟── expression of type `A` does not match type `C`
 //│ ║  l.20: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`
@@ -53,7 +53,7 @@ a: C
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.43: 	a: C
 //│ ╙──      	   ^
-//│ res: c
+//│ res: C
 
 
 // Transitivity is currently broken for primitive literals:

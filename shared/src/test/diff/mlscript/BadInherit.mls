@@ -31,7 +31,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `parent1 & {name: ?name}` does not match type `parent2`
+//│ ╟── expression of type `Parent1 & {name: ?name}` does not match type `Parent2`
 //│ ║  l.30: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -64,20 +64,20 @@ class Crazy[A]: A & { name: A }
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
 //│ Defined class Crazy
-//│ Crazy: 'a -> (crazy & {Crazy#A = 'a, name: 'a} & 'a)
+//│ Crazy: 'a -> (Crazy['a] & 'a)
 
 Crazy
-//│ res: 'a -> (crazy & {Crazy#A = 'a, name: 'a} & 'a)
+//│ res: 'a -> (Crazy['a] & 'a)
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: crazy & {Crazy#A :> 'a <: 'a | {age: 42, name: "Bob"}, name: 'a | {age: 42, name: "Bob"}} & 'a | crazy & {Crazy#A :> 'a <: 'a | {age: 42, name: "Bob"}, age: 42, name: "Bob" & {age: 42, name: "Bob"} | "Bob" & 'a}
+//│ c: Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a | (Crazy['a .. 'a | {age: 42, name: "Bob"}] with {age: 42, name: "Bob" & {age: 42, name: "Bob"} | "Bob" & 'a})
 
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.76: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~(crazy & {name: ?a, Crazy#A = ?a})`
+//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~Crazy[?a]`
 //│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -89,7 +89,7 @@ c: nothing
 //│ res: nothing
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: crazy & {Crazy#A :> 'a <: 'a | parent1 & {name: "Bob"}, name: 'a | parent1 & {name: "Bob"}} & 'a
+//│ d: (Crazy['a .. 'a | Parent1 & {name: "Bob"}] with {name: 'a | Parent1 & {name: "Bob"}}) & 'a
 
 d: nothing
 //│ res: nothing
@@ -167,12 +167,12 @@ E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.165: 	E{}: 1
 //│ ║         	^^^
-//│ ╙── expression of type `e` does not match type `1`
+//│ ╙── expression of type `E` does not match type `1`
 //│ res: 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.166: 	E{}: int
 //│ ║         	^^^
-//│ ╟── expression of type `e` does not match type `int`
+//│ ╟── expression of type `E` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.166: 	E{}: int
 //│ ╙──       	     ^^^

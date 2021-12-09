@@ -11,7 +11,7 @@ test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.10: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & ~(?a & ~myTrait)` does not match type `{value: ?b}`
+//│ ╟── expression of type `1 & myTrait | 1 & ~?a` does not match type `{value: ?b}`
 //│ ║  l.10: 	test1 1
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from field selection:
@@ -26,7 +26,7 @@ test1 { value = 1 }
 //│ res: 0 | 1
 
 def mt = MyTrait { value = 1 }
-//│ mt: {MyTrait#A :> 'A <: 1 | 'A, value: 1} & myTrait
+//│ mt: {value: 1} & myTrait
 
 test1 mt
 //│ res: 0 | 1
@@ -92,7 +92,7 @@ test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?default} & ~(?a & ~myTrait)` does not match type `{value: ?b}`
+//│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not match type `{value: ?b}`
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -105,17 +105,17 @@ test2 (C2 { default = "oops" })
 
 // Note: `value` is unused here; would deserve a warning
 def c2 = C2 { value = 1; default = "oops" }
-//│ c2: c2 & {default: "oops"}
+//│ c2: C2 & {default: "oops"}
 
 :e
 test2 c2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.111: 	test2 c2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `c2 & {default: ?default} & ~(?a & ~myTrait)` does not match type `{value: ?b}`
+//│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not match type `{value: ?b}`
 //│ ║  l.107: 	def c2 = C2 { value = 1; default = "oops" }
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `myTrait & ?c | ?a & ~myTrait`
+//│ ╟── but it flows into reference with expected type `myTrait & ?c | ?d & ~myTrait`
 //│ ║  l.111: 	test2 c2
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -138,20 +138,20 @@ class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 def strawman: C2 & ~MyTrait[anything]
-//│ strawman: c2 & {default: string} & ~myTrait
+//│ strawman: C2 & ~myTrait
 
 test2 strawman
 //│ res: string
 
 strawman: C2
-//│ res: c2 & {default: string}
+//│ res: C2
 
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.150: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `C2 & ~MyTrait[anything]` does not match type `~{value: anything}`
+//│ ╟── expression of type `C2 & ~myTrait` does not match type `~{value: anything}`
 //│ ║  l.140: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`

@@ -18,22 +18,22 @@ class Bar: {}
 //│ Defined class Bar
 
 def foo = Foo { field = id 1 }
-//│ foo: foo & {Foo#A :> 'A <: 1 | 'A, field: 1}
+//│ foo: Foo['A .. 1 | 'A] with {field: 1}
 
 (if true then foo else { field = 2 }).field
 //│ res: 1 | 2
 
 Foo { field = id 1 }
-//│ res: foo & {Foo#A :> 'A <: 1 | 'A, field: 1}
+//│ res: Foo['A .. 1 | 'A] with {field: 1}
 
 def test x = case x of { Bar -> 1 | Foo -> 2 }
-//│ test: (bar | foo) -> (1 | 2)
+//│ test: (Bar | Foo[?]) -> (1 | 2)
 
 test foo
 //│ res: 1 | 2
 
 def test x = case x of { Bar -> 1 | Foo -> x.field }
-//│ test: (bar | foo & {field: 'a}) -> (1 | 'a)
+//│ test: (Bar | (Foo[?] with {field: 'a})) -> (1 | 'a)
 
 test foo
 //│ res: 1
@@ -42,6 +42,6 @@ test (Foo { field = 2 })
 //│ res: 1 | 2
 
 def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: (foo & {field: 'a} | ~foo) -> (1 | 'a)
+//│ test: ((Foo[?] with {field: 'a}) | ~Foo[?]) -> (1 | 'a)
 
 

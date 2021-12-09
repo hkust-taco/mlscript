@@ -264,14 +264,21 @@ abstract class TyperHelpers { self: Typer =>
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
       ).mkString(", ")
     
-    def expPos: Type = (this
+    def expPos(implicit ctx: Ctx): Type = (
+      // this
+      this.pushPosWithout(_ => ())
+      // this.normalize(true)
       // |> (canonicalizeType(_, true))
       // |> (simplifyType(_, true, removePolarVars = false))
+      |> (reconstructClassTypes(_, true, ctx))
       |> (expandType(_, true, stopAtTyVars = true))
     )
-    def expNeg: Type = (this
+    def expNeg(implicit ctx: Ctx): Type = (
+      this
+      // this.normalize(false)
       // |> (canonicalizeType(_, false))
       // |> (simplifyType(_, false, removePolarVars = false))
+      |> (reconstructClassTypes(_, false, ctx))
       |> (expandType(_, false, stopAtTyVars = true))
     )
     

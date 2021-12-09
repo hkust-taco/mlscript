@@ -5,7 +5,7 @@ data Test a b
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
 //│ Defined class Test
-//│ Test: 'a -> 'b -> (test & {Test#a = 'a, Test#b = 'b, a: 'a, b: 'b})
+//│ Test: 'a -> 'b -> Test['a, 'b]
 
 :p
 data Person(name: string, age: int)
@@ -13,10 +13,10 @@ data Person(name: string, age: int)
 //│ Desugared: class Person: {age: int, name: string}
 //│ Desugared: def Person: [] -> (name: string, age: int,) -> Person[]
 //│ Defined class Person
-//│ Person: (name: string, age: int,) -> (person & {age: int, name: string})
+//│ Person: (name: string, age: int,) -> Person
 
 let p = Person("Bob", 42)
-//│ p: person & {age: int, name: string}
+//│ p: Person
 
 let foo q = q.age
 foo p
@@ -72,8 +72,8 @@ bar fake-p
 data Wine(name: string, age: int)
 let w = Wine("Côtes du Rhône", 3)
 //│ Defined class Wine
-//│ Wine: (name: string, age: int,) -> (wine & {age: int, name: string})
-//│ w: wine & {age: int, name: string}
+//│ Wine: (name: string, age: int,) -> Wine
+//│ w: Wine
 
 // :e
 bar w

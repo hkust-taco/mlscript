@@ -129,7 +129,7 @@ trait TypeSimplifier { self: Typer =>
         val newOccs = MutSet.empty[SimpleType]
         def go(st: SimpleType): Unit = st match {
           case ComposedType(p, l, r) =>
-            println(s">> $pol $l $r")
+            // println(s">> $pol $l $r")
             if (p === pol) { go(l); go(r) }
             else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
           case _: BaseType => newOccs += st; analyze(st, pol)
@@ -139,7 +139,7 @@ trait TypeSimplifier { self: Typer =>
         go(ct)
         newOccs.foreach {
           case tv: TypeVariable =>
-            println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+            // println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
             coOccurrences.get(pol -> tv) match {
               case Some(os) => os.filterInPlace(newOccs) // computes the intersection
               case None => coOccurrences(pol -> tv) = newOccs
@@ -282,4 +282,107 @@ trait TypeSimplifier { self: Typer =>
     
   }
   
+  def reconstructClassTypes(st: SimpleType, pol: Bool, ctx: Ctx): SimpleType = {
+    
+    val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    
+    def renew(tv: TypeVariable): TypeVariable =
+      if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
+      else renewed.get(tv) match {
+        case S(tv2) => tv2
+        case N =>
+          val tv2 = freshVar(tv.prov, tv.nameHint)(0)
+          renewed += tv -> tv2
+          tv2.lowerBounds = tv.lowerBounds.map(go(_, true))
+          tv2.upperBounds = tv.upperBounds.map(go(_, false))
+          tv2
+      }
+    
+    def go(st: SimpleType, pol: Bool): SimpleType = st match {
+      case ExtrType(_) => st
+      case tv: TypeVariable => renew(tv)
+      case NegType(und) => go(und, !pol).neg()
+      case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
+      case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
+      case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
+      case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
+      case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
+      case ProxyType(underlying) => go(underlying, pol)
+      case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
+      case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
+          TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
+        })(tr.prov, tr.ctx)
+      case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol)
+      case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
+        val dnf @ DNF(cs) = DNF.mk(ty, pol)
+        cs.sorted.map { c =>
+          c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
+            case LhsRefined(bo, tts, rcd) =>
+              lazy val newRcd = rcd.copy(
+                rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol)))(rcd.prov)
+              bo match {
+                case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
+                  val clsNme = tagNme.capitalize
+                  val td = ctx.tyDefs(clsNme)
+                  val typeRef = TypeRef(td, td.tparams.map { tp =>
+                    val fieldTagNme = tparamField(TypeName(clsNme), tp)
+                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst{
+                      case (_, FunctionType(ub, lb)) if lb >:< ub => lb
+                      case (_, FunctionType(lb, ub)) =>
+                        TypeBounds.mk(go(lb, false), go(ub, true))
+                    }.getOrElse(TypeBounds(BotType, TopType)(noProv))
+                  })(noProv, ctx)
+                  val clsFields = fieldsOf(
+                    typeRef.expandWith(paramTags = false)(_ => ()), paramTags = false)(_ => ()) // FIXME swallowing diags
+                  val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme
+                  val cleanedRcd = rcd.copy(
+                    rcd.fields.filterNot { case (field, fty) =>
+                      // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
+                      cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
+                        clsFields.get(field).exists(_ <:< fty)
+                    }.mapValues(go(_, pol))
+                  )(rcd.prov)
+                  val removedFields = clsFields.keysIterator
+                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSet
+                  val needsWith = !rcd.fields.forall {
+                    case (field, fty) =>
+                      // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
+                      clsFields.get(field).forall(fty <:< _)
+                  }
+                  val withoutType = if (removedFields.isEmpty) typeRef
+                    else Without(typeRef, removedFields)(noProv)
+                  val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
+                    else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
+                  tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                    .foldLeft(withType: ST)(_ & _)
+                case _ =>
+                  LhsRefined(bo.map {
+                    case ct: ClassTag => ct
+                    case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
+                    case tt @ TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(tt.prov)
+                    case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
+                  }, tts, newRcd).toType(sort = true)
+              }
+            case LhsTop => TopType
+          }, {
+            case RhsBot => BotType
+            case RhsField(n, t) => RecordType(n -> go(t, pol) :: Nil)(noProv)
+            case RhsBases(ots, rest) =>
+              // Note: could recosntruct class tags for these, but it would be pretty verbose,
+              //    as in showing `T & ~C[?] & ~D[?, ?]` instead of just `T & ~c & ~d`
+              // ots.map { case t @ (_: ClassTag | _: TraitTag) => ... }
+              val r = rest match {
+                case v @ S(R(RhsField(n, t))) => RhsField(n, go(t, pol)).toType(sort = true)
+                case v @ S(L(bty)) => go(bty, pol)
+                case N => BotType
+              }
+              ots.sorted.foldLeft(r)(_ | _)
+          })
+        }.foldLeft(BotType: ST)(_ | _)
+    }
+    
+    go(st, pol)
+    
+  }
+    
 }

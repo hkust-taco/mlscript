@@ -38,14 +38,14 @@ E{} : E[?]
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.29: 	E{} : E[?]
 //│ ╙──      	        ^
-//│ res: e & {E#A <: anything}
+//│ res: E[?]
 
 def e: E[?]
 def e = E{}
-//│ e: e & {E#A <: anything}
-//│ e & {E#A = 'A}
+//│ e: E[?]
+//│ E['A]
 //│   <:  e:
-//│ e & {E#A <: anything}
+//│ E[?]
 
 
 type Als1[A] = int -> A

@@ -2,7 +2,7 @@
 class Person: { name: string; age: int }
 def Person = fun n -> fun a -> Person { name = n; age = a }
 //│ Defined class Person
-//│ Person: (string & 'a) -> (int & 'b) -> (person & {age: 'b, name: 'a})
+//│ Person: (string & 'a) -> (int & 'b) -> (Person with {age: 'b, name: 'a})
 
 class Animal: {}
 //│ Defined class Animal
@@ -11,24 +11,24 @@ def test = fun x -> case x of
   { Person -> x.age
   | Animal -> 0
   }
-//│ test: (animal | person & {age: 'a}) -> (0 | 'a)
+//│ test: (Animal | (Person\name with {age: 'a})) -> (0 | 'a)
 
 // TODO simplify type to : test: Person & {age: 'a} | Animal -> 'a | 0
 
 test: Person & {age: 'a} | Animal -> 'a | 0
-//│ res: animal -> 0 | 0 | person & {age: 0, name: string}
+//│ res: Animal -> 0 | 0 | Person & {age: 0}
 
 test: (Person & {age: int} | Animal) -> int
-//│ res: (animal | person & {age: int, name: string}) -> int
+//│ res: (Animal | Person) -> int
 
 def a = Animal{}
-//│ a: animal
+//│ a: Animal
 
 a: {}
 //│ res: anything
 
 def p = Person "Bob" 42
-//│ p: person & {age: 42, name: "Bob"}
+//│ p: Person & {age: 42, name: "Bob"}
 
 p: { age: int }
 //│ res: {age: int}

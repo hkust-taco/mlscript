@@ -117,6 +117,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Cls, TypeName("string"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
     TypeDef(Als, TypeName("anything"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
     TypeDef(Als, TypeName("nothing"), Nil, Nil, Bot, List.empty, List.empty, Set.empty, N) ::
+    TypeDef(Cls, TypeName("error"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
+    TypeDef(Cls, TypeName("unit"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
@@ -172,7 +174,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val v = freshVar(noProv)(1)
         PolymorphicType(0, fun(BoolType, fun(v, fun(v, v)(noProv))(noProv))(noProv))
       },
-    ) ++ primTypes ++ primTypes.map(p => "" + p._1.head.toUpper + p._1.tail -> p._2) // TODO settle on naming convention...
+    ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
   
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
@@ -219,6 +221,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def wrapMethod(tn: Str, bodyTy: PolymorphicType)(implicit prov: TypeProvenance, ctx: Ctx): PolymorphicType =
     PolymorphicType(bodyTy.level, FunctionType(ctx.thisType(tn), bodyTy.body)(prov))
 
+  
+  /** Only supports getting the fields of a valid base class type.
+   * Notably, does not traverse type variables. */
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit raise: Raise): Map[Var, ST] =
+  // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
+  {
+    ty match {
+      case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
+      case ComposedType(false, l, r) =>
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+      case RecordType(fs) => fs.toMap
+      case p: ProxyType => fieldsOf(p.underlying, paramTags)
+      case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
+      case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
+      case _: ObjectTag | _: FunctionType | _: TupleType | _: TypeVariable
+        | _: NegType | _: ExtrType | _: ComposedType => Map.empty
+    }
+  }
+  // ()
+  
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
     var allEnv = ctx.env.clone
@@ -260,38 +282,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
         val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, td.targsMap)
-        var fields = SortedMap.empty[Var, SimpleType]
         def allDeclMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDecls.get(bc.name).map(_.keySet)
           .getOrElse(allDeclMths(ctx.tyDefs(bc.name)))) ++ td.mthDecls.map(_.nme.name)
         def allDefMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDefs.get(bc.name).map(_.keySet)
           .getOrElse(allDefMths(ctx.tyDefs(bc.name)))) ++ td.mthDefs.map(_.nme.name)
-        def checkCycleComputeFields(ty: SimpleType, computeFields: Bool)
-            (implicit travsersed: Set[TypeDef]): Bool =
-              trace(s"Cycle? $ty {${travsersed.mkString(",")}}"){ty match {
-          case _: ObjectTag => true
-          case TypeRef(td, _) if travsersed(td) =>
+        def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeDef \/ TV]): Bool =
+            // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
+            ty match {
+          case TypeRef(td, _) if travsersed(L(td)) =>
             err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
             false
-          case tr @ TypeRef(td, targs) =>
-            if ((td.kind is Cls) && computeFields) td.tparams.lazyZip(targs).foreach{ (tp, ta) =>
-              val fieldName = Var(td.nme.name+"#"+tp.name)
-              fields += fieldName ->
-                (fields.getOrElse(fieldName, TopType) & FunctionType(ta, ta)(noProv))
-            }
-            checkCycleComputeFields(tr.expand, computeFields)(travsersed + td)
-          case ComposedType(_, l, r) => checkCycleComputeFields(l, computeFields) && checkCycleComputeFields(r, computeFields)
-          case tv: TypeVariable => true
-          case _: FunctionType | _: TupleType => true
-          case NegType(u) => checkCycleComputeFields(u, computeFields)
-          case RecordType(fs) =>
-            fs.foreach(f => fields += f._1 -> (fields.getOrElse(f._1, TopType) & f._2))
-            true
-          case _: ExtrType => true
-          case p: ProxyType => checkCycleComputeFields(p.underlying, computeFields)
-          case Without(base, _) => checkCycleComputeFields(base, computeFields)
-        }}()
+          case tr @ TypeRef(td, targs) => checkCycle(tr.expand)(travsersed + L(td))
+          case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
+          case NegType(u) => checkCycle(u)
+          case p: ProxyType => checkCycle(p.underlying)
+          case Without(base, _) => checkCycle(base)
+          case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
+          case tv: TypeVariable => travsersed(R(tv)) || {
+            val t2 = travsersed + R(tv)
+            tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
+          }
+          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: TupleType => true
+        }
+        // }()
         val rightParents = td.kind match {
-          case Als => checkCycleComputeFields(body_ty, computeFields = false)(Set.single(td))
+          case Als => checkCycle(body_ty)(Set.single(L(td)))
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
@@ -339,9 +354,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
             }
-            checkParents(body_ty) &&
-                checkCycleComputeFields(body_ty, computeFields = td.kind is Cls)(Set.single(td)) &&
-                ((allDeclMths(td) -- allDefMths(td)).nonEmpty || {
+            lazy val isAbstract = (allDeclMths(td) -- allDefMths(td)).nonEmpty
+            checkParents(body_ty) && checkCycle(body_ty)(Set.single(L(td))) && isAbstract.||{
+              val fields = fieldsOf(body_ty, true)
               val tparamTags = td.tparams.lazyZip(td.targs).map((tp, tv) =>
                 tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv)).toList
               val ctor = k match {
@@ -369,7 +384,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               }
               ctx += n.name -> ctor
               true
-            })
+            }
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.nme.name) match {
@@ -482,9 +497,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val subsMap = getSubsMap(tn.name)
         def ss(mt: PolymorphicType, bmt: TypeScheme, bno: Option[Str] = N)(implicit raise: Raise, prov: TypeProvenance) = bmt match {
           case pt: PolymorphicType => constrain(subst(mt, rigidSubsMap).instantiate,
-            subst(bno.fold(pt)(bn => subst(pt, subsMap(bn))), rigidSubsMap).rigidify)(raise, prov)
+            subst(bno.fold(pt)(bn => subst(pt, subsMap(bn))), rigidSubsMap).rigidify)(raise, prov, ctx)
           case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate,
-            subst(bno.fold(st)(bn => subst(st, subsMap(bn))), rigidSubsMap))(raise, prov)
+            subst(bno.fold(st)(bn => subst(st, subsMap(bn))), rigidSubsMap))(raise, prov, ctx)
         }
         decls.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
@@ -551,11 +566,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               } else TypeRef(td, Nil)(tpr, ctx)
             case L(e) =>
               if (name.isEmpty || !name.head.isLower) e()
-              else typeNamed(tyLoc, name.head.toUpper.toString + name.tail) match {
+              else typeNamed(tyLoc, name.capitalize) match {
                 case R(td) => td.kind match {
                   case Cls => clsNameToNomTag(td)(tp(tyLoc, "class tag"), ctx)
-                  case Trt => ???
-                  case Als => ???
+                  case Trt => trtNameToNomTag(td)(tp(tyLoc, "trait tag"), ctx)
+                  case Als => err(msg"Type alias $name cannot be used as a type tag", tyLoc)(raise, tpr)
                 }
                 case L(_) => e()
               }
@@ -620,7 +635,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               msg"Expression in statement position should have type `unit`." -> N ::
               msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
               err.allMsgs)),
-            prov = TypeProvenance(t.toLoc, t.describe))
+            prov = TypeProvenance(t.toLoc, t.describe), ctx)
       }
       L(PolymorphicType(0, ty))
     case _ =>
@@ -635,7 +650,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       val e_ty = freshVar(TypeProvenance(rhs.toLoc, "let-bound value"))(lvl + 1)
       ctx += nme -> e_ty
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
-      constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe))
+      constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       e_ty
     } else typeTerm(rhs)(ctx.nextLevel, raise, vars)
     PolymorphicType(lvl, res)
@@ -682,10 +697,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case err: TypeError if alreadyReportedAnError => () // silence further errors from this location
         case err: TypeError =>
           alreadyReportedAnError = true
-          constrain(errType, res)(_ => (), noProv) // This is just to get error types leak into the result
+          constrain(errType, res)(_ => (), noProv, ctx) // This is just to get error types leak into the result
           raise(err)
         case diag => raise(diag)
-      }, prov)
+      }, prov, ctx)
       res
     }
     term match {
@@ -909,7 +924,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             new TypeVariable(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
           
           // constrain(ty, t_ty)(raise, prov)
-          constrain(t_ty, ty)(raise, prov)
+          constrain(t_ty, ty)(raise, prov, ctx)
           ctx += nme.name -> t_ty
           
           t_ty
