@@ -85,10 +85,10 @@ def eval1_ty = eval1
 //│ ('a -> int) -> (add & {Add#E :> 'a & ~add & ~lit | 'b | add & {Add#E :> 'c <: 'd, lhs: 'd, rhs: 'd} | lit & {val: int} as 'd <: 'c, lhs: 'c, rhs: 'c} & 'b | lit & {val: int} & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 //│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:437)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:459)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:459)
-//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:471)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:440)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:462)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:462)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:474)
 //│ 	at: mlscript.TyperDatatypes$PolymorphicType.rigidify(TyperDatatypes.scala:30)
 //│ 	at: mlscript.ConstraintSolver.subsume(ConstraintSolver.scala:377)
 //│ 	at: mlscript.DiffTests.$anonfun$new$22(DiffTests.scala:288)

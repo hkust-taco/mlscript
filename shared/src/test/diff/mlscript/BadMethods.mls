@@ -199,7 +199,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
 //│ Defined class BadPair
 //│ Defined BadPair.Test: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> ('A0 & 'B0 & 'a)) -> anything -> (badPair & {AbstractPair#A = 'A0, AbstractPair#B = 'B0, BadPair#A = 'A0, BadPair#B = 'B0, x: 'a, y: 'a})
+//│ Defined BadPair.Map: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (badPair & {AbstractPair#A = 'A0, AbstractPair#B = 'B0, BadPair#A = 'A0, BadPair#B = 'B0, x: 'a, y: 'a})
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -427,3 +427,62 @@ class Test5B: Test5A
 //│ Declared Test5A.Mth5A: test5A -> 42
 //│ Defined class Test5B
 //│ Defined Test5B.Mth5A: test5B -> 43
+
+
+class Test6A[A]
+    method Mth6A: A
+    method Mth6B[B]: (A -> B) -> B
+trait Test6B
+    method Mth6A: bool
+class Test6C: Test6A[int] & Test6B
+//│ Defined class Test6A
+//│ Declared Test6A.Mth6A: (test6A & {Test6A#A = 'A}) -> 'A
+//│ Declared Test6A.Mth6B: (test6A & {Test6A#A = 'A}) -> ('A -> 'B) -> 'B
+//│ Defined trait Test6B
+//│ Declared Test6B.Mth6A: test6B -> bool
+//│ Defined class Test6C
+
+:e
+Test6A
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.446: 	Test6A
+//│ ║         	^^^^^^
+//│ ╟── Note that class Test6A is abstract:
+//│ ║  l.432: 	class Test6A[A]
+//│ ║         	      ^^^^^^^^
+//│ ╟── Hint: method Mth6B is abstract
+//│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Hint: method Mth6A is abstract
+//│ ║  l.433: 	    method Mth6A: A
+//│ ╙──       	           ^^^^^^^^
+//│ res: error
+
+:e
+Test6B
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.462: 	Test6B
+//│ ║         	^^^^^^
+//│ ╟── Note that trait Test6B is abstract:
+//│ ║  l.435: 	trait Test6B
+//│ ║         	      ^^^^^^
+//│ ╟── Hint: method Mth6A is abstract
+//│ ║  l.436: 	    method Mth6A: bool
+//│ ╙──       	           ^^^^^^^^^^^
+//│ res: error
+
+:e
+Test6C
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.475: 	Test6C
+//│ ║         	^^^^^^
+//│ ╟── Note that class Test6C is abstract:
+//│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Hint: method Mth6B is abstract
+//│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Hint: method Mth6A is abstract
+//│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
+//│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error

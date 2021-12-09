@@ -45,28 +45,48 @@ class Bar2: Foo2[int] & { x: int }
 class Bar3: Foo2[int]
 //│ Defined class Bar3
 
+:e
 :ns
 Bar2
 Bar3
 //│ res: {x: 'x & int} -> (bar2 & {Foo2#A = int, x: 'x})
-//│ res: anything -> (bar3 & {Foo2#A = int})
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.51: 	Bar3
+//│ ║        	^^^^
+//│ ╟── Note that class Bar3 is abstract:
+//│ ║  l.45: 	class Bar3: Foo2[int]
+//│ ║        	      ^^^^^^^^^^^^^^^
+//│ ╟── Hint: method M2 is abstract
+//│ ║  l.37: 	  method M2: A
+//│ ╙──      	         ^^^^^
+//│ res: error
 
+:e
 Bar2
 Bar3
 //│ res: {x: int & 'x} -> (bar2 & {Foo2#A = int, x: 'x})
-//│ res: anything -> (bar3 & {Foo2#A = int})
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.66: 	Bar3
+//│ ║        	^^^^
+//│ ╟── Note that class Bar3 is abstract:
+//│ ║  l.45: 	class Bar3: Foo2[int]
+//│ ║        	      ^^^^^^^^^^^^^^^
+//│ ╟── Hint: method M2 is abstract
+//│ ║  l.37: 	  method M2: A
+//│ ╙──      	         ^^^^^
+//│ res: error
 
 :e
 {A = 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.60: 	{A = 1}
+//│ ║  l.80: 	{A = 1}
 //│ ╙──      	^^^^^^^
 //│ res: {A: 1}
 
 :e
 error: {A: 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.67: 	error: {A: 1}
+//│ ║  l.87: 	error: {A: 1}
 //│ ╙──      	        ^
 //│ res: {A: 1}
 
@@ -76,10 +96,10 @@ b = Bar2{x = 1}
 :e
 c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.77: 	c = b: Foo2[string]
+//│ ║  l.97: 	c = b: Foo2[string]
 //│ ║        	    ^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.77: 	c = b: Foo2[string]
+//│ ║  l.97: 	c = b: Foo2[string]
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.38: 	class Bar2: Foo2[int] & { x: int }
@@ -101,10 +121,10 @@ d: Foo2['a]
 :e
 d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.102: 	d: Foo2[string]
+//│ ║  l.122: 	d: Foo2[string]
 //│ ║         	^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.102: 	d: Foo2[string]
+//│ ║  l.122: 	d: Foo2[string]
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.38: 	class Bar2: Foo2[int] & { x: int }
