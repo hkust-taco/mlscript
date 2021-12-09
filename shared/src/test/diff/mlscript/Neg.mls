@@ -56,7 +56,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.55: 	1: ~(~3 & ~2)
 //│ ║        	^
-//│ ╟── expression of type `1` does not match type `~(~3 & ~2)`
+//│ ╟── expression of type `1` does not match type `~(~2 & ~3)`
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.55: 	1: ~(~3 & ~2)
 //│ ╙──      	   ^^^^^^^^^^

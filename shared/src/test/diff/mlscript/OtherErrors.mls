@@ -34,7 +34,7 @@ id
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.33: 	1: 1 & int: { x: int; y: string }
 //│ ║        	^
-//│ ╟── expression of type `1 & int` does not match type `{x: int, y: string}`
+//│ ╟── expression of type `1` does not match type `{x: int, y: string}`
 //│ ║  l.33: 	1: 1 & int: { x: int; y: string }
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from record type:
@@ -46,7 +46,7 @@ id
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.45: 	1: 1 & int: { x: int; y: string } | string
 //│ ║        	^
-//│ ╟── expression of type `1 & int` does not match type `{x: int, y: string} | string`
+//│ ╟── expression of type `1` does not match type `{x: int, y: string} | string`
 //│ ║  l.45: 	1: 1 & int: { x: int; y: string } | string
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from union type:

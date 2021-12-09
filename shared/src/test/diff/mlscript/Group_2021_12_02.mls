@@ -7,7 +7,7 @@ class Const
 //│ Defined class Const
 
 Lit
-//│ res: anything -> lit
+//│ res: anything -> Lit
 
 // TODO: support `as` types in parser and typer:
 // def eval: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
@@ -19,7 +19,7 @@ type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~A
 // def eval: ('b -> 'c & int) -> Expr['b] -> (int | 'c)
 
 def eval: ('b -> int) -> Expr['b] -> int
-//│ eval: ('b -> int) -> (add & {lhs: 'a, rhs: 'a} | lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
+//│ eval: ('b -> int) -> (Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
 
 // TODO better simplify type!
 rec def eval f e = case e of {
@@ -27,9 +27,9 @@ rec def eval f e = case e of {
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ ('a -> int) -> (add & {lhs: 'b, rhs: 'b} | lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
+//│ ('a -> int) -> (Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval:
-//│ ('b -> int) -> (add & {lhs: 'a, rhs: 'a} | lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
+//│ ('b -> int) -> (Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
 
 :e
 eval {} (Lit{} with { val = 1 })
@@ -58,7 +58,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.57: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ~Lit & ~Add & ?b`
+//│ ╟── expression of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ?b & ~add & ~lit`
 //│ ║  l.57: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -70,7 +70,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ res: error | int
 
 l = Lit{} with {hello=1}
-//│ l: lit & {hello: 1}
+//│ l: Lit & {hello: 1}
 l: {hello:1}
 //│ res: {hello: 1}
 

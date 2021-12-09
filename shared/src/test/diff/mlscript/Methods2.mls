@@ -1,19 +1,22 @@
+
 class Option[A]
     method Get: A
-//│ Defined class Option
-//│ Declared Option.Get: (option & {Option#A = 'A}) -> 'A
-
+    method Destruct: Some[A] | None[A]
 class Some[A]: Option[A] & { payload: A }
     method Get = this.payload
-//│ Defined class Some
-//│ Defined Some.Get: (some & {Option#A = 'A, Some#A = 'A, payload: 'A}) -> 'A
-
+    method Destruct = this
 class None[A]: Option[A]
     method Get = error
+    method Destruct = this
+//│ Defined class Option
+//│ Declared Option.Get: Option['A] -> 'A
+//│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
+//│ Defined class Some
+//│ Defined Some.Get: Some['A] -> 'A
+//│ Defined Some.Destruct: Some['A] -> Some['A]
 //│ Defined class None
-//│ Defined None.Get: (none & {None#A = 'A, Option#A = 'A}) -> nothing
-
-
+//│ Defined None.Get: None['A] -> nothing
+//│ Defined None.Destruct: None['A] -> None['A]
 
 
 class List[A]
@@ -21,57 +24,110 @@ class List[A]
     method HeadOption: Option[A]
     method Map[B]: (A -> B) -> List[B]
 //│ Defined class List
-//│ Declared List.Size: (list & {List#A = 'A}) -> int
-//│ Declared List.HeadOption: (list & {List#A = 'A}) -> (option & {Option#A = 'A})
-//│ Declared List.Map: (list & {List#A = 'A}) -> ('A -> 'B) -> (list & {List#A = 'B})
+//│ Declared List.Size: List['A] -> int
+//│ Declared List.HeadOption: List['A] -> Option['A]
+//│ Declared List.Map: List['A] -> ('A -> 'B) -> List['B]
 
 class Nil[A]: List[A]
     method Size = 0
     method HeadOption = None {}
     method Map[B] f = Nil {}
 //│ Defined class Nil
-//│ Defined Nil.Size: (nil & {List#A = 'A, Nil#A = 'A}) -> 0
-//│ Defined Nil.HeadOption: (nil & {List#A = 'A, Nil#A = 'A}) -> (none & {None#A = 'A0, Option#A = 'A0})
-//│ Defined Nil.Map: (nil & {List#A = 'A, Nil#A = 'A}) -> anything -> (nil & {List#A = 'A0, Nil#A = 'A0})
+//│ Defined Nil.Size: Nil['A] -> 0
+//│ Defined Nil.HeadOption: Nil['A] -> None['A0]
+//│ Defined Nil.Map: Nil['A] -> anything -> Nil['A0]
 
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons
-//│ Defined Cons.Size: (cons & {Cons#A = 'A, List#A = 'A, head: 'A, tail: list & {List#A = 'A}}) -> int
-//│ Defined Cons.HeadOption: (cons & {Cons#A = 'A, List#A = 'A, head: 'A, tail: list & {List#A = 'A}}) -> (some & {Option#A :> 'a <: 'A | 'a, Some#A :> 'a <: 'A | 'a, payload: 'A})
-//│ Defined Cons.Map: (cons & {Cons#A = 'A, List#A = 'A, head: 'A, tail: list & {List#A = 'A}}) -> ('A -> ('a & 'b)) -> (cons & {Cons#A = 'a, List#A = 'a, head: 'b, tail: list & {List#A = 'a}})
+//│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
+//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
+//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
+
+// Note that the useless `with {tail: List['A]}` refinement is kept
+//  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
+//  as we do not try to expand type aliases right now.
+Cons.Size
+//│ res: (Cons['A] with {tail: List['A]}) -> int
+
+List.HeadOption
+//│ res: List['A] -> Option['A]
+
+// TODO: Strangely, this explicit call does not have the inferred refined type:
+Cons.HeadOption
+//│ res: (Cons['A] with {tail: List['A]}) -> Option['A]
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ l: cons & {Cons#A :> 'A <: 0 | 1 | 'A, List#A :> 'A <: 0 | 1 | 'A, head: 0, tail: cons & {Cons#A :> 'A <: 0 | 1 | 'A, List#A :> 'A <: 0 | 1 | 'A, head: 1, tail: nil & {List#A :> 'A <: 0 | 1 | 'A, Nil#A :> 'A <: 0 | 1 | 'A}}}
+//│ l: Cons['A .. 0 | 1 | 'A] with {head: 0, tail: Cons['A .. 0 | 1 | 'A] with {head: 1, tail: Nil['A .. 0 | 1 | 'A]}}
 
 l.Size
 //│ res: int
 
 l.Map (fun x -> mul x 2)
-//│ res: list & {List#A :> 'B <: 'B | int}
+//│ res: List['B .. 'B | int]
 
 o = l.HeadOption
-//│ o: option & {Option#A :> 'A <: 0 | 1 | 'A}
+//│ o: Option['A .. 0 | 1 | 'A]
+
+o = l.(Cons.HeadOption)
+//│ o: Option['A .. 0 | 1 | 'A]
+
+:e
+case o of {None -> 0 | Some -> o.payload}
+//│ ╔══[ERROR] Type mismatch in case of:
+//│ ║  l.78: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
+//│ ║  l.24: 	    method HeadOption: Option[A]
+//│ ║        	                       ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
+//│ ║  l.78: 	case o of {None -> 0 | Some -> o.payload}
+//│ ╙──      	     ^
+//│ res: 0
+
+v = o.Destruct
+case v of {None -> 0 | Some -> v.payload}
+//│ v: None['A .. 0 | 1 | 'A] | Some['A .. 0 | 1 | 'A]
+//│ res: 0 | 1
+
+
+def newHeadOption x = case x of {
+    | Cons -> Some {payload = x.head}
+    | _ -> None{}
+    }
+//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~Cons[?]) -> (None['A0] | (Some['A] with {payload: 'payload}))
+
+// Note that `o` is not a list, so this takes the default case:
+newHeadOption o
+//│ res: None['A] | (Some['A0] with {payload: nothing})
+
+newHeadOption l
+//│ res: None['A] | (Some['A0 .. 0 | 'A0] with {payload: 0})
+
+case res of {None -> 0 | Some -> res.payload}
+//│ res: 0
+
 
 // Idiomatic definition for proper matching: `type Option[A] = Some[A] | None[A]`
 :e
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.60: 	case o of {
-//│ ║        	     ^^^^^^
-//│ ║  l.61: 	    Some -> o.Get | None -> 0 }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `option & {Option#A = ?A}` does not match type `some & ?a | none & ?b & ~some`
-//│ ║  l.21: 	    method HeadOption: Option[A]
+//│ ║  l.115: 	case o of {
+//│ ║         	     ^^^^^^
+//│ ║  l.116: 	    Some -> o.Get | None -> 0 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
+//│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `some & ?a | none & ?b & ~some`
-//│ ║  l.60: 	case o of {
-//│ ╙──      	     ^
+//│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`
+//│ ║  l.115: 	case o of {
+//│ ╙──       	     ^
 //│ res: 0 | 1
 
 case o of {
     Some -> o.Get | None -> 0 | Option -> error }
 //│ res: 0 | 1
+

@@ -20,7 +20,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance): Unit = {
+  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
@@ -42,7 +42,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
+          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
         
         // TODO to improve performance, avoid re-normalizing already-normalized types!!
@@ -53,7 +53,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit ctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
+          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
         def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
         tys.reduceOption(_ | _).getOrElse(BotType)
@@ -109,7 +109,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
         case (Nil, Nil) =>
-          def fail = reportError(doesntMatch(ctx.head.head._2))
+          def fail = reportError(doesntMatch(cctx.head.head._2))
           (done_ls, done_rs) match { // TODO missing cases
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
               | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
@@ -146,17 +146,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
     
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
-          (implicit raise: Raise, ctx: ConCtx): Unit = {
+          (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       val pushed = lhs.pushPosWithout
       if (pushed isnt lhs) println(s"Push LHS  $lhs  ~>  $pushed")
       recImpl(pushed, rhs, outerProv)
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
-          (implicit raise: Raise, ctx: ConCtx): Unit =
+          (implicit raise: Raise, cctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
-      ((lhs -> rhs :: ctx.headOr(Nil)) :: ctx.tailOr(Nil)) |> { implicit ctx =>
+      ((lhs -> rhs :: cctx.headOr(Nil)) :: cctx.tailOr(Nil)) |> { implicit cctx =>
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
@@ -178,7 +178,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
-            rec(r0, r1)(raise, Nil :: ctx)
+            rec(r0, r1)(raise, Nil :: cctx)
           case (prim: ClassTag, _) if rhs === prim => ()
           case (prim: ClassTag, ClassTag(id:Var, _)) if prim.parents.contains(id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -262,16 +262,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
-    def reportError(error: Message)(implicit ctx: ConCtx): Unit = {
-      val (lhs_rhs @ (lhs, rhs)) = ctx.head.head
+    def reportError(error: Message)(implicit cctx: ConCtx): Unit = {
+      val (lhs_rhs @ (lhs, rhs)) = cctx.head.head
       val failure = error
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
-      println(s"CTX: ${ctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
       
       val detailedContext =
         if (explainErrors)
           msg"[info] Additional Explanations below:" -> N ::
-          ctx.reverseIterator.flatMap { case subCtx => if (subCtx.isEmpty) Nil else {
+          cctx.reverseIterator.flatMap { case subCtx => if (subCtx.isEmpty) Nil else {
             val (lhss, rhss) = subCtx.unzip
             val prefixes = "" #:: LazyList.continually("i.e., ")
             msg"[info] While constraining..." -> N ::
@@ -284,12 +284,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }}.toList
         else Nil
       
-      val lhsProv = ctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
+      val lhsProv = cctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
       
       // TODO re-enable
       // assert(lhsProv.loco.isDefined) // TODO use soft assert
       
-      val relevantFailures = ctx.zipWithIndex.map { case (subCtx, i) =>
+      val relevantFailures = cctx.zipWithIndex.map { case (subCtx, i) =>
         subCtx.collectFirst {
           case (l, r)
             if l.prov.loco =/= lhsProv.loco
@@ -304,7 +304,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       var shownLocs = MutSet.empty[Loc]
       
-      val tighestLocatedRHS = ctx.flatMap { subCtx =>
+      val tighestLocatedRHS = cctx.flatMap { subCtx =>
         subCtx.flatMap { case (l, r) =>
           val considered = (true, r, r.prov) :: Nil
           considered.filter { case (isMainProv, _, p) =>

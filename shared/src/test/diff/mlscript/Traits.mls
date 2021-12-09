@@ -27,7 +27,7 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (d & {x: 'x, y: 'y})
+//│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (D with {x: 'x, y: 'y})
 
 error: A & B
 //│ res: {x: int, y: string} & a & b
@@ -37,20 +37,20 @@ def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.36: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{x: ?x, y: ?y}`
+//│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
 //│ ║  l.36: 	def dv = D{}
 //│ ╙──      	          ^^
-//│ dv: d & {x: nothing, y: nothing} | error
+//│ dv: D & {x: nothing, y: nothing} | error
 
 def dv = D { x = 0; y = "hello" }
-//│ dv: d & {x: 0, y: "hello"}
+//│ dv: D & {x: 0, y: "hello"}
 
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.49: 	dv: nothing
 //│ ║        	^^
-//│ ╟── expression of type `d & {x: ?x, y: ?y}` does not match type `nothing`
+//│ ╟── expression of type `D with {x: ?x, y: ?y}` does not match type `nothing`
 //│ ║  l.45: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
@@ -69,7 +69,7 @@ dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.68: 	dv: A & B: nothing
 //│ ║        	^^
-//│ ╟── expression of type `A & B` does not match type `nothing`
+//│ ╟── expression of type `{x: int, y: string} & a & b` does not match type `nothing`
 //│ ║  l.68: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -92,12 +92,12 @@ E{}
 //│ ╟── expression of type `anything` does not have field 'x'
 //│ ║  l.88: 	E{}
 //│ ╙──      	 ^^
-//│ res: e & {x: nothing} | error
+//│ res: E & {x: nothing} | error
 
 def ev = E { x = 1 }
 ev: C
-//│ ev: e & {x: 1}
-//│ res: c & {x: 0 | 1}
+//│ ev: E & {x: 1}
+//│ res: C
 
 
 trait T1: C & A
@@ -108,7 +108,7 @@ def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: 1}` does not match type `~a | c`
+//│ ╟── expression of type `{x: 1}` does not match type `~a | C`
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `C`
@@ -120,13 +120,13 @@ def t = T1 (A { x = 1 })
 //│ t: error | {x: 1} & a & t1
 
 def t = T1 (A (C { x = 1 }))
-//│ t: c & {x: 1} & a & t1
+//│ t: C & {x: 1} & a & t1
 
 class CA: C & A
 //│ Defined class CA
 
 def t = T1 (CA { x = 1 })
-//│ t: cA & {x: 1} & t1
+//│ t: CA & {x: 1} & t1
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
@@ -137,16 +137,16 @@ def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
-//│ ╟── expression of type `anything` does not match type `{x: ?x, y: ?y}`
+//│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
 //│ ║  l.136: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
-//│ c1: c1 & {x: nothing, y: nothing} | error
+//│ c1: C1 & {x: nothing, y: nothing} | error
 
 def c1 = C1 { x = 1; y = "hi" }
-//│ c1: c1 & {x: 1, y: "hi"}
+//│ c1: C1 & {x: 1, y: "hi"}
 
 c1: T1
-//│ res: c & {x: 0 | 1} & a & t1
+//│ res: C & a & t1
 
 c1: A
 //│ res: {x: int} & a

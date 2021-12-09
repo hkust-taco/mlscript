@@ -20,38 +20,38 @@ Nil{}
 //│ ╟── expression of type `anything` does not have field 'size'
 //│ ║  l.16: 	Nil{}
 //│ ╙──      	   ^^
-//│ res: error | nil & {ListBase#A = nothing, Seq#A = nothing, size: nothing}
+//│ res: error | Nil & {size: nothing}
 
 def Nil = Nil { size = 0 }
-//│ Nil: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}
+//│ Nil: Nil & {size: 0}
 
 // FIXME
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{head: ?head, size: ?size, tail: ?tail}`
+//│ ╟── expression of type `1` does not match type `{size: ?size, tail: ?tail, head: ?head}`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `cons & {ListBase#A = ?A, Seq#A = ?A, head: ?head, size: ?size, tail: ?tail, Cons#A = ?A}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` does not match type `?a -> ?b`
 //│ ║  l.29: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 
 Cons
-//│ res: {head: 'head & 'A, size: int & 'size, tail: (cons & {Cons#A = 'A, ListBase#A = 'A, Seq#A = 'A, head: 'A, size: int, tail: 'b & ('a | nil & {ListBase#A = nothing, Seq#A = nothing, size: int})} as 'a) & 'tail | nil & {ListBase#A = nothing, Seq#A = nothing, size: int} & 'tail} -> (cons & {Cons#A = 'A, ListBase#A = 'A, Seq#A = 'A, head: 'head, size: 'size, tail: 'tail})
+//│ res: {head: 'A & 'head, size: int & 'size, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> ((cons & {Cons#A :> 'A | 'a <: 'A, ListBase#A :> 'A | 'a <: 'A, Seq#A :> 'A | 'a <: 'A, head: 'A, size: int, tail: 'c & ('b | nil & {ListBase#A = nothing, Seq#A = nothing, size: int})} as 'b) & 'd | nil & {ListBase#A = nothing, Seq#A = nothing, size: int} & 'd) -> (cons & {Cons#A :> 'A <: 'A | 'a, ListBase#A :> 'A <: 'A | 'a, Seq#A :> 'A <: 'A | 'a, head: 'a, size: int, tail: 'd})
+//│ Cons_old: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> ((cons & {Cons#A :> 'A | 'a <: 'A, ListBase#A :> 'A | 'a <: 'A, Seq#A :> 'A | 'a <: 'A, head: 'A, size: int, tail: 'c & ('b | nil & {ListBase#A = nothing, Seq#A = nothing, size: int})} as 'b) & 'd | nil & {ListBase#A = nothing, Seq#A = nothing, size: int} & 'd) -> (cons & {Cons#A :> 'A <: 'A | 'a, ListBase#A :> 'A <: 'A | 'a, Seq#A :> 'A <: 'A | 'a, head: 'a, size: int, tail: 'd})
+//│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
 
 // We do not yet perform variance analysis
 :e
@@ -65,25 +65,25 @@ Nil: ListBase[anything]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}
 //│ ╙──     	                    ^^^^^^^
-//│ res: listBase & {ListBase#A = anything, Seq#A = anything, size: int}
+//│ res: ListBase[anything]
 
 def c = Cons 1 Nil
-//│ c: cons & {Cons#A :> 'A <: 1 | 'A, ListBase#A :> 'A <: 1 | 'A, Seq#A :> 'A <: 1 | 'A, head: 1, size: int, tail: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}}
+//│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
 
 c: ListBase[int]
-//│ res: listBase & {ListBase#A = int, Seq#A = int, size: int}
+//│ res: ListBase[int]
 
 c.head
 //│ res: 1
 
 c.tail
-//│ res: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}
+//│ res: Nil & {size: 0}
 
 c.size
 //│ res: int
 
 def d = Cons 2 c
-//│ d: cons & {Cons#A :> 'A <: 1 | 2 | 'A, ListBase#A :> 'A <: 1 | 2 | 'A, Seq#A :> 'A <: 1 | 2 | 'A, head: 2, size: int, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, ListBase#A :> 'A <: 1 | 2 | 'A, Seq#A :> 'A <: 1 | 2 | 'A, head: 1, size: int, tail: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}}}
+//│ d: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}}
 
 d.head
 //│ res: 2
@@ -92,7 +92,7 @@ d.size
 //│ res: int
 
 d.tail
-//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, ListBase#A :> 'A <: 1 | 2 | 'A, Seq#A :> 'A <: 1 | 2 | 'A, head: 1, size: int, tail: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}}
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}
 
 d.tail.size
 //│ res: int
@@ -100,5 +100,5 @@ d.tail.size
 d.tail.head
 d.tail.tail
 //│ res: 1
-//│ res: nil & {ListBase#A = nothing, Seq#A = nothing, size: 0}
+//│ res: Nil & {size: 0}
 

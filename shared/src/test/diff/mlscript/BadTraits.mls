@@ -12,7 +12,7 @@ T {}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.11: 	T {}
 //│ ║        	^^^^
-//│ ╟── expression of type `anything` does not match type `a`
+//│ ╟── expression of type `anything` does not match type `A`
 //│ ║  l.11: 	T {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -21,14 +21,14 @@ T {}
 //│ res: error | t
 
 def a = A{}
-//│ a: a
+//│ a: A
 
 :e
 T a
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.27: 	T a
 //│ ║        	^^^
-//│ ╟── expression of type `a` does not match type `b`
+//│ ╟── expression of type `A` does not match type `B`
 //│ ║  l.23: 	def a = A{}
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `B`
@@ -37,33 +37,33 @@ T a
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	             ^
-//│ res: a & t | error
+//│ res: A & t | error
 
 :e
 T A
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	T A
 //│ ║        	^^^
-//│ ╟── expression of type `anything -> a` does not match type `a`
+//│ ╟── expression of type `anything -> A` does not match type `A`
 //│ ║  l.43: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
-//│ res: anything -> a & t | error
+//│ res: anything -> A & t | error
 
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.56: 	T (B {})
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `b` does not match type `a`
+//│ ╟── expression of type `B` does not match type `A`
 //│ ║  l.56: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
-//│ res: b & t | error
+//│ res: B & t | error
 
 def t = T error
 //│ t: nothing
@@ -89,4 +89,33 @@ class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
 //│ ║  l.88: 	class D1: B & T
 //│ ╙──      	      ^^^^^^^^^
+
+
+trait S: { x: int }
+//│ Defined trait S
+
+s = S{ x = 1 }
+//│ s: {x: 1} & s
+
+t = s: s
+//│ t: s
+
+:e
+t.x
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.104: 	t.x
+//│ ║         	^^^
+//│ ╟── expression of type `s` does not have field 'x'
+//│ ║  l.100: 	t = s: s
+//│ ║         	       ^
+//│ ╟── but it flows into reference with expected type `{x: ?a}`
+//│ ║  l.104: 	t.x
+//│ ╙──       	^
+//│ res: error
+
+t = s: S
+//│ t: {x: int} & s
+
+t.x
+//│ res: int
 

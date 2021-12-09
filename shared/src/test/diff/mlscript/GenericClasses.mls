@@ -2,16 +2,16 @@
 class None: {}
 def None = None{}
 //│ Defined class None
-//│ None: none
+//│ None: None
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> (some & {Some#A :> 'A <: 'A | 'a, value: 'a})
+//│ Some: 'a -> (Some['A .. 'A | 'a] with {value: 'a})
 
 Some 42
 (Some 42).value
-//│ res: some & {Some#A :> 'A <: 42 | 'A, value: 42}
+//│ res: Some['A .. 42 | 'A] with {value: 42}
 //│ res: 42
 
 type Option[A] = Some[A] | None
@@ -19,15 +19,15 @@ type Option[A] = Some[A] | None
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: none | some & {Some#A = int, value: int}
-//│ res: none | some & {Some#A = int, value: int}
+//│ res: None | Some[int]
+//│ res: None | Some[int]
 
 :e
 res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.26: 	res.value
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `none` does not have field 'value'
+//│ ╟── expression of type `None` does not have field 'value'
 //│ ║  l.17: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
@@ -50,7 +50,7 @@ res.value
 //│ ╟── from applied type reference:
 //│ ║  l.39: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: none | some & {Some#A = int, value: int}
+//│ res: None | Some[int]
 
 
 class Foo1[A]: { x: A }
@@ -59,19 +59,19 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Bar1
-//│ res: {x: int & 'x} -> (bar1 & {Foo1#A = int, x: 'x})
+//│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
 
 g = Bar1 { x = 42 }
-//│ g: bar1 & {Foo1#A = int, x: 42}
+//│ g: Bar1 & {x: 42}
 
 g: Foo1['a]
-//│ res: foo1 & {Foo1#A = int, x: int}
+//│ res: Foo1[int]
 
 res.x
 //│ res: int
 
 g: Foo1['a]: Foo1[int]
-//│ res: foo1 & {Foo1#A = int, x: int}
+//│ res: Foo1[int]
 
 res.x
 //│ res: int
@@ -90,29 +90,29 @@ g: Foo1['a]: Foo1[string]
 //│ ╟── from record type:
 //│ ║  l.56: 	class Foo1[A]: { x: A }
 //│ ╙──      	               ^^^^^^^^
-//│ res: foo1 & {Foo1#A = string, x: string}
+//│ res: Foo1[string]
 
 
 class Foo2[A]
 //│ Defined class Foo2
 
 Foo2
-//│ res: anything -> (foo2 & {Foo2#A = 'A})
+//│ res: anything -> Foo2['A]
 
 error: Foo2[int]
-//│ res: foo2 & {Foo2#A = int}
+//│ res: Foo2[int]
 
 f = fun x -> case x of { Foo2 -> x }
-//│ f: (foo2 & 'a) -> 'a
+//│ f: (Foo2[?] & 'a) -> 'a
 
 f (Foo2 {})
-//│ res: foo2 & {Foo2#A = 'A}
+//│ res: Foo2['A]
 
 error: (Foo2[?] & 'a) -> 'a
-//│ res: (foo2 & {Foo2#A} & 'a) -> 'a
+//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (foo2 & {Foo2#A} & 'a) -> 'a
+//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a

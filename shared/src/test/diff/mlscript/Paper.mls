@@ -11,13 +11,13 @@ def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ('a -> 'b) -> (none | some & {value: 'a}) -> (none | 'b)
+//│ flatMap: ('a -> 'b) -> (None | (Some[?] with {value: 'a})) -> (None | 'b)
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ('a -> 'b) -> (some & {value: 'a} | 'b & ~some) -> 'b
+//│ flatMap2: ('a -> 'b) -> ((Some[?] with {value: 'a}) | 'b & ~some) -> 'b
 
 def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (some & 'a | 'b & ~some) -> 'b
+//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
 
 
 
@@ -33,7 +33,7 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Cons#A = 'A, Some#A = 'A, tail: 'c, value: 'value} | none as 'c)
+//│ map2: ('a -> ('value & 'A)) -> ((Cons[?] with {tail: 'b, value: 'a}) | None as 'b) -> ((Cons['A] with {tail: 'c, value: 'value}) | None as 'c)
 
 
 
@@ -58,23 +58,23 @@ fun x -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: (int & ~0 | ~int) -> (int | none)
+//│ res: (int & ~0 | ~int) -> (int | None)
 
 // TOOD mayeb we shouldn't refine x's type here...
 fun (x: int) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 
 def tryDiv: int -> int -> Option[int]
-//│ tryDiv: int -> int -> (none | some & {Some#A = int, value: int})
+//│ tryDiv: int -> int -> (None | Some[int])
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> (0 | int & ~0) -> (none | some & {Some#A :> 'A <: 'A | int, value: int})
+//│ int -> (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int}))
 //│   <:  tryDiv:
-//│ int -> int -> (none | some & {Some#A = int, value: int})
+//│ int -> int -> (None | Some[int])
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1
 tryDiv 1 0
-//│ res: none | some & {Some#A = int, value: int}
-//│ res: none | some & {Some#A = int, value: int}
+//│ res: None | Some[int]
+//│ res: None | Some[int]
 

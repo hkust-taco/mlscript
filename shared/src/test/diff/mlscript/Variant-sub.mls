@@ -5,26 +5,37 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: 'a -> (some & {Some#A :> 'A <: 'A | 'a, v: 'a})
-//│ None: none
+//│ Some: 'a -> (Some['A .. 'A | 'a] with {v: 'a})
+//│ None: None
 
 def flatMap = fun f -> fun opt ->
-  case opt of { Some -> f opt.v | _ -> opt }
-//│ flatMap: ('a -> 'b) -> (some & {v: 'a} | 'b & ~some) -> 'b
+  case opt of { Some -> f opt.v | None -> opt }
+//│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
 
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
-flatMap f "oops"
-//│ f: 'a -> (some & {Some#A :> 'A <: 'A | 'a, v: 'a})
-//│ res: some & {Some#A :> 'A <: 1 | 'A, v: 1}
-//│ res: none | some & {Some#A = 'A, v: nothing}
-//│ res: "oops" | some & {Some#A = 'A, v: nothing}
+//│ f: 'a -> (Some['A .. 'A | 'a] with {v: 'a})
+//│ res: Some['A .. 1 | 'A] with {v: 1}
+//│ res: None | (Some['A] with {v: nothing})
 
-class NoneBecause: { reason: string }
+:e
+flatMap f "oops"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.23: 	flatMap f "oops"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `"oops"` does not match type `Some[?] & ?a | None & ?b`
+//│ ║  l.23: 	flatMap f "oops"
+//│ ║        	          ^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.12: 	  case opt of { Some -> f opt.v | None -> opt }
+//│ ╙──      	       ^^^
+//│ res: "oops" | error | (Some['A] with {v: nothing})
+
+class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
-//│ res: noneBecause & {reason: "uh uh"} | some & {Some#A = 'A, v: nothing}
+//│ res: NoneBecause & {reason: "uh uh"} | (Some['A] with {v: nothing})
 
 type Expr = Lit | Neg | Var | Plus
 class Lit: {v: int}
@@ -53,7 +64,7 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (lit & {v: int & 'b} | neg & {sub: 'a} | plus & {lhs: 'a, rhs: 'a} | var & {nme: string} as 'a) -> (noneBecause & {reason: string} | some & {Some#A :> 'A <: 'A | 'b, v: 'b} | some & {Some#A :> 'A0 <: 'A0 | int, v: int} | some & {Some#A :> 'A1 <: 'A1 | int, v: int})
+//│ evalOpt: (Lit & {v: int & 'b} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A .. 'A | 'b] with {v: 'b}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: noneBecause & {reason: string} | some & {Some#A :> 'A <: 2 | 3 | 'A, v: 2 | 3} | some & {Some#A :> 'A0 <: 'A0 | int, v: int} | some & {Some#A :> 'A1 <: 'A1 | int, v: int}
+//│ res: NoneBecause | (Some['A .. 2 | 3 | 'A] with {v: 2 | 3}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int})

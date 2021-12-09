@@ -125,7 +125,7 @@ res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.124: 	res.z
 //│ ║         	^^^^^
-//│ ╟── expression of type `(anything\x & {x: 1})\y & {y: 2}` does not match type `{z: ?a}`
+//│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
 //│ ║  l.120: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
@@ -141,20 +141,20 @@ class C[A]: { x: A }
 //│ Defined class C
 
 c = C{x = 1}
-//│ c: c & {C#A :> 'A <: 1 | 'A, x: 1}
+//│ c: C['A .. 1 | 'A] with {x: 1}
 
 c.x
 //│ res: 1
 
 // FIXME: should reconstruct C[...]\x & {y: 2, x: "hi"}
 d = c with { x = "hi"; y = 2 }
-//│ d: c & {C#A :> 'A <: 1 | 'A, x: "hi", y: 2}
+//│ d: C['A .. 1 | 'A] with {x: "hi", y: 2}
 
 d.x
 //│ res: "hi"
 
 d: C['a]
-//│ res: c & {C#A :> 'a <: "hi" | 'a | 1, x: "hi" | 'a | 1}
+//│ res: C['a .. "hi" | 'a | 1]
 
 res.x
 //│ res: "hi" | 1
