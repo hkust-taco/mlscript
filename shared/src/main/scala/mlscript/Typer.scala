@@ -420,11 +420,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             err(msg"Method names must start with a capital letter", nme.toLoc)
           if (defs.isDefinedAt(nme.name))
             err(msg"Method '${tn}.${nme.name}' is already defined.", nme.toLoc)
-          td.tparams.flatMap(tp1 => tparams.find(_.name === tp1.name).map(tp1 -> _)).foreach { case tp1 -> tp2 =>
-            warn((msg"Method type parameter ${tp1}" -> tp1.toLoc)
+          val tp1s = td.tparams.map(tp => tp.name -> tp).toMap
+          tparams.foreach(tp2 => tp1s.get(tp2.name) match {
+            case S(tp1) => warn((msg"Method type parameter ${tp1}" -> tp1.toLoc)
               :: (msg"shadows class type parameter ${tp2}" -> tp2.toLoc)
               :: Nil)
-          }
+            case N =>
+          })
           val bodyTy = rhs.fold(
             term => subst(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid),
             ty => PolymorphicType(thisCtx.lvl, subst(typeType(ty)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid))
