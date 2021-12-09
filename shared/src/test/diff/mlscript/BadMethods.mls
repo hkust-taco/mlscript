@@ -15,13 +15,13 @@ class Bar[A]: Foo[A]
 //│ Defined class Foo
 //│ Declared Foo.Map: (foo & {Foo#A = 'A, x: 'A}) -> ('A -> anything) -> 'A
 //│ Defined class Bar
-//│ Declared Bar.Map: (bar & {Foo#A = 'A, Bar#A = 'A, x: 'A}) -> anything -> 'A
-//│ Defined Bar.Map: (bar & {Foo#A = 'A, Bar#A = 'A, x: 'A}) -> (('a -> (anything -> 'a) -> 'b) -> 'b as 'a)
+//│ Declared Bar.Map: (bar & {Bar#A = 'A, Foo#A = 'A, x: 'A}) -> anything -> 'A
+//│ Defined Bar.Map: (bar & {Bar#A = 'A, Foo#A = 'A, x: 'A}) -> (('a -> (anything -> 'a) -> 'b) -> 'b as 'a)
 
 Foo.Map
 Bar.Map
 //│ res: (foo & {Foo#A = 'A, x: 'A}) -> ('A -> anything) -> 'A
-//│ res: (bar & {Foo#A = 'A, Bar#A = 'A, x: 'A}) -> anything -> 'A
+//│ res: (bar & {Bar#A = 'A, Foo#A = 'A, x: 'A}) -> anything -> 'A
 
 
 
@@ -45,8 +45,8 @@ class bar[A, B]: Foo[A] & { Y: B; z: int }
 //│ ║  l.31: 	    method identity z = z
 //│ ╙──      	           ^^^^^^^^
 //│ Defined class bar
-//│ Defined bar.identity: (bar & {Foo#A = 'A, z: int, Y: 'B, x: 'A, bar#A: 'A -> 'A, bar#B: 'B -> 'B}) -> 'a -> 'a
-//│ Defined bar.identity: (bar & {Foo#A = 'A, z: int, Y: 'B, x: 'A, bar#A: 'A -> 'A, bar#B: 'B -> 'B}) -> 'a -> 'a
+//│ Defined bar.identity: (bar & {Foo#A = 'A, Y: 'B, bar#A: 'A -> 'A, bar#B: 'B -> 'B, x: 'A, z: int}) -> 'a -> 'a
+//│ Defined bar.identity: (bar & {Foo#A = 'A, Y: 'B, bar#A: 'A -> 'A, bar#B: 'B -> 'B, x: 'A, z: int}) -> 'a -> 'a
 
 
 
@@ -58,7 +58,7 @@ class ImplicitCall[A]: { x: A }
 
 i = ImplicitCall { x = "stonks" }
 i.Fun
-//│ i: implicitCall & {ImplicitCall#A :> 'A | "stonks" <: 'A, x: "stonks"}
+//│ i: implicitCall & {ImplicitCall#A :> 'A <: "stonks" | 'A, x: "stonks"}
 //│ res: "stonks"
 
 class NoMoreImplicitCall
@@ -109,8 +109,8 @@ class BadThis: { x: int; y: int }
 //│ ║  l.92: 	    method Funny = this 42 42
 //│ ╙──      	                   ^^^^
 //│ Defined class BadThis
-//│ Defined BadThis.Sum: (badThis & {y: int, x: int}) -> error
-//│ Defined BadThis.Funny: (badThis & {y: int, x: int}) -> error
+//│ Defined BadThis.Sum: (badThis & {x: int, y: int}) -> error
+//│ Defined BadThis.Funny: (badThis & {x: int, y: int}) -> error
 
 
 
@@ -128,7 +128,7 @@ class BadSelf[A]: { x: A }
 
 c = BadSelf { x = fun x -> x }
 c.F
-//│ c: badSelf & {BadSelf#A :> 'A | 'a -> 'a <: 'A, x: 'a -> 'a}
+//│ c: badSelf & {BadSelf#A :> 'A <: 'a -> 'a | 'A, x: 'a -> 'a}
 //│ res: error
 
 
@@ -137,7 +137,7 @@ c.F
 class Simple2[A]: { a: A }
     method Get: A
 //│ Defined class Simple2
-//│ Declared Simple2.Get: (simple2 & {a: 'A, Simple2#A = 'A}) -> 'A
+//│ Declared Simple2.Get: (simple2 & {Simple2#A = 'A, a: 'A}) -> 'A
 
 class Simple3[A, B]: Simple2[A]
     method Get: B
@@ -149,7 +149,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ║  l.138: 	    method Get: A
 //│ ╙──       	           ^^^^^^
 //│ Defined class Simple3
-//│ Declared Simple3.Get: (simple3 & {a: 'A, Simple3#B = 'B, Simple2#A = 'A, Simple3#A = 'A}) -> 'B
+//│ Declared Simple3.Get: (simple3 & {Simple2#A = 'A, Simple3#A = 'A, Simple3#B = 'B, a: 'A}) -> 'B
 
 
 
@@ -158,8 +158,8 @@ class AbstractPair[A, B]: { x: A; y: B }
     method Test: (A -> B -> bool) -> bool
     method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ Defined class AbstractPair
-//│ Declared AbstractPair.Test: (abstractPair & {AbstractPair#B = 'B, y: 'B, AbstractPair#A = 'A, x: 'A}) -> ('A -> 'B -> bool) -> bool
-//│ Declared AbstractPair.Map: (abstractPair & {AbstractPair#B = 'B, y: 'B, AbstractPair#A = 'A, x: 'A}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#B = 'D, y: 'D, AbstractPair#A = 'C, x: 'C})
+//│ Declared AbstractPair.Test: (abstractPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'B -> bool) -> bool
+//│ Declared AbstractPair.Map: (abstractPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#A = 'C, AbstractPair#B = 'D, x: 'C, y: 'D})
 
 class BadPair[A, B]: AbstractPair[A, B]
     method Test f = f this.x this.x
@@ -198,12 +198,12 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║  l.159: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
 //│ Defined class BadPair
-//│ Defined BadPair.Test: (badPair & {BadPair#A = 'A, AbstractPair#A = 'A, x: 'A, y: 'B, BadPair#B = 'B, AbstractPair#B = 'B}) -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: (badPair & {BadPair#A = 'A, AbstractPair#A = 'A, x: 'A, y: 'B, BadPair#B = 'B, AbstractPair#B = 'B}) -> ('A -> ('a & 'A0 & 'B0)) -> anything -> (badPair & {BadPair#A = 'A0, AbstractPair#A = 'A0, x: 'a, y: 'a, BadPair#B = 'B0, AbstractPair#B = 'B0})
+//│ Defined BadPair.Test: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'A -> 'a) -> 'a
+//│ Defined BadPair.Map: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> ('A0 & 'B0 & 'a)) -> anything -> (badPair & {AbstractPair#A = 'A0, AbstractPair#B = 'B0, BadPair#A = 'A0, BadPair#B = 'B0, x: 'a, y: 'a})
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
-//│ bp: badPair & {BadPair#A :> 'A | 42 <: 'A, AbstractPair#A :> 'A | 42 <: 'A, x: 42, y: true, BadPair#B :> 'B | true <: 'B, AbstractPair#B :> 'B | true <: 'B}
+//│ bp: badPair & {AbstractPair#A :> 'A <: 42 | 'A, AbstractPair#B :> 'B <: 'B | true, BadPair#A :> 'A <: 42 | 'A, BadPair#B :> 'B <: 'B | true, x: 42, y: true}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.205: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -221,12 +221,12 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
-//│ BadPair: badPair & {BadPair#A :> 'A | 42 <: 'A, AbstractPair#A :> 'A | 42 <: 'A, x: 42, y: 0, BadPair#B :> 'B | 0 <: 'B, AbstractPair#B :> 'B | 0 <: 'B}
-//│ res: (badPair & {BadPair#A = 'A, AbstractPair#A = 'A, x: 'A, y: 'B, BadPair#B = 'B, AbstractPair#B = 'B}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#B = 'D, y: 'D, AbstractPair#A = 'C, x: 'C})
+//│ BadPair: badPair & {AbstractPair#A :> 'A <: 42 | 'A, AbstractPair#B :> 'B <: 0 | 'B, BadPair#A :> 'A <: 42 | 'A, BadPair#B :> 'B <: 0 | 'B, x: 42, y: 0}
+//│ res: (badPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, BadPair#A = 'A, BadPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#A = 'C, AbstractPair#B = 'D, x: 'C, y: 'D})
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.223: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> 'C) -> (0 -> 'D) -> (abstractPair & {AbstractPair#B = 'D, y: 'D, AbstractPair#A = 'C, x: 'C})
+//│ res: (42 -> 'C) -> (0 -> 'D) -> (abstractPair & {AbstractPair#A = 'C, AbstractPair#B = 'D, x: 'C, y: 'D})
 
 
 class ClassA

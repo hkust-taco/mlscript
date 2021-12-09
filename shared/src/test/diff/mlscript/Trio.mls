@@ -17,7 +17,7 @@ def arg: A | B | C
 //│ arg: a & {fA: int} | b & {fB: string} | c & {fC: bool}
 
 foo arg
-//│ res: int | string | bool
+//│ res: bool | int | string
 
 foo (arg with { fC = true })
 //│ res: int | string | true
@@ -28,7 +28,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: (a & {fA: int, payload: int} | b & {fB: 'a} | c & {fC: 'b, payload: 'c}) -> (int | 'a | {l: 'b, r: 'c})
+//│ foo: (a & {fA: int, payload: int} | b & {fB: 'a} | c & {fC: 'b, payload: 'c}) -> (int | {l: 'b, r: 'c} | 'a)
 
 :e
 foo arg
@@ -47,7 +47,7 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.26: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: int | string | {l: bool, r: nothing} | error
+//│ res: error | int | string | {l: bool, r: nothing}
 
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}

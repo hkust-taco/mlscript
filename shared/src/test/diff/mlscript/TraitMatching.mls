@@ -4,7 +4,7 @@ trait MyTrait[A]: { value: A }
 
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'a} & myTrait | ~myTrait) -> ('a | 0)
+//│ test1: ({value: 'a} & myTrait | ~myTrait) -> (0 | 'a)
 
 :e
 test1 1
@@ -23,23 +23,23 @@ test1 1
 //│ res: 0 | error
 
 test1 { value = 1 }
-//│ res: 1 | 0
+//│ res: 0 | 1
 
 def mt = MyTrait { value = 1 }
-//│ mt: {MyTrait#A :> 'A | 1 <: 'A, value: 1} & myTrait
+//│ mt: {MyTrait#A :> 'A <: 1 | 'A, value: 1} & myTrait
 
 test1 mt
-//│ res: 1 | 0
+//│ res: 0 | 1
 
 class C1: MyTrait[int]
 //│ Defined class C1
 
 test1 (C1 { value = 1 })
-//│ res: 1 | 0
+//│ res: 0 | 1
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ test2: ({value: 'a} & myTrait | {default: 'a} & ~myTrait) -> 'a
+//│ test2: ({default: 'a} & ~myTrait | {value: 'a} & myTrait) -> 'a
 
 :e
 test2 1
@@ -74,7 +74,7 @@ test2 { value = 1 }
 //│ res: 1 | error
 
 test2 { value = 1; default = "hi" }
-//│ res: 1 | "hi"
+//│ res: "hi" | 1
 
 test2 mt
 //│ res: 1
@@ -127,7 +127,7 @@ test2 c2
 //│ res: "oops" | error
 
 test2 (c2 with { value = 1 })
-//│ res: 1 | "oops"
+//│ res: "oops" | 1
 
 
 // Note: if we allowed this, we'd have to be careful in the semantics of trait ctors!

@@ -1,0 +1,76 @@
+
+class A
+class B: A
+class C: B
+c = C{}
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+//│ c: c
+
+c: C
+//│ res: c
+
+c: B
+//│ res: b
+
+res: A
+//│ res: a
+
+c: A
+//│ res: a
+
+a = res
+//│ a: a
+
+:e
+a: B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.27: 	a: B
+//│ ║        	^
+//│ ╟── expression of type `a` does not match type `b`
+//│ ║  l.20: 	c: A
+//│ ║        	   ^
+//│ ╟── but it flows into reference with expected type `B`
+//│ ║  l.27: 	a: B
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.27: 	a: B
+//│ ╙──      	   ^
+//│ res: b
+
+:e
+a: C
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.43: 	a: C
+//│ ║        	^
+//│ ╟── expression of type `a` does not match type `c`
+//│ ║  l.20: 	c: A
+//│ ║        	   ^
+//│ ╟── but it flows into reference with expected type `C`
+//│ ║  l.43: 	a: C
+//│ ║        	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.43: 	a: C
+//│ ╙──      	   ^
+//│ res: c
+
+
+// Transitivity is currently broken for primitive literals:
+
+42: int
+res: number
+//│ res: int
+//│ res: number
+
+// FIXME
+42: number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.67: 	42: number
+//│ ║        	^^
+//│ ╟── expression of type `42` does not match type `number`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.67: 	42: number
+//│ ╙──      	    ^^^^^^
+//│ res: number
+

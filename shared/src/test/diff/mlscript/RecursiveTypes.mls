@@ -48,10 +48,10 @@ if true then l else r
 //│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
 
 if true then (fun x -> add x 1) else (fun y -> not y)
-//│ res: nothing -> (int | bool)
+//│ res: nothing -> (bool | int)
 
 if true then (fun x -> add x 1) else (fun y -> not y)
-//│ res: nothing -> (int | bool)
+//│ res: nothing -> (bool | int)
 
 
 

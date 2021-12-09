@@ -9,7 +9,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   def canonicalizeType(ty: SimpleType, pol: Bool = true): SimpleType = {
-    type PolarType = (DNF, Boolean)
+    type PolarType = (DNF, Bool)
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
     
@@ -20,11 +20,11 @@ trait TypeSimplifier { self: Typer =>
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(0) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    def goDeep(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): SimpleType =
+    def goDeep(ty: SimpleType, pol: Bool)(implicit inProcess: Set[PolarType]): SimpleType =
       go1(go0(ty, pol), pol)
     
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
-    def go0(ty: SimpleType, pol: Boolean)(implicit inProcess: Set[PolarType]): DNF = 
+    def go0(ty: SimpleType, pol: Bool)(implicit inProcess: Set[PolarType]): DNF = 
     trace(s"ty[$pol] $ty") {
       
       // TODO should we also coalesce nvars? is it bad if we don't?
@@ -48,9 +48,9 @@ trait TypeSimplifier { self: Typer =>
     }(r => s"-> $r")
     
     // Merge the bounds of all type variables of the given DNF, and traverse the result
-    def go1(ty: DNF, pol: Boolean)
+    def go1(ty: DNF, pol: Bool)
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
-      if (ty.isBot) ty.toType else {
+      if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
         if (inProcess.contains(pty))
           recursive.getOrElseUpdate(pty, freshVar(noProv)(0))
@@ -90,7 +90,7 @@ trait TypeSimplifier { self: Typer =>
               }
               Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(!pol)(rnf), nvars.map(renew))
             })
-            val adapted = res.toType
+            val adapted = res.toType(sort = true)
             recursive.get(pty) match {
               case Some(v) =>
                 val bs = if (pol) v.lowerBounds else v.upperBounds
@@ -112,11 +112,11 @@ trait TypeSimplifier { self: Typer =>
   
   def simplifyType(st: SimpleType, pol: Bool = true, removePolarVars: Bool = true): SimpleType = {
     
-    val coOccurrences: MutMap[(Boolean, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
     val analyzed = MutSet.empty[PolarVariable]
     
-    def analyze(st: SimpleType, pol: Boolean): Unit = st match {
+    def analyze(st: SimpleType, pol: Bool): Unit = st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
@@ -150,6 +150,8 @@ trait TypeSimplifier { self: Typer =>
       case ProxyType(underlying) => analyze(underlying, pol)
       case tr @ TypeRef(defn, targs) => analyze(tr.expand(_ => ()), pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
       case Without(base, names) => analyze(base, pol)
+      case TypeBounds(lb, ub) =>
+        if (pol) analyze(ub, true) else analyze(ub, false)
     }
     def processBounds(tv: TV, pol: Bool) = {
       if (!analyzed(tv -> pol)) {
@@ -244,7 +246,7 @@ trait TypeSimplifier { self: Typer =>
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
-    def transform(st: SimpleType, pol: Boolean): SimpleType = st match {
+    def transform(st: SimpleType, pol: Bool): SimpleType = st match {
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
@@ -273,6 +275,8 @@ trait TypeSimplifier { self: Typer =>
       case ProxyType(underlying) => transform(underlying, pol)
       case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // FIXME may diverge; and we should try to keep these!
       case wo @ Without(base, names) => Without(transform(base, pol), names)(wo.prov)
+      case tb @ TypeBounds(lb, ub) =>
+        if (pol) transform(ub, true) else transform(lb, false)
     }
     transform(st, pol)
     

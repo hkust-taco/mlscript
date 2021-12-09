@@ -12,8 +12,8 @@ data type Either l r of
 //│ Defined type alias Either
 //│ Defined class Left
 //│ Defined class Right
-//│ Left: 'a -> (left & {Left#r = 'b, Left#l = 'a, l: 'a})
-//│ Right: 'a -> (right & {r: 'a, Right#r = 'a, Right#l = 'b})
+//│ Left: 'a -> (left & {Left#l = 'a, Left#r = 'b, l: 'a})
+//│ Right: 'a -> (right & {Right#l = 'b, Right#r = 'a, r: 'a})
 
 :e
 data type Either2 (l: _) (r: _) of
@@ -35,14 +35,14 @@ data type Either2 (l: _) (r: _) of
 //│ Defined class Left2
 //│ Defined class Right2
 //│ Left2: 'a -> (left2 & {Left2#l = 'a, l: 'a})
-//│ Right2: 'a -> (right2 & {r: 'a, Right2#r = 'a})
+//│ Right2: 'a -> (right2 & {Right2#r = 'a, r: 'a})
 
 let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
-//│ l: left & {Left#r = 'a, Left#l :> 'b | 1 <: 'b, l: 'b | 1}
-//│ r: right & {r: 'a | "ok", Right#r :> 'a | "ok" <: 'a, Right#l = 'b}
-//│ e: left & {Left#r = 'a, Left#l :> 'b | 1 <: 'b, l: 'b | 1} | right & {r: 'c | "ok", Right#r :> 'c | "ok" <: 'c, Right#l = 'd}
+//│ l: left & {Left#l :> 'a <: 1 | 'a, Left#r = 'b, l: 1 | 'a}
+//│ r: right & {Right#l = 'a, Right#r :> 'b <: "ok" | 'b, r: "ok" | 'b}
+//│ e: left & {Left#l :> 'a <: 1 | 'a, Left#r = 'b, l: 1 | 'a} | right & {Right#l = 'c, Right#r :> 'd <: "ok" | 'd, r: "ok" | 'd}
 
 :e // TODO
 e as Either Int String

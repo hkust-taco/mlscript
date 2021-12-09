@@ -1,0 +1,18 @@
+// Weird features to eventually remove
+
+
+anything
+//│ res: anything
+
+nothing
+//│ res: nothing
+
+Nothing
+//│ res: nothing
+
+int
+//│ res: int
+
+int + 1
+//│ res: int
+

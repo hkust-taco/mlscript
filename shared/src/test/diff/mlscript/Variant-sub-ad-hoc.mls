@@ -17,7 +17,7 @@ res = flatMap f (Some 1)
 res = flatMap f None
 //│ f: 'a -> (some & {v: 'a})
 //│ res: some & {v: 1}
-//│ res: some & {v: nothing} | none
+//│ res: none | some & {v: nothing}
 
 class Lit
 class Neg
@@ -40,8 +40,8 @@ rec def evalOpt = fun x -> case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (lit & {v: int & 'b} | neg & {sub: 'a} | var & {nme: string} | plus & {lhs: 'a, rhs: 'a} as 'a) -> (some & {v: 'b} | some & {v: int} | none & {err: string})
+//│ evalOpt: (lit & {v: int & 'b} | neg & {sub: 'a} | plus & {lhs: 'a, rhs: 'a} | var & {nme: string} as 'a) -> (none & {err: string} | some & {v: int} | some & {v: 'b})
 
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})
-//│ res: some & {v: int} | none & {err: string}
+//│ res: none & {err: string} | some & {v: int}
 

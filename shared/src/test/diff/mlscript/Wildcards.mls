@@ -1,0 +1,134 @@
+
+
+:e
+42: ?
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.4: 	42: ?
+//│ ║       	^^
+//│ ╟── expression of type `42` does not match type `nothing`
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.4: 	42: ?
+//│ ╙──     	    ^
+//│ res: anything
+
+def n: ?
+n = 42
+//│ n: anything
+//│ 42
+//│   <:  n:
+//│ anything
+
+
+def f x = x : ?
+//│ f: nothing -> anything
+
+class E[A]
+//│ Defined class E
+
+:e
+E{} : E[?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.29: 	E{} : E[?]
+//│ ║        	^^^
+//│ ╟── expression of type `anything` does not match type `nothing`
+//│ ╟── but it flows into application of type `?a`
+//│ ║  l.29: 	E{} : E[?]
+//│ ║        	^^^
+//│ ╟── which does not match type `E[?]`
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.29: 	E{} : E[?]
+//│ ╙──      	        ^
+//│ res: e & {E#A <: anything}
+
+def e: E[?]
+def e = E{}
+//│ e: e & {E#A <: anything}
+//│ e & {E#A = 'A}
+//│   <:  e:
+//│ e & {E#A <: anything}
+
+
+type Als1[A] = int -> A
+//│ Defined type alias Als1
+
+:e
+add 1 : Als1[?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.55: 	add 1 : Als1[?]
+//│ ║        	^^^^^
+//│ ╟── expression of type `int` does not match type `nothing`
+//│ ╟── but it flows into application of type `?a`
+//│ ║  l.55: 	add 1 : Als1[?]
+//│ ║        	^^^^^
+//│ ╟── which does not match type `Als1[?]`
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.55: 	add 1 : Als1[?]
+//│ ║        	             ^
+//│ ╟── from function type:
+//│ ║  l.51: 	type Als1[A] = int -> A
+//│ ╙──      	               ^^^^^^^^
+//│ res: int -> anything
+
+def a1: Als1[?]
+a1 = add 1
+//│ a1: int -> anything
+//│ int -> int
+//│   <:  a1:
+//│ int -> anything
+
+
+type Als2[A] = A -> int
+//│ Defined type alias Als2
+
+:e
+add 1 : Als2[?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.84: 	add 1 : Als2[?]
+//│ ║        	^^^^^
+//│ ╟── expression of type `anything` does not match type `int`
+//│ ║  l.84: 	add 1 : Als2[?]
+//│ ╙──      	             ^
+//│ res: nothing -> int
+
+def a2: Als2[?]
+a2 = add 1
+//│ a2: nothing -> int
+//│ int -> int
+//│   <:  a2:
+//│ nothing -> int
+
+
+def q: ?
+//│ q: anything
+
+q = 1
+//│ 1
+//│   <:  q:
+//│ anything
+
+:e
+q + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.110: 	q + 1
+//│ ║         	^^^
+//│ ╟── expression of type `anything` does not match type `int`
+//│ ║  l.101: 	def q: ?
+//│ ║         	       ^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.110: 	q + 1
+//│ ╙──       	^
+//│ res: error | int
+
+:e
+q q
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.123: 	q q
+//│ ║         	^^^
+//│ ╟── expression of type `anything` is not a function
+//│ ║  l.101: 	def q: ?
+//│ ║         	       ^
+//│ ╟── but it flows into reference with expected type `anything -> ?a`
+//│ ║  l.123: 	q q
+//│ ╙──       	^
+//│ res: error
+

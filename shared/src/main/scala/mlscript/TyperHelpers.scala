@@ -38,13 +38,15 @@ abstract class TyperHelpers { self: Typer =>
 
   def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])(implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
     case _ if map.isDefinedAt(ts) => map(ts)
+    case TypeBounds(lb, ub) => TypeBounds(subst(lb, map), subst(ub, map))(ts.prov)
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
     case TupleType(fields) => TupleType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
-    case ProxyType(underlying) => ProxyType(subst(underlying, map))(ts.prov)
+    case ProvType(underlying) => ProvType(subst(underlying, map))(ts.prov)
+    case ProxyType(underlying) => subst(underlying, map)
     case t@TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov, t.ctx)
     case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
       cache += tv -> tv
@@ -100,6 +102,8 @@ abstract class TyperHelpers { self: Typer =>
       case _ => NegType(this)(prov)
     }
     
+    def >:< (that: SimpleType): Bool =
+      (this is that) || this <:< that && that <:< this
     // TODO for composed types and negs, should better first normalize the inequation
     def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     // trace(s"? $this <: $that") {
@@ -107,12 +111,14 @@ abstract class TyperHelpers { self: Typer =>
       case (RecordType(Nil), _) => TopType <:< that
       case (_, RecordType(Nil)) => this <:< TopType
       case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
+      case (TypeBounds(lb, ub), _) => ub <:< that
+      case (_, TypeBounds(lb, ub)) => this <:< lb
       case (FunctionType(l1, r1), FunctionType(l2, r2)) => l2 <:< l1 && r1 <:< r2
       case (_: FunctionType, _) | (_, _: FunctionType) => false
       case (ComposedType(true, l, r), _) => l <:< that && r <:< that
-      case (_, ComposedType(false, l, r)) => that <:< l && that <:< r
+      case (_, ComposedType(false, l, r)) => this <:< l && this <:< r
       case (ComposedType(false, l, r), _) => l <:< that || r <:< that
-      case (_, ComposedType(true, l, r)) => that <:< l || that <:< r
+      case (_, ComposedType(true, l, r)) => this <:< l || this <:< r
       case (RecordType(fs1), RecordType(fs2)) =>
         fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
       case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
@@ -136,6 +142,8 @@ abstract class TyperHelpers { self: Typer =>
       case (_, ExtrType(false)) => true
       case (ExtrType(true), _) => true
       case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
+      case (tr: TypeRef, _) if primitiveTypes contains tr.defn.nme.name => tr.expand(_ => ()) <:< that // FIXME swallow errors?
+      case (_, tr: TypeRef) if primitiveTypes contains tr.defn.nme.name => this <:< tr.expand(_ => ()) // FIXME swallow errors?
       case (_: TypeRef, _) | (_, _: TypeRef) =>
         false // TODO try to expand them (this requires populating the cache because of recursive types)
       case (_: Without, _) | (_, _: Without)
@@ -173,7 +181,8 @@ abstract class TyperHelpers { self: Typer =>
       }) => nt.neg(n.prov, force = true).withoutPos(names)
       case e @ ExtrType(_) => e // valid? -> seems we could go both ways, but this way simplifies constraint solving
       // case e @ ExtrType(false) => e
-      case p @ ProxyType(und) => ProxyType(und.withoutPos(names))(p.prov)
+      case p @ ProvType(und) => ProvType(und.withoutPos(names))(p.prov)
+      case p @ ProxyType(und) => und.withoutPos(names)
       case p: ObjectTag => p
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
     }
@@ -192,8 +201,8 @@ abstract class TyperHelpers { self: Typer =>
         // meaning negated records are basically bottoms.
       case rw => NegType(f(rw))(p)
     }
-    def withProvOf(ty: SimpleType): ProxyType = withProv(ty.prov)
-    def withProv(p: TypeProvenance): ProxyType = ProxyType(this)(p)
+    def withProvOf(ty: SimpleType): ProvType = withProv(ty.prov)
+    def withProv(p: TypeProvenance): ProvType = ProvType(this)(p)
     def pushPosWithout(implicit raise: Raise): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => b.unwrapAll.withoutPos(ns) match {
@@ -210,7 +219,7 @@ abstract class TyperHelpers { self: Typer =>
       }
       case _ => this
     }
-    def normalize(pol: Bool): ST = DNF.mk(this, pol = pol).toType
+    def normalize(pol: Bool): ST = DNF.mk(this, pol = pol).toType()
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
@@ -232,6 +241,7 @@ abstract class TyperHelpers { self: Typer =>
       case _: ObjectTag => Nil
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
+      case TypeBounds(lb, ub) => lb :: ub :: Nil
     }
     
     def getVars: Set[TypeVariable] = {

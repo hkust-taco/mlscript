@@ -7,23 +7,23 @@ type List[A] = Nil | Cons[A]
 //│ Defined type alias List
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
-//│ originalCons: {head: 'head & 'A, tail: nil & 'tail | (cons & {Cons#A = 'A, head: 'A, tail: 'b & (nil | 'a)} as 'a) & 'tail} -> (cons & {Cons#A = 'A, head: 'head, tail: 'tail})
+//│ originalCons: {head: 'head & 'A, tail: (cons & {Cons#A = 'A, head: 'A, tail: 'b & ('a | nil)} as 'a) & 'tail | nil & 'tail} -> (cons & {Cons#A = 'A, head: 'head, tail: 'tail})
 
 def Nil = Nil {}
 //│ Nil: nil
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (nil & 'b | (cons & {Cons#A :> 'A <: 'A | 'a, head: 'A, tail: 'd & (nil | 'c)} as 'c) & 'b) -> (cons & {Cons#A :> 'A | 'a <: 'A, head: 'a, tail: 'b})
+//│ Cons: 'a -> ((cons & {Cons#A :> 'A | 'a <: 'A, head: 'A, tail: 'c & ('b | nil)} as 'b) & 'd | nil & 'd) -> (cons & {Cons#A :> 'A <: 'A | 'a, head: 'a, tail: 'd})
 
 
 Cons 2
-//│ res: (nil & 'a | (cons & {Cons#A :> 'A <: 'A | 2, head: 'A, tail: 'c & (nil | 'b)} as 'b) & 'a) -> (cons & {Cons#A :> 'A | 2 <: 'A, head: 2, tail: 'a})
+//│ res: ((cons & {Cons#A :> 2 | 'A <: 'A, head: 'A, tail: 'b & ('a | nil)} as 'a) & 'c | nil & 'c) -> (cons & {Cons#A :> 'A <: 2 | 'A, head: 2, tail: 'c})
 
 def c = Cons 2 Nil
-//│ c: cons & {Cons#A :> 'A | 2 <: 'A, head: 2, tail: nil}
+//│ c: cons & {Cons#A :> 'A <: 2 | 'A, head: 2, tail: nil}
 
 def d = Cons 1 c
-//│ d: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 1, tail: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}}
+//│ d: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 1, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}}
 
 d.head
 //│ res: 1
@@ -32,19 +32,19 @@ res: 1
 //│ res: 1
 
 d.tail
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}
 
 Cons 1 res
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 1, tail: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 1, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}}
 
 res.tail
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}
 
 Cons 1 (Cons 2 Nil)
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 1, tail: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 1, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}}
 
 res.tail
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}
 
 // We can now access the tail's tail, thanks to the refined type
 res.tail
@@ -67,14 +67,14 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> (nil & 'b | (cons & {Cons#A :> 'A <: 'A | 'a, head: 'A, tail: 'd & (nil | 'c)} as 'c) & 'b) -> (cons & {Cons#A :> 'A | 'a <: 'A, head: 'a, tail: 'b})
+//│ Cons: 'a -> ((cons & {Cons#A :> 'A | 'a <: 'A, head: 'A, tail: 'c & ('b | nil)} as 'b) & 'd | nil & 'd) -> (cons & {Cons#A :> 'A <: 'A | 'a, head: 'a, tail: 'd})
 
 
 Cons 2
-//│ res: (nil & 'a | (cons & {Cons#A :> 'A <: 'A | 2, head: 'A, tail: 'c & (nil | 'b)} as 'b) & 'a) -> (cons & {Cons#A :> 'A | 2 <: 'A, head: 2, tail: 'a})
+//│ res: ((cons & {Cons#A :> 2 | 'A <: 'A, head: 'A, tail: 'b & ('a | nil)} as 'a) & 'c | nil & 'c) -> (cons & {Cons#A :> 'A <: 2 | 'A, head: 2, tail: 'c})
 
 Cons 2 Nil
-//│ res: cons & {Cons#A :> 'A | 2 <: 'A, head: 2, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 2 | 'A, head: 2, tail: nil}
 
 res.head
 //│ res: 2
@@ -99,7 +99,7 @@ Cons 1 res
 //│ ╟── from reference:
 //│ ║  l.69: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
-//│ res: cons & {Cons#A :> 'A | 1 <: 'A, head: 1, tail: 2} | error
+//│ res: cons & {Cons#A :> 'A <: 1 | 'A, head: 1, tail: 2} | error
 
 // Here there used to be a loss of precision in the older with-field approach.
 //    The problem occured when constraining `α8 w/ {head: α5, tail: [α6]}  <!  nil | {head: α2}`
@@ -111,33 +111,33 @@ Cons 1 res
 // But then I reverted to the use of simple field-hiding types, as they are simpler!
 // 
 Cons 1 (Cons 2 Nil)
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 1, tail: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 1, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: nil}
 
 
 Cons 2 Nil
-//│ res: cons & {Cons#A :> 'A | 2 <: 'A, head: 2, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 2 | 'A, head: 2, tail: nil}
 
 Cons 1 (id res)
-//│ res: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 1, tail: cons & {Cons#A :> 'A | 1 | 2 <: 'A, head: 2, tail: nil}}
+//│ res: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 1, tail: cons & {Cons#A :> 'A <: 1 | 2 | 'A, head: 2, tail: nil}}
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: nil}
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
-//│ Cons: 'a -> (cons & {Cons#A :> 'A | 0 <: 'A, head: 'a, tail: nil})
+//│ Cons: 'a -> (cons & {Cons#A :> 'A <: 0 | 'A, head: 'a, tail: nil})
 
 Cons 1
-//│ res: cons & {Cons#A :> 'A | 0 <: 'A, head: 1, tail: nil}
+//│ res: cons & {Cons#A :> 'A <: 0 | 'A, head: 1, tail: nil}
 
 res.head
 //│ res: 1
 
 def c = Cons 1
-//│ c: cons & {Cons#A :> 'A | 0 <: 'A, head: 1, tail: nil}
+//│ c: cons & {Cons#A :> 'A <: 0 | 'A, head: 1, tail: nil}
 
 c.head
 //│ res: 1
@@ -146,12 +146,12 @@ c.head
 
 def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
-//│ c: 'a -> (nil | cons & {Cons#A = 'b, head: 'b, tail: 'c} as 'c) -> (nil | cons & {Cons#A = 'a | 'b, head: 'a | 'b, tail: 'd} as 'd)
-//│ res: nil | cons & {Cons#A :> 'a | 1 | 2 <: 'a, head: 'a | 1 | 2, tail: 'b} as 'b
+//│ c: 'a -> (cons & {Cons#A = 'b, head: 'b, tail: 'c} | nil as 'c) -> (cons & {Cons#A = 'a | 'b, head: 'a | 'b, tail: 'd} | nil as 'd)
+//│ res: cons & {Cons#A :> 'a <: 'a | 1 | 2, head: 'a | 1 | 2, tail: 'b} | nil as 'b
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
-//│ c: 'a -> (nil & 'l | (cons & {Cons#A = 'b, head: 'b, tail: 'd & (nil | 'c)} as 'c) & 'l) -> (cons & {Cons#A = anything, head: 'a, tail: nil & 'l | (cons & {Cons#A = anything, head: anything, tail: 'f | nil | 'e} as 'e) & 'l})
+//│ c: 'a -> ((cons & {Cons#A = 'b, head: 'b, tail: 'd & ('c | nil)} as 'c) & 'l | nil & 'l) -> (cons & {Cons#A = anything, head: 'a, tail: (cons & {Cons#A = anything, head: anything, tail: 'f | 'e | nil} as 'e) & 'l | nil & 'l})
 //│ res: cons & {Cons#A = anything, head: 1, tail: cons & {Cons#A = anything, head: 2, tail: nil}}
 
 

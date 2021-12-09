@@ -23,10 +23,10 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> ('b & 'a)) -> 'a -> 'b
+//│ res: ('a -> ('a & 'b)) -> 'a -> 'b
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> ('b & 'a)) -> 'a -> 'b
+//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
 
 
 
@@ -59,7 +59,7 @@ succ true
 //│ ╟── expression of type `true` does not match type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
-//│ res: int | error
+//│ res: error | int
 
 :e
 x => succ (not x)
@@ -72,7 +72,7 @@ x => succ (not x)
 //│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ╙──      	          ^^^^^^^
-//│ res: bool -> (int | error)
+//│ res: bool -> (error | int)
 
 :e
 (x => not x.f) { f: 123 }
@@ -214,7 +214,7 @@ y => (let f = x => x; {a: f y, b: f true})
 //│ res: 'a -> {a: 'a, b: true}
 
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: ((true | 0) -> 'a) -> {a: 'a, b: 'a}
+//│ res: ((0 | true) -> 'a) -> {a: 'a, b: 'a}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
@@ -233,7 +233,7 @@ let rec f = x => f x.u
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> ({thing: 'a, self: 'b} as 'b)
+//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
 
 
 
@@ -270,7 +270,7 @@ next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: 'b | 'b -> 'a as 'a
+//│ res: 'b -> 'a | 'b as 'a
 
 (let rec x = (y => (x (y y))); x)
 //│ res: ('b -> 'a & 'b as 'a) -> nothing
@@ -279,16 +279,16 @@ x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> ('c | 'b | 'a) as 'a
+//│ res: 'b -> ('c | 'a | 'b) as 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> ('c | 'b | 'a) as 'a
+//│ res: 'b -> ('c | 'a | 'b) as 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ('c | ({u: 'b | 'a, v: 'd} as 'd)) as 'a
+//│ res: 'b -> ('c | ({u: 'a | 'b, v: 'd} as 'd)) as 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ('c | ({u: 'd, v: 'b | 'a} as 'd)) as 'a
+//│ res: 'b -> ('c | ({u: 'd, v: 'a | 'b} as 'd)) as 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: ('a -> anything & 'b) -> 'b as 'a
@@ -297,6 +297,6 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: 'b -> ('c | 'b | 'a) as 'a
-//│ res: 'b | ({u: 'c} & 'b) -> ('d | 'c | 'a) as 'a
+//│ x: 'b -> ('c | 'a | 'b) as 'a
+//│ res: (({u: 'b} & 'c) -> ('d | 'a | 'b | 'c) as 'a) | 'c
 

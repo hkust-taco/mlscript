@@ -2,37 +2,37 @@ class Foo[A, B]: { x: A; y: B }
     method Fun[C]: (A -> B -> C) -> (A -> B -> C)
     method Fun[C, D] (f: C -> D) = f
 //│ Defined class Foo
-//│ Declared Foo.Fun: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
-//│ Defined Foo.Fun: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> (nothing -> anything & 'a) -> 'a
+//│ Declared Foo.Fun: (foo & {Foo#A = 'A, Foo#B = 'B, x: 'A, y: 'B}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
+//│ Defined Foo.Fun: (foo & {Foo#A = 'A, Foo#B = 'B, x: 'A, y: 'B}) -> (nothing -> anything & 'a) -> 'a
 
 class Bar: Foo[int, bool]
     method Fun f = f
 //│ Defined class Bar
-//│ Defined Bar.Fun: (bar & {Foo#B = bool, Foo#A = int, y: bool, x: int}) -> 'a -> 'a
+//│ Defined Bar.Fun: (bar & {Foo#A = int, Foo#B = bool, x: int, y: bool}) -> 'a -> 'a
 
 Foo.Fun
 Bar.Fun
-//│ res: (foo & {Foo#B = 'B, Foo#A = 'A, y: 'B, x: 'A}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
-//│ res: (bar & {Foo#B = bool, Foo#A = int, y: bool, x: int}) -> (int -> bool -> 'C) -> int -> bool -> 'C
+//│ res: (foo & {Foo#A = 'A, Foo#B = 'B, x: 'A, y: 'B}) -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
+//│ res: (bar & {Foo#A = int, Foo#B = bool, x: int, y: bool}) -> (int -> bool -> 'C) -> int -> bool -> 'C
 
 f = Foo { x = 1; y = 2 }
-//│ f: foo & {Foo#B :> 'B | 2 <: 'B, Foo#A :> 'A | 1 <: 'A, y: 2, x: 1}
+//│ f: foo & {Foo#A :> 'A <: 1 | 'A, Foo#B :> 'B <: 2 | 'B, x: 1, y: 2}
 
 f.(Foo.Fun)
-//│ res: (('A | 1) -> ('B | 2) -> 'C) -> 'A -> 'B -> 'C
+//│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 
 Foo.Fun f
-//│ res: (('A | 1) -> ('B | 2) -> 'C) -> 'A -> 'B -> 'C
+//│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 
 f.Fun
-//│ res: (('A | 1) -> ('B | 2) -> 'C) -> 'A -> 'B -> 'C
+//│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 
 // :d
 Bar
-//│ res: {x: int & 'x, y: bool & 'y} -> (bar & {Foo#B = bool, Foo#A = int, y: 'y, x: 'x})
+//│ res: {x: int & 'x, y: bool & 'y} -> (bar & {Foo#A = int, Foo#B = bool, x: 'x, y: 'y})
 
 g = Bar { x = 42; y = true }
-//│ g: bar & {Foo#B = bool, Foo#A = int, y: true, x: 42}
+//│ g: bar & {Foo#A = int, Foo#B = bool, x: 42, y: true}
 
 g.(Foo.Fun)
 g.(Bar.Fun)
@@ -49,7 +49,7 @@ g.Fun
 
 h = Bar { x = 43; y = true }
 h.Fun
-//│ h: bar & {Foo#B = bool, Foo#A = int, y: true, x: 43}
+//│ h: bar & {Foo#A = int, Foo#B = bool, x: 43, y: true}
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 
 
@@ -83,10 +83,10 @@ class WrapperWrapper[A]: Wrapper[Wrapper[A]]
 //│ Defined WrapperWrapper.Apply2: (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'A, x: 'A}, WrapperWrapper#A = 'A, x: wrapper & {Wrapper#A = 'A, x: 'A}}) -> ('A -> 'a) -> (wrapperWrapper & {Wrapper#A = wrapper & {Wrapper#A = 'a, x: 'a}, WrapperWrapper#A = 'a, x: wrapper & {Wrapper#A = 'a, x: 'a}})
 
 WrapperWrapper { x = Psyduck { x = 0 } }
-//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'A | 0 <: 'A, x: 'A | 0} <: wrapper & {Wrapper#A :> 'A <: 'A | 0, x: 'A}, WrapperWrapper#A :> 'A | 0 <: 'A, x: psyduck & {Psyduck#B :> 'A | 0 <: 'A, Wrapper#A :> 'A | 0 <: 'A, x: 0}}
+//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 0 | 'A <: 'A, x: 'A} <: wrapper & {Wrapper#A :> 'A <: 0 | 'A, x: 0 | 'A}, WrapperWrapper#A :> 'A <: 0 | 'A, x: psyduck & {Psyduck#B :> 'A <: 0 | 'A, Wrapper#A :> 'A <: 0 | 'A, x: 0}}
 
 res.Apply2 (fun x -> mul x 2)
-//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'B | int <: 'B, x: 'B | int} <: wrapper & {Wrapper#A :> 'B <: 'B | int, x: 'B}, WrapperWrapper#A :> 'B | int <: 'B, x: wrapper & {Wrapper#A :> 'B | int <: 'B, x: 'B | int}}
+//│ res: wrapperWrapper & {Wrapper#A :> wrapper & {Wrapper#A :> 'B | int <: 'B, x: 'B} <: wrapper & {Wrapper#A :> 'B <: 'B | int, x: 'B | int}, WrapperWrapper#A :> 'B <: 'B | int, x: wrapper & {Wrapper#A :> 'B <: 'B | int, x: 'B | int}}
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (wrapper & {Wrapper#A = 'A, x: 'x})
@@ -98,8 +98,8 @@ class Asc[A, B]: { x: A; y: B }
     method Left = { x = this.x; y = this.y } : { x: A }
     method Right2 = this : { y: B }
 //│ Defined class Asc
-//│ Defined Asc.Left: (asc & {y: 'B, Asc#B = 'B, Asc#A = 'A, x: 'A}) -> {x: 'A}
-//│ Defined Asc.Right2: (asc & {y: 'B, Asc#B = 'B, Asc#A = 'A, x: 'A}) -> {y: 'B}
+//│ Defined Asc.Left: (asc & {Asc#A = 'A, Asc#B = 'B, x: 'A, y: 'B}) -> {x: 'A}
+//│ Defined Asc.Right2: (asc & {Asc#A = 'A, Asc#B = 'B, x: 'A, y: 'B}) -> {y: 'B}
 
 
 
@@ -112,7 +112,7 @@ class Simple[A]
 class Simple2[A]: { a: A }
     method Get: A
 //│ Defined class Simple2
-//│ Declared Simple2.Get: (simple2 & {a: 'A, Simple2#A = 'A}) -> 'A
+//│ Declared Simple2.Get: (simple2 & {Simple2#A = 'A, a: 'A}) -> 'A
 
 
 
@@ -121,37 +121,37 @@ class AbstractPair[A, B]: { x: A; y: B }
     method Test: (A -> B -> bool) -> bool
     method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ Defined class AbstractPair
-//│ Declared AbstractPair.Test: (abstractPair & {AbstractPair#B = 'B, y: 'B, AbstractPair#A = 'A, x: 'A}) -> ('A -> 'B -> bool) -> bool
-//│ Declared AbstractPair.Map: (abstractPair & {AbstractPair#B = 'B, y: 'B, AbstractPair#A = 'A, x: 'A}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#B = 'D, y: 'D, AbstractPair#A = 'C, x: 'C})
+//│ Declared AbstractPair.Test: (abstractPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'B -> bool) -> bool
+//│ Declared AbstractPair.Map: (abstractPair & {AbstractPair#A = 'A, AbstractPair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'C) -> ('B -> 'D) -> (abstractPair & {AbstractPair#A = 'C, AbstractPair#B = 'D, x: 'C, y: 'D})
 
 class Pair[A, B]: AbstractPair[A, B]
     method Test(f: A -> B -> bool) = f this.x this.y
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
 //│ Defined class Pair
-//│ Defined Pair.Test: (pair & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, AbstractPair#B = 'B}) -> ('A -> 'B -> (bool & 'a)) -> 'a
-//│ Defined Pair.Map: (pair & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, AbstractPair#B = 'B}) -> ('A -> ('a & 'A0)) -> ('B -> ('b & 'B0)) -> (pair & {Pair#B = 'B0, AbstractPair#A = 'A0, x: 'a, Pair#A = 'A0, y: 'b, AbstractPair#B = 'B0})
+//│ Defined Pair.Test: (pair & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, x: 'A, y: 'B}) -> ('A -> 'B -> (bool & 'a)) -> 'a
+//│ Defined Pair.Map: (pair & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, x: 'A, y: 'B}) -> ('A -> ('a & 'A0)) -> ('B -> ('b & 'B0)) -> (pair & {AbstractPair#A = 'A0, AbstractPair#B = 'B0, Pair#A = 'A0, Pair#B = 'B0, x: 'a, y: 'b})
 
 class True[A, B]: Pair[A, B]
     method Test f = true
     method True = this.Test (fun x -> error)
 //│ Defined class True
-//│ Defined True.Test: (true & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True#A = 'A, True#B = 'B, AbstractPair#B = 'B}) -> anything -> true
-//│ Defined True.True: (true & {Pair#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True#A = 'A, True#B = 'B, AbstractPair#B = 'B}) -> true
+//│ Defined True.Test: (true & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, True#A = 'A, True#B = 'B, x: 'A, y: 'B}) -> anything -> true
+//│ Defined True.True: (true & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, True#A = 'A, True#B = 'B, x: 'A, y: 'B}) -> true
 
 class True2[A, B]: Pair[A, B]
     method Test: anything -> bool
     method True = this.Test (fun x -> error)
     method Test f = true
 //│ Defined class True2
-//│ Declared True2.Test: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> anything -> bool
-//│ Defined True2.True: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> bool
-//│ Defined True2.Test: (true2 & {Pair#B = 'B, True2#B = 'B, AbstractPair#A = 'A, x: 'A, Pair#A = 'A, y: 'B, True2#A = 'A, AbstractPair#B = 'B}) -> anything -> true
+//│ Declared True2.Test: (true2 & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, True2#A = 'A, True2#B = 'B, x: 'A, y: 'B}) -> anything -> bool
+//│ Defined True2.True: (true2 & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, True2#A = 'A, True2#B = 'B, x: 'A, y: 'B}) -> bool
+//│ Defined True2.Test: (true2 & {AbstractPair#A = 'A, AbstractPair#B = 'B, Pair#A = 'A, Pair#B = 'B, True2#A = 'A, True2#B = 'B, x: 'A, y: 'B}) -> anything -> true
 
 p = Pair { x = 42; y = true }
 fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
-//│ p: pair & {Pair#B :> 'B | true <: 'B, AbstractPair#A :> 'A | 42 <: 'A, x: 42, Pair#A :> 'A | 42 <: 'A, y: true, AbstractPair#B :> 'B | true <: 'B}
+//│ p: pair & {AbstractPair#A :> 'A <: 42 | 'A, AbstractPair#B :> 'B <: 'B | true, Pair#A :> 'A <: 42 | 'A, Pair#B :> 'B <: 'B | true, x: 42, y: true}
 //│ fx: int -> int
 //│ fy: bool -> bool
 //│ ft: int -> bool -> bool
@@ -159,18 +159,18 @@ ft = fun x -> fun y -> if (y) then gt x 0 else y
 p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
-//│ res: abstractPair & {AbstractPair#B :> 'D | bool <: 'D, y: 'D | bool, AbstractPair#A :> 'C | int <: 'C, x: 'C | int}
+//│ res: abstractPair & {AbstractPair#A :> 'C <: 'C | int, AbstractPair#B :> 'D <: 'D | bool, x: 'C | int, y: 'D | bool}
 //│ res: bool
 //│ res: bool
 
 t = True { x = "foo"; y = false }
 t.(True.True)
-//│ t: true & {Pair#B :> 'B | false <: 'B, AbstractPair#A :> 'A | "foo" <: 'A, x: "foo", Pair#A :> 'A | "foo" <: 'A, y: false, True#A :> 'A | "foo" <: 'A, True#B :> 'B | false <: 'B, AbstractPair#B :> 'B | false <: 'B}
+//│ t: true & {AbstractPair#A :> 'A <: "foo" | 'A, AbstractPair#B :> 'B <: 'B | false, Pair#A :> 'A <: "foo" | 'A, Pair#B :> 'B <: 'B | false, True#A :> 'A <: "foo" | 'A, True#B :> 'B <: 'B | false, x: "foo", y: false}
 //│ res: true
 
 t = True2 { x = "bar"; y = false }
 t.(True2.True)
-//│ t: true2 & {Pair#B :> 'B | false <: 'B, True2#B :> 'B | false <: 'B, AbstractPair#A :> 'A | "bar" <: 'A, x: "bar", Pair#A :> 'A | "bar" <: 'A, y: false, True2#A :> 'A | "bar" <: 'A, AbstractPair#B :> 'B | false <: 'B}
+//│ t: true2 & {AbstractPair#A :> 'A <: "bar" | 'A, AbstractPair#B :> 'B <: 'B | false, Pair#A :> 'A <: "bar" | 'A, Pair#B :> 'B <: 'B | false, True2#A :> 'A <: "bar" | 'A, True2#B :> 'B <: 'B | false, x: "bar", y: false}
 //│ res: bool
 
 
@@ -199,11 +199,11 @@ class Class2C: Class2B[int, bool]
 //│ Defined trait Trait2A
 //│ Declared Trait2A.MtdB: ({Trait2A#A = 'A} & trait2A) -> 'A
 //│ Defined class Class2B
-//│ Declared Class2B.MtdA: (class2B & {Class2B#A = 'A, Class1A#A = 'A, Class2B#B = 'B, Trait2A#A = 'B} & trait2A) -> 'A
-//│ Declared Class2B.MtdB: (class2B & {Class2B#A = 'A, Class1A#A = 'A, Class2B#B = 'B, Trait2A#A = 'B} & trait2A) -> 'B
+//│ Declared Class2B.MtdA: (class2B & {Class1A#A = 'A, Class2B#A = 'A, Class2B#B = 'B, Trait2A#A = 'B} & trait2A) -> 'A
+//│ Declared Class2B.MtdB: (class2B & {Class1A#A = 'A, Class2B#A = 'A, Class2B#B = 'B, Trait2A#A = 'B} & trait2A) -> 'B
 //│ Defined class Class2C
-//│ Defined Class2C.MtdA: (class2C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
-//│ Defined Class2C.MtdB: (class2C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> true
+//│ Defined Class2C.MtdA: (class2C & {Class1A#A = int, Class2B#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
+//│ Defined Class2C.MtdB: (class2C & {Class1A#A = int, Class2B#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> true
 
 
 :e
@@ -226,8 +226,8 @@ class Class3C: Class2C
 //│ ║  l.195: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
-//│ Defined Class3C.MtdA: (class3C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
-//│ Defined Class3C.MtdB: (class3C & {Class2B#A = int, Class1A#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
+//│ Defined Class3C.MtdA: (class3C & {Class1A#A = int, Class2B#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
+//│ Defined Class3C.MtdB: (class3C & {Class1A#A = int, Class2B#A = int, Class2B#B = bool, Trait2A#A = bool} & trait2A) -> 42
 
 type Id[T] = T
 class Test1[A]: { x: A }
@@ -238,7 +238,7 @@ class Test2[B]: Test1[Id[B]] & { x: B }
 //│ Defined class Test1
 //│ Declared Test1.F: (test1 & {Test1#A = 'A, x: 'A}) -> 'A
 //│ Defined class Test2
-//│ Defined Test2.F: (test2 & {Test2#B = 'B, Test1#A = 'B, x: 'B}) -> 'B
+//│ Defined Test2.F: (test2 & {Test1#A = 'B, Test2#B = 'B, x: 'B}) -> 'B
 
 
 class Test3A: Test1['a -> 'a]

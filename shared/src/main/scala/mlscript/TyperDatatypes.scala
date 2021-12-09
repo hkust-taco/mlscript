@@ -64,6 +64,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val shadowing = fs.iterator.map(_._1).toSet
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
+    def sorted: RecordType = RecordType(fields.sortBy(_._1))(prov)
     override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {
@@ -102,12 +103,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"${base}\\${names.mkString("-")}"
   }
   
-  /** The sole purpose of ProxyType is to store additional type provenance info. */
-  case class ProxyType(underlying: SimpleType)(val prov: TypeProvenance)
-      extends SimpleType {
+  /** A proxy type is a derived type form storing some additional information,
+   * but which can always be converted into an underlying simple type. */
+  sealed abstract class ProxyType extends SimpleType {
     def level: Int = underlying.level
-    
+    def underlying: SimpleType
     override def toString = s"[$underlying]"
+  }
+  object ProxyType {
+    def unapply(proxy: ProxyType): S[ST] =
+      S(proxy.underlying)
+  }
+  
+  /** The sole purpose of ProvType is to store additional type provenance info. */
+  case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     
     // TOOD override equals/hashCode? — could affect hash consing...
@@ -115,26 +124,39 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def equals(that: Any): Bool = unwrapProxies.equals(that)
   }
   
+  /** A proxy type, `S with {x: T; ...}` is equivalent to `S\x\... & {x: T; ...}`. */
+  case class WithType(base: SimpleType, rcd: RecordType)(val prov: TypeProvenance) extends ProxyType {
+    lazy val underlying: ST =
+      base.without(rcd.fields.iterator.map(_._1).toSet) & rcd
+  }
+  
   case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])
       (val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
     assert(targs.size === defn.tparams.size)
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
-    def expand(implicit raise: Raise): SimpleType = {
+    def expand(implicit raise: Raise): SimpleType = expandWith(paramTags = true)
+    def expandWith(paramTags: Bool)(implicit raise: Raise): SimpleType = {
       val body_ty = typeType(defn.body)(ctx, raise, vars = defn.tparams.map(_.name).zip(targs).toMap)
-      lazy val tparamTags = RecordType.mk(defn.tparams.lazyZip(targs).map((tp, tv) =>
-        Var(defn.nme.name+"#"+tp.name) -> FunctionType(tv, tv)(noProv)).toList)(noProv)
+      lazy val tparamTags =
+        if (paramTags) RecordType.mk(defn.tparams.lazyZip(targs).map((tp, tv) =>
+          tparamField(defn.nme, tp) -> FunctionType(tv, tv)(noProv)).toList)(noProv)
+        else TopType
       defn.kind match {
         case Als => body_ty
         case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
         case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
       }
     }
-    override def toString =
-      if (targs.isEmpty) defn.nme.name else s"${defn.nme.name}[${targs.mkString(",")}]"
+    override def toString = {
+      val displayName =
+        if (primitiveTypes.contains(defn.nme.name)) defn.nme.name.capitalize else defn.nme.name
+      if (targs.isEmpty) displayName else s"$displayName[${targs.mkString(",")}]"
+    }
   }
   
-  sealed trait ObjectTag extends BaseTypeOrTag {
+  sealed trait ObjectTag extends BaseTypeOrTag with Ordered[ObjectTag] {
     val id: SimpleTerm
+    def compare(that: ObjectTag): Int = this.id compare that.id
   }
   
   case class ClassTag(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType with ObjectTag {
@@ -159,6 +181,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = id.idStr
   }
   
+  /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
+   * The only way to give something such a type is to make the type part of a def or method signature,
+   * as it will be replaced by a fresh bounded type variable upon subsumption checking (cf rigidification). */
+  case class TypeBounds(lb: SimpleType, ub: SimpleType)(val prov: TypeProvenance) extends SimpleType {
+    def level: Int = lb.level max ub.level
+    override def toString = s"$lb..$ub"
+  }
+  object TypeBounds {
+    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType =
+      if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
+  }
+  
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
    *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
@@ -166,16 +200,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
       val nameHint: Opt[Str] = N
-  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable {
+  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
+    def compare(that: TV): Int = this.uid compare that.uid
     override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
     override def hashCode: Int = uid
   }
   type TV = TypeVariable
   private var freshCount = 0
-  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N)(implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, Nil, Nil, nameHint)(p)
+  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil)
+        (implicit lvl: Int): TypeVariable =
+    new TypeVariable(lvl, lbs, ubs, nameHint)(p)
   def resetState(): Unit = {
     freshCount = 0
   }

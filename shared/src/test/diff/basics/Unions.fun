@@ -130,12 +130,12 @@ h(0)
 //│ res: int
 
 let foo(r: { v: 0 } | { v: 1 }) = if r.v < 1 then r.v else 2
-//│ foo: (r: {v: 0 & 'a | 1 & 'a},) -> ('a | 2)
+//│ foo: (r: {v: 0 & 'a | 1 & 'a},) -> (2 | 'a)
 
 foo({ v: 0 })
 foo({ v: 1 })
-//│ res: 2 | 0
-//│ res: 2 | 1
+//│ res: 0 | 2
+//│ res: 1 | 2
 
 x => foo(x)
 //│ res: (r: {v: 0 & 'a | 1 & 'a},) -> (2 | 'a)
@@ -145,12 +145,12 @@ x => foo { v: x }
 
 
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
-//│ bar: (r: (0, 0,) & {_2: 'a, _1: int & 'a} | (1, 1,) & {_2: 'a, _1: int & 'a},) -> 'a
+//│ bar: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, 1,) & {_1: int & 'a, _2: 'a},) -> 'a
 
 // :e
 bar(0, 1)
 bar(2, 2)
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│ res: 2
 
 // TODO
@@ -168,7 +168,7 @@ x => bar(x, x) // TODO simplify better
 x => bar(1, x)
 x => bar(x, 0)
 //│ res: (int & 'a) -> 'a
-//│ res: 'a -> ('a | 1)
+//│ res: 'a -> (1 | 'a)
 //│ res: (int & 'a) -> (0 | 'a)
 
 // :e
@@ -186,13 +186,13 @@ x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
 //│ res: (int & 'a) -> (0 | 'a)
 //│ res: (int & 'a) -> (0 | 'a)
-//│ res: (int & 'a) -> ('a | 0)
+//│ res: (int & 'a) -> (0 | 'a)
 //│ res: (int & 'a) -> (0 | 'a)
 
 // :e
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
-//│ res: (int & 'a) -> (0 | 'a | 1)
+//│ res: (int & 'a) -> (0 | 1 | 'a)
 //│ res: (int & 'a, int & 'a,) -> 'a
 
 // :e // TODO delay tricky constraints for later (instead of eager) resolution:
@@ -201,7 +201,7 @@ x => bar(bar(x, 1), 0)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: {_2: 'a, _1: int & 'a},) -> 'a
+//│ baz: (r: {_1: int & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)
@@ -226,7 +226,7 @@ baz(0, 0)
 baz(0, 1)
 baz(1, 1)
 //│ res: 0
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│ res: 1
 
 x => baz(x, 0)
@@ -234,13 +234,13 @@ x => baz(0, x)
 x => baz(x, x)
 (x, y) => baz(x, y)
 //│ res: (int & 'a) -> (0 | 'a)
-//│ res: 'a -> ('a | 0)
+//│ res: 'a -> (0 | 'a)
 //│ res: (int & 'a) -> 'a
 //│ res: (int & 'a, 'a,) -> 'a
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: (0, 0,) & {_2: 'a, _1: int & 'a} | (1, anything,) & {_2: 'a, _1: int & 'a},) -> 'a
+//│ baz: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, anything,) & {_1: int & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)
@@ -261,7 +261,7 @@ baz(0, 1)
 //│ ║  l.242: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error
-//│ res: 1 | 0
+//│ res: 0 | 1
 
 // TODO
 baz(0, 0)
@@ -271,8 +271,8 @@ x => baz(1, x)
 x => baz(x, 1)
 //│ res: 0
 //│ res: 1
-//│ res: 'a -> ('a | 0)
-//│ res: 'a -> ('a | 1)
+//│ res: 'a -> (0 | 'a)
+//│ res: 'a -> (1 | 'a)
 //│ res: (int & 'a) -> (1 | 'a)
 
 // :e

@@ -26,7 +26,7 @@ class Foo[A]: { field: A }
 //│ Defined class Foo
 
 def foo(f: Foo['a]) = f.field
-//│ foo: (foo & {Foo#A = 'a, field: 'b & 'a}) -> 'b
+//│ foo: (foo & {Foo#A = 'a, field: 'a & 'b}) -> 'b
 
 
 (succ 1): int

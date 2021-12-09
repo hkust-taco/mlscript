@@ -67,6 +67,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // saving it as negations in the variable's bounds!
         case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls))
         case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv)
+        case (TypeBounds(lb, ub) :: ls, _) => annoying(ub :: ls, done_ls, rs, done_rs)
+        case (_, TypeBounds(lb, ub) :: rs) => annoying(ls, done_ls, lb :: rs, done_rs)
         case (ComposedType(true, ll, lr) :: ls, _) =>
           mkCase("1"){ implicit dbgHelp => annoying(ll :: ls, done_ls, rs, done_rs) }
           mkCase("2"){ implicit dbgHelp => annoying(lr :: ls, done_ls, rs, done_rs) }
@@ -170,6 +172,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         lhs_rhs match {
           case (ExtrType(true), _) => ()
           case (_, ExtrType(false) | RecordType(Nil)) => ()
+          case (TypeBounds(lb, ub), _) => rec(ub, rhs)
+          case (_, TypeBounds(lb, ub)) => rec(lhs, lb)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0)(raise, Nil)
@@ -178,11 +182,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (prim: ClassTag, _) if rhs === prim => ()
           case (prim: ClassTag, ClassTag(id:Var, _)) if prim.parents.contains(id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            val newBound = outerProv.fold(rhs)(ProxyType(rhs)(_))
+            val newBound = outerProv.fold(rhs)(ProvType(rhs)(_))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            val newBound = outerProv.fold(lhs)(ProxyType(lhs)(_))
+            val newBound = outerProv.fold(lhs)(ProvType(lhs)(_))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
@@ -378,6 +382,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
       (implicit cache: MutMap[TV, TV] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
+      case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
@@ -394,7 +399,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       })
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
       case e @ ExtrType(_) => e
-      case p @ ProxyType(und) => ProxyType(extrude(und, lvl, pol))(p.prov)
+      case p @ ProvType(und) => ProvType(extrude(und, lvl, pol))(p.prov)
+      case p @ ProxyType(und) => extrude(und, lvl, pol)
       case _: ClassTag | _: TraitTag => ty
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol)))(tr.prov, tr.ctx) // FIXME pol...
     }
@@ -416,7 +422,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // Note: maybe this and `extrude` should be merged?
   def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false)(implicit lvl: Int): SimpleType = {
     val freshened = MutMap.empty[TV, SimpleType]
-    def freshen(ty: SimpleType): SimpleType = if (ty.level <= lim) ty else ty match {
+    def freshen(ty: SimpleType): SimpleType =
+      if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
+                    // since these have the level of their bounds, when rigidifying
+                    // we need to make sure to copy the whole type regardless of level...
+        && ty.level <= lim) ty else ty match {
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
@@ -439,13 +449,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
           v
       }
+      case t @ TypeBounds(lb, ub) =>
+        if (rigidify) {
+          val tv = freshVar(t.prov)
+          tv.lowerBounds ::= freshen(lb)
+          tv.upperBounds ::= freshen(ub)
+          tv
+        } else TypeBounds(freshen(lb), freshen(ub))(t.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
-      case p @ ProxyType(und) => ProxyType(freshen(und))(p.prov)
+      case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
+      case p @ ProxyType(und) => freshen(und)
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov, tr.ctx)

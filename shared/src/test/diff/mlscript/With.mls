@@ -6,7 +6,7 @@ rcd.x
 //│ res: 1
 
 rcd with { y = 2 }
-//│ res: {y: 2, x: 1}
+//│ res: {x: 1, y: 2}
 
 add res.x res.y
 //│ res: int
@@ -41,7 +41,7 @@ f rcd
 //│ res: {x: "oops"}
 
 f (rcd with { y = 2 })
-//│ res: {y: 2, x: "oops"}
+//│ res: {x: "oops", y: 2}
 
 
 def f a b = if true then a else b
@@ -70,13 +70,13 @@ def getf { f } = f
 def foo x =
   let xf = x with { f = 42 }
   in getf xf
-//│ foo: (~{f: 42} | {f: 'a})\f -> 'a
+//│ foo: ({f: 'a} | ~{f: 42})\f -> 'a
 
 foo 123
 //│ res: 42
 
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
-//│ fooManual: (~{f: 42} | {f: 'a})\f -> 'a
+//│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
 
 fooManual 123
 //│ res: 42
@@ -84,12 +84,12 @@ fooManual 123
 def foo x =
   let xf = x with { f = 42 }
   in add (getf xf) (getf x)
-//│ foo: ((~{f: 42} | {f: int})\f & {f: int}) -> int
+//│ foo: (({f: int} | ~{f: 42})\f & {f: int}) -> int
 
 def foo x =
   let xf = x with { f = 42 }
   in { l = getf xf; r = getf x; s = x }
-//│ foo: ((~{f: 42} | {f: 'a})\f & {f: 'b} & 'c) -> {l: 'a, r: 'b, s: 'c}
+//│ foo: (({f: 'a} | ~{f: 42})\f & {f: 'b} & 'c) -> {l: 'a, r: 'b, s: 'c}
 
 :e
 foo 42
@@ -105,7 +105,7 @@ foo 42
 //│ ╟── from argument:
 //│ ║  l.91: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──      	                             ^
-//│ res: {l: 42, r: nothing, s: 42} | error
+//│ res: error | {l: 42, r: nothing, s: 42}
 
 def r = foo (42 with { f = 1 })
 //│ r: {l: 42, r: 1, s: 42 & {f: 1}}
@@ -118,7 +118,7 @@ add r.s 1
 
 
 {} with { x = 1 } with { y = 2 }
-//│ res: {y: 2, x: 1}
+//│ res: {x: 1, y: 2}
 
 :e
 res.z
@@ -141,17 +141,21 @@ class C[A]: { x: A }
 //│ Defined class C
 
 c = C{x = 1}
-//│ c: c & {C#A :> 'A | 1 <: 'A, x: 1}
+//│ c: c & {C#A :> 'A <: 1 | 'A, x: 1}
 
+c.x
+//│ res: 1
+
+// FIXME: should reconstruct C[...]\x & {y: 2, x: "hi"}
 d = c with { x = "hi"; y = 2 }
-//│ d: c & {C#A :> 'A | 1 <: 'A, y: 2, x: "hi"}
+//│ d: c & {C#A :> 'A <: 1 | 'A, x: "hi", y: 2}
 
 d.x
 //│ res: "hi"
 
 d: C['a]
-//│ res: c & {C#A :> 'a | 1 | "hi" <: 'a, x: 'a | 1 | "hi"}
+//│ res: c & {C#A :> 'a <: "hi" | 'a | 1, x: "hi" | 'a | 1}
 
 res.x
-//│ res: 1 | "hi"
+//│ res: "hi" | 1
 

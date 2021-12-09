@@ -35,6 +35,7 @@ package object utils {
       if (newStr.length < self.length) newStr + replace
       else newStr
     }
+    def isCapitalized: Bool = self.nonEmpty && self.head.isUpper
   }
   
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
@@ -46,6 +47,22 @@ package object utils {
   }
   implicit class OptIterableOps[A](private val self: IterableOnce[Opt[A]]) extends AnyVal {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
+  }
+  implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal {
+    def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
+    def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
+  }
+  
+  implicit class MapOps[A, B](private val self: Map[A, B]) extends AnyVal {
+    def +++(that: Map[A, B]): Map[A, B] = {
+      require(!self.keysIterator.exists(that.keySet), (self.keySet, that.keySet))
+      self ++ that
+    }
+    def +++(that: Iterable[A -> B]): Map[A, B] = {
+      val thatKeySet = that.iterator.map(_._1).toSet
+      require(!self.keysIterator.exists(thatKeySet), (self.keySet, thatKeySet))
+      self ++ that
+    }
   }
   
   def mergeOptionsFlat[A](lhs: Option[A], rhs: Option[A])(f: (A, A) => Opt[A]): Option[A] = (lhs, rhs) match {

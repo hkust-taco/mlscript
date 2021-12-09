@@ -15,3 +15,14 @@ type oops = int
 //│ ║  l.10: 	type oops = int
 //│ ╙──      	     ^^^^
 
+
+// TODO forbid
+aa = {a = 1; a = "oops" }
+//│ aa: {a: 1, a: "oops"}
+
+aa.a
+//│ res: 1
+
+aa: { a: 'a }
+//│ res: {a: 1}
+

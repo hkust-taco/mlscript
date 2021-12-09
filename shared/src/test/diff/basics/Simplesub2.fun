@@ -9,7 +9,7 @@ let id = x => x
 //│ id: 'a -> 'a
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> ('b & 'a)) -> 'a -> 'b
+//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
 
 let object1 = { x: 42, y: id }
 //│ object1: {x: 42, y: 'a -> 'a}
@@ -19,11 +19,11 @@ let object2 = { x: 17, y: false }
 
 let pick_an_object = b =>
   if b then object1 else object2
-//│ pick_an_object: bool -> {x: 42 | 17, y: 'a -> 'a | false}
+//│ pick_an_object: bool -> {x: 17 | 42, y: 'a -> 'a | false}
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> ({thing: 'a, self: 'b} as 'b)
+//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
 
 
 

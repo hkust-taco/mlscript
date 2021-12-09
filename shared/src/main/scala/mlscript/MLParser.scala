@@ -164,7 +164,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       case (rec, id, ts, ps, bod) => L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(i, acc)))))
     })
   
-  def ty[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
+  def ty[_: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
+    case (ty, ass) => ass.foldLeft(ty)((a, b) => Recursive(b, a))
+  }
+  def tyNoAs[_: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
   def tyNoUnion[_: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
   def tyNoInter[_: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
     case (l, S(r)) => Function(l, r)
@@ -173,16 +176,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // Note: field removal types are not supposed to be explicitly used by programmers,
   //    and they won't work in negative positions,
   //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
-  def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | litTy | parTy) ~ ("\\" ~ variable).rep(0) ) map {
+  def tyNoFun[_: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)
   }
   def ctor[_: P]: P[Type] = locate(P( tyName ~ "[" ~ ty.rep(0, ",") ~ "]" ) map {
     case (tname, targs) => AppliedType(tname, targs.toList)
-  }) | tyNeg | tyName | tyVar //| const.map(Const) // TODO
+  }) | tyNeg | tyName | tyVar | tyWild | litTy
   def tyNeg[_: P]: P[Type] = locate(P("~" ~/ tyNoFun map { t => Neg(t) }))
   def tyName[_: P]: P[TypeName] = locate(P(ident map TypeName))
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
+  def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
   def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )

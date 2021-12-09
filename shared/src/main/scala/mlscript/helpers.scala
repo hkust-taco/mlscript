@@ -30,16 +30,17 @@ abstract class TypeImpl extends Located { self: Type =>
     // case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs.getOrElse(n, s"[??? $n ???]")}"
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
+    case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
       val nme = nt._1.name
-      if (nme.headOption.exists(_.isUpper)) nt._2 match {
+      if (nme.isCapitalized) nt._2 match { // TODO maybe rm this
         case Function(Top, Bot) => s"$nme"
-        case Function(ub, lb) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-        case Function(ub, Bot) => s"$nme <: ${ub.showIn(ctx, 0)}"
-        case Function(Top, lb) => s"$nme :> ${lb.showIn(ctx, 0)}"
-        case Function(ub, lb) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+        case Function(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+        case Function(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+        case Function(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+        case Function(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         case Bot | Top => s"$nme"
         case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
       }
@@ -50,6 +51,10 @@ abstract class TypeImpl extends Located { self: Type =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    case Bounds(Bot, Top) => s"?"
+    case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
+    case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
+    case Bounds(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
@@ -60,6 +65,7 @@ abstract class TypeImpl extends Located { self: Type =>
   def children: List[Type] = this match {
     case _: NullaryType => Nil
     case Function(l, r) => l :: r :: Nil
+    case Bounds(l, r) => l :: r :: Nil
     case Neg(b) => b :: Nil
     case Record(fs) => fs.map(_._2)
     case Tuple(fs) => fs.map(_._2)
@@ -68,6 +74,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Recursive(n, b) => b :: Nil
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
+    case WithExtension(b, r) => b :: r :: Nil
   }
   
 }
@@ -260,10 +267,17 @@ trait LitImpl { self: Lit =>
   }
 }
 
-trait VarImpl extends Ordered[Var] { self: Var =>
+trait VarImpl { self: Var =>
   def isPatVar: Bool =
     name.head.isLetter && name.head.isLower && name =/= "true" && name =/= "false"
-  def compare(that: Var): Int = this.name compare that.name
+}
+
+trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
+  def compare(that: SimpleTerm): Int = this.idStr compare that.idStr
+  val idStr: Str = this match {
+    case Var(name) => name
+    case lit: Lit => lit.toString
+  }
 }
 
 trait Located {

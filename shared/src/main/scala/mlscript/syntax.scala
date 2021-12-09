@@ -62,12 +62,7 @@ final case class IntLit(value: BigInt)      extends Lit
 final case class DecLit(value: BigDecimal)  extends Lit
 final case class StrLit(value: Str)         extends Lit
 
-sealed abstract class SimpleTerm extends Term {
-  val idStr: Str = this match {
-    case Var(name) => name
-    case lit: Lit => lit.toString
-  }
-}
+sealed abstract class SimpleTerm extends Term with SimpleTermImpl
 
 sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term)  extends Statement
@@ -92,6 +87,8 @@ final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
+final case class Bounds(lb: Type, ub: Type)              extends Type
+final case class WithExtension(base: Type, rcd: Record)  extends Type
 
 sealed abstract class NullaryType                        extends Type
 

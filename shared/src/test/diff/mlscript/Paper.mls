@@ -11,7 +11,7 @@ def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ('a -> 'b) -> (some & {value: 'a} | none) -> ('b | none)
+//│ flatMap: ('a -> 'b) -> (none | some & {value: 'a}) -> (none | 'b)
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
 //│ flatMap2: ('a -> 'b) -> (some & {value: 'a} | 'b & ~some) -> 'b
@@ -33,7 +33,7 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Some#A = 'A, Cons#A = 'A, tail: 'c, value: 'value} | none as 'c)
+//│ map2: ('a -> ('value & 'A)) -> (cons & {tail: 'b, value: 'a} | none as 'b) -> (cons & {Cons#A = 'A, Some#A = 'A, tail: 'c, value: 'value} | none as 'c)
 
 
 
@@ -52,7 +52,7 @@ safeDiv 1 0
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.41: 	def safeDiv x (y: ~0) = div x y
 //│ ╙──      	                  ^^
-//│ res: int | error
+//│ res: error | int
 
 fun x -> safeDiv 1 x
 //│ res: (int & ~0) -> int
@@ -65,14 +65,16 @@ fun (x: int) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 
 def tryDiv: int -> int -> Option[int]
-//│ tryDiv: int -> int -> (some & {Some#A = int, value: int} | none)
+//│ tryDiv: int -> int -> (none | some & {Some#A = int, value: int})
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> (0 | int & ~0) -> (none | some & {Some#A :> 'A | int <: 'A, value: int})  <:  tryDiv: int -> int -> (some & {Some#A = int, value: int} | none)
+//│ int -> (0 | int & ~0) -> (none | some & {Some#A :> 'A <: 'A | int, value: int})
+//│   <:  tryDiv:
+//│ int -> int -> (none | some & {Some#A = int, value: int})
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1
 tryDiv 1 0
-//│ res: some & {Some#A = int, value: int} | none
-//│ res: some & {Some#A = int, value: int} | none
+//│ res: none | some & {Some#A = int, value: int}
+//│ res: none | some & {Some#A = int, value: int}
 

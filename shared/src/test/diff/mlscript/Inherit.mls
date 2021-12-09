@@ -19,10 +19,10 @@ def c = Child(Parent { name = "Bob" })
 //│ ╟── expression of type `parent & {name: ?name}` does not match type `{age: ?age, name: ?name0}`
 //│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
-//│ c: child & {name: "Bob", age: nothing} | error
+//│ c: child & {age: nothing, name: "Bob"} | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
-//│ c: child & {name: "Bob", age: 123}
+//│ c: child & {age: 123, name: "Bob"}
 
 c: Parent
 //│ res: parent & {name: string}
@@ -74,17 +74,17 @@ f (c: Parent)
 //│ ╟── from reference:
 //│ ║  l.52: 	def f x = case x of {
 //│ ╙──      	               ^
-//│ res: string | error
+//│ res: error | string
 
 
 def f x = case x of {
   | Parent -> x.name
   | _ -> ""
   }
-//│ f: (parent & {name: 'a} | ~parent) -> ('a | "")
+//│ f: (parent & {name: 'a} | ~parent) -> ("" | 'a)
 
 f c
-//│ res: "Bob" | ""
+//│ res: "" | "Bob"
 
 f (c: Parent)
 //│ res: string

@@ -52,6 +52,6 @@ id
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.45: 	1: 1 & int: { x: int; y: string } | string
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: {x: int, y: string} | string
+//│ res: string | {x: int, y: string}
 
 

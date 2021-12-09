@@ -95,14 +95,17 @@ d = b: Bar2
 d.M2
 //│ res: int
 
+d: Foo2['a]
+//│ res: foo2 & {Foo2#A = int}
+
 :e
 d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.99: 	d: Foo2[string]
-//│ ║        	^
+//│ ║  l.102: 	d: Foo2[string]
+//│ ║         	^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.99: 	d: Foo2[string]
-//│ ║        	        ^^^^^^
+//│ ║  l.102: 	d: Foo2[string]
+//│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.38: 	class Bar2: Foo2[int] & { x: int }
 //│ ╙──      	                 ^^^

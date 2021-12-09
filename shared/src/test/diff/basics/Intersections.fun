@@ -22,7 +22,7 @@ succ / foo(1)
 
 // Intersection-based overloading is not actually supported... a value of this type is impossible to provide:
 let foo = (Int => Int) & (Bool => Bool)
-//│ foo: (int | bool) -> nothing
+//│ foo: (bool | int) -> nothing
 
 foo(1) // returns int & bool, equivalent to nothing
 succ / foo(1)

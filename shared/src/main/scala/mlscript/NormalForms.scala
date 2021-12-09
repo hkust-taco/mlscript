@@ -12,9 +12,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class LhsNf {
-    def toTypes: Ls[SimpleType] = toType :: Nil
-    def toType: SimpleType = this match {
-      case LhsRefined(bo, ts, r) => ts.foldLeft(bo.fold[ST](r)(_ & r))(_ & _)
+    def toTypes: Ls[SimpleType] = toType() :: Nil
+    def toType(sort: Bool = false): SimpleType = this match {
+      case LhsRefined(bo, ts, r) =>
+        val sr = if (sort) r.sorted else r
+        ts.toArray.sorted.foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
       case LhsTop => TopType
     }
     def & (that: BaseTypeOrTag): Opt[LhsNf] = (this, that) match {
@@ -62,11 +64,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class RhsNf {
-    def toTypes: Ls[SimpleType] = toType :: Nil
-    def toType: SimpleType = this match {
+    def toTypes: Ls[SimpleType] = toType() :: Nil
+    def toType(sort: Bool = false): SimpleType = this match {
       case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
       case RhsBases(ps, bf) =>
-        ps.foldLeft(bf.fold(BotType:ST)(_.fold(identity, _.toType)))(_ | _)
+        (if (sort) ps.sorted else ps).foldLeft(bf.fold(BotType: ST)(_.fold(identity, _.toType(sort))))(_ | _)
       case RhsBot => BotType
     }
     def | (that: RhsNf): Opt[RhsNf] = that match {
@@ -123,7 +125,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(RhsBases(p, S(R(RhsField(n1, t1 | that._2)))))
       case _: RhsField | _: RhsBases => N
     }
-    def <:< (that: RhsNf): Bool = this.toType <:< that.toType
+    def <:< (that: RhsNf): Bool = this.toType() <:< that.toType() // TODO less inefficient! (uncached calls to toType)
   }
   case class RhsField(name: Var, ty: SimpleType) extends RhsNf
     { def name_ty: Var -> ST = name -> ty }
@@ -135,9 +137,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   
   
-  case class Conjunct(lnf: LhsNf, vars: Set[TypeVariable], rnf: RhsNf, nvars: Set[TypeVariable]) {
-    def toType: SimpleType =
-      (vars.iterator ++ Iterator(rnf.toType.neg()) ++ nvars.map(_.neg())).foldLeft(lnf.toType)(_ & _)
+  case class Conjunct(lnf: LhsNf, vars: Set[TypeVariable], rnf: RhsNf, nvars: Set[TypeVariable]) extends Ordered[Conjunct] {
+    def compare(that: Conjunct): Int = this.toString compare that.toString // TODO less inefficient!!
+    def toType(sort: Bool = false): SimpleType =
+      toTypeWith(_.toType(sort), _.toType(sort), sort)
+    def toTypeWith(f: LhsNf => SimpleType, g: RhsNf => SimpleType, sort: Bool = false): SimpleType =
+      ((if (sort) vars.toArray.sorted.iterator else vars.iterator) ++ Iterator(g(rnf).neg())
+        ++ (if (sort) nvars.toArray.sorted.iterator else nvars).map(_.neg())).foldLeft(f(lnf))(_ & _)
     def <:< (that: Conjunct): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&
@@ -147,7 +153,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // }(r => s"!! $r")
     def & (that: Conjunct): Opt[Conjunct] =
       // trace(s"?? $this & $that ${lnf & that.lnf} ${rnf | that.rnf}") {
-      if (lnf.toType <:< that.rnf.toType) N // TODO support <:< on any Nf?
+      if (lnf.toType() <:< that.rnf.toType()) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
       else S(Conjunct.mk(lnf & that.lnf getOrElse (return N), vars | that.vars
         , rnf | that.rnf getOrElse (return N)
         , nvars | that.nvars))
@@ -205,9 +211,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   case class DNF(cs: Ls[Conjunct]) {
     def isBot: Bool = cs.isEmpty
-    def toType: SimpleType = cs match {
+    def toType(sort: Bool = false): SimpleType = cs.sorted match {
       case Nil => BotType
-      case t :: ts => t.toType | DNF(ts).toType
+      case t :: ts => t.toType(sort) | DNF(ts).toType(sort)
     }
     def & (that: DNF): DNF =
       that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)
@@ -253,14 +259,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case tv: TypeVariable => of(Set.single(tv))
       case ProxyType(underlying) => mk(underlying, pol)
       case tr @ TypeRef(defn, targs) => mk(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
   }
   
   
   case class CNF(ds: Ls[Disjunct]) {
-    def & (that: CNF): CNF =
-      that.ds.map(this & _).foldLeft(CNF.extr(false))(_ | _)
-    def | (that: CNF): CNF = that.ds.foldLeft(this)(_ | _)
+    def & (that: CNF): CNF = that.ds.foldLeft(this)(_ & _)
+    def | (that: CNF): CNF = that.ds.map(this | _).foldLeft(CNF.extr(false))(_ & _)
     def & (that: Disjunct): CNF =
       // TODO try to merge it with the others if possible
       CNF(that :: ds)
@@ -273,21 +279,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(bt: BaseType): CNF =
       CNF.of(RhsBot | bt getOrElse (return CNF.extr(true)))
     def of(tvs: Set[TypeVariable]): CNF = CNF(Disjunct.of(tvs) :: Nil)
-    def of(rcd: RecordType): CNF = rcd.fields.iterator.map(f =>
-      Disjunct(RhsField(f._1, f._2), Set.empty, LhsTop, Set.empty)).foldLeft(of(RhsBot))(_ | _)
+    def of(rcd: RecordType): CNF = CNF(rcd.fields.iterator.map(f =>
+      Disjunct(RhsField(f._1, f._2), Set.empty, LhsTop, Set.empty)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF): CNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool): CNF = ty match {
-      case bt: BaseType => of(bt)
-      case tt: TraitTag => of(RhsBases(tt :: Nil, N))
-      case rt @ RecordType(fs) => of(rt)
-      case ExtrType(pol) => extr(!pol)
-      case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))
-      case NegType(und) => CNF(DNF.mk(und, !pol).cs.map(_.neg))
-      case tv: TypeVariable => of(Set.single(tv))
-      case ProxyType(underlying) => mk(underlying, pol)
-      case tr @ TypeRef(defn, targs) => mk(tr.expand(_ => ()), pol) // TODO try to keep them?
-    }
+    def mk(ty: SimpleType, pol: Bool): CNF =
+      // trace(s"?C $ty") {
+      ty match {
+        case bt: BaseType => of(bt)
+        case tt: TraitTag => of(RhsBases(tt :: Nil, N))
+        case rt @ RecordType(fs) => of(rt)
+        case ExtrType(pol) => extr(!pol)
+        case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))
+        case NegType(und) => CNF(DNF.mk(und, !pol).cs.map(_.neg))
+        case tv: TypeVariable => of(Set.single(tv))
+        case ProxyType(underlying) => mk(underlying, pol)
+        case tr @ TypeRef(defn, targs) => mk(tr.expand(_ => ()), pol) // TODO try to keep them?
+        case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
+      }
+      // }(r => s"!C $r")
   }
   
   

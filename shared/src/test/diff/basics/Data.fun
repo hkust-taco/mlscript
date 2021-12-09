@@ -5,7 +5,7 @@ data Test a b
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
 //│ Defined class Test
-//│ Test: 'a -> 'b -> (test & {Test#b = 'b, a: 'a, b: 'b, Test#a = 'a})
+//│ Test: 'a -> 'b -> (test & {Test#a = 'a, Test#b = 'b, a: 'a, b: 'b})
 
 :p
 data Person(name: string, age: int)
@@ -13,10 +13,10 @@ data Person(name: string, age: int)
 //│ Desugared: class Person: {age: int, name: string}
 //│ Desugared: def Person: [] -> (name: string, age: int,) -> Person[]
 //│ Defined class Person
-//│ Person: (name: string, age: int,) -> (person & {name: string, age: int})
+//│ Person: (name: string, age: int,) -> (person & {age: int, name: string})
 
 let p = Person("Bob", 42)
-//│ p: person & {name: string, age: int}
+//│ p: person & {age: int, name: string}
 
 let foo q = q.age
 foo p
@@ -63,7 +63,7 @@ bar {age: 1} // TODO B/E
 //│ res: 1
 
 let fake-p = { name: "Bob", age: 42 }
-//│ fake-p: {name: "Bob", age: 42}
+//│ fake-p: {age: 42, name: "Bob"}
 
 // :e // TODO B/E
 bar fake-p
@@ -72,8 +72,8 @@ bar fake-p
 data Wine(name: string, age: int)
 let w = Wine("Côtes du Rhône", 3)
 //│ Defined class Wine
-//│ Wine: (name: string, age: int,) -> (wine & {name: string, age: int})
-//│ w: wine & {name: string, age: int}
+//│ Wine: (name: string, age: int,) -> (wine & {age: int, name: string})
+//│ w: wine & {age: int, name: string}
 
 // :e
 bar w
