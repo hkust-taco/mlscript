@@ -36,7 +36,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Record(fs) => fs.map { nt =>
       val nme = nt._1.name
       if (nme.isCapitalized) nt._2 match { // TODO maybe rm this
-        case Function(Top, Bot) => s"$nme"
+        case Function(Bot, Top) => s"$nme"
         case Function(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
         case Function(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
         case Function(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
