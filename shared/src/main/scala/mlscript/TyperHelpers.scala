@@ -68,6 +68,13 @@ abstract class TyperHelpers { self: Typer =>
       case ((no1, t1), (no2, t2)) => (no1 orElse no2, t1 & t2)
     }
   }
+  def tupleUnion(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {
+    require(fs1.size === fs2.size)
+    (fs1 lazyZip fs2).map {
+      case ((S(n1), t1), (S(n2), t2)) => (Option.when(n1 === n2)(n1), t1 | t2)
+      case ((no1, t1), (no2, t2)) => (N, t1 | t2)
+    }
+  }
   
   trait SimpleTypeImpl { self: SimpleType =>
     
