@@ -122,15 +122,15 @@ let take1 (x: 1) = 1
 let takeWhat y = if y < 0 then take0 y else take1 y
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:33)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:48)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:157)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$12(NormalForms.scala:222)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:52)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:166)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$12(NormalForms.scala:232)
 //│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:222)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$10(NormalForms.scala:219)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:232)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$10(NormalForms.scala:229)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:219)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:229)
 
 let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
 //│ takeWhat: nothing -> (0 | 1)
