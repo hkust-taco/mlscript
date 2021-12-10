@@ -264,4 +264,161 @@ bar_ty2 = bar2_ty2
 
 
 
+// ------ // ------ // ------ // ------ // ------ // ------ //
 
+
+
+rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
+//│ f: nothing -> ('a\a & {a: int} as 'a)
+
+:ns
+rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ f: 'a | ('b & (~{a: 'c | int} | ({a: 'e & 'd} as 'd))\a & (({a: 'f} as 'd) as 'f) & (~{a: 'c | int} | int)\a & int & int) -> ('g | 'e | ('b | 'h\a & {a: 'c | int} as 'h))
+
+// Notice how the error is reported in call sites, due to the delaying effect of the field removal type...
+
+:e
+f 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.281: 	f 1
+//│ ║         	^^^
+//│ ╟── expression of type `int` does not have field 'a'
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║         	                                             ^^^^^
+//│ ╟── but it flows into integer literal with expected type `~{a: ?a} | {a: ?b}`
+//│ ║  l.281: 	f 1
+//│ ║         	  ^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error | int | (('b | 1 | 'a)\a & {a: int} as 'a)
+
+:e
+f { a = 1 }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.297: 	f { a = 1 }
+//│ ║         	^^^^^^^^^^^
+//│ ╟── expression of type `int` does not have field 'a'
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║         	                                             ^^^^^
+//│ ╟── but it flows into record literal with expected type `~{a: ?a} | {a: ?b}`
+//│ ║  l.297: 	f { a = 1 }
+//│ ║         	  ^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error | int | ({a: 1} | 'a\a & {a: int} as 'a)
+
+:e
+rec def infina = 0 with { a = infina }
+f infina
+//│ infina: 0 & {a: 'a} as 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.314: 	f infina
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `int` does not have field 'a'
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║         	                                             ^^^^^
+//│ ╟── but it flows into reference with expected type `(~{a: ?a} | {a: ?b})\a`
+//│ ║  l.314: 	f infina
+//│ ║         	  ^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error | int | (('b | (0 & {a: 'c} as 'c) | 'a)\a & {a: int} as 'a)
+
+
+
+rec def f x = if error then f (x with { a = x - 1 }) else x
+//│ f: nothing -> ('a\a & {a: int} as 'a)
+
+r = f 1
+//│ r: 1 | 'a\a & {a: int} as 'a
+
+r + 1
+//│ res: int
+
+:e
+r.a
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.342: 	r.a
+//│ ║         	^^^
+//│ ╟── expression of type `1` does not have field 'a'
+//│ ║  l.335: 	r = f 1
+//│ ║         	      ^
+//│ ╟── but it flows into reference with expected type `{a: ?a}`
+//│ ║  l.342: 	r.a
+//│ ╙──       	^
+//│ res: error | int
+
+case r of {int -> 0 | _ -> r.a}
+//│ res: 0
+
+r2 = case r of {int -> error | _ -> r}
+//│ r2: ('b | 1 | 'a)\a & {a: int} as 'a
+
+r2.a
+//│ res: nothing
+
+r2 + 1
+//│ res: int
+
+r: int
+//│ res: int
+
+
+
+rec def f x = if error then f (x with { a = 1 }) else x
+//│ f: 'a -> ('a | 'b\a & {a: 1} as 'b)
+
+r = f 1
+//│ r: 1 | 'a\a & {a: 1} as 'a
+
+r: int
+//│ res: int
+
+
+// Field removal also blocks proper simplification
+
+def fancyBottom1: 'a & ('a -> 'a) as 'a
+def fancyBottom2: 'a\x as 'a
+//│ fancyBottom1: nothing
+//│ fancyBottom2: 'a\x as 'a
+
+fancyBottom2: nothing
+//│ res: nothing
+
+
+
+// ------ // ------ // ------ // ------ // ------ // ------ //
+
+
+
+// Just poking around:
+
+def impossible: 'a -> ('a & int)
+//│ impossible: 'a -> (int & 'a)
+
+rec def f (x: int | string) = f (impossible x) + 1
+//│ f: (int | string) -> int
+
+rec def f (x: int | string) = (case x of {int -> f "ok" | string -> f (impossible x)}) + 1
+//│ f: (int | string) -> int
+
+rec def f x = (case x of {int -> f "ok" | string -> f (impossible x)}) + 1
+//│ f: (int | string) -> int
+
+f 1
+f "a"
+//│ res: int
+//│ res: int
+
+rec def f x = case x of {int -> f "ok" | string -> f (impossible x) | _ -> x}
+//│ f: (int | string | 'a & ~int & ~string) -> 'a
+
+f 1
+f "a"
+f false
+//│ res: nothing
+//│ res: nothing
+//│ res: false
