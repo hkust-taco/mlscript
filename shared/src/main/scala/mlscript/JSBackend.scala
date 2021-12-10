@@ -110,7 +110,7 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
+    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs) :: Nil)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -119,20 +119,20 @@ class JSBackend {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
+      JSImmEvalFn(name :: Nil, Left(translateTerm(body)), translateTerm(value) :: Nil)
     case Blk(stmts) =>
       JSImmEvalFn(
-        "",
+        "" :: Nil,
         Right(stmts flatMap (_.desugared._2) map {
           translateStatement(_)
         }),
-        new JSPlaceholderExpr()
+        JSPlaceholderExpr() :: Nil
       )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
       val parameter = getTemporaryName("x")
       val body = translateCaseBranch(parameter, cases)
-      JSImmEvalFn(parameter, Right(body), argument)
+      JSImmEvalFn(parameter :: Nil, Right(body), argument :: Nil)
     }
     case IntLit(value) => {
       val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
@@ -144,7 +144,7 @@ class JSBackend {
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
     case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
-      throw new Error(s"cannot generate code for term $term")
+      throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
   // Translate consecutive case branches into a list of if statements.
@@ -155,7 +155,7 @@ class JSBackend {
         JSIfStmt(
           className match {
             case Var("int") =>
-              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
+              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
             case Var("bool") =>
               JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
             case Var(s @ ("true" | "false")) =>
@@ -412,7 +412,7 @@ class JSBackend {
             JSExprStmt(
               JSInvoke(
                 JSMember(JSIdent(exprResultObjName), "push"),
-                translateTerm(term)
+                translateTerm(term) :: Nil
               )
             )
           })
