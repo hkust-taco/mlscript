@@ -436,7 +436,12 @@ object JSBackend {
     case Var(name)                   => s"Var($name)"
     case Lam(lhs, rhs)               => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
     case App(lhs, rhs)               => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case Tup(fields)                 => s"Tup(...)"
+    case Tup(fields)                 =>
+      val entries = fields map {
+        case (S(name), value) => s"$name: ${inspectTerm(value)}"
+        case (N, value)       => s"_: ${inspectTerm(value)}"
+      }
+      s"Tup(${entries mkString ", "})"
     case Rcd(fields)                 => s"Rcd(...)"
     case Sel(receiver, fieldName)    => s"Sel(${inspectTerm(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
