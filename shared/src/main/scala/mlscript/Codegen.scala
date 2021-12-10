@@ -59,7 +59,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
   def parenthesized(implicit run: Bool = true): SourceCode =
     if (run) {
       lines.length match {
-        case 0 => this
+        case 0 => SourceCode.from("()")
         case 1 => new SourceCode(lines map { _.between("(", ")") })
         case _ =>
           val head = lines.head

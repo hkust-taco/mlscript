@@ -99,18 +99,25 @@ class JSBackend {
         JSIdent(name)
       }
     // TODO: need scope to track variables so that we can rename reserved words
+    case Lam(Tup(params), body) =>
+      JSArrowFn(params map { case (_, param) => translatePattern(param) }, translateTerm(body))
+    // Old single parameter anonymous function.
     case Lam(lhs, rhs) =>
       JSArrowFn(translatePattern(lhs) :: Nil, translateTerm(rhs))
-    // Binary expressions.
-    case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
-      JSBinary(builtinFnOpMap(name), translateTerm(left), translateTerm(right))
-    case App(App(Var(op), left), right) if binaryOps contains op =>
-      JSBinary(op, translateTerm(left), translateTerm(right))
+    // Binary expressions called by function names.
+    case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+        if builtinFnOpMap contains name =>
+      JSBinary(builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
+    // Binary expressions called by operators.
+    case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+        if binaryOps contains op =>
+      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs) :: Nil)
+    case App(callee, Tup(args)) =>
+      JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -143,7 +150,8 @@ class JSBackend {
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
-    case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
+    case Bra(_, trm) => translateTerm(trm)
+    case _: Tup | _: Bind | _: Test | _: With =>
       throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
@@ -446,7 +454,7 @@ object JSBackend {
     case Sel(receiver, fieldName)    => s"Sel(${inspectTerm(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
     case Blk(stmts)                  => s"Blk(...)"
-    case Bra(rcd, trm)               => s"Bra(...)"
+    case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspectTerm(trm)})"
     case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(...)"
     case Test(trm, ty)               => s"Test(...)"
