@@ -169,20 +169,33 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         , nvars | that.nvars))
       // }(r => s"!! $r")
     def neg: Disjunct = Disjunct(rnf, nvars, lnf, vars)
+    /** `tryMerge` tries to compute the union of two conjuncts as a conjunct,
+      * failing if this merging cannot be done without losing information.
+      * This ends up simplifying away things like:
+      *   {x: int} | {y: int} ~> anything
+      *   (A -> B) | {x: C}   ~> anything  */
     def tryMerge(that: Conjunct): Opt[Conjunct] = (this, that) match {
       case (Conjunct(LhsRefined(bse1, ts1, rcd1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2), vs2, r2, nvs2))
         if vs1 === vs2 && r1 === r2 && nvs1 === nvs2
-      => (bse1, bse2) match {
-        case (S(FunctionType(l1, r1)), S(FunctionType(l2, r2))) => // TODO Q: records ok here?!
-          S(Conjunct(LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts1 & ts2, // FIXME or should it be `&& ts1 === ts2` above?
-            RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)), vs1, RhsBot, nvs1))
-        case (N, N) =>
-          S(Conjunct(LhsRefined(N, ts1 & ts2, RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)), vs1, RhsBot, nvs1))
+      =>
+        val rcdU = RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)
+        (bse1, bse2) match {
+          case (S(FunctionType(l1, r1)), S(FunctionType(l2, r2))) => // TODO Q: records ok here?!
+            S(Conjunct(LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts1 & ts2, // FIXME or should it be `&& ts1 === ts2` above?
+              rcdU), vs1, RhsBot, nvs1))
+          case (S(TupleType(fs1)), S(TupleType(fs2))) => // TODO Q: records ok here?!
+            if (fs1.size =/= fs2.size) S(Conjunct(LhsRefined(N, ts1 & ts2, rcdU), vs1, RhsBot, nvs1))
+            else S(Conjunct(LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts1 & ts2, // FIXME or should it be `&& ts1 === ts2` above?
+              rcdU), vs1, RhsBot, nvs1))
+          case (N, N)
+            | (S(_: FunctionType), S(_: TupleType)) | (S(_: TupleType), S(_: FunctionType))
+          =>
+            S(Conjunct(LhsRefined(N, ts1 & ts2, rcdU), vs1, RhsBot, nvs1))
+          case _ => N
+        }
         case _ => N
       }
-      case _ => N
-    }
     override def toString: Str =
       (Iterator(lnf).filter(_ =/= LhsTop) ++ vars
         ++ (Iterator(rnf).filter(_ =/= RhsBot) ++ nvars).map("~"+_)).mkString("∧")
@@ -238,9 +251,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case c :: cs =>
           if (c <:< toMerge) acc.reverse ::: toMerge :: cs
           else if (toMerge <:< c) acc.reverse ::: c :: cs
-          else 
-          // TODO always rm fun/rcd and rcd/rcd here?
-          c.tryMerge(toMerge) match {
+          else c.tryMerge(toMerge) match {
             case Some(value) => acc.reverse ::: value :: cs
             case None => go(cs, c :: acc, toMerge)
           }

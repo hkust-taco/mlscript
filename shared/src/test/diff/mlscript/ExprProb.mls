@@ -129,7 +129,7 @@ rec def prettier1 k ev e = case e of {
       in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
   | _ -> k e
   }
-//│ prettier1: ((('a,) | ('b,) | ('c,)) -> string) -> ('d -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | 'c & ~add & ~lit as 'e, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | 'b & ~add & ~lit as 'f}) & 'd | Lit | 'a & ~add & ~lit) -> string
+//│ prettier1: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit as 'c, rhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit as 'd}) & 'b | Lit | 'a & ~add & ~lit) -> string
 
 
 
