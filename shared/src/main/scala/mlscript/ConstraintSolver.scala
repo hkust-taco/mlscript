@@ -439,23 +439,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
-          val v = TraitTag(Var(
-            tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
-          freshened += tv -> v
-          // TODO support bounds on rigidified variables (intersect/union them in):
-          assert(tv.lowerBounds.isEmpty)
-          assert(tv.upperBounds.isEmpty)
-          v
+          val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
+            Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
+          if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
+            // The bounds of `tv` may be recursive (refer to `tv` itself),
+            //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
+            //    (if there is no recursion, it will just be a useless type variable)
+            val tv2 = freshVar(tv.prov, tv.nameHint)
+            freshened += tv -> tv2
+            // Assuming there were no recursive bounds, given L <: tv <: U,
+            //    we essentially need to turn tv's occurrence into the type-bounds (rv | L)..(rv & U),
+            //    meaning all negative occurrences should be interpreted as rv | L
+            //    and all positive occurrences should be interpreted as rv & U
+            //    where rv is the rigidified variables.
+            // Now, since there may be recursive bounds, we do the same
+            //    but through the indirection of a type variable tv2:
+            tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            tv2
+          } else {
+            freshened += tv -> rv
+            rv
+          }
         case None =>
           val v = freshVar(tv.prov, tv.nameHint)
           freshened += tv -> v
-          // v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
-          // v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          //  ^ the above are more efficient, but they lead to a different order
-          //    of fresh variable creations, which leads to some types not being
-          //    simplified the same when put into the RHS of a let binding...
-          v.lowerBounds = tv.lowerBounds.reverse.map(freshen).reverse
-          v.upperBounds = tv.upperBounds.reverse.map(freshen).reverse
+          v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
+          v.upperBounds = tv.upperBounds.mapConserve(freshen)
           v
       }
       case t @ TypeBounds(lb, ub) =>

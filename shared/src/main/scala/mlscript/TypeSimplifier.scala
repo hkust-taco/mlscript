@@ -322,15 +322,13 @@ trait TypeSimplifier { self: Typer =>
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
             case LhsRefined(bo, tts, rcd) =>
-              lazy val newRcd = rcd.copy(
-                rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol)))(rcd.prov)
               bo match {
                 case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
                   val clsNme = tagNme.capitalize
                   val td = ctx.tyDefs(clsNme)
                   val typeRef = TypeRef(td, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
-                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst{
+                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
                       case (_, FunctionType(ub, lb)) if lb >:< ub => lb
                       case (_, FunctionType(lb, ub)) =>
                         TypeBounds.mk(go(lb, false), go(ub, true))
@@ -360,6 +358,8 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
+                  lazy val newRcd = rcd.copy(
+                    rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol)))(rcd.prov).sorted
                   LhsRefined(bo.map {
                     case ct: ClassTag => ct
                     case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
@@ -381,7 +381,7 @@ trait TypeSimplifier { self: Typer =>
                 case N => BotType
               }
               ots.sorted.foldLeft(r)(_ | _)
-          })
+          }, sort = true)
         }.foldLeft(BotType: ST)(_ | _)
     }
     
