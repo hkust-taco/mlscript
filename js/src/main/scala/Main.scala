@@ -111,7 +111,7 @@ object Main {
   // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
-      val lines = (new JSBackend())(pgrm)
+      val lines = new JSBackend(pgrm)()
       val code = s"""(() => {
                     |  let [defs, exprs] = (() => {
                     |    ${lines.mkString("\n")}

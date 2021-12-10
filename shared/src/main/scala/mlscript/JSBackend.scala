@@ -6,7 +6,7 @@ import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
 
-class JSBackend {
+class JSBackend(pgrm: Pgrm) {
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
   val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
@@ -19,7 +19,10 @@ class JSBackend {
   val classNames: HashSet[Str] = HashSet()
 
   // All names used in `def`s.
-  val defNames: HashSet[Str] = HashSet()
+  val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
+    case Def(rec, nme, rhs) => S(nme)
+    case _                  => N
+  })
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
@@ -73,8 +76,11 @@ class JSBackend {
       throw new Error(s"term $t is not a valid pattern")
   }
 
+  // This will be changed during code generation.
   private var hasWithConstruct = false
-  private var withConstructFnName = "withConstruct"
+
+  // Name of the helper function for `with` construction.
+  private val withConstructFnName = getAlternativeName("withConstruct")
 
   private val builtinFnOpMap =
     immutable.HashMap(
@@ -136,7 +142,7 @@ class JSBackend {
       )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
-      val parameter = getTemporaryName("x")
+      val parameter = "x"
       val body = translateCaseBranch(parameter, cases)
       JSImmEvalFn(parameter :: Nil, Right(body), argument :: Nil)
     }
@@ -348,7 +354,7 @@ class JSBackend {
     }
   }
 
-  def apply(pgrm: Pgrm): Ls[Str] = {
+  def apply(): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     // Collect type aliases into a map so we can normalize them.
@@ -359,19 +365,11 @@ class JSBackend {
       case _ => ()
     }
 
-    // Collect names in definitions.
-    otherStmts foreach {
-      case Def(rec, nme, rhs) => defNames += nme
-      case _                  => ()
-    }
-
-    withConstructFnName = getTemporaryName(withConstructFnName)
-
-    val defResultObjName = getTemporaryName("defs")
-    val exprResultObjName = getTemporaryName("exprs")
+    val defResultObjName = getAlternativeName("defs")
+    val exprResultObjName = getAlternativeName("exprs")
     // This hash map counts how many times a name has been used.
     val resolveShadowName = new ShadowNameResolver
-    var stmts: Ls[JSStmt] =
+    val stmts: Ls[JSStmt] =
       JSConstDecl(defResultObjName, JSRecord(Nil)) ::
         JSConstDecl(exprResultObjName, JSArray(Nil)) ::
         typeDefs
@@ -450,24 +448,32 @@ class JSBackend {
             ) :: Nil
           )
 
-    // If `with` construct is used, prepend the prelude function.
-    if (hasWithConstruct) {
-      stmts = JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
-    }
-
-    SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
+    SourceCode
+      .concat(
+        (if (hasWithConstruct) {
+          JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
+        } else { stmts }) map { _.toSourceCode }
+      )
+      .lines map { _.toString }
   }
 
-  /** Get a temporary name which is not duplicated with user-defined names.
+  /** 
+    * Get an alternative name which is not duplicated with user-defined names.
+    * This should be only used on internal variables such as prelude functions,
+    * result collection objects.
     *
     * @param name
     *   the base name
     * @return
     *   identifier like `$name$n` where `n` is an integer
     */
-  private def getTemporaryName(name: Str): Str = (name #:: LazyList
-    .from(0)
-    .map { name + _.toString }).dropWhile { defNames contains _ }.head
+  private def getAlternativeName(name: Str): Str = {
+    val newName = (name #:: LazyList
+      .from(0)
+      .map { name + _.toString }).dropWhile { defNames contains _ }.head
+    defNames += newName
+    newName
+  }
 }
 
 object JSBackend {
@@ -499,11 +505,16 @@ object JSBackend {
     case StrLit(value) => s"StrLit($value)"
   }
 
-  /** Make a function for `with` construct.
+  /** 
+    * This function makes the following function.
     *
-    * @param name
-    *   the function name
-    * @return
+    * ```js
+    * function withConstruct(target, fields) {
+    *   const copy = Object.assign({}, target, fields);
+    *   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+    *   return copy;
+    * }
+    * ```
     */
   private def makeWithConstructDecl(name: Str) = JSFuncDecl(
     name,
