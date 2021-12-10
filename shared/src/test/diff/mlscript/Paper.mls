@@ -38,20 +38,33 @@ rec def map2 f ls = case ls of {
 
 
 
+:e
 def safeDiv x (y: ~0) = div x y
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.42: 	def safeDiv x (y: ~0) = div x y
+//│ ║        	                        ^^^^^^^
+//│ ╟── expression of type `~0` does not match type `int`
+//│ ║  l.42: 	def safeDiv x (y: ~0) = div x y
+//│ ║        	                  ^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.42: 	def safeDiv x (y: ~0) = div x y
+//│ ╙──      	                              ^
+//│ safeDiv: int -> ~0 -> (error | int)
+
+def safeDiv x (y: int & ~0) = div x y
 //│ safeDiv: int -> (int & ~0) -> int
 
 :e
 safeDiv 1 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	safeDiv 1 0
+//│ ║  l.58: 	safeDiv 1 0
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `0` does not match type `~0`
-//│ ║  l.45: 	safeDiv 1 0
+//│ ║  l.58: 	safeDiv 1 0
 //│ ║        	          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.41: 	def safeDiv x (y: ~0) = div x y
-//│ ╙──      	                  ^^
+//│ ║  l.54: 	def safeDiv x (y: int & ~0) = div x y
+//│ ╙──      	                        ^^
 //│ res: error | int
 
 fun x -> safeDiv 1 x
@@ -60,8 +73,23 @@ fun x -> safeDiv 1 x
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
 //│ res: (int & ~0 | ~int) -> (int | None)
 
-// TOOD mayeb we shouldn't refine x's type here...
+:e // we no longer refine x's type here, as that was rather unexpected
 fun (x: int) -> safeDiv 1 x
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.77: 	fun (x: int) -> safeDiv 1 x
+//│ ║        	                ^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `~0`
+//│ ║  l.77: 	fun (x: int) -> safeDiv 1 x
+//│ ║        	        ^^^
+//│ ╟── but it flows into reference with expected type `~0`
+//│ ║  l.77: 	fun (x: int) -> safeDiv 1 x
+//│ ║        	                          ^
+//│ ╟── Note: constraint arises from type negation:
+//│ ║  l.54: 	def safeDiv x (y: int & ~0) = div x y
+//│ ╙──      	                        ^^
+//│ res: int -> (error | int)
+
+fun (x: int & ~0) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 
 def tryDiv: int -> int -> Option[int]

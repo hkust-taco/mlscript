@@ -28,7 +28,7 @@ d1 = Derived1 { x = 1 }
 
 foo d1
 foo d1 0
-//│ res: 'a -> (Base1['a] | Derived1)
+//│ res: 'A -> (Base1['A] | Derived1)
 //│ res: Base1['A .. 0 | 'A] | Derived1
 
 def bar0: Base1[int] -> int -> Base1[int]

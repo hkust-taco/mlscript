@@ -26,9 +26,36 @@ class Foo[A]: { field: A }
 //│ Defined class Foo
 
 def foo(f: Foo['a]) = f.field
-//│ foo: (Foo['a] & {field: 'a & 'b}) -> 'b
+//│ foo: Foo['a] -> 'a
 
 
 (succ 1): int
 //│ res: int
+
+
+def foo({ a; b }: { a: int; b: string}) = { b; a }
+//│ foo: {a: int, b: string} -> {a: int, b: string}
+
+:e
+def foo({ a = "hey" }: { a: string}) = 0
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║        	        ^^^^^^^^^^^^^
+//│ ╟── expression of type `string` does not match type `"hey"`
+//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║        	                            ^^^^^^
+//│ ╟── Note: constraint arises from string literal:
+//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ╙──      	              ^^^^^
+//│ foo: {a: string} -> 0
+
+:e
+def foo({ a; b }: { a: int }) = b
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.53: 	def foo({ a; b }: { a: int }) = b
+//│ ║        	        ^^^^^^^^
+//│ ╟── expression of type `{a: int}` does not have field 'b'
+//│ ║  l.53: 	def foo({ a; b }: { a: int }) = b
+//│ ╙──      	                  ^^^^^^^^^^
+//│ foo: {a: int} -> nothing
 

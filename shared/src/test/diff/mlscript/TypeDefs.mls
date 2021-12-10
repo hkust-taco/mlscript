@@ -117,9 +117,9 @@ type TypeC = TypeA
 //│ res: int
 
 
-// FIXME? maybe x's type should be upcasted in the body
+
 def test = fun (x: TypeB) -> x
-//│ test: (int & 'a) -> 'a
+//│ test: int -> int
 
 
 
