@@ -18,7 +18,7 @@ trait TypeSimplifier { self: Typer =>
     val allVars = ty.getVars
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
-        freshVar(noProv, tv.nameHint)(0) tap { fv => println(s"Renewed $tv ~> $fv") })
+        freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
     def goDeep(ty: SimpleType, pol: Bool)(implicit inProcess: Set[PolarType]): SimpleType =
       go1(go0(ty, pol), pol)
@@ -53,7 +53,7 @@ trait TypeSimplifier { self: Typer =>
       if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
         if (inProcess.contains(pty))
-          recursive.getOrElseUpdate(pty, freshVar(noProv)(0))
+          recursive.getOrElseUpdate(pty, freshVar(noProv)(ty.level))
         else {
           (inProcess + pty) pipe { implicit inProcess =>
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
@@ -259,7 +259,7 @@ trait TypeSimplifier { self: Typer =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
               wasDefined = false
-              val nv = freshVar(noProv, tv.nameHint)(0)
+              val nv = freshVar(noProv, tv.nameHint)(tv.level)
               println(s"Renewed $tv ~> $nv")
               nv
             })
@@ -291,7 +291,7 @@ trait TypeSimplifier { self: Typer =>
       else renewed.get(tv) match {
         case S(tv2) => tv2
         case N =>
-          val tv2 = freshVar(tv.prov, tv.nameHint)(0)
+          val tv2 = freshVar(tv.prov, tv.nameHint)(tv.level)
           renewed += tv -> tv2
           tv2.lowerBounds = tv.lowerBounds.map(go(_, true))
           tv2.upperBounds = tv.upperBounds.map(go(_, false))

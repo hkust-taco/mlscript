@@ -13,12 +13,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   sealed abstract class LhsNf {
     def toTypes: Ls[SimpleType] = toType() :: Nil
-    def toType(sort: Bool = false): SimpleType = this match {
+    def toType(sort: Bool = false): SimpleType =
+      if (sort) mkType(true) else underlying
+    private def mkType(sort: Bool): SimpleType = this match {
       case LhsRefined(bo, ts, r) =>
         val sr = if (sort) r.sorted else r
         ts.toArray.sorted.foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
       case LhsTop => TopType
     }
+    lazy val underlying: SimpleType = mkType(false)
+    def level: Int = underlying.level
     def & (that: BaseTypeOrTag): Opt[LhsNf] = (this, that) match {
       case (LhsTop, that: BaseType) => S(LhsRefined(S(that), Set.empty, RecordType(Nil)(noProv)))
       case (LhsTop, that: TraitTag) => S(LhsRefined(N, Set.single(that), RecordType(Nil)(noProv)))
@@ -65,12 +69,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   sealed abstract class RhsNf {
     def toTypes: Ls[SimpleType] = toType() :: Nil
-    def toType(sort: Bool = false): SimpleType = this match {
+    def toType(sort: Bool = false): SimpleType =
+      if (sort) mkType(true) else underlying
+    private def mkType(sort: Bool): SimpleType = this match {
       case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
       case RhsBases(ps, bf) =>
         (if (sort) ps.sorted else ps).foldLeft(bf.fold(BotType: ST)(_.fold(identity, _.toType(sort))))(_ | _)
       case RhsBot => BotType
     }
+    lazy val underlying: SimpleType = mkType(false)
+    def level: Int = underlying.level
     def | (that: RhsNf): Opt[RhsNf] = that match {
       case RhsBases(prims, bf) =>
         val tmp = prims.foldLeft(this)(_ | _ getOrElse (return N))
@@ -144,6 +152,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def toTypeWith(f: LhsNf => SimpleType, g: RhsNf => SimpleType, sort: Bool = false): SimpleType =
       ((if (sort) vars.toArray.sorted.iterator else vars.iterator) ++ Iterator(g(rnf).neg())
         ++ (if (sort) nvars.toArray.sorted.iterator else nvars).map(_.neg())).foldLeft(f(lnf))(_ & _)
+    lazy val level: Int = (vars.iterator ++ nvars).map(_.level).++(Iterator(lnf.level, rnf.level)).max
     def <:< (that: Conjunct): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&
@@ -215,6 +224,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case Nil => BotType
       case t :: ts => t.toType(sort) | DNF(ts).toType(sort)
     }
+    def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def & (that: DNF): DNF =
       that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)
     def | (that: DNF): DNF = that.cs.foldLeft(this)(_ | _)
