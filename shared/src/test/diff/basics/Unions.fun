@@ -145,7 +145,7 @@ x => foo { v: x }
 
 
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
-//│ bar: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, 1,) & {_1: int & 'a, _2: 'a},) -> 'a
+//│ bar: (r: (0 | 1, 0 | 1,) & {_1: int & 'a, _2: 'a},) -> 'a
 
 // :e
 bar(0, 1)
@@ -240,7 +240,7 @@ x => baz(x, x)
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: (0, 0,) & {_1: int & 'a, _2: 'a} | (1, anything,) & {_1: int & 'a, _2: 'a},) -> 'a
+//│ baz: (r: (0 | 1, anything,) & {_1: int & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)
