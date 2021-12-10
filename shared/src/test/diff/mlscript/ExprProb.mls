@@ -78,22 +78,10 @@ def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 eval1_ty
 //│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 
-// TODO this requires bounded variable rigidification to work... (currently unimplemented)
 def eval1_ty = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:446)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:468)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:468)
-//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:480)
-//│ 	at: mlscript.TyperDatatypes$PolymorphicType.rigidify(TyperDatatypes.scala:30)
-//│ 	at: mlscript.ConstraintSolver.subsume(ConstraintSolver.scala:377)
-//│ 	at: mlscript.DiffTests.$anonfun$new$22(DiffTests.scala:290)
-//│ 	at: mlscript.DiffTests.$anonfun$new$22$adapted(DiffTests.scala:268)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
 
 // Workaround:
 :ns
@@ -217,7 +205,7 @@ eval1 done e2
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── expression of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
-//│ ║  l.177: 	e2 = add (lit 1) (nega e1)
+//│ ║  l.165: 	e2 = add (lit 1) (nega e1)
 //│ ║         	                  ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?a | Add[?] & ?b | ?c & ~add & ~lit`
 //│ ║  l.+1: 	eval1 done e2
@@ -254,19 +242,19 @@ prettier2 done eval1 e1
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.125: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.113: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from argument:
-//│ ║  l.169: 	  }) ev
+//│ ║  l.157: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from argument:
-//│ ║  l.167: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.155: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.141: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.129: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e1
@@ -275,10 +263,10 @@ prettier2 done eval1 e1
 //│ ║  l.47: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from argument:
-//│ ║  l.125: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.113: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.121: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.109: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 

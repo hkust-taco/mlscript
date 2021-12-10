@@ -91,3 +91,177 @@ if true then l else r
 //│ res: int -> int -> int -> int -> int -> int -> 'a as 'a
 
 
+
+// ------ // ------ // ------ // ------ // ------ // ------ //
+
+
+
+class C[A]: { a: A }
+//│ Defined class C
+
+
+
+:ns
+rec def foo (c: C['a]) = foo (c.a)
+//│ foo: 'b | (C['a & 'c .. 'a] as 'c) -> 'd
+
+// TODO figure ou why some type variables are not simplified here
+foo
+//│ res: ((C[?] with {a: 'c & 'b & 'a}) as 'b) -> nothing
+
+type Rec = C[Rec]
+def foo_ty: Rec -> nothing
+//│ Defined type alias Rec
+//│ foo_ty: ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+
+foo_ty = foo
+//│ ((C[?] with {a: 'c & 'b & 'a}) as 'b) -> nothing
+//│   <:  foo_ty:
+//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+
+def foo_ty2: (C['r] as 'r) -> nothing
+//│ foo_ty2: ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+
+:ns
+foo_ty2
+//│ res: (C['r .. C['r .. 'r0] as 'r0] as 'r) -> nothing
+
+foo_ty = foo_ty2
+//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+//│   <:  foo_ty:
+//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+
+foo_ty2 = foo_ty
+//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+//│   <:  foo_ty2:
+//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+
+foo_ty2 = foo
+//│ ((C[?] with {a: 'c & 'b & 'a}) as 'b) -> nothing
+//│   <:  foo_ty2:
+//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+
+
+
+rec def bar = C { a = bar }
+//│ bar: (C[?] with {a: 'a}) as 'a
+
+type Rec2 = C[Rec2]
+def bar_ty: Rec2
+//│ Defined type alias Rec2
+//│ bar_ty: (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+
+bar_ty = bar
+//│ (C[?] with {a: 'a}) as 'a
+//│   <:  bar_ty:
+//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+
+def bar_ty2: C['r] as 'r
+//│ bar_ty2: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+
+:ns
+bar_ty2
+//│ res: C[C['r0 .. 'r] as 'r0 .. 'r] as 'r
+
+bar_ty2
+//│ res: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+
+bar_ty = bar_ty2
+//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│   <:  bar_ty:
+//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+
+bar_ty2 = bar_ty
+//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+//│   <:  bar_ty2:
+//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+
+bar_ty2 = bar
+//│ (C[?] with {a: 'a}) as 'a
+//│   <:  bar_ty2:
+//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+
+
+
+type Rec3 = { x: Rec3 }
+//│ Defined type alias Rec3
+
+def bar2_ty: Rec3
+//│ bar2_ty: {x: 'a} as 'a
+
+def bar2_ty2: { x: 'r } as 'r
+//│ bar2_ty2: {x: 'a} as 'a
+
+bar2_ty = bar2_ty2
+//│ {x: 'a} as 'a
+//│   <:  bar2_ty:
+//│ {x: 'a} as 'a
+
+bar2_ty2 = bar2_ty
+//│ {x: 'a} as 'a
+//│   <:  bar2_ty2:
+//│ {x: 'a} as 'a
+
+:e
+bar2_ty2 = bar_ty2
+//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│   <:  bar2_ty2:
+//│ {x: 'a} as 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.206: 	bar2_ty2 = bar_ty2
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `C[?r]` does not match type `'r | {x: ?r0}`
+//│ ║  l.159: 	def bar_ty2: C['r] as 'r
+//│ ║         	             ^^^^^
+//│ ╟── but it flows into reference with expected type `'r | {x: ?r1}`
+//│ ║  l.206: 	bar2_ty2 = bar_ty2
+//│ ║         	           ^^^^^^^
+//│ ╟── Note: constraint arises from local type binding:
+//│ ║  l.192: 	def bar2_ty2: { x: 'r } as 'r
+//│ ╙──       	              ^^^^^^^^^
+
+:e
+bar_ty2 = bar2_ty2
+//│ {x: 'a} as 'a
+//│   <:  bar_ty2:
+//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ║  l.192: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║         	              ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `'r | C[?r1]`
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	          ^^^^^^^^
+//│ ╟── Note: constraint arises from local type binding:
+//│ ║  l.159: 	def bar_ty2: C['r] as 'r
+//│ ╙──       	             ^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ║  l.192: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║         	              ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `'r | C[?r1]`
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	          ^^^^^^^^
+//│ ╟── Note: constraint arises from local type binding:
+//│ ║  l.159: 	def bar_ty2: C['r] as 'r
+//│ ╙──       	             ^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ║  l.192: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║         	              ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `'r | C[?r1]`
+//│ ║  l.224: 	bar_ty2 = bar2_ty2
+//│ ║         	          ^^^^^^^^
+//│ ╟── Note: constraint arises from local type binding:
+//│ ║  l.159: 	def bar_ty2: C['r] as 'r
+//│ ╙──       	             ^^^^^
+
+
+
+
