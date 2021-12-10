@@ -429,8 +429,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         thisCtx += "this" -> subst(thisCtx.thisType(tn.name), rigid)
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
-          val dummyTargs2 = tparams.map(p => freshVar(originProv(p.toLoc, "method type parameter"), S(p.name))(ctx.lvl + 2))
+          val dummyTargs2 = tparams.map(p =>
+            TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter")))
           val targsMap2 = tparams.map(_.name).zip(dummyTargs2).toMap
+          val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
+            t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
           if (!nme.name.head.isUpper)
             err(msg"Method names must start with a capital letter", nme.toLoc)
           if (defs.isDefinedAt(nme.name))
@@ -443,8 +446,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case N =>
           })
           val bodyTy = rhs.fold(
-            term => subst(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid),
-            ty => PolymorphicType(thisCtx.lvl, subst(typeType(ty)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid))
+            term =>
+              subst(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap ++ targsMap2), reverseRigid2),
+            ty => PolymorphicType(thisCtx.lvl, subst(
+              typeType(ty)(thisCtx.nextLevel, raise, targsMap ++ targsMap2),
+              // ^ Note: we need to go to the next level here,
+              //    which is also done automatically by `typeLetRhs` in the case above
+              reverseRigid2))
           )
           rhs.fold(_ => defs, _ => decls) += nme.name -> (bodyTy match {
             case PolymorphicType(level, body) => PolymorphicType(level, ProvType(body)(prov))
@@ -503,10 +511,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         decls.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
+          println(s">> Checking subsumption for declared type of $nme : $mt")
           td.baseClasses.foreach { case Var(bn) => ctx.mthDecls.get(bn).foreach(_.get(nme).foreach(ss(mt, _, S(bn)))) }
         }
         defs.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
+          println(s">> Checking subsumption for inferred type of $nme : $mt")
           ctx.mthDecls.get(tn.name).foreach(_.get(nme).foreach(ss(mt, _)))
         }
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
@@ -516,6 +526,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             ctx.mthDefs.get(bn).foreach(_.get(nme.name).foreach { bmt =>
               if (!ctx.mthDecls.get(bn).exists(_.isDefinedAt(nme.name))) {
                 err(msg"Overriding method ${bn}.${nme.name} without explicit declaration is not allowed.", md.toLoc)
+                println(s">> Checking subsumption (against inferred type) for inferred type of $nme : $mt")
                 ss(mt, bmt)
               }
             })
@@ -710,7 +721,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val trm_ty = typeTerm(trm)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
         con(trm_ty, ty_ty, ty_ty)
-        if (ctx.inPattern) trm_ty else ty_ty
+        if (ctx.inPattern)
+          con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type 
+        else ty_ty
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!

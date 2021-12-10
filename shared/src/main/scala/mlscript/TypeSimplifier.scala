@@ -192,7 +192,11 @@ trait TypeSimplifier { self: Typer =>
       println(s"[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
-          case w: TypeVariable if !(w is v) && !varSubst.contains(w) && (recVars.contains(v) === recVars.contains(w)) =>
+          case w: TypeVariable if !(w is v) && !varSubst.contains(w)
+              && (recVars.contains(v) === recVars.contains(w))
+              && (v.nameHint.nonEmpty || w.nameHint.isEmpty)
+              // ^ Don't merge in this direction if that would override a nameHint
+            =>
             // Note: We avoid merging rec and non-rec vars, because the non-rec one may not be strictly polar ^
             //       As an example of this, see [test:T1].
             println(s"[w] $w ${coOccurrences.get(pol -> w)}")

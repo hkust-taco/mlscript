@@ -85,10 +85,10 @@ def eval1_ty = eval1
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
 //│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:440)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:462)
-//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:462)
-//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:474)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:446)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:468)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:468)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:480)
 //│ 	at: mlscript.TyperDatatypes$PolymorphicType.rigidify(TyperDatatypes.scala:30)
 //│ 	at: mlscript.ConstraintSolver.subsume(ConstraintSolver.scala:377)
 //│ 	at: mlscript.DiffTests.$anonfun$new$22(DiffTests.scala:290)

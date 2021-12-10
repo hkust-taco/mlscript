@@ -389,7 +389,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
-        val nv = freshVar(tv.prov)(lvl)
+        val nv = freshVar(tv.prov, tv.nameHint)(lvl)
         cache += (tv -> nv)
         if (pol) { tv.upperBounds ::= nv
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol)) }
@@ -402,7 +402,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProvType(und) => ProvType(extrude(und, lvl, pol))(p.prov)
       case p @ ProxyType(und) => extrude(und, lvl, pol)
       case _: ClassTag | _: TraitTag => ty
-      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(extrude(_, lvl, pol)))(tr.prov, tr.ctx) // FIXME pol...
+      case tr @ TypeRef(d, ts) =>
+        /* Note: we could try to preserve TypeRef-s through extrusion,
+            but in the absence of variance analysis it's a bit wasteful
+            to always extrude in both directions: */
+        // TypeRef(d, ts.map(t =>
+        //   TypeBounds(extrude(t, lvl, pol), extrude(t, lvl, pol))(noProv)))(tr.prov, tr.ctx) // FIXME pol...
+        extrude(tr.expand(_ => ()), lvl, pol).withProvOf(tr)
     }
   
   
