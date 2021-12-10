@@ -486,3 +486,65 @@ Test6C
 //│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
+
+
+
+
+:e
+class Dup[A, A]: { x: A }
+    method MthDup[B, C, // random comment
+        B]: (A -> B) -> B
+    method MthDup f = f this.x
+//│ ╔══[ERROR] Multiple declarations of type parameter A in class definition
+//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared at
+//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║         	          ^
+//│ ╟── Declared at
+//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ╙──       	             ^
+//│ ╔══[ERROR] Multiple declarations of type parameter B in method declaration
+//│ ║  l.495: 	    method MthDup[B, C, // random comment
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.496: 	        B]: (A -> B) -> B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Declared at
+//│ ║  l.495: 	    method MthDup[B, C, // random comment
+//│ ║         	                  ^
+//│ ╟── Declared at
+//│ ║  l.496: 	        B]: (A -> B) -> B
+//│ ╙──       	        ^
+//│ Defined class Dup
+//│ Declared Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'B) -> 'B
+//│ Defined Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'a) -> 'a
+
+t = Dup { x = 42 }
+//│ t: Dup['A | 'A0 .. 42 & 'A | 'A & 'A0, 'A | 'A0 .. 42 & 'A | 'A & 'A0] with {x: 42}
+
+t : Dup[bool, int]
+//│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+
+t : Dup[int, bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║         	^
+//│ ╟── expression of type `42` does not match type `bool`
+//│ ║  l.522: 	t = Dup { x = 42 }
+//│ ║         	              ^^
+//│ ╟── but it flows into reference with expected type `Dup[int, bool]`
+//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║         	^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║         	             ^^^^
+//│ ╟── from record type:
+//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ╙──       	                 ^^^^^^^^
+//│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+
+// SOF... (other than id, log, discard)
+// t.MthDup (fun x -> mul 2 x)
+
+t.MthDup id
+//│ res: 42
