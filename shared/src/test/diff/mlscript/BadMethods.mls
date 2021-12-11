@@ -543,7 +543,7 @@ t : Dup[int, bool]
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
 
-// SOF... (other than id, log, discard)
+// SOF... (other than 'A -> T, anything -> T)
 // t.MthDup (fun x -> mul 2 x)
 
 t.MthDup id
