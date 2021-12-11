@@ -210,23 +210,20 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╟── expression of type `42` does not match type `bool`
 //│ ║  l.204: 	bp = BadPair { x = 42; y = true }
 //│ ║         	                   ^^
-//│ ╟── but it flows into application with expected type `bool`
+//│ ╟── Note: constraint arises from argument:
 //│ ║  l.205: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
-//│ ║         	                                         ^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	    method Test: (A -> B -> bool) -> bool
-//│ ╙──       	                            ^^^^
-//│ res: bool | error
+//│ ╙──       	                                         ^
+//│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair['A .. 42 | 'A, 'B .. 0 | 'B] with {x: 42, y: 0}
-//│ res: BadPair['A, 'B] -> ('A -> 'C) -> ('B -> 'D) -> AbstractPair['C, 'D]
+//│ res: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
-//│ ║  l.223: 	BadPair.(BadPair.Map)
+//│ ║  l.220: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> 'C) -> (0 -> 'D) -> AbstractPair['C, 'D]
+//│ res: (42 -> ('B & 'A & 'a)) -> anything -> (BadPair['A, 'B] with {x: 'a, y: 'a})
 
 
 class ClassA
@@ -238,19 +235,19 @@ class ClassA
 class ClassB: ClassA
     method MtdA = 43
 //│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
-//│ ║  l.239: 	    method MtdA = 43
+//│ ║  l.236: 	    method MtdA = 43
 //│ ╙──       	           ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.239: 	    method MtdA = 43
+//│ ║  l.236: 	    method MtdA = 43
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `43` does not match type `42`
-//│ ║  l.239: 	    method MtdA = 43
+//│ ║  l.236: 	    method MtdA = 43
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `42`
-//│ ║  l.239: 	    method MtdA = 43
+//│ ║  l.236: 	    method MtdA = 43
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.233: 	    method MtdA = 42
+//│ ║  l.230: 	    method MtdA = 42
 //│ ╙──       	                  ^^
 //│ Defined class ClassB
 //│ Defined ClassB.MtdA: ClassB -> 43
@@ -260,34 +257,34 @@ class ClassC: ClassA
     method MtdA: int
     method MtdA = 43
 //│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
-//│ ║  l.260: 	    method MtdA: int
+//│ ║  l.257: 	    method MtdA: int
 //│ ╙──       	           ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
-//│ ║  l.260: 	    method MtdA: int
+//│ ║  l.257: 	    method MtdA: int
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `42`
-//│ ║  l.260: 	    method MtdA: int
+//│ ║  l.257: 	    method MtdA: int
 //│ ║         	                 ^^^
 //│ ╟── but it flows into method declaration with expected type `42`
-//│ ║  l.260: 	    method MtdA: int
+//│ ║  l.257: 	    method MtdA: int
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.233: 	    method MtdA = 42
+//│ ║  l.230: 	    method MtdA = 42
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
-//│ ║  l.261: 	    method MtdA = 43
+//│ ║  l.258: 	    method MtdA = 43
 //│ ╙──       	           ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.261: 	    method MtdA = 43
+//│ ║  l.258: 	    method MtdA = 43
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `43` does not match type `42`
-//│ ║  l.261: 	    method MtdA = 43
+//│ ║  l.258: 	    method MtdA = 43
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `42`
-//│ ║  l.261: 	    method MtdA = 43
+//│ ║  l.258: 	    method MtdA = 43
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.233: 	    method MtdA = 42
+//│ ║  l.230: 	    method MtdA = 42
 //│ ╙──       	                  ^^
 //│ Defined class ClassC
 //│ Declared ClassC.MtdA: ClassC -> int
@@ -299,19 +296,19 @@ class ClassD: ClassA
 class ClassE: ClassD
     method MtdA = 43
 //│ ╔══[ERROR] Overriding method ClassA.MtdA without explicit declaration is not allowed.
-//│ ║  l.298: 	    method MtdA: int
+//│ ║  l.295: 	    method MtdA: int
 //│ ╙──       	           ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
-//│ ║  l.298: 	    method MtdA: int
+//│ ║  l.295: 	    method MtdA: int
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `42`
-//│ ║  l.298: 	    method MtdA: int
+//│ ║  l.295: 	    method MtdA: int
 //│ ║         	                 ^^^
 //│ ╟── but it flows into method declaration with expected type `42`
-//│ ║  l.298: 	    method MtdA: int
+//│ ║  l.295: 	    method MtdA: int
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.233: 	    method MtdA = 42
+//│ ║  l.230: 	    method MtdA = 42
 //│ ╙──       	                  ^^
 //│ Defined class ClassD
 //│ Declared ClassD.MtdA: ClassD -> int
@@ -330,19 +327,19 @@ trait Trait2A[B]
 class Class2B: Class2A[int] & Trait2A[string]
     method MtdA = "ok"
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.331: 	    method MtdA = "ok"
+//│ ║  l.328: 	    method MtdA = "ok"
 //│ ║         	           ^^^^^^^^^^^
 //│ ╟── expression of type `"ok"` does not match type `int`
-//│ ║  l.331: 	    method MtdA = "ok"
+//│ ║  l.328: 	    method MtdA = "ok"
 //│ ║         	                  ^^^^
 //│ ╟── but it flows into method definition with expected type `int`
-//│ ║  l.331: 	    method MtdA = "ok"
+//│ ║  l.328: 	    method MtdA = "ok"
 //│ ║         	           ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.330: 	class Class2B: Class2A[int] & Trait2A[string]
+//│ ║  l.327: 	class Class2B: Class2A[int] & Trait2A[string]
 //│ ║         	                       ^^^
 //│ ╟── from method declaration:
-//│ ║  l.327: 	    method MtdA: A
+//│ ║  l.324: 	    method MtdA: A
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class2A
 //│ Declared Class2A.MtdA: Class2A['A] -> 'A
@@ -360,7 +357,7 @@ type Type3A = Class3A[string]
 class Class3B: Type3A
     method MtdA = 1
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.360: 	class Class3B: Type3A
+//│ ║  l.357: 	class Class3B: Type3A
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 //│ Declared Class3A.MtdA: Class3A['A] -> 'A
@@ -370,7 +367,7 @@ class Class3B: Type3A
 :e
 Oops.M
 //│ ╔══[ERROR] Method M not found
-//│ ║  l.371: 	Oops.M
+//│ ║  l.368: 	Oops.M
 //│ ╙──       	^^^^^^
 //│ res: error
 
@@ -385,16 +382,16 @@ class Test4A
 class Test4B: Test4A
     method Mth4A: int
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.380: 	    method Mth4A = true
+//│ ║  l.377: 	    method Mth4A = true
 //│ ║         	           ^^^^^^^^^^^^
 //│ ╟── expression of type `true` does not match type `int`
-//│ ║  l.380: 	    method Mth4A = true
+//│ ║  l.377: 	    method Mth4A = true
 //│ ║         	                   ^^^^
 //│ ╟── but it flows into method definition with expected type `int`
-//│ ║  l.380: 	    method Mth4A = true
+//│ ║  l.377: 	    method Mth4A = true
 //│ ║         	           ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.386: 	    method Mth4A: int
+//│ ║  l.383: 	    method Mth4A: int
 //│ ╙──       	                  ^^^
 //│ Defined class Test4B
 //│ Declared Test4B.Mth4A: Test4B -> int
@@ -412,16 +409,16 @@ class Test5A
 class Test5B: Test5A
     method Mth5A = 43
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.413: 	    method Mth5A = 43
+//│ ║  l.410: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── expression of type `43` does not match type `42`
-//│ ║  l.413: 	    method Mth5A = 43
+//│ ║  l.410: 	    method Mth5A = 43
 //│ ║         	                   ^^
 //│ ╟── but it flows into method definition with expected type `42`
-//│ ║  l.413: 	    method Mth5A = 43
+//│ ║  l.410: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from method declaration:
-//│ ║  l.411: 	    method Mth5A: 42
+//│ ║  l.408: 	    method Mth5A: 42
 //│ ╙──       	           ^^^^^
 //│ Defined class Test5A
 //│ Declared Test5A.Mth5A: Test5A -> 42
@@ -445,45 +442,45 @@ class Test6C: Test6A[int] & Test6B
 :e
 Test6A
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.446: 	Test6A
+//│ ║  l.443: 	Test6A
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6A is abstract:
-//│ ║  l.432: 	class Test6A[A]
+//│ ║  l.429: 	class Test6A[A]
 //│ ║         	      ^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.431: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.433: 	    method Mth6A: A
+//│ ║  l.430: 	    method Mth6A: A
 //│ ╙──       	           ^^^^^^^^
 //│ res: error
 
 :e
 Test6B
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.462: 	Test6B
+//│ ║  l.459: 	Test6B
 //│ ║         	^^^^^^
 //│ ╟── Note that trait Test6B is abstract:
-//│ ║  l.435: 	trait Test6B
+//│ ║  l.432: 	trait Test6B
 //│ ║         	      ^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.436: 	    method Mth6A: bool
+//│ ║  l.433: 	    method Mth6A: bool
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: error
 
 :e
 Test6C
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.475: 	Test6C
+//│ ║  l.472: 	Test6C
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6C is abstract:
-//│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.434: 	class Test6C: Test6A[int] & Test6B
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.434: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.431: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.437: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.434: 	class Test6C: Test6A[int] & Test6B
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -496,24 +493,24 @@ class Dup[A, A]: { x: A }
         B]: (A -> B) -> B
     method MthDup f = f this.x
 //│ ╔══[ERROR] Multiple declarations of type parameter A in class definition
-//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ║         	          ^
 //│ ╟── Declared at
-//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Multiple declarations of type parameter B in method declaration
-//│ ║  l.495: 	    method MthDup[B, C, // random comment
+//│ ║  l.492: 	    method MthDup[B, C, // random comment
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.496: 	        B]: (A -> B) -> B
+//│ ║  l.493: 	        B]: (A -> B) -> B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.495: 	    method MthDup[B, C, // random comment
+//│ ║  l.492: 	    method MthDup[B, C, // random comment
 //│ ║         	                  ^
 //│ ╟── Declared at
-//│ ║  l.496: 	        B]: (A -> B) -> B
+//│ ║  l.493: 	        B]: (A -> B) -> B
 //│ ╙──       	        ^
 //│ Defined class Dup
 //│ Declared Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'B) -> 'B
@@ -527,19 +524,19 @@ t : Dup[bool, int]
 
 t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║  l.525: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.522: 	t = Dup { x = 42 }
+//│ ║  l.519: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── but it flows into reference with expected type `Dup[int, bool]`
-//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║  l.525: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.528: 	t : Dup[int, bool]
+//│ ║  l.525: 	t : Dup[int, bool]
 //│ ║         	             ^^^^
 //│ ╟── from record type:
-//│ ║  l.494: 	class Dup[A, A]: { x: A }
+//│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
 
@@ -559,7 +556,7 @@ class B: { x: int }
   method F: int
   method F = 1
 //│ ╔══[ERROR] identifier not found: Yes
-//│ ║  l.557: 	  method Nope = Yes.F
+//│ ║  l.554: 	  method Nope = Yes.F
 //│ ╙──       	                ^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})

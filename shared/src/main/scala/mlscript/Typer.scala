@@ -484,26 +484,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           ((td.baseClasses.flatMap(t => newMthDefs.getOrElse(t.name, Map.empty).view.mapValues(subst(_, subsMap(t.name)))))
             .groupMapReduce(_._1)(_._2){ case PolymorphicType(_, body1) -> PolymorphicType(_, body2) => 
               PolymorphicType(thisCtx.lvl, ComposedType(false, body1, body2)(prov)) } ++ defs.toMap)
-        allEnv ++= (newMthDefs(tn.name) ++ newMthDecls(tn.name)).flatMap{ case mn -> bodyTy => 
-          val m_ty = wrapMethod(tn.name, bodyTy)
-          s"${tn.name}.${mn}" -> m_ty ::
-            (ctx.methodBase.get(mn) match {
-              case S(S(v)) if ctx.allBaseClassesOf(tn.name).contains(v) => Nil
-              case S(S(v)) if ctx.allBaseClassesOf(v.name.toList.mapHead(_.toUpper).mkString)
-                  .contains(Var(tn.name.toList.mapHead(_.toLower).mkString)) =>
-                ctx.methodBase += mn -> S(Var(tn.name.toList.mapHead(_.toLower).mkString))
-                ("." + mn) -> m_ty :: Nil
-              case S(S(v)) =>
-                ctx.methodBase += mn -> N
-                allEnv -= "." + mn
-                Nil
-              case S(N) => Nil
-              case N =>
-                ctx.methodBase += mn -> S(Var(tn.name.toList.mapHead(_.toLower).mkString))
-                ("." + mn) -> m_ty :: Nil
-            })
+        val mthDeclsSet = td.mthDecls.map(_.nme.name).toSet
+        allEnv ++= (newMthDecls(tn.name) ++ newMthDefs(tn.name).iterator.filter { case mn -> _ => !mthDeclsSet(mn) })
+          .flatMap{ case mn -> bodyTy =>
+            val m_ty = wrapMethod(tn.name, bodyTy)
+            s"${tn.name}.${mn}" -> m_ty ::
+              (ctx.methodBase.get(mn) match {
+                case S(S(v)) if ctx.allBaseClassesOf(tn.name).contains(v) => Nil
+                case S(S(v)) if ctx.allBaseClassesOf(v.name.toList.mapHead(_.toUpper).mkString)
+                    .contains(Var(tn.name.toList.mapHead(_.toLower).mkString)) =>
+                  ctx.methodBase += mn -> S(Var(tn.name.toList.mapHead(_.toLower).mkString))
+                  ("." + mn) -> m_ty :: Nil
+                case S(S(v)) =>
+                  ctx.methodBase += mn -> N
+                  allEnv -= "." + mn
+                  Nil
+                case S(N) => Nil
+                case N =>
+                  ctx.methodBase += mn -> S(Var(tn.name.toList.mapHead(_.toLower).mkString))
+                  ("." + mn) -> m_ty :: Nil
+              })
+          }
         }
-      }
       ctx.copy(mthDecls = newMthDecls.toMap, mthDefs = newMthDefs.toMap).tap(checkSubsume(_))
     }
     /* Perform subsumption checking on method declarations and definitions

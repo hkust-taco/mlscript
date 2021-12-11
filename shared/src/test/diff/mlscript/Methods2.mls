@@ -55,9 +55,8 @@ Cons.Size
 List.HeadOption
 //│ res: List['A] -> Option['A]
 
-// TODO: Strangely, this explicit call does not have the inferred refined type:
 Cons.HeadOption
-//│ res: (Cons['A] with {tail: List['A]}) -> Option['A]
+//│ res: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│ l: Cons['A .. 0 | 1 | 'A] with {head: 0, tail: Cons['A .. 0 | 1 | 'A] with {head: 1, tail: Nil['A .. 0 | 1 | 'A]}}
@@ -68,22 +67,22 @@ l.Size
 l.Map (fun x -> mul x 2)
 //│ res: List['B .. 'B | int]
 
-o = l.HeadOption
-//│ o: Option['A .. 0 | 1 | 'A]
-
 o = l.(Cons.HeadOption)
+//│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
+
+o = l.HeadOption
 //│ o: Option['A .. 0 | 1 | 'A]
 
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.78: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.77: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.78: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.77: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──      	     ^
 //│ res: 0
 
@@ -115,15 +114,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.115: 	case o of {
+//│ ║  l.114: 	case o of {
 //│ ║         	     ^^^^^^
-//│ ║  l.116: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.115: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`
-//│ ║  l.115: 	case o of {
+//│ ║  l.114: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 
