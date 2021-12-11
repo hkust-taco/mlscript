@@ -1,27 +1,27 @@
 
 :p
 2 + 2
-//│ Parsed: ((+ 2) 2);
-//│ Desugared: ((+ 2) 2)
+//│ Parsed: ((+ (2,)) (2,));
+//│ Desugared: ((+ (2,)) (2,))
 //│ res: int
 
 :p
 1 + 2 * 2 + 3
-//│ Parsed: ((+ ((+ 1) ((* 2) 2))) 3);
-//│ Desugared: ((+ ((+ 1) ((* 2) 2))) 3)
+//│ Parsed: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,));
+//│ Desugared: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,))
 //│ res: int
 
 :p
 1 + 2 / 2 + 3
-//│ Parsed: ((+ ((+ 1) ((/ 2) 2))) 3);
-//│ Desugared: ((+ ((+ 1) ((/ 2) 2))) 3)
+//│ Parsed: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,));
+//│ Desugared: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,))
 //│ res: int
 
 :e
 :p
 1 |> 2 || 3
-//│ Parsed: ((|| ((|> 1) 2)) 3);
-//│ Desugared: ((|| ((|> 1) 2)) 3)
+//│ Parsed: ((|| (((|> (1,)) (2,)),)) (3,));
+//│ Desugared: ((|| (((|> (1,)) (2,)),)) (3,))
 //│ ╔══[ERROR] identifier not found: |>
 //│ ║  l.22: 	1 |> 2 || 3
 //│ ╙──      	  ^^
@@ -35,8 +35,8 @@
 
 :p
 true || false && true || false
-//│ Parsed: ((|| ((|| true) ((&& false) true))) false);
-//│ Desugared: ((|| ((|| true) ((&& false) true))) false)
+//│ Parsed: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,));
+//│ Desugared: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,))
 //│ res: bool
 
 
