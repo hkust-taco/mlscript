@@ -258,6 +258,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       }
       if (!n.name.head.isUpper) err(
         msg"Type names must start with a capital letter", n.toLoc)
+      td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
+          msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
+            :: tps.map(tp => msg"Declared at" -> tp.toLoc))
+        case _ =>
+      }
       val dummyTargs = td.tparams.map(p =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter"), S(p.name))(ctx.lvl + 1))
       val td1 = TypeDef(td.kind, td.nme, td.tparams, dummyTargs, td.body, td.mthDecls, td.mthDefs, 
@@ -435,6 +440,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         thisCtx += "this" -> subst(thisCtx.thisType(tn.name), rigid)
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
+          tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
+              msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc
+                :: tps.map(tp => msg"Declared at" -> tp.toLoc))
+            case _ =>
+          }
           val dummyTargs2 = tparams.map(p =>
             TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter")))
           val targsMap2 = tparams.map(_.name).zip(dummyTargs2).toMap
@@ -567,11 +577,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           else ComposedType(true, rec(lhs), rec(rhs)) _
         )(tp(ty.toLoc, "union type"))
       case Neg(t) => NegType(rec(t))(tp(ty.toLoc, "type negation"))
-      case Record(fs) => RecordType.mk(fs.map { nt =>
+      case Record(fs) => 
+        val prov = tp(ty.toLoc, "record type")
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+            msg"Multiple declarations of field name ${s} in ${prov.desc}" -> ty.toLoc
+              :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise, prov)
+          case _ =>
+        }
+        RecordType.mk(fs.map { nt =>
           if (nt._1.name.head.isUpper)
-            err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise, noProv)
+            err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise, prov)
           nt._1 -> rec(nt._2)
-        })(tp(ty.toLoc, "record type"))
+        })(prov)
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(r.fields.mapValues(rec))(tp(r.toLoc, "extension record")))(tp(ty.toLoc, "extension type"))
@@ -760,11 +777,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case App(App(Var("&"), lhs), rhs) =>
         typeTerm(lhs) & (typeTerm(rhs), prov)
       case Rcd(fs) => // TODO rm: no longer used?
+        val prov = tp(term.toLoc, "record literal")
+        fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
+            msg"Multiple declarations of field name ${s} in ${prov.desc}" -> term.toLoc
+              :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise, prov)
+          case _ =>
+        }
         RecordType.mk(fs.map { case (n, t) => 
-            if (n.name.head.isUpper)
-              err(msg"Field identifiers must start with a small letter", term.toLoc)(raise, noProv)
-            (n, typeTerm(t))
-          })(tp(term.toLoc, "record literal"))
+          if (n.name.head.isUpper)
+            err(msg"Field identifiers must start with a small letter", term.toLoc)(raise, prov)
+          (n, typeTerm(t))
+        })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
