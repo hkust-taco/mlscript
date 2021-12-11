@@ -64,10 +64,11 @@ class JSBackend {
     case Asc(trm, _) => translatePattern(trm)
     // Replace literals with wildcards.
     case _: Lit => JSWildcardPattern()
+    case Bra(_, trm) => translatePattern(trm)
     // Others are not supported yet.
-    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bra | _: Bind | _: Test |
+    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bind | _: Test |
         _: With | _: CaseOf =>
-      throw new Error(s"term $t is not a valid pattern")
+      throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
   private val builtinFnOpMap =
@@ -118,6 +119,8 @@ class JSBackend {
     // Function application.
     case App(callee, Tup(args)) =>
       JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
+    case App(callee, arg) =>
+      JSInvoke(translateTerm(callee), translateTerm(arg) :: Nil)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -335,9 +338,14 @@ class JSBackend {
   ): JSClassMemberDecl = {
     val name = method.nme.name
     method.rhs.value match {
-      case Lam(Var(param), rhs)         => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
-      case Lam(Asc(Var(param), _), rhs) => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
-      case term                         => JSClassGetter(name, L(translateTerm(term)))
+      case Lam(Var(param), rhs)         => JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
+      case Lam(Asc(Var(param), _), rhs) => JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
+      case Lam(Tup(params), body) => JSClassMethod(
+        name,
+        params map { case _ -> param => translatePattern(param) },
+        L(translateTerm(body))
+      )
+      case term => JSClassGetter(name, L(translateTerm(term)))
     }
   }
 
