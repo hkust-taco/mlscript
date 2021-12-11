@@ -70,10 +70,11 @@ class JSBackend(pgrm: Pgrm) {
     case Asc(trm, _) => translatePattern(trm)
     // Replace literals with wildcards.
     case _: Lit => JSWildcardPattern()
+    case Bra(_, trm) => translatePattern(trm)
     // Others are not supported yet.
-    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bra | _: Bind | _: Test |
+    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bind | _: Test |
         _: With | _: CaseOf =>
-      throw new Error(s"term $t is not a valid pattern")
+      throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
   // This will be changed during code generation.
@@ -111,18 +112,27 @@ class JSBackend(pgrm: Pgrm) {
         JSIdent(name)
       }
     // TODO: need scope to track variables so that we can rename reserved words
+    case Lam(Tup(params), body) =>
+      JSArrowFn(params map { case (_, param) => translatePattern(param) }, translateTerm(body))
+    // Old single parameter anonymous function.
     case Lam(lhs, rhs) =>
       JSArrowFn(translatePattern(lhs) :: Nil, translateTerm(rhs))
-    // Binary expressions.
-    case App(App(Var(name), left), right) if builtinFnOpMap contains name =>
-      JSBinary(builtinFnOpMap(name), translateTerm(left), translateTerm(right))
-    case App(App(Var(op), left), right) if binaryOps contains op =>
-      JSBinary(op, translateTerm(left), translateTerm(right))
+    // Binary expressions called by function names.
+    case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+        if builtinFnOpMap contains name =>
+      JSBinary(builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
+    // Binary expressions called by operators.
+    case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+        if binaryOps contains op =>
+      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs) :: Nil)
+    case App(callee, Tup(args)) =>
+      JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
+    case App(callee, arg) =>
+      JSInvoke(translateTerm(callee), translateTerm(arg) :: Nil)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -134,11 +144,11 @@ class JSBackend(pgrm: Pgrm) {
       JSImmEvalFn(name :: Nil, Left(translateTerm(body)), translateTerm(value) :: Nil)
     case Blk(stmts) =>
       JSImmEvalFn(
-        Nil,
+        "" :: Nil,
         Right(stmts flatMap (_.desugared._2) map {
           translateStatement(_)
         }),
-        new JSPlaceholderExpr() :: Nil
+        JSPlaceholderExpr() :: Nil
       )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
@@ -164,8 +174,9 @@ class JSBackend(pgrm: Pgrm) {
           name -> translateTerm(value)
         }) :: Nil
       )
-    case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
-      throw new Error(s"cannot generate code for term $term")
+    case Bra(_, trm) => translateTerm(trm)
+    case _: Tup | _: Bind | _: Test =>
+      throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
   // Translate consecutive case branches into a list of if statements.
@@ -253,7 +264,7 @@ class JSBackend(pgrm: Pgrm) {
         }
       case Recursive(uv, ty)                   => Recursive(uv, substitute(ty, subs))
       case Rem(ty, fields)                     => Rem(substitute(ty, subs), fields)
-      case Bot | Top | _: Literal | _: TypeVar => body
+      case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension => body
     }
   }
 
@@ -348,9 +359,14 @@ class JSBackend(pgrm: Pgrm) {
   ): JSClassMemberDecl = {
     val name = method.nme.name
     method.rhs.value match {
-      case Lam(Var(param), rhs)         => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
-      case Lam(Asc(Var(param), _), rhs) => JSClassMethod(name, param :: Nil, L(translateTerm(rhs)))
-      case term                         => JSClassGetter(name, L(translateTerm(term)))
+      case Lam(Var(param), rhs)         => JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
+      case Lam(Asc(Var(param), _), rhs) => JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
+      case Lam(Tup(params), body) => JSClassMethod(
+        name,
+        params map { case _ -> param => translatePattern(param) },
+        L(translateTerm(body))
+      )
+      case term => JSClassGetter(name, L(translateTerm(term)))
     }
   }
 
@@ -481,12 +497,17 @@ object JSBackend {
     case Var(name)                   => s"Var($name)"
     case Lam(lhs, rhs)               => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
     case App(lhs, rhs)               => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case Tup(fields)                 => s"Tup(...)"
+    case Tup(fields)                 =>
+      val entries = fields map {
+        case (S(name), value) => s"$name: ${inspectTerm(value)}"
+        case (N, value)       => s"_: ${inspectTerm(value)}"
+      }
+      s"Tup(${entries mkString ", "})"
     case Rcd(fields)                 => s"Rcd(...)"
     case Sel(receiver, fieldName)    => s"Sel(${inspectTerm(receiver)}, $fieldName)"
     case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
     case Blk(stmts)                  => s"Blk(...)"
-    case Bra(rcd, trm)               => s"Bra(...)"
+    case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspectTerm(trm)})"
     case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
     case Bind(lhs, rhs)              => s"Bind(...)"
     case Test(trm, ty)               => s"Test(...)"

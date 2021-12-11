@@ -59,7 +59,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
   def parenthesized(implicit run: Bool = true): SourceCode =
     if (run) {
       lines.length match {
-        case 0 => this
+        case 0 => SourceCode.from("()")
         case 1 => new SourceCode(lines map { _.between("(", ")") })
         case _ =>
           val head = lines.head
@@ -462,17 +462,15 @@ final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JS
 
 final case class JSClassMethod(
     name: Str,
-    params: Ls[Str],
+    params: Ls[JSPattern],
     body: JSExpr \/ Ls[JSStmt]
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode.from(name) ++
-      SourceCode.from(params mkString ", ").parenthesized ++
-      SourceCode.space ++ (body match {
-        case Left(expr) => new JSReturnStmt(expr).toSourceCode
-        case Right(stmts) =>
-          stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
-      }).block
+    SourceCode.from(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
+      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Right(stmts) =>
+        stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
+    }).block
 }
 
 final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDecl {
