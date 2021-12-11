@@ -61,7 +61,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
   }
   case class LhsRefined(base: Opt[BaseType], ttags: Set[TraitTag], reft: RecordType) extends LhsNf {
-    override def toString: Str = s"${base.getOrElse("")}${reft}"
+    override def toString: Str = s"${base.getOrElse("")}${reft}${ttags.iterator.map("∧"+_).mkString}"
   }
   case object LhsTop extends LhsNf {
     override def toString: Str = "⊤"
