@@ -6,7 +6,7 @@ import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
 
-class JSBackend {
+class JSBackend(pgrm: Pgrm) {
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
   val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
@@ -17,6 +17,12 @@ class JSBackend {
 
   // This object contains all classNames.
   val classNames: HashSet[Str] = HashSet()
+
+  // All names used in `def`s.
+  val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
+    case Def(rec, nme, rhs) => S(nme)
+    case _                  => N
+  })
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
@@ -70,6 +76,12 @@ class JSBackend {
       throw new Error(s"term $t is not a valid pattern")
   }
 
+  // This will be changed during code generation.
+  private var hasWithConstruct = false
+
+  // Name of the helper function for `with` construction.
+  private val withConstructFnName = getAlternativeName("withConstruct")
+
   private val builtinFnOpMap =
     immutable.HashMap(
       "add" -> "+",
@@ -110,7 +122,7 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Function application.
-    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs))
+    case App(lhs, rhs) => JSInvoke(translateTerm(lhs), translateTerm(rhs) :: Nil)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -119,20 +131,20 @@ class JSBackend {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      JSImmEvalFn(name, Left(translateTerm(body)), translateTerm(value))
+      JSImmEvalFn(name :: Nil, Left(translateTerm(body)), translateTerm(value) :: Nil)
     case Blk(stmts) =>
       JSImmEvalFn(
-        "",
+        Nil,
         Right(stmts flatMap (_.desugared._2) map {
           translateStatement(_)
         }),
-        new JSPlaceholderExpr()
+        new JSPlaceholderExpr() :: Nil
       )
     case CaseOf(term, cases) => {
       val argument = translateTerm(term)
-      val parameter = getTemporaryName("x")
+      val parameter = "x"
       val body = translateCaseBranch(parameter, cases)
-      JSImmEvalFn(parameter, Right(body), argument)
+      JSImmEvalFn(parameter :: Nil, Right(body), argument :: Nil)
     }
     case IntLit(value) => {
       val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
@@ -143,6 +155,15 @@ class JSBackend {
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
+    // `c with { x = "hi"; y = 2 }`
+    case With(trm, Rcd(fields)) =>
+      hasWithConstruct = true
+      JSInvoke(
+        JSIdent(withConstructFnName),
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
+          name -> translateTerm(value)
+        }) :: Nil
+      )
     case _: Tup | _: Bra | _: Bind | _: Test | _: With =>
       throw new Error(s"cannot generate code for term $term")
   }
@@ -155,7 +176,7 @@ class JSBackend {
         JSIfStmt(
           className match {
             case Var("int") =>
-              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut)
+              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
             case Var("bool") =>
               JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
             case Var(s @ ("true" | "false")) =>
@@ -333,7 +354,7 @@ class JSBackend {
     }
   }
 
-  def apply(pgrm: Pgrm): Ls[Str] = {
+  def apply(): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     // Collect type aliases into a map so we can normalize them.
@@ -344,8 +365,8 @@ class JSBackend {
       case _ => ()
     }
 
-    val defResultObjName = getTemporaryName("defs")
-    val exprResultObjName = getTemporaryName("exprs")
+    val defResultObjName = getAlternativeName("defs")
+    val exprResultObjName = getAlternativeName("exprs")
     // This hash map counts how many times a name has been used.
     val resolveShadowName = new ShadowNameResolver
     val stmts: Ls[JSStmt] =
@@ -371,7 +392,10 @@ class JSBackend {
           .concat(otherStmts.flatMap {
             case Def(isRecursive, name, L(body)) =>
               val translatedBody = translateTerm(body)
-              val tempName = getTemporaryName(name)
+              // Get a name that not conflicts with class names.
+              val tempName = (name #:: LazyList
+                .from(0)
+                .map { name + _.toString }).dropWhile { classNames contains _ }.head
               if (tempName =/= name) {
                 letLhsAliasMap += name -> tempName
               }
@@ -412,7 +436,7 @@ class JSBackend {
             JSExprStmt(
               JSInvoke(
                 JSMember(JSIdent(exprResultObjName), "push"),
-                translateTerm(term)
+                translateTerm(term) :: Nil
               )
             )
           })
@@ -423,12 +447,33 @@ class JSBackend {
               )
             ) :: Nil
           )
-    SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
+
+    SourceCode
+      .concat(
+        (if (hasWithConstruct) {
+          JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
+        } else { stmts }) map { _.toSourceCode }
+      )
+      .lines map { _.toString }
   }
 
-  private def getTemporaryName(name: Str): Str = (name #:: LazyList
-    .from(0)
-    .map { name + _.toString }).dropWhile { classNames contains _ }.head
+  /** 
+    * Get an alternative name which is not duplicated with user-defined names.
+    * This should be only used on internal variables such as prelude functions,
+    * result collection objects.
+    *
+    * @param name
+    *   the base name
+    * @return
+    *   identifier like `$name$n` where `n` is an integer
+    */
+  private def getAlternativeName(name: Str): Str = {
+    val newName = (name #:: LazyList
+      .from(0)
+      .map { name + _.toString }).dropWhile { defNames contains _ }.head
+    defNames += newName
+    newName
+  }
 }
 
 object JSBackend {
@@ -459,4 +504,31 @@ object JSBackend {
     case DecLit(value) => s"DecLit($value)"
     case StrLit(value) => s"StrLit($value)"
   }
+
+  /** 
+    * This function makes the following function.
+    *
+    * ```js
+    * function withConstruct(target, fields) {
+    *   const copy = Object.assign({}, target, fields);
+    *   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+    *   return copy;
+    * }
+    * ```
+    */
+  private def makeWithConstructDecl(name: Str) = JSFuncDecl(
+    name,
+    JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
+    JSConstDecl(
+      "copy",
+      JSInvoke(
+        JSMember(JSIdent("Object"), "assign"),
+        JSRecord(Nil) :: JSIdent("target") :: JSIdent("fields") :: Nil
+      )
+    ) :: JSInvoke(
+      JSMember(JSIdent("Object"), "setPrototypeOf"),
+      JSIdent("copy") ::
+        JSInvoke(JSMember(JSIdent("Object"), "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
+    ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
+  )
 }
