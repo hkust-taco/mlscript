@@ -548,3 +548,23 @@ t : Dup[int, bool]
 
 t.MthDup id
 //│ res: 42
+
+
+// We don't currently analyze forward method declarations
+:e
+class A
+  method Yes = (B{x=1})
+  method Nope = Yes.F
+class B: { x: int }
+  method F: int
+  method F = 1
+//│ ╔══[ERROR] identifier not found: Yes
+//│ ║  l.557: 	  method Nope = Yes.F
+//│ ╙──       	                ^^^
+//│ Defined class A
+//│ Defined A.Yes: A -> (B & {x: 1})
+//│ Defined A.Nope: A -> error
+//│ Defined class B
+//│ Declared B.F: B -> int
+//│ Defined B.F: B -> 1
+
