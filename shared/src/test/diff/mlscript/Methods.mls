@@ -13,7 +13,7 @@ class Bar: Foo[int, bool]
 Foo.Fun
 Bar.Fun
 //│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
-//│ res: Bar -> (int -> bool -> 'C) -> int -> bool -> 'C
+//│ res: Bar -> 'a -> 'a
 
 f = Foo { x = 1; y = 2 }
 //│ f: Foo['A .. 1 | 'A, 'B .. 2 | 'B] with {x: 1, y: 2}
@@ -37,12 +37,12 @@ g = Bar { x = 42; y = true }
 g.(Foo.Fun)
 g.(Bar.Fun)
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
-//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│ res: 'a -> 'a
 
 Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
-//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│ res: 'a -> 'a
 
 g.Fun
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
