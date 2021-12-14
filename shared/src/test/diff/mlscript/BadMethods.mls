@@ -550,7 +550,7 @@ t.MthDup id
 // We don't currently analyze forward method declarations
 :e
 class A
-  method Yes = (B{x=1})
+  method Yes = B { x = 1 }
   method Nope = Yes.F
 class B: { x: int }
   method F: int

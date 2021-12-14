@@ -153,6 +153,7 @@ object Main {
   // 1. results of definitions;
   // 2. results of expressions;
   // 3. error message (if has).
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   private def executeCode(
       code: Str
   ): (collection.mutable.HashMap[Str, Str], Ls[Str], Str) = {

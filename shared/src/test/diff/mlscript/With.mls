@@ -146,7 +146,6 @@ c = C{x = 1}
 c.x
 //│ res: 1
 
-// FIXME: should reconstruct C[...]\x & {y: 2, x: "hi"}
 d = c with { x = "hi"; y = 2 }
 //│ d: C['A .. 1 | 'A] with {x: "hi", y: 2}
 
@@ -158,4 +157,8 @@ d: C['a]
 
 res.x
 //│ res: "hi" | 1
+
+
+def f x = (x with { a = 1 }).b
+//│ f: ({b: 'a} | ~{a: 1})\a -> 'a
 

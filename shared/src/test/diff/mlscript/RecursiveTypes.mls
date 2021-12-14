@@ -275,18 +275,24 @@ rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ f: 'a | ('b & (~{a: 'c | int} | ({a: 'e & 'd} as 'd))\a & (({a: 'f} as 'd) as 'f) & (~{a: 'c | int} | int)\a & int & int) -> ('g | 'e | ('b | 'h\a & {a: 'c | int} as 'h))
 
-// Notice how the error is reported in call sites, due to the delaying effect of the field removal type...
+f
+//│ res: nothing -> ('a\a & {a: int} as 'a)
+
+// Notice how what is most likely an the error is reported in call sites,
+//    due to the delaying effect of the field removal type...
+//    though it *is* still possible to call this function wtihout errors,
+//    using a bottom-typed argument.
 
 :e
 f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.281: 	f 1
+//│ ║  l.287: 	f 1
 //│ ║         	^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into integer literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.281: 	f 1
+//│ ║  l.287: 	f 1
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -296,31 +302,34 @@ f 1
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.297: 	f { a = 1 }
+//│ ║  l.303: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into record literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.297: 	f { a = 1 }
+//│ ║  l.303: 	f { a = 1 }
 //│ ║         	  ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | ({a: 1} | 'a\a & {a: int} as 'a)
 
+f error
+//│ res: 'a\a & {a: int} as 'a
+
 :e
 rec def infina = 0 with { a = infina }
 f infina
 //│ infina: 0 & {a: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.314: 	f infina
+//│ ║  l.323: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into reference with expected type `(~{a: ?a} | {a: ?b})\a`
-//│ ║  l.314: 	f infina
+//│ ║  l.323: 	f infina
 //│ ║         	  ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -328,7 +337,7 @@ f infina
 //│ res: error | int | (('b | (0 & {a: 'c} as 'c) | 'a)\a & {a: int} as 'a)
 
 
-
+// FIXME why does type printing show `nothing`?
 rec def f x = if error then f (x with { a = x - 1 }) else x
 //│ f: nothing -> ('a\a & {a: int} as 'a)
 
@@ -341,13 +350,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.342: 	r.a
+//│ ║  l.351: 	r.a
 //│ ║         	^^^
 //│ ╟── expression of type `1` does not have field 'a'
-//│ ║  l.335: 	r = f 1
+//│ ║  l.344: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.342: 	r.a
+//│ ║  l.351: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 
@@ -422,3 +431,4 @@ f false
 //│ res: nothing
 //│ res: nothing
 //│ res: false
+
