@@ -29,7 +29,8 @@ class JSBackend(pgrm: Pgrm) {
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
-  val letLhsAliasMap: HashMap[Str, Str] = HashMap()
+  // The key is the name of the class, and the value is the name of the function.
+  private val ctorAliasMap: HashMap[Str, Str] = HashMap()
 
   // I just realized `Statement` is unused.
   def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt = stmt match {
@@ -107,7 +108,7 @@ class JSBackend(pgrm: Pgrm) {
   def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(name) =>
       if (classNames.contains(name)) {
-        letLhsAliasMap.get(name) match {
+        ctorAliasMap.get(name) match {
           case N        => JSIdent(name, true)
           case S(alias) => JSIdent(alias, false)
         }
@@ -425,55 +426,45 @@ class JSBackend(pgrm: Pgrm) {
           // defs.name = name;
           // ```
           .concat(otherStmts.flatMap {
-            case Def(isRecursive, name, L(body)) =>
+            case Def(isRecursive, originalName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
+              // `declName` menas the name used in the declaration.
+              // We allow define functions with the same name as classes.
               // Get a name that not conflicts with class names.
-              val tempName = (name #:: LazyList
-                .from(0)
-                .map { name + _.toString }).dropWhile { classNames contains _ }.head
-              if (tempName =/= name) {
-                letLhsAliasMap += name -> tempName
-              }
-              //
-              val shadowedName = resolveShadowName(tempName)
-              if (shadowedName === tempName) {
-                // Declare the name, assign and record the value.
-                // ```
-                // let <tempName> = <expr>;
-                // defs.<name> = <tempName>;
-                // ```
-                JSLetDecl(tempName, translatedBody) ::
-                  JSExprStmt(
-                    JSAssignExpr(
-                      JSMember(JSIdent(defResultObjName), name),
-                      JSIdent(tempName)
-                    )
-                  ) :: Nil
+              val declName = if (classNames contains originalName) {
+                val alias = topLevelScope allocate originalName
+                ctorAliasMap += originalName -> alias
+                alias
               } else {
-                // Re-assign and record the value as a new name:
-                // ```
-                // <tempName> = <expr>;
-                // defs["<name>@<number of shadow>"] = <tempName>;
-                // ```
-                JSExprStmt(JSAssignExpr(JSIdent(tempName), translatedBody)) ::
-                  JSExprStmt(
-                    JSAssignExpr(
-                      JSMember(JSIdent(defResultObjName), shadowedName),
-                      JSIdent(tempName)
-                    )
-                  ) :: Nil
+                originalName
               }
+              // We need to save a snapshot after each computation.
+              // The snapshot name will be same as the original name, or in the
+              // format of `originalName@n` if the original name is used.
+              val snapshotName = resolveShadowName(originalName)
+              (if (snapshotName === originalName) {
+                 // First time: `let <declName> = <expr>;`
+                 JSLetDecl(declName, translatedBody)
+               } else {
+                 // Not first time: `<declName> = <expr>;`
+                 JSExprStmt(JSAssignExpr(JSIdent(declName), translatedBody))
+               }) :: // Save the value: `defs.<snapshotName> = <declName>;`
+                JSExprStmt(
+                  JSAssignExpr(
+                    JSMember(JSIdent(defResultObjName), snapshotName),
+                    JSIdent(declName)
+                  )
+                ) :: Nil
+            // Ignore type declarations.
             case Def(isRecursive, name, R(body)) => Nil
-            case _: Term                         => Nil
-          })
-          // Generate something like `exprs.push(<expr>)`.
-          .concat(otherStmts.zipWithIndex.collect { case (term: Term, index) =>
-            JSExprStmt(
-              JSInvoke(
-                JSMember(JSIdent(exprResultObjName), "push"),
-                translateTerm(term)(topLevelScope) :: Nil
-              )
-            )
+            // `exprs.push(<expr>)`.
+            case term: Term =>
+              JSExprStmt(
+                JSInvoke(
+                  JSMember(JSIdent(exprResultObjName), "push"),
+                  translateTerm(term)(topLevelScope) :: Nil
+                )
+              ) :: Nil
           })
           .concat(
             JSReturnStmt(
