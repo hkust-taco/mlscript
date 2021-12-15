@@ -81,6 +81,11 @@ class JSBackend(pgrm: Pgrm) {
       throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
+  def translateParams(t: Term): Ls[JSPattern] = t match {
+    case Tup(params) => params map { case _ -> p => translatePattern(p) }
+    case _ => throw new Error(s"term $t is not a valid parameter list")
+  }
+
   // This will be changed during code generation.
   private var hasWithConstruct = false
 
@@ -116,15 +121,10 @@ class JSBackend(pgrm: Pgrm) {
         JSIdent(name)
       }
     // TODO: need scope to track variables so that we can rename reserved words
-    case Lam(Tup(params), body) =>
-      val patterns = params map { case (_, param) => translatePattern(param) }
+    case Lam(params, body) =>
+      val patterns = translateParams(params)
       val lamScope = Scope(patterns flatMap { _.bindings }, scope)
       JSArrowFn(patterns, translateTerm(body)(lamScope))
-    // Old single parameter anonymous function.
-    case Lam(lhs, rhs) =>
-      val param = translatePattern(lhs)
-      val lamScope = Scope(param.bindings, scope)
-      JSArrowFn(param :: Nil, translateTerm(rhs)(lamScope))
     // Binary expressions called by function names.
     case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
         if builtinFnOpMap contains name =>
@@ -373,16 +373,8 @@ class JSBackend(pgrm: Pgrm) {
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
     method.rhs.value match {
-      case Lam(Var(param), rhs) =>
-        JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
-      case Lam(Asc(Var(param), _), rhs) =>
-        JSClassMethod(name, JSNamePattern(param) :: Nil, L(translateTerm(rhs)))
-      case Lam(Tup(params), body) =>
-        JSClassMethod(
-          name,
-          params map { case _ -> param => translatePattern(param) },
-          L(translateTerm(body))
-        )
+      case Lam(params, body) =>
+        JSClassMethod(name, translateParams(params), L(translateTerm(body)))
       case term => JSClassGetter(name, L(translateTerm(term)))
     }
   }
