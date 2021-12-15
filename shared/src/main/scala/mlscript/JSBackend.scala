@@ -417,7 +417,7 @@ class JSBackend(pgrm: Pgrm) {
           .concat(otherStmts.flatMap {
             case Def(isRecursive, originalName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
-              // `declName` menas the name used in the declaration.
+              // `declName` means the name used in the declaration.
               // We allow define functions with the same name as classes.
               // Get a name that not conflicts with class names.
               val declName = if (classNames contains originalName) {
