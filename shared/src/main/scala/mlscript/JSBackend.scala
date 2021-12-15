@@ -156,12 +156,9 @@ class JSBackend(pgrm: Pgrm) {
         translateTerm(value)(letScope) :: Nil
       )
     case Blk(stmts) =>
-      val blockScope = Scope(Nil, scope)
       JSImmEvalFn(
         Nil,
-        Right(stmts flatMap (_.desugared._2) map {
-          translateStatement(_)(blockScope)
-        }),
+        Right(stmts flatMap (_.desugared._2) map { translateStatement(_) }),
         JSPlaceholderExpr() :: Nil
       )
     case CaseOf(term, cases) => {
