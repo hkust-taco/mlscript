@@ -531,7 +531,7 @@ object JSBackend {
     * This function makes the following function.
     *
     * ```js
-    *   function withConstruct(target, fields) {
+    * function withConstruct(target, fields) {
     *   const copy = Object.assign({}, target, fields);
     *   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
     *   return copy;
