@@ -35,7 +35,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: 'a | (lit & 'c | add & 'd & {lhs: 'b} & ~lit | 'e & ~add & ~lit as 'b) -> (1 | 'f | 0 as 'f)
+//│ eval1_stub: 'a | (lit & 'c | (add & 'd & {lhs: 'b} | 'e & ~add) & ~lit as 'b) -> (1 | 'f | 0 as 'f)
 
 eval1_stub
 //│ res: ((Add[?]\rhs with {lhs: 'a}) | Lit | ~add & ~lit as 'a) -> (0 | 1)
@@ -53,7 +53,7 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: 'a | ('b & 'c -> ('d & int) & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | add & 'h & {rhs: 'e} & {lhs: 'e} & ~lit | 'c & ~add & ~lit as 'e) -> ('g | 'i | int | 'd)
+//│ res: 'a | ('b & 'c -> ('d & int) & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | (add & 'h & {rhs: 'e} & {lhs: 'e} | 'c & ~add) & ~lit as 'e) -> ('g | 'i | int | 'd)
 
 error: ~Add[?]
 //│ res: ~Add[?]
@@ -72,15 +72,15 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 //│ eval1_ty_ugly: ('a -> int) -> (Lit | Add['b .. Lit | Add['b .. 'b0] | 'a & ~Lit & ~Add[?] as 'b0] | 'a & ~Lit & ~Add[?] as 'b) -> int
 
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
-//│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | 'a & 'b & ~add & ~lit as 'c) -> int
+//│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 
 :stats
 def eval1_ty_ugly = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty_ugly:
-//│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ constrain calls: 152
-//│ annoying  calls: 422
+//│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
+//│ constrain calls: 142
+//│ annoying  calls: 357
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -99,11 +99,11 @@ def eval1_ty = eval1
 
 :stats
 eval1_ty = eval1_ty_ugly
-//│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | 'a & 'b & ~add & ~lit as 'c) -> int
+//│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ constrain calls: 780
-//│ annoying  calls: 6765
+//│ constrain calls: 680
+//│ annoying  calls: 6773
 
 
 // Workaround:
@@ -121,8 +121,8 @@ def eval1_ty = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
-//│ constrain calls: 150
-//│ annoying  calls: 355
+//│ constrain calls: 146
+//│ annoying  calls: 293
 
 
 rec def pretty1 k e = case e of {
@@ -157,8 +157,8 @@ prettier1 done (eval1 done) e1
 //│ res: int
 //│ res: string
 //│ res: string
-//│ constrain calls: 977
-//│ annoying  calls: 1932
+//│ constrain calls: 998
+//│ annoying  calls: 1767
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
@@ -200,8 +200,8 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 :stats
 eval2 done e1
 //│ res: int
-//│ constrain calls: 249
-//│ annoying  calls: 431
+//│ constrain calls: 254
+//│ annoying  calls: 372
 
 e2 = add (lit 1) (nega e1)
 //│ e2: Add['E .. 'E | Lit & {val: 1} | (Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})] with {lhs: Lit & {val: 1}, rhs: Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
@@ -210,7 +210,7 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│ constrain calls: 395
-//│ annoying  calls: 714
+//│ annoying  calls: 619
 
 d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}})] with {arg: Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}}}
@@ -218,8 +218,8 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 :stats
 eval2 done d2
 //│ res: int
-//│ constrain calls: 276
-//│ annoying  calls: 475
+//│ constrain calls: 271
+//│ annoying  calls: 416
 
 
 prettier2 done
@@ -231,8 +231,8 @@ prettier2 done (eval1 done)
 :stats
 prettier2 done (eval1 done) e1
 //│ res: string
-//│ constrain calls: 521
-//│ annoying  calls: 922
+//│ constrain calls: 536
+//│ annoying  calls: 823
 
 :stats
 prettier2 done (eval2 done)
@@ -241,8 +241,8 @@ prettier2 done (eval2 done) d2
 //│ res: (((Add[?] with {lhs: 'c & ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'd), rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'g}) as 'b) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│ res: string
 //│ res: string
-//│ constrain calls: 1582
-//│ annoying  calls: 2456
+//│ constrain calls: 1569
+//│ annoying  calls: 2135
 
 
 
