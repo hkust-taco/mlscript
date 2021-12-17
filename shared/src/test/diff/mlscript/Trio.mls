@@ -20,8 +20,9 @@ b = B { fB = "test" }
 :stats
 foo b
 //│ res: "test"
-//│ constrain calls: 16
-//│ annoying  calls: 8
+//│ constrain calls  : 16
+//│ annoying  calls  : 8
+//│ subtyping calls  : 20
 
 
 def arg: A | B | C
@@ -30,14 +31,16 @@ def arg: A | B | C
 :stats
 foo arg
 //│ res: bool | int | string
-//│ constrain calls: 31
-//│ annoying  calls: 24
+//│ constrain calls  : 31
+//│ annoying  calls  : 24
+//│ subtyping calls  : 75
 
 :stats
 foo (arg with { fC = true })
 //│ res: int | string | true
-//│ constrain calls: 21
-//│ annoying  calls: 22
+//│ constrain calls  : 21
+//│ annoying  calls  : 22
+//│ subtyping calls  : 82
 
 
 def foo x = case x of {
@@ -51,27 +54,29 @@ def foo x = case x of {
 :stats
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	foo arg
+//│ ║  l.55: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `A` does not match type `{payload: ?a}`
-//│ ║  l.27: 	def arg: A | B | C
+//│ ║  l.28: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `A & ?b | B & ?c | C & ?d`
-//│ ║  l.52: 	foo arg
+//│ ║  l.55: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.44: 	  | A -> add x.fA x.payload
+//│ ║  l.47: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.43: 	def foo x = case x of {
+//│ ║  l.46: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
-//│ constrain calls: 38
-//│ annoying  calls: 30
+//│ constrain calls  : 38
+//│ annoying  calls  : 30
+//│ subtyping calls  : 148
 
 :stats
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
-//│ constrain calls: 30
-//│ annoying  calls: 28
+//│ constrain calls  : 30
+//│ annoying  calls  : 28
+//│ subtyping calls  : 91
 

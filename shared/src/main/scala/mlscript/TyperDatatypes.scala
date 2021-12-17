@@ -36,6 +36,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val prov: TypeProvenance
     def level: Int
     def instantiate(implicit lvl: Int) = this
+    constructedTypes += 1
   }
   type ST = SimpleType
   

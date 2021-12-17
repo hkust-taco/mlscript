@@ -8,6 +8,19 @@ import mlscript.utils._, shorthands._
 /** Inessential methods used to help debugging. */
 abstract class TyperHelpers { self: Typer =>
   
+  protected var constrainCalls = 0
+  protected var annoyingCalls = 0
+  protected var subtypingCalls = 0
+  protected var constructedTypes = 0
+  def stats: (Int, Int, Int, Int) =
+    (constrainCalls, annoyingCalls, subtypingCalls, constructedTypes)
+  def resetStats(): Unit = {
+    constrainCalls = 0
+    annoyingCalls  = 0
+    subtypingCalls = 0
+    constructedTypes = 0
+  }
+  
   private val noPostTrace: Any => String = _ => ""
   
   protected var indent = 0
@@ -175,6 +188,7 @@ abstract class TyperHelpers { self: Typer =>
     def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
     // trace(s"? $this <: $that") {
+      subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
       (this === that) || ((this, that) match {
         case (RecordType(Nil), _) => TopType <:< that
