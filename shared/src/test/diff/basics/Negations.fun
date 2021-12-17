@@ -60,6 +60,8 @@ jesus(water: w)
 //│ ║  l.58: 	(0 | 1) & neg 0 as 0
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `1` does not match type `0`
+//│ ║  l.58: 	(0 | 1) & neg 0 as 0
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.58: 	(0 | 1) & neg 0 as 0
 //│ ╙──      	                   ^
@@ -71,13 +73,13 @@ jesus(water: w)
 :e
 neg 0 as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.72: 	neg 0 as 1
+//│ ║  l.74: 	neg 0 as 1
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `~0` does not match type `1`
-//│ ║  l.72: 	neg 0 as 1
+//│ ║  l.74: 	neg 0 as 1
 //│ ║        	^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.72: 	neg 0 as 1
+//│ ║  l.74: 	neg 0 as 1
 //│ ╙──      	         ^
 //│ res: 1
 

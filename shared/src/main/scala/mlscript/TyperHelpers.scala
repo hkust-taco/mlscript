@@ -97,7 +97,8 @@ abstract class TyperHelpers { self: Typer =>
     def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType | RecordType(Nil), _) => that
       case (BotType, _) => BotType
-      case (ComposedType(true, l, r), _) => l & that | r & that
+      // Unnecessary and can complicate constraint solving quite a lot:
+      // case (ComposedType(true, l, r), _) => l & that | r & that
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
@@ -199,6 +200,7 @@ abstract class TyperHelpers { self: Typer =>
       case p @ ProvType(und) => ProvType(und.withoutPos(names))(p.prov)
       case p @ ProxyType(und) => und.withoutPos(names)
       case p: ObjectTag => p
+      case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
     }
     def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
