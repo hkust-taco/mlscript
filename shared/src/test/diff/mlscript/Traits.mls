@@ -108,7 +108,7 @@ def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: 1}` does not match type `~a | C`
+//│ ╟── expression of type `{x: 1}` does not match type `~{x: 1} | ~a | C`
 //│ ║  l.107: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?a`

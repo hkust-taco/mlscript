@@ -60,8 +60,8 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a})) -> 'a
 //│ arg: A[int] | B[int]
 //│ res: int
-//│ constrain calls: 44
-//│ annoying  calls: 78
+//│ constrain calls: 31
+//│ annoying  calls: 16
 
 
 // ====== 3 ====== //
@@ -77,8 +77,8 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a})) -> 'a
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
-//│ constrain calls: 97
-//│ annoying  calls: 252
+//│ constrain calls: 42
+//│ annoying  calls: 24
 
 
 // ====== 4 ====== //
@@ -95,98 +95,101 @@ foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a})) -> 'a
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
-//│ constrain calls: 210
-//│ annoying  calls: 637
+//│ constrain calls: 53
+//│ annoying  calls: 32
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
-//│ constrain calls: 182
-//│ annoying  calls: 640
+//│ constrain calls: 25
+//│ annoying  calls: 29
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
-//│ constrain calls: 182
-//│ annoying  calls: 640
+//│ constrain calls: 25
+//│ annoying  calls: 29
 
 
 // ====== 5 ====== //
 
-// :stats
-// def foo x = case x of {
-//   | A -> x.fA
-//   | B -> x.fB
-//   | C -> x.fC
-//   | D -> x.fD
-//   | E -> x.fE
-//   }
-// def arg: A[int] | B[int] | C[int] | D[int] | E[int]
-// foo arg
-// //│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | ((((c & {fC: 'c}) & ~b) & ~a) | (((((d & {fD: 'd}) & ~c) & ~b) & ~a) | (((((e & {fE: 'e}) & ~d) & ~c) & ~b) & ~a))))) -> 'a | ('b | ('c | ('d | 'e)))
-// //│ arg: (((A[int] | B[int]) | C[int]) | D[int]) | E[int]
-// //│ res: int | (int | (int | (int | int)))
-// //│ constrain calls: 2102
-// //│ annoying  calls: 11662
+:stats
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  | D -> x.fD
+  | E -> x.fE
+  }
+def arg: A[int] | B[int] | C[int] | D[int] | E[int]
+foo arg
+//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a})) -> 'a
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
+//│ res: int
+//│ constrain calls: 64
+//│ annoying  calls: 40
 
 
 // ====== 6 ====== //
 
-// :stats
-// def foo x = case x of {
-//   | A -> x.fA
-//   | B -> x.fB
-//   | C -> x.fC
-//   | D -> x.fD
-//   | E -> x.fE
-//   | F -> x.fF
-//   }
-// def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
-// foo arg
-// //│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | ((((c & {fC: 'c}) & ~b) & ~a) | (((((d & {fD: 'd}) & ~c) & ~b) & ~a) | ((((((e & {fE: 'e}) & ~d) & ~c) & ~b) & ~a) | ((((((f & {fF: 'f}) & ~e) & ~d) & ~c) & ~b) & ~a)))))) -> 'a | ('b | ('c | ('d | ('e | 'f))))
-// //│ arg: ((((A[int] | B[int]) | C[int]) | D[int]) | E[int]) | F[int]
-// //│ res: int | (int | (int | (int | (int | int))))
-// //│ constrain calls: 10055
-// //│ annoying  calls: 63405
+:stats
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  | D -> x.fD
+  | E -> x.fE
+  | F -> x.fF
+  }
+def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
+foo arg
+//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a})) -> 'a
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
+//│ res: int
+//│ constrain calls: 75
+//│ annoying  calls: 48
 
 
 // ====== 7 ====== //
 
-// :stats
-// def foo x = case x of {
-//   | A -> x.fA
-//   | B -> x.fB
-//   | C -> x.fC
-//   | D -> x.fD
-//   | E -> x.fE
-//   | F -> x.fF
-//   | G -> x.fG
-//   }
-// def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
-// foo arg
-// //│ foo: ((a & {fA: 'a}) | (((b & {fB: 'b}) & ~a) | ((((c & {fC: 'c}) & ~b) & ~a) | (((((d & {fD: 'd}) & ~c) & ~b) & ~a) | ((((((e & {fE: 'e}) & ~d) & ~c) & ~b) & ~a) | (((((((f & {fF: 'f}) & ~e) & ~d) & ~c) & ~b) & ~a) | (((((((g & {fG: 'g}) & ~f) & ~e) & ~d) & ~c) & ~b) & ~a))))))) -> 'a | ('b | ('c | ('d | ('e | ('f | 'g)))))
-// //│ arg: (((((A[int] | B[int]) | C[int]) | D[int]) | E[int]) | F[int]) | G[int]
-// //│ res: int | (int | (int | (int | (int | (int | int)))))
-// //│ constrain calls: 52171
-// //│ annoying  calls: 364401
+:stats
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  | D -> x.fD
+  | E -> x.fE
+  | F -> x.fF
+  | G -> x.fG
+  }
+def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+foo arg
+//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a})) -> 'a
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ res: int
+//│ constrain calls: 86
+//│ annoying  calls: 56
 
 
 // ====== 8 ====== //
 
-// // Too long!
-// // :stats
-// // def foo x = case x of {
-// //   | A -> x.fA
-// //   | B -> x.fB
-// //   | C -> x.fC
-// //   | D -> x.fD
-// //   | E -> x.fE
-// //   | F -> x.fF
-// //   | G -> x.fG
-// //   | H -> x.fH
-// //   }
-// // def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
-// // foo arg
+:stats
+def foo x = case x of {
+  | A -> x.fA
+  | B -> x.fB
+  | C -> x.fC
+  | D -> x.fD
+  | E -> x.fE
+  | F -> x.fF
+  | G -> x.fG
+  | H -> x.fH
+  }
+def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
+foo arg
+//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a}) | (H[?] with {fH: 'a})) -> 'a
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
+//│ res: int
+//│ constrain calls: 97
+//│ annoying  calls: 64
 
-// The growth is perfectly exponential
 

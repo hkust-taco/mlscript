@@ -72,5 +72,5 @@ baz "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.58: 	def baz x = case x of
 //│ ╙──      	                 ^
-//│ res: "oops" | error
+//│ res: error
 
