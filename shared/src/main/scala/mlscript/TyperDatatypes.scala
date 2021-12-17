@@ -135,26 +135,25 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       base.without(rcd.fields.iterator.map(_._1).toSet) & rcd
   }
   
-  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])
-      (val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
-    assert(targs.size === defn.tparams.size)
+  case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
-    def expand(implicit raise: Raise): SimpleType = expandWith(paramTags = true)
-    def expandWith(paramTags: Bool)(implicit raise: Raise): SimpleType = {
-      val body_ty = typeType(defn.body)(ctx, raise, vars = defn.tparams.map(_.name).zip(targs).toMap)
+    def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
+    def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = {
+      val td = ctx.tyDefs(defn.name)
+      require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
-        if (paramTags) RecordType.mk(defn.tparams.lazyZip(targs).map((tp, tv) =>
-          tparamField(defn.nme, tp) -> FunctionType(tv, tv)(noProv)).toList)(noProv)
+        if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
+          tparamField(defn, tp) -> FunctionType(tv, tv)(noProv) }.toList)(noProv)
         else TopType
-      defn.kind match {
-        case Als => body_ty
-        case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
-        case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
-      }
+      subst(td.kind match {
+        case Als => td.bodyTy
+        case Cls => clsNameToNomTag(defn.name)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
+        case Trt => trtNameToNomTag(defn.name)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
+      }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
     }
     override def toString = {
       val displayName =
-        if (primitiveTypes.contains(defn.nme.name)) defn.nme.name.capitalize else defn.nme.name
+        if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name
       if (targs.isEmpty) displayName else s"$displayName[${targs.mkString(",")}]"
     }
   }
@@ -194,7 +193,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
-    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType =
+    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
   }
   

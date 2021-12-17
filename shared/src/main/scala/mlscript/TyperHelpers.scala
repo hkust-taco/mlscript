@@ -60,7 +60,7 @@ abstract class TyperHelpers { self: Typer =>
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
     case ProvType(underlying) => ProvType(subst(underlying, map))(ts.prov)
     case ProxyType(underlying) => subst(underlying, map)
-    case t@TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov, t.ctx)
+    case t @ TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov)
     case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
       cache += tv -> tv
       tv
@@ -182,10 +182,10 @@ abstract class TyperHelpers { self: Typer =>
       case _ => NegType(this)(prov)
     }
     
-    def >:< (that: SimpleType): Bool =
+    def >:< (that: SimpleType)(implicit ctx: Ctx): Bool =
       (this is that) || this <:< that && that <:< this
     // TODO for composed types and negs, should better first normalize the inequation
-    def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
     // trace(s"? $this <: $that") {
       subtypingCalls += 1
@@ -228,8 +228,8 @@ abstract class TyperHelpers { self: Typer =>
         case (_, ExtrType(false)) => true
         case (ExtrType(true), _) => true
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.nme.name => tr.expand(_ => ()) <:< that // FIXME swallow errors?
-        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.nme.name => this <:< tr.expand(_ => ()) // FIXME swallow errors?
+        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.name => tr.expand <:< that
+        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.name => this <:< tr.expand
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)
@@ -274,11 +274,11 @@ abstract class TyperHelpers { self: Typer =>
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
     }
-    def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
+    def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll
       case u => u
     }
-    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
+    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit ctx: Ctx): SimpleType = unwrapAll match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
@@ -291,7 +291,7 @@ abstract class TyperHelpers { self: Typer =>
     }
     def withProvOf(ty: SimpleType): ProvType = withProv(ty.prov)
     def withProv(p: TypeProvenance): ProvType = ProvType(this)(p)
-    def pushPosWithout(implicit raise: Raise): SimpleType = this match {
+    def pushPosWithout(implicit ctx: Ctx): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else b.unwrapAll.withoutPos(ns) match {
         case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
@@ -307,7 +307,7 @@ abstract class TyperHelpers { self: Typer =>
       }
       case _ => this
     }
-    def normalize(pol: Bool): ST = DNF.mk(this, pol = pol).toType()
+    def normalize(pol: Bool)(implicit ctx: Ctx): ST = DNF.mk(this, pol = pol).toType()
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
@@ -354,7 +354,7 @@ abstract class TyperHelpers { self: Typer =>
     
     def expPos(implicit ctx: Ctx): Type = (
       // this
-      this.pushPosWithout(_ => ())
+      this.pushPosWithout
       // this.normalize(true)
       // |> (canonicalizeType(_, true))
       // |> (simplifyType(_, true, removePolarVars = false))

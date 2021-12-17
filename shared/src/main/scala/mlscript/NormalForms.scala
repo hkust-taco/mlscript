@@ -73,6 +73,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (_, LhsTop) => true
       case (LhsTop, _) => false
       case (LhsRefined(b1, ts1, rt1), LhsRefined(b2, ts2, rt2)) =>
+        implicit val ctx: Ctx = Ctx.empty
         b2.forall(b2 => b1.exists(_ <:< b2)) && ts2.forall(ts1) && rt1 <:< rt2
     }
   }
@@ -159,7 +160,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(RhsBases(p, S(R(RhsField(n1, t1 | that._2)))))
       case _: RhsField | _: RhsBases => N
     }
-    def <:< (that: RhsNf): Bool = this.toType() <:< that.toType() // TODO less inefficient! (uncached calls to toType)
+    def <:< (that: RhsNf): Bool = this.toType().<:<(that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
   }
   case class RhsField(name: Var, ty: SimpleType) extends RhsNf
     { def name_ty: Var -> ST = name -> ty }
@@ -202,7 +203,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // }(r => s"!! $r")
     def & (that: Conjunct): Opt[Conjunct] =
       // trace(s"?? $this & $that ${lnf & that.lnf} ${rnf | that.rnf}") {
-      if (lnf.toType() <:< that.rnf.toType()) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
+      if (lnf.toType().<:<(that.rnf.toType())(Ctx.empty)) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
       else S(Conjunct.mk(lnf & that.lnf getOrElse (return N), vars | that.vars
         , rnf | that.rnf getOrElse (return N)
         , nvars | that.nvars))
@@ -317,7 +318,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(tvs: Set[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF): DNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool): DNF = (if (pol) ty.pushPosWithout(_ => ()) else ty) match {
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx): DNF = (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => of(bt)
       case bt: TraitTag => of(bt)
       case rt @ RecordType(fs) => of(rt)
@@ -326,7 +327,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case NegType(und) => DNF(CNF.mk(und, !pol).ds.map(_.neg))
       case tv: TypeVariable => of(Set.single(tv))
       case ProxyType(underlying) => mk(underlying, pol)
-      case tr @ TypeRef(defn, targs) => mk(tr.expand(_ => ()), pol) // TODO try to keep them?
+      case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
   }
@@ -351,7 +352,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), Set.empty, LhsTop, Set.empty)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF): CNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool): CNF =
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx): CNF =
       // trace(s"?C $ty") {
       ty match {
         case bt: BaseType => of(bt)
@@ -362,7 +363,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case NegType(und) => CNF(DNF.mk(und, !pol).cs.map(_.neg))
         case tv: TypeVariable => of(Set.single(tv))
         case ProxyType(underlying) => mk(underlying, pol)
-        case tr @ TypeRef(defn, targs) => mk(tr.expand(_ => ()), pol) // TODO try to keep them?
+        case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
         case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
       }
       // }(r => s"!C $r")

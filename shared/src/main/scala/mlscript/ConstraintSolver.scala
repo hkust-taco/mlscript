@@ -456,7 +456,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
-      (implicit cache: MutMap[TV, TV] = MutMap.empty): SimpleType =
+      (implicit ctx: Ctx, cache: MutMap[TV, TV] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
@@ -484,7 +484,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             to always extrude in both directions: */
         // TypeRef(d, ts.map(t =>
         //   TypeBounds(extrude(t, lvl, pol), extrude(t, lvl, pol))(noProv)))(tr.prov, tr.ctx) // FIXME pol...
-        extrude(tr.expand(_ => ()), lvl, pol).withProvOf(tr)
+        extrude(tr.expand, lvl, pol).withProvOf(tr)
     }
   
   
@@ -561,7 +561,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => freshen(und)
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
-      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov, tr.ctx)
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
     }
     freshen(ty)
   }

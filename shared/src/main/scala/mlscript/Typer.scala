@@ -20,13 +20,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   type Raise = Diagnostic => Unit
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
-  
+
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
-    tparams: List[TypeName],
-    targs: List[TypeVariable],
-    body: Type,
+    tparamsargs: List[(TypeName, TypeVariable)],
+    tvars: Iterable[TypeVariable], // "implicit" type variables. instantiate every time a `TypeRef` is expanded
+    bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
     baseClasses: Set[Var],
@@ -36,32 +36,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       baseClasses.map(v => Var(v.name.toList.mapHead(_.toLower).mkString)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
-    val targsMap: Map[Str, TypeVariable] = tparams.map(_.name).zip(targs).toMap
+    val tparams: List[TypeName] = tparamsargs.map(_._1)
+    val targs: List[TypeVariable] = tparamsargs.map(_._2)
+    def thisTy(implicit prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
+    def wrapMethod(bodyTy: PolymorphicType)(implicit prov: TypeProvenance): PolymorphicType =
+      PolymorphicType(bodyTy.level, FunctionType(singleTup(thisTy), bodyTy.body)(prov))
   }
   
-  /** targsMaps: stores the map from type parameters to type variables for polymorphic classes and methods
-   *    first layer: class name;
-   *    second layer: method name or None for top-level class type parameters;
-   *    third layer: type parameter.
-   *    For "normal" contexts, all innermost values should be `TypeVariable`s.
-   *    For the nested context during method typing, the innermost values can also be `TraitTag`s.
-   */
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef],
       mthDecls: Map[Str, Map[Str, PolymorphicType]], mthDefs: Map[Str, Map[Str, PolymorphicType]],
-      methodBase: MutMap[Str, Option[Var]], abcCache: MutMap[Str, Set[Var]]) {
+      methodBase: MutMap[Str, Option[Var]]) {
     def +=(b: Binding): Unit = env += b
     def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeScheme] = env.get(name) orElse parent.dlof(_.get(name))(N)
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def nest: Ctx = copy(Some(this), MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
+    private val abcCache: MutMap[Str, Set[Var]] = MutMap.empty
     def allBaseClassesOf(name: Str): Set[Var] = abcCache.getOrElse(name,
       tyDefs.get(name).fold(Set.empty[Var])(_.allBaseClasses(this)(Set.empty).tap(abcCache += name -> _)))
-    private val thisTyCache = MutMap.empty[Str, TypeRef]
-    def thisType(tn: Str)(implicit prov: TypeProvenance): TypeRef = thisTyCache.getOrElse(tn, {
-      val td = tyDefs(tn)
-      TypeRef(td, td.targs)(prov, this).tap(thisTyCache += tn -> _)
-    })
   }
   object Ctx {
     def init: Ctx = Ctx(
@@ -72,8 +65,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       mthDecls = Map.empty,
       mthDefs = Map.empty,
-      methodBase = MutMap.empty,
-      abcCache = MutMap.empty)
+      methodBase = MutMap.empty)
+    val empty: Ctx = init
   }
   implicit def lvl(implicit ctx: Ctx): Int = ctx.lvl
   
@@ -111,16 +104,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TypeName("int"), Nil, Nil, Top, List.empty, List.empty, Set.single(Var("number")), N) ::
-    TypeDef(Cls, TypeName("number"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Cls, TypeName("bool"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Cls, TypeName("true"), Nil, Nil, Top, List.empty, List.empty, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, TypeName("false"), Nil, Nil, Top, List.empty, List.empty, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, TypeName("string"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Als, TypeName("anything"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Als, TypeName("nothing"), Nil, Nil, Bot, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Cls, TypeName("error"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
-    TypeDef(Cls, TypeName("unit"), Nil, Nil, Top, List.empty, List.empty, Set.empty, N) ::
+    TypeDef(Cls, TypeName("int"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("number")), N) ::
+    TypeDef(Cls, TypeName("number"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Cls, TypeName("bool"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Cls, TypeName("true"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, TypeName("false"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, TypeName("string"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Als, TypeName("anything"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Als, TypeName("nothing"), Nil, Nil, BotType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
@@ -186,14 +179,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
     Var(clsNme.name + "#" + tparamNme.name)
   
-  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
-    require(td.kind is Cls)
-    ClassTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail),
-      td.allBaseClasses(ctx)(Set.single(Var(td.nme.name))))(prov)
+  def clsNameToNomTag(tn: Str)(prov: TypeProvenance, ctx: Ctx): SimpleType = ctx.tyDefs.get(tn) match {
+    case S(td) =>
+      require(td.kind is Cls)
+      ClassTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail),
+        ctx.allBaseClassesOf(td.nme.name))(prov)
+    case N => errType(prov)
   }
-  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
-    require(td.kind is Trt)
-    TraitTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail))(prov)
+  def trtNameToNomTag(tn: Str)(prov: TypeProvenance, ctx: Ctx): SimpleType = ctx.tyDefs.get(tn) match {
+    case S(td) =>
+      require(td.kind is Trt)
+      TraitTag(Var(td.nme.name.head.toLower.toString + td.nme.name.tail))(prov)
+    case N => errType(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
@@ -210,27 +207,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** Extract the mapping of type arguments applied to the base classes and traits from the body of a type definition.
    *  Only inheritance from a conjunction of `TypeName`s, `AppliedType`s and `Record`s are legal. */
-  def targsAppOf(tyDef: TypeDef)(implicit ctx: Ctx, raise: Raise,
-      vars: Map[Str, SimpleType] = Map.empty): Map[Str, Map[Str, SimpleType]] = {
-    def rec(ty: Type): Map[Str, Map[Str, SimpleType]] = ty match {
-      case Inter(l, r) => rec(l) ++ rec(r)
-      case AppliedType(TypeName(bn), ts) => ctx.tyDefs.get(bn).fold(Map(bn -> Map.empty[Str, SimpleType])) {
-        td => Map(bn -> td.tparams.map(_.name).zip(ts.map(typeType(_)(ctx.nextLevel, raise, vars))).toMap)
+  def targsAppOf(tn: Str)(implicit ctx: Ctx): Map[Str, Map[Str, SimpleType]] = {
+    def rec(ty: SimpleType): Map[Str, Map[Str, SimpleType]] = ty match {
+      case ComposedType(false, l, r) => rec(l) ++ rec(r)
+      case TypeRef(bn, ts) => ctx.tyDefs.get(bn.name).fold(Map(bn.name -> Map.empty[Str, SimpleType])) {
+        td => Map(bn.name -> td.tparams.iterator.map(_.name).zip(ts).toMap)
       }
-      case Record(_) => Map.empty
-      case TypeName(_) => Map.empty
+      case RecordType(_) => Map.empty
+      case _: ObjectTag => Map.empty
       case _ => Map.empty
     }
-    rec(tyDef.body)
+    ctx.tyDefs.get(tn) match { 
+      case S(td) => rec(td.bodyTy)
+      case N => Map.empty
+    }
   }
-
-  def wrapMethod(tn: Str, bodyTy: PolymorphicType)(implicit prov: TypeProvenance, ctx: Ctx): PolymorphicType =
-    PolymorphicType(bodyTy.level, FunctionType(singleTup(ctx.thisType(tn)), bodyTy.body)(prov))
 
   
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit raise: Raise): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
@@ -250,6 +246,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
     var allDefs = ctx.tyDefs
     var allEnv = ctx.env.clone
+    val newDefsInfo = newDefs0.iterator.map { case td => td.nme.name -> (td.kind, td.tparams.size) }.toMap
     val newDefs = newDefs0.map { td =>
       implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
       val n = td.nme
@@ -265,8 +262,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       }
       val dummyTargs = td.tparams.map(p =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter"), S(p.name))(ctx.lvl + 1))
-      val td1 = TypeDef(td.kind, td.nme, td.tparams, dummyTargs, td.body, td.mthDecls, td.mthDefs, 
-        baseClassesOf(td), td.toLoc)
+      val tparamsargs = td.tparams.lazyZip(dummyTargs)
+      val (bodyTy, tvars) = 
+        typeType2(td.body, simplify = false)(ctx.nextLevel, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+      val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
+        td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n.name -> td1
       td1
     }
@@ -275,13 +275,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def getSubsMap(tn: Str)(implicit ctx: Ctx): Map[Str, Map[SimpleType, SimpleType]] = subsMapCache.getOrElse(tn,
       (ctx.tyDefs.get(tn) match {
         case S(td) =>
-          val targsApp = targsAppOf(td)(ctx, raise, ctx.tyDefs(tn).targsMap)
-          td.baseClasses.flatMap { case Var(bn) => ctx.tyDefs.get(bn).map(_.targsMap).map(bn -> _) }.map { case bn -> m =>
-            bn -> m.map[SimpleType, SimpleType] {
-              case targ -> (tv: TypeVariable) => tv -> targsApp(bn).getOrElse(targ,
-                freshVar(noProv)(tv.level)) // Q: Is this `freshVar` legit? Seems it should never happen
-              case _ => die
-            }
+          val targsApp = targsAppOf(tn)
+          td.baseClasses.flatMap(bn => ctx.tyDefs.get(bn.name)).iterator.map { td2 =>
+            val bn = td2.nme.name
+            bn -> td2.tparamsargs.iterator.map(tpa => tpa._2 -> targsApp(bn)(tpa._1.name)).toMap[SimpleType, SimpleType]
           }.toMap
         case N => Map.empty[Str, Map[SimpleType, SimpleType]]
       }).tap(subsMapCache += tn -> _)
@@ -292,18 +289,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-        val body_ty = typeType(td.body, simplify = false)(ctx.nextLevel, raise, td.targsMap)
         def allDeclMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDecls.get(bc.name).map(_.keySet)
           .getOrElse(allDeclMths(ctx.tyDefs(bc.name)))) ++ td.mthDecls.map(_.nme.name)
         def allDefMths(td: TypeDef): Set[Str] = td.baseClasses.flatMap(bc => ctx.mthDefs.get(bc.name).map(_.keySet)
           .getOrElse(allDefMths(ctx.tyDefs(bc.name)))) ++ td.mthDefs.map(_.nme.name)
-        def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeDef \/ TV]): Bool =
+        def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
             ty match {
-          case TypeRef(td, _) if travsersed(L(td)) =>
-            err(msg"illegal cycle involving type ${td.nme.name}", prov.loco)
+          case TypeRef(tn, _) if travsersed(L(tn)) =>
+            err(msg"illegal cycle involving type ${tn}", prov.loco)
             false
-          case tr @ TypeRef(td, targs) => checkCycle(tr.expand)(travsersed + L(td))
+          case tr @ TypeRef(tn, targs) => checkCycle(tr.expand)(travsersed + L(tn))
           case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
           case NegType(u) => checkCycle(u)
           case p: ProxyType => checkCycle(p.underlying)
@@ -317,19 +313,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         // }()
         val rightParents = td.kind match {
-          case Als => checkCycle(body_ty)(Set.single(L(td)))
+          case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case k: ObjDefKind =>
             val parentsClasses = MutSet.empty[TypeRef]
             def checkParents(ty: SimpleType): Bool = ty match {
               // case ClassTag(Var("string"), _) => true // Q: always?
               case _: ObjectTag => true // Q: always? // FIXME actually no
-              case tr @ TypeRef(td2, _) =>
+              case tr @ TypeRef(tn2, _) =>
+                val td2 = ctx.tyDefs(tn2.name)
                 td2.kind match {
                   case Cls =>
                     if (td.kind is Cls) {
                       parentsClasses.isEmpty || {
-                        err(msg"${td.kind.str} $n cannot inherit from class ${tr.defn.nme
-                            } as it already inherits from class ${parentsClasses.head.defn.nme}",
+                        err(msg"${td.kind.str} $n cannot inherit from class ${tn2
+                            } as it already inherits from class ${parentsClasses.head.defn}",
                           prov.loco)
                         false
                       } tap (_ => parentsClasses += tr)
@@ -366,13 +363,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case p: ProxyType => checkParents(p.underlying)
             }
             lazy val isAbstract = (allDeclMths(td) -- allDefMths(td)).nonEmpty
-            checkParents(body_ty) && checkCycle(body_ty)(Set.single(L(td))) && isAbstract.||{
-              val fields = fieldsOf(body_ty, true)
-              val tparamTags = td.tparams.lazyZip(td.targs).map((tp, tv) =>
-                tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv)).toList
+            checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && isAbstract.||{
+              val fields = fieldsOf(td.bodyTy, true)
+              val tparamTags = td.tparamsargs.map { case (tp, tv) =>
+                tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
               val ctor = k match {
                 case Cls =>
-                  val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class"), ctx)
+                  val nomTag = clsNameToNomTag(n.name)(originProv(td.nme.toLoc, "class"), ctx)
                   val fieldsRefined = fields.iterator.map(f =>
                     if (f._1.name.isCapitalized) f
                     else f._1 ->
@@ -386,9 +383,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                       fieldsRefined ::: tparamTags
                     )(noProv))(originProv(td.nme.toLoc, "class constructor")))
                 case Trt =>
-                  val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait"), ctx)
+                  val nomTag = trtNameToNomTag(n.name)(originProv(td.nme.toLoc, "trait"), ctx)
                   val tv = freshVar(noProv)(1)
-                  tv.upperBounds ::= body_ty
+                  tv.upperBounds ::= td.bodyTy
                   PolymorphicType(0, FunctionType(
                     singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                   )(originProv(td.nme.toLoc, "trait constructor")))
@@ -398,17 +395,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             }
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
-          case tr @ TypeRef(defn, targs) => reached.get(defn.nme.name) match {
-            case None => checkRegular(tr.expand)(reached + (defn.nme.name -> targs))
+          case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
+            case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
             case Some(tys) =>
               // TODO less syntactic check...
-              if (defn.nme === td.nme && tys =/= targs) {
-                if (defn.nme.name === td.nme.name)
-                  err(msg"Type definition is not regular: it occurs within itself as ${
-                    expandType(tr, true).show
-                  }, but is defined as ${
-                    expandType(TypeRef(defn, td.targs)(noProv, ctx), true).show
-                  }", td.toLoc)(raise, noProv)
+              if (defn === td.nme && tys =/= targs) {
+                err(msg"Type definition is not regular: it occurs within itself as ${
+                  expandType(tr, true).show
+                }, but is defined as ${
+                  expandType(TypeRef(defn, td.targs)(noProv), true).show
+                }", td.toLoc)(raise, noProv)
                 false
               } else true
           }
@@ -416,7 +412,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
-        if (rightParents && checkRegular(body_ty)(Map(n.name -> td.targs)))
+        if (rightParents && checkRegular(td.bodyTy)(Map(n.name -> td.targs)))
           td.nme.name -> td :: Nil
         else Nil
       })
@@ -431,13 +427,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val decls = MutMap.empty[Str, PolymorphicType]
         val defs = MutMap.empty[Str, PolymorphicType]
         val thisCtx = ctx.nest
-        val targsMap = td.targsMap.map { 
-          case s -> (tv: TypeVariable) => s -> freshenAbove(ctx.lvl, tv, true)
-          case _ => die
-        }
-        val rigid = td.targsMap.map { case pn -> tv => tv -> targsMap(pn) }.toMap[SimpleType, SimpleType]
-        val reverseRigid = rigid.map(_.swap).toMap
-        thisCtx += "this" -> subst(thisCtx.thisType(tn.name), rigid)
+        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val targsMap = td.tparams.iterator.map(_.name).zip(rigidtargs).toMap
+        val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
+        thisCtx += "this" -> TypeRef(td.nme, rigidtargs)(prov)
         (td.mthDecls ++ td.mthDefs).foreach { case md @ MethodDef(rec, prt, nme, tparams, rhs) =>
           implicit val prov: TypeProvenance = tp(md.toLoc, rhs.fold(_ => "method definition", _ => "method declaration"))
           tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
@@ -454,7 +447,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             err(msg"Method names must start with a capital letter", nme.toLoc)
           if (defs.isDefinedAt(nme.name))
             err(msg"Method '${tn}.${nme.name}' is already defined.", nme.toLoc)
-          val tp1s = td.tparams.map(tp => tp.name -> tp).toMap
+          val tp1s = td.tparams.iterator.map(tp => tp.name -> tp).toMap
           tparams.foreach(tp2 => tp1s.get(tp2.name) match {
             case S(tp1) => warn((msg"Method type parameter ${tp1}" -> tp1.toLoc)
               :: (msg"shadows class type parameter ${tp2}" -> tp2.toLoc)
@@ -473,7 +466,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           rhs.fold(_ => defs, _ => decls) += nme.name -> (bodyTy match {
             case PolymorphicType(level, body) => PolymorphicType(level, ProvType(body)(prov))
           })
-          thisCtx.env += "." + nme.name -> wrapMethod(tn.name, bodyTy)
+          thisCtx.env += "." + nme.name -> td.wrapMethod(bodyTy)
         }
         val subsMap = getSubsMap(tn.name)
         newMthDecls += tn.name ->
@@ -487,11 +480,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val mthDeclsSet = td.mthDecls.map(_.nme.name).toSet
         allEnv ++= (newMthDecls(tn.name) ++ newMthDefs(tn.name).iterator.filter { case mn -> _ => !mthDeclsSet(mn) })
           .flatMap{ case mn -> bodyTy =>
-            val m_ty = wrapMethod(tn.name, bodyTy)
+            val m_ty = td.wrapMethod(bodyTy)
             s"${tn.name}.${mn}" -> m_ty ::
               (ctx.methodBase.get(mn) match {
                 case S(S(v)) if ctx.allBaseClassesOf(tn.name).contains(v) => Nil
-                case S(S(v)) if ctx.allBaseClassesOf(v.name.toList.mapHead(_.toUpper).mkString)
+                case S(S(v)) if ctx.allBaseClassesOf(v.name.capitalize)
                     .contains(Var(tn.name.toList.mapHead(_.toLower).mkString)) =>
                   ctx.methodBase += mn -> S(Var(tn.name.toList.mapHead(_.toLower).mkString))
                   ("." + mn) -> m_ty :: Nil
@@ -516,12 +509,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val tn = td.nme
         val decls = ctx.mthDecls(tn.name)
         val defs = ctx.mthDefs(tn.name)
-        val rigidSubsMap = td.targsMap.map { 
-          case s -> (tv: TypeVariable) => tv -> freshenAbove(ctx.lvl, tv, true)
-          case _ => die
-        }.toMap[SimpleType, SimpleType]
+        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidSubsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         val subsMap = getSubsMap(tn.name)
-        def ss(mt: PolymorphicType, bmt: TypeScheme, bno: Option[Str] = N)(implicit raise: Raise, prov: TypeProvenance) = bmt match {
+        def ss(mt: PolymorphicType, bmt: TypeScheme, bno: Option[Str] = N)(implicit prov: TypeProvenance) = bmt match {
           case pt: PolymorphicType => constrain(subst(mt, rigidSubsMap).instantiate,
             subst(bno.fold(pt)(bn => subst(pt, subsMap(bn))), rigidSubsMap).rigidify)(raise, prov, ctx)
           case st: SimpleType => constrain(subst(mt, rigidSubsMap).instantiate,
@@ -554,12 +545,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     }
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, tyDefs = allDefs)))
   }
+  /* Parameters `vars` and `newDefsInfo` are used for typing `TypeName`s.
+   * If the key is found in `vars`, the type is typed as the associated value. Use case: type arguments.
+   * If the key is found in `newDefsInfo`, the type is typed as a `TypeRef`, where the associated value
+   *   is used to check the kind of the definition and the number of type arguments expected. Use case:
+   *   for typing bodies of type definitions with mutually recursive references. */
+  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty,
+      newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): SimpleType = 
+    typeType2(ty, simplify)._1
+  /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
+   * Useful for instantiating them by substitution when expanding a `TypeRef`. */
   // TODO better record type provenances!
-  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise,
-      vars: Map[Str, SimpleType] = Map.empty): SimpleType = {
+  def typeType2(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty,
+      newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) = {
     val typeType = ()
-    def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ TypeDef =
-      ctx.tyDefs.get(name).toRight(() =>
+    def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
+      newDefsInfo.get(name).orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size))).toRight(() =>
         err("type identifier not found: " + name, loc)(raise, tp(loc, "missing type")))
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
@@ -595,21 +596,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(r.fields.mapValues(rec))(tp(r.toLoc, "extension record")))(tp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tp(ty.toLoc, "literal type"))
-      case TypeName(name) =>
+      case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tp(tyLoc, "type reference")
         vars.get(name).getOrElse {
           typeNamed(tyLoc, name) match {
-            case R(td) =>
-              if (td.tparams.nonEmpty) {
+            case R((_, tpnum)) =>
+              if (tpnum =/= 0) {
                 err(msg"Type $name takes parameters", tyLoc)(raise, tpr)
-              } else TypeRef(td, Nil)(tpr, ctx)
+              } else TypeRef(tn, Nil)(tpr)
             case L(e) =>
               if (name.isEmpty || !name.head.isLower) e()
               else typeNamed(tyLoc, name.capitalize) match {
-                case R(td) => td.kind match {
-                  case Cls => clsNameToNomTag(td)(tp(tyLoc, "class tag"), ctx)
-                  case Trt => trtNameToNomTag(td)(tp(tyLoc, "trait tag"), ctx)
+                case R((kind, _)) => kind match {
+                  case Cls => clsNameToNomTag(name.capitalize)(tp(tyLoc, "class tag"), ctx)
+                  case Trt => trtNameToNomTag(name.capitalize)(tp(tyLoc, "trait tag"), ctx)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise, tpr)
                 }
@@ -620,19 +621,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil, tv.identifier.toOption)(noProv))
+          localVars.getOrElseUpdate(tv, freshVar(noProv, tv.identifier.toOption))
             .withProv(tp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
         val prov = tp(ty.toLoc, "applied type reference")
         typeNamed(ty.toLoc, base.name) match {
-          case R(td) =>
-            val tpnum = td.tparams.size
+          case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map(rec) else {
               err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${
                   targs.size.toString}", ty.toLoc)(raise, prov)
               (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv))).take(tpnum).toList
             }
-            TypeRef(td, realTargs)(prov, ctx)
+            TypeRef(base, realTargs)(prov)
           case L(e) => e()
         }
       case Recursive(uv, body) =>
@@ -644,7 +644,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Rem(base, fs) => Without(rec(base), fs
         .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov
     }
-    rec(ty)(ctx, Map.empty)
+    (rec(ty)(ctx, Map.empty), localVars.values)
   }
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
@@ -947,8 +947,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case Some(td) =>
               td.kind match {
                 case Als => err(msg"can only match on classes and traits", pat.toLoc)(raise, tpr)
-                case Cls => clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx)
-                case Trt => trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx)
+                case Cls => clsNameToNomTag(td.nme.name)(tp(pat.toLoc, "class pattern"), ctx)
+                case Trt => trtNameToNomTag(td.nme.name)(tp(pat.toLoc, "trait pattern"), ctx)
               }
           }
       }
@@ -1089,9 +1089,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case Var(n) => TypeName(n)
               case lit: Lit => Literal(lit)
             }
-            case TypeRef(td, Nil) => TypeName(td.nme.name)
+            case TypeRef(td, Nil) => td
             case TypeRef(td, targs) =>
-              AppliedType(TypeName(td.nme.name), targs.map { t =>
+              AppliedType(td, targs.map { t =>
                 val l = go(t, false)
                 val u = go(t, true)
                 if (l === u) l else Bounds(l, u)
