@@ -122,52 +122,58 @@ abstract class TyperHelpers { self: Typer =>
       (this is that) || this <:< that && that <:< this
     // TODO for composed types and negs, should better first normalize the inequation
     def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    {
     // trace(s"? $this <: $that") {
-    (this === that) || ((this, that) match {
-      case (RecordType(Nil), _) => TopType <:< that
-      case (_, RecordType(Nil)) => this <:< TopType
-      case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
-      case (TypeBounds(lb, ub), _) => ub <:< that
-      case (_, TypeBounds(lb, ub)) => this <:< lb
-      case (FunctionType(l1, r1), FunctionType(l2, r2)) => l2 <:< l1 && r1 <:< r2
-      case (_: FunctionType, _) | (_, _: FunctionType) => false
-      case (ComposedType(true, l, r), _) => l <:< that && r <:< that
-      case (_, ComposedType(false, l, r)) => this <:< l && this <:< r
-      case (ComposedType(false, l, r), _) => l <:< that || r <:< that
-      case (_, ComposedType(true, l, r)) => this <:< l || this <:< r
-      case (RecordType(fs1), RecordType(fs2)) =>
-        fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
-      case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
-      case (_: TypeVariable, _) | (_, _: TypeVariable)
-        if cache.contains(this -> that)
-        => cache(this -> that)
-      case (tv: TypeVariable, _) =>
-        cache(this -> that) = true
-        val tmp = tv.upperBounds.exists(_ <:< that)
-        cache(this -> that) = tmp
-        tmp
-      case (_, tv: TypeVariable) =>
-        cache(this -> that) = true
-        val tmp = tv.lowerBounds.exists(this <:< _)
-        cache(this -> that) = tmp
-        tmp
-      case (ProxyType(und), _) => und <:< that
-      case (_, ProxyType(und)) => this <:< und
-      case (_, NegType(und)) => (this & und) <:< BotType
-      case (NegType(und), _) => TopType <:< (that | und)
-      case (_, ExtrType(false)) => true
-      case (ExtrType(true), _) => true
-      case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-      case (tr: TypeRef, _) if primitiveTypes contains tr.defn.nme.name => tr.expand(_ => ()) <:< that // FIXME swallow errors?
-      case (_, tr: TypeRef) if primitiveTypes contains tr.defn.nme.name => this <:< tr.expand(_ => ()) // FIXME swallow errors?
-      case (_: TypeRef, _) | (_, _: TypeRef) =>
-        false // TODO try to expand them (this requires populating the cache because of recursive types)
-      case (_: Without, _) | (_, _: Without)
-        | (_: TupleType, _) | (_, _: TupleType)
-        | (_: TraitTag, _) | (_, _: TraitTag)
-        => false // don't even try
-      case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
-    })
+      def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
+      (this === that) || ((this, that) match {
+        case (RecordType(Nil), _) => TopType <:< that
+        case (_, RecordType(Nil)) => this <:< TopType
+        case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
+        case (TypeBounds(lb, ub), _) => ub <:< that
+        case (_, TypeBounds(lb, ub)) => this <:< lb
+        case (FunctionType(l1, r1), FunctionType(l2, r2)) => assume { implicit cache =>
+          l2 <:< l1 && r1 <:< r2 
+        }
+        case (_: FunctionType, _) | (_, _: FunctionType) => false
+        case (ComposedType(true, l, r), _) => l <:< that && r <:< that
+        case (_, ComposedType(false, l, r)) => this <:< l && this <:< r
+        case (ComposedType(false, l, r), _) => l <:< that || r <:< that
+        case (_, ComposedType(true, l, r)) => this <:< l || this <:< r
+        case (RecordType(fs1), RecordType(fs2)) => assume { implicit cache =>
+          fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
+        }
+        case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
+        case (_: TypeVariable, _) | (_, _: TypeVariable)
+          if cache.contains(this -> that)
+          => cache(this -> that)
+        case (tv: TypeVariable, _) =>
+          cache(this -> that) = false
+          val tmp = tv.upperBounds.exists(_ <:< that)
+          if (tmp) cache(this -> that) = true
+          tmp
+        case (_, tv: TypeVariable) =>
+          cache(this -> that) = false
+          val tmp = tv.lowerBounds.exists(this <:< _)
+          if (tmp) cache(this -> that) = true
+          tmp
+        case (ProxyType(und), _) => und <:< that
+        case (_, ProxyType(und)) => this <:< und
+        case (_, NegType(und)) => (this & und) <:< BotType
+        case (NegType(und), _) => TopType <:< (that | und)
+        case (_, ExtrType(false)) => true
+        case (ExtrType(true), _) => true
+        case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
+        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.nme.name => tr.expand(_ => ()) <:< that // FIXME swallow errors?
+        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.nme.name => this <:< tr.expand(_ => ()) // FIXME swallow errors?
+        case (_: TypeRef, _) | (_, _: TypeRef) =>
+          false // TODO try to expand them (this requires populating the cache because of recursive types)
+        case (_: Without, _) | (_, _: Without)
+          | (_: TupleType, _) | (_, _: TupleType)
+          | (_: TraitTag, _) | (_, _: TraitTag)
+          => false // don't even try
+        case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
+      })
+    }
     // }(r => s"! $r")
     
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
