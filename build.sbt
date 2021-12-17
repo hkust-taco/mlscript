@@ -44,6 +44,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.mls", NothingFilter),
+    Test / testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-oC"),
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
