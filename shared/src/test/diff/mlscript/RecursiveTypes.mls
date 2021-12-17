@@ -313,7 +313,7 @@ f { a = 1 }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | int | ({a: 1} | 'a\a & {a: int} as 'a)
+//│ res: error
 
 f error
 //│ res: 'a\a & {a: int} as 'a
@@ -335,7 +335,7 @@ f ainf
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.275: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | int | ({a: 'a} as 'a)
+//│ res: error
 
 :e
 rec def infina = 0 with { a = infina }

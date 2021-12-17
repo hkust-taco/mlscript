@@ -732,13 +732,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
-      var alreadyReportedAnError = false
+      var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: TypeError if alreadyReportedAnError => () // silence further errors from this location
         case err: TypeError =>
-          alreadyReportedAnError = true
-          constrain(errType, res)(_ => (), noProv, ctx) // This is just to get error types leak into the result
-          raise(err)
+          // Note that we do not immediately abort constraining because we still
+          //  care about getting the non-erroneous parts of the code return meaningful types.
+          // In other words, this is so that errors do not interfere too much
+          //  with the rest of the (hopefully good) code.
+          if (errorsCount === 0) {
+            constrain(errType, res)(_ => (), noProv, ctx)
+            // ^ This is just to get error types leak into the result
+            raise(err)
+          } else if (errorsCount < 3) {
+            // Silence further errors from this location.
+          } else {
+            return res
+            // ^ Stop constraining, at this point.
+            //    This is to avoid rogue (explosive) constraint solving from badly-behaved error cases.
+            //    For instance see the StressTraits.mls test.
+          }
+          errorsCount += 1
         case diag => raise(diag)
       }, prov, ctx)
       res
