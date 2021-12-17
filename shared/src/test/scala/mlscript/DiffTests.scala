@@ -56,6 +56,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
     
+    print(s"Processing  $fileName")
+    // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
+    // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    
+    val beginTime = System.nanoTime()
+    
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
     
@@ -335,12 +341,18 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     try rec(allLines, defaultMode) finally {
       out.close()
     }
+    val testFaield = failures.nonEmpty
     val result = strw.toString
+    val endTime = System.nanoTime()
+    val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
+    val testColor = if (testFaield) Console.RED else Console.GREEN
+    println(s"${" " * (30 - fileName.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}")
     if (result =/= fileContents) {
-      println(s"Updating $file...")
+      println(s"! Updating $file")
       write.over(file, result)
     }
-    if (failures.nonEmpty)
+    if (testFaield)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
