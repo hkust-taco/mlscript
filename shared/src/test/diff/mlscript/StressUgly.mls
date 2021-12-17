@@ -140,6 +140,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ╙──      	              ^^^^^^^^
-//│ constrain calls: 55
-//│ annoying  calls: 56
+//│ constrain calls  : 55
+//│ annoying  calls  : 56
+//│ subtyping calls  : 477
 

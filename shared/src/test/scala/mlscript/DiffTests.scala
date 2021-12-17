@@ -317,9 +317,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             }
             
             if (mode.stats) {
-              val (co, an) = typer.stats
-              output(s"constrain calls: " + co)
-              output(s"annoying  calls: " + an)
+              val (co, an, su, ty) = typer.stats
+              output(s"constrain calls  : " + co)
+              output(s"annoying  calls  : " + an)
+              output(s"subtyping calls  : " + su)
+              // output(s"constructed types: " + ty)
             }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)

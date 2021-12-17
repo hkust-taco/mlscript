@@ -28,8 +28,9 @@ def foo x = case x of {
   | H -> x.fH
   }
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f | {fH: 'a} & h & ~a & ~b & ~c & ~d & ~e & ~f & ~g) -> 'a
-//│ constrain calls: 26
-//│ annoying  calls: 0
+//│ constrain calls  : 26
+//│ annoying  calls  : 0
+//│ subtyping calls  : 445
 
 
 // ====== 1 & all ====== //
@@ -39,8 +40,9 @@ def arg: A[int]
 foo arg
 //│ arg: {fA: int} & a
 //│ res: int
-//│ constrain calls: 15
-//│ annoying  calls: 8
+//│ constrain calls  : 15
+//│ annoying  calls  : 8
+//│ subtyping calls  : 68
 
 :stats
 :e
@@ -48,13 +50,13 @@ def arg: A[int] | B[int]
 foo arg
 //│ arg: {fA: int} & a | {fB: int} & b
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	foo arg
+//│ ║  l.50: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.47: 	def arg: A[int] | B[int]
+//│ ║  l.49: 	def arg: A[int] | B[int]
 //│ ║        	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
-//│ ║  l.48: 	foo arg
+//│ ║  l.50: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.21: 	  | A -> x.fA
@@ -63,8 +65,9 @@ foo arg
 //│ ║  l.20: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls: 30
-//│ annoying  calls: 30
+//│ constrain calls  : 30
+//│ annoying  calls  : 30
+//│ subtyping calls  : 235
 
 :stats
 :e
@@ -72,13 +75,13 @@ def arg: A[int] | B[int] | C[int]
 foo arg
 //│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	foo arg
+//│ ║  l.75: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.71: 	def arg: A[int] | B[int] | C[int]
+//│ ║  l.74: 	def arg: A[int] | B[int] | C[int]
 //│ ║        	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
-//│ ║  l.72: 	foo arg
+//│ ║  l.75: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.21: 	  | A -> x.fA
@@ -87,8 +90,9 @@ foo arg
 //│ ║  l.20: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls: 59
-//│ annoying  calls: 81
+//│ constrain calls  : 59
+//│ annoying  calls  : 81
+//│ subtyping calls  : 787
 
 :stats
 :e
@@ -96,14 +100,14 @@ def arg: A[int] | B[int] | D[int]
 foo arg
 //│ arg: {fA: int} & a | {fB: int} & b | {fD: int} & d
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.96: 	foo arg
-//│ ║        	^^^^^^^
+//│ ║  l.100: 	foo arg
+//│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.95: 	def arg: A[int] | B[int] | D[int]
+//│ ║  l.99: 	def arg: A[int] | B[int] | D[int]
 //│ ║        	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
-//│ ║  l.96: 	foo arg
-//│ ║        	    ^^^
+//│ ║  l.100: 	foo arg
+//│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.21: 	  | A -> x.fA
 //│ ║        	         ^^^^
@@ -111,8 +115,9 @@ foo arg
 //│ ║  l.20: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error
-//│ constrain calls: 67
-//│ annoying  calls: 106
+//│ constrain calls  : 67
+//│ annoying  calls  : 106
+//│ subtyping calls  : 1898
 
 
 // ====== 2 ====== //
@@ -128,23 +133,24 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a) -> 'a
 //│ arg: {fA: int} & a | {fB: int} & b
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	foo arg
+//│ ║  l.132: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.126: 	def arg: A[int] | B[int]
+//│ ║  l.131: 	def arg: A[int] | B[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a`
-//│ ║  l.127: 	foo arg
+//│ ║  l.132: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.123: 	  | A -> x.fA
+//│ ║  l.128: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.122: 	def foo x = case x of {
+//│ ║  l.127: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls: 38
-//│ annoying  calls: 30
+//│ constrain calls  : 38
+//│ annoying  calls  : 30
+//│ subtyping calls  : 152
 
 
 // ====== 3 ====== //
@@ -161,23 +167,24 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b) -> 'a
 //│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.160: 	foo arg
+//│ ║  l.166: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.159: 	def arg: A[int] | B[int] | C[int]
+//│ ║  l.165: 	def arg: A[int] | B[int] | C[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b`
-//│ ║  l.160: 	foo arg
+//│ ║  l.166: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.155: 	  | A -> x.fA
+//│ ║  l.161: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.154: 	def foo x = case x of {
+//│ ║  l.160: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls: 70
-//│ annoying  calls: 81
+//│ constrain calls  : 70
+//│ annoying  calls  : 81
+//│ subtyping calls  : 657
 
 
 // ====== 4 ====== //
@@ -195,61 +202,64 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c) -> 'a
 //│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b | {fD: int} & d
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.194: 	foo arg
+//│ ║  l.201: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.193: 	def arg: A[int] | B[int] | C[int] | D[int]
+//│ ║  l.200: 	def arg: A[int] | B[int] | C[int] | D[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c`
-//│ ║  l.194: 	foo arg
+//│ ║  l.201: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.188: 	  | A -> x.fA
+//│ ║  l.195: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.187: 	def foo x = case x of {
+//│ ║  l.194: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 79
-//│ annoying  calls: 93
+//│ constrain calls  : 79
+//│ annoying  calls  : 93
+//│ subtyping calls  : 863
 
 :stats
 :e
 foo (arg with { x = 1} with { y = 2 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.218: 	foo (arg with { x = 1} with { y = 2 })
+//│ ║  l.226: 	foo (arg with { x = 1} with { y = 2 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{fB: int, x: 1, y: 2} & a & b | {fB: int, x: 1, y: 2} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.218: 	foo (arg with { x = 1} with { y = 2 })
+//│ ║  l.226: 	foo (arg with { x = 1} with { y = 2 })
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.188: 	  | A -> x.fA
+//│ ║  l.195: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.187: 	def foo x = case x of {
+//│ ║  l.194: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 51
-//│ annoying  calls: 90
+//│ constrain calls  : 51
+//│ annoying  calls  : 90
+//│ subtyping calls  : 398
 
 :stats
 :e
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.237: 	foo (arg with { x = 1; y = 2; z = 3 })
+//│ ║  l.246: 	foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{fB: int, x: 1, y: 2, z: 3} & a & b | {fB: int, x: 1, y: 2, z: 3} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.237: 	foo (arg with { x = 1; y = 2; z = 3 })
+//│ ║  l.246: 	foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.188: 	  | A -> x.fA
+//│ ║  l.195: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.187: 	def foo x = case x of {
+//│ ║  l.194: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 51
-//│ annoying  calls: 90
+//│ constrain calls  : 51
+//│ annoying  calls  : 90
+//│ subtyping calls  : 386
 
 
 // ====== 5 ====== //
@@ -268,23 +278,24 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d) -> 'a
 //│ arg: {fC: int} & c | {fE: int} & e | {fA: int} & a | {fB: int} & b | {fD: int} & d
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.267: 	foo arg
+//│ ║  l.277: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.266: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int]
+//│ ║  l.276: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d`
-//│ ║  l.267: 	foo arg
+//│ ║  l.277: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.260: 	  | A -> x.fA
+//│ ║  l.270: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.259: 	def foo x = case x of {
+//│ ║  l.269: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 83
-//│ annoying  calls: 93
+//│ constrain calls  : 83
+//│ annoying  calls  : 93
+//│ subtyping calls  : 971
 
 
 // ====== 6 ====== //
@@ -304,23 +315,24 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e) -> 'a
 //│ arg: {fC: int} & c | {fE: int} & e | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.303: 	foo arg
+//│ ║  l.314: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.302: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
+//│ ║  l.313: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e`
-//│ ║  l.303: 	foo arg
+//│ ║  l.314: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.295: 	  | A -> x.fA
+//│ ║  l.306: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.294: 	def foo x = case x of {
+//│ ║  l.305: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 87
-//│ annoying  calls: 93
+//│ constrain calls  : 87
+//│ annoying  calls  : 93
+//│ subtyping calls  : 1102
 
 
 // ====== 7 ====== //
@@ -341,23 +353,24 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ arg: {fC: int} & c | {fE: int} & e | {fG: int} & g | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.340: 	foo arg
+//│ ║  l.352: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.339: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ ║  l.351: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f`
-//│ ║  l.340: 	foo arg
+//│ ║  l.352: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.331: 	  | A -> x.fA
+//│ ║  l.343: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.330: 	def foo x = case x of {
+//│ ║  l.342: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 91
-//│ annoying  calls: 93
+//│ constrain calls  : 91
+//│ annoying  calls  : 93
+//│ subtyping calls  : 1256
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
@@ -366,28 +379,30 @@ def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD
 :e
 foo_manual arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.367: 	foo_manual arg
+//│ ║  l.380: 	foo_manual arg
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── expression of type `{fB: int} & b` does not match type `{fA: ?a} & a | {fB: ?a} & b & ~a | {fC: ?a} & c & ~a & ~b | {fD: ?a} & d & ~a & ~b & ~c | {fE: ?a} & e & ~a & ~b & ~c & ~d | {fF: ?a} & f & ~a & ~b & ~c & ~d & ~e | {fG: ?a} & g & ~a & ~b & ~c & ~d & ~e & ~f`
-//│ ║  l.339: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ ║  l.351: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `{fA: ?a0} & a | {fB: ?a0} & b & ~a | {fC: ?a0} & c & ~a & ~b | {fD: ?a0} & d & ~a & ~b & ~c | {fE: ?a0} & e & ~a & ~b & ~c & ~d | {fF: ?a0} & f & ~a & ~b & ~c & ~d & ~e | {fG: ?a0} & g & ~a & ~b & ~c & ~d & ~e & ~f`
-//│ ║  l.367: 	foo_manual arg
+//│ ║  l.380: 	foo_manual arg
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.362: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
+//│ ║  l.375: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
-//│ constrain calls: 25
-//│ annoying  calls: 86
+//│ constrain calls  : 25
+//│ annoying  calls  : 86
+//│ subtyping calls  : 877
 
 :stats
 foo_manual = foo
 //│ ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│   <:  foo_manual:
 //│ ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
-//│ constrain calls: 86
-//│ annoying  calls: 182
+//│ constrain calls  : 86
+//│ annoying  calls  : 182
+//│ subtyping calls  : 1108
 
 
 // ====== 8 ====== //
@@ -409,22 +424,23 @@ foo arg
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f | {fH: 'a} & h & ~a & ~b & ~c & ~d & ~e & ~f & ~g) -> 'a
 //│ arg: {fC: int} & c | {fE: int} & e | {fG: int} & g | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f | {fH: int} & h
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.408: 	foo arg
+//│ ║  l.423: 	foo arg
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
-//│ ║  l.407: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
+//│ ║  l.422: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
-//│ ║  l.408: 	foo arg
+//│ ║  l.423: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.398: 	  | A -> x.fA
+//│ ║  l.413: 	  | A -> x.fA
 //│ ║         	         ^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.397: 	def foo x = case x of {
+//│ ║  l.412: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls: 95
-//│ annoying  calls: 93
+//│ constrain calls  : 95
+//│ annoying  calls  : 93
+//│ subtyping calls  : 1433
 
 

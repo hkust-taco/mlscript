@@ -11,14 +11,6 @@ import mlscript.Message._
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
   
-  private var constrainCalls = 0
-  private var annoyingCalls = 0
-  def stats: (Int, Int) = (constrainCalls, annoyingCalls)
-  def resetStats(): Unit = {
-    constrainCalls = 0
-    annoyingCalls  = 0
-  }
-  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -67,10 +59,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             // First, we filter out those RHS alternatives that obviously don't match our LHS:
             val possible = fullRhs.cs.filter { r =>
+              
+              // Note that without this subtyping check,
+              //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
+              //  ExprProb subsumption test case explodes.
               if ((r.rnf is RhsBot) && r.vars.isEmpty && r.nvars.isEmpty && lnf <:< r.lnf) {
                 println(s"OK  $lnf <: $r")
                 return ()
               }
+              
               // println(s"Possible? $r ${lnf & r.lnf}")
               !vars.exists(r.nvars) && (lnf & r.lnf).isDefined && ((lnf, r.rnf) match {
                 case (LhsRefined(_, ttags, _), RhsBases(objTags, rest))

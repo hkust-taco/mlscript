@@ -522,41 +522,45 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
-//│ constrain calls: 53
-//│ annoying  calls: 66
+//│ constrain calls  : 53
+//│ annoying  calls  : 66
+//│ subtyping calls  : 162
 
 :stats
 t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.529: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── expression of type `42` does not match type `bool`
 //│ ║  l.519: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── but it flows into reference with expected type `Dup[int, bool]`
-//│ ║  l.529: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.529: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	             ^^^^
 //│ ╟── from record type:
 //│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
-//│ constrain calls: 70
-//│ annoying  calls: 66
+//│ constrain calls  : 70
+//│ annoying  calls  : 66
+//│ subtyping calls  : 161
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls: 65
-//│ annoying  calls: 27
+//│ constrain calls  : 65
+//│ annoying  calls  : 27
+//│ subtyping calls  : 43
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls: 47
-//│ annoying  calls: 25
+//│ constrain calls  : 47
+//│ annoying  calls  : 25
+//│ subtyping calls  : 58
 
 
 // We don't currently analyze forward method declarations
@@ -568,7 +572,7 @@ class B: { x: int }
   method F: int
   method F = 1
 //│ ╔══[ERROR] identifier not found: Yes
-//│ ║  l.566: 	  method Nope = Yes.F
+//│ ║  l.570: 	  method Nope = Yes.F
 //│ ╙──       	                ^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})
