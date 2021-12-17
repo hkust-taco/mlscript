@@ -30,7 +30,7 @@ flatMap f "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.12: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
-//│ res: "oops" | error | (Some['A] with {v: nothing})
+//│ res: error | (Some['A] with {v: nothing})
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })

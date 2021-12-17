@@ -23,6 +23,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     lazy val underlying: SimpleType = mkType(false)
     def level: Int = underlying.level
+    def hasTag(ttg: TraitTag): Bool = this match {
+      case LhsRefined(bo, ts, r) => ts(ttg)
+      case LhsTop => false
+    }
+    def size: Int = this match {
+      case LhsRefined(bo, ts, r) => bo.size + ts.size + r.fields.size
+      case LhsTop => 0
+    }
     def & (that: BaseTypeOrTag): Opt[LhsNf] = (this, that) match {
       case (LhsTop, that: BaseType) => S(LhsRefined(S(that), Set.empty, RecordType(Nil)(noProv)))
       case (LhsTop, that: TraitTag) => S(LhsRefined(N, Set.single(that), RecordType(Nil)(noProv)))
@@ -36,6 +44,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
           case (S(TupleType(fs0)), TupleType(fs1)) if fs0.size === fs1.size =>
             S(TupleType(tupleIntersection(fs0, fs1))(noProv))
+          case (S(w1 @ Without(b1, ns1)), w2 @ Without(b2, ns2)) if ns1 === ns2 =>
+            // This case is quite hacky... if we find two incompatible Without types,
+            //  just make a new dummy Without type to merge them.
+            // The workaround is due to the fact that unlike other types, we can't fully
+            //  reduce Without types away, so they are "unduly" treated as `BaseType`s.
+            S(Without(b1 & b2, ns1)(w1.prov & w2.prov))
+          case (S(b), w: Without) => S(Without(b & w, Set.empty)(noProv))
+          case (S(w: Without), b) => S(Without(w & b, Set.empty)(noProv))
           case (S(_), _) => N
           case (N, _) => S(that)
         }) map { b => LhsRefined(S(b), ts, r1) }
@@ -80,6 +96,15 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     lazy val underlying: SimpleType = mkType(false)
     def level: Int = underlying.level
+    def hasTag(ttg: TraitTag): Bool = this match {
+      case RhsBases(ts, _) => ts.contains(ttg)
+      case RhsBot | _: RhsField => false
+    }
+    def size: Int = this match {
+      case RhsBases(ts, r) => ts.size + 1
+      case _: RhsField => 1
+      case RhsBot => 0
+    }
     def | (that: RhsNf): Opt[RhsNf] = that match {
       case RhsBases(prims, bf) =>
         val tmp = prims.foldLeft(this)(_ | _ getOrElse (return N))
@@ -154,6 +179,20 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       ((if (sort) vars.toArray.sorted.iterator else vars.iterator) ++ Iterator(g(rnf).neg())
         ++ (if (sort) nvars.toArray.sorted.iterator else nvars).map(_.neg())).foldLeft(f(lnf))(_ & _)
     lazy val level: Int = (vars.iterator ++ nvars).map(_.level).++(Iterator(lnf.level, rnf.level)).max
+    def - (fact: Factorizable): Conjunct = fact match {
+      case tv: TV => Conjunct(lnf, vars - tv, rnf, nvars)
+      case NegVar(tv) => Conjunct(lnf, vars, rnf, nvars - tv)
+      case tt: TraitTag => lnf match {
+        case LhsRefined(b, tts, rft) =>
+          if (tts(tt)) copy(lnf = LhsRefined(b, tts - tt, rft)) else this
+        case LhsTop => this
+      }
+      case NegTrait(tt) => rnf match {
+        case RhsBases(tts, r) => copy(rnf = RhsBases(tts.filterNot(_ === tt), r))
+        case RhsBot | _: RhsField => this
+      }
+    }
+    lazy val interSize: Int = vars.size + nvars.size + lnf.size + rnf.size
     def <:< (that: Conjunct): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&

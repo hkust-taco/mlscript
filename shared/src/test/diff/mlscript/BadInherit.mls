@@ -77,7 +77,7 @@ c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.76: 	c: nothing
 //│ ║        	^
-//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~Crazy[?a]`
+//│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~{name: "Bob", age: 42} | ~{Crazy#A = ?a} | ~{name: ?a} | ~Crazy[?]`
 //│ ║  l.72: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`

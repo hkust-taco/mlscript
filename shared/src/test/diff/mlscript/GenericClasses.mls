@@ -116,7 +116,7 @@ f: (Foo2[?] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (~(foo2 & {Foo2#A}) | foo2)) -> ('a | Foo2[?] & 'b as 'b)
+//│ res: (Foo2[?] & 'a & (foo2 | ~(Foo2[?] & 'a0 as 'a0) | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A} & (Foo2[?] & 'a0 as 'a0))) & (foo2 | ~(foo2 & {Foo2#A} & (Foo2[?] & 'a0 as 'a0)))) -> ((Foo2[?] & 'b as 'a0) as 'b)
 
 f
 //│ res: (Foo2[?] & 'a) -> 'a

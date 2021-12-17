@@ -16,8 +16,8 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 :stats
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
-//│ constrain calls: 88
-//│ annoying  calls: 62
+//│ constrain calls: 70
+//│ annoying  calls: 19
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -49,7 +49,7 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: ((None & ~'a | (Some['A .. 42 | 'A] with {value: 42})) -> 'a) -> (None | 'a)
+//│ res: ((Some['A .. 42 | 'A] with {value: 42}) -> 'a) -> (None | 'a)
 
 
 
@@ -83,7 +83,7 @@ res 1
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.69: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
-//│ res: 1 | error
+//│ res: error
 
 
 def funny = fun f -> case f of { Some -> f f }
