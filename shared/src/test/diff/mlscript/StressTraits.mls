@@ -110,9 +110,9 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.20: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: error | int
-//│ constrain calls: 86
-//│ annoying  calls: 128
+//│ res: error
+//│ constrain calls: 67
+//│ annoying  calls: 106
 
 
 // ====== 2 ====== //
@@ -209,9 +209,9 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.187: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 129
-//│ annoying  calls: 179
+//│ res: error
+//│ constrain calls: 79
+//│ annoying  calls: 93
 
 :stats
 :e
@@ -228,9 +228,9 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ╟── from refined scrutinee:
 //│ ║  l.187: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 101
-//│ annoying  calls: 176
+//│ res: error
+//│ constrain calls: 51
+//│ annoying  calls: 90
 
 :stats
 :e
@@ -247,9 +247,9 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ╟── from refined scrutinee:
 //│ ║  l.187: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 101
-//│ annoying  calls: 176
+//│ res: error
+//│ constrain calls: 51
+//│ annoying  calls: 90
 
 
 // ====== 5 ====== //
@@ -282,9 +282,9 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.259: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 236
-//│ annoying  calls: 359
+//│ res: error
+//│ constrain calls: 83
+//│ annoying  calls: 93
 
 
 // ====== 6 ====== //
@@ -318,9 +318,9 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.294: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 430
-//│ annoying  calls: 693
+//│ res: error
+//│ constrain calls: 87
+//│ annoying  calls: 93
 
 
 // ====== 7 ====== //
@@ -355,9 +355,9 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.330: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 786
-//│ annoying  calls: 1333
+//│ res: error
+//│ constrain calls: 91
+//│ annoying  calls: 93
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
@@ -377,9 +377,9 @@ foo_manual arg
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.362: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | int
-//│ constrain calls: 36
-//│ annoying  calls: 867
+//│ res: error
+//│ constrain calls: 25
+//│ annoying  calls: 86
 
 :stats
 foo_manual = foo
@@ -423,8 +423,8 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.397: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls: 1451
-//│ annoying  calls: 2603
+//│ res: error
+//│ constrain calls: 95
+//│ annoying  calls: 93
 
 
