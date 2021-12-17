@@ -201,7 +201,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
-  def parTy[_: P]: P[Type] = P( "(" ~/ ty ~ ")" )
+  def parTy[_: P]: P[Type] = P( "(" ~/ ty.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+    case (N -> ty :: Nil, N) => ty
+    case (fs, _) => Tuple(fs)
+  }
   def litTy[_: P]: P[Type] = P( lit.map(Literal) )
   
   def toplvl[_: P]: P[Statement] =

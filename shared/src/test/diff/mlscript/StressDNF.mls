@@ -1,0 +1,560 @@
+
+class A
+class B
+class C
+class D
+class E
+//│ Defined class A
+//│ Defined class B
+//│ Defined class C
+//│ Defined class D
+//│ Defined class E
+
+def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ty0: (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+
+:stats
+ty0 = ty0
+//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│   <:  ty0:
+//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ constrain calls: 597
+//│ annoying  calls: 2597
+
+def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ty1: (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
+
+:stats
+ty0 = ty1
+//│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
+//│   <:  ty0:
+//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ constrain calls: 151
+//│ annoying  calls: 639
+
+:stats
+:e
+ty1 = ty0
+//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│   <:  ty1:
+//│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a | A & 'a & ~?f` does not match type `'b`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f0) -> (?a, ?b, ?c, ?d, ?e, ?f0,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `B & 'b & ~'a` does not match type `'c`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                           ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `B & 'b` does not match type `'c`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                           ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                  ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'b` does not match type `'d`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                               ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                      ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'b` does not match type `'d`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                               ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                      ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'a` does not match type `'d`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                               ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                      ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c` does not match type `'d`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                               ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                      ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'a & ~'d` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'b & ~'d` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'c` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'c` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `B & 'b & ~'a & ~'c` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a & ~'b & ~'e` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                          ^^
+//│ ╟── from type variable:
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                                                   ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a & ~'b` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a & ~'b` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'b & ~'e` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                          ^^
+//│ ╟── from type variable:
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                                                   ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'b` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'b` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'a & ~'e` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                          ^^
+//│ ╟── from type variable:
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                                                   ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'a` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd` does not match type `'e`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                   ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                          ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'e` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'a & ~'e` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `D & 'd & ~'b & ~'e` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a & ~'b & ~'e` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'d` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'d` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'d` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'a & ~'d` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `C & 'c & ~'b & ~'d` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `B & 'b & ~'c` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'c` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'c` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `B & 'b & ~'a & ~'c` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `A & 'a & ~'b` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'b` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'b` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e & ~'a` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	^^^^^^^^^
+//│ ╟── expression of type `E & 'e` does not match type `'f`
+//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║        	                                                                                                       ^^
+//│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?c & ?b | C & ?d & ?c | D & ?e & ?d | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
+//│ ║  l.37: 	ty1 = ty0
+//│ ║        	      ^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.24: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ╙──      	                                                                              ^^
+//│ constrain calls: 597
+//│ annoying  calls: 2158
+
+
