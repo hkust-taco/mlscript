@@ -39,27 +39,23 @@ type Test1 = { x: int }
 //│ ║  l.37: 	type Test1 = { x: int }
 //│ ╙──      	     ^^^^^
 
-// FIXME
 type Test2 = { x: int }
 //│ Defined type alias Test2
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.47:12: class Test = { x: int }
+//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.46:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.51:10: type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.50:10: type Test: { x: int }
 
-// FIXME
 type Test3 = int -> int
 //│ Defined type alias Test3
 
-// FIXME
 type Test4 = int -> int -> int
 //│ Defined type alias Test4
 
-// FIXME
 type Test5 = (int -> int) -> int
 //│ Defined type alias Test5
 
@@ -71,10 +67,10 @@ type T = int
 type T = int
 type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.71: 	type T = int
+//│ ║  l.67: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.72: 	type T = int
+//│ ║  l.68: 	type T = int
 //│ ╙──      	     ^
 
 :e
@@ -84,18 +80,18 @@ def foo = 1
 foo 42
 //│ Defined type alias TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.82: 	foo 42
+//│ ║  l.78: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ foo: 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	foo 42
+//│ ║  l.80: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` is not a function
-//│ ║  l.83: 	def foo = 1
+//│ ║  l.79: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.84: 	foo 42
+//│ ║  l.80: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 
@@ -109,7 +105,7 @@ def test = fun x -> (x: TypeB)
 test 42
 type TypeC = TypeA
 //│ ╔══[ERROR] illegal cycle involving type TypeOops
-//│ ║  l.106: 	type TypeOops = TypeOops
+//│ ║  l.102: 	type TypeOops = TypeOops
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias TypeB
 //│ Defined type alias TypeC
@@ -138,13 +134,13 @@ error: Lol -> Lol
 :e
 type Runaway[A] = Runaway['a]
 //│ ╔══[ERROR] illegal cycle involving type Runaway
-//│ ║  l.139: 	type Runaway[A] = Runaway['a]
+//│ ║  l.135: 	type Runaway[A] = Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
-//│ ║  l.145: 	type Runaway[A] = 'a -> Runaway['a]
+//│ ║  l.141: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -154,20 +150,20 @@ type Runaway2 = Lol -> Runaway2
 :e
 id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.155: 	id: Runaway2
+//│ ║  l.151: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── expression of type `{x: ?a -> ?a}` is not a function
-//│ ║  l.128: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.124: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference of type `?b -> ?b`
-//│ ║  l.155: 	id: Runaway2
+//│ ║  l.151: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── which does not match type `Runaway2`
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.151: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.147: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.155: 	id: Runaway2
+//│ ║  l.151: 	id: Runaway2
 //│ ╙──       	    ^^^^^^^^
 //│ res: {x: 'a -> 'a} -> 'b as 'b
 
@@ -177,13 +173,13 @@ error: Runaway2
 :e
 error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.178: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.174: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
-//│ ║  l.128: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.124: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.178: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.174: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: {x: 'a -> 'a} -> 'b as 'b
 
