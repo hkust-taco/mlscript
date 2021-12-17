@@ -45,3 +45,18 @@ def test x = case x of { Foo -> x.field | _ -> 1 }
 //│ test: ((Foo[?] with {field: 'a}) | ~Foo[?]) -> (1 | 'a)
 
 
+def f x = x.u
+//│ f: {u: 'a} -> 'a
+
+f { u = 1 }
+//│ res: 1
+
+f { u = 1; v = 2 }
+//│ res: 1
+
+f (if true then { u = 1; v = 2 } else { u = 1 })
+//│ res: 1
+
+if true then { u = 1; v = 2 } else { u = 2 }
+//│ res: {u: 1 | 2}
+

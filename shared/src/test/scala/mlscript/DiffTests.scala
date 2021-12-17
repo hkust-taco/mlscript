@@ -71,9 +71,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
+    var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def funkyTuples = file.ext =:= "fun"
-      override def emitDbg(str: String): Unit = output(str)
+      override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
@@ -82,8 +83,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false)
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool, stdout: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -103,6 +104,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "stats" => mode.copy(stats = true)
+          case "stdout" => mode.copy(stdout = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case _ =>
@@ -152,6 +154,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
+            stdout = mode.stdout
             
             var totalTypeErrors = 0
             var totalWarnings = 0

@@ -283,3 +283,19 @@ indirect r
 def takeFunOrRecord: (int -> int | { x: int }) -> int
 //│ takeFunOrRecord: anything -> int
 
+:pe
+takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x = v } " at l.287:33: takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
+
+:pe
+takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x } -> 0" at l.291:33: takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
+
+:pe
+takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(int -> in" at l.295:33: takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
+
+:pe
+takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.299:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
+
