@@ -177,21 +177,28 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def tryMerge(that: Conjunct): Opt[Conjunct] = (this, that) match {
       case (Conjunct(LhsRefined(bse1, ts1, rcd1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2), vs2, r2, nvs2))
-        if vs1 === vs2 && r1 === r2 && nvs1 === nvs2
+        if vs1 === vs2 && r1 === r2 && nvs1 === nvs2 && ts1 === ts2
       =>
+        val ts = ts1
         val rcdU = RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)
+        // Example:
+        //    Why is it sound to merge (A -> B) & {R} | (C -> D) & {S}
+        //    into ((A & C) -> (B | D)) & ({R} | {S}) ?
+        //  Because the former can be distributed to
+        //    (A -> B | C -> D) & (A -> B | {S}) & ({R} | C -> D) & ({R} | {S})
+        //    == ((A & C) -> (B | D)) & Top & Top & ({R} | {S})
         (bse1, bse2) match {
           case (S(FunctionType(l1, r1)), S(FunctionType(l2, r2))) => // TODO Q: records ok here?!
-            S(Conjunct(LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts1 & ts2, // FIXME or should it be `&& ts1 === ts2` above?
-              rcdU), vs1, RhsBot, nvs1))
+            S(Conjunct(
+              LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(TupleType(fs1)), S(TupleType(fs2))) => // TODO Q: records ok here?!
-            if (fs1.size =/= fs2.size) S(Conjunct(LhsRefined(N, ts1 & ts2, rcdU), vs1, RhsBot, nvs1))
-            else S(Conjunct(LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts1 & ts2, // FIXME or should it be `&& ts1 === ts2` above?
-              rcdU), vs1, RhsBot, nvs1))
+            if (fs1.size =/= fs2.size) S(Conjunct(LhsRefined(N, ts, rcdU), vs1, RhsBot, nvs1))
+            else S(Conjunct(
+              LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (N, N)
             | (S(_: FunctionType), S(_: TupleType)) | (S(_: TupleType), S(_: FunctionType))
           =>
-            S(Conjunct(LhsRefined(N, ts1 & ts2, rcdU), vs1, RhsBot, nvs1))
+            S(Conjunct(LhsRefined(N, ts, rcdU), vs1, RhsBot, nvs1))
           case _ => N
         }
         case _ => N
