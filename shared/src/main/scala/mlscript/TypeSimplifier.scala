@@ -76,7 +76,7 @@ trait TypeSimplifier { self: Typer =>
               def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
                 case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
                 case RhsBases(prims, bf) =>
-                  // TODO refactor to handle goDeep not returning something else...
+                  // TODO refactor to handle goDeep returning something else...
                   RhsBases(prims, bf match {
                     case N => N
                     case S(L(bt)) => goDeep(bt, pol) match {
@@ -278,7 +278,9 @@ trait TypeSimplifier { self: Typer =>
       case NegType(und) => transform(und, !pol).neg()
       case ProxyType(underlying) => transform(underlying, pol)
       case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // FIXME may diverge; and we should try to keep these!
-      case wo @ Without(base, names) => Without(transform(base, pol), names)(wo.prov)
+      case wo @ Without(base, names) =>
+        if (names.isEmpty) transform(base, pol)
+        else Without(transform(base, pol), names)(wo.prov)
       case tb @ TypeBounds(lb, ub) =>
         if (pol) transform(ub, true) else transform(lb, false)
     }
