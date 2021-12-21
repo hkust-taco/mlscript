@@ -106,19 +106,6 @@ class SourceCode(val lines: Ls[SourceLine]) {
             ::: Ls(SourceLine.from("]"))
         )
     }
-  // Surround the source code with braces in a record style.
-  def record: SourceCode =
-    lines.length match {
-      case 0 => SourceCode.from("{}")
-      case 1 => new SourceCode(lines map { _.between("{ ", " }") })
-      case _ =>
-        new SourceCode(
-          SourceLine.from("{")
-            :: lines.map({ _.indented.withPostfix(",") })
-            ::: SourceLine.from("}")
-            :: Nil
-        )
-    }
   // Surround the source code with braces in a block style.
   def block: SourceCode =
     lines.length match {
@@ -140,9 +127,20 @@ object SourceCode {
   })
   def space: SourceCode = SourceCode.from(" ")
   def semicolon: SourceCode = SourceCode.from(";")
+  def comma: SourceCode = SourceCode.from(",")
   def empty: SourceCode = new SourceCode(Nil)
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
+  def record(entries: Ls[SourceCode]): SourceCode =
+    entries match {
+      case Nil         => SourceCode.from("{}")
+      case sole :: Nil => SourceCode.from("{ ") + sole + SourceCode.from(" }")
+      case _ =>
+        (entries.zipWithIndex.foldLeft(SourceCode.from("{")) { case (acc, (entry, index)) =>
+          acc + (if (index + 1 == entries.length) { entry }
+                 else { entry ++ SourceCode.comma }).indented
+        }) + SourceCode.from("}")
+    }
 }
 
 abstract class JSCode {
@@ -165,15 +163,14 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
     case name -> Some(subPattern) => subPattern.bindings
     case name -> None             => name :: Nil
   }
-  def toSourceCode: SourceCode =
+  def toSourceCode: SourceCode = SourceCode.record(
     properties
       .map {
         case name -> Some(subPattern) =>
           SourceCode.from(s"$name: ") ++ subPattern.toSourceCode
         case name -> N => SourceCode.from(name)
       }
-      .foldLeft(SourceCode.empty) { _ + _ }
-      .record
+  )
 }
 
 final case class JSWildcardPattern() extends JSPattern {
@@ -386,12 +383,11 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   override def precedence: Int = 22
   // Make
   override def toSourceCode: SourceCode = SourceCode
-    .concat(entries map { case (key, value) =>
+    .record(entries map { case (key, value) =>
       val body = if (JSMember.isValidIdentifier(key)) { key }
       else { JSLit.makeStringLiteral(key) }
       SourceCode.from(body + ": ") ++ value.toSourceCode
     })
-    .record
 }
 
 object JSMember {
