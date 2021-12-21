@@ -125,10 +125,12 @@ object SourceCode {
   def apply(lines: Ls[Str]): SourceCode = new SourceCode(lines map {
     new SourceLine(_, 0)
   })
-  def space: SourceCode = SourceCode(" ")
-  def semicolon: SourceCode = SourceCode(";")
-  def comma: SourceCode = SourceCode(",")
-  def empty: SourceCode = new SourceCode(Nil)
+
+  val space: SourceCode = SourceCode(" ")
+  val semicolon: SourceCode = SourceCode(";")
+  val comma: SourceCode = SourceCode(",")
+  val empty: SourceCode = SourceCode(Nil)
+  
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
   def record(entries: Ls[SourceCode]): SourceCode =
