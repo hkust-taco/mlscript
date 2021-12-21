@@ -128,7 +128,7 @@ object SourceCode {
       case sole :: Nil => SourceCode("{ ") + sole + SourceCode(" }")
       case _ =>
         (entries.zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
-          acc + (if (index + 1 == entries.length) { entry }
+          acc + (if (index + 1 === entries.length) { entry }
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("}")
     }
@@ -142,7 +142,7 @@ object SourceCode {
       case sole :: Nil => SourceCode("[") + sole + SourceCode("]")
       case _ =>
         (entries.zipWithIndex.foldLeft(SourceCode("[")) { case (acc, (entry, index)) =>
-          acc + (if (index + 1 == entries.length) { entry }
+          acc + (if (index + 1 === entries.length) { entry }
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("]")
     }
