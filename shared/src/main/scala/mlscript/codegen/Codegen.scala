@@ -94,18 +94,6 @@ class SourceCode(val lines: Ls[SourceLine]) {
             ::: Ls(SourceLine(")"))
         )
     }
-  // Surround the source code with braces in a array style.
-  def array: SourceCode =
-    lines.length match {
-      case 0 => SourceCode("[]")
-      case 1 => new SourceCode(lines map { _.between("[", "]") })
-      case _ =>
-        new SourceCode(
-          SourceLine("[")
-            :: lines.map({ _.indented.withPostfix(",") })
-            ::: Ls(SourceLine("]"))
-        )
-    }
   // Surround the source code with braces in a block style.
   def block: SourceCode =
     lines.length match {
@@ -130,9 +118,10 @@ object SourceCode {
   val semicolon: SourceCode = SourceCode(";")
   val comma: SourceCode = SourceCode(",")
   val empty: SourceCode = SourceCode(Nil)
-  
+
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
+
   def record(entries: Ls[SourceCode]): SourceCode =
     entries match {
       case Nil         => SourceCode("{}")
@@ -142,6 +131,20 @@ object SourceCode {
           acc + (if (index + 1 == entries.length) { entry }
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("}")
+    }
+
+  /**
+    * Surround the source code with braces.
+    */
+  def array(entries: Ls[SourceCode]): SourceCode =
+    entries match {
+      case Nil         => SourceCode("[]")
+      case sole :: Nil => SourceCode("[") + sole + SourceCode("]")
+      case _ =>
+        (entries.zipWithIndex.foldLeft(SourceCode("[")) { case (acc, (entry, index)) =>
+          acc + (if (index + 1 == entries.length) { entry }
+                 else { entry ++ SourceCode.comma }).indented
+        }) + SourceCode("]")
     }
 }
 
@@ -155,8 +158,7 @@ abstract class JSPattern extends JSCode {
 
 final case class JSArrayPattern(elements: Ls[JSPattern]) extends JSPattern {
   def bindings: Ls[Str] = elements flatMap { _.bindings }
-  def toSourceCode: SourceCode =
-    elements.map({ _.toSourceCode }).foldLeft(SourceCode.empty) { _ + _ }.array
+  def toSourceCode: SourceCode = SourceCode.array(elements map { _.toSourceCode })
 }
 
 final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends JSPattern {
@@ -375,9 +377,7 @@ final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
   // Precedence of literals is zero.
   override def precedence: Int = 22
   // Make
-  override def toSourceCode: SourceCode = SourceCode
-    .concat(items map { _.toSourceCode })
-    .array
+  override def toSourceCode: SourceCode = SourceCode.array(items map { _.toSourceCode })
 }
 
 final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
