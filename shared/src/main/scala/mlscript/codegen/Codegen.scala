@@ -59,7 +59,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
   def parenthesized(implicit run: Bool = true): SourceCode =
     if (run) {
       lines.length match {
-        case 0 => SourceCode.from("()")
+        case 0 => SourceCode("()")
         case 1 => new SourceCode(lines map { _.between("(", ")") })
         case _ =>
           val head = lines.head
@@ -97,7 +97,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
   // Surround the source code with braces in a array style.
   def array: SourceCode =
     lines.length match {
-      case 0 => SourceCode.from("[]")
+      case 0 => SourceCode("[]")
       case 1 => new SourceCode(lines map { _.between("[", "]") })
       case _ =>
         new SourceCode(
@@ -109,7 +109,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
   // Surround the source code with braces in a block style.
   def block: SourceCode =
     lines.length match {
-      case 0 => SourceCode.from("{}")
+      case 0 => SourceCode("{}")
       case _ =>
         new SourceCode(
           SourceLine.from("{")
@@ -121,25 +121,25 @@ class SourceCode(val lines: Ls[SourceLine]) {
 }
 
 object SourceCode {
-  def from(line: Str): SourceCode = new SourceCode(Ls(new SourceLine(line, 0)))
-  def fromLines(lines: Ls[Str]): SourceCode = new SourceCode(lines map {
+  def apply(line: Str): SourceCode = new SourceCode(Ls(new SourceLine(line, 0)))
+  def apply(lines: Ls[Str]): SourceCode = new SourceCode(lines map {
     new SourceLine(_, 0)
   })
-  def space: SourceCode = SourceCode.from(" ")
-  def semicolon: SourceCode = SourceCode.from(";")
-  def comma: SourceCode = SourceCode.from(",")
+  def space: SourceCode = SourceCode(" ")
+  def semicolon: SourceCode = SourceCode(";")
+  def comma: SourceCode = SourceCode(",")
   def empty: SourceCode = new SourceCode(Nil)
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
   def record(entries: Ls[SourceCode]): SourceCode =
     entries match {
-      case Nil         => SourceCode.from("{}")
-      case sole :: Nil => SourceCode.from("{ ") + sole + SourceCode.from(" }")
+      case Nil         => SourceCode("{}")
+      case sole :: Nil => SourceCode("{ ") + sole + SourceCode(" }")
       case _ =>
-        (entries.zipWithIndex.foldLeft(SourceCode.from("{")) { case (acc, (entry, index)) =>
+        (entries.zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
           acc + (if (index + 1 == entries.length) { entry }
                  else { entry ++ SourceCode.comma }).indented
-        }) + SourceCode.from("}")
+        }) + SourceCode("}")
     }
 }
 
@@ -167,8 +167,8 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
     properties
       .map {
         case name -> Some(subPattern) =>
-          SourceCode.from(s"$name: ") ++ subPattern.toSourceCode
-        case name -> N => SourceCode.from(name)
+          SourceCode(s"$name: ") ++ subPattern.toSourceCode
+        case name -> N => SourceCode(name)
       }
   )
 }
@@ -180,7 +180,7 @@ final case class JSWildcardPattern() extends JSPattern {
 
 final case class JSNamePattern(name: Str) extends JSPattern {
   def bindings: Ls[Str] = name :: Nil
-  def toSourceCode: SourceCode = SourceCode.from(name)
+  def toSourceCode: SourceCode = SourceCode(name)
 }
 
 abstract class JSExpr extends JSCode {
@@ -195,16 +195,16 @@ object JSExpr {
     params.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ (y match {
-          case JSWildcardPattern() => SourceCode.from(s"_$i")
+          case JSWildcardPattern() => SourceCode(s"_$i")
           case pattern             => pattern.toSourceCode
-        }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode.from(", "))
+        }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized
   def arguments(exprs: Ls[JSExpr]): SourceCode =
     exprs.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.toSourceCode ++ (if (i === exprs.length - 1) SourceCode.empty
-                                else SourceCode.from(", "))
+                                else SourceCode(", "))
       }
       .parenthesized
 }
@@ -212,7 +212,7 @@ object JSExpr {
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
   def precedence: Int = 3
   def toSourceCode: SourceCode =
-    lhs.toSourceCode ++ SourceCode.from(" = ") ++ rhs.toSourceCode
+    lhs.toSourceCode ++ SourceCode(" = ") ++ rhs.toSourceCode
 }
 
 final case class JSPlaceholderExpr() extends JSExpr {
@@ -226,11 +226,11 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
     params.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ (y match {
-          case JSWildcardPattern() => SourceCode.from(s"_$i")
+          case JSWildcardPattern() => SourceCode(s"_$i")
           case pattern             => pattern.toSourceCode
-        }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode.from(", "))
+        }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
-      .parenthesized ++ SourceCode.from(" => ") ++ body.toSourceCode
+      .parenthesized ++ SourceCode(" => ") ++ body.toSourceCode
 }
 
 // IIFE: immediately invoked function expression
@@ -241,7 +241,7 @@ final case class JSImmEvalFn(
 ) extends JSExpr {
   def precedence: Int = 22
   def toSourceCode: SourceCode = {
-    (SourceCode.from(s"function (${params mkString ", "}) ") ++ (body match {
+    (SourceCode(s"function (${params mkString ", "}) ") ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
@@ -253,9 +253,9 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
   def precedence: Int = 4
   def toSourceCode =
     tst.toSourceCode.parenthesized(tst.precedence < precedence) ++
-      SourceCode.from(" ? ") ++
+      SourceCode(" ? ") ++
       csq.toSourceCode.parenthesized(csq.precedence < precedence) ++
-      SourceCode.from(" : ") ++
+      SourceCode(" : ") ++
       alt.toSourceCode.parenthesized(alt.precedence < precedence)
 }
 
@@ -267,11 +267,11 @@ final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr 
     ) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.toSourceCode ++ (if (i === arguments.length - 1) SourceCode.empty
-                                else SourceCode.from(", "))
+                                else SourceCode(", "))
       }
       .parenthesized
     callee match {
-      case JSIdent(_, true) => SourceCode.from("new ") ++ body
+      case JSIdent(_, true) => SourceCode("new ") ++ body
       case _                => body
     }
   }
@@ -288,7 +288,7 @@ final case class JSBinary(op: Str, left: JSExpr, right: JSExpr) extends JSExpr {
 
   override def toSourceCode: SourceCode =
     left.toSourceCode.parenthesized(left.precedence < precedence) ++
-      SourceCode.from(s" $op ") ++
+      SourceCode(s" $op ") ++
       right.toSourceCode.parenthesized(right.precedence < precedence)
 }
 
@@ -319,7 +319,7 @@ object JSBinary {
 final case class JSLit(literal: Str) extends JSExpr {
   // Literals has the highest precedence.
   def precedence: Int = 22
-  def toSourceCode = SourceCode.from(literal)
+  def toSourceCode = SourceCode(literal)
 }
 
 object JSLit {
@@ -347,12 +347,12 @@ object JSLit {
 final case class JSInstanceOf(left: JSExpr, right: JSExpr) extends JSExpr {
   def precedence: Int = 12
   def toSourceCode: SourceCode =
-    left.toSourceCode ++ SourceCode.from(" instanceof ") ++ right.toSourceCode
+    left.toSourceCode ++ SourceCode(" instanceof ") ++ right.toSourceCode
 }
 
 final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExpr {
   def precedence: Int = 22
-  def toSourceCode: SourceCode = SourceCode.from(name)
+  def toSourceCode: SourceCode = SourceCode(name)
 }
 
 final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
@@ -360,7 +360,7 @@ final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
   override def toSourceCode: SourceCode =
     target.toSourceCode.parenthesized(
       target.precedence < precedence
-    ) ++ SourceCode.from(
+    ) ++ SourceCode(
       if (JSMember.isValidIdentifier(field)) {
         s".$field"
       } else {
@@ -386,7 +386,7 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
     .record(entries map { case (key, value) =>
       val body = if (JSMember.isValidIdentifier(key)) { key }
       else { JSLit.makeStringLiteral(key) }
-      SourceCode.from(body + ": ") ++ value.toSourceCode
+      SourceCode(body + ": ") ++ value.toSourceCode
     })
 }
 
@@ -404,7 +404,7 @@ final case class JSExprStmt(expr: JSExpr) extends JSStmt {
 
 // A single if statement without else clauses
 final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt]) extends JSStmt {
-  def toSourceCode: SourceCode = SourceCode.from("if ") ++
+  def toSourceCode: SourceCode = SourceCode("if ") ++
     test.toSourceCode.condition ++
     SourceCode.space ++
     body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
@@ -413,7 +413,7 @@ final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt]) extends JSStmt {
 // A single return statement.
 final case class JSReturnStmt(value: JSExpr) extends JSStmt {
   def toSourceCode =
-    SourceCode.from(
+    SourceCode(
       "return "
     ) ++ value.toSourceCode.clause ++ SourceCode.semicolon
 }
@@ -421,26 +421,26 @@ final case class JSReturnStmt(value: JSExpr) extends JSStmt {
 // Throw statement currently only used in non-exhaustive pattern matchings.
 final case class JSThrowStmt() extends JSStmt {
   def toSourceCode =
-    SourceCode.from("throw new Error(\"non-exhaustive case expression\");")
+    SourceCode("throw new Error(\"non-exhaustive case expression\");")
 }
 
 final case class JSLetDecl(pattern: Str, body: JSExpr) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode.from(
+    SourceCode(
       s"let $pattern = "
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
 final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode.from(
+    SourceCode(
       s"const $pattern = "
     ) ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
 final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode.from(s"function $name") ++ JSExpr.params(params) ++ SourceCode.space ++ body
+    SourceCode(s"function $name") ++ JSExpr.params(params) ++ SourceCode.space ++ body
       .foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
       .block
 }
@@ -449,7 +449,7 @@ abstract class JSClassMemberDecl extends JSStmt;
 
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode.from(s"get $name() ") ++ (body match {
+    SourceCode(s"get $name() ") ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
@@ -462,7 +462,7 @@ final case class JSClassMethod(
     body: JSExpr \/ Ls[JSStmt]
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode.from(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
+    SourceCode(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
@@ -471,7 +471,7 @@ final case class JSClassMethod(
 
 final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
-    SourceCode.from(name) ++ SourceCode.from(" = ") ++ body.toSourceCode ++ SourceCode.semicolon
+    SourceCode(name) ++ SourceCode(" = ") ++ body.toSourceCode ++ SourceCode.semicolon
 }
 
 final case class JSClassDecl(
@@ -481,7 +481,7 @@ final case class JSClassDecl(
     methods: Ls[JSClassMemberDecl] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
-    val ctor = SourceCode.fromLines(
+    val ctor = SourceCode(
       "  constructor(fields) {" :: (if (base.isEmpty) {
                                       Nil
                                     } else {
@@ -493,17 +493,17 @@ final case class JSClassDecl(
     val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
       x + y.toSourceCode.indented
     }
-    val epilogue = SourceCode.fromLines("}" :: Nil)
+    val epilogue = SourceCode("}" :: Nil)
     base match {
       case Some(baseCls) =>
-        SourceCode.fromLines(
+        SourceCode(
           s"class $name extends ${baseCls.name} {" :: Nil
         ) + ctor + methodsSourceCode + epilogue
       case None =>
         if (fields.isEmpty && methods.isEmpty) {
-          SourceCode.from(s"class $name {}")
+          SourceCode(s"class $name {}")
         } else {
-          SourceCode.fromLines(
+          SourceCode(
             s"class $name {" :: Nil
           ) + ctor + methodsSourceCode + epilogue
         }
@@ -513,5 +513,5 @@ final case class JSClassDecl(
 }
 
 final case class JSComment(text: Str) extends JSStmt {
-  def toSourceCode: SourceCode = SourceCode.from(s"// $text")
+  def toSourceCode: SourceCode = SourceCode(s"// $text")
 }
