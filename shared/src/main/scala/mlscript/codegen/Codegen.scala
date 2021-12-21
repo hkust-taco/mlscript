@@ -26,7 +26,7 @@ class SourceLine(val content: Str, indent: Int = 0) {
 }
 
 object SourceLine {
-  def from(line: Str): SourceLine = new SourceLine(line)
+  def apply(line: Str): SourceLine = new SourceLine(line)
 }
 
 class SourceCode(val lines: Ls[SourceLine]) {
@@ -89,9 +89,9 @@ class SourceCode(val lines: Ls[SourceLine]) {
       case 1 => new SourceCode(lines map { _.between("(", ")") })
       case _ =>
         new SourceCode(
-          SourceLine.from("(")
+          SourceLine("(")
             :: lines.map({ _.indented })
-            ::: Ls(SourceLine.from(")"))
+            ::: Ls(SourceLine(")"))
         )
     }
   // Surround the source code with braces in a array style.
@@ -101,9 +101,9 @@ class SourceCode(val lines: Ls[SourceLine]) {
       case 1 => new SourceCode(lines map { _.between("[", "]") })
       case _ =>
         new SourceCode(
-          SourceLine.from("[")
+          SourceLine("[")
             :: lines.map({ _.indented.withPostfix(",") })
-            ::: Ls(SourceLine.from("]"))
+            ::: Ls(SourceLine("]"))
         )
     }
   // Surround the source code with braces in a block style.
@@ -112,9 +112,9 @@ class SourceCode(val lines: Ls[SourceLine]) {
       case 0 => SourceCode("{}")
       case _ =>
         new SourceCode(
-          SourceLine.from("{")
+          SourceLine("{")
             :: lines.map({ _.indented })
-            ::: Ls(SourceLine.from("}"))
+            ::: Ls(SourceLine("}"))
         )
     }
   override def toString: Str = lines.mkString("\n")
