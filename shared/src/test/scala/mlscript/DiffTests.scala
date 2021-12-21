@@ -29,7 +29,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       Set.empty
     }
   
-  // Allow overriding which specific tests to run, soemtimes easier for development:
+  // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
     // "Ascribe",
     // "Repro",
@@ -76,8 +76,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false)
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
+      showJavaScript: Bool, runJavaScript: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -99,6 +100,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "stats" => mode.copy(stats = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
+          case "g" | "gen" => mode.copy(showJavaScript = true)
+          case "r" | "run" => mode.copy(runJavaScript = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -312,6 +315,27 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               output(s"constrain calls: " + co)
               output(s"annoying  calls: " + an)
             }
+
+            if (mode.showJavaScript || mode.runJavaScript) {
+              val backend = new JSBackend(p)
+              val (prologue, executions) = backend.testCode()
+              if (mode.showJavaScript) {
+                prologue foreach { output(_) }
+                executions foreach { case name -> code =>
+                  output(s"// $name")
+                  code foreach { output(_) }
+                }
+              }
+              if (mode.runJavaScript) {
+                output("JavaScript results")
+                val host = ReplHost()
+                host.skipHello()
+                executions foreach { case name -> code => 
+                  host.query(code) foreach { case result => output(s"$name = $result") }
+                }
+                host.terminate()
+              }
+            }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
@@ -345,4 +369,34 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     
   }}
   
+  case class ReplHost() {
+    private val process = os.proc("node", "--interactive").spawn()
+
+    def skipHello(): Unit = {
+      process.stdout.readLine()
+      process.stdout.readLine()
+    }
+    
+    def query(lines: Str): Opt[Str] = {
+      (lines map { case line =>
+        println("writing: " + line)
+        process.stdin.writeLine(line)
+        process.stdin.flush()
+        val reply = process.stdout.readLine()
+        if (reply startsWith "> ") { reply drop 2 } else { reply }
+      }).lastOption
+    }
+
+    def drain(): Str = {
+      val stream = process.stdout.wrapped
+      val sb = new StringBuilder
+      while (stream.available > 0)
+        sb.append(stream.read().toChar)
+      sb.toString
+    }
+
+    def terminate(): Unit = {
+      process.destroy()
+    }
+  }
 }
