@@ -328,11 +328,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 executions foreach { case name -> code =>
                   var indent = Opt.empty[Str]
                   // Print the reply with indentation
-                  host.query(code).lines forEach { line =>
+                  host.query(code).split('\n') foreach { line =>
                     indent match {
                       case S(indent) => s"$indent   $line"
                       case N =>
-                        indent = S(" " repeat name.length)
+                        indent = S(" " * name.length)
                         s"$name = $line"
                     }
                   }
@@ -387,14 +387,16 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       println(s"Sent: $fragment")
       process.stdin.writeLine(fragment)
       process.stdin.flush()
-      val nlf = 1 + fragment.count(_ == '\n')
-      val receivedLines = (0 until nlf) map { _ =>
+      val sb = new StringBuilder
+      while (process.stdout.wrapped.available > 0) {
         val line = process.stdout.readLine
-        println(s"  Received line: $line")
-        // Drop the leading prompt mark if have
-        if (line startsWith "> ") { line drop 2 } else { line }
+        sb.append(if (line startsWith "> ") {
+          line drop 2
+        } else {
+          line
+        })
       }
-      val reply = receivedLines mkString "\n"
+      val reply = sb.toString
       println(s"Received: $reply")
       reply
     }
