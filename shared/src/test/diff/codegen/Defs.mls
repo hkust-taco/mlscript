@@ -1,5 +1,4 @@
 
-:r
 class Test: {}
 def a = 1
 def b = 2
@@ -7,6 +6,7 @@ def c = 3
 def d = 4
 def z = 5 + a
 def f x = x + 1
+def q = 0
 //│ Defined class Test
 //│ a: 1
 //│ b: 2
@@ -14,50 +14,22 @@ def f x = x + 1
 //│ d: 4
 //│ z: int
 //│ f: int -> int
-//│ JavaScript results
-//│ a = 1
-//│ b = 2
-//│ c = 3
-//│ d = 4
-//│ z = 6
-//│ f = [Function: f]
+//│ q: 0
+//│ JavaScript execution results
 
 if true then if true then a else b else a
 //│ res: 1 | 2
+//│ JavaScript execution results
+
+def id x = x
+//│ id: 'a -> 'a
+//│ JavaScript execution results
 
 if true then if true then id a else id b else a
 //│ res: 1 | 2
+//│ JavaScript execution results
 
-class Foo[A]: { field: A }
-class Bar: {}
-//│ Defined class Foo
-//│ Defined class Bar
-
-def foo = Foo { field = id 1 }
-//│ foo: Foo['A .. 1 | 'A] with {field: 1}
-
-(if true then foo else { field = 2 }).field
-//│ res: 1 | 2
-
-Foo { field = id 1 }
-//│ res: Foo['A .. 1 | 'A] with {field: 1}
-
-def test x = case x of { Bar -> 1 | Foo -> 2 }
-//│ test: (Bar | Foo[?]) -> (1 | 2)
-
-test foo
-//│ res: 1 | 2
-
-def test x = case x of { Bar -> 1 | Foo -> x.field }
-//│ test: (Bar | (Foo[?] with {field: 'a})) -> (1 | 'a)
-
-test foo
-//│ res: 1
-
-test (Foo { field = 2 })
-//│ res: 1 | 2
-
-def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: ((Foo[?] with {field: 'a}) | ~Foo[?]) -> (1 | 'a)
-
+class Point[T]: { x: T; y: T }
+//│ Defined class Point
+//│ JavaScript execution results
 

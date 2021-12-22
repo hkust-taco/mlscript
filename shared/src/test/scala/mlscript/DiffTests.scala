@@ -55,7 +55,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
-    
+
+    val host = ReplHost()
+    host.skipHello()
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
     
@@ -77,11 +79,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
-      showJavaScript: Bool, runJavaScript: Bool)
+      noExecution: Bool, noGeneration: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
+    var noJavaScript = false
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
@@ -100,8 +103,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "stats" => mode.copy(stats = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
-          case "g" | "gen" => mode.copy(showJavaScript = true)
-          case "r" | "run" => mode.copy(runJavaScript = true)
+          case "NoJS" => noJavaScript = true; mode
+          case "ne" => mode.copy(noExecution = true)
+          case "ng" => mode.copy(noGeneration = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -316,24 +320,23 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               output(s"annoying  calls: " + an)
             }
 
-            if (mode.showJavaScript || mode.runJavaScript) {
+            if (!mode.noGeneration && !noJavaScript) {
               val backend = new JSBackend(p)
               val (prologue, executions) = backend.testCode()
-              if (mode.showJavaScript) {
-                prologue foreach { output(_) }
+              if (!mode.noExecution) {
+                output("JavaScript execution results")
                 executions foreach { case name -> code =>
-                  output(s"// $name")
-                  code foreach { output(_) }
+                  var indent = Opt.empty[Str]
+                  // Print the reply with indentation
+                  host.query(code).lines forEach { line =>
+                    indent match {
+                      case S(indent) => s"$indent   $line"
+                      case N =>
+                        indent = S(" " repeat name.length)
+                        s"$name = $line"
+                    }
+                  }
                 }
-              }
-              if (mode.runJavaScript) {
-                output("JavaScript results")
-                val host = ReplHost()
-                host.skipHello()
-                executions foreach { case name -> code => 
-                  host.query(code) foreach { case result => output(s"$name = $result") }
-                }
-                host.terminate()
               }
             }
             
@@ -366,7 +369,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     }
     if (failures.nonEmpty)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
-    
+
+    // Remember to shutdown the REPL host
+    host.terminate()
   }}
   
   case class ReplHost() {
@@ -376,15 +381,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       process.stdout.readLine()
       process.stdout.readLine()
     }
-    
-    def query(lines: Str): Opt[Str] = {
-      (lines map { case line =>
-        println("writing: " + line)
-        process.stdin.writeLine(line)
-        process.stdin.flush()
-        val reply = process.stdout.readLine()
-        if (reply startsWith "> ") { reply drop 2 } else { reply }
-      }).lastOption
+
+    def query(fragments: Ls[Str]): Str = {
+      val fragment = fragments mkString "\n"
+      println(s"Sent: $fragment")
+      process.stdin.writeLine(fragment)
+      process.stdin.flush()
+      val nlf = 1 + fragment.count(_ == '\n')
+      val receivedLines = (0 until nlf) map { _ =>
+        val line = process.stdout.readLine
+        println(s"  Received line: $line")
+        // Drop the leading prompt mark if have
+        if (line startsWith "> ") { line drop 2 } else { line }
+      }
+      val reply = receivedLines mkString "\n"
+      println(s"Received: $reply")
+      reply
     }
 
     def drain(): Str = {
