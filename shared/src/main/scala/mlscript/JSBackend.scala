@@ -25,7 +25,7 @@ class JSBackend(pgrm: Pgrm) {
     case _                  => N
   })
 
-  private val topLevelScope = Scope(defNames.toSeq)
+  private val topLevelScope = Scope()
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
@@ -90,7 +90,7 @@ class JSBackend(pgrm: Pgrm) {
   private var hasWithConstruct = false
 
   // Name of the helper function for `with` construction.
-  private val withConstructFnName = topLevelScope allocate "withConstruct"
+  private val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
 
   private val builtinFnOpMap =
     immutable.HashMap(
@@ -118,7 +118,7 @@ class JSBackend(pgrm: Pgrm) {
           case S(alias) => JSIdent(alias, false)
         }
       } else {
-        JSIdent(name)
+        JSIdent(scope resolve name)
       }
     // TODO: need scope to track variables so that we can rename reserved words
     case Lam(params, body) =>
@@ -163,7 +163,7 @@ class JSBackend(pgrm: Pgrm) {
       )
     case CaseOf(term, cases) => {
       val arg = translateTerm(term)
-      val param = scope.allocate()
+      val param = scope.allocateJavaScriptName()
       JSImmEvalFn(
         param :: Nil,
         Right(translateCaseBranch(param, cases)(Scope(param :: Nil, scope))),
@@ -390,8 +390,8 @@ class JSBackend(pgrm: Pgrm) {
       case _ => ()
     }
 
-    val defResultObjName = topLevelScope allocate "defs"
-    val exprResultObjName = topLevelScope allocate "exprs"
+    val defResultObjName = topLevelScope allocateJavaScriptName "defs"
+    val exprResultObjName = topLevelScope allocateJavaScriptName "exprs"
     // This hash map counts how many times a name has been used.
     val resolveShadowName = new ShadowNameResolver
     val stmts: Ls[JSStmt] =
@@ -420,13 +420,14 @@ class JSBackend(pgrm: Pgrm) {
               // `declName` means the name used in the declaration.
               // We allow define functions with the same name as classes.
               // Get a name that not conflicts with class names.
-              val declName = if (classNames contains originalName) {
-                val alias = topLevelScope allocate originalName
-                ctorAliasMap += originalName -> alias
-                alias
-              } else {
-                originalName
-              }
+              // val declName = if (classNames contains originalName) {
+              //   val alias = topLevelScope allocate originalName
+              //   ctorAliasMap += originalName -> alias
+              //   alias
+              // } else {
+              //   originalName
+              // }
+              val declName = topLevelScope declare originalName
               // We need to save a snapshot after each computation.
               // The snapshot name will be same as the original name, or in the
               // format of `originalName@n` if the original name is used.
