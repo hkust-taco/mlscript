@@ -113,7 +113,6 @@ class JSBackend(pgrm: Pgrm) {
   private def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(mlsName) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
-      println(s"resolve $mlsName to $jsName in $srcScope")
       // If it is a class name and the name is declared in the top-level scope.
       if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
         // `mlsName === jsName` means no re-declaration, so it refers to the class.
