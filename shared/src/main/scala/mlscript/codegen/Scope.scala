@@ -11,7 +11,8 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
   private val symbols = scala.collection.mutable.HashSet[Str](initialSymbols: _*)
 
   // If a symbol is re-declared, this map contains the actual JavaScript name.
-  private val overrides = scala.collection.mutable.HashMap[Str, Str]()
+  private val overrides =
+    scala.collection.mutable.HashMap[Str, Str](symbols.toSeq.map(s => (s, s)): _*)
 
   private def declareJavaScriptName(name: Str): Unit = {
     if (symbols contains name) {
@@ -74,6 +75,7 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
       newName
     } else {
       declareJavaScriptName(name)
+      overrides += name -> name
       name
     }
   }
@@ -87,6 +89,19 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
   def resolve(name: Str): Str = (overrides get name) orElse {
     enclosing map { _ resolve name }
   } getOrElse name
+
+  /**
+    * Same as `resolve`, but returns the `Scope` where the name is defined.
+    *
+    * @param name
+    * @return
+    */
+  def resolveWithScope(name: Str): (Str, Opt[Scope]) =
+    overrides.get(name).map((_, S(this))) orElse {
+      enclosing map { _.resolveWithScope(name) }
+    } getOrElse (name, N)
+
+  val isTopLevel: Bool = enclosing.isEmpty
 }
 
 object Scope {

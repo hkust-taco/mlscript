@@ -31,10 +31,11 @@ class JSBackend(pgrm: Pgrm) {
   private val ctorAliasMap: HashMap[Str, Str] = HashMap()
 
   // I just realized `Statement` is unused.
-  private def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt = stmt match {
-    case t: Term             => JSExprStmt(translateTerm(t))
-    case _: Def | _: TypeDef => ??? // TODO
-  }
+  private def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt =
+    stmt match {
+      case t: Term             => JSExprStmt(translateTerm(t))
+      case _: Def | _: TypeDef => ??? // TODO
+    }
 
   /** This function translates parameter destructions in `def` declarations.
     *
@@ -106,17 +107,19 @@ class JSBackend(pgrm: Pgrm) {
 
   private val binaryOps = Set.from(builtinFnOpMap.values.concat("&&" :: "||" :: Nil))
 
+  // For inheritance usage.
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
   private def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    case Var(name) =>
-      if (classNames.contains(name)) {
-        ctorAliasMap.get(name) match {
-          case N        => JSIdent(name, true)
-          case S(alias) => JSIdent(alias, false)
-        }
+    case Var(mlsName) =>
+      val (jsName, srcScope) = scope resolveWithScope mlsName
+      println(s"resolve $mlsName to $jsName in $srcScope")
+      // If it is a class name and the name is declared in the top-level scope.
+      if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
+        // `mlsName === jsName` means no re-declaration, so it refers to the class.
+        JSIdent(jsName, mlsName === jsName)
       } else {
-        JSIdent(scope resolve name)
+        JSIdent(jsName)
       }
     // TODO: need scope to track variables so that we can rename reserved words
     case Lam(params, body) =>
@@ -188,7 +191,9 @@ class JSBackend(pgrm: Pgrm) {
   }
 
   // Translate consecutive case branches into a list of if statements.
-  private def translateCaseBranch(name: Str, branch: CaseBranches)(implicit scope: Scope): Ls[JSStmt] =
+  private def translateCaseBranch(name: Str, branch: CaseBranches)(implicit
+      scope: Scope
+  ): Ls[JSStmt] =
     branch match {
       case Case(className, body, rest) =>
         val scrut = JSIdent(name)
@@ -391,6 +396,7 @@ class JSBackend(pgrm: Pgrm) {
           .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
             kind match {
               case Cls =>
+                topLevelScope declare name
                 classNames += name
                 val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
                 nameClsMap += name -> cls

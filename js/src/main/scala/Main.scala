@@ -125,6 +125,7 @@ object Main {
         val sb = new StringBuilder()
         sb ++= "<font color=\"red\">Code generation crashed:</font>"
         sb ++= htmlLineBreak + e.getMessage
+        // sb ++= htmlLineBreak + ((e.getStackTrace) mkString htmlLineBreak)
         sb ++= htmlLineBreak
         sb ++= htmlLineBreak
         L(sb.toString)
