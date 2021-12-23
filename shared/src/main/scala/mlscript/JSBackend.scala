@@ -17,15 +17,21 @@ class JSBackend(pgrm: Pgrm) {
   val MinimalSafeInteger: BigInt = BigInt("-9007199254740991")
 
   // This object contains all classNames.
-  val classNames: HashSet[Str] = HashSet()
+  private val classNames: HashSet[Str] = HashSet()
 
   // All names used in `def`s.
-  val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
+  private val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
     case Def(rec, nme, rhs) => S(nme)
     case _                  => N
   })
 
   private val topLevelScope = Scope()
+
+  // Name of the array that contains execution results
+  val resultsName: Str = topLevelScope allocateJavaScriptName "results"
+
+  // TODO: remove this the prelude code manager is done
+  val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
@@ -83,7 +89,7 @@ class JSBackend(pgrm: Pgrm) {
 
   def translateParams(t: Term): Ls[JSPattern] = t match {
     case Tup(params) => params map { case _ -> p => translatePattern(p) }
-    case _ => throw new Error(s"term $t is not a valid parameter list")
+    case _           => throw new Error(s"term $t is not a valid parameter list")
   }
 
   // This will be changed during code generation.
@@ -390,13 +396,9 @@ class JSBackend(pgrm: Pgrm) {
       case _ => ()
     }
 
-    val defResultObjName = topLevelScope allocateJavaScriptName "defs"
-    val exprResultObjName = topLevelScope allocateJavaScriptName "exprs"
-    // This hash map counts how many times a name has been used.
-    val resolveShadowName = new ShadowNameResolver
+    val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
-      JSConstDecl(defResultObjName, JSRecord(Nil)) ::
-        JSConstDecl(exprResultObjName, JSArray(Nil)) ::
+      JSConstDecl(resultsName, JSArray(Nil)) ::
         typeDefs
           .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
             kind match {
@@ -411,59 +413,24 @@ class JSBackend(pgrm: Pgrm) {
           }
           // Generate something like:
           // ```js
-          // const name = <expr>;
-          // defs.name = name;
+          // const <name> = <expr>;
+          // <results>.push(<name>);
           // ```
           .concat(otherStmts.flatMap {
-            case Def(isRecursive, originalName, L(body)) =>
+            case Def(_, mlsName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
-              // `declName` means the name used in the declaration.
-              // We allow define functions with the same name as classes.
-              // Get a name that not conflicts with class names.
-              // val declName = if (classNames contains originalName) {
-              //   val alias = topLevelScope allocate originalName
-              //   ctorAliasMap += originalName -> alias
-              //   alias
-              // } else {
-              //   originalName
-              // }
-              val declName = topLevelScope declare originalName
-              // We need to save a snapshot after each computation.
-              // The snapshot name will be same as the original name, or in the
-              // format of `originalName@n` if the original name is used.
-              val snapshotName = resolveShadowName(originalName)
-              (if (snapshotName === originalName) {
-                 // First time: `let <declName> = <expr>;`
-                 JSLetDecl(declName, translatedBody)
-               } else {
-                 // Not first time: `<declName> = <expr>;`
-                 JSExprStmt(JSAssignExpr(JSIdent(declName), translatedBody))
-               }) :: // Save the value: `defs.<snapshotName> = <declName>;`
-                JSExprStmt(
-                  JSAssignExpr(
-                    JSMember(JSIdent(defResultObjName), snapshotName),
-                    JSIdent(declName)
-                  )
-                ) :: Nil
+              val jsName = topLevelScope declare mlsName
+              JSConstDecl(jsName, translatedBody) ::
+                JSInvoke(JSMember(resultsIdent, "push"), JSIdent(jsName) :: Nil).stmt :: Nil
             // Ignore type declarations.
-            case Def(isRecursive, name, R(body)) => Nil
+            case Def(_, _, R(_)) => Nil
             // `exprs.push(<expr>)`.
             case term: Term =>
-              JSExprStmt(
-                JSInvoke(
-                  JSMember(JSIdent(exprResultObjName), "push"),
-                  translateTerm(term)(topLevelScope) :: Nil
-                )
-              ) :: Nil
+              JSInvoke(
+                JSMember(resultsIdent, "push"),
+                translateTerm(term)(topLevelScope) :: Nil
+              ).stmt :: Nil
           })
-          .concat(
-            JSReturnStmt(
-              JSArray(
-                JSIdent(defResultObjName) :: JSIdent(exprResultObjName) :: Nil
-              )
-            ) :: Nil
-          )
-
     SourceCode
       .concat(
         (if (hasWithConstruct) {
