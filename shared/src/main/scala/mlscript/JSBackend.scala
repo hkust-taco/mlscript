@@ -500,8 +500,6 @@ object JSBackend {
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_SAFE_INTEGER
   val MinimalSafeInteger: BigInt = BigInt("-9007199254740991")
 
-  val SAFE_INTEGER_RANGE: immutable.NumericRange.Inclusive[BigInt] =
-    MinimalSafeInteger to MaximalSafeInteger
-
-  def isSafeInteger(value: BigInt): Boolean = SAFE_INTEGER_RANGE.contains(value)
+  def isSafeInteger(value: BigInt): Boolean =
+    MinimalSafeInteger <= value && value <= MaximalSafeInteger
 }
