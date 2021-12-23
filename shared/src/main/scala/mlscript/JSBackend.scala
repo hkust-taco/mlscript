@@ -8,14 +8,6 @@ import scala.collection.immutable
 import mlscript.codegen.Scope
 
 class JSBackend(pgrm: Pgrm) {
-  // For integers larger than this value, use BigInt notation.
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
-  val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
-
-  // For integers less than this value, use BigInt notation.
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_SAFE_INTEGER
-  val MinimalSafeInteger: BigInt = BigInt("-9007199254740991")
-
   // This object contains all classNames.
   private val classNames: HashSet[Str] = HashSet()
 
@@ -39,7 +31,7 @@ class JSBackend(pgrm: Pgrm) {
   private val ctorAliasMap: HashMap[Str, Str] = HashMap()
 
   // I just realized `Statement` is unused.
-  def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt = stmt match {
+  private def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt = stmt match {
     case t: Term             => JSExprStmt(translateTerm(t))
     case _: Def | _: TypeDef => ??? // TODO
   }
@@ -65,7 +57,7 @@ class JSBackend(pgrm: Pgrm) {
     * @return
     *   a `JSPattern` representing the pattern
     */
-  def translatePattern(t: Term): JSPattern = t match {
+  private def translatePattern(t: Term): JSPattern = t match {
     // fun x -> ... ==> function (x) { ... }
     // should returns ("x", ["x"])
     case Var(name) => JSNamePattern(name)
@@ -87,7 +79,7 @@ class JSBackend(pgrm: Pgrm) {
       throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
-  def translateParams(t: Term): Ls[JSPattern] = t match {
+  private def translateParams(t: Term): Ls[JSPattern] = t match {
     case Tup(params) => params map { case _ -> p => translatePattern(p) }
     case _           => throw new Error(s"term $t is not a valid parameter list")
   }
@@ -116,7 +108,7 @@ class JSBackend(pgrm: Pgrm) {
 
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
-  def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+  private def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(name) =>
       if (classNames.contains(name)) {
         ctorAliasMap.get(name) match {
@@ -176,11 +168,7 @@ class JSBackend(pgrm: Pgrm) {
         arg :: Nil
       )
     }
-    case IntLit(value) => {
-      val useBigInt = MinimalSafeInteger <= value && value <= MaximalSafeInteger
-      JSLit(if (useBigInt) { value.toString }
-      else { value.toString + "n" })
-    }
+    case IntLit(value) => JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n"))
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
     // `Asc(x, ty)` <== `x: Type`
@@ -200,7 +188,7 @@ class JSBackend(pgrm: Pgrm) {
   }
 
   // Translate consecutive case branches into a list of if statements.
-  def translateCaseBranch(name: Str, branch: CaseBranches)(implicit scope: Scope): Ls[JSStmt] =
+  private def translateCaseBranch(name: Str, branch: CaseBranches)(implicit scope: Scope): Ls[JSStmt] =
     branch match {
       case Case(className, body, rest) =>
         val scrut = JSIdent(name)
@@ -356,7 +344,7 @@ class JSBackend(pgrm: Pgrm) {
   // Translate MLscript class declaration to JavaScript class declaration.
   // First, we will analyze its fields and base class name.
   // Then, we will check if the base class exists.
-  def translateClassDeclaration(
+  private def translateClassDeclaration(
       name: Str,
       actualType: Type,
       methods: Ls[MethodDef[Left[Term, Type]]]
@@ -374,7 +362,7 @@ class JSBackend(pgrm: Pgrm) {
     }
   }
 
-  def translateClassMember(
+  private def translateClassMember(
       method: MethodDef[Left[Term, Type]]
   )(implicit scope: Scope): JSClassMemberDecl = {
     val name = method.nme.name
@@ -442,6 +430,8 @@ class JSBackend(pgrm: Pgrm) {
 }
 
 object JSBackend {
+  def apply(pgrm: Pgrm): JSBackend = new JSBackend(pgrm)
+
   private def inspectTerm(t: Term): Str = t match {
     case Var(name)     => s"Var($name)"
     case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
@@ -501,4 +491,17 @@ object JSBackend {
         JSInvoke(JSMember(JSIdent("Object"), "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
     ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
   )
+
+  // For integers larger than this value, use BigInt notation.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
+  val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
+
+  // For integers less than this value, use BigInt notation.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MIN_SAFE_INTEGER
+  val MinimalSafeInteger: BigInt = BigInt("-9007199254740991")
+
+  val SAFE_INTEGER_RANGE: immutable.NumericRange.Inclusive[BigInt] =
+    MinimalSafeInteger to MaximalSafeInteger
+
+  def isSafeInteger(value: BigInt): Boolean = SAFE_INTEGER_RANGE.contains(value)
 }

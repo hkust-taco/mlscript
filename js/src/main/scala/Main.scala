@@ -100,7 +100,7 @@ object Main {
   // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
-      val backend = new JSBackend(pgrm)
+      val backend = JSBackend(pgrm)
       val lines = backend()
       val code = s"""(() => {
                     |function ${backend.prettyPrinterName}(value) {
@@ -138,9 +138,7 @@ object Main {
   // 2. results of expressions;
   // 3. error message (if has).
   @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
-  private def executeCode(
-      code: Str
-  ): Either[Str, Ls[Str]] = {
+  private def executeCode(code: Str): Either[Str, Ls[Str]] = {
     try {
       R(js.eval(code).asInstanceOf[js.Array[Str]].toList)
     } catch {
