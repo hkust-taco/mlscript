@@ -298,3 +298,33 @@ takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
 takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
 //│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.298:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
 
+
+class AA
+trait TT
+def ty: AA | ('a \ x)
+def ty2: TT & { x: int }
+// def ty: AA | (int -> int)
+//│ Defined class AA
+//│ Defined trait TT
+//│ ty: AA
+//│ ty2: {x: int} & tT
+
+:e
+ty = ty2
+//│ {x: int} & tT
+//│   <:  ty:
+//│ AA
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.313: 	ty = ty2
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `{x: int} & tT` does not match type `AA | 'a\x`
+//│ ║  l.305: 	def ty2: TT & { x: int }
+//│ ║         	         ^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `AA | 'a\x`
+//│ ║  l.313: 	ty = ty2
+//│ ║         	     ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.304: 	def ty: AA | ('a \ x)
+//│ ╙──       	        ^^^^^^^^
+
+
