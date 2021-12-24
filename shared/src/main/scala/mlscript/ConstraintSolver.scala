@@ -169,8 +169,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
         case (Nil, Nil) =>
+          // TODO improve:
+          //    Most of the `rec` calls below will yield ugly errors because we don't maintain
+          //    the original constraining context!
           def fail = reportError(doesntMatch(cctx.head.head._2))
-          (done_ls, done_rs) match { // TODO missing cases
+          (done_ls, done_rs) match {
             case (LhsRefined(S(Without(b, _)), _, _), RhsBot) => rec(b, BotType)
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
               | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
@@ -187,19 +190,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
               else annoying(Nil, LhsRefined(N, ts, r), Nil, RhsBases(Nil, bf))
-            case (LhsRefined(bo, ts, r), RhsField(n, t2)) =>
-              r.fields.find(_._1 === n) match {
-                case S(nt1) => rec(nt1._2, t2)
-                case N =>
-                  bo match {
-                    case S(Without(b, ns)) =>
-                      if (ns(n)) rec(b, BotType)
-                      else rec(b, done_rs.toType())
-                    case _ => fail
-                  }
-              }
-            case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) => // Q: missing anything in prev fields?
-              // TODO dedup with above
+            case (lr @ LhsRefined(bo, ts, r), rf @ RhsField(n, t2)) =>
+              // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
+              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf))))
+            case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) => rec(nt1._2, t2)
                 case N =>
@@ -217,12 +211,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(S(b: TupleType), ts, r), _) => fail
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType())
-            case (LhsRefined(N, ts, r), RhsBases(pts, S(L(x)))) =>
-              lastWords(s"TODO ${done_ls} <: ${done_rs} (${x.getClass})") // TODO
-            case (LhsRefined(S(b), ts, r), RhsBases(pts, _)) =>
-              lastWords(s"TODO ${done_ls} <: ${done_rs} (${b.getClass})") // TODO
-            case _ =>
-              lastWords(s"TODO ${done_ls} <: ${done_rs} (${done_ls.getClass} ${done_rs.getClass})") // TODO
+            case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
+              // rec((pts.map(_.neg()).foldLeft(done_ls.toType())(_ & _)).without(ns), base)
+              // ^ This less efficient version creates a slightly different error message
+              //    (see test in Annoying.mls)
+              annoying(pts.map(_.neg()), done_ls, base :: Nil, RhsBot)
           }
           
       }

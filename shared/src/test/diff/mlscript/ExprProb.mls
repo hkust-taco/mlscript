@@ -81,7 +81,7 @@ def eval1_ty_ugly = eval1
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 //│ constrain calls  : 58
-//│ annoying  calls  : 30
+//│ annoying  calls  : 36
 //│ subtyping calls  : 6988
 
 :ns
@@ -97,7 +97,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│ constrain calls  : 58
-//│ annoying  calls  : 30
+//│ annoying  calls  : 36
 //│ subtyping calls  : 1393
 
 :stats
@@ -135,7 +135,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│ constrain calls  : 62
-//│ annoying  calls  : 32
+//│ annoying  calls  : 38
 //│ subtyping calls  : 1136
 
 
@@ -173,7 +173,7 @@ prettier1 done (eval1 done) e1
 //│ res: string
 //│ res: string
 //│ constrain calls  : 452
-//│ annoying  calls  : 184
+//│ annoying  calls  : 240
 //│ subtyping calls  : 741
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -218,7 +218,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 eval2 done e1
 //│ res: int
 //│ constrain calls  : 108
-//│ annoying  calls  : 46
+//│ annoying  calls  : 60
 //│ subtyping calls  : 136
 
 e2 = add (lit 1) (nega e1)
@@ -228,7 +228,7 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│ constrain calls  : 154
-//│ annoying  calls  : 81
+//│ annoying  calls  : 103
 //│ subtyping calls  : 192
 
 d2 = nega (add (lit 1) (nega (lit 1)))
@@ -238,7 +238,7 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 eval2 done d2
 //│ res: int
 //│ constrain calls  : 106
-//│ annoying  calls  : 59
+//│ annoying  calls  : 71
 //│ subtyping calls  : 99
 
 
@@ -252,7 +252,7 @@ prettier2 done (eval1 done)
 prettier2 done (eval1 done) e1
 //│ res: string
 //│ constrain calls  : 230
-//│ annoying  calls  : 92
+//│ annoying  calls  : 120
 //│ subtyping calls  : 248
 
 :stats
@@ -263,7 +263,7 @@ prettier2 done (eval2 done) d2
 //│ res: string
 //│ res: string
 //│ constrain calls  : 643
-//│ annoying  calls  : 269
+//│ annoying  calls  : 335
 //│ subtyping calls  : 63770
 
 
@@ -379,7 +379,7 @@ prettier2 done (eval1 done) e2
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ constrain calls  : 309
-//│ annoying  calls  : 156
+//│ annoying  calls  : 198
 //│ subtyping calls  : 643
 
 :e
@@ -459,7 +459,7 @@ prettier2 done eval2 e1
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ constrain calls  : 145
-//│ annoying  calls  : 50
+//│ annoying  calls  : 64
 //│ subtyping calls  : 494
 
 :e
@@ -508,7 +508,7 @@ prettier2 done eval2 e2
 //│ ╙──       	                                ^
 //│ res: error
 //│ constrain calls  : 111
-//│ annoying  calls  : 32
+//│ annoying  calls  : 36
 //│ subtyping calls  : 1014
 
 :e
@@ -566,7 +566,7 @@ prettier2 done eval2 d2
 //│ ╙──       	           ^
 //│ res: error | string
 //│ constrain calls  : 144
-//│ annoying  calls  : 63
+//│ annoying  calls  : 75
 //│ subtyping calls  : 578
 
 :e
@@ -615,6 +615,6 @@ prettier2 done eval1 e2
 //│ ╙──       	                                ^
 //│ res: error
 //│ constrain calls  : 110
-//│ annoying  calls  : 32
+//│ annoying  calls  : 36
 //│ subtyping calls  : 1008
 
