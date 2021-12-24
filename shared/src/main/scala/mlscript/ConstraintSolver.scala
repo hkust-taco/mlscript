@@ -239,6 +239,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
+      if (lhs === rhs) return ()  // TODO try subtyping here?
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       ((lhs -> rhs :: cctx.headOr(Nil)) :: cctx.tailOr(Nil)) |> { implicit cctx =>
         if (lhs is rhs) return
@@ -263,8 +264,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
             rec(r0, r1)(raise, Nil :: cctx)
-          case (prim: ClassTag, _) if rhs === prim => ()
-          case (prim: ClassTag, ClassTag(id:Var, _)) if prim.parents.contains(id) => ()
+          case (prim: ClassTag, ot: ObjectTag)
+            if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = outerProv.fold(rhs)(ProvType(rhs)(_))
             lhs.upperBounds ::= newBound // update the bound

@@ -80,7 +80,7 @@ def eval1_ty_ugly = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
-//│ constrain calls  : 59
+//│ constrain calls  : 58
 //│ annoying  calls  : 30
 //│ subtyping calls  : 6988
 
@@ -96,7 +96,7 @@ def eval1_ty = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ constrain calls  : 59
+//│ constrain calls  : 58
 //│ annoying  calls  : 30
 //│ subtyping calls  : 1393
 
@@ -105,7 +105,7 @@ eval1_ty_ugly = eval1_ty
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
-//│ constrain calls  : 16
+//│ constrain calls  : 14
 //│ annoying  calls  : 1
 //│ subtyping calls  : 6952
 
@@ -114,7 +114,7 @@ eval1_ty = eval1_ty_ugly
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ constrain calls  : 16
+//│ constrain calls  : 14
 //│ annoying  calls  : 1
 //│ subtyping calls  : 7128
 
@@ -134,7 +134,7 @@ def eval1_ty = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
-//│ constrain calls  : 63
+//│ constrain calls  : 62
 //│ annoying  calls  : 32
 //│ subtyping calls  : 1136
 
