@@ -274,3 +274,18 @@ class Test[A]: { x: A }
 //│ Defined Test.Mth: Test['A] -> ('A -> 'B) -> 'B
 
 
+
+trait D
+  method G = 1
+trait E
+  method G: int
+class H: D & E
+//│ Defined trait D
+//│ Defined D.G: d -> 1
+//│ Defined trait E
+//│ Declared E.G: e -> int
+//│ Defined class H
+
+((H{}): D).(D.G)
+//│ res: 1
+

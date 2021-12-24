@@ -186,3 +186,27 @@ error: {x: int} -> nothing : Runaway2
 error: {x: 'x -> 'x} -> nothing : Runaway2
 //│ res: {x: 'a -> 'a} -> 'b as 'b
 
+
+
+
+type A1[A] = A -> A -> A1[A]
+type A2[A] = A -> A2[A]
+//│ Defined type alias A1
+//│ Defined type alias A2
+
+def ty1: A1[anything]
+def ty2: A2[anything]
+//│ ty1: anything -> anything -> 'a as 'a
+//│ ty2: anything -> 'a as 'a
+
+ty1 = ty2
+//│ anything -> 'a as 'a
+//│   <:  ty1:
+//│ anything -> anything -> 'a as 'a
+
+ty2 = ty1
+//│ anything -> anything -> 'a as 'a
+//│   <:  ty2:
+//│ anything -> 'a as 'a
+
+
