@@ -31,6 +31,31 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
+  class MethodType(level: Int, body: SimpleType, val prts: List[TypeName]) extends PolymorphicType(level, body) {
+    def &(that: MethodType, prt: TypeName)(implicit prov: TypeProvenance): MethodType = {
+      require(this.level === that.level)
+      MethodType(level, this.body & that.body, prt)
+    }
+    def +(that: MethodType): MethodType =
+      if (this.prts === that.prts) that
+      else MethodType(0, errType(noProv), this.prts ::: that.prts)
+    override def toString: Str = s"MethodType($level, $body, $prts)"
+  }
+  object MethodType {
+    def apply(level: Int, body: SimpleType, prt: TypeName): MethodType = new MethodType(level, body, prt :: Nil)
+    def apply(level: Int, body: SimpleType, prts: List[TypeName]): MethodType = new MethodType(level, body, prts)
+    def unapply(mt: MethodType): S[(Int, SimpleType, List[TypeName])] = S((mt.level, mt.body, mt.prts))
+  }
+
+  class AbstractConstructor(val absMths: Set[TypeName])(body: SimpleType) extends PolymorphicType(0, body) {
+    override def toString: Str = s"AbstractConstructor($absMths)"
+  }
+  object AbstractConstructor {
+    def apply(absMths: Set[TypeName])(implicit prov: TypeProvenance): AbstractConstructor =
+      new AbstractConstructor(absMths)(errType(prov))
+    def unapply(ctor: AbstractConstructor): S[Set[TypeName]] = S(ctor.absMths)
+  }
+  
   /** A type without universally quantified type variables. */
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance

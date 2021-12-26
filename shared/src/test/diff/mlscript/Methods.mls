@@ -256,7 +256,7 @@ class Class3C: Class2C
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.230: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
-//│ ╟── from method declaration:
+//│ ╟── from inherited method declaration:
 //│ ║  l.229: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
@@ -359,3 +359,44 @@ Ber
 //│ res: error
 //│    = [Function: res]
 
+
+
+
+class Test5A[A]: { a: A }
+    method Mth5A[B]: (A -> B) -> B
+//│ Defined class Test5A
+//│ Declared Test5A.Mth5A: Test5A['A] -> ('A -> 'B) -> 'B
+
+
+trait Test5B: { tag: int }
+    method Mth5B = this.tag
+//│ Defined trait Test5B
+//│ Defined Test5B.Mth5B: ({tag: int} & test5B) -> int
+
+
+class Test5C[A]: Test5A[A] & Test5B
+    method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
+//│ Defined class Test5C
+//│ Defined Test5C.Mth5A: (Test5C['A] & test5B) -> ('A -> 'a) -> 'a
+
+
+class Test5D: Test5A[int] & Test5B
+    method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
+//│ Defined class Test5D
+//│ Defined Test5D.Mth5A: (Test5D & test5B) -> (int -> 'a) -> 'a
+
+
+
+
+class Test6A: { a: int }
+    method Add (that: Test6A) = Test6A { a = this.a + that.a }
+//│ Defined class Test6A
+//│ Defined Test6A.Add: Test6A -> Test6A -> Test6A
+
+class Test6B: { a: Test6A; b: Test6A }
+    method Add (that: Test6B) = Test6B { a = this.a.(Test6A.Add) that.a; b = this.b.(Test6A.Add) that.b }
+//│ Defined class Test6B
+//│ Defined Test6B.Add: (Test6B with {a: Test6A, b: Test6A}) -> (Test6B with {a: Test6A, b: Test6A}) -> (Test6B with {a: Test6A, b: Test6A})
+
+class Test6C: Test6B
+//│ Defined class Test6C
