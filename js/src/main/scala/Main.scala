@@ -83,7 +83,7 @@ object Main {
           }
       }
     }
-
+    
     target.innerHTML = tryRes.fold[Str](
       err =>
         s"""
@@ -96,7 +96,7 @@ object Main {
       identity
     )
   }
-
+  
   // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
@@ -131,7 +131,7 @@ object Main {
         L(sb.toString)
     }
   }
-
+  
   // Execute the generated code.
   // We extract this function because there is some boilerplate code.
   // It returns a tuple of three items:
@@ -152,22 +152,22 @@ object Main {
         L(errorBuilder.toString)
     }
   }
-
+  
   private val htmlLineBreak = "<br />"
   private val htmlWhiteSpace = "&nbsp;"
   private val splitLeadingSpaces: Regex = "^( +)(.+)$".r
-
+  
   def checkProgramType(pgrm: Pgrm): Ls[Option[Str] -> Str] -> Option[Str] = {
     val (diags, (typeDefs, stmts)) = pgrm.desugared
-
+    
     val typer = new mlscript.Typer(
       dbg = false,
       verbose = false,
       explainErrors = false
     )
-
+    
     import typer._
-
+    
     val res = new collection.mutable.StringBuilder
     val results = new collection.mutable.ArrayBuffer[Option[Str] -> Str]
     val stopAtFirstError = true
@@ -181,7 +181,7 @@ object Main {
         .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}
                 </font></b><br/>"""
     }
-
+    
     implicit val raise: Raise = throw _
     implicit var ctx: Ctx =
       try processTypeDefs(typeDefs)(Ctx.init, raise)
@@ -190,7 +190,7 @@ object Main {
           res ++= formatError("class definitions", err)
           Ctx.init
       }
-
+    
     def getType(ty: typer.TypeScheme): Type = {
       val wty = ty.instantiate(0)
       println(s"Typed as: $wty")
@@ -221,16 +221,16 @@ object Main {
               <font color="LightBlue">${exp.show}</font>
               </b><br/>"""
     }
-
+    
     def underline(fragment: Str): Str =
       s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
-
+    
     var totalTypeErrors = 0
     var totalWarnings = 0
     var outputMarker = ""
     val blockLineNum = 0
     val showRelativeLineNums = false
-
+    
     def report(diag: Diagnostic): Str = {
       var sb = new collection.mutable.StringBuilder
       def output(s: Str): Unit = {
@@ -292,9 +292,9 @@ object Main {
       if (diag.allMsgs.isEmpty) output("╙──")
       sb.toString
     }
-
+    
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
-
+    
     var decls = stmts
     while (decls.nonEmpty) {
       val d = decls.head
@@ -315,14 +315,8 @@ object Main {
           results append S(d.nme) -> (getType(ty_sch).show)
         case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
           val errProv = TypeProvenance(rhs.toLoc, "def signature")
-          val ty_sch = PolymorphicType(
-            0,
-            typeType(rhs)(
-              ctx.nextLevel,
-              raise,
-              vars = tps.map(tp => tp.name -> freshVar(noProv /*FIXME*/ )(1)).toMap
-            )
-          )
+          val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
+            vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme) -> getType(ty_sch).show
@@ -356,10 +350,10 @@ object Main {
           errorOccurred = true
       }
     }
-
+    
     results.toList -> (if (errorOccurred) S(res.toString) else N)
   }
-
+  
   private def underline(fragment: Str): Str =
     s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
 }
