@@ -140,9 +140,16 @@ object SourceCode {
   })
   def space: SourceCode = SourceCode.from(" ")
   def semicolon: SourceCode = SourceCode.from(";")
+  def commaSpace: SourceCode = SourceCode.from(", ")
   def empty: SourceCode = new SourceCode(Nil)
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
+
+  def sepBy(codes: Ls[SourceCode], sep: SourceCode = this.commaSpace): SourceCode =
+    codes.zipWithIndex
+      .foldLeft(this.empty) { case (x, (y, i)) =>
+        x ++ y ++ (if (i === codes.length - 1) this.empty else sep)
+      }
 }
 
 abstract class JSCode {
@@ -190,7 +197,10 @@ abstract class JSExpr extends JSCode {
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
   def precedence: Int
 
+  def isSimple: Bool = false
+
   def stmt: JSExprStmt = JSExprStmt(this)
+  def `return`: JSReturnStmt = JSReturnStmt(this)
 }
 
 object JSExpr {
@@ -212,6 +222,11 @@ object JSExpr {
       .parenthesized
 }
 
+final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
+  def precedence: Int = 1
+  def toSourceCode: SourceCode = SourceCode.sepBy(exprs map { _.toSourceCode })
+}
+
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
   def precedence: Int = 3
   def toSourceCode: SourceCode =
@@ -223,7 +238,7 @@ final case class JSPlaceholderExpr() extends JSExpr {
   def toSourceCode: SourceCode = SourceCode.empty
 }
 
-final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
+final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) extends JSExpr {
   def precedence: Int = 22
   def toSourceCode: SourceCode =
     params.zipWithIndex
@@ -233,7 +248,10 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
           case pattern             => pattern.toSourceCode
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode.from(", "))
       }
-      .parenthesized ++ SourceCode.from(" => ") ++ body.toSourceCode
+      .parenthesized ++ SourceCode.from(" => ") ++ (body match {
+      case L(expr)  => expr.toSourceCode.parenthesized(expr.precedence < precedence)
+      case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
+    })
 }
 
 // IIFE: immediately invoked function expression
@@ -323,6 +341,7 @@ final case class JSLit(literal: Str) extends JSExpr {
   // Literals has the highest precedence.
   def precedence: Int = 22
   def toSourceCode = SourceCode.from(literal)
+  override def isSimple: Bool = true
 }
 
 object JSLit {
@@ -356,6 +375,8 @@ final case class JSInstanceOf(left: JSExpr, right: JSExpr) extends JSExpr {
 final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExpr {
   def precedence: Int = 22
   def toSourceCode: SourceCode = SourceCode.from(name)
+
+  override def isSimple: Bool = true
 }
 
 final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
@@ -370,6 +391,8 @@ final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
         s"[${JSLit.makeStringLiteral(field)}]"
       }
     )
+
+  override def isSimple: Bool = target.isSimple
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -428,11 +451,19 @@ final case class JSThrowStmt() extends JSStmt {
     SourceCode.from("throw new Error(\"non-exhaustive case expression\");")
 }
 
-final case class JSLetDecl(pattern: Str, body: JSExpr) extends JSStmt {
+final case class JSLetDecl(decls: Ls[Str -> Opt[JSExpr]]) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode.from(
-      s"let $pattern = "
-    ) ++ body.toSourceCode ++ SourceCode.semicolon
+    SourceCode.from(s"let ") ++ decls.zipWithIndex
+      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+        x ++ (y match {
+          case (pat, N)       => SourceCode.from(pat)
+          case (pat, S(init)) => SourceCode.from(pat) ++ SourceCode.from(" = ") ++ init.toSourceCode
+        }) ++ (if (i === decls.length - 1) SourceCode.empty else SourceCode.from(", "))
+      } ++ SourceCode.semicolon
+}
+
+object JSLetDecl {
+  def from(names: Ls[Str]): JSLetDecl = JSLetDecl(names map { _ -> N })
 }
 
 final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {

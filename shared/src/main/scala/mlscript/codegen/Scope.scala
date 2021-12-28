@@ -1,6 +1,7 @@
 package mlscript.codegen
 
 import mlscript.utils.shorthands._
+import mlscript.{JSStmt, JSExpr, JSLetDecl}
 
 class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
   def this() = this(Nil, None)
@@ -13,6 +14,9 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
   // If a symbol is re-declared, this map contains the actual JavaScript name.
   private val overrides =
     scala.collection.mutable.HashMap[Str, Str](symbols.toSeq.map(s => (s, s)): _*)
+
+  // Temporary variables allocated in this scope.
+  private val tempVars = scala.collection.mutable.HashSet[Str]()
 
   private def declareJavaScriptName(name: Str): Unit = {
     if (symbols contains name) {
@@ -60,6 +64,43 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
     }
     throw new Exception("Could not allocate a new symbol")
   }
+
+  /**
+    * Allocate a temporary variable. When exit this scope, remember to emit
+    * declarations for them.
+    */
+  def allocateTempVar(): Str = {
+    val name = allocateJavaScriptName("temp")
+    tempVars += name
+    name
+  }
+
+  private def emitTempVarDecls(): Opt[JSLetDecl] = if (tempVars.isEmpty) {
+    N
+  } else {
+    val decl = JSLetDecl.from(tempVars.toList)
+    tempVars.clear()
+    S(decl)
+  }
+
+  /**
+    * Prepend temp variable declarations to given statements.
+    */
+  def withTempVarDecls(stmts: Ls[JSStmt]): Ls[JSStmt] =
+    emitTempVarDecls() match {
+      case S(decl) => decl :: stmts
+      case N       => stmts
+    }
+
+  /**
+    * Prepend temp variable declarations to given expression. If no temp variables,
+    * return the expression as `Left`.
+    */
+  def withTempVarDecls(expr: JSExpr): JSExpr \/ Ls[JSStmt] =
+    emitTempVarDecls() match {
+      case S(decl) => R(decl :: expr.`return` :: Nil)
+      case N       => L(expr)
+    }
 
   /**
     * Declare a name in current MLscript scope. The method returns corresponding

@@ -110,6 +110,7 @@ class JSBackend(pgrm: Pgrm) {
   // For inheritance usage.
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
+  // Returns: temp identifiers and the expression
   private def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(mlsName) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
@@ -124,7 +125,7 @@ class JSBackend(pgrm: Pgrm) {
     case Lam(params, body) =>
       val patterns = translateParams(params)
       val lamScope = Scope(patterns flatMap { _.bindings }, scope)
-      JSArrowFn(patterns, translateTerm(body)(lamScope))
+      JSArrowFn(patterns, lamScope withTempVarDecls translateTerm(body)(lamScope))
     // Binary expressions called by function names.
     case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
         if builtinFnOpMap contains name =>
@@ -152,24 +153,35 @@ class JSBackend(pgrm: Pgrm) {
       val letScope = Scope(name :: Nil, scope)
       JSImmEvalFn(
         name :: Nil,
-        Left(translateTerm(body)(letScope)),
+        letScope withTempVarDecls translateTerm(body)(letScope),
         translateTerm(value)(letScope) :: Nil
       )
     case Blk(stmts) =>
+      val blkScope = Scope(Nil, scope)
       JSImmEvalFn(
         Nil,
-        Right(stmts flatMap (_.desugared._2) map { translateStatement(_) }),
-        JSPlaceholderExpr() :: Nil
+        R(blkScope withTempVarDecls (stmts flatMap (_.desugared._2) map {
+          translateStatement(_)(blkScope)
+        })),
+        Nil
       )
-    case CaseOf(term, cases) => {
-      val arg = translateTerm(term)
-      val param = scope.allocateJavaScriptName()
-      JSImmEvalFn(
-        param :: Nil,
-        Right(translateCaseBranch(param, cases)(Scope(param :: Nil, scope))),
-        arg :: Nil
-      )
-    }
+    // Pattern match with only one branch -> comma expression
+    case CaseOf(trm, Wildcard(default)) =>
+      println("what")
+      JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
+    // Pattern match with two branches -> tenary operator
+    case CaseOf(trm, Case(tst, csq, Wildcard(alt))) => 
+      translateCase(translateTerm(trm), tst)(translateTerm(csq), translateTerm(alt))
+    // Pattern match with more branches -> chain of ternary expressions with cache
+    case CaseOf(trm, cases) =>
+      println("dude")
+      val arg = translateTerm(trm)
+      if (arg.isSimple) {
+        translateCaseBranch(arg, cases)
+      } else {
+        val name = JSIdent(scope.allocateTempVar())
+        JSCommaExpr(JSAssignExpr(name, arg) :: translateCaseBranch(name, cases) :: Nil)
+      }
     case IntLit(value) => JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n"))
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
@@ -189,34 +201,36 @@ class JSBackend(pgrm: Pgrm) {
       throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
-  // Translate consecutive case branches into a list of if statements.
-  private def translateCaseBranch(name: Str, branch: CaseBranches)(implicit
+  private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
       scope: Scope
-  ): Ls[JSStmt] =
-    branch match {
-      case Case(className, body, rest) =>
-        val scrut = JSIdent(name)
-        JSIfStmt(
-          className match {
-            case Var("int") =>
-              JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
-            case Var("bool") =>
-              JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
-            case Var(s @ ("true" | "false")) =>
-              JSBinary("==", scrut, JSLit(s))
-            case Var("string") =>
-              // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
-              JSBinary("==", JSMember(scrut, "constructor"), JSLit("String"))
-            case Var(clsName) =>
-              JSInstanceOf(scrut, JSIdent(clsName))
-            case lit: Lit =>
-              JSBinary("==", scrut, JSLit(lit.idStr))
-          },
-          Ls(JSReturnStmt(translateTerm(body)))
-        ) :: translateCaseBranch(name, rest)
-      case Wildcard(body) => Ls(JSReturnStmt(translateTerm(body)))
-      case NoCases        => Ls(JSThrowStmt())
-    }
+  ): JSExpr = branch match {
+    case Case(pat, body, rest) =>
+      translateCase(scrut, pat)(translateTerm(body), translateCaseBranch(scrut, rest))
+    case Wildcard(body) => translateTerm(body)
+    case NoCases        => JSImmEvalFn(Nil, R(JSThrowStmt() :: Nil), Nil)
+  }
+
+  private def translateCase(scrut: JSExpr, pat: SimpleTerm) = {
+    JSTenary(
+      pat match {
+        case Var("int") =>
+          JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
+        case Var("bool") =>
+          JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
+        case Var(s @ ("true" | "false")) =>
+          JSBinary("==", scrut, JSLit(s))
+        case Var("string") =>
+          // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
+          JSBinary("==", JSMember(scrut, "constructor"), JSLit("String"))
+        case Var(clsName) =>
+          JSInstanceOf(scrut, JSIdent(clsName))
+        case lit: Lit =>
+          JSBinary("==", scrut, JSLit(lit.idStr))
+      },
+      _,
+      _
+    )
+  }
 
   private val typeAliasMap =
     collection.mutable.HashMap[Str, Ls[Str] -> Type]()
@@ -413,13 +427,13 @@ class JSBackend(pgrm: Pgrm) {
             case Def(_, mlsName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
               val jsName = topLevelScope declare mlsName
-              JSConstDecl(jsName, translatedBody) ::
+              topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
                 JSInvoke(JSMember(resultsIdent, "push"), JSIdent(jsName) :: Nil).stmt :: Nil
             // Ignore type declarations.
             case Def(_, _, R(_)) => Nil
             // `exprs.push(<expr>)`.
             case term: Term =>
-              JSInvoke(
+              topLevelScope withTempVarDecls JSInvoke(
                 JSMember(resultsIdent, "push"),
                 translateTerm(term)(topLevelScope) :: Nil
               ).stmt :: Nil
