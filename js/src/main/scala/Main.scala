@@ -64,12 +64,17 @@ object Main {
               }
               // Assemble something like: `val <name>: <type> = <value>`.
               // If error occurred, leave `<no value>`.
-              typeCheckResult foreach { case (name, ty) =>
-                val value = results match {
-                  case head :: next =>
-                    results = next
-                    S(head)
-                  case Nil => N
+              typeCheckResult.zip(pgrm.desugared._2._2) foreach { case ((name, ty), origin) =>
+                val value = origin match {
+                  // Do not extract from results if its a type declaration.
+                  case Def(_, _, R(_)) => N
+                  // Otherwise, `origin` is either a term or a definition.
+                  case _ => results match {
+                    case head :: next =>
+                      results = next
+                      S(head)
+                    case Nil => N
+                  }
                 }
                 htmlBuilder ++= s"""<b>
                   |  <font color="#93a1a1">val </font>
