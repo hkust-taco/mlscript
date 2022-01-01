@@ -167,14 +167,12 @@ class JSBackend(pgrm: Pgrm) {
       )
     // Pattern match with only one branch -> comma expression
     case CaseOf(trm, Wildcard(default)) =>
-      println("what")
       JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
     // Pattern match with two branches -> tenary operator
     case CaseOf(trm, Case(tst, csq, Wildcard(alt))) => 
       translateCase(translateTerm(trm), tst)(translateTerm(csq), translateTerm(alt))
     // Pattern match with more branches -> chain of ternary expressions with cache
     case CaseOf(trm, cases) =>
-      println("dude")
       val arg = translateTerm(trm)
       if (arg.isSimple) {
         translateCaseBranch(arg, cases)
