@@ -464,9 +464,10 @@ object JSLetDecl {
 
 final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode(
-      s"const $pattern = "
-    ) ++ body.toSourceCode ++ SourceCode.semicolon
+    SourceCode(s"const $pattern = ") ++ (body match {
+      case _: JSCommaExpr => body.toSourceCode.parenthesized
+      case _ => body.toSourceCode
+    }) ++ SourceCode.semicolon
 }
 
 final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) extends JSStmt {
