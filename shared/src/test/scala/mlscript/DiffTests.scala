@@ -55,9 +55,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
-
-    val host = ReplHost()
-    host.skipHello()
+    
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
     
@@ -322,21 +320,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
 
             if (!mode.noGeneration && !noJavaScript) {
               val backend = new JSBackend(p)
-              val (prologue, executions) = backend.testCode()
               if (!mode.noExecution) {
-                output("JavaScript execution results")
-                executions foreach { case name -> code =>
-                  var indent = Opt.empty[Str]
-                  // Print the reply with indentation
-                  host.query(code).split('\n') foreach { line =>
-                    indent match {
-                      case S(indent) => s"$indent   $line"
-                      case N =>
-                        indent = S(" " * name.length)
-                        s"$name = $line"
-                    }
-                  }
-                }
+                // TODO: execute JavaScript here.
               }
             }
             
@@ -369,48 +354,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     }
     if (failures.nonEmpty)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
-
-    // Remember to shutdown the REPL host
-    host.terminate()
+    
   }}
   
-  case class ReplHost() {
-    private val process = os.proc("node", "--interactive").spawn()
-
-    def skipHello(): Unit = {
-      process.stdout.readLine()
-      process.stdout.readLine()
-    }
-
-    def query(fragments: Ls[Str]): Str = {
-      val fragment = fragments mkString "\n"
-      println(s"Sent: $fragment")
-      process.stdin.writeLine(fragment)
-      process.stdin.flush()
-      val sb = new StringBuilder
-      while (process.stdout.wrapped.available > 0) {
-        val line = process.stdout.readLine
-        sb.append(if (line startsWith "> ") {
-          line drop 2
-        } else {
-          line
-        })
-      }
-      val reply = sb.toString
-      println(s"Received: $reply")
-      reply
-    }
-
-    def drain(): Str = {
-      val stream = process.stdout.wrapped
-      val sb = new StringBuilder
-      while (stream.available > 0)
-        sb.append(stream.read().toChar)
-      sb.toString
-    }
-
-    def terminate(): Unit = {
-      process.destroy()
-    }
-  }
 }

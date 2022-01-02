@@ -15,21 +15,16 @@ def q = 0
 //│ z: int
 //│ f: int -> int
 //│ q: 0
-//│ JavaScript execution results
 
 if true then if true then a else b else a
 //│ res: 1 | 2
-//│ JavaScript execution results
 
 def id x = x
 //│ id: 'a -> 'a
-//│ JavaScript execution results
 
 if true then if true then id a else id b else a
 //│ res: 1 | 2
-//│ JavaScript execution results
 
 class Point[T]: { x: T; y: T }
 //│ Defined class Point
-//│ JavaScript execution results
 

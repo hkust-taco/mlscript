@@ -1,4 +1,3 @@
-:NoJS
 
 let f x =
   discard / x as { v: (y) } // TODO accept plain `y`
