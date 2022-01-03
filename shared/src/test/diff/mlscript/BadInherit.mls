@@ -149,6 +149,7 @@ class Cycle: N[Cycle]
 
 
 
+:ng
 // TODO forbid
 class D: int
 //│ Defined class D
@@ -157,6 +158,7 @@ add (D{}) 2
 //│ res: int
 
 
+:ng
 // TODO forbid
 class E: 1
 //│ Defined class E
@@ -165,16 +167,16 @@ class E: 1
 E{}: 1
 E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	E{}: 1
+//│ ║  l.167: 	E{}: 1
 //│ ║         	^^^
 //│ ╙── expression of type `E` does not match type `1`
 //│ res: 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.166: 	E{}: int
+//│ ║  l.168: 	E{}: int
 //│ ║         	^^^
 //│ ╟── expression of type `E` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.166: 	E{}: int
+//│ ║  l.168: 	E{}: int
 //│ ╙──       	     ^^^
 //│ res: int
 
@@ -183,10 +185,10 @@ E{}: int
 class F: nothing
 F{}
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.183: 	class F: nothing
+//│ ║  l.185: 	class F: nothing
 //│ ╙──       	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: F
-//│ ║  l.184: 	F{}
+//│ ║  l.186: 	F{}
 //│ ╙──       	^
 //│ res: error
 
@@ -206,7 +208,7 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.207: 	class Weird: {} | {}
+//│ ║  l.209: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
@@ -215,7 +217,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.216: 	class B: Id[A]
+//│ ║  l.218: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
@@ -225,7 +227,7 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.226: 	class Class3B: Class3A & 'a
+//│ ║  l.228: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

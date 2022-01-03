@@ -83,6 +83,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     var allowTypeErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
+
+    val backend = JSBackend()
+    val host = ExecHost()
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
@@ -318,10 +321,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               output(s"annoying  calls: " + an)
             }
 
-            if (!mode.noGeneration && !noJavaScript) {
-              val backend = new JSBackend(p)
+            if (!allowTypeErrors && !mode.expectTypeErrors &&
+                !mode.expectTypeErrors && file.ext == "mls" &&
+                !mode.noGeneration && !noJavaScript) {
+              val lines = backend.test(p)
               if (!mode.noExecution) {
-                // TODO: execute JavaScript here.
+                val code = lines.mkString("", "\n", "\n")
               }
             }
             
@@ -357,4 +362,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     
   }}
   
+  case class ExecHost() {
+    private val tempFile = os.temp()
+    
+    def execute(code: Str): Either[Str, Str] = {
+      os.write.append(tempFile, code)
+      try
+        R(os.proc("node", tempFile).call().toString)
+      catch {
+        case err: Throwable =>
+          L(err.toString)
+      }
+    }
+  }
 }

@@ -7,15 +7,12 @@ import collection.immutable.LazyList
 import scala.collection.immutable
 import mlscript.codegen.Scope
 
-class JSBackend(pgrm: Pgrm) {
+class JSBackend {
   // This object contains all classNames.
   private val classNames: HashSet[Str] = HashSet()
 
-  // All names used in `def`s.
-  private val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
-    case Def(rec, nme, rhs) => S(nme)
-    case _                  => N
-  })
+  // TODO: let `Scope` track symbol kinds.
+  private val traitNames = HashSet[Str]()
 
   private val topLevelScope = Scope()
 
@@ -74,9 +71,9 @@ class JSBackend(pgrm: Pgrm) {
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
+    case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Tup | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With |
-        _: CaseOf =>
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf =>
       throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
@@ -137,6 +134,9 @@ class JSBackend(pgrm: Pgrm) {
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+    // Trait construction.
+    case App(Var(callee), Tup(N -> (rcd: Rcd) :: Nil)) if (traitNames contains callee) =>
+      translateTerm(rcd)
     // Function application.
     case App(callee, Tup(args)) =>
       JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
@@ -169,7 +169,7 @@ class JSBackend(pgrm: Pgrm) {
     case CaseOf(trm, Wildcard(default)) =>
       JSCommaExpr(translateTerm(trm) :: translateTerm(default) :: Nil)
     // Pattern match with two branches -> tenary operator
-    case CaseOf(trm, Case(tst, csq, Wildcard(alt))) => 
+    case CaseOf(trm, Case(tst, csq, Wildcard(alt))) =>
       translateCase(translateTerm(trm), tst)(translateTerm(csq), translateTerm(alt))
     // Pattern match with more branches -> chain of ternary expressions with cache
     case CaseOf(trm, cases) =>
@@ -195,7 +195,9 @@ class JSBackend(pgrm: Pgrm) {
         }) :: Nil
       )
     case Bra(_, trm) => translateTerm(trm)
-    case _: Tup | _: Bind | _: Test =>
+    case Tup(terms) =>
+      JSArray(terms map { case (_, term) => translateTerm(term) })
+    case _: Bind | _: Test =>
       throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
@@ -306,19 +308,22 @@ class JSBackend(pgrm: Pgrm) {
     // If `A` is a type alias, it is replaced by its real type.
     // Otherwise just use the name.
     case TypeName(name) =>
-      typeAliasMap get name match {
-        // The base class is not a type alias.
-        case N => Nil -> S(name)
-        // The base class is a type alias with no parameters.
-        // Good, just make sure all term is normalized.
-        case S(Nil -> body) => getBaseClassAndFields(substitute(body))
-        // The base class is a type alias with parameters.
-        // Oops, we don't support this.
-        case S(tparams -> _) =>
-          throw new Error(
-            s"type $name expects ${tparams.length} type parameters but nothing provided"
-          )
-      }
+      if (traitNames contains name)
+        Nil -> N
+      else
+        typeAliasMap get name match {
+          // The base class is not a type alias.
+          case N => Nil -> S(name)
+          // The base class is a type alias with no parameters.
+          // Good, just make sure all term is normalized.
+          case S(Nil -> body) => getBaseClassAndFields(substitute(body))
+          // The base class is a type alias with parameters.
+          // Oops, we don't support this.
+          case S(tparams -> _) =>
+            throw new Error(
+              s"type $name expects ${tparams.length} type parameters but nothing provided"
+            )
+        }
     // `class C: { <items> } & A` ==>
     // `class C extends A { constructor(fields) { <items> } }`
     case Inter(Record(entries), ty) =>
@@ -351,10 +356,15 @@ class JSBackend(pgrm: Pgrm) {
     // For applied types such as `Id[T]`, normalize them before translation.
     // Do not forget to normalize type arguments first.
     case AppliedType(TypeName(base), targs) =>
-      getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
+      if (traitNames contains base)
+        Nil -> N
+      else
+        getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
-    case _ => ???
+    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
+      throw new Error(s"unable to derive from type $ty")
   }
 
   // Translate MLscript class declaration to JavaScript class declaration.
@@ -389,7 +399,7 @@ class JSBackend(pgrm: Pgrm) {
     }
   }
 
-  def apply(): Ls[Str] = {
+  def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     // Collect type aliases into a map so we can normalize them.
@@ -397,6 +407,8 @@ class JSBackend(pgrm: Pgrm) {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
         val tnames = tparams map { case TypeName(nme) => nme }
         typeAliasMap(name) = tnames -> body
+      case TypeDef(Trt, TypeName(name), _, _, _, _) =>
+        traitNames += name
       case _ => ()
     }
 
@@ -444,10 +456,72 @@ class JSBackend(pgrm: Pgrm) {
       )
       .lines map { _.toString }
   }
+
+  private var numRun = 0
+
+  // Generate code for test.
+  def test(pgrm: Pgrm): Ls[Str] = {
+    val (diags, (typeDefs, otherStmts)) = pgrm.desugared
+
+    val print: JSExpr => JSStmt = { JSIdent(prettyPrinterName)(_).log() }
+
+    // Collect type aliases into a map so we can normalize them.
+    typeDefs foreach {
+      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+        val tnames = tparams map { case TypeName(nme) => nme }
+        typeAliasMap(name) = tnames -> body
+      case TypeDef(Trt, TypeName(name), _, _, _, _) =>
+        traitNames += name
+      case _ => ()
+    }
+
+    val resultsIdent = JSIdent(resultsName)
+    var stmts: Ls[JSStmt] =
+      JSComment(s"Run #$numRun") ::
+      typeDefs
+        .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
+          kind match {
+            case Cls =>
+              topLevelScope declare name
+              classNames += name
+              val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
+              nameClsMap += name -> cls
+              cls
+            case Trt => JSComment(s"trait $name")
+            case Als => JSComment(s"type alias $name")
+          }
+        }
+        .concat(otherStmts.flatMap {
+          // const <name> = <expr>;
+          // console.log(<name>);
+          case Def(_, mlsName, L(body)) =>
+            val translatedBody = translateTerm(body)(topLevelScope)
+            val jsName = topLevelScope declare mlsName
+            topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
+              print(JSIdent(jsName)) :: Nil
+          // Ignore type declarations.
+          case Def(_, _, R(_)) => Nil
+          // console.log(<expr>);
+          case term: Term =>
+            print(translateTerm(term)(topLevelScope)) :: Nil
+        })
+
+    // If this is the first time, insert the prelude code.
+    if (numRun === 0) {
+      stmts = JSBackend.makePrettyPrinter(prettyPrinterName, false) :: stmts
+      if (hasWithConstruct) {
+        stmts = JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
+      }
+    }
+
+    numRun = numRun + 1
+
+    SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
+  }
 }
 
 object JSBackend {
-  def apply(pgrm: Pgrm): JSBackend = new JSBackend(pgrm)
+  def apply(): JSBackend = new JSBackend()
 
   private def inspectTerm(t: Term): Str = t match {
     case Var(name)     => s"Var($name)"
@@ -508,6 +582,31 @@ object JSBackend {
         JSInvoke(JSMember(JSIdent("Object"), "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
     ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
   )
+
+  private def makePrettyPrinter(name: Str, indent: Bool) = {
+    val arg = JSIdent("value")
+    val default = arg.member("constructor").member("name") + JSExpr(" ") +
+      (if (indent) JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
+       else JSIdent("JSON").member("stringify")(arg));
+    JSFuncDecl(
+      name,
+      JSNamePattern("value") :: Nil,
+      JSIdent(name)
+        .typeof()
+        .switch(
+          default.`return` :: Nil,
+          JSExpr("number") -> Nil,
+          JSExpr("boolean") -> Nil,
+          // Returns `"[Function: <name>]"`
+          JSExpr("function") -> {
+            val name = arg.member("name") ?? JSExpr("<anonymous>")
+            val repr = JSExpr("[Function: ") + name + JSExpr("]")
+            (repr.`return` :: Nil)
+          },
+          JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
+        ) :: Nil,
+    )
+  }
 
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER

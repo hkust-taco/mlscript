@@ -147,7 +147,7 @@ object SourceCode {
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("]")
     }
-  
+
   def sepBy(codes: Ls[SourceCode], sep: SourceCode = this.commaSpace): SourceCode =
     codes.zipWithIndex
       .foldLeft(this.empty) { case (x, (y, i)) =>
@@ -203,9 +203,38 @@ abstract class JSExpr extends JSCode {
 
   def stmt: JSExprStmt = JSExprStmt(this)
   def `return`: JSReturnStmt = JSReturnStmt(this)
+
+  def member(name: Str): JSMember = JSMember(this, name)
+
+  def apply(args: JSExpr*): JSInvoke = JSInvoke(this, args.toList)
+
+  def unary(op: Str): JSUnary = JSUnary(op, this)
+
+  def binary(op: Str, rhs: JSExpr): JSBinary = JSBinary(op, this, rhs)
+
+  def +(rhs: JSExpr): JSBinary = binary("+", rhs)
+
+  def ??(rhs: JSExpr): JSBinary = binary("??", rhs)
+
+  def typeof(): JSUnary = unary("typeof")
+
+  def switch(default: Ls[JSStmt], cases: (JSExpr -> Ls[JSStmt])*): JSSwitchStmt =
+    JSSwitchStmt(
+      this,
+      (cases map { case (t, c) => JSSwitchCase(t, c) }).toList,
+      S(JSDefaultCase(default))
+    )
+
+  def switch(cases: (JSExpr -> Ls[JSStmt])*): JSSwitchStmt =
+    JSSwitchStmt(this, (cases map { case (t, c) => JSSwitchCase(t, c) }).toList)
+
+  def log(): JSStmt = JSIdent("console").member("log")(this).stmt
 }
 
 object JSExpr {
+  // Helper function for creating string literals.
+  def apply(str: Str): JSLit = JSLit(JSLit.makeStringLiteral(str))
+
   def params(params: Ls[JSPattern]): SourceCode =
     params.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
@@ -300,6 +329,15 @@ final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr 
   }
 }
 
+final case class JSUnary(op: Str, arg: JSExpr) extends JSExpr {
+  def precedence: Int = 15
+
+  override def toSourceCode: SourceCode = (op match {
+    case "typeof" => SourceCode("typeof ")
+    case _        => SourceCode(op)
+  }) ++ arg.toSourceCode.parenthesized(arg.precedence < precedence)
+}
+
 final case class JSBinary(op: Str, left: JSExpr, right: JSExpr) extends JSExpr {
   def apply(op: Str, left: JSExpr, right: JSExpr): JSBinary =
     new JSBinary(op, left, right)
@@ -336,6 +374,7 @@ object JSBinary {
       "==" -> 11,
       "&&" -> 7,
       "||" -> 7,
+      "??" -> 4
     )
 }
 
@@ -447,6 +486,32 @@ final case class JSThrowStmt() extends JSStmt {
     SourceCode("throw new Error(\"non-exhaustive case expression\");")
 }
 
+final case class JSSwitchStmt(
+    discriminant: JSExpr,
+    cases: Ls[JSSwitchCase],
+    default: Opt[JSDefaultCase] = N
+) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode("switch (") ++ discriminant.toSourceCode ++ SourceCode(") {") +
+      cases.foldLeft(SourceCode.empty) { _ + _.toSourceCode.indented } +
+      (default match {
+        case S(default) => default.toSourceCode.indented + SourceCode("}")
+        case N => SourceCode("}")
+      })
+}
+
+final case class JSSwitchCase(test: JSExpr, consequent: Ls[JSStmt]) {
+  def toSourceCode: SourceCode =
+    SourceCode("case ") ++ test.toSourceCode ++ SourceCode(": ") +
+      consequent.foldLeft(SourceCode.empty) { _ + _.toSourceCode.indented }
+}
+
+final case class JSDefaultCase(consequent: Ls[JSStmt]) {
+  def toSourceCode: SourceCode =
+    SourceCode("default:") +
+      consequent.foldLeft(SourceCode.empty) { _ + _.toSourceCode.indented }
+}
+
 final case class JSLetDecl(decls: Ls[Str -> Opt[JSExpr]]) extends JSStmt {
   def toSourceCode: SourceCode =
     SourceCode(s"let ") ++ decls.zipWithIndex
@@ -466,7 +531,7 @@ final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
   def toSourceCode: SourceCode =
     SourceCode(s"const $pattern = ") ++ (body match {
       case _: JSCommaExpr => body.toSourceCode.parenthesized
-      case _ => body.toSourceCode
+      case _              => body.toSourceCode
     }) ++ SourceCode.semicolon
 }
 
