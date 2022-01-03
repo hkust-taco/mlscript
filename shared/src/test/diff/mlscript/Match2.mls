@@ -74,3 +74,21 @@ baz "oops"
 //│ ╙──      	                 ^
 //│ res: error
 
+
+
+def test3 x = case x of
+  { 1 -> true
+  | true -> true
+  | _ -> false
+  }
+//│ test3: (1 | true | ~1 & ~true) -> bool
+
+
+def test3 x = case x of
+  { 1 -> x
+  | true -> true
+  | _ -> false
+  }
+//│ test3: (1 & 'a | true | ~1 & ~true) -> (false | true | 'a)
+
+
