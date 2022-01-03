@@ -117,6 +117,7 @@ object SourceCode {
   val space: SourceCode = SourceCode(" ")
   val semicolon: SourceCode = SourceCode(";")
   val comma: SourceCode = SourceCode(",")
+  val commaSpace: SourceCode = SourceCode(", ")
   val empty: SourceCode = SourceCode(Nil)
 
   def concat(codes: Ls[SourceCode]): SourceCode =
@@ -146,6 +147,13 @@ object SourceCode {
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("]")
     }
+  
+  def sepBy(codes: Ls[SourceCode], sep: SourceCode = this.commaSpace): SourceCode =
+    codes.zipWithIndex
+      .foldLeft(this.empty) { case (x, (y, i)) =>
+        x ++ y ++ (if (i === codes.length - 1) this.empty else sep)
+      }
+
 }
 
 abstract class JSCode {
@@ -191,7 +199,10 @@ abstract class JSExpr extends JSCode {
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
   def precedence: Int
 
+  def isSimple: Bool = false
+
   def stmt: JSExprStmt = JSExprStmt(this)
+  def `return`: JSReturnStmt = JSReturnStmt(this)
 }
 
 object JSExpr {
@@ -213,6 +224,11 @@ object JSExpr {
       .parenthesized
 }
 
+final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
+  def precedence: Int = 1
+  def toSourceCode: SourceCode = SourceCode.sepBy(exprs map { _.toSourceCode })
+}
+
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
   def precedence: Int = 3
   def toSourceCode: SourceCode =
@@ -224,7 +240,7 @@ final case class JSPlaceholderExpr() extends JSExpr {
   def toSourceCode: SourceCode = SourceCode.empty
 }
 
-final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
+final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) extends JSExpr {
   def precedence: Int = 22
   def toSourceCode: SourceCode =
     params.zipWithIndex
@@ -234,7 +250,10 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr) extends JSExpr {
           case pattern             => pattern.toSourceCode
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
-      .parenthesized ++ SourceCode(" => ") ++ body.toSourceCode
+      .parenthesized ++ SourceCode(" => ") ++ (body match {
+      case L(expr)  => expr.toSourceCode.parenthesized(expr.precedence < precedence)
+      case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
+    })
 }
 
 // IIFE: immediately invoked function expression
@@ -371,6 +390,8 @@ final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
         s"[${JSLit.makeStringLiteral(field)}]"
       }
     )
+
+  override def isSimple: Bool = target.isSimple
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -426,18 +447,27 @@ final case class JSThrowStmt() extends JSStmt {
     SourceCode("throw new Error(\"non-exhaustive case expression\");")
 }
 
-final case class JSLetDecl(pattern: Str, body: JSExpr) extends JSStmt {
+final case class JSLetDecl(decls: Ls[Str -> Opt[JSExpr]]) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode(
-      s"let $pattern = "
-    ) ++ body.toSourceCode ++ SourceCode.semicolon
+    SourceCode(s"let ") ++ decls.zipWithIndex
+      .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
+        x ++ (y match {
+          case (pat, N)       => SourceCode(pat)
+          case (pat, S(init)) => SourceCode(pat) ++ SourceCode(" = ") ++ init.toSourceCode
+        }) ++ (if (i === decls.length - 1) SourceCode.empty else SourceCode(", "))
+      } ++ SourceCode.semicolon
+}
+
+object JSLetDecl {
+  def from(names: Ls[Str]): JSLetDecl = JSLetDecl(names map { _ -> N })
 }
 
 final case class JSConstDecl(pattern: Str, body: JSExpr) extends JSStmt {
   def toSourceCode: SourceCode =
-    SourceCode(
-      s"const $pattern = "
-    ) ++ body.toSourceCode ++ SourceCode.semicolon
+    SourceCode(s"const $pattern = ") ++ (body match {
+      case _: JSCommaExpr => body.toSourceCode.parenthesized
+      case _ => body.toSourceCode
+    }) ++ SourceCode.semicolon
 }
 
 final case class JSFuncDecl(name: Str, params: Ls[JSPattern], body: Ls[JSStmt]) extends JSStmt {

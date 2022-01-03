@@ -49,47 +49,41 @@ object Main {
           errorResult match {
             case Some(typeCheckResult) => typeCheckResult
             case None => {
-              // We're going write two parts to this `StringBuilder`:
-              // 1. Errors from code generation, execution;
-              // 2. Types of definitions and expressions.
-              val sb = new StringBuilder
-              // If code generation succeeds, run the generated code.
-              // If it fails, write down the error message.
-              // The code here is a bit verbose.
-              var (defResults, exprResults, error) =
-                generateRuntimeCode(pgrm) match {
-                  case R(code) => executeCode(code)
-                  case L(error) =>
-                    (collection.mutable.HashMap[Str, Str](), Nil, error)
+              val htmlBuilder = new StringBuilder
+              var results = generateRuntimeCode(pgrm) match {
+                case R(code) =>
+                  executeCode(code) match {
+                    case L(errorHtml) =>
+                      htmlBuilder ++= errorHtml
+                      Nil
+                    case R(results) => results
+                  }
+                case L(errorHtml) =>
+                  htmlBuilder ++= errorHtml
+                  Nil
+              }
+              // Assemble something like: `val <name>: <type> = <value>`.
+              // If error occurred, leave `<no value>`.
+              typeCheckResult.zip(pgrm.desugared._2._2) foreach { case ((name, ty), origin) =>
+                val value = origin match {
+                  // Do not extract from results if its a type declaration.
+                  case Def(_, _, R(_)) => N
+                  // Otherwise, `origin` is either a term or a definition.
+                  case _ => results match {
+                    case head :: next =>
+                      results = next
+                      S(head)
+                    case Nil => N
+                  }
                 }
-              sb ++= error
-              // Iterate type and assemble something like:
-              // `val <name>: <type> = <value>`.
-              // If the value is not found, write `<no value>`.
-              val resolveShadowName = new ShadowNameResolver
-              typeCheckResult foreach { case (name, ty) =>
-                val res = name match {
-                  // This type definition is a `def`.
-                  case S(name) =>
-                    defResults get resolveShadowName(name)
-                  // This type definition is an expression. (No name)
-                  case N =>
-                    exprResults match {
-                      case head :: next => {
-                        exprResults = next
-                        S(head)
-                      }
-                      case immutable.Nil => N
-                    }
-                }
-                sb ++= s"""<b>
+                htmlBuilder ++= s"""<b>
                   |  <font color="#93a1a1">val </font>
                   |  <font color="LightGreen">${name getOrElse "res"}</font>: 
                   |  <font color="LightBlue">$ty</font>
-                  |</b> = ${res getOrElse "<font color=\"gray\">no value</font>"}
+                  |</b> = ${value getOrElse "<font color=\"gray\">no value</font>"}
                   |$htmlLineBreak""".stripMargin
               }
-              sb.toString
+              htmlBuilder.toString
             }
           }
       }
@@ -111,28 +105,23 @@ object Main {
   // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
-      val lines = new JSBackend(pgrm)()
+      val backend = JSBackend(pgrm)
+      val lines = backend()
       val code = s"""(() => {
-                    |  let [defs, exprs] = (() => {
-                    |    ${lines.mkString("\n")}
-                    |  })();
-                    |  for (const key of Object.keys(defs)) {
-                    |    defs[key] = prettyPrint(defs[key]);
+                    |function ${backend.prettyPrinterName}(value) {
+                    |  switch (typeof value) {
+                    |    case "number":
+                    |    case "boolean":
+                    |    case "function":
+                    |      return value.toString();
+                    |    case "string":
+                    |      return '\"' + value + '\"';
+                    |    default:
+                    |      return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
                     |  }
-                    |  exprs = exprs.map(prettyPrint);
-                    |  return { defs, exprs };
-                    |  function prettyPrint(value) {
-                    |    switch (typeof value) {
-                    |      case "number":
-                    |      case "boolean":
-                    |      case "function":
-                    |        return value.toString();
-                    |      case "string":
-                    |        return '\"' + value + '\"';
-                    |      default:
-                    |        return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
-                    |    }
-                    |  }
+                    |}
+                    |${lines.mkString("\n")}
+                    |return ${backend.resultsName}.map(${backend.prettyPrinterName});
                     |})()""".stripMargin
       println("Running code: " + code)
       R(code)
@@ -141,6 +130,7 @@ object Main {
         val sb = new StringBuilder()
         sb ++= "<font color=\"red\">Code generation crashed:</font>"
         sb ++= htmlLineBreak + e.getMessage
+        // sb ++= htmlLineBreak + ((e.getStackTrace) mkString htmlLineBreak)
         sb ++= htmlLineBreak
         sb ++= htmlLineBreak
         L(sb.toString)
@@ -154,34 +144,18 @@ object Main {
   // 2. results of expressions;
   // 3. error message (if has).
   @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
-  private def executeCode(
-      code: Str
-  ): (collection.mutable.HashMap[Str, Str], Ls[Str], Str) = {
-    // Collect evaluation results.
-    var defResults = new collection.mutable.HashMap[Str, Str]
-    var exprResults: Ls[Str] = Nil
-    var sb = new StringBuilder()
+  private def executeCode(code: Str): Either[Str, Ls[Str]] = {
     try {
-      // I know this is very hacky but using `asIntanceOf` is painful.
-      // TODO: pretty print JavaScript values in a less hacky way.
-      // Maybe I can add a global function for reporting results.
-      val results = js.eval(code).asInstanceOf[js.Dictionary[js.Any]]
-      results.get("defs").foreach { defs =>
-        defs.asInstanceOf[js.Dictionary[Str]] foreach { case (key, value) =>
-          defResults += key -> value
-        }
-      }
-      results.get("exprs").foreach { exprs =>
-        exprResults = exprs.asInstanceOf[js.Array[Str]].toList
-      }
+      R(js.eval(code).asInstanceOf[js.Array[Str]].toList)
     } catch {
       case e: Throwable =>
-        sb ++= "<font color=\"red\">Runtime error occurred:</font>"
-        sb ++= htmlLineBreak + e.getMessage
-        sb ++= htmlLineBreak
-        sb ++= htmlLineBreak
+        val errorBuilder = new StringBuilder()
+        errorBuilder ++= "<font color=\"red\">Runtime error occurred:</font>"
+        errorBuilder ++= htmlLineBreak + e.getMessage
+        errorBuilder ++= htmlLineBreak
+        errorBuilder ++= htmlLineBreak
+        L(errorBuilder.toString)
     }
-    (defResults, exprResults, sb.toString)
   }
   
   private val htmlLineBreak = "<br />"
@@ -203,7 +177,7 @@ object Main {
     val results = new collection.mutable.ArrayBuffer[Option[Str] -> Str]
     val stopAtFirstError = true
     var errorOccurred = false
-    
+
     def formatError(culprit: Str, err: TypeError): Str = {
       s"""<b><font color="Red">
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
@@ -252,7 +226,7 @@ object Main {
               <font color="LightBlue">${exp.show}</font>
               </b><br/>"""
     }
-
+    
     def underline(fragment: Str): Str =
       s"<u style=\"text-decoration: #E74C3C dashed underline\">$fragment</u>"
     
