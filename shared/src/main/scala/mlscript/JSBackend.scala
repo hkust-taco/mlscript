@@ -501,12 +501,12 @@ class JSBackend {
     numRun = numRun + 1
 
     TestCode(SourceCode.fromStmts(prelude).toLines, queryStmts map {
-      SourceCode.fromStmts(_).toLines mkString " "
+      SourceCode.fromStmts(_).toLines
     })
   }
 }
 
-final case class TestCode(prelude: Ls[Str], queries: Ls[Str])
+final case class TestCode(prelude: Ls[Str], queries: Ls[Ls[Str]])
 
 object JSBackend {
   def apply(): JSBackend = new JSBackend()
