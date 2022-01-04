@@ -103,7 +103,10 @@ WrapperWrapper { x = Psyduck { x = 0 } }
 
 res.Apply2 (fun x -> mul x 2)
 //│ res: WrapperWrapper['B .. 'B | int] with {x: Wrapper['B .. 'B | int]}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Uncaught ReferenceError: mul is not defined
+//│          at REPL23:1:32
+//│          at Psyduck.Apply (REPL20:1:127)
+//│          at WrapperWrapper.Apply2 (REPL21:1:149)
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (Wrapper['A] with {x: 'x})
@@ -246,19 +249,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.247: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.247: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.247: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.231: 	class Class2C: Class2B[int, bool]
+//│ ║  l.234: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.230: 	    method MtdB: B
+//│ ║  l.233: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -294,10 +297,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.294: 	class Test4A[A]: { x: A }
+//│ ║  l.297: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.295: 	    method Mth4A[A]: A
+//│ ║  l.298: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing

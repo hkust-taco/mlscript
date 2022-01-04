@@ -21,7 +21,7 @@ rcd with { x = "oops" }
 
 res.x
 //│ res: "oops"
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 'oops'
 
 id rcd with { x = "oops" }
 //│ res: {x: "oops"}
@@ -29,7 +29,7 @@ id rcd with { x = "oops" }
 
 res.x
 //│ res: "oops"
-//│    = Uncaught ReferenceError: res is not defined
+//│    = undefined
 
 
 def rcd = { }
@@ -42,7 +42,7 @@ id rcd with { x = "oops" }
 
 res.x
 //│ res: "oops"
-//│    = Uncaught ReferenceError: res is not defined
+//│    = undefined
 
 
 def f r = r with { x = "oops" }
@@ -153,13 +153,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.167: 	res.z
+//│ ║  l.154: 	res.z
 //│ ║         	^^^^^
 //│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
-//│ ║  l.162: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.149: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.167: 	res.z
+//│ ║  l.154: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 
@@ -192,7 +192,7 @@ d: C['a]
 
 res.x
 //│ res: "hi" | 1
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 'hi'
 
 
 def f x = (x with { a = 1 }).b

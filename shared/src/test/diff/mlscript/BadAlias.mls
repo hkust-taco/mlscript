@@ -14,7 +14,7 @@ type A = A
 
 res: "oops"
 //│ res: "oops"
-//│    = Uncaught ReferenceError: res is not defined
+//│    = undefined
 
 :e
 add res 1

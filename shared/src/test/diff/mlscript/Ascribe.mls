@@ -41,7 +41,7 @@ def foo(f: Foo['a]) = f.field
 
 def foo({ a; b }: { a: int; b: string}) = { b; a }
 //│ foo: {a: int, b: string} -> {a: int, b: string}
-//│    = const foo3 = ({   a,   b }) => {   b: b,   a: a }; foo3;
+//│    = const foo3 = ({   a,   b }) => {   b: b,   a: a }; res = foo3;
 //│                                                  ^
 //│      
 //│      Uncaught SyntaxError: Unexpected token ':'

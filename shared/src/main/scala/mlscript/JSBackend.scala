@@ -9,18 +9,12 @@ import mlscript.codegen.Scope
 
 class JSBackend {
   // This object contains all classNames.
-  private val classNames: HashSet[Str] = HashSet()
+  protected val classNames: HashSet[Str] = HashSet()
 
   // TODO: let `Scope` track symbol kinds.
-  private val traitNames = HashSet[Str]()
+  protected val traitNames = HashSet[Str]()
 
-  private val topLevelScope = Scope()
-
-  // Name of the array that contains execution results
-  val resultsName: Str = topLevelScope allocateJavaScriptName "results"
-
-  // TODO: remove this the prelude code manager is done
-  val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
+  protected val topLevelScope = Scope()
 
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
@@ -83,16 +77,16 @@ class JSBackend {
   }
 
   // This will be changed during code generation.
-  private var hasWithConstruct = false
+  protected var hasWithConstruct = false
 
   // Name of the helper function for `with` construction.
-  private val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
+  protected val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
 
   // For inheritance usage.
-  private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
+  protected val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
   // Returns: temp identifiers and the expression
-  private def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+  protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(mlsName) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
       // If it is a class name and the name is declared in the top-level scope.
@@ -217,7 +211,7 @@ class JSBackend {
     )
   }
 
-  private val typeAliasMap =
+  protected val typeAliasMap =
     collection.mutable.HashMap[Str, Ls[Str] -> Type]()
 
   // This function normalizes something like `T[A, B]`.
@@ -355,7 +349,7 @@ class JSBackend {
   // Translate MLscript class declaration to JavaScript class declaration.
   // First, we will analyze its fields and base class name.
   // Then, we will check if the base class exists.
-  private def translateClassDeclaration(
+  protected def translateClassDeclaration(
       name: Str,
       actualType: Type,
       methods: Ls[MethodDef[Left[Term, Type]]]
@@ -383,6 +377,14 @@ class JSBackend {
       case term => JSClassGetter(name, L(translateTerm(term)))
     }
   }
+}
+
+class JSWebBackend extends JSBackend {
+  // Name of the array that contains execution results
+  val resultsName: Str = topLevelScope allocateJavaScriptName "results"
+
+  // TODO: remove this the prelude code manager is done
+  val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
 
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
@@ -441,11 +443,15 @@ class JSBackend {
       )
       .lines map { _.toString }
   }
+}
 
+class JSTestBackend extends JSBackend {
+  private val resultName = topLevelScope allocateJavaScriptName "res"
+  
   private var numRun = 0
 
   // Generate code for test.
-  def test(pgrm: Pgrm): TestCode = {
+  def apply(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     // Collect type aliases into a map so we can normalize them.
@@ -458,7 +464,8 @@ class JSBackend {
       case _ => ()
     }
 
-    val resultsIdent = JSIdent(resultsName)
+    val resultIdent = JSIdent(resultName)
+
     // Generate hoisted declarations.
     val defStmts = typeDefs
       .flatMap { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
@@ -482,35 +489,40 @@ class JSBackend {
         case Def(_, mlsName, L(body)) =>
           val translatedBody = translateTerm(body)(topLevelScope)
           val jsName = topLevelScope declare mlsName
-          S(topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
-            JSIdent(jsName).stmt :: Nil)
+          S(
+            topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
+              (resultIdent := JSIdent(jsName)) :: Nil
+          )
         // Ignore type declarations.
         case Def(_, _, R(_)) => N
         // Just `<expr>;`
         case term: Term =>
-          S(translateTerm(term)(topLevelScope).stmt :: Nil)
+          S((resultIdent := translateTerm(term)(topLevelScope)) :: Nil)
       }
 
     // If this is the first time, insert the prelude code.
     val prelude: Ls[JSStmt] =
-      (if (numRun === 0) JSBackend.makePrettyPrinter(prettyPrinterName, false) :: Nil else Nil) :::
+      (if (numRun === 0)
+        JSLetDecl(resultName -> N :: Nil) :: Nil
+       else Nil) :::
         (if (hasWithConstruct) JSBackend.makeWithConstructDecl(withConstructFnName) :: Nil
          else Nil) :::
         defStmts
 
     numRun = numRun + 1
 
-    TestCode(SourceCode.fromStmts(prelude).toLines, queryStmts map {
-      SourceCode.fromStmts(_).toLines mkString " "
-    })
+    TestCode(
+      SourceCode.fromStmts(prelude).toLines,
+      queryStmts map {
+        SourceCode.fromStmts(_).toLines mkString " "
+      }
+    )
   }
 }
 
 final case class TestCode(prelude: Ls[Str], queries: Ls[Str])
 
 object JSBackend {
-  def apply(): JSBackend = new JSBackend()
-
   private def inspectTerm(t: Term): Str = t match {
     case Var(name)     => s"Var($name)"
     case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
@@ -558,7 +570,7 @@ object JSBackend {
     * }
     * ```
     */
-  private def makeWithConstructDecl(name: Str) = {
+  def makeWithConstructDecl(name: Str) = {
     val obj = JSIdent("Object")
     val body: Ls[JSStmt] = JSIfStmt(
       (JSIdent("target").typeof() :=== JSExpr("string")) :||

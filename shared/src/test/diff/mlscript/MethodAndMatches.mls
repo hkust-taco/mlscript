@@ -34,7 +34,7 @@ foo d1 0
 //│    = [Function (anonymous)]
 //│ res: Base1['A .. 0 | 'A] | Derived1
 //│    = Uncaught ReferenceError: add is not defined
-//│          at Derived1.get M2 [as M2] (REPL1:1:581)
+//│          at Derived1.get M2 [as M2] (REPL1:1:259)
 //│          at REPL2:1:90
 
 def bar0: Base1[int] -> int -> Base1[int]

@@ -78,7 +78,7 @@ g: Foo1['a]
 
 res.x
 //│ res: int
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 42
 
 g: Foo1['a]: Foo1[int]
 //│ res: Foo1[int]
@@ -86,7 +86,7 @@ g: Foo1['a]: Foo1[int]
 
 res.x
 //│ res: int
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 42
 
 :e
 g: Foo1['a]: Foo1[string]

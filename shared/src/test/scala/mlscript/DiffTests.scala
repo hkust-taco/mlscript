@@ -84,7 +84,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     var showRelativeLineNums = false
     var noJavaScript = false
 
-    val backend = JSBackend()
+    val backend = new JSTestBackend()
     val host = ReplHost()
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
@@ -278,7 +278,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             var results = if (!allowTypeErrors && !mode.expectTypeErrors &&
                 !mode.expectTypeErrors && file.ext == "mls" &&
                 !mode.noGeneration && !noJavaScript) {
-              val testCode = backend.test(p)
+              val testCode = backend(p)
               if (mode.showGeneratedJS) {
                 if (!testCode.prelude.isEmpty) {
                   output("// Prelude")

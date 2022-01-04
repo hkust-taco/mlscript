@@ -19,7 +19,7 @@ c: B
 
 res: A
 //│ res: A
-//│    = Uncaught ReferenceError: res is not defined
+//│    = C {}
 
 c: A
 //│ res: A
@@ -27,7 +27,7 @@ c: A
 
 a = res
 //│ a: A
-//│  = Uncaught ReferenceError: res is not defined
+//│  = C {}
 
 :e
 a: B
@@ -69,7 +69,7 @@ res: number
 //│ res: int
 //│    = 42
 //│ res: number
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 42
 
 // FIXME
 42: number

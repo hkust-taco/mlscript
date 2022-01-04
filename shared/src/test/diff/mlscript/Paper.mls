@@ -74,11 +74,11 @@ safeDiv 1 0
 
 fun x -> safeDiv 1 x
 //│ res: (int & ~0) -> int
-//│    = [Function (anonymous)]
+//│    = [Function: res]
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
 //│ res: (int & ~0 | ~int) -> (int | None)
-//│    = [Function (anonymous)]
+//│    = [Function: res]
 
 :e // we no longer refine x's type here, as that was rather unexpected
 fun (x: int) -> safeDiv 1 x
@@ -98,7 +98,7 @@ fun (x: int) -> safeDiv 1 x
 
 fun (x: int & ~0) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
-//│    = [Function (anonymous)]
+//│    = [Function: res]
 
 def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> (None | Some[int])

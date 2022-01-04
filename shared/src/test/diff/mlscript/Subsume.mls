@@ -30,7 +30,7 @@ f 1
 
 fun x -> f x
 //│ res: int -> int
-//│    = [Function (anonymous)]
+//│    = [Function: res]
 
 
 
@@ -233,7 +233,8 @@ f 1
 
 res 2
 //│ res: 1 | 2
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Uncaught ReferenceError: gt is not defined
+//│          at REPL13:1:27
 
 
 :e
@@ -244,17 +245,17 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.242: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.242: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── but it flows into function of type `?a -> ?b`
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.242: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── which does not match type `(int & 'a) -> 'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.240: 	def g: (int & 'a) -> 'a
+//│ ║  l.241: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
 
 

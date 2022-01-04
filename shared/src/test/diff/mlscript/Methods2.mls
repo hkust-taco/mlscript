@@ -73,7 +73,7 @@ l.Size
 l.Map (fun x -> mul x 2)
 //│ res: List['B .. 'B | int]
 //│    = Uncaught ReferenceError: mul is not defined
-//│          at REPL10:1:21
+//│          at REPL10:1:27
 //│          at Cons.Map (REPL4:1:312)
 
 o = l.(Cons.HeadOption)
@@ -123,7 +123,7 @@ newHeadOption l
 
 case res of {None -> 0 | Some -> res.payload}
 //│ res: 0
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 0
 
 
 // Idiomatic definition for proper matching: `type Option[A] = Some[A] | None[A]`

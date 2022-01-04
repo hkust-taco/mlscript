@@ -37,7 +37,7 @@ d.head
 
 res: 1
 //│ res: 1
-//│    = Uncaught ReferenceError: res is not defined
+//│    = 1
 
 d.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
@@ -45,11 +45,11 @@ d.tail
 
 Cons 1 res
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
@@ -57,12 +57,12 @@ Cons 1 (Cons 2 Nil)
 
 res.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
 res.tail
 //│ res: Nil
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Nil {}
 
 :e
 res.tail.head
@@ -96,7 +96,7 @@ Cons 2 Nil
 
 res.head
 //│ res: 2
-//│    = Uncaught ReferenceError: res is not defined
+//│    = undefined
 
 :e
 Cons 1 res
@@ -136,7 +136,7 @@ Cons 1 (Cons 2 Nil)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Uncaught TypeError: Cannot read properties of undefined (reading 'head')
 
 
 Cons 2 Nil
@@ -150,7 +150,7 @@ Cons 1 (id res)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Uncaught TypeError: Cannot read properties of undefined (reading 'head')
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
@@ -164,7 +164,7 @@ Cons 1
 
 res.head
 //│ res: 1
-//│    = Uncaught ReferenceError: res is not defined
+//│    = undefined
 
 def c = Cons 1
 //│ c: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
