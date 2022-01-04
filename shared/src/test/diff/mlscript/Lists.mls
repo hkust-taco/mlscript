@@ -160,7 +160,7 @@ def Cons head = originalCons { head=0; tail=Nil } with { head }
 Cons 1
 //│ res: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
 //│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at Cons3 (REPL35:1:40)
+//│          at Cons3 (REPL26:1:40)
 
 res.head
 //│ res: 1
@@ -169,7 +169,7 @@ res.head
 def c = Cons 1
 //│ c: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
 //│  = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│        at Cons3 (REPL35:1:40)
+//│        at Cons3 (REPL26:1:40)
 
 c.head
 //│ res: 1

@@ -75,7 +75,7 @@ Nil: ListBase[anything]
 def c = Cons 1 Nil
 //│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
 //│  = Uncaught ReferenceError: succ is not defined
-//│        at REPL10:1:55
+//│        at REPL9:1:55
 
 c: ListBase[int]
 //│ res: ListBase[int]

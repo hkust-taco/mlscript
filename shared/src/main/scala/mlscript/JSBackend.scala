@@ -447,8 +447,10 @@ class JSWebBackend extends JSBackend {
 
 class JSTestBackend extends JSBackend {
   private val resultName = topLevelScope allocateJavaScriptName "res"
-  
+
   private var numRun = 0
+
+  private var withConstructInserted = false
 
   // Generate code for test.
   def apply(pgrm: Pgrm): TestCode = {
@@ -500,15 +502,19 @@ class JSTestBackend extends JSBackend {
           S((resultIdent := translateTerm(term)(topLevelScope)) :: Nil)
       }
 
-    // If this is the first time, insert the prelude code.
-    val prelude: Ls[JSStmt] =
-      (if (numRun === 0)
-        JSLetDecl(resultName -> N :: Nil) :: Nil
-       else Nil) :::
-        (if (hasWithConstruct) JSBackend.makeWithConstructDecl(withConstructFnName) :: Nil
-         else Nil) :::
-        defStmts
+    // If this is the first time, insert the declaration of `res`.
+    var prelude: Ls[JSStmt] = defStmts
+    if (numRun === 0) {
+      prelude = JSLetDecl(resultName -> N :: Nil) :: prelude
+    }
 
+    // If `withConstruct` used but not inserted yet.
+    if (hasWithConstruct && !withConstructInserted) {
+      withConstructInserted = true
+      prelude = JSBackend.makeWithConstructDecl(withConstructFnName) :: prelude
+    }
+
+    // Increase the run number.
     numRun = numRun + 1
 
     TestCode(

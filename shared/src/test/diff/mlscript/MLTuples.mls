@@ -135,7 +135,7 @@ g tx
 //│    = Uncaught ReferenceError: htx is not defined
 //│ res: () | 1
 //│    = Uncaught ReferenceError: Hey is not defined
-//│          at g (REPL23:1:36)
+//│          at g (REPL13:1:36)
 
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
@@ -147,7 +147,7 @@ g (tx with { y = 2 })
 //│    = Uncaught ReferenceError: htx is not defined
 //│ res: 1 | 2
 //│    = Uncaught ReferenceError: Hey is not defined
-//│          at g1 (REPL28:1:37)
+//│          at g1 (REPL16:1:37)
 
 :e
 g tx

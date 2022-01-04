@@ -17,7 +17,7 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = Uncaught ReferenceError: add is not defined
-//│          at REPL6:1:36
+//│          at REPL5:1:36
 //│          at REPL2:1:57
 
 

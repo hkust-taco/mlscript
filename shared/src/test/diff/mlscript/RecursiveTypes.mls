@@ -391,7 +391,7 @@ rec def f x = if error then f (x with { a = x - 1 }) else x
 r = f 1
 //│ r: 1 | 'a\a & {a: int} as 'a
 //│  = Uncaught ReferenceError: error is not defined
-//│        at f2 (REPL54:1:20)
+//│        at f2 (REPL50:1:20)
 
 r + 1
 //│ res: int
@@ -439,7 +439,7 @@ rec def f x = if error then f (x with { a = 1 }) else x
 r = f 1
 //│ r: 1 | 'a\a & {a: 1} as 'a
 //│  = Uncaught ReferenceError: error is not defined
-//│        at f3 (REPL70:1:20)
+//│        at f3 (REPL58:1:20)
 
 r: int
 //│ res: int
@@ -484,11 +484,11 @@ f 1
 f "a"
 //│ res: int
 //│    = Uncaught ReferenceError: impossible is not defined
-//│          at f5 (REPL82:1:107)
-//│          at f6 (REPL84:1:79)
+//│          at f5 (REPL63:1:107)
+//│          at f6 (REPL64:1:79)
 //│ res: int
 //│    = Uncaught ReferenceError: impossible is not defined
-//│          at f6 (REPL84:1:107)
+//│          at f6 (REPL64:1:107)
 
 rec def f x = case x of {int -> f "ok" | string -> f (impossible x) | _ -> x}
 //│ f: (int | string | 'a & ~int & ~string) -> 'a
@@ -499,11 +499,11 @@ f "a"
 f false
 //│ res: nothing
 //│    = Uncaught ReferenceError: impossible is not defined
-//│          at f6 (REPL84:1:107)
-//│          at f7 (REPL89:1:77)
+//│          at f6 (REPL64:1:107)
+//│          at f7 (REPL67:1:77)
 //│ res: nothing
 //│    = Uncaught ReferenceError: impossible is not defined
-//│          at f7 (REPL89:1:105)
+//│          at f7 (REPL67:1:105)
 //│ res: false
 //│    = false
 
