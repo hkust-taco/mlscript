@@ -24,43 +24,48 @@ Nil{}
 
 def Nil = Nil { size = 0 }
 //│ Nil: Nil & {size: 0}
+//│    = Nil { size: 0 }
 
 // FIXME
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	Cons 1 Nil
+//│ ║  l.30: 	Cons 1 Nil
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` does not match type `{size: ?size, tail: ?tail, head: ?head}`
-//│ ║  l.29: 	Cons 1 Nil
+//│ ║  l.30: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	Cons 1 Nil
+//│ ║  l.30: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` does not match type `?a -> ?b`
-//│ ║  l.29: 	Cons 1 Nil
+//│ ║  l.30: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
+//│    = Uncaught TypeError: (intermediate value) is not a function
 
 Cons
 //│ res: {head: 'A & 'head, size: int & 'size, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})
+//│    = [class Cons extends ListBase]
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
 //│ Cons_old: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
 //│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.58: 	Nil: ListBase[anything]
+//│ ║  l.63: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not match type `nothing`
-//│ ║  l.58: 	Nil: ListBase[anything]
+//│ ║  l.63: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}
@@ -69,36 +74,49 @@ Nil: ListBase[anything]
 
 def c = Cons 1 Nil
 //│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
+//│  = Uncaught ReferenceError: succ is not defined
+//│        at REPL10:1:55
 
 c: ListBase[int]
 //│ res: ListBase[int]
+//│    = Uncaught ReferenceError: c is not defined
 
 c.head
 //│ res: 1
+//│    = Uncaught ReferenceError: c is not defined
 
 c.tail
 //│ res: Nil & {size: 0}
+//│    = Uncaught ReferenceError: c is not defined
 
 c.size
 //│ res: int
+//│    = Uncaught ReferenceError: c is not defined
 
 def d = Cons 2 c
 //│ d: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}}
+//│  = Uncaught ReferenceError: c is not defined
 
 d.head
 //│ res: 2
+//│    = Uncaught ReferenceError: d is not defined
 
 d.size
 //│ res: int
+//│    = Uncaught ReferenceError: d is not defined
 
 d.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}
+//│    = Uncaught ReferenceError: d is not defined
 
 d.tail.size
 //│ res: int
+//│    = Uncaught ReferenceError: d is not defined
 
 d.tail.head
 d.tail.tail
 //│ res: 1
+//│    = Uncaught ReferenceError: d is not defined
 //│ res: Nil & {size: 0}
+//│    = Uncaught ReferenceError: d is not defined
 

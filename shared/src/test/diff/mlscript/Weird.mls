@@ -3,16 +3,21 @@
 
 anything
 //│ res: anything
+//│    = Uncaught ReferenceError: anything is not defined
 
 nothing
 //│ res: nothing
+//│    = Uncaught ReferenceError: nothing is not defined
 
 Nothing
 //│ res: nothing
+//│    = Uncaught ReferenceError: Nothing is not defined
 
 int
 //│ res: int
+//│    = Uncaught ReferenceError: int is not defined
 
 int + 1
 //│ res: int
+//│    = Uncaught ReferenceError: int is not defined
 

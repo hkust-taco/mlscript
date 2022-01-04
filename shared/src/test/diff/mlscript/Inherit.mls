@@ -7,72 +7,84 @@ class Child: Parent & { age: int }
 
 def p = Parent{ name = "Bob" }
 //│ p: Parent & {name: "Bob"}
+//│  = Parent { name: 'Bob' }
 
 p: Parent
 //│ res: Parent
+//│    = Parent { name: 'Bob' }
 
 :e
 def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
+//│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Parent & {name: ?name}` does not match type `{name: ?name0, age: ?age}`
-//│ ║  l.15: 	def c = Child(Parent { name = "Bob" })
+//│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
 //│ c: Child & {age: 123, name: "Bob"}
+//│  = Child { name: 'Bob', age: 123 }
 
 c: Parent
 //│ res: Parent
+//│    = Child { name: 'Bob', age: 123 }
 
 c.name
 //│ res: "Bob"
+//│    = 'Bob'
 
 c: { name: 'a }
 //│ res: {name: "Bob"}
+//│    = Child { name: 'Bob', age: 123 }
 
 c: { name: string }
 //│ res: {name: string}
+//│    = Child { name: 'Bob', age: 123 }
 
 
 def f x = case x of {
   | Parent -> x.name
   }
 //│ f: (Parent with {name: 'a}) -> 'a
+//│  = [Function: f]
 
 f c
 //│ res: "Bob"
+//│    = 'Bob'
 
 f (c: Parent)
 //│ res: string
+//│    = 'Bob'
 
 
 def f x = case x of {
   | Child -> x.name
   }
 //│ f: (Child\age with {name: 'a}) -> 'a
+//│  = [Function: f1]
 
 f c
 //│ res: "Bob"
+//│    = 'Bob'
 
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.61: 	f (c: Parent)
+//│ ║  l.73: 	f (c: Parent)
 //│ ║        	^^^^
 //│ ╟── expression of type `Parent` does not match type `Child`
-//│ ║  l.61: 	f (c: Parent)
+//│ ║  l.73: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── but it flows into argument with expected type `(?a,)`
-//│ ║  l.61: 	f (c: Parent)
+//│ ║  l.73: 	f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.53: 	  | Child -> x.name
+//│ ║  l.63: 	  | Child -> x.name
 //│ ║        	    ^^^^^
 //│ ╟── from reference:
-//│ ║  l.52: 	def f x = case x of {
+//│ ║  l.62: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: error | string
 
@@ -82,12 +94,15 @@ def f x = case x of {
   | _ -> ""
   }
 //│ f: ((Parent with {name: 'a}) | ~Parent) -> ("" | 'a)
+//│  = [Function: f2]
 
 f c
 //│ res: "" | "Bob"
+//│    = 'Bob'
 
 f (c: Parent)
 //│ res: string
+//│    = 'Bob'
 
 
 def f x = case x of {
@@ -95,10 +110,13 @@ def f x = case x of {
   | Child -> x.name
   }
 //│ f: (Parent with {name: 'a}) -> 'a
+//│  = [Function: f3]
 
 f c
 //│ res: "Bob"
+//│    = 'Bob'
 
 f (c: Parent)
 //│ res: string
+//│    = 'Bob'
 

@@ -7,35 +7,42 @@ class Child: Parent
 
 def p = Parent{}
 //│ p: Parent
+//│  = Parent {}
 
 def c = Child(p)
 //│ c: Child
+//│  = Child {}
 
 :e
 c.name
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.15: 	c.name
+//│ ║  l.17: 	c.name
 //│ ║        	^^^^^^
 //│ ╟── expression of type `Child` does not have field 'name'
-//│ ║  l.11: 	def c = Child(p)
+//│ ║  l.12: 	def c = Child(p)
 //│ ║        	        ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{name: ?a}`
-//│ ║  l.15: 	c.name
+//│ ║  l.17: 	c.name
 //│ ╙──      	^
 //│ res: error
 
 c: Child
 //│ res: Child
+//│    = Child {}
 
 c: Parent
 //│ res: Parent
+//│    = Child {}
 
 c: Parent & Child
 //│ res: Child
+//│    = Child {}
 
 c: Parent & Child & {}
 //│ res: Child
+//│    = Child {}
 
 c: Parent & anything & Child & {}
 //│ res: Child
+//│    = Child {}
 

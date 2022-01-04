@@ -21,11 +21,12 @@ type Hello = int
 
 42: Hello
 //│ res: int
+//│    = 42
 
 :e
 42: hello
 //│ ╔══[ERROR] Type alias hello cannot be used as a type tag
-//│ ║  l.26: 	42: hello
+//│ ║  l.27: 	42: hello
 //│ ╙──      	    ^^^^^
 //│ res: error
 
@@ -33,44 +34,46 @@ type Hello = int
 :e
 aa = { a = 1; a = "oops" }
 //│ ╔══[ERROR] Multiple declarations of field name a in record literal
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.35: 	aa = { a = 1; a = "oops" }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.35: 	aa = { a = 1; a = "oops" }
 //│ ║        	       ^
 //│ ╟── Declared at
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.35: 	aa = { a = 1; a = "oops" }
 //│ ╙──      	              ^
 //│ aa: {a: 1, a: "oops"}
 
 :e
 aa: { a: int; a: string }
 //│ ╔══[ERROR] Multiple declarations of field name a in record type
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ║        	      ^
 //│ ╟── Declared at
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── expression of type `1` does not match type `string`
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.35: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── but it flows into reference with expected type `{a: int, a: string}`
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.48: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^
 //│ res: {a: int, a: string}
 
 aa.a
 //│ res: 1
+//│    = Uncaught ReferenceError: aa is not defined
 
 aa: { a: 'a }
 //│ res: {a: 1}
+//│    = Uncaught ReferenceError: aa is not defined
 

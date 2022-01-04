@@ -1,25 +1,29 @@
 
 "hello": 'a
 //│ res: "hello"
+//│    = 'hello'
 
 :e
 "hello": 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.6: 	"hello": 'a -> 'a
+//│ ║  l.7: 	"hello": 'a -> 'a
 //│ ║       	^^^^^^^
 //│ ╟── expression of type `"hello"` is not a function
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.6: 	"hello": 'a -> 'a
+//│ ║  l.7: 	"hello": 'a -> 'a
 //│ ╙──     	         ^^^^^^^^
 //│ res: 'a -> ('a | error)
 
 { name = "Bob" } : { name: 'a }
 //│ res: {name: "Bob"}
+//│    = 'Bob'
 
 def foo(n: 'a) = add n 1
 //│ foo: int -> int
+//│    = [Function: foo]
 def foo(n: 'a) = add n 1: 'a
 //│ foo: int -> int
+//│    = [Function: foo1]
 
 
 class Foo[A]: { field: A }
@@ -27,35 +31,41 @@ class Foo[A]: { field: A }
 
 def foo(f: Foo['a]) = f.field
 //│ foo: Foo['a] -> 'a
+//│    = [Function: foo2]
 
 
 (succ 1): int
 //│ res: int
+//│    = Uncaught ReferenceError: succ is not defined
 
 
 def foo({ a; b }: { a: int; b: string}) = { b; a }
 //│ foo: {a: int, b: string} -> {a: int, b: string}
+//│    = const foo3 = ({   a,   b }) => {   b: b,   a: a }; foo3;
+//│                                                  ^
+//│      
+//│      Uncaught SyntaxError: Unexpected token ':'
 
 :e
 def foo({ a = "hey" }: { a: string}) = 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── expression of type `string` does not match type `"hey"`
-//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from string literal:
-//│ ║  l.40: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ╙──      	              ^^^^^
 //│ foo: {a: string} -> 0
 
 :e
 def foo({ a; b }: { a: int }) = b
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.53: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.63: 	def foo({ a; b }: { a: int }) = b
 //│ ║        	        ^^^^^^^^
 //│ ╟── expression of type `{a: int}` does not have field 'b'
-//│ ║  l.53: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.63: 	def foo({ a; b }: { a: int }) = b
 //│ ╙──      	                  ^^^^^^^^^^
 //│ foo: {a: int} -> nothing
 

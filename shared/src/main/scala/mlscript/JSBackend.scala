@@ -460,10 +460,8 @@ class JSBackend {
   private var numRun = 0
 
   // Generate code for test.
-  def test(pgrm: Pgrm): Ls[Str] = {
+  def test(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
-
-    val print: JSExpr => JSStmt = { JSIdent(prettyPrinterName)(_).log() }
 
     // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
@@ -476,49 +474,54 @@ class JSBackend {
     }
 
     val resultsIdent = JSIdent(resultsName)
-    var stmts: Ls[JSStmt] =
-      JSComment(s"Run #$numRun") ::
-      typeDefs
-        .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
-          kind match {
-            case Cls =>
-              topLevelScope declare name
-              classNames += name
-              val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
-              nameClsMap += name -> cls
-              cls
-            case Trt => JSComment(s"trait $name")
-            case Als => JSComment(s"type alias $name")
-          }
+    // Generate hoisted declarations.
+    val defStmts = typeDefs
+      .flatMap { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
+        kind match {
+          case Cls =>
+            topLevelScope declare name
+            classNames += name
+            val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
+            nameClsMap += name -> cls
+            S(cls)
+          case Trt => N
+          case Als => N
         }
-        .concat(otherStmts.flatMap {
-          // const <name> = <expr>;
-          // console.log(<name>);
-          case Def(_, mlsName, L(body)) =>
-            val translatedBody = translateTerm(body)(topLevelScope)
-            val jsName = topLevelScope declare mlsName
-            topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
-              print(JSIdent(jsName)) :: Nil
-          // Ignore type declarations.
-          case Def(_, _, R(_)) => Nil
-          // console.log(<expr>);
-          case term: Term =>
-            print(translateTerm(term)(topLevelScope)) :: Nil
-        })
+      }
+
+    // Generate statements.
+    val queryStmts: Ls[Ls[JSStmt]] =
+      otherStmts.flatMap {
+        // const <name> = <expr>;
+        // <name>;
+        case Def(_, mlsName, L(body)) =>
+          val translatedBody = translateTerm(body)(topLevelScope)
+          val jsName = topLevelScope declare mlsName
+          S(topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
+            JSIdent(jsName).stmt :: Nil)
+        // Ignore type declarations.
+        case Def(_, _, R(_)) => N
+        // Just `<expr>;`
+        case term: Term =>
+          S(translateTerm(term)(topLevelScope).stmt :: Nil)
+      }
 
     // If this is the first time, insert the prelude code.
-    if (numRun === 0) {
-      stmts = JSBackend.makePrettyPrinter(prettyPrinterName, false) :: stmts
-      if (hasWithConstruct) {
-        stmts = JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
-      }
-    }
+    val prelude: Ls[JSStmt] =
+      (if (numRun === 0) JSBackend.makePrettyPrinter(prettyPrinterName, false) :: Nil else Nil) :::
+        (if (hasWithConstruct) JSBackend.makeWithConstructDecl(withConstructFnName) :: Nil
+         else Nil) :::
+        defStmts
 
     numRun = numRun + 1
 
-    SourceCode.concat(stmts map { _.toSourceCode }).lines map { _.toString }
+    TestCode(SourceCode.fromStmts(prelude).toLines, queryStmts map {
+      SourceCode.fromStmts(_).toLines mkString " "
+    })
   }
 }
+
+final case class TestCode(prelude: Ls[Str], queries: Ls[Str])
 
 object JSBackend {
   def apply(): JSBackend = new JSBackend()

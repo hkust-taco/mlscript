@@ -28,6 +28,7 @@ def foo x = case x of {
   | H -> x.fH
   }
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a}) | (H[?] with {fH: 'a})) -> 'a
+//│    = [Function: foo]
 //│ constrain calls: 26
 //│ annoying  calls: 0
 
@@ -58,8 +59,10 @@ def foo x = case x of {
 def arg: A[int] | B[int]
 foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a})) -> 'a
+//│    = [Function: foo1]
 //│ arg: A[int] | B[int]
 //│ res: int
+//│    = Uncaught ReferenceError: arg is not defined
 //│ constrain calls: 44
 //│ annoying  calls: 78
 
@@ -75,8 +78,10 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int]
 foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a})) -> 'a
+//│    = [Function: foo2]
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
+//│    = Uncaught ReferenceError: arg is not defined
 //│ constrain calls: 106
 //│ annoying  calls: 301
 
@@ -93,20 +98,24 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
 //│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a})) -> 'a
+//│    = [Function: foo3]
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
+//│    = Uncaught ReferenceError: arg is not defined
 //│ constrain calls: 273
 //│ annoying  calls: 993
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
+//│    = Uncaught ReferenceError: arg is not defined
 //│ constrain calls: 245
 //│ annoying  calls: 996
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
+//│    = Uncaught ReferenceError: arg is not defined
 //│ constrain calls: 245
 //│ annoying  calls: 996
 

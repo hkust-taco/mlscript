@@ -106,6 +106,8 @@ class SourceCode(val lines: Ls[SourceLine]) {
         )
     }
   override def toString: Str = lines.mkString("\n")
+
+  def toLines: Ls[Str] = lines.map(_.toString)
 }
 
 object SourceCode {
@@ -113,6 +115,7 @@ object SourceCode {
   def apply(lines: Ls[Str]): SourceCode = new SourceCode(lines map {
     new SourceLine(_, 0)
   })
+  def fromStmts(stmts: Ls[JSStmt]): SourceCode = SourceCode.concat(stmts map { _.toSourceCode })
 
   val space: SourceCode = SourceCode(" ")
   val semicolon: SourceCode = SourceCode(";")

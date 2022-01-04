@@ -8,58 +8,72 @@ type List[A] = Nil | Cons[A]
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
 //│ originalCons: {head: 'head & 'A, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, tail: 'tail})
+//│             = [class Cons]
 
 def Nil = Nil {}
 //│ Nil: Nil
+//│    = Nil {}
 
 def Cons head tail = Cons { head; tail }
 //│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│     = [Function: Cons1]
 
 
 Cons 2
 //│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'c | Nil & 'c) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'c})
+//│    = [Function (anonymous)]
 
 def c = Cons 2 Nil
 //│ c: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│  = Cons { head: 2, tail: Nil {} }
 
 def d = Cons 1 c
 //│ d: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
 //│ res: 1
+//│    = 1
 
 res: 1
 //│ res: 1
+//│    = Uncaught ReferenceError: res is not defined
 
 d.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
+//│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Uncaught ReferenceError: res is not defined
 
 res.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
+//│    = Uncaught ReferenceError: res is not defined
 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
+//│    = Uncaught ReferenceError: res is not defined
 
 // We can now access the tail's tail, thanks to the refined type
 res.tail
 //│ res: Nil
+//│    = Uncaught ReferenceError: res is not defined
 
 :e
 res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.54: 	res.tail.head
+//│ ║  l.68: 	res.tail.head
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Nil` does not have field 'tail'
-//│ ║  l.12: 	def Nil = Nil {}
+//│ ║  l.13: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.54: 	res.tail.head
+//│ ║  l.68: 	res.tail.head
 //│ ╙──      	^^^
 //│ res: error
 
@@ -68,28 +82,33 @@ res.tail.head
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│     = [Function: Cons2]
 
 
 Cons 2
 //│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'c | Nil & 'c) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'c})
+//│    = [Function (anonymous)]
 
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│          at REPL17:1:50
 
 res.head
 //│ res: 2
+//│    = Uncaught ReferenceError: res is not defined
 
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	Cons 1 res
-//│ ║        	^^^^^^^^^^
+//│ ║  l.102: 	Cons 1 res
+//│ ║         	^^^^^^^^^^
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
-//│ ║  l.76: 	Cons 2 Nil
+//│ ║  l.92: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `List[?A0]`
-//│ ║  l.83: 	Cons 1 res
-//│ ║        	       ^^^
+//│ ║  l.102: 	Cons 1 res
+//│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^^^^^^^^^^^
@@ -97,7 +116,7 @@ Cons 1 res
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ║       	                                ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.69: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ║  l.83: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
 //│ res: (Cons['A .. 1 | 'A] with {head: 1, tail: 2}) | error
 
@@ -112,35 +131,55 @@ Cons 1 res
 // 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│          at REPL17:1:50
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
+//│    = {   a: res.head,   b: res.tail.head,   c: res.tail.tail };
+//│                          ^
+//│      
+//│      Uncaught SyntaxError: Unexpected token ':'
 
 
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│          at REPL17:1:50
 
 Cons 1 (id res)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Uncaught ReferenceError: id is not defined
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
+//│    = {   a: res.head,   b: res.tail.head,   c: res.tail.tail };
+//│                          ^
+//│      
+//│      Uncaught SyntaxError: Unexpected token ':'
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
 //│ Cons: 'a -> (Cons['A .. 0 | 'A] with {head: 'a, tail: Nil})
+//│     = [Function: Cons3]
 
 Cons 1
 //│ res: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
+//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│          at Cons3 (REPL35:1:40)
 
 res.head
 //│ res: 1
+//│    = Uncaught ReferenceError: res is not defined
 
 def c = Cons 1
 //│ c: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
+//│  = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│        at Cons3 (REPL35:1:40)
 
 c.head
 //│ res: 1
+//│    = Uncaught ReferenceError: c1 is not defined
 
 
 
@@ -148,10 +187,12 @@ def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
 //│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
+//│    = Uncaught ReferenceError: c1 is not defined
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
 //│ c: 'a -> (((Cons['b] with {tail: 'd & ('c | Nil)}) as 'c) & 'l | Nil & 'l) -> (Cons[anything] with {head: 'a, tail: ((Cons[anything] with {tail: 'f | 'e | Nil}) as 'e) & 'l | Nil & 'l})
 //│ res: Cons[anything] with {head: 1, tail: Cons[anything] with {head: 2, tail: Nil}}
+//│    = Uncaught ReferenceError: c1 is not defined
 
 

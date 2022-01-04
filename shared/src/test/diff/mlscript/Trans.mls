@@ -7,51 +7,57 @@ c = C{}
 //│ Defined class B
 //│ Defined class C
 //│ c: C
+//│  = C {}
 
 c: C
 //│ res: C
+//│    = C {}
 
 c: B
 //│ res: B
+//│    = C {}
 
 res: A
 //│ res: A
+//│    = Uncaught ReferenceError: res is not defined
 
 c: A
 //│ res: A
+//│    = C {}
 
 a = res
 //│ a: A
+//│  = Uncaught ReferenceError: res is not defined
 
 :e
 a: B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ║        	^
 //│ ╟── expression of type `A` does not match type `B`
-//│ ║  l.20: 	c: A
+//│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `B`
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ╙──      	   ^
 //│ res: B
 
 :e
 a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	a: C
+//│ ║  l.49: 	a: C
 //│ ║        	^
 //│ ╟── expression of type `A` does not match type `C`
-//│ ║  l.20: 	c: A
+//│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.43: 	a: C
+//│ ║  l.49: 	a: C
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.43: 	a: C
+//│ ║  l.49: 	a: C
 //│ ╙──      	   ^
 //│ res: C
 
@@ -61,16 +67,19 @@ a: C
 42: int
 res: number
 //│ res: int
+//│    = 42
 //│ res: number
+//│    = Uncaught ReferenceError: res is not defined
 
 // FIXME
 42: number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.67: 	42: number
+//│ ║  l.75: 	42: number
 //│ ║        	^^
 //│ ╟── expression of type `42` does not match type `number`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	42: number
+//│ ║  l.75: 	42: number
 //│ ╙──      	    ^^^^^^
 //│ res: number
+//│    = 42
 

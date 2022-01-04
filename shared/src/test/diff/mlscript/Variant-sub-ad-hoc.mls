@@ -6,18 +6,24 @@ class Some
 def Some v = Some{} with {v}
 def None = None{}
 //│ Some: 'a -> (Some & {v: 'a})
+//│     = [Function: Some1]
 //│ None: None
+//│     = None {}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | _ -> opt }
 //│ flatMap: ('a -> 'b) -> (Some & {v: 'a} | 'b & ~some) -> 'b
+//│        = [Function: flatMap]
 
 f = fun x -> Some x
 res = flatMap f (Some 1)
 res = flatMap f None
 //│ f: 'a -> (Some & {v: 'a})
+//│  = [Function: f]
 //│ res: Some & {v: 1}
+//│    = Some { v: 1 }
 //│ res: None | Some & {v: nothing}
+//│    = None {}
 
 class Lit
 class Neg
@@ -41,7 +47,9 @@ rec def evalOpt = fun x -> case x of {
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
 //│ evalOpt: (Lit & {v: int & 'b} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string} as 'a) -> (None & {err: string} | Some & {v: int} | Some & {v: 'b})
+//│        = [Function: evalOpt]
 
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})
 //│ res: None & {err: string} | Some & {v: int}
+//│    = Some { v: 4 }
 

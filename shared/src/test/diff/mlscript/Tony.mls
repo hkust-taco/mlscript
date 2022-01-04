@@ -7,80 +7,98 @@ class None: {}
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 //│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
+//│         = [Function: flatMap3]
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
 //│ arg: None | (Some['A .. 42 | 'A] with {payload: 23, value: 42})
+//│    = Some { value: 42, payload: 23 }
 
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
+//│    = 65
 
 
 def arg = if true then Some{value = 42} else None {}
 //│ arg: None | (Some['A .. 42 | 'A] with {value: 42})
+//│    = Some { value: 42 }
 
 flatMap3 (fun x -> x.value) arg
 //│ res: 42 | None
+//│    = 42
 
 
 def foo = flatMap3 (fun x -> x.value)
 //│ foo: ((Some[?] with {value: 'a}) | 'a & ~some) -> 'a
+//│    = [Function (anonymous)]
 
 foo arg
 //│ res: 42 | None
+//│    = 42
 
 foo 1
 //│ res: 1
+//│    = 1
 
 def fn = foo None
 //│ fn: anything -> None
+//│   = [class None]
 
 // :d
 fn{} // foo None {}
 //│ res: None
+//│    = Uncaught TypeError: Class constructor None cannot be invoked without 'new'
 
 // :d
 foo (None{})
 //│ res: None
+//│    = None {}
 
 
 fun f -> flatMap3 f arg
 //│ res: ((None & ~'a | (Some['A .. 42 | 'A] with {value: 42})) -> 'a) -> (None | 'a)
+//│    = [Function (anonymous)]
 
 
 
 
 def foo = flatMap3 (fun x -> x)
 //│ foo: (Some[?] & 'a | 'a & ~some) -> 'a
+//│    = [Function (anonymous)]
 
 foo 1
 //│ res: 1
+//│    = 1
 
 
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
 //│ simpler: (1 -> 'a) -> (None | 'a)
+//│        = [Function: simpler]
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ simpler: ('a -> 'b) -> (None & 'b | Some[?] & 'a) -> 'b
+//│        = [Function: simpler1]
 
 simpler (fun x -> x.value)
 //│ res: (None & 'a | (Some[?] with {value: 'a})) -> 'a
+//│    = [Function (anonymous)]
 
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	res 1
+//│ ║  l.89: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.72: 	res 1
+//│ ║  l.89: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.65: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.80: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: 1 | error
 
 
 def funny = fun f -> case f of { Some -> f f }
 //│ funny: nothing -> nothing
+//│      = [Function: funny]

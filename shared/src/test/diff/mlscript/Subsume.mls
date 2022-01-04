@@ -8,6 +8,7 @@ def f x = x
 //│ 'a -> 'a
 //│   <:  f:
 //│ int -> int
+//│  = [Function: f]
 
 :e
 def f = 42
@@ -15,7 +16,7 @@ def f = 42
 //│   <:  f:
 //│ int -> int
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.13: 	def f = 42
+//│ ║  l.14: 	def f = 42
 //│ ║        	        ^^
 //│ ╟── expression of type `42` is not a function
 //│ ╟── Note: constraint arises from function type:
@@ -25,9 +26,11 @@ def f = 42
 
 f 1
 //│ res: int
+//│    = 1
 
 fun x -> f x
 //│ res: int -> int
+//│    = [Function (anonymous)]
 
 
 
@@ -38,17 +41,18 @@ def boom = 1
 //│ 1
 //│   <:  boom:
 //│ anything
+//│     = 1
 
 :e
 add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	add boom 1
+//│ ║  l.47: 	add boom 1
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `int`
-//│ ║  l.34: 	def boom: anything
+//│ ║  l.37: 	def boom: anything
 //│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.43: 	add boom 1
+//│ ║  l.47: 	add boom 1
 //│ ╙──      	    ^^^^
 //│ res: error | int
 
@@ -62,11 +66,11 @@ def boom = 1
 //│   <:  boom:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.60: 	def boom = 1
+//│ ║  l.64: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── expression of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.56: 	def boom: nothing
+//│ ║  l.60: 	def boom: nothing
 //│ ╙──      	          ^^^^^^^
 
 
@@ -79,11 +83,11 @@ def boom = 1
 //│   <:  boom:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.77: 	def boom = 1
+//│ ║  l.81: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── expression of type `1` does not match type `'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.73: 	def boom: 'a
+//│ ║  l.77: 	def boom: 'a
 //│ ╙──      	          ^^
 
 
@@ -94,17 +98,22 @@ def id: 'a -> 'a
 id 1
 id true
 //│ res: 1
+//│    = Uncaught ReferenceError: id is not defined
 //│ res: true
+//│    = Uncaught ReferenceError: id is not defined
 
 def id x = x
 //│ 'a -> 'a
 //│   <:  id:
 //│ 'a -> 'a
+//│   = [Function: id]
 
 id 1
 id true
 //│ res: 1
+//│    = 1
 //│ res: true
+//│    = true
 
 
 :e
@@ -113,26 +122,26 @@ def id n = add n 1
 //│   <:  id:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.111: 	def id n = add n 1
+//│ ║  l.120: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── expression of type `'a` does not match type `int`
-//│ ║  l.91: 	def id: 'a -> 'a
+//│ ║  l.95: 	def id: 'a -> 'a
 //│ ║        	        ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.111: 	def id n = add n 1
+//│ ║  l.120: 	def id n = add n 1
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.111: 	def id n = add n 1
+//│ ║  l.120: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.111: 	def id n = add n 1
+//│ ║  l.120: 	def id n = add n 1
 //│ ║         	           ^^^^^^^
 //│ ╟── but it flows into function of type `?a -> ?b`
-//│ ║  l.111: 	def id n = add n 1
+//│ ║  l.120: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── which does not match type `'a -> 'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.91: 	def id: 'a -> 'a
+//│ ║  l.95: 	def id: 'a -> 'a
 //│ ╙──      	              ^^
 
 :e
@@ -141,25 +150,25 @@ def id (x: int) = x
 //│   <:  id:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.139: 	def id (x: int) = x
+//│ ║  l.148: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
 //│ ╟── expression of type `'a` does not match type `int`
-//│ ║  l.91: 	def id: 'a -> 'a
+//│ ║  l.95: 	def id: 'a -> 'a
 //│ ║        	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.139: 	def id (x: int) = x
+//│ ║  l.148: 	def id (x: int) = x
 //│ ╙──       	           ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.139: 	def id (x: int) = x
+//│ ║  l.148: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.139: 	def id (x: int) = x
+//│ ║  l.148: 	def id (x: int) = x
 //│ ║         	           ^^^
 //│ ╟── but it flows into reference with expected type `'a`
-//│ ║  l.139: 	def id (x: int) = x
+//│ ║  l.148: 	def id (x: int) = x
 //│ ║         	                  ^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.91: 	def id: 'a -> 'a
+//│ ║  l.95: 	def id: 'a -> 'a
 //│ ╙──      	              ^^
 
 
@@ -169,6 +178,7 @@ def f: (int & 'a) -> 'a
 
 def impl a = a a
 //│ impl: ('a -> 'b & 'a) -> 'b
+//│     = [Function: impl]
 
 :e
 def f = impl
@@ -176,17 +186,18 @@ def f = impl
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.174: 	def f = impl
+//│ ║  l.184: 	def f = impl
 //│ ║         	        ^^^^
 //│ ╟── expression of type `int & 'a` does not match type `?a -> ?b`
-//│ ║  l.167: 	def f: (int & 'a) -> 'a
+//│ ║  l.176: 	def f: (int & 'a) -> 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.170: 	def impl a = a a
+//│ ║  l.179: 	def impl a = a a
 //│ ╙──       	             ^^^
 
 f 1 
 //│ res: 1
+//│    = 1
 
 
 def f: (int & 'a) -> (int & 'a) -> 'a 
@@ -195,9 +206,11 @@ def f a b = if gt a b then a else b
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
+//│  = [Function: f1]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
+//│    = [Function (anonymous)]
 
 :e
 def f a b = if gt a b then a else b b // mistake!
@@ -205,20 +218,22 @@ def f a b = if gt a b then a else b b // mistake!
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.203: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.216: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int & 'a` does not match type `?a -> ?b`
-//│ ║  l.192: 	def f: (int & 'a) -> (int & 'a) -> 'a 
+//│ ║  l.203: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                      ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.203: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.216: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^^^
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
+//│    = [Function (anonymous)]
 
 res 2
 //│ res: 1 | 2
+//│    = Uncaught ReferenceError: res is not defined
 
 
 :e
@@ -229,17 +244,17 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.226: 	def g a = add a 1
+//│ ║  l.241: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.226: 	def g a = add a 1
+//│ ║  l.241: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── but it flows into function of type `?a -> ?b`
-//│ ║  l.226: 	def g a = add a 1
+//│ ║  l.241: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── which does not match type `(int & 'a) -> 'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.225: 	def g: (int & 'a) -> 'a
+//│ ║  l.240: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
 
 
@@ -249,6 +264,7 @@ def g a = add a 1
 
 def twice f x = f (f x)
 //│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│      = [Function: twice]
 
 def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
 def ty2: ('b -> ('b & 'd)) -> 'b -> 'd
@@ -259,19 +275,23 @@ ty1 = ty2
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
+//│    = Uncaught ReferenceError: ty2 is not defined
 
 ty2 = ty1
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
+//│    = Uncaught ReferenceError: ty1 is not defined
 
 ty1 = twice
 ty2 = twice
 //│ ('a -> ('a & 'b)) -> 'a -> 'b
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
+//│    = [Function: twice]
 //│ ('a -> ('a & 'b)) -> 'a -> 'b
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
+//│    = [Function: twice]
 
 

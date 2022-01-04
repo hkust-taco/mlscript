@@ -1,64 +1,69 @@
 
 1: ~string
 //│ res: ~string
+//│    = 1
 
 :e
 1: ~int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.6: 	1: ~int
+//│ ║  l.7: 	1: ~int
 //│ ║       	^
 //│ ╟── expression of type `1` does not match type `~int`
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.6: 	1: ~int
+//│ ║  l.7: 	1: ~int
 //│ ╙──     	   ^^^^
 //│ res: ~int
 
 :e
 add res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.17: 	add res 1
+//│ ║  l.18: 	add res 1
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `~int` does not match type `int`
-//│ ║  l.6: 	1: ~int
+//│ ║  l.7: 	1: ~int
 //│ ║       	   ^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.17: 	add res 1
+//│ ║  l.18: 	add res 1
 //│ ╙──      	    ^^^
 //│ res: error | int
 
 :e
 (1: int): ~int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.30: 	(1: int): ~int
+//│ ║  l.31: 	(1: int): ~int
 //│ ║        	 ^
 //│ ╟── expression of type `int` does not match type `~int`
-//│ ║  l.30: 	(1: int): ~int
+//│ ║  l.31: 	(1: int): ~int
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.30: 	(1: int): ~int
+//│ ║  l.31: 	(1: int): ~int
 //│ ╙──      	          ^^^^
 //│ res: ~int
 
 1: ~2
 //│ res: ~2
+//│    = 1
 
 1: int
 //│ res: int
+//│    = 1
 
 "ok": ~int
 //│ res: ~int
+//│    = 'ok'
 
 1: ~(~1 & ~2)
 //│ res: 1 | 2
+//│    = 1
 
 :e
 1: ~(~3 & ~2)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	1: ~(~3 & ~2)
+//│ ║  l.60: 	1: ~(~3 & ~2)
 //│ ║        	^
 //│ ╟── expression of type `1` does not match type `~(~2 & ~3)`
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.55: 	1: ~(~3 & ~2)
+//│ ║  l.60: 	1: ~(~3 & ~2)
 //│ ╙──      	   ^^^^^^^^^^
 //│ res: 2 | 3
 

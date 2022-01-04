@@ -3,16 +3,20 @@ class None: {}
 def None = None{}
 //│ Defined class None
 //│ None: None
+//│     = None {}
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
 //│ Some: 'a -> (Some['A .. 'A | 'a] with {value: 'a})
+//│     = [Function: Some1]
 
 Some 42
 (Some 42).value
 //│ res: Some['A .. 42 | 'A] with {value: 42}
+//│    = Some { value: 42 }
 //│ res: 42
+//│    = 42
 
 type Option[A] = Some[A] | None
 //│ Defined type alias Option
@@ -20,35 +24,37 @@ type Option[A] = Some[A] | None
 None: Option[int]
 Some 42 : Option[int]
 //│ res: None | Some[int]
+//│    = None {}
 //│ res: None | Some[int]
+//│    = Some { value: 42 }
 
 :e
 res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.26: 	res.value
+//│ ║  l.32: 	res.value
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `None` does not have field 'value'
-//│ ║  l.17: 	type Option[A] = Some[A] | None
+//│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
-//│ ║  l.26: 	res.value
+//│ ║  l.32: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
 
 :e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.39: 	42: Option[int, int]
+//│ ║  l.45: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.39: 	42: Option[int, int]
+//│ ║  l.45: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── expression of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.17: 	type Option[A] = Some[A] | None
+//│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.39: 	42: Option[int, int]
+//│ ║  l.45: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ res: None | Some[int]
 
@@ -60,35 +66,41 @@ class Bar1: Foo1[int]
 
 Bar1
 //│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
+//│    = [class Bar1 extends Foo1]
 
 g = Bar1 { x = 42 }
 //│ g: Bar1 & {x: 42}
+//│  = Bar1 { x: 42 }
 
 g: Foo1['a]
 //│ res: Foo1[int]
+//│    = Bar1 { x: 42 }
 
 res.x
 //│ res: int
+//│    = Uncaught ReferenceError: res is not defined
 
 g: Foo1['a]: Foo1[int]
 //│ res: Foo1[int]
+//│    = Bar1 { x: 42 }
 
 res.x
 //│ res: int
+//│    = Uncaught ReferenceError: res is not defined
 
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.80: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.92: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
 //│ ╟── expression of type `int` does not match type `string`
-//│ ║  l.57: 	class Bar1: Foo1[int]
+//│ ║  l.63: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.80: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.92: 	g: Foo1['a]: Foo1[string]
 //│ ║        	                  ^^^^^^
 //│ ╟── from record type:
-//│ ║  l.56: 	class Foo1[A]: { x: A }
+//│ ║  l.62: 	class Foo1[A]: { x: A }
 //│ ╙──      	               ^^^^^^^^
 //│ res: Foo1[string]
 
@@ -98,26 +110,34 @@ class Foo2[A]
 
 Foo2
 //│ res: anything -> Foo2['A]
+//│    = [class Foo2]
 
 error: Foo2[int]
 //│ res: Foo2[int]
+//│    = Uncaught ReferenceError: error is not defined
 
 f = fun x -> case x of { Foo2 -> x }
 //│ f: (Foo2[?] & 'a) -> 'a
+//│  = [Function: f]
 
 f (Foo2 {})
 //│ res: Foo2['A]
+//│    = Foo2 {}
 
 error: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│    = Uncaught ReferenceError: error is not defined
 
 f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│    = [Function: f]
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a & (~(foo2 & {Foo2#A}) | foo2)) -> ('a | Foo2[?] & 'b as 'b)
+//│    = [Function: f]
 
 f
 //│ res: (Foo2[?] & 'a) -> 'a
+//│    = [Function: f]
 

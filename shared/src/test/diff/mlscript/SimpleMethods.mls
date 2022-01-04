@@ -15,12 +15,15 @@ class C0
 
 (C0{}).Foo0
 //│ res: anything -> (error | int)
+//│    = Uncaught ReferenceError: C0 is not defined
 
 f1 = (C0{}).Foo1
 //│ f1: 'A -> {a: 'A}
+//│   = Uncaught ReferenceError: C0 is not defined
 
 f1 1
 //│ res: {a: 1}
+//│    = Uncaught ReferenceError: f1 is not defined
 
 
 class C1
@@ -53,10 +56,10 @@ class C4: C3
 class C5[A]
   method F(x: A) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.54: 	  method F(x: A) = x + 1
+//│ ║  l.57: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
 //│ ╟── expression of type `A` does not match type `int`
-//│ ║  l.54: 	  method F(x: A) = x + 1
+//│ ║  l.57: 	  method F(x: A) = x + 1
 //│ ╙──      	                   ^
 //│ Defined class C5
 //│ Defined C5.F: C5['A] -> 'A -> (error | int)
@@ -75,7 +78,7 @@ class Hey
     rec method A = B
     rec method B = 1
 //│ ╔══[ERROR] identifier not found: B
-//│ ║  l.75: 	    rec method A = B
+//│ ║  l.78: 	    rec method A = B
 //│ ╙──      	                   ^
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error

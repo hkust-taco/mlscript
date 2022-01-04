@@ -51,45 +51,56 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //  as we do not try to expand type aliases right now.
 Cons.Size
 //│ res: (Cons['A] with {tail: List['A]}) -> int
+//│    = undefined
 
 List.HeadOption
 //│ res: List['A] -> Option['A]
+//│    = undefined
 
 Cons.HeadOption
 //│ res: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
+//│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│ l: Cons['A .. 0 | 1 | 'A] with {head: 0, tail: Cons['A .. 0 | 1 | 'A] with {head: 1, tail: Nil['A .. 0 | 1 | 'A]}}
+//│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
 //│ res: int
+//│    = Uncaught ReferenceError: succ is not defined
+//│          at Cons.get Size [as Size] (REPL4:1:151)
 
 l.Map (fun x -> mul x 2)
 //│ res: List['B .. 'B | int]
+//│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
 //│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
+//│  = undefined
 
 o = l.HeadOption
 //│ o: Option['A .. 0 | 1 | 'A]
+//│  = Some { payload: 0 }
 
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.77: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.86: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.77: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.86: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──      	     ^
 //│ res: 0
 
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
 //│ v: None['A .. 0 | 1 | 'A] | Some['A .. 0 | 1 | 'A]
+//│  = Some { payload: 0 }
 //│ res: 0 | 1
+//│    = 0
 
 
 def newHeadOption x = case x of {
@@ -97,16 +108,20 @@ def newHeadOption x = case x of {
     | _ -> None{}
     }
 //│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~Cons[?]) -> (None['A0] | (Some['A] with {payload: 'payload}))
+//│              = [Function: newHeadOption]
 
 // Note that `o` is not a list, so this takes the default case:
 newHeadOption o
 //│ res: None['A] | (Some['A0] with {payload: nothing})
+//│    = None {}
 
 newHeadOption l
 //│ res: None['A] | (Some['A0 .. 0 | 'A0] with {payload: 0})
+//│    = Some { payload: 0 }
 
 case res of {None -> 0 | Some -> res.payload}
 //│ res: 0
+//│    = Uncaught ReferenceError: res is not defined
 
 
 // Idiomatic definition for proper matching: `type Option[A] = Some[A] | None[A]`
@@ -114,19 +129,20 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.114: 	case o of {
+//│ ║  l.129: 	case o of {
 //│ ║         	     ^^^^^^
-//│ ║  l.115: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.130: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`
-//│ ║  l.114: 	case o of {
+//│ ║  l.129: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 
 case o of {
     Some -> o.Get | None -> 0 | Option -> error }
 //│ res: 0 | 1
+//│    = 0
 
