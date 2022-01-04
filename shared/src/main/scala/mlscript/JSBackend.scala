@@ -549,27 +549,35 @@ object JSBackend {
     *
     * ```js
     * function withConstruct(target, fields) {
+    *   if (typeof target === "string" || typeof target === "number") {
+    *     return Object.assign(target, fields);
+    *   }
     *   const copy = Object.assign({}, target, fields);
     *   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
     *   return copy;
     * }
     * ```
     */
-  private def makeWithConstructDecl(name: Str) = JSFuncDecl(
-    name,
-    JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
-    JSConstDecl(
-      "copy",
-      JSInvoke(
-        JSMember(JSIdent("Object"), "assign"),
-        JSRecord(Nil) :: JSIdent("target") :: JSIdent("fields") :: Nil
-      )
-    ) :: JSInvoke(
-      JSMember(JSIdent("Object"), "setPrototypeOf"),
-      JSIdent("copy") ::
-        JSInvoke(JSMember(JSIdent("Object"), "getPrototypeOf"), JSIdent("target") :: Nil) :: Nil
-    ).stmt :: JSReturnStmt(JSIdent("copy")) :: Nil
-  )
+  private def makeWithConstructDecl(name: Str) = {
+    val obj = JSIdent("Object")
+    val body: Ls[JSStmt] = JSIfStmt(
+      (JSIdent("target").typeof() :=== JSExpr("string")) :||
+        (JSIdent("target").typeof() :=== JSExpr("number")) :||
+        (JSIdent("target").typeof() :=== JSExpr("boolean")) :||
+        (JSIdent("target").typeof() :=== JSExpr("bigint")) :||
+        (JSIdent("target").typeof() :=== JSExpr("symbol")),
+      obj("assign")(JSIdent("target"), JSIdent("fields")).`return` :: Nil,
+      JSConstDecl("copy", obj("assign")(JSRecord(Nil), JSIdent("target"), JSIdent("fields"))) ::
+        obj("setPrototypeOf")(JSIdent("copy"), obj("getPrototypeOf")(JSIdent("target"))).stmt ::
+        JSIdent("copy").`return` ::
+        Nil
+    ) :: Nil
+    JSFuncDecl(
+      name,
+      JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
+      body
+    )
+  }
 
   private def makePrettyPrinter(name: Str, indent: Bool) = {
     val arg = JSIdent("value")

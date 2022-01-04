@@ -209,17 +209,23 @@ abstract class JSExpr extends JSCode {
 
   def member(name: Str): JSMember = JSMember(this, name)
 
+  def apply(name: Str): JSMember = JSMember(this, name)
+
   def apply(args: JSExpr*): JSInvoke = JSInvoke(this, args.toList)
 
   def unary(op: Str): JSUnary = JSUnary(op, this)
 
   def binary(op: Str, rhs: JSExpr): JSBinary = JSBinary(op, this, rhs)
 
+  def typeof(): JSUnary = JSUnary("typeof", this)
+
   def +(rhs: JSExpr): JSBinary = binary("+", rhs)
 
   def ??(rhs: JSExpr): JSBinary = binary("??", rhs)
 
-  def typeof(): JSUnary = unary("typeof")
+  def :||(rhs: JSExpr): JSBinary = binary("||", rhs)
+
+  def :===(rhs: JSExpr): JSBinary = binary("===", rhs)
 
   def switch(default: Ls[JSStmt], cases: (JSExpr -> Ls[JSStmt])*): JSSwitchStmt =
     JSSwitchStmt(
@@ -347,7 +353,7 @@ final case class JSBinary(op: Str, left: JSExpr, right: JSExpr) extends JSExpr {
 
   def precedence: Int = JSBinary.opPrecMap get op match {
     case Some(prec) => prec
-    case None       => ???
+    case None       => throw new Error(s"Unknown binary operator: $op")
   }
 
   override def toSourceCode: SourceCode =
@@ -359,24 +365,41 @@ final case class JSBinary(op: Str, left: JSExpr, right: JSExpr) extends JSExpr {
 object JSBinary {
   private def opPrecMap =
     immutable.HashMap[Str, Int](
-      "**" -> 16,
-      "*" -> 15,
-      "/" -> 15,
-      "%" -> 15,
-      "+" -> 14,
-      "-" -> 14,
-      "<<" -> 13,
-      ">>" -> 13,
-      ">>>" -> 13,
-      "<" -> 12,
-      "<=" -> 12,
-      ">" -> 12,
-      ">=" -> 12,
-      "in" -> 12,
-      "instanceof" -> 12,
-      "==" -> 11,
-      "&&" -> 7,
-      "||" -> 7,
+      // infixr 14
+      "**" -> 14,
+      // infixl 13
+      "*" -> 13,
+      "/" -> 13,
+      "%" -> 13,
+      // infixl 12
+      "+" -> 12,
+      "-" -> 12,
+      // infixl 11
+      "<<" -> 11,
+      ">>" -> 11,
+      ">>>" -> 11,
+      // infixl 10
+      "<" -> 10,
+      "<=" -> 10,
+      ">" -> 10,
+      ">=" -> 10,
+      "in" -> 10,
+      "instanceof" -> 10,
+      // infixl 9
+      "==" -> 9,
+      "!=" -> 9,
+      "===" -> 9,
+      "!==" -> 9,
+      // infixl 8
+      "&" -> 8,
+      // infixl 7
+      "^" -> 7,
+      // infixl 6
+      "|" -> 6,
+      // infixl 5
+      "&&" -> 5,
+      // infixl 4
+      "||" -> 4,
       "??" -> 4
     )
 }
@@ -469,11 +492,14 @@ final case class JSExprStmt(expr: JSExpr) extends JSStmt {
 }
 
 // A single if statement without else clauses
-final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt]) extends JSStmt {
+final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt], `else`: Ls[JSStmt] = Nil) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode("if ") ++
     test.toSourceCode.condition ++
     SourceCode.space ++
-    body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+    body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block ++ (`else` match {
+      case Nil => SourceCode.empty
+      case _   => SourceCode("else ") ++ `else`.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+    })
 }
 
 // A single return statement.
