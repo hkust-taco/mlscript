@@ -383,7 +383,7 @@ class JSWebBackend extends JSBackend {
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope allocateJavaScriptName "results"
 
-  // TODO: remove this the prelude code manager is done
+  // TODO: remove this when the prelude code manager is done
   val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
 
   def apply(pgrm: Pgrm): Ls[Str] = {
