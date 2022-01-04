@@ -162,7 +162,7 @@ class D: int
 
 add (D{}) 2
 //│ res: int
-//│    = Uncaught ReferenceError: D is not defined
+//│    = Uncaught ReferenceError: add is not defined
 
 
 :ng

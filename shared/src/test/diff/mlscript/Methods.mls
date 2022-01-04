@@ -182,15 +182,17 @@ p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
 //│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool]
-//│    = Uncaught ReferenceError: not is not defined
-//│          at fy (REPL34:1:20)
-//│          at REPL29:1:202
+//│    = Uncaught ReferenceError: mul is not defined
+//│          at fx (REPL33:1:26)
+//│          at REPL29:1:181
 //│ res: bool
-//│    = true
+//│    = Uncaught ReferenceError: gt is not defined
+//│          at REPL35:1:27
+//│          at Pair.Test (REPL29:1:114)
 //│ res: bool
-//│    = Uncaught ReferenceError: not is not defined
-//│          at fy (REPL34:1:20)
-//│          at REPL29:1:202
+//│    = Uncaught ReferenceError: mul is not defined
+//│          at fx (REPL33:1:26)
+//│          at REPL29:1:181
 
 t = True { x = "foo"; y = false }
 t.(True.True)
@@ -244,19 +246,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.245: 	    method MtdB = 42
+//│ ║  l.247: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.245: 	    method MtdB = 42
+//│ ║  l.247: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.245: 	    method MtdB = 42
+//│ ║  l.247: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.229: 	class Class2C: Class2B[int, bool]
+//│ ║  l.231: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.228: 	    method MtdB: B
+//│ ║  l.230: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -292,10 +294,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.292: 	class Test4A[A]: { x: A }
+//│ ║  l.294: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.293: 	    method Mth4A[A]: A
+//│ ║  l.295: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing

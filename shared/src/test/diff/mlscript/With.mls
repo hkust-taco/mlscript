@@ -13,7 +13,7 @@ rcd with { y = 2 }
 
 add res.x res.y
 //│ res: int
-//│    = Uncaught ReferenceError: res is not defined
+//│    = Uncaught ReferenceError: add is not defined
 
 rcd with { x = "oops" }
 //│ res: {x: "oops"}
@@ -143,8 +143,7 @@ r.s.f
 
 add r.s 1
 //│ res: int
-//│    = Uncaught TypeError: Number.prototype.valueOf requires that 'this' be a Number
-//│          at Number.valueOf (<anonymous>)
+//│    = Uncaught ReferenceError: add is not defined
 
 
 {} with { x = 1 } with { y = 2 }
@@ -154,13 +153,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.155: 	res.z
+//│ ║  l.154: 	res.z
 //│ ║         	^^^^^
 //│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
-//│ ║  l.150: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.149: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.155: 	res.z
+//│ ║  l.154: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 

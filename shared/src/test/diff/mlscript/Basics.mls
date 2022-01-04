@@ -50,7 +50,7 @@ def x = add x 1
 //│ res: 1
 //│    = 1
 //│ x: int
-//│  = 2
+//│  = Uncaught ReferenceError: add is not defined
 
 def x = 1
 x

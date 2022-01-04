@@ -88,22 +88,6 @@ class JSBackend {
   // Name of the helper function for `with` construction.
   private val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
 
-  private val builtinFnOpMap =
-    immutable.HashMap(
-      "add" -> "+",
-      "sub" -> "-",
-      "mul" -> "*",
-      "div" -> "/",
-      "lt" -> "<",
-      "le" -> "<=",
-      "gt" -> ">",
-      "ge" -> ">=",
-      "eq" -> "==",
-      "ne" -> "!=",
-    )
-
-  private val binaryOps = Set.from(builtinFnOpMap.values.concat("&&" :: "||" :: Nil))
-
   // For inheritance usage.
   private val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
 
@@ -123,13 +107,14 @@ class JSBackend {
       val patterns = translateParams(params)
       val lamScope = Scope(patterns flatMap { _.bindings }, scope)
       JSArrowFn(patterns, lamScope withTempVarDecls translateTerm(body)(lamScope))
+    // TODO: when scope symbols are ready, rewrite this
     // Binary expressions called by function names.
-    case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
-        if builtinFnOpMap contains name =>
-      JSBinary(builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
+    // case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+    //     if JSBackend.builtinFnOpMap contains name =>
+    //   JSBinary(JSBackend.builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
     // Binary expressions called by operators.
     case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
-        if binaryOps contains op =>
+        if JSBackend.binaryOps contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
@@ -621,4 +606,20 @@ object JSBackend {
 
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
+
+  val builtinFnOpMap =
+    immutable.HashMap(
+      "add" -> "+",
+      "sub" -> "-",
+      "mul" -> "*",
+      "div" -> "/",
+      "lt" -> "<",
+      "le" -> "<=",
+      "gt" -> ">",
+      "ge" -> ">=",
+      "eq" -> "==",
+      "ne" -> "!=",
+    )
+
+  val binaryOps = Set.from(builtinFnOpMap.values.concat("&&" :: "||" :: Nil))
 }

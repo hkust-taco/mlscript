@@ -179,22 +179,19 @@ eval1 done e1
 pretty1 done e1
 prettier1 done (eval1 done) e1
 //│ e1: Add['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│   = '[object Object][object Object][object Object]'
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
+//│     }
 //│ res: int
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL10:1:150
+//│    = 6
 //│ res: string
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL23:1:176
+//│    = Uncaught ReferenceError: concat is not defined
+//│          at REPL23:1:112
 //│ res: string
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL24:1:246
+//│    = Uncaught ReferenceError: intToString is not defined
+//│          at REPL23:1:69
+//│          at REPL24:1:235
 
 
 
@@ -226,37 +223,26 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 
 eval2 done e1
 //│ res: int
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL35:1:79
-//│          at REPL10:1:150
+//│    = 6
 
 e2 = add (lit 1) (nega e1)
 //│ e2: Add['E .. 'E | Lit & {val: 1} | (Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})] with {lhs: Lit & {val: 1}, rhs: Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
-//│   = '[object Object][object Object]'
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
+//│     }
 
 eval2 done e2
 //│ res: int
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL35:1:79
-//│          at REPL10:1:150
+//│    = -5
 
 d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}})] with {arg: Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}}}
-//│   = Nega { arg: '[object Object][object Object]' }
+//│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
 eval2 done d2
 //│ res: int
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL35:1:79
-//│          at REPL10:1:150
-//│          at REPL35:1:69
-//│          at REPL10:1:150
+//│    = 0
 
 
 prettier2 done
@@ -268,11 +254,9 @@ prettier2 done (eval1 done) e1
 //│ res: ((Add[?] with {lhs: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit as 'b, rhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit as 'c}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL36:1:112
-//│          at REPL24:1:246
+//│    = Uncaught ReferenceError: intToString is not defined
+//│          at REPL23:1:69
+//│          at REPL24:1:235
 
 prettier2 done (eval2 done)
 prettier2 done (eval2 done) e2
@@ -280,11 +264,9 @@ prettier2 done (eval2 done) d2
 //│ res: (((Add[?] with {lhs: 'c & ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'd), rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'g}) as 'b) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL2:1:80
-//│          at done (REPL2:1:129)
-//│          at REPL36:1:112
-//│          at REPL24:1:246
+//│    = Uncaught ReferenceError: intToString is not defined
+//│          at REPL23:1:69
+//│          at REPL24:1:235
 //│ res: string
 //│    = Uncaught ReferenceError: concat is not defined
 //│          at REPL36:1:55
@@ -345,10 +327,10 @@ prettier2 done eval1 e1
 //│ ║  l.150: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.221: 	  }) ev
+//│ ║  l.218: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.219: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.216: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
