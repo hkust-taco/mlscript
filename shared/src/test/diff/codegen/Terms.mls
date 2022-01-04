@@ -1,0 +1,181 @@
+
+// Define something first
+
+def x = 0
+//│ x: 0
+//│  = 0
+
+def y = 0
+//│ y: 0
+//│  = 0
+
+// Var
+:js
+x
+//│ // Query 1
+//│ x;
+//│ // End of generated code
+//│ res: 0
+//│    = 0
+
+// Lam
+:js
+fun x -> x
+//│ // Query 1
+//│ (x) => x;
+//│ // End of generated code
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+// App(Var(op), lhs, rhs)
+:js
+0 + 1
+//│ // Query 1
+//│ 0 + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+// App(App(App(Var("if"), test), consequent), alternative)
+:js
+if true then 1 else 2
+//│ // Query 1
+//│ true ? 1 : 2;
+//│ // End of generated code
+//│ res: 1 | 2
+//│    = 1
+
+// App: construct objects conforming some traits
+:js
+trait T: { x: int }
+T { x = 0 }
+//│ Defined trait T
+//│ // Query 1
+//│ ({ 
+//│ x: 0
+//│  });
+//│ // End of generated code
+//│ res: {x: 0} & t
+//│    = { x: 0 }
+
+// App
+:js
+def f x = x
+f 0
+//│ // Query 1
+//│ const f = (x) => x;
+//│ f;
+//│ // Query 2
+//│ f(0);
+//│ // End of generated code
+//│ f: 'a -> 'a
+//│  = [Function: f]
+//│ res: 0
+//│    = 0
+
+// Rcd
+:js
+{ x = 0; y = 0 }
+//│ // Query 1
+//│ ({
+//│   x: 0,
+//│   y: 0
+//│ });
+//│ // End of generated code
+//│ res: {x: 0, y: 0}
+//│    = { x: 0, y: 0 }
+
+// Rcd
+:js
+{ x = 0; y = 0 }.x
+//│ // Query 1
+//│ ({
+//│   x: 0,
+//│   y: 0
+//│ }).x;
+//│ // End of generated code
+//│ res: 0
+//│    = 0
+
+// Let
+:js
+let x = 0 in x + 1
+//│ // Query 1
+//│ (function (x) {
+//│   return x + 1;
+//│ })(0);
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+// Blk: Unused in MLParser
+
+// CaseOf
+:js
+class A: { a: int }
+class B: { b: int }
+case A { a = 0 } of
+  { A -> "A"
+  | B -> "B"
+  }
+//│ Defined class A
+//│ Defined class B
+//│ // Prelude
+//│ class A {
+//│   constructor(fields) {
+//│     this.a = fields.a;
+//│   }
+//│ }
+//│ class B {
+//│   constructor(fields) {
+//│     this.b = fields.b;
+//│   }
+//│ }
+//│ // Query 1
+//│ temp = new A({ 
+//│ a: 0
+//│  }), temp instanceof A ? "A" : temp instanceof B ? "B" : (function () {
+//│   throw new Error("non-exhaustive case expression");
+//│ })();
+//│ // End of generated code
+//│ res: "A" | "B"
+//│    = 'A'
+
+// IntLit
+:js
+42
+//│ // Query 1
+//│ 42;
+//│ // End of generated code
+//│ res: 42
+//│    = 42
+
+// StrLit
+:js
+"Hello"
+//│ // Query 1
+//│ "Hello";
+//│ // End of generated code
+//│ res: "Hello"
+//│    = 'Hello'
+
+// Asc
+:js
+42 : int
+//│ // Query 1
+//│ 42;
+//│ // End of generated code
+//│ res: int
+//│    = 42
+
+// Tup
+:js
+(x, y)
+//│ // Query 1
+//│ [
+//│   x,
+//│   y
+//│ ];
+//│ // End of generated code
+//│ res: (0, 0,)
+//│    = [ 0, 0 ]
