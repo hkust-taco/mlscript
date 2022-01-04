@@ -136,10 +136,7 @@ Cons 1 (Cons 2 Nil)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = {   a: res.head,   b: res.tail.head,   c: res.tail.tail };
-//│                          ^
-//│      
-//│      Uncaught SyntaxError: Unexpected token ':'
+//│    = Uncaught ReferenceError: res is not defined
 
 
 Cons 2 Nil
@@ -153,10 +150,7 @@ Cons 1 (id res)
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = {   a: res.head,   b: res.tail.head,   c: res.tail.tail };
-//│                          ^
-//│      
-//│      Uncaught SyntaxError: Unexpected token ':'
+//│    = Uncaught ReferenceError: res is not defined
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }

@@ -464,7 +464,8 @@ object JSMember {
 abstract class JSStmt extends JSCode
 
 final case class JSExprStmt(expr: JSExpr) extends JSStmt {
-  def toSourceCode: SourceCode = expr.toSourceCode ++ SourceCode.semicolon
+  def toSourceCode: SourceCode =
+    expr.toSourceCode.parenthesized(expr.isInstanceOf[JSRecord]) ++ SourceCode.semicolon
 }
 
 // A single if statement without else clauses

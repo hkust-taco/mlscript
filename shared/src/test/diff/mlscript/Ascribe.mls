@@ -16,7 +16,7 @@
 
 { name = "Bob" } : { name: 'a }
 //│ res: {name: "Bob"}
-//│    = 'Bob'
+//│    = { name: 'Bob' }
 
 def foo(n: 'a) = add n 1
 //│ foo: int -> int
