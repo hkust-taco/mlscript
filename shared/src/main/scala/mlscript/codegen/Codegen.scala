@@ -404,6 +404,8 @@ object JSBinary {
       "||" -> 4,
       "??" -> 4
     )
+  
+  val operators: Set[Str] = opPrecMap.keySet
 }
 
 final case class JSLit(literal: Str) extends JSExpr {

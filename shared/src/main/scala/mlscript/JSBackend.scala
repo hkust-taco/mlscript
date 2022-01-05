@@ -108,7 +108,7 @@ class JSBackend {
     //   JSBinary(JSBackend.builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
     // Binary expressions called by operators.
     case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
-        if JSBackend.binaryOps contains op =>
+        if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
@@ -690,6 +690,4 @@ object JSBackend {
       "eq" -> "==",
       "ne" -> "!=",
     )
-
-  val binaryOps = Set.from(builtinFnOpMap.values.concat("&&" :: "||" :: Nil))
 }
