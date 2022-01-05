@@ -215,6 +215,21 @@ let x = 0 in x + 1
 
 // Blk: Unused in MLParser
 
+// CaseOf: Empty
+:js
+def f x = case x of { }
+//│ // Query 1
+//│ const f1 = (x) => {
+//│   let temp;
+//│   return (temp = x, (function () {
+//│     throw new Error("non-exhaustive case expression");
+//│   })());
+//│ };
+//│ res = f1;
+//│ // End of generated code
+//│ f: nothing -> nothing
+//│  = [Function: f1]
+
 // CaseOf: Just the wildcard
 :js
 case 0 of { _ -> 1 }
