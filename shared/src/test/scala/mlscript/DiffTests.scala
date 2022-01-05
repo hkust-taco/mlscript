@@ -299,7 +299,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     case lines => host.execute(lines mkString " ")
                   }
                   S(testCode.queries map { q =>
-                    // Useful for find out what are really happening.
+                    // Useful for find out what is really happening.
                     // println(s"In test $file:")
                     // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
                     val res = host.query(q)
