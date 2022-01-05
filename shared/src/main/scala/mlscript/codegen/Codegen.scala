@@ -449,7 +449,7 @@ final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
   override def precedence: Int = 20
   override def toSourceCode: SourceCode =
     target.toSourceCode.parenthesized(
-      target.precedence < precedence
+      target.precedence < precedence || target.isInstanceOf[JSRecord]
     ) ++ SourceCode(
       if (JSMember.isValidIdentifier(field)) {
         s".$field"

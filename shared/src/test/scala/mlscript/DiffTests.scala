@@ -286,9 +286,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                       output(line)
                     }
                   }
-                  testCode.queries.zipWithIndex foreach { case (q, i) =>
-                    output(s"// Query $i")
-                    q.split('\n') foreach { output(_) }
+                  testCode.queries.zipWithIndex foreach { case (queryLines, i) =>
+                    output(s"// Query ${i + 1}")
+                    queryLines foreach { output(_) }
                   }
                   output("// End of generated code")
                 }
@@ -298,7 +298,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     case Nil => ()
                     case lines => host.execute(lines mkString " ")
                   }
-                  S(testCode.queries map { q =>
+                  S(testCode.queries map { queryLines =>
+                    val q = queryLines mkString " "
                     // Useful for find out what are really happening.
                     // println(s"In test $file:")
                     // println(s"Querying: ${JSLit.makeStringLiteral(q)}")

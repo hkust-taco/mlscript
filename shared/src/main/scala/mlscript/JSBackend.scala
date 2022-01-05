@@ -537,13 +537,13 @@ class JSTestBackend extends JSBackend {
     TestCode(
       SourceCode.fromStmts(prelude).toLines,
       queryStmts map {
-        SourceCode.fromStmts(_).toLines mkString " "
+        SourceCode.fromStmts(_).toLines
       }
     )
   }
 }
 
-final case class TestCode(prelude: Ls[Str], queries: Ls[Str])
+final case class TestCode(prelude: Ls[Str], queries: Ls[Ls[Str]])
 
 object JSBackend {
   private def inspectTerm(t: Term): Str = t match {
