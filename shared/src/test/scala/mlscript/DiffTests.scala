@@ -275,7 +275,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             )
 
-            var results: Ls[Str] \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
+            var results: Str \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
                 file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
@@ -300,7 +300,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                   }
                   S(testCode.queries map { queryLines =>
                     val q = queryLines mkString " "
-                    // Useful for find out what are really happening.
+                    // Useful for find out what is really happening.
                     // println(s"In test $file:")
                     // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
                     val res = host.query(q)
@@ -376,8 +376,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             // If code generation fails, show the error message.
             results match {
               case L(err) =>
-                output("Code generation crashed with following error:")
-                err foreach { line => output(s"  $line") }
+                output("Code generation crashed with the following error:")
+                output(s"  $err")
               case _ => ()
             }
             

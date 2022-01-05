@@ -10,13 +10,8 @@ class Child: Parent1 & Parent2
 //│ ╔══[ERROR] class Child cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Cannot have two base classes: Parent1, Parent2
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:331)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
@@ -33,18 +28,18 @@ def f(x:Child) = x: nothing
 
 :pe
 def c = Child(Parent1{name="A"} with Parent2{name="B"})
-//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.35:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
+//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.30:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
 
 :e
 def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.39: 	def c = Child(Parent1{name="A"})
+//│ ║  l.34: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Parent1 & {name: ?name}` does not match type `Parent2`
-//│ ║  l.39: 	def c = Child(Parent1{name="A"})
+//│ ║  l.34: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.22: 	def Child: (Parent1 & Parent2) -> Child
+//│ ║  l.17: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	                      ^^^^^^^
 //│ c: error
 //│  = Uncaught ReferenceError: Child is not defined
@@ -53,44 +48,29 @@ def c = Child(Parent1{name="A"})
 type Sly1 = Parent2
 class Child2: Parent1 & Sly1
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.54: 	class Child2: Parent1 & Sly1
+//│ ║  l.49: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Cannot have two base classes: Parent1, Parent2
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:331)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 :e
 type Sly2[A] = A
 class Child2: Sly2[Parent1] & Parent2
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.69: 	class Child2: Sly2[Parent1] & Parent2
+//│ ║  l.59: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Cannot have two base classes: Parent1, Parent2
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:331)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 :e
 class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.83: 	class Crazy[A]: A & { name: A }
+//│ ║  l.68: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Class A is not defined.
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:364)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
-//│     at mlscript.JSTestBackend.apply(JSBackend.scala:456)
 
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
@@ -108,17 +88,17 @@ def c = Crazy({ name = "Bob"; age = 42 })
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.109: 	c: nothing
-//│ ║         	^
+//│ ║  l.89: 	c: nothing
+//│ ║        	^
 //│ ╟── expression of type `{name: "Bob", age: 42}` does not match type `~Crazy[?a]`
-//│ ║  l.104: 	def c = Crazy({ name = "Bob"; age = 42 })
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.109: 	c: nothing
-//│ ║         	^
+//│ ║  l.89: 	c: nothing
+//│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.109: 	c: nothing
-//│ ╙──       	   ^^^^^^^
+//│ ║  l.89: 	c: nothing
+//│ ╙──      	   ^^^^^^^
 //│ res: nothing
 //│    = Uncaught ReferenceError: c1 is not defined
 
@@ -134,71 +114,51 @@ d: nothing
 :e
 class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.135: 	class Stupid: Parent1 | Parent2
+//│ ║  l.115: 	class Stupid: Parent1 | Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Union(TypeName(Parent1),TypeName(Parent2))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
-//│ ║  l.147: 	class Stupid: Parent1 -> Parent2
+//│ ║  l.122: 	class Stupid: Parent1 -> Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Function(Tuple(List((None,TypeName(Parent1)))),TypeName(Parent2))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.159: 	class Stupid: ~Parent1
+//│ ║  l.129: 	class Stupid: ~Parent1
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Neg(TypeName(Parent1))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 :e // TODO don't report several times
 class Cycle1: Cycle2
 class Cycle2: Cycle1
 type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.172: 	class Cycle1: Cycle2
+//│ ║  l.137: 	class Cycle1: Cycle2
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle2
-//│ ║  l.173: 	class Cycle2: Cycle1
+//│ ║  l.138: 	class Cycle2: Cycle1
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.174: 	type Stutter = Cycle1
+//│ ║  l.139: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Class Cycle2 is not defined.
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:364)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
-//│     at mlscript.JSTestBackend.apply(JSBackend.scala:456)
 
 :e
 def c = Cycle1 error
 c: Cycle1
 //│ ╔══[ERROR] identifier not found: Cycle1
-//│ ║  l.193: 	def c = Cycle1 error
+//│ ║  l.153: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
 //│  = Uncaught ReferenceError: Cycle1 is not defined
 //│ ╔══[ERROR] type identifier not found: Cycle1
-//│ ║  l.194: 	c: Cycle1
+//│ ║  l.154: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 //│    = Uncaught ReferenceError: c2 is not defined
@@ -210,15 +170,10 @@ type N[A] = ~A
 :e
 class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.211: 	class Cycle: N[Cycle]
+//│ ║  l.171: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Neg(TypeName(Cycle))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 
 
@@ -241,17 +196,17 @@ class E: 1
 E{}: 1
 E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.241: 	E{}: 1
+//│ ║  l.196: 	E{}: 1
 //│ ║         	^^^
 //│ ╙── expression of type `E` does not match type `1`
 //│ res: 1
 //│    = Uncaught ReferenceError: E is not defined
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.242: 	E{}: int
+//│ ║  l.197: 	E{}: int
 //│ ║         	^^^
 //│ ╟── expression of type `E` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.242: 	E{}: int
+//│ ║  l.197: 	E{}: int
 //│ ╙──       	     ^^^
 //│ res: int
 //│    = Uncaught ReferenceError: E is not defined
@@ -261,19 +216,14 @@ E{}: int
 class F: nothing
 F{}
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.261: 	class F: nothing
+//│ ║  l.216: 	class F: nothing
 //│ ╙──       	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: F
-//│ ║  l.262: 	F{}
+//│ ║  l.217: 	F{}
 //│ ╙──       	^
 //│ res: error
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   Class nothing is not defined.
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:364)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
-//│     at mlscript.JSTestBackend.apply(JSBackend.scala:456)
 
 
 // TODO forbid
@@ -293,15 +243,10 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.294: 	class Weird: {} | {}
+//│ ║  l.244: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Union(Record(List()),Record(List()))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
-//│     at mlscript.JSTestBackend.generate(JSBackend.scala:490)
 
 
 :e
@@ -309,7 +254,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.310: 	class B: Id[A]
+//│ ║  l.255: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
@@ -319,14 +264,9 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.320: 	class Class3B: Class3A & 'a
+//│ ║  l.265: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type 'a
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:319)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
 

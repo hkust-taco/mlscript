@@ -93,13 +93,8 @@ def f (x y z) = add x y
 //│ ║  l.91: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   term App(App(Var(x), Tup(_: Var(y))), Tup(_: Var(z))) is not a valid pattern
-//│     at mlscript.JSBackend.translatePattern(JSBackend.scala:71)
-//│     at mlscript.JSBackend.$anonfun$translateParams$1(JSBackend.scala:75)
-//│     at scala.collection.immutable.List.map(List.scala:246)
-//│     at mlscript.JSBackend.translateParams(JSBackend.scala:75)
-//│     at mlscript.JSBackend.translateTerm(JSBackend.scala:101)
 
 f 1
 //│ res: int

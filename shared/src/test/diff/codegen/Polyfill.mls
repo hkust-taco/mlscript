@@ -41,15 +41,18 @@ n = 123 with { x = 1 }
 //│   return !x;
 //│ }
 //│ let res;
-//│ // Query 0
-//│ const n = withConstruct(123, {  x: 1  }); res = n;
+//│ // Query 1
+//│ const n = withConstruct(123, { 
+//│ x: 1
+//│  });
+//│ res = n;
 //│ // End of generated code
 //│ n: 123 & {x: 1}
 //│  = [Number: 123] { x: 1 }
 
 :js
 n + 1
-//│ // Query 0
+//│ // Query 1
 //│ res = n + 1;
 //│ // End of generated code
 //│ res: int

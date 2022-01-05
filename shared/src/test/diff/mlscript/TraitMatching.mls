@@ -164,13 +164,8 @@ class C3: { default: string } & ~MyTrait[anything]
 //│ ╔══[ERROR] cannot inherit from a type negation
 //│ ║  l.163: 	class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with following error:
+//│ Code generation crashed with the following error:
 //│   unable to derive from type Neg(AppliedType(TypeName(MyTrait),List(TypeName(anything))))
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:346)
-//│     at mlscript.JSBackend.getBaseClassAndFields(JSBackend.scala:309)
-//│     at mlscript.JSBackend.translateClassDeclaration(JSBackend.scala:358)
-//│     at mlscript.JSTestBackend.$anonfun$generate$3(JSBackend.scala:495)
-//│     at scala.collection.immutable.List.flatMap(List.scala:293)
 
 def strawman: C2 & ~MyTrait[anything]
 //│ strawman: C2 & ~myTrait
@@ -186,16 +181,16 @@ strawman: C2
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.187: 	strawman: ~{ value: anything }
+//│ ║  l.182: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `C2 & ~myTrait` does not match type `~{value: anything}`
-//│ ║  l.175: 	def strawman: C2 & ~MyTrait[anything]
+//│ ║  l.170: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.187: 	strawman: ~{ value: anything }
+//│ ║  l.182: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.187: 	strawman: ~{ value: anything }
+//│ ║  l.182: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
 //│    = Uncaught ReferenceError: strawman is not defined

@@ -452,11 +452,10 @@ class JSTestBackend extends JSBackend {
 
   private var withConstructInserted = false
 
-  def apply(pgrm: Pgrm): Ls[Str] \/ TestCode = try {
+  def apply(pgrm: Pgrm): Str \/ TestCode = try {
     R(generate(pgrm))
   } catch {
-    case e: Throwable =>
-      L(e.getMessage() :: e.getStackTrace().toSeq.take(5).map({ trace => s"  at $trace" }).toList)
+    case e: Throwable => L(e.getMessage())
   }
 
   // Generate code for test.
