@@ -52,6 +52,7 @@ foo arg
 //│ ║  l.29: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
+//│    = Uncaught ReferenceError: arg is not defined
 
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}

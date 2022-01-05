@@ -275,53 +275,54 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             )
 
-            var results = if (!allowTypeErrors && !mode.expectTypeErrors &&
-                !mode.expectTypeErrors && file.ext == "mls" &&
-                !mode.noGeneration && !noJavaScript) {
-              val testCode = backend(p)
-              if (mode.showGeneratedJS) {
-                if (!testCode.prelude.isEmpty) {
-                  output("// Prelude")
-                  testCode.prelude foreach { line =>
-                    output(line)
+            var results: Ls[Str] \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
+                file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
+              backend(p) map { testCode =>
+                // Display the generated code.
+                if (mode.showGeneratedJS) {
+                  if (!testCode.prelude.isEmpty) {
+                    output("// Prelude")
+                    testCode.prelude foreach { line =>
+                      output(line)
+                    }
                   }
+                  testCode.queries.zipWithIndex foreach { case (q, i) =>
+                    output(s"// Query $i")
+                    q.split('\n') foreach { output(_) }
+                  }
+                  output("// End of generated code")
                 }
-                testCode.queries.zipWithIndex foreach { case (q, i) =>
-                  output(s"// Query $i")
-                  q.split('\n') foreach { output(_) }
+                // Execute code.
+                if (!mode.noExecution) {
+                  testCode.prelude match {
+                    case Nil => ()
+                    case lines => host.execute(lines mkString " ")
+                  }
+                  S(testCode.queries map { q =>
+                    // Useful for find out what are really happening.
+                    // println(s"In test $file:")
+                    // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
+                    val res = host.query(q)
+                    // println(s"Response: ${JSLit.makeStringLiteral(res)}")
+                    res.split('\n').toList
+                  })
+                } else {
+                  N
                 }
-                output("// End of generated code")
-              }
-              if (!mode.noExecution) {
-                testCode.prelude match {
-                  case Nil => ()
-                  case lines => host.execute(lines mkString " ")
-                }
-                S(testCode.queries map { q =>
-                  // Useful for find out what are really happening.
-                  // println(s"In test $file:")
-                  // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
-                  val res = host.query(q)
-                  // println(s"Response: ${JSLit.makeStringLiteral(res)}")
-                  res.split('\n')
-                })
-              } else {
-                N
               }
             } else {
-              N
+              R(N)
             }
 
             def showResult(prefixLength: Int) = {
               results match {
-                case S(head :: next) =>
+                case R(S(head :: next)) =>
                   head.zipWithIndex foreach { case (s, i) =>
                     if (i == 0) output(" " * prefixLength + "= " + s)
                     else output(" " * (prefixLength + 2) + s)
                   }
-                  results = S(next)
-                case S(Nil) =>
-                case N =>
+                  results = R(S(next))
+                case _ => ()
               }
             }
             
@@ -369,6 +370,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     }
                 }
                 showResult(prefixLength)
+            }
+
+            // If code generation fails, show the error message.
+            results match {
+              case L(err) =>
+                output("Code generation crashed with following error:")
+                err foreach { line => output(s"  $line") }
+              case _ => ()
             }
             
             if (mode.stats) {

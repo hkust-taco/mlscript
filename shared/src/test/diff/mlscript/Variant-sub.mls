@@ -37,6 +37,9 @@ flatMap f "oops"
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
 //│ res: "oops" | error | (Some['A] with {v: nothing})
+//│    = Uncaught Error: non-exhaustive case expression
+//│          at REPL4:1:157
+//│          at REPL4:1:206
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })

@@ -29,51 +29,54 @@ type Hello = int
 //│ ║  l.27: 	42: hello
 //│ ╙──      	    ^^^^^
 //│ res: error
+//│    = 42
 
 
 :e
 aa = { a = 1; a = "oops" }
 //│ ╔══[ERROR] Multiple declarations of field name a in record literal
-//│ ║  l.35: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.35: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	       ^
 //│ ╟── Declared at
-//│ ║  l.35: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ╙──      	              ^
 //│ aa: {a: 1, a: "oops"}
+//│   = { a: 'oops' }
 
 :e
 aa: { a: int; a: string }
 //│ ╔══[ERROR] Multiple declarations of field name a in record type
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	      ^
 //│ ╟── Declared at
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── expression of type `1` does not match type `string`
-//│ ║  l.35: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── but it flows into reference with expected type `{a: int, a: string}`
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^
 //│ res: {a: int, a: string}
+//│    = { a: 'oops' }
 
 aa.a
 //│ res: 1
-//│    = Uncaught ReferenceError: aa is not defined
+//│    = 'oops'
 
 aa: { a: 'a }
 //│ res: {a: 1}
-//│    = Uncaught ReferenceError: aa is not defined
+//│    = { a: 'oops' }
 

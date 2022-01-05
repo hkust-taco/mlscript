@@ -132,6 +132,7 @@ foo 42
 //│ ║  l.116: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──       	                             ^
 //│ res: error | {l: 42, r: nothing, s: 42}
+//│    = { l: 42, r: undefined, s: 42 }
 
 def r = foo (42 with { f = 1 })
 //│ r: {l: 42, r: 1, s: 42 & {f: 1}}
@@ -153,15 +154,16 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.154: 	res.z
+//│ ║  l.155: 	res.z
 //│ ║         	^^^^^
 //│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
-//│ ║  l.149: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.150: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.154: 	res.z
+//│ ║  l.155: 	res.z
 //│ ╙──       	^^^
 //│ res: error
+//│    = undefined
 
 
 

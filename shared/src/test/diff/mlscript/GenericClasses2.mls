@@ -34,6 +34,7 @@ b: Foo1[string]
 //│ ║  l.2: 	class Foo1[A]: { x: A }
 //│ ╙──     	               ^^^^^^^^
 //│ res: Foo1[string]
+//│    = Bar1 { x: 1 }
 
 
 class Foo2[A]
@@ -53,45 +54,51 @@ class Bar3: Foo2[int]
 Bar2
 Bar3
 //│ res: {x: 'x & int} -> (bar2 & {Foo2#A = int, x: 'x})
+//│    = [class Bar2 extends Foo2]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.54: 	Bar3
+//│ ║  l.55: 	Bar3
 //│ ║        	^^^^
 //│ ╟── Note that class Bar3 is abstract:
-//│ ║  l.48: 	class Bar3: Foo2[int]
+//│ ║  l.49: 	class Bar3: Foo2[int]
 //│ ║        	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method M2 is abstract
-//│ ║  l.40: 	  method M2: A
+//│ ║  l.41: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error
+//│    = [class Bar3 extends Foo2]
 
 :e
 Bar2
 Bar3
 //│ res: {x: int & 'x} -> (Bar2 with {x: 'x})
+//│    = [class Bar2 extends Foo2]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.69: 	Bar3
+//│ ║  l.72: 	Bar3
 //│ ║        	^^^^
 //│ ╟── Note that class Bar3 is abstract:
-//│ ║  l.48: 	class Bar3: Foo2[int]
+//│ ║  l.49: 	class Bar3: Foo2[int]
 //│ ║        	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method M2 is abstract
-//│ ║  l.40: 	  method M2: A
+//│ ║  l.41: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error
+//│    = [class Bar3 extends Foo2]
 
 :e
 {A = 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.83: 	{A = 1}
+//│ ║  l.88: 	{A = 1}
 //│ ╙──      	^^^^^^^
 //│ res: {A: 1}
+//│    = { A: 1 }
 
 :e
 error: {A: 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
-//│ ║  l.90: 	error: {A: 1}
+//│ ║  l.96: 	error: {A: 1}
 //│ ╙──      	        ^
 //│ res: {A: 1}
+//│    = Uncaught ReferenceError: error is not defined
 
 b = Bar2{x = 1}
 //│ b: Bar2 & {x: 1}
@@ -100,19 +107,20 @@ b = Bar2{x = 1}
 :e
 c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.101: 	c = b: Foo2[string]
+//│ ║  l.108: 	c = b: Foo2[string]
 //│ ║         	    ^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.101: 	c = b: Foo2[string]
+//│ ║  l.108: 	c = b: Foo2[string]
 //│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.41: 	class Bar2: Foo2[int] & { x: int }
+//│ ║  l.42: 	class Bar2: Foo2[int] & { x: int }
 //│ ╙──      	                 ^^^
 //│ c: Foo2[string]
+//│  = Bar2 { x: 1 }
 
 c.M2
 //│ res: string
-//│    = Uncaught ReferenceError: c is not defined
+//│    = 1
 
 d = b: Bar2
 //│ d: Bar2
@@ -129,13 +137,14 @@ d: Foo2['a]
 :e
 d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.130: 	d: Foo2[string]
+//│ ║  l.138: 	d: Foo2[string]
 //│ ║         	^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.130: 	d: Foo2[string]
+//│ ║  l.138: 	d: Foo2[string]
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.41: 	class Bar2: Foo2[int] & { x: int }
+//│ ║  l.42: 	class Bar2: Foo2[int] & { x: int }
 //│ ╙──      	                 ^^^
 //│ res: Foo2[string]
+//│    = Bar2 { x: 1 }
 

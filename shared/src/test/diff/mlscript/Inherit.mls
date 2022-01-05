@@ -22,6 +22,7 @@ def c = Child(Parent { name = "Bob" })
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error
+//│  = Child { name: 'Bob', age: undefined }
 
 def c = Child(Parent { name = "Bob" } with { age = 123 })
 //│ c: Child & {age: 123, name: "Bob"}
@@ -72,21 +73,22 @@ f c
 :e
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.73: 	f (c: Parent)
+//│ ║  l.74: 	f (c: Parent)
 //│ ║        	^^^^
 //│ ╟── expression of type `Parent` does not match type `Child`
-//│ ║  l.73: 	f (c: Parent)
+//│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── but it flows into argument with expected type `(?a,)`
-//│ ║  l.73: 	f (c: Parent)
+//│ ║  l.74: 	f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.63: 	  | Child -> x.name
+//│ ║  l.64: 	  | Child -> x.name
 //│ ║        	    ^^^^^
 //│ ╟── from reference:
-//│ ║  l.62: 	def f x = case x of {
+//│ ║  l.63: 	def f x = case x of {
 //│ ╙──      	               ^
 //│ res: error | string
+//│    = 'Bob'
 
 
 def f x = case x of {

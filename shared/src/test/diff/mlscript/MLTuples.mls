@@ -43,6 +43,7 @@ Hey t
 //│ ║  l.28: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
+//│    = Uncaught ReferenceError: Hey is not defined
 
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
@@ -80,44 +81,47 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	f t
+//│ ║  l.80: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.79: 	f t
+//│ ║  l.80: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.74: 	f ((a, b)) = add a b
+//│ ║  l.75: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	f tx
+//│ ║  l.81: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.80: 	f tx
+//│ ║  l.81: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.74: 	f ((a, b)) = add a b
+//│ ║  l.75: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	f htx
+//│ ║  l.82: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~hey | (?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.81: 	f htx
+//│ ║  l.82: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.74: 	f ((a, b)) = add a b
+//│ ║  l.75: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = Uncaught ReferenceError: htx is not defined
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -130,7 +134,7 @@ g tx
 //│    = Uncaught ReferenceError: htx is not defined
 //│ res: () | 1
 //│    = Uncaught ReferenceError: Hey is not defined
-//│          at g (REPL13:1:36)
+//│          at g (REPL17:1:36)
 
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
@@ -142,26 +146,28 @@ g (tx with { y = 2 })
 //│    = Uncaught ReferenceError: htx is not defined
 //│ res: 1 | 2
 //│    = Uncaught ReferenceError: Hey is not defined
-//│          at g1 (REPL16:1:37)
+//│          at g1 (REPL20:1:37)
 
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.148: 	g tx
+//│ ║  l.152: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.148: 	g tx
+//│ ║  l.152: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.135: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.139: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.135: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.139: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
+//│    = Uncaught ReferenceError: Hey is not defined
+//│          at g1 (REPL20:1:37)
 
 
 if bool then (1,) else (2,)

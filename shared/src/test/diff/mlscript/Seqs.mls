@@ -21,6 +21,7 @@ Nil{}
 //│ ║  l.16: 	Nil{}
 //│ ╙──      	   ^^
 //│ res: error | Nil & {size: nothing}
+//│    = Nil { size: undefined }
 
 def Nil = Nil { size = 0 }
 //│ Nil: Nil & {size: 0}
@@ -29,16 +30,16 @@ def Nil = Nil { size = 0 }
 // FIXME
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.30: 	Cons 1 Nil
+//│ ║  l.31: 	Cons 1 Nil
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` does not match type `{size: ?size, tail: ?tail, head: ?head}`
-//│ ║  l.30: 	Cons 1 Nil
+//│ ║  l.31: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.30: 	Cons 1 Nil
+//│ ║  l.31: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` does not match type `?a -> ?b`
-//│ ║  l.30: 	Cons 1 Nil
+//│ ║  l.31: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 //│    = Uncaught TypeError: (intermediate value) is not a function
@@ -62,15 +63,16 @@ def Cons head tail =
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.63: 	Nil: ListBase[anything]
+//│ ║  l.64: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not match type `nothing`
-//│ ║  l.63: 	Nil: ListBase[anything]
+//│ ║  l.64: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}
 //│ ╙──     	                    ^^^^^^^
 //│ res: ListBase[anything]
+//│    = Nil { size: 0 }
 
 def c = Cons 1 Nil
 //│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}

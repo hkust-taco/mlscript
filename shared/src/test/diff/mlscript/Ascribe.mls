@@ -13,6 +13,7 @@
 //│ ║  l.7: 	"hello": 'a -> 'a
 //│ ╙──     	         ^^^^^^^^
 //│ res: 'a -> ('a | error)
+//│    = 'hello'
 
 { name = "Bob" } : { name: 'a }
 //│ res: {name: "Bob"}
@@ -49,23 +50,28 @@ def foo({ a; b }: { a: int; b: string}) = { b; a }
 :e
 def foo({ a = "hey" }: { a: string}) = 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.51: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── expression of type `string` does not match type `"hey"`
-//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.51: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from string literal:
-//│ ║  l.50: 	def foo({ a = "hey" }: { a: string}) = 0
+//│ ║  l.51: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ╙──      	              ^^^^^
 //│ foo: {a: string} -> 0
+//│    = const foo4 = ({  a:   }) => 0; res = foo4;
+//│                            ^
+//│      
+//│      Uncaught SyntaxError: Unexpected token '}'
 
 :e
 def foo({ a; b }: { a: int }) = b
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.63: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.68: 	def foo({ a; b }: { a: int }) = b
 //│ ║        	        ^^^^^^^^
 //│ ╟── expression of type `{a: int}` does not have field 'b'
-//│ ║  l.63: 	def foo({ a; b }: { a: int }) = b
+//│ ║  l.68: 	def foo({ a; b }: { a: int }) = b
 //│ ╙──      	                  ^^^^^^^^^^
 //│ foo: {a: int} -> nothing
+//│    = [Function: foo5]
 

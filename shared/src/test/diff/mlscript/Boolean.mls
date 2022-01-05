@@ -19,4 +19,5 @@ Boolean
 //│ ║  l.17: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
+//│    = [Function: Boolean]
 

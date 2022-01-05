@@ -305,6 +305,11 @@ eval1 done e2
 //│ ║  l.53: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ╙──      	                                   ^^^^^
 //│ res: error | int
+//│    = Uncaught Error: non-exhaustive case expression
+//│          at REPL2:1:80
+//│          at done (REPL2:1:129)
+//│          at REPL10:1:150
+//│          at REPL10:1:140
 
 
 :e
@@ -351,6 +356,9 @@ prettier2 done eval1 e1
 //│ ║  l.146: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
+//│    = Uncaught ReferenceError: intToString is not defined
+//│          at REPL23:1:69
+//│          at REPL24:1:235
 
 
 // FIXME properly report errors for:

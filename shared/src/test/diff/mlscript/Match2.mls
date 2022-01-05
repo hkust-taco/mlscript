@@ -45,19 +45,25 @@ bar Test
 //│ ║  l.29: 	def bar x = case x of
 //│ ╙──      	                 ^
 //│ res: error
+//│    = Uncaught Error: non-exhaustive case expression
+//│          at REPL7:1:145
+//│          at bar (REPL7:1:194)
 
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.50: 	bar "ops"
+//│ ║  l.53: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.50: 	bar "ops"
+//│ ║  l.53: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
 //│ ╙──      	                 ^
 //│ res: error
+//│    = Uncaught Error: non-exhaustive case expression
+//│          at REPL7:1:145
+//│          at bar (REPL7:1:194)
 
 
 def baz x = case x of
@@ -70,13 +76,16 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	baz "oops"
+//│ ║  l.77: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.71: 	baz "oops"
+//│ ║  l.77: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.63: 	def baz x = case x of
+//│ ║  l.69: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: "oops" | error
+//│    = Uncaught Error: non-exhaustive case expression
+//│          at REPL10:1:134
+//│          at baz (REPL10:1:183)
 

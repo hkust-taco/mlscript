@@ -22,11 +22,12 @@ def f = 42
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.3: 	def f: int -> int
 //│ ╙──     	       ^^^^^^^^^^
+//│  = 42
 
 
 f 1
 //│ res: int
-//│    = 1
+//│    = Uncaught TypeError: f1 is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -46,15 +47,16 @@ def boom = 1
 :e
 add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	add boom 1
+//│ ║  l.48: 	add boom 1
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `int`
-//│ ║  l.37: 	def boom: anything
+//│ ║  l.38: 	def boom: anything
 //│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.47: 	add boom 1
+//│ ║  l.48: 	add boom 1
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = 2
 
 
 def boom: nothing
@@ -66,12 +68,13 @@ def boom = 1
 //│   <:  boom:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.64: 	def boom = 1
+//│ ║  l.66: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── expression of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.60: 	def boom: nothing
+//│ ║  l.62: 	def boom: nothing
 //│ ╙──      	          ^^^^^^^
+//│     = 1
 
 
 def boom: 'a
@@ -83,12 +86,13 @@ def boom = 1
 //│   <:  boom:
 //│ nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.81: 	def boom = 1
+//│ ║  l.84: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── expression of type `1` does not match type `'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.77: 	def boom: 'a
+//│ ║  l.80: 	def boom: 'a
 //│ ╙──      	          ^^
+//│     = 1
 
 
 
@@ -122,27 +126,28 @@ def id n = add n 1
 //│   <:  id:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.120: 	def id n = add n 1
+//│ ║  l.124: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── expression of type `'a` does not match type `int`
-//│ ║  l.95: 	def id: 'a -> 'a
+//│ ║  l.99: 	def id: 'a -> 'a
 //│ ║        	        ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.120: 	def id n = add n 1
+//│ ║  l.124: 	def id n = add n 1
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.120: 	def id n = add n 1
+//│ ║  l.124: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.120: 	def id n = add n 1
+//│ ║  l.124: 	def id n = add n 1
 //│ ║         	           ^^^^^^^
 //│ ╟── but it flows into function of type `?a -> ?b`
-//│ ║  l.120: 	def id n = add n 1
+//│ ║  l.124: 	def id n = add n 1
 //│ ║         	       ^^^^^^^^^^^
 //│ ╟── which does not match type `'a -> 'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.95: 	def id: 'a -> 'a
+//│ ║  l.99: 	def id: 'a -> 'a
 //│ ╙──      	              ^^
+//│   = [Function: id2]
 
 :e
 def id (x: int) = x
@@ -150,26 +155,27 @@ def id (x: int) = x
 //│   <:  id:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.148: 	def id (x: int) = x
+//│ ║  l.153: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
 //│ ╟── expression of type `'a` does not match type `int`
-//│ ║  l.95: 	def id: 'a -> 'a
+//│ ║  l.99: 	def id: 'a -> 'a
 //│ ║        	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.148: 	def id (x: int) = x
+//│ ║  l.153: 	def id (x: int) = x
 //│ ╙──       	           ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.148: 	def id (x: int) = x
+//│ ║  l.153: 	def id (x: int) = x
 //│ ║         	        ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.148: 	def id (x: int) = x
+//│ ║  l.153: 	def id (x: int) = x
 //│ ║         	           ^^^
 //│ ╟── but it flows into reference with expected type `'a`
-//│ ║  l.148: 	def id (x: int) = x
+//│ ║  l.153: 	def id (x: int) = x
 //│ ║         	                  ^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.95: 	def id: 'a -> 'a
+//│ ║  l.99: 	def id: 'a -> 'a
 //│ ╙──      	              ^^
+//│   = [Function: id3]
 
 
 
@@ -186,18 +192,20 @@ def f = impl
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.184: 	def f = impl
+//│ ║  l.190: 	def f = impl
 //│ ║         	        ^^^^
 //│ ╟── expression of type `int & 'a` does not match type `?a -> ?b`
-//│ ║  l.176: 	def f: (int & 'a) -> 'a
+//│ ║  l.182: 	def f: (int & 'a) -> 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.179: 	def impl a = a a
+//│ ║  l.185: 	def impl a = a a
 //│ ╙──       	             ^^^
+//│  = [Function: impl]
 
 f 1 
 //│ res: 1
-//│    = 1
+//│    = Uncaught TypeError: a is not a function
+//│          at impl (REPL17:1:22)
 
 
 def f: (int & 'a) -> (int & 'a) -> 'a 
@@ -206,7 +214,7 @@ def f a b = if gt a b then a else b
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
-//│  = [Function: f1]
+//│  = [Function: f3]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
@@ -218,14 +226,15 @@ def f a b = if gt a b then a else b b // mistake!
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.216: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.224: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int & 'a` does not match type `?a -> ?b`
-//│ ║  l.203: 	def f: (int & 'a) -> (int & 'a) -> 'a 
+//│ ║  l.211: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                      ^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.216: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.224: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^^^
+//│  = [Function: f4]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
@@ -233,7 +242,8 @@ f 1
 
 res 2
 //│ res: 1 | 2
-//│    = 2
+//│    = Uncaught TypeError: b is not a function
+//│          at REPL22:1:42
 
 
 :e
@@ -244,18 +254,19 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.251: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `'a`
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.251: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── but it flows into function of type `?a -> ?b`
-//│ ║  l.241: 	def g a = add a 1
+//│ ║  l.251: 	def g a = add a 1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── which does not match type `(int & 'a) -> 'a`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.240: 	def g: (int & 'a) -> 'a
+//│ ║  l.250: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
+//│  = [Function: g]
 
 
 

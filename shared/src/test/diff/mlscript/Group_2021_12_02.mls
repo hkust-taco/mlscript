@@ -45,6 +45,7 @@ eval {} (Lit{} with { val = 1 })
 //│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	           ^^^^^^^^^
 //│ res: error | int
+//│    = 1
 
 eval (fun x -> x) (Lit{} with { val = 1 })
 //│ res: int
@@ -61,10 +62,10 @@ eval (fun x -> x.hello) (Const{} with {hello=1})
 :e
 eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.62: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.63: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ?b & ~add & ~lit`
-//│ ║  l.62: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.63: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.16: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
@@ -73,6 +74,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	                         ^^^^^^^^
 //│ res: error | int
+//│    = 1
 
 l = Lit{} with {hello=1}
 //│ l: Lit & {hello: 1}

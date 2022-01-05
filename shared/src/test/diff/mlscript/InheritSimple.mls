@@ -25,6 +25,7 @@ c.name
 //│ ║  l.17: 	c.name
 //│ ╙──      	^
 //│ res: error
+//│    = undefined
 
 c: Child
 //│ res: Child

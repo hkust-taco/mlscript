@@ -44,22 +44,24 @@ a: B
 //│ ║  l.33: 	a: B
 //│ ╙──      	   ^
 //│ res: B
+//│    = C {}
 
 :e
 a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.49: 	a: C
+//│ ║  l.50: 	a: C
 //│ ║        	^
 //│ ╟── expression of type `A` does not match type `C`
 //│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.49: 	a: C
+//│ ║  l.50: 	a: C
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.49: 	a: C
+//│ ║  l.50: 	a: C
 //│ ╙──      	   ^
 //│ res: C
+//│    = C {}
 
 
 // Transitivity is currently broken for primitive literals:
@@ -74,11 +76,11 @@ res: number
 // FIXME
 42: number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.75: 	42: number
+//│ ║  l.77: 	42: number
 //│ ║        	^^
 //│ ╟── expression of type `42` does not match type `number`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.75: 	42: number
+//│ ║  l.77: 	42: number
 //│ ╙──      	    ^^^^^^
 //│ res: number
 //│    = 42

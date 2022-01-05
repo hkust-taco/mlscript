@@ -15,15 +15,15 @@ class C0
 
 (C0{}).Foo0
 //│ res: anything -> (error | int)
-//│    = Uncaught ReferenceError: C0 is not defined
+//│    = [Function: Foo0]
 
 f1 = (C0{}).Foo1
 //│ f1: 'A -> {a: 'A}
-//│   = Uncaught ReferenceError: C0 is not defined
+//│   = [Function: Foo1]
 
 f1 1
 //│ res: {a: 1}
-//│    = Uncaught ReferenceError: f1 is not defined
+//│    = { a: 1 }
 
 
 class C1

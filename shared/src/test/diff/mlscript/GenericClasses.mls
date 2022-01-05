@@ -40,23 +40,25 @@ res.value
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
+//│    = 42
 
 :e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.45: 	42: Option[int, int]
+//│ ║  l.46: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.45: 	42: Option[int, int]
+//│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── expression of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.45: 	42: Option[int, int]
+//│ ║  l.46: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ res: None | Some[int]
+//│    = 42
 
 
 class Foo1[A]: { x: A }
@@ -91,18 +93,19 @@ res.x
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.92: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
 //│ ╟── expression of type `int` does not match type `string`
-//│ ║  l.63: 	class Bar1: Foo1[int]
+//│ ║  l.65: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.92: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
 //│ ║        	                  ^^^^^^
 //│ ╟── from record type:
-//│ ║  l.62: 	class Foo1[A]: { x: A }
+//│ ║  l.64: 	class Foo1[A]: { x: A }
 //│ ╙──      	               ^^^^^^^^
 //│ res: Foo1[string]
+//│    = Bar1 { x: 42 }
 
 
 class Foo2[A]

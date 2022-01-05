@@ -452,8 +452,15 @@ class JSTestBackend extends JSBackend {
 
   private var withConstructInserted = false
 
+  def apply(pgrm: Pgrm): Ls[Str] \/ TestCode = try {
+    R(generate(pgrm))
+  } catch {
+    case e: Throwable =>
+      L(e.getMessage() :: e.getStackTrace().toSeq.take(5).map({ trace => s"  at $trace" }).toList)
+  }
+
   // Generate code for test.
-  def apply(pgrm: Pgrm): TestCode = {
+  private def generate(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     // TODO: insert them via the prelude manager.
