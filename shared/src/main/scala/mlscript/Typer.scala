@@ -49,12 +49,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     decls: Map[Str, MethodType],
     defns: Map[Str, MethodType],
   ) {
-    private def inter(that: MethodDefs, tn: TypeName): MethodDefs =
+    private def &(that: MethodDefs, tn: TypeName)(newdefns: Set[Str])(implicit raise: Raise): MethodDefs =
       MethodDefs(
         tn,
         this.prts ::: that.prts,
         mergeMap(this.decls, that.decls)(_.&(_, tn)(TypeProvenance(tn.toLoc, "inherited method declaration"))),
-        mergeMap(this.defns, that.defns)(_.&(_, tn)(TypeProvenance(tn.toLoc, "inherited method definition")))
+        (this.defns.iterator ++ that.defns.iterator).toSeq.groupMap(_._1)(_._2).flatMap {
+          case _ -> Nil => die
+          case mn -> (defn :: Nil) => S(mn -> defn)
+          case mn -> defns if newdefns(mn) => N
+          case mn -> defns =>
+            implicit val prov: TypeProvenance = TypeProvenance(tn.toLoc, "inherited method declaration")
+            S(mn -> MethodType(defns.head.level,
+              err(msg"A method definition must be given when inheriting multiple method definitions" -> tn.toLoc
+                :: msg"Definitions of method $mn inherited from:" -> N
+                :: defns.iterator.map(mt => msg"• ${mt.prts.head}" -> mt.prov.loco).toList),
+              tn :: Nil
+            ))
+        }
       )
     private def ++(that: MethodDefs): MethodDefs = {
       require(prts.isEmpty)
@@ -65,7 +77,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         this.defns ++ that.defns
       )
     }
-    def propagate: MethodDefs = prts.map(_.propagate).reduceOption(_.inter(_, tn)).foldRight(copy(prts = Nil))(_ ++ _)
+    def propagate(top: Bool)(implicit raise: Raise): MethodDefs =
+      prts.map(_.propagate(false)).reduceOption(_.&(_, tn)(defns.keySet))
+        .foldRight(if (top) copy(prts = Nil, decls = Map.empty, defns = Map.empty) else copy(prts = Nil))(_ ++ _)
   }
   
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], mthenv: MutMap[Str, MethodType],
@@ -520,7 +534,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val tn = td.nme
         val MethodDefs(_, _, decls, defns) = mds
-        val MethodDefs(_, _, declsInherit, defnsInherit) = mds.copy(decls = Map.empty, defns = Map.empty).propagate
+        val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate(true)
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: PolymorphicType, bmt: PolymorphicType)(implicit prov: TypeProvenance) =

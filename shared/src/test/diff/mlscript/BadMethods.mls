@@ -665,3 +665,81 @@ class H2: D2 & E2
 //│ Declared E2.G2: e2 -> bool
 //│ Defined class H2
 
+
+
+
+trait Test7A
+  method Mth7A: int
+  method Mth7A = 42
+trait Test7B
+  method Mth7A: int
+  method Mth7A = 43
+//│ Defined trait Test7A
+//│ Declared Test7A.Mth7A: test7A -> int
+//│ Defined Test7A.Mth7A: test7A -> 42
+//│ Defined trait Test7B
+//│ Declared Test7B.Mth7A: test7B -> int
+//│ Defined Test7B.Mth7A: test7B -> 43
+
+:e
+class Test7C: Test7A & Test7B
+//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║         	      ^^^^^^
+//│ ╟── Definitions of method Mth7A inherited from:
+//│ ╟── • Test7A
+//│ ║  l.673: 	  method Mth7A = 42
+//│ ║         	         ^^^^^^^^^^
+//│ ╟── • Test7B
+//│ ║  l.676: 	  method Mth7A = 43
+//│ ╙──       	         ^^^^^^^^^^
+//│ Defined class Test7C
+
+class Test7D: Test7A & Test7B
+  method Mth7A = this.(Test7A.Mth7A) * this.(Test7B.Mth7A)
+//│ Defined class Test7D
+//│ Defined Test7D.Mth7A: (Test7D & test7A & test7B) -> int
+
+:e // TODO: suppress?
+class Test7E: Test7C
+  method Mth7A = 0
+//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║         	      ^^^^^^
+//│ ╟── Definitions of method Mth7A inherited from:
+//│ ╟── • Test7A
+//│ ║  l.673: 	  method Mth7A = 42
+//│ ║         	         ^^^^^^^^^^
+//│ ╟── • Test7B
+//│ ║  l.676: 	  method Mth7A = 43
+//│ ╙──       	         ^^^^^^^^^^
+//│ Defined class Test7E
+//│ Defined Test7E.Mth7A: (Test7E & test7A & test7B) -> 0
+
+:e
+trait Test7F
+  method Mth7A = 0
+class Test7G: Test7C & Test7F
+//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║         	      ^^^^^^
+//│ ╟── Definitions of method Mth7A inherited from:
+//│ ╟── • Test7A
+//│ ║  l.673: 	  method Mth7A = 42
+//│ ║         	         ^^^^^^^^^^
+//│ ╟── • Test7B
+//│ ║  l.676: 	  method Mth7A = 43
+//│ ╙──       	         ^^^^^^^^^^
+//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ║  l.722: 	class Test7G: Test7C & Test7F
+//│ ║         	      ^^^^^^
+//│ ╟── Definitions of method Mth7A inherited from:
+//│ ╟── • Test7C
+//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║         	      ^^^^^^
+//│ ╟── • Test7F
+//│ ║  l.721: 	  method Mth7A = 0
+//│ ╙──       	         ^^^^^^^^^
+//│ Defined trait Test7F
+//│ Defined Test7F.Mth7A: test7F -> 0
+//│ Defined class Test7G
