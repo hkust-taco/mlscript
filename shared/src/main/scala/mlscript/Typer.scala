@@ -79,7 +79,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     }
     private def addprt(prt: TypeName): MethodDefs =
       copy(decls = decls.view.mapValues(mt => mt.copyMT(prts = prt :: mt.prts)).toMap)
-    def propagate(top: Bool)(implicit raise: Raise): MethodDefs =
+    def propagate(top: Bool = true)(implicit raise: Raise): MethodDefs =
       prts.map(_.propagate(false)).reduceOption(_.&(_)(tn, defns.keySet)).map(_.addprt(tn))
         .foldRight(if (top) copy(prts = Nil, decls = Map.empty, defns = Map.empty) else copy(prts = Nil))(_ ++ _)
   }
@@ -223,8 +223,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def clsNameToNomTag(tn: Str)(prov: TypeProvenance, ctx: Ctx): SimpleType = ctx.tyDefs.get(tn) match {
     case S(td) =>
       require(td.kind is Cls)
-      ClassTag(Var(td.nme.name.decapitalize),
-        ctx.allBaseClassesOf(td.nme.name))(prov)
+      ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
     case N => errType(prov)
   }
   def trtNameToNomTag(tn: Str)(prov: TypeProvenance, ctx: Ctx): SimpleType = ctx.tyDefs.get(tn) match {
@@ -258,10 +257,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case _: ObjectTag => Map.empty
       case _ => Map.empty
     }
-    ctx.tyDefs.get(tn) match { 
-      case S(td) => rec(td.bodyTy)
-      case N => Map.empty
-    }
+    ctx.tyDefs.get(tn).fold(Map.empty[Str, Map[Str, SimpleType]])(td => rec(td.bodyTy))
   }
 
   
@@ -324,8 +320,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
             td.mthDefs.iterator.map(md => md.nme.copy().withLocOf(md)).toSet)
           ) { case ((decls1, defns1), (decls2, defns2)) => (
-            (decls1.toSeq ++ decls2.toSeq).groupMapReduce(identity)(identity)((mn, _) =>
-              TypeName(mn.name).withLoc(td.toLoc)).valuesIterator.toSet, defns1 ++ defns2
+            (decls1.toSeq ++ decls2.toSeq).groupBy(identity).map { case (mn, mns) =>
+              if (mns.size > 1) TypeName(mn.name).withLoc(td.toLoc) else mn }.toSet,
+            defns1 ++ defns2
           )}
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
@@ -459,7 +456,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Recursive traverse the type definition and type the bodies of method definitions 
        * by applying the targs in `TypeRef` and rigidifying class type parameters. */
-      def typeMethod(td: TypeDef): Unit = {
+      def typeMethodsSingle(td: TypeDef): Unit = {
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
@@ -536,7 +533,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val tn = td.nme
         val MethodDefs(_, _, decls, defns) = mds
-        val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate(true)
+        val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate()
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: PolymorphicType, bmt: PolymorphicType)(implicit prov: TypeProvenance) =
@@ -596,12 +593,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case (N, N) => N
           }).foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
-          ctx.mthenv += fullName -> ctx.getmth(fullName).fold(mthTy)(if (decls.isDefinedAt(nme)) _ else mthTy)
+          if (!ctx.containsmth(fullName) || !decls.isDefinedAt(nme)) ctx.mthenv += fullName -> mthTy
           ctx.mthenv += s"${tn.name}#${nme}" -> mthTy
           if (!decls.isDefinedAt(nme) && !declsInherit.isDefinedAt(nme)) registerImplicit(nme, mthTy)
         }
       }
-      newDefs.foreach(td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) typeMethod(td))
+      newDefs.foreach(td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) typeMethodsSingle(td))
       ctx
     }
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, mthenv = allMthEnv, tyDefs = allDefs)))

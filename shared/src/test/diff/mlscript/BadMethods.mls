@@ -716,9 +716,12 @@ class Test7E: Test7C
 //│ Defined class Test7E
 //│ Defined Test7E.Mth7A: (Test7E & test7A & test7B) -> 0
 
-:e
 trait Test7F
   method Mth7A = 0
+//│ Defined trait Test7F
+//│ Defined Test7F.Mth7A: test7F -> 0
+
+:e
 class Test7G: Test7C & Test7F
 //│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
 //│ ║  l.685: 	class Test7C: Test7A & Test7B
@@ -731,15 +734,13 @@ class Test7G: Test7C & Test7F
 //│ ║  l.676: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
-//│ ║  l.722: 	class Test7G: Test7C & Test7F
+//│ ║  l.725: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7C
 //│ ║  l.685: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── • Test7F
-//│ ║  l.721: 	  method Mth7A = 0
+//│ ║  l.720: 	  method Mth7A = 0
 //│ ╙──       	         ^^^^^^^^^
-//│ Defined trait Test7F
-//│ Defined Test7F.Mth7A: test7F -> 0
 //│ Defined class Test7G
