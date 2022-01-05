@@ -140,7 +140,7 @@ error: Lol -> Lol
 
 { x = id } : Lol
 //│ res: {x: 'a -> 'a}
-//│    = Uncaught ReferenceError: id is not defined
+//│    = { x: [Function: id] }
 
 
 :e

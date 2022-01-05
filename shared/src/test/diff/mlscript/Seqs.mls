@@ -74,49 +74,52 @@ Nil: ListBase[anything]
 
 def c = Cons 1 Nil
 //│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
-//│  = Uncaught ReferenceError: succ is not defined
-//│        at REPL9:1:55
+//│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c: ListBase[int]
 //│ res: ListBase[int]
-//│    = Uncaught ReferenceError: c is not defined
+//│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c.head
 //│ res: 1
-//│    = Uncaught ReferenceError: c is not defined
+//│    = 1
 
 c.tail
 //│ res: Nil & {size: 0}
-//│    = Uncaught ReferenceError: c is not defined
+//│    = Nil { size: 0 }
 
 c.size
 //│ res: int
-//│    = Uncaught ReferenceError: c is not defined
+//│    = 1
 
 def d = Cons 2 c
 //│ d: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}}
-//│  = Uncaught ReferenceError: c is not defined
+//│  = Cons {
+//│      size: 2,
+//│      head: 2,
+//│      tail: Cons { size: 1, head: 1, tail: Nil { size: 0 } }
+//│    }
 
 d.head
 //│ res: 2
-//│    = Uncaught ReferenceError: d is not defined
+//│    = 2
 
 d.size
 //│ res: int
-//│    = Uncaught ReferenceError: d is not defined
+//│    = 2
 
 d.tail
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}
-//│    = Uncaught ReferenceError: d is not defined
+//│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size
 //│ res: int
-//│    = Uncaught ReferenceError: d is not defined
+//│    = 1
 
 d.tail.head
 d.tail.tail
 //│ res: 1
-//│    = Uncaught ReferenceError: d is not defined
+//│    = 1
 //│ res: Nil & {size: 0}
-//│    = Uncaught ReferenceError: d is not defined
+//│    = Nil { size: 0 }
 

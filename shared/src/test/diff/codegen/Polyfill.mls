@@ -10,6 +10,36 @@ n = 123 with { x = 1 }
 //│     return copy;
 //│   }
 //│ }
+//│ function id(x) {
+//│   return x;
+//│ }
+//│ function succ(x) {
+//│   return x + 1;
+//│ }
+//│ function add(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x + y;
+//│   }else {
+//│     return (y) => (x + y);
+//│   }
+//│ }
+//│ function mul(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x * y;
+//│   }else {
+//│     return (y) => (x * y);
+//│   }
+//│ }
+//│ function gt(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x > y;
+//│   }else {
+//│     return (y) => (x > y);
+//│   }
+//│ }
+//│ function not(x) {
+//│   return !x;
+//│ }
 //│ let res;
 //│ // Query 0
 //│ const n = withConstruct(123, {  x: 1  }); res = n;

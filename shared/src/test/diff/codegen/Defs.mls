@@ -29,7 +29,7 @@ if true then if true then a else b else a
 
 def id x = x
 //│ id: 'a -> 'a
-//│   = [Function: id]
+//│   = [Function: id1]
 
 if true then if true then id a else id b else a
 //│ res: 1 | 2

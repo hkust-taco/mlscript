@@ -16,9 +16,7 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
-//│    = Uncaught ReferenceError: add is not defined
-//│          at REPL5:1:36
-//│          at REPL2:1:57
+//│    = 65
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -90,13 +88,13 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	res 1
+//│ ║  l.89: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.91: 	res 1
+//│ ║  l.89: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.82: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.80: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: 1 | error
 

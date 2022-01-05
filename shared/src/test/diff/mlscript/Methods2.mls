@@ -67,14 +67,11 @@ l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 
 l.Size
 //│ res: int
-//│    = Uncaught ReferenceError: succ is not defined
-//│          at Cons.get Size [as Size] (REPL4:1:151)
+//│    = 2
 
 l.Map (fun x -> mul x 2)
 //│ res: List['B .. 'B | int]
-//│    = Uncaught ReferenceError: mul is not defined
-//│          at REPL10:1:27
-//│          at Cons.Map (REPL4:1:312)
+//│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
 //│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
@@ -87,13 +84,13 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.88: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.85: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.88: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.85: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──      	     ^
 //│ res: 0
 
@@ -131,15 +128,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in case of:
-//│ ║  l.131: 	case o of {
+//│ ║  l.128: 	case o of {
 //│ ║         	     ^^^^^^
-//│ ║  l.132: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.129: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`
-//│ ║  l.131: 	case o of {
+//│ ║  l.128: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 

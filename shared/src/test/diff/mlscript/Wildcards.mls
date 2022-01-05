@@ -78,7 +78,7 @@ a1 = add 1
 //│ int -> int
 //│   <:  a1:
 //│ int -> anything
-//│   = Uncaught ReferenceError: add is not defined
+//│   = [Function (anonymous)]
 
 
 type Als2[A] = A -> int
@@ -100,7 +100,7 @@ a2 = add 1
 //│ int -> int
 //│   <:  a2:
 //│ nothing -> int
-//│   = Uncaught ReferenceError: add is not defined
+//│   = [Function (anonymous)]
 
 
 def q: ?

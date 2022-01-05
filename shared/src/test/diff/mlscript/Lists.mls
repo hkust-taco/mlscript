@@ -146,7 +146,8 @@ Cons 2 Nil
 
 Cons 1 (id res)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
-//│    = Uncaught ReferenceError: id is not defined
+//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
+//│          at REPL17:1:50
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}

@@ -103,10 +103,7 @@ WrapperWrapper { x = Psyduck { x = 0 } }
 
 res.Apply2 (fun x -> mul x 2)
 //│ res: WrapperWrapper['B .. 'B | int] with {x: Wrapper['B .. 'B | int]}
-//│    = Uncaught ReferenceError: mul is not defined
-//│          at REPL23:1:32
-//│          at Psyduck.Apply (REPL20:1:127)
-//│          at WrapperWrapper.Apply2 (REPL21:1:149)
+//│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (Wrapper['A] with {x: 'x})
@@ -185,17 +182,11 @@ p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
 //│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool]
-//│    = Uncaught ReferenceError: mul is not defined
-//│          at fx (REPL33:1:26)
-//│          at REPL29:1:181
+//│    = Pair { x: 84, y: false }
 //│ res: bool
-//│    = Uncaught ReferenceError: gt is not defined
-//│          at REPL35:1:27
-//│          at Pair.Test (REPL29:1:114)
+//│    = true
 //│ res: bool
-//│    = Uncaught ReferenceError: mul is not defined
-//│          at fx (REPL33:1:26)
-//│          at REPL29:1:181
+//│    = false
 
 t = True { x = "foo"; y = false }
 t.(True.True)
@@ -249,19 +240,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.241: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.241: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.241: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.234: 	class Class2C: Class2B[int, bool]
+//│ ║  l.225: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.233: 	    method MtdB: B
+//│ ║  l.224: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -297,10 +288,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.297: 	class Test4A[A]: { x: A }
+//│ ║  l.288: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.298: 	    method Mth4A[A]: A
+//│ ║  l.289: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing

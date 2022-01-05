@@ -13,7 +13,7 @@ rcd with { y = 2 }
 
 add res.x res.y
 //│ res: int
-//│    = Uncaught ReferenceError: add is not defined
+//│    = 3
 
 rcd with { x = "oops" }
 //│ res: {x: "oops"}
@@ -25,11 +25,11 @@ res.x
 
 id rcd with { x = "oops" }
 //│ res: {x: "oops"}
-//│    = Uncaught ReferenceError: id is not defined
+//│    = { x: 'oops' }
 
 res.x
 //│ res: "oops"
-//│    = undefined
+//│    = 'oops'
 
 
 def rcd = { }
@@ -38,11 +38,11 @@ def rcd = { }
 
 id rcd with { x = "oops" }
 //│ res: {x: "oops"}
-//│    = Uncaught ReferenceError: id is not defined
+//│    = { x: 'oops' }
 
 res.x
 //│ res: "oops"
-//│    = undefined
+//│    = 'oops'
 
 
 def f r = r with { x = "oops" }
@@ -143,7 +143,7 @@ r.s.f
 
 add r.s 1
 //│ res: int
-//│    = Uncaught ReferenceError: add is not defined
+//│    = 43
 
 
 {} with { x = 1 } with { y = 2 }

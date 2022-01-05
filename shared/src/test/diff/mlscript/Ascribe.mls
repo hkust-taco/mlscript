@@ -36,7 +36,7 @@ def foo(f: Foo['a]) = f.field
 
 (succ 1): int
 //│ res: int
-//│    = Uncaught ReferenceError: succ is not defined
+//│    = 2
 
 
 def foo({ a; b }: { a: int; b: string}) = { b; a }

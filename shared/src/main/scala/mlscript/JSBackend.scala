@@ -456,6 +456,16 @@ class JSTestBackend extends JSBackend {
   def apply(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
+    // TODO: insert them via the prelude manager.
+    lazy val preludeFuncs =
+      JSBackend.makeIdentity(topLevelScope allocateJavaScriptName "id") ::
+        JSBackend.makeSuccessor(topLevelScope allocateJavaScriptName "succ") ::
+        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "add", "+") ::
+        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "mul", "*") ::
+        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "gt", ">") ::
+        JSBackend.makeUnaryFunc(topLevelScope allocateJavaScriptName "not", "!") ::
+        Nil
+
     // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
@@ -505,7 +515,7 @@ class JSTestBackend extends JSBackend {
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = defStmts
     if (numRun === 0) {
-      prelude = JSLetDecl(resultName -> N :: Nil) :: prelude
+      prelude = preludeFuncs ::: (JSLetDecl(resultName -> N :: Nil) :: prelude)
     }
 
     // If `withConstruct` used but not inserted yet.
@@ -621,6 +631,33 @@ object JSBackend {
         ) :: Nil,
     )
   }
+
+  def makeIdentity(name: Str): JSFuncDecl =
+    JSFuncDecl(name, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
+
+  def makeSuccessor(name: Str): JSFuncDecl =
+    JSFuncDecl(name, JSNamePattern("x") :: Nil, (JSIdent("x") + JSLit("1")).`return` :: Nil)
+
+  def makeBinaryFunc(name: Str, op: Str): JSFuncDecl =
+    JSFuncDecl(
+      name,
+      JSNamePattern("x") :: JSNamePattern("y") :: Nil,
+      JSIfStmt(
+        JSIdent("arguments").member("length") :=== JSLit("2"),
+        (JSIdent("x").binary(op, JSIdent("y"))).`return` :: Nil,
+        JSArrowFn(
+          JSNamePattern("y") :: Nil,
+          L(JSIdent("x").binary(op, JSIdent("y")))
+        ).`return` :: Nil
+      ) :: Nil
+    )
+
+  def makeUnaryFunc(name: Str, op: Str): JSFuncDecl =
+    JSFuncDecl(
+      name,
+      JSNamePattern("x") :: Nil,
+      (JSIdent("x").unary(op)).`return` :: Nil
+    )
 
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
