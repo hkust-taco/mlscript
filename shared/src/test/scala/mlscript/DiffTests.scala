@@ -375,7 +375,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             // If code generation fails, show the error message.
             results match {
               case L(err) =>
-                output("Code generation crashed with following error:")
+                output("Code generation crashed with the following error:")
                 err foreach { line => output(s"  $line") }
               case _ => ()
             }
