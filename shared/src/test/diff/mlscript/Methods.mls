@@ -400,3 +400,23 @@ class Test6B: { a: Test6A; b: Test6A }
 
 class Test6C: Test6B
 //│ Defined class Test6C
+
+
+
+
+trait Test7A
+    method Mth7A: int
+    method Mth7A = 0
+//│ Defined trait Test7A
+//│ Declared Test7A.Mth7A: test7A -> int
+//│ Defined Test7A.Mth7A: test7A -> 0
+
+trait Test7B
+    method Mth7A: int
+//│ Defined trait Test7B
+//│ Declared Test7B.Mth7A: test7B -> int
+
+class Test7C: Test7A & Test7B
+    method Mth7A = 42
+//│ Defined class Test7C
+//│ Defined Test7C.Mth7A: (Test7C & test7A & test7B) -> 42

@@ -31,19 +31,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
-  class MethodType(level: Int, body: SimpleType, val prts: List[TypeName]) extends PolymorphicType(level, body) {
-    def &(that: MethodType, prt: TypeName)(implicit prov: TypeProvenance): MethodType = {
+  class MethodType(level: Int, body: SimpleType, val prts: List[TypeName], val single: Bool)
+      extends PolymorphicType(level, body) {
+    def &(that: MethodType): MethodType = {
       require(this.level === that.level)
-      MethodType(level, this.body & that.body, prt)
+      MethodType(level, this.body & that.body, (this.prts ::: that.prts).distinct, false)
     }
     def +(that: MethodType): MethodType =
       if (this.prts === that.prts) that
-      else MethodType(0, errType(noProv), this.prts ::: that.prts)
+      else MethodType(0, errType(noProv), (this.prts ::: that.prts).distinct)
     override def toString: Str = s"MethodType($level, $body, $prts)"
+    def copyMT(level: Int = this.level, body: SimpleType = this.body, prts: List[TypeName] = this.prts): MethodType =
+      MethodType(level, body, prts, this.single)
   }
   object MethodType {
-    def apply(level: Int, body: SimpleType, prt: TypeName): MethodType = new MethodType(level, body, prt :: Nil)
-    def apply(level: Int, body: SimpleType, prts: List[TypeName]): MethodType = new MethodType(level, body, prts)
+    def apply(level: Int, body: SimpleType, prt: TypeName): MethodType = new MethodType(level, body, prt :: Nil, true)
+    def apply(level: Int, body: SimpleType, prts: List[TypeName]): MethodType = new MethodType(level, body, prts, true)
+    private def apply(level: Int, body: SimpleType, prts: List[TypeName], single: Bool): MethodType =
+      new MethodType(level, body, prts, single)
     def unapply(mt: MethodType): S[(Int, SimpleType, List[TypeName])] = S((mt.level, mt.body, mt.prts))
   }
 

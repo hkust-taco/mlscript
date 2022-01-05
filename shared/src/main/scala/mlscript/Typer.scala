@@ -49,11 +49,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     decls: Map[Str, MethodType],
     defns: Map[Str, MethodType],
   ) {
-    private def &(that: MethodDefs, tn: TypeName)(newdefns: Set[Str])(implicit raise: Raise): MethodDefs =
+    private def &(that: MethodDefs)(tn: TypeName, newdefns: Set[Str])(implicit raise: Raise): MethodDefs =
       MethodDefs(
         tn,
         this.prts ::: that.prts,
-        mergeMap(this.decls, that.decls)(_.&(_, tn)(TypeProvenance(tn.toLoc, "inherited method declaration"))),
+        mergeMap(this.decls, that.decls)(_ & _),
         (this.defns.iterator ++ that.defns.iterator).toSeq.groupMap(_._1)(_._2).flatMap {
           case _ -> Nil => die
           case mn -> (defn :: Nil) => S(mn -> defn)
@@ -77,8 +77,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         this.defns ++ that.defns
       )
     }
+    private def addprt(prt: TypeName): MethodDefs =
+      copy(decls = decls.view.mapValues(mt => mt.copyMT(prts = prt :: mt.prts)).toMap)
     def propagate(top: Bool)(implicit raise: Raise): MethodDefs =
-      prts.map(_.propagate(false)).reduceOption(_.&(_, tn)(defns.keySet))
+      prts.map(_.propagate(false)).reduceOption(_.&(_)(tn, defns.keySet)).map(_.addprt(tn))
         .foldRight(if (top) copy(prts = Nil, decls = Map.empty, defns = Map.empty) else copy(prts = Nil))(_ ++ _)
   }
   
@@ -561,9 +563,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           (if (decls.isDefinedAt(nme) && !defns.isDefinedAt(nme)) decls.get(nme) else N).orElse(declsInherit.get(nme))
             .foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
-          if (!declsInherit.get(nme).exists(_.prts === mt.prts))
-            ctx.mthenv += fullName -> ctx.getmth(fullName).getOrElse(mthTy)
-          if (!decls.isDefinedAt(nme) && !declsInherit.isDefinedAt(nme)) registerImplicit(nme, mthTy)
+          if (!declsInherit.get(nme).exists(decl => decl.single && decl.prts.last === mt.prts.head))
+            ctx.mthenv += fullName -> mthTy
         }
         decls.foreach { case nme -> mt =>
           implicit val prov: TypeProvenance = mt.prov
@@ -584,10 +585,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val fullName = s"${tn.name}.${nme}"
           println(s">> Checking subsumption for inferred type of $nme : $mt")
           decls.get(nme).orElse((declsInherit.get(nme), defnsInherit.get(nme)) match {
-            case (S(decl), S(defn)) if decl.prts === defn.prts ||
-                defn.prts.forall(bn => decl.prts.iterator.map(bn2 => Var(bn2.name.decapitalize)).toSet
-                .subsetOf(ctx.allBaseClassesOf(bn.name))) =>
-              S(decl)
+            case (S(decl), S(defn)) if defn.prts.toSet.subsetOf(decl.prts.toSet) => S(decl)
             case (_, S(defn)) =>
               err(msg"Overriding method ${defn.prts.headOption.fold("")(_.name)}.${nme} without explicit declaration is not allowed."
                   -> mt.prov.loco ::
