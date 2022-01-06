@@ -93,7 +93,7 @@ def f (x y z) = add x y
 //│ ║  l.91: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   term App(App(Var(x), Tup(_: Var(y))), Tup(_: Var(z))) is not a valid pattern
 
 f 1

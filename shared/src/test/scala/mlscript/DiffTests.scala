@@ -275,7 +275,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             )
 
-            var results: Str \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
+            var results: (Str, Bool) \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
                 file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
@@ -375,9 +375,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
 
             // If code generation fails, show the error message.
             results match {
-              case L(err) =>
-                output("Code generation crashed with the following error:")
-                output(s"  $err")
+              case L((message, crashed)) =>
+                if (crashed)
+                  output("Code generation crashed:")
+                else
+                  output("Code generation met an error:")
+                output(s"  $message")
               case _ => ()
             }
             

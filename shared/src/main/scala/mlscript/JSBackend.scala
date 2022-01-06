@@ -5,7 +5,7 @@ import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
-import mlscript.codegen.Scope
+import mlscript.codegen.{CodeGenError, Scope}
 
 class JSBackend {
   // This object contains all classNames.
@@ -68,12 +68,12 @@ class JSBackend {
     case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
     // Others are not supported yet.
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf =>
-      throw new Error(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
+      throw CodeGenError(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term): Ls[JSPattern] = t match {
     case Tup(params) => params map { case _ -> p => translatePattern(p) }
-    case _           => throw new Error(s"term $t is not a valid parameter list")
+    case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
   // This will be changed during code generation.
@@ -177,7 +177,7 @@ class JSBackend {
     case Tup(terms) =>
       JSArray(terms map { case (_, term) => translateTerm(term) })
     case _: Bind | _: Test =>
-      throw new Error(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
+      throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
@@ -230,7 +230,7 @@ class JSBackend {
           // For classes with type parameters, we just erase the type parameters.
           TypeName(name)
         } else {
-          throw new Error(s"type $name is not defined")
+          throw CodeGenError(s"type $name is not defined")
         }
     }
 
@@ -261,7 +261,7 @@ class JSBackend {
               case N              => TypeName(name)
               case S(Nil -> body) => substitute(body, subs)
               case S(tparams -> _) =>
-                throw new Error(
+                throw CodeGenError(
                   s"type $name expects ${tparams.length} type parameters but nothing provided"
                 )
             }
@@ -299,7 +299,7 @@ class JSBackend {
           // The base class is a type alias with parameters.
           // Oops, we don't support this.
           case S(tparams -> _) =>
-            throw new Error(
+            throw CodeGenError(
               s"type $name expects ${tparams.length} type parameters but nothing provided"
             )
         }
@@ -328,7 +328,7 @@ class JSBackend {
           if (cls1 === cls2) {
             fields1 ++ fields2 -> S(cls1)
           } else {
-            throw new Exception(s"Cannot have two base classes: $cls1, $cls2")
+            throw CodeGenError(s"Cannot have two base classes: $cls1, $cls2")
           }
       }
     // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
@@ -343,7 +343,7 @@ class JSBackend {
     // But it is not achievable in JavaScript.
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
         Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
-      throw new Error(s"unable to derive from type $ty")
+      throw CodeGenError(s"unable to derive from type $ty")
   }
 
   // Translate MLscript class declaration to JavaScript class declaration.
@@ -361,7 +361,7 @@ class JSBackend {
       // Case 2: has a base class and fields.
       case fields -> S(clsNme) =>
         nameClsMap get clsNme match {
-          case N      => throw new Error(s"Class $clsNme is not defined.")
+          case N      => throw CodeGenError(s"Class $clsNme is not defined.")
           case S(cls) => JSClassDecl(name, fields.distinct, S(cls), members)
         }
     }
@@ -452,10 +452,12 @@ class JSTestBackend extends JSBackend {
 
   private var withConstructInserted = false
 
-  def apply(pgrm: Pgrm): Str \/ TestCode = try {
+  // TODO: make the return type more readable
+  def apply(pgrm: Pgrm): (Str, Bool) \/ TestCode = try {
     R(generate(pgrm))
   } catch {
-    case e: Throwable => L(e.getMessage())
+    case e: CodeGenError => L(e.getMessage() -> false) // Intended errors
+    case e: Throwable => L(e.getMessage() -> true) // Unexpected crashes
   }
 
   // Generate code for test.

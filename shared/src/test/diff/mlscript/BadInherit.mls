@@ -10,7 +10,7 @@ class Child: Parent1 & Parent2
 //│ ╔══[ERROR] class Child cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Cannot have two base classes: Parent1, Parent2
 
 type Child = Parent1 & Parent2
@@ -51,7 +51,7 @@ class Child2: Parent1 & Sly1
 //│ ║  l.49: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Cannot have two base classes: Parent1, Parent2
 
 :e
@@ -61,7 +61,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ║  l.59: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Cannot have two base classes: Parent1, Parent2
 
 :e
@@ -69,7 +69,7 @@ class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
 //│ ║  l.68: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Class A is not defined.
 
 class Crazy[A]: { name: A }
@@ -116,21 +116,21 @@ class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
 //│ ║  l.115: 	class Stupid: Parent1 | Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type Union(TypeName(Parent1),TypeName(Parent2))
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
 //│ ║  l.122: 	class Stupid: Parent1 -> Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type Function(Tuple(List((None,TypeName(Parent1)))),TypeName(Parent2))
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
 //│ ║  l.129: 	class Stupid: ~Parent1
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type Neg(TypeName(Parent1))
 
 :e // TODO don't report several times
@@ -146,7 +146,7 @@ type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
 //│ ║  l.139: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Class Cycle2 is not defined.
 
 :e
@@ -172,7 +172,7 @@ class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.171: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type Neg(TypeName(Cycle))
 
 
@@ -222,7 +222,7 @@ F{}
 //│ ║  l.217: 	F{}
 //│ ╙──       	^
 //│ res: error
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   Class nothing is not defined.
 
 
@@ -245,7 +245,7 @@ class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
 //│ ║  l.244: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type Union(Record(List()),Record(List()))
 
 
@@ -267,6 +267,6 @@ class Class3B: Class3A & 'a
 //│ ║  l.265: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
-//│ Code generation crashed with the following error:
+//│ Code generation met an error:
 //│   unable to derive from type 'a
 
