@@ -4,11 +4,13 @@ n = 123 with { x = 1 }
 //│ function withConstruct(target, fields) {
 //│   if (typeof target === "string" || typeof target === "number" || typeof target === "boolean" || typeof target === "bigint" || typeof target === "symbol") {
 //│     return Object.assign(target, fields);
-//│   }else {
-//│     const copy = Object.assign({}, target, fields);
-//│     Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
-//│     return copy;
 //│   }
+//│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
+//│     return Object.assign(target.valueOf(), target, fields);
+//│   }
+//│   const copy = Object.assign({}, target, fields);
+//│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+//│   return copy;
 //│ }
 //│ function id(x) {
 //│   return x;
@@ -50,10 +52,18 @@ n = 123 with { x = 1 }
 //│ n: 123 & {x: 1}
 //│  = [Number: 123] { x: 1 }
 
-:js
-n + 1
-//│ // Query 1
-//│ res = n + 1;
-//│ // End of generated code
+// `withConstruct` should works on extended primitive values.
+m = n with { y = 2 }
+//│ m: 123 & {x: 1, y: 2}
+//│  = [Number: 123] { x: 1, y: 2 }
+
+// `m` should work well with following operations.
+m.x
+m.y
+m + 1
+//│ res: 1
+//│    = 1
+//│ res: 2
+//│    = 2
 //│ res: int
 //│    = 124

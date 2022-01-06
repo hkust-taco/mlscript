@@ -219,6 +219,8 @@ abstract class JSExpr extends JSCode {
 
   def typeof(): JSUnary = JSUnary("typeof", this)
 
+  def instanceOf(rhs: JSExpr): JSBinary = JSBinary("instanceof", this, rhs)
+
   def +(rhs: JSExpr): JSBinary = binary("+", rhs)
 
   def ??(rhs: JSExpr): JSBinary = binary("??", rhs)
