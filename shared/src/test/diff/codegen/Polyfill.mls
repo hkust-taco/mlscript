@@ -50,6 +50,14 @@ n = 123 with { x = 1 }
 //│ n: 123 & {x: 1}
 //│  = [Number: 123] { x: 1 }
 
+:js
+n + 1
+//│ // Query 1
+//│ res = n + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 124
+
 // `withConstruct` should works on extended primitive values.
 m = n with { y = 2 }
 //│ m: 123 & {x: 1, y: 2}
