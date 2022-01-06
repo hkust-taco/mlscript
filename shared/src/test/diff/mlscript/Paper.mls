@@ -119,7 +119,7 @@ tryDiv 1 0
 //│ res: None | Some[int]
 //│    = Uncaught ReferenceError: div is not defined
 //│          at REPL8:1:39
-//│          at REPL14:1:85
+//│          at REPL14:1:84
 //│ res: None | Some[int]
 //│    = None {}
 

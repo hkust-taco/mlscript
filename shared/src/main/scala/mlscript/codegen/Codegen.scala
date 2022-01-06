@@ -54,6 +54,11 @@ class SourceCode(val lines: Ls[SourceLine]) {
       }
     case Nil => this
   }
+
+  def isSingleLine: Bool = lines.length == 1
+
+  def isMultipleLine: Bool = lines.length > 1
+
   def isEmpty: Bool = lines.isEmpty
   def indented: SourceCode = new SourceCode(lines map { _.indented })
   def parenthesized(implicit run: Bool = true): SourceCode =
@@ -129,7 +134,11 @@ object SourceCode {
   def record(entries: Ls[SourceCode]): SourceCode =
     entries match {
       case Nil         => SourceCode("{}")
-      case sole :: Nil => SourceCode("{ ") + sole + SourceCode(" }")
+      case entry :: Nil => if (entry.isMultipleLine) {
+        SourceCode("{") + entry.indented + SourceCode("}")
+      } else {
+        SourceCode("{ ") ++ entry ++ SourceCode(" }")
+      }
       case _ =>
         (entries.zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
           acc + (if (index + 1 === entries.length) { entry }
@@ -143,7 +152,11 @@ object SourceCode {
   def array(entries: Ls[SourceCode]): SourceCode =
     entries match {
       case Nil         => SourceCode("[]")
-      case sole :: Nil => SourceCode("[") + sole + SourceCode("]")
+      case entry :: Nil => if (entry.isMultipleLine) {
+        SourceCode("[") + entry.indented + SourceCode("]")
+      } else {
+        SourceCode("[") ++ entry ++ SourceCode("]")
+      }
       case _ =>
         (entries.zipWithIndex.foldLeft(SourceCode("[")) { case (acc, (entry, index)) =>
           acc + (if (index + 1 === entries.length) { entry }

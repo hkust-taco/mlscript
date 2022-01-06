@@ -59,8 +59,8 @@ def foo({ a = "hey" }: { a: string}) = 0
 //│ ║  l.51: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ╙──      	              ^^^^^
 //│ foo: {a: string} -> 0
-//│    = const foo4 = ({  a:   }) => 0; res = foo4;
-//│                            ^
+//│    = const foo4 = ({ a:  }) => 0; res = foo4;
+//│                          ^
 //│      
 //│      Uncaught SyntaxError: Unexpected token '}'
 

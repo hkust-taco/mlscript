@@ -87,9 +87,7 @@ trait T: { x: int }
 T { x = 0 }
 //│ Defined trait T
 //│ // Query 1
-//│ res = { 
-//│ x: 0
-//│  };
+//│ res = { x: 0 };
 //│ // End of generated code
 //│ res: {x: 0} & t
 //│    = { x: 0 }
@@ -98,9 +96,7 @@ T { x = 0 }
 :js
 A { a = 0 }
 //│ // Query 1
-//│ res = new A({ 
-//│ a: 0
-//│  });
+//│ res = new A({ a: 0 });
 //│ // End of generated code
 //│ res: A & {a: 0}
 //│    = A { a: 0 }
@@ -129,6 +125,15 @@ f 0
 //│ res: anything
 //│    = {}
 
+// Rcd: Sole
+:js
+{ x = 0 }
+//│ // Query 1
+//│ res = { x: 0 };
+//│ // End of generated code
+//│ res: {x: 0}
+//│    = { x: 0 }
+
 // Rcd: Flat
 :js
 { x = 0; y = 0 }
@@ -146,9 +151,7 @@ f 0
 { x = { y = 0 }; z = 0 }
 //│ // Query 1
 //│ res = {
-//│   x: { 
-//│   y: 0
-//│    },
+//│   x: { y: 0 },
 //│   z: 0
 //│ };
 //│ // End of generated code
@@ -160,12 +163,12 @@ f 0
 { x = { y = { a = 0; b = "s" } }; w = 0; a = (0, 0); z }
 //│ // Query 1
 //│ res = {
-//│   x: { 
-//│   y: {
-//│     a: 0,
-//│     b: "s"
-//│   }
-//│    },
+//│   x: {
+//│     y: {
+//│       a: 0,
+//│       b: "s"
+//│     }
+//│   },
 //│   w: 0,
 //│   a: [
 //│     0,
@@ -193,11 +196,7 @@ f 0
 :js
 (if true then { x = 0 } else { x = 1 }).x
 //│ // Query 1
-//│ res = (true ? { 
-//│ x: 0
-//│  } : { 
-//│ x: 1
-//│  }).x;
+//│ res = (true ? { x: 0 } : { x: 1 }).x;
 //│ // End of generated code
 //│ res: 0 | 1
 //│    = 0
@@ -271,9 +270,7 @@ case A { a = 0 } of
   | B -> "B"
   }
 //│ // Query 1
-//│ res = temp1 = new A({ 
-//│ a: 0
-//│  }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
+//│ res = temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })();
 //│ // End of generated code

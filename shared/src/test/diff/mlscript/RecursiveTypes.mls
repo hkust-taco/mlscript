@@ -330,37 +330,44 @@ f
 //    though it *is* still possible to call this function wtihout errors,
 //    using a bottom-typed argument.
 
+// TODO: This causes `Maximum call stack size exceeded`.
 :e
 f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.334: 	f 1
+//│ ║  l.335: 	f 1
 //│ ║         	^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into integer literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.334: 	f 1
+//│ ║  l.335: 	f 1
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | 1 | 'a)\a & {a: int} as 'a)
-//│    = Uncaught TypeError: Number.prototype.valueOf requires that 'this' be a Number
-//│          at Number.valueOf (<anonymous>)
-//│          at f (REPL48:1:21)
+//│    = Uncaught RangeError: Maximum call stack size exceeded
+//│          at f (REPL48:1:43)
 //│          at f (REPL48:1:27)
-//│          at f1 (REPL49:1:28)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
+//│          at f (REPL48:1:27)
 
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.355: 	f { a = 1 }
+//│ ║  l.362: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into record literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.355: 	f { a = 1 }
+//│ ║  l.362: 	f { a = 1 }
 //│ ║         	  ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -378,13 +385,13 @@ f infina
 //│ infina: 0 & {a: 'a} as 'a
 //│       = Uncaught ReferenceError: Cannot access 'infina' before initialization
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.377: 	f infina
+//│ ║  l.384: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into reference with expected type `(~{a: ?a} | {a: ?b})\a`
-//│ ║  l.377: 	f infina
+//│ ║  l.384: 	f infina
 //│ ║         	  ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.320: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -410,13 +417,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.411: 	r.a
+//│ ║  l.418: 	r.a
 //│ ║         	^^^
 //│ ╟── expression of type `1` does not have field 'a'
-//│ ║  l.401: 	r = f 1
+//│ ║  l.408: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.411: 	r.a
+//│ ║  l.418: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│    = Uncaught ReferenceError: r7 is not defined
