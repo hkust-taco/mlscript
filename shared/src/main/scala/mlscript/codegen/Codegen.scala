@@ -194,6 +194,7 @@ final case class JSObjectPattern(properties: Ls[Str -> Opt[JSPattern]]) extends 
   def toSourceCode: SourceCode = SourceCode.record(
     properties
       .map {
+        case name -> Some(JSWildcardPattern()) => SourceCode(name)
         case name -> Some(subPattern) =>
           SourceCode(s"$name: ") ++ subPattern.toSourceCode
         case name -> N => SourceCode(name)
