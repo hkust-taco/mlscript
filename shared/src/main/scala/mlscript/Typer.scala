@@ -610,7 +610,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 case R(td) => td.kind match {
                   case Cls => clsNameToNomTag(td)(tp(tyLoc, "class tag"), ctx)
                   case Trt => trtNameToNomTag(td)(tp(tyLoc, "trait tag"), ctx)
-                  case Als => err(msg"Type alias $name cannot be used as a type tag", tyLoc)(raise, tpr)
+                  case Als => err(
+                    msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise, tpr)
                 }
                 case L(_) => e()
               }
