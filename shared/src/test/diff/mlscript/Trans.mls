@@ -63,14 +63,6 @@ res: number
 //│ res: int
 //│ res: number
 
-// FIXME
 42: number
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.67: 	42: number
-//│ ║        	^^
-//│ ╟── expression of type `42` does not match type `number`
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.67: 	42: number
-//│ ╙──      	    ^^^^^^
 //│ res: number
 

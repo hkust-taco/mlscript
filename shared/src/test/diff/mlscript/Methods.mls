@@ -289,3 +289,34 @@ class H: D & E
 ((H{}): D).(D.G)
 //│ res: 1
 
+
+
+class Fee
+    method F: 1 | 2
+//│ Defined class Fee
+//│ Declared Fee.F: Fee -> (1 | 2)
+
+trait Fee2
+    method F: 2 | 3
+//│ Defined trait Fee2
+//│ Declared Fee2.F: fee2 -> (2 | 3)
+
+class Ber: Fee & Fee2
+//│ Defined class Ber
+
+Ber.F
+//│ res: (Ber & fee2) -> 2
+
+:e
+Ber
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.311: 	Ber
+//│ ║         	^^^
+//│ ╟── Note that class Ber is abstract:
+//│ ║  l.304: 	class Ber: Fee & Fee2
+//│ ║         	      ^^^^^^^^^^^^^^^
+//│ ╟── Hint: method F is abstract
+//│ ║  l.304: 	class Ber: Fee & Fee2
+//│ ╙──       	      ^^^^^^^^^^^^^^^
+//│ res: error
+

@@ -261,10 +261,10 @@ trait TermImpl extends StatementImpl { self: Term =>
 private class NotAType(val trm: Term) extends Throwable
 
 trait LitImpl { self: Lit =>
-  def baseClass: Var = this match {
-    case _: IntLit => Var("int")
-    case _: StrLit => Var("string")
-    case _: DecLit => Var("number")
+  def baseClasses: Set[Var] = this match {
+    case _: IntLit => Set.single(Var("int")) + Var("number")
+    case _: StrLit => Set.single(Var("string"))
+    case _: DecLit => Set.single(Var("number"))
   }
 }
 

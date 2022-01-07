@@ -594,7 +594,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(r.fields.mapValues(rec))(tp(r.toLoc, "extension record")))(tp(ty.toLoc, "extension type"))
-      case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
+      case Literal(lit) => ClassTag(lit, lit.baseClasses)(tp(ty.toLoc, "literal type"))
       case TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tp(tyLoc, "type reference")
@@ -786,7 +786,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case lit: Lit => ClassTag(lit, Set.single(lit.baseClass))(prov)
+      case lit: Lit => ClassTag(lit, lit.baseClasses)(prov)
       case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
@@ -932,7 +932,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case Case(pat, bod, rest) =>
       val patTy = pat match {
         case lit: Lit =>
-          ClassTag(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
+          ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
         case Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
