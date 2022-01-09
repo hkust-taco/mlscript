@@ -6,6 +6,7 @@ import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
 import mlscript.codegen.{CodeGenError, Scope}
+import javax.xml.transform.Source
 
 class JSBackend {
   // This object contains all classNames.
@@ -501,23 +502,34 @@ class JSTestBackend extends JSBackend {
         }
       }
 
+    val zeroWidthSpace = JSLit("\"\\u200B\"")
+    val catchClause = JSCatchClause(
+      JSIdent("e"),
+      (zeroWidthSpace + JSIdent("e") + zeroWidthSpace).log() :: Nil
+    )
+
     // Generate statements.
-    val queryStmts: Ls[Ls[JSStmt]] =
+    val queries: Ls[Opt[JSLetDecl] -> Ls[JSStmt]] =
       otherStmts.flatMap {
-        // const <name> = <expr>;
-        // <name>;
+        // let <name>;
+        // try { <name> = <expr>; res = <name>; }
+        // catch (e) { console.log(e); }
         case Def(_, mlsName, L(body)) =>
           val translatedBody = translateTerm(body)(topLevelScope)
           val jsName = topLevelScope declare mlsName
           S(
-            topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
-              (resultIdent := JSIdent(jsName)) :: Nil
+            S(JSLetDecl.from(jsName :: topLevelScope.getTempVars())) ->
+             ((JSIdent(jsName) := translatedBody) ::
+                (resultIdent := JSIdent(jsName)) ::
+                Nil)
           )
         // Ignore type declarations.
         case Def(_, _, R(_)) => N
-        // Just `<expr>;`
+        // try { res = <expr>; }
+        // catch (e) { console.log(e); }
         case term: Term =>
-          S((resultIdent := translateTerm(term)(topLevelScope)) :: Nil)
+          val body = translateTerm(term)(topLevelScope)
+          S(topLevelScope.emitTempVarDecls() -> ((resultIdent := body) :: Nil))
       }
 
     // If this is the first time, insert the declaration of `res`.
@@ -537,14 +549,21 @@ class JSTestBackend extends JSBackend {
 
     TestCode(
       SourceCode.fromStmts(prelude).toLines,
-      queryStmts map {
-        SourceCode.fromStmts(_).toLines
+      queries map { case (decls -> stmts) =>
+        val prelude = decls match {
+          case S(stmt) => stmt.toSourceCode.toLines
+          case N       => Nil
+        }
+        val code = SourceCode.fromStmts(stmts).toLines
+        Query(prelude, code)
       }
     )
   }
 }
 
-final case class TestCode(prelude: Ls[Str], queries: Ls[Ls[Str]])
+final case class Query(prelude: Ls[Str], code: Ls[Str])
+
+final case class TestCode(prelude: Ls[Str], queries: Ls[Query])
 
 object JSBackend {
   private def inspectTerm(t: Term): Str = t match {

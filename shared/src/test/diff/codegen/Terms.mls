@@ -106,7 +106,8 @@ A { a = 0 }
 def f x = x
 f 0
 //│ // Query 1
-//│ const f = (x) => x;
+//│ let f;
+//│ f = (x) => x;
 //│ res = f;
 //│ // Query 2
 //│ res = f(0);
@@ -218,7 +219,8 @@ let x = 0 in x + 1
 :js
 def f x = case x of { }
 //│ // Query 1
-//│ const f1 = (x) => {
+//│ let f1;
+//│ f1 = (x) => {
 //│   let temp;
 //│   return (temp = x, (function () {
 //│     throw new Error("non-exhaustive case expression");
@@ -233,7 +235,7 @@ def f x = case x of { }
 :js
 case 0 of { _ -> 1 }
 //│ // Query 1
-//│ res = 0, 1;
+//│ res = (0, 1);
 //│ // End of generated code
 //│ res: 1
 //│    = 1
@@ -258,7 +260,8 @@ case 0 of
   | _ -> 0
   }
 //│ // Query 1
-//│ res = temp = 0, temp instanceof A ? 1 : temp instanceof B ? 2 : 0;
+//│ let temp;
+//│ res = (temp = 0, temp instanceof A ? 1 : temp instanceof B ? 2 : 0);
 //│ // End of generated code
 //│ res: 0 | 1 | 2
 //│    = 0
@@ -270,9 +273,10 @@ case A { a = 0 } of
   | B -> "B"
   }
 //│ // Query 1
-//│ res = temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
+//│ let temp1;
+//│ res = (temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
 //│   throw new Error("non-exhaustive case expression");
-//│ })();
+//│ })());
 //│ // End of generated code
 //│ res: "A" | "B"
 //│    = 'A'

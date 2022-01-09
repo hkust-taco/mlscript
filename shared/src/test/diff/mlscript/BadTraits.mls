@@ -40,63 +40,67 @@ T a
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	             ^
 //│ res: A & t | error
-//│    = Uncaught ReferenceError: T is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T is not defined
 
 :e
 T A
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	^^^
 //│ ╟── expression of type `anything -> A` does not match type `A`
-//│ ║  l.46: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: anything -> A & t | error
-//│    = Uncaught ReferenceError: T is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T is not defined
 
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.60: 	T (B {})
+//│ ║  l.62: 	T (B {})
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ║  l.60: 	T (B {})
+//│ ║  l.62: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: B & t | error
-//│    = Uncaught ReferenceError: T is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T is not defined
 
 def t = T error
 //│ t: nothing
-//│  = Uncaught ReferenceError: T is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T is not defined
 
 t: nothing
 //│ res: nothing
-//│    = Uncaught ReferenceError: t is not defined
+//│    = undefined
 
 type Als = A & B
 //│ Defined type alias Als
 
 t: Als
 //│ res: nothing
-//│    = Uncaught ReferenceError: t is not defined
+//│    = undefined
 
 
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.90: 	class D0: T
+//│ ║  l.94: 	class D0: T
 //│ ╙──      	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.96: 	class D1: B & T
-//│ ╙──      	      ^^^^^^^^^
+//│ ║  l.100: 	class D1: B & T
+//│ ╙──       	      ^^^^^^^^^
 
 
 trait S: { x: int }
@@ -113,13 +117,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.114: 	t.x
+//│ ║  l.118: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.109: 	t = s: s
+//│ ║  l.113: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.114: 	t.x
+//│ ║  l.118: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1

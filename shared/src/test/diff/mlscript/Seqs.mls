@@ -42,7 +42,8 @@ Cons 1 Nil
 //│ ║  l.31: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
-//│    = Uncaught TypeError: (intermediate value) is not a function
+//│ Unexpected runtime error
+//│   TypeError: (intermediate value) is not a function
 
 Cons
 //│ res: {head: 'A & 'head, size: int & 'size, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})
@@ -63,10 +64,10 @@ def Cons head tail =
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.64: 	Nil: ListBase[anything]
+//│ ║  l.65: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not match type `nothing`
-//│ ║  l.64: 	Nil: ListBase[anything]
+//│ ║  l.65: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}

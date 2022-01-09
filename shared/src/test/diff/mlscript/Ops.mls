@@ -35,10 +35,7 @@
 //│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
-//│    = res = |>(1)(2) || 3;
-//│            ^
-//│      
-//│      Uncaught SyntaxError: Unexpected token '|'
+//│    = 5
 
 :p
 true || false && true || false
@@ -52,8 +49,8 @@ true || false && true || false
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.54:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.51:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.58:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.55:1: - 1

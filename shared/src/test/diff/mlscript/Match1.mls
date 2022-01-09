@@ -10,8 +10,8 @@ case 1 of { }
 //│ ║       	     ^
 //│ ╙── expression of type `1` does not match type `nothing`
 //│ res: nothing
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL3:1:40
+//│ Unexpected runtime error
+//│   Error: non-exhaustive case expression
 
 :e
 case 1 of { A -> 0 }
@@ -19,20 +19,22 @@ case 1 of { A -> 0 }
 //│ ║  l.17: 	case 1 of { A -> 0 }
 //│ ╙──      	            ^
 //│ res: error
-//│    = Uncaught ReferenceError: A is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: A is not defined
 
 :e
 case 1 of { A -> 0 | B -> 1 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.25: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.26: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	            ^
 //│ res: error
-//│    = Uncaught ReferenceError: A is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: A is not defined
 
 :e
 def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.33: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
+//│ ║  l.35: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
 //│  = [Function: f]
@@ -43,7 +45,7 @@ def f = fun x -> case x of
   | Bar -> 1
   }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.42: 	  { Foo -> 0
+//│ ║  l.44: 	  { Foo -> 0
 //│ ╙──      	    ^^^
 //│ f: error -> error
 //│  = [Function: f1]
@@ -51,7 +53,7 @@ def f = fun x -> case x of
 :e
 def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.52: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ║  l.54: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
 //│  = [Function: f2]

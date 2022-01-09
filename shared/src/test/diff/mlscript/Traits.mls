@@ -34,15 +34,16 @@ D
 
 error: A & B
 //│ res: {x: int, y: string} & a & b
-//│    = Uncaught ReferenceError: error is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: error is not defined
 
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.40: 	def dv = D{}
+//│ ║  l.41: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.40: 	def dv = D{}
+//│ ║  l.41: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
 //│   = D { x: undefined }
@@ -54,16 +55,16 @@ def dv = D { x = 0; y = "hello" }
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	dv: nothing
+//│ ║  l.56: 	dv: nothing
 //│ ║        	^^
 //│ ╟── expression of type `D with {x: ?x, y: ?y}` does not match type `nothing`
-//│ ║  l.50: 	def dv = D { x = 0; y = "hello" }
+//│ ║  l.51: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.55: 	dv: nothing
+//│ ║  l.56: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.55: 	dv: nothing
+//│ ║  l.56: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
 //│    = D { x: 0 }
@@ -75,13 +76,13 @@ dv: A & B
 :e
 dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.76: 	dv: A & B: nothing
+//│ ║  l.77: 	dv: A & B: nothing
 //│ ║        	^^
 //│ ╟── expression of type `{x: int, y: string} & a & b` does not match type `nothing`
-//│ ║  l.76: 	dv: A & B: nothing
+//│ ║  l.77: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.76: 	dv: A & B: nothing
+//│ ║  l.77: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
 //│    = D { x: 0 }
@@ -96,10 +97,10 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	E{}
+//│ ║  l.98: 	E{}
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.97: 	E{}
+//│ ║  l.98: 	E{}
 //│ ╙──      	 ^^
 //│ res: E & {x: nothing} | error
 //│    = E {}
@@ -118,30 +119,33 @@ trait T1: C & A
 :e
 def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.119: 	def t = T1 (A { x = 1 })
+//│ ║  l.120: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: 1}` does not match type `~a | C`
-//│ ║  l.119: 	def t = T1 (A { x = 1 })
+//│ ║  l.120: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?a`
-//│ ║  l.119: 	def t = T1 (A { x = 1 })
+//│ ║  l.120: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.115: 	trait T1: C & A
+//│ ║  l.116: 	trait T1: C & A
 //│ ╙──       	          ^
 //│ t: error | {x: 1} & a & t1
-//│  = Uncaught ReferenceError: T1 is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T1 is not defined
 
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│  = Uncaught ReferenceError: T1 is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T1 is not defined
 
 class CA: C & A
 //│ Defined class CA
 
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│  = Uncaught ReferenceError: T1 is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: T1 is not defined
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
@@ -150,10 +154,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.151: 	def c1 = C1 { }
+//│ ║  l.155: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.151: 	def c1 = C1 { }
+//│ ║  l.155: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined }

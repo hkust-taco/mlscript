@@ -55,7 +55,8 @@ res == 4
 :js
 def res = 0
 //│ // Query 1
-//│ const res1 = 0;
+//│ let res1;
+//│ res1 = 0;
 //│ res = res1;
 //│ // End of generated code
 //│ res: 0

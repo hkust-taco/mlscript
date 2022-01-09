@@ -19,11 +19,13 @@ def arg: A | B | C
 
 foo arg
 //│ res: bool | int | string
-//│    = Uncaught ReferenceError: arg is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: arg is not defined
 
 foo (arg with { fC = true })
 //│ res: int | string | true
-//│    = Uncaught ReferenceError: arg is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: arg is not defined
 
 
 def foo x = case x of {
@@ -37,24 +39,26 @@ def foo x = case x of {
 :e
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	foo arg
+//│ ║  l.40: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `A` does not match type `{payload: ?a}`
 //│ ║  l.17: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `A & ?b | B & ?c | C & ?d`
-//│ ║  l.38: 	foo arg
+//│ ║  l.40: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.30: 	  | A -> add x.fA x.payload
+//│ ║  l.32: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.29: 	def foo x = case x of {
+//│ ║  l.31: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
-//│    = Uncaught ReferenceError: arg is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: arg is not defined
 
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
-//│    = Uncaught ReferenceError: arg is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: arg is not defined
 

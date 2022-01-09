@@ -47,7 +47,8 @@ def fn = foo None
 // :d
 fn{} // foo None {}
 //│ res: None
-//│    = Uncaught TypeError: Class constructor None cannot be invoked without 'new'
+//│ Unexpected runtime error
+//│   TypeError: Class constructor None cannot be invoked without 'new'
 
 // :d
 foo (None{})
@@ -88,18 +89,17 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	res 1
+//│ ║  l.90: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.89: 	res 1
+//│ ║  l.90: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.80: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.81: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: 1 | error
-//│    = Uncaught Error: non-exhaustive case expression
-//│          at REPL18:1:156
-//│          at REPL18:1:205
+//│ Unexpected runtime error
+//│   Error: non-exhaustive case expression
 
 
 def funny = fun f -> case f of { Some -> f f }

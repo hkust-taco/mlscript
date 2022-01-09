@@ -98,7 +98,8 @@ error: {A: 1}
 //│ ║  l.96: 	error: {A: 1}
 //│ ╙──      	        ^
 //│ res: {A: 1}
-//│    = Uncaught ReferenceError: error is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: error is not defined
 
 b = Bar2{x = 1}
 //│ b: Bar2 & {x: 1}
@@ -107,10 +108,10 @@ b = Bar2{x = 1}
 :e
 c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.108: 	c = b: Foo2[string]
+//│ ║  l.109: 	c = b: Foo2[string]
 //│ ║         	    ^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.108: 	c = b: Foo2[string]
+//│ ║  l.109: 	c = b: Foo2[string]
 //│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.42: 	class Bar2: Foo2[int] & { x: int }
@@ -137,10 +138,10 @@ d: Foo2['a]
 :e
 d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.138: 	d: Foo2[string]
+//│ ║  l.139: 	d: Foo2[string]
 //│ ║         	^
 //│ ╟── expression of type `string` does not match type `int`
-//│ ║  l.138: 	d: Foo2[string]
+//│ ║  l.139: 	d: Foo2[string]
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.42: 	class Bar2: Foo2[int] & { x: int }

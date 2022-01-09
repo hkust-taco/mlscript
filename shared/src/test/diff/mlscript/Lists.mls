@@ -76,7 +76,8 @@ res.tail.head
 //│ ║  l.68: 	res.tail.head
 //│ ╙──      	^^^
 //│ res: error
-//│    = Uncaught TypeError: Cannot read properties of undefined (reading 'head')
+//│ Unexpected runtime error
+//│   TypeError: Cannot read properties of undefined (reading 'head')
 
 
 
@@ -92,8 +93,8 @@ Cons 2
 
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at REPL18:1:50
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 res.head
 //│ res: 2
@@ -102,13 +103,13 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.103: 	Cons 1 res
+//│ ║  l.104: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
-//│ ║  l.93: 	Cons 2 Nil
+//│ ║  l.94: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `List[?A0]`
-//│ ║  l.103: 	Cons 1 res
+//│ ║  l.104: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
@@ -117,11 +118,11 @@ Cons 1 res
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
 //│ ║       	                                ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.84: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ║  l.85: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
 //│ res: (Cons['A .. 1 | 'A] with {head: 1, tail: 2}) | error
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at REPL18:1:50
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 // Here there used to be a loss of precision in the older with-field approach.
 //    The problem occured when constraining `α8 w/ {head: α5, tail: [α6]}  <!  nil | {head: α2}`
@@ -134,27 +135,29 @@ Cons 1 res
 // 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at REPL18:1:50
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = Uncaught TypeError: Cannot read properties of undefined (reading 'head')
+//│ Unexpected runtime error
+//│   TypeError: Cannot read properties of undefined (reading 'head')
 
 
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at REPL18:1:50
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 Cons 1 (id res)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at REPL18:1:50
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
-//│    = Uncaught TypeError: Cannot read properties of undefined (reading 'head')
+//│ Unexpected runtime error
+//│   TypeError: Cannot read properties of undefined (reading 'head')
 
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
@@ -163,8 +166,8 @@ def Cons head = originalCons { head=0; tail=Nil } with { head }
 
 Cons 1
 //│ res: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
-//│    = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│          at Cons3 (REPL28:1:40)
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 res.head
 //│ res: 1
@@ -172,12 +175,13 @@ res.head
 
 def c = Cons 1
 //│ c: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
-//│  = Uncaught TypeError: Class constructor Cons cannot be invoked without 'new'
-//│        at Cons3 (REPL28:1:40)
+//│ Unexpected runtime error
+//│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
 c.head
 //│ res: 1
-//│    = Uncaught ReferenceError: c1 is not defined
+//│ Unexpected runtime error
+//│   TypeError: Cannot read properties of undefined (reading 'head')
 
 
 
@@ -185,12 +189,14 @@ def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
 //│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
-//│    = Uncaught ReferenceError: c1 is not defined
+//│ Unexpected runtime error
+//│   TypeError: c1 is not a function
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
 //│ c: 'a -> (((Cons['b] with {tail: 'd & ('c | Nil)}) as 'c) & 'l | Nil & 'l) -> (Cons[anything] with {head: 'a, tail: ((Cons[anything] with {tail: 'f | 'e | Nil}) as 'e) & 'l | Nil & 'l})
 //│ res: Cons[anything] with {head: 1, tail: Cons[anything] with {head: 2, tail: Nil}}
-//│    = Uncaught ReferenceError: c1 is not defined
+//│ Unexpected runtime error
+//│   TypeError: c1 is not a function
 
 

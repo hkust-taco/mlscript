@@ -256,6 +256,13 @@ abstract class JSExpr extends JSCode {
     JSSwitchStmt(this, (cases map { case (t, c) => JSSwitchCase(t, c) }).toList)
 
   def log(): JSStmt = JSIdent("console").member("log")(this).stmt
+
+  def embed(parentPrecedence: Int): SourceCode =
+    if (precedence < parentPrecedence) {
+      this.toSourceCode.parenthesized
+    } else {
+      this.toSourceCode
+    }
 }
 
 object JSExpr {
@@ -288,7 +295,7 @@ final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
   def precedence: Int = 3
   def toSourceCode: SourceCode =
-    lhs.toSourceCode ++ SourceCode(" = ") ++ rhs.toSourceCode
+    lhs.embed(precedence) ++ SourceCode(" = ") ++ rhs.embed(precedence)
 }
 
 final case class JSPlaceholderExpr() extends JSExpr {
@@ -528,6 +535,17 @@ final case class JSReturnStmt(value: JSExpr) extends JSStmt {
     SourceCode(
       "return "
     ) ++ value.toSourceCode.clause ++ SourceCode.semicolon
+}
+
+final case class JSTryStmt(block: Ls[JSStmt], handler: JSCatchClause) extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode("try ") ++
+    block.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block ++
+    handler.toSourceCode
+}
+
+final case class JSCatchClause(param: JSIdent, body: Ls[JSStmt]) extends JSCode {
+  def toSourceCode: SourceCode = SourceCode(s" catch (${param.name}) ") ++
+    body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
 }
 
 // Throw statement currently only used in non-exhaustive pattern matchings.

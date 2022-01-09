@@ -22,13 +22,13 @@ test1 1
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
 //│ res: 0 | error
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test1 (REPL2:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 test1 { value = 1 }
 //│ res: 0 | 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test1 (REPL2:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 def mt = MyTrait { value = 1 }
 //│ mt: {value: 1} & myTrait
@@ -36,16 +36,16 @@ def mt = MyTrait { value = 1 }
 
 test1 mt
 //│ res: 0 | 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test1 (REPL2:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 class C1: MyTrait[int]
 //│ Defined class C1
 
 test1 (C1 { value = 1 })
 //│ res: 0 | 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test1 (REPL2:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
@@ -67,8 +67,8 @@ test2 1
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: error
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 :e
 test2 { value = 1 }
@@ -85,23 +85,23 @@ test2 { value = 1 }
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: 1 | error
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 test2 { value = 1; default = "hi" }
 //│ res: "hi" | 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 test2 mt
 //│ res: 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 test2 (C1 { value = 1 })
 //│ res: 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 
 // TODO: ability to declare classes as `final` so they can be assumed _not_ to inherit from a trait?
@@ -123,8 +123,8 @@ test2 (C2 { default = "oops" })
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 // Note: `value` is unused here; would deserve a warning
 def c2 = C2 { value = 1; default = "oops" }
@@ -149,13 +149,13 @@ test2 c2
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 test2 (c2 with { value = 1 })
 //│ res: "oops" | 1
-//│    = Uncaught ReferenceError: MyTrait is not defined
-//│          at test2 (REPL9:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: MyTrait is not defined
 
 
 // Note: if we allowed this, we'd have to be careful in the semantics of trait ctors!
@@ -172,26 +172,29 @@ def strawman: C2 & ~MyTrait[anything]
 
 test2 strawman
 //│ res: string
-//│    = Uncaught ReferenceError: strawman is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: strawman is not defined
 
 strawman: C2
 //│ res: C2
-//│    = Uncaught ReferenceError: strawman is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: strawman is not defined
 
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.182: 	strawman: ~{ value: anything }
+//│ ║  l.184: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `C2 & ~myTrait` does not match type `~{value: anything}`
 //│ ║  l.170: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.182: 	strawman: ~{ value: anything }
+//│ ║  l.184: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.182: 	strawman: ~{ value: anything }
+//│ ║  l.184: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
-//│    = Uncaught ReferenceError: strawman is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: strawman is not defined
 

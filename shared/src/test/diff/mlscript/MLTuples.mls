@@ -18,7 +18,8 @@ tx = t with { x = 1 }
 //│   return copy;
 //│ }
 //│ // Query 1
-//│ const tx = withConstruct(t, { x: 1 });
+//│ let tx;
+//│ tx = withConstruct(t, { x: 1 });
 //│ res = tx;
 //│ // End of generated code
 //│ tx: (1, 2, 3,) & {x: 1}
@@ -34,46 +35,49 @@ trait Hey: { x: int }
 :e
 Hey t
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.35: 	Hey t
+//│ ║  l.36: 	Hey t
 //│ ║        	^^^^^
 //│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
-//│ ║  l.35: 	Hey t
+//│ ║  l.36: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.31: 	trait Hey: { x: int }
+//│ ║  l.32: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
-//│    = Uncaught ReferenceError: Hey is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
-//│    = Uncaught ReferenceError: Hey is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 
 htx.x
 //│ res: 1
-//│    = Uncaught ReferenceError: htx is not defined
+//│ Unexpected runtime error
+//│   TypeError: Cannot read properties of undefined (reading 'x')
 
 f ((a, b, c)) = { a; b; c }
 //│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
-//│  = const f = ([   a,   b,   c ]) => {   a: a,   b: b,   c: c }; res = f;
-//│                                                  ^
-//│    
-//│    Uncaught SyntaxError: Unexpected token ':'
+//│  = 1
 
 f t
 //│ res: {a: 1, b: 2, c: 3}
-//│    = Uncaught ReferenceError: f is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: f is not defined
 
 f tx
 //│ res: {a: 1, b: 2, c: 3}
-//│    = Uncaught ReferenceError: f is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: f is not defined
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
-//│    = Uncaught ReferenceError: f is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: f is not defined
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
@@ -84,47 +88,48 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	f t
+//│ ║  l.87: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.83: 	f t
+//│ ║  l.87: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.78: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	f tx
+//│ ║  l.88: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.84: 	f tx
+//│ ║  l.88: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.78: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	f htx
+//│ ║  l.89: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~hey | (?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.85: 	f htx
+//│ ║  l.89: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.78: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
-//│    = Uncaught ReferenceError: htx is not defined
+//│ Unexpected runtime error
+//│   TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -134,10 +139,11 @@ g arg = case arg of { Hey -> arg.x | _ -> () }
 g htx
 g tx
 //│ res: () | 1
-//│    = Uncaught ReferenceError: htx is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 //│ res: () | 1
-//│    = Uncaught ReferenceError: Hey is not defined
-//│          at g (REPL17:1:36)
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
@@ -146,46 +152,51 @@ g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 g htx
 g (tx with { y = 2 })
 //│ res: 1
-//│    = Uncaught ReferenceError: htx is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 //│ res: 1 | 2
-//│    = Uncaught ReferenceError: Hey is not defined
-//│          at g1 (REPL20:1:37)
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.155: 	g tx
+//│ ║  l.162: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.155: 	g tx
+//│ ║  l.162: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.142: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.142: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
-//│    = Uncaught ReferenceError: Hey is not defined
-//│          at g1 (REPL20:1:37)
+//│ Unexpected runtime error
+//│   ReferenceError: Hey is not defined
 
 
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
-//│    = Uncaught ReferenceError: bool is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: bool is not defined
 
 if bool then (1,) else (2, 3)
 //│ res: anything
-//│    = Uncaught ReferenceError: bool is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: bool is not defined
 
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: {b: 2 | 3}
-//│    = Uncaught ReferenceError: bool is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: bool is not defined
 
 if bool then (1,) else fun x -> x
 //│ res: anything
-//│    = Uncaught ReferenceError: bool is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: bool is not defined
 

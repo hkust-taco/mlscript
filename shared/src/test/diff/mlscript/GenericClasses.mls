@@ -117,7 +117,8 @@ Foo2
 
 error: Foo2[int]
 //│ res: Foo2[int]
-//│    = Uncaught ReferenceError: error is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: error is not defined
 
 f = fun x -> case x of { Foo2 -> x }
 //│ f: (Foo2[?] & 'a) -> 'a
@@ -129,7 +130,8 @@ f (Foo2 {})
 
 error: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[anything .. nothing] & 'a) -> 'a
-//│    = Uncaught ReferenceError: error is not defined
+//│ Unexpected runtime error
+//│   ReferenceError: error is not defined
 
 f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[anything .. nothing] & 'a) -> 'a

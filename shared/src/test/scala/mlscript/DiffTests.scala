@@ -77,8 +77,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
-      noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false, false, false, false)
+      noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
+      expectRuntimeError: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false,
+      false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -275,7 +277,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             )
 
-            var results: (Str, Bool) \/ Opt[Ls[Ls[Str]]] = if (!allowTypeErrors &&
+            var results: (Str, Bool) \/ Opt[Ls[Str \/ Str]] = if (!allowTypeErrors &&
                 file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
@@ -286,9 +288,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                       output(line)
                     }
                   }
-                  testCode.queries.zipWithIndex foreach { case (queryLines, i) =>
+                  testCode.queries.zipWithIndex foreach { case (query, i) =>
                     output(s"// Query ${i + 1}")
-                    queryLines foreach { output(_) }
+                    query.prelude foreach { output(_) }
+                    query.code foreach { output(_) }
                   }
                   output("// End of generated code")
                 }
@@ -298,14 +301,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     case Nil => ()
                     case lines => host.execute(lines mkString " ")
                   }
-                  S(testCode.queries map { queryLines =>
-                    val q = queryLines mkString " "
+                  S(testCode.queries map { query =>
                     // Useful for find out what is really happening.
                     // println(s"In test $file:")
                     // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
-                    val res = host.query(q)
+                    val res = host.query(query.prelude.mkString(""), query.code.mkString(""))
                     // println(s"Response: ${JSLit.makeStringLiteral(res)}")
-                    res.split('\n').toList
+                    res
                   })
                 } else {
                   N
@@ -318,9 +320,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             def showResult(prefixLength: Int) = {
               results match {
                 case R(S(head :: next)) =>
-                  head.zipWithIndex foreach { case (s, i) =>
-                    if (i == 0) output(" " * prefixLength + "= " + s)
-                    else output(" " * (prefixLength + 2) + s)
+                  val text = head match {
+                    case L(err) =>
+                      output("Unexpected runtime error")
+                      err.split('\n') foreach { s => output("  " + s) }
+                    case R(result) =>
+                      result.split('\n').zipWithIndex foreach { case (s, i) =>
+                        if (i == 0) output(" " * prefixLength + "= " + s)
+                        else output(" " * (prefixLength + 2) + s)
+                      }
                   }
                   results = R(S(next))
                 case _ => ()
@@ -430,6 +438,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
 
     private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
     private val stdout = new BufferedReader(new InputStreamReader(proc.getInputStream))
+    private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
 
     skipUntilPrompt()
 
@@ -442,13 +451,21 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       ()
     }
 
-    private def consumeUntilPrompt(): Str = {
+    private def consumeUntilPrompt(): Str \/ Str = {
       val buffer = new StringBuilder()
       while (!buffer.endsWith("\n> ")) {
         buffer.append(stdout.read().toChar)
       }
       buffer.delete(buffer.length - 3, buffer.length)
-      buffer.toString()
+      val reply = buffer.toString()
+      val begin = reply.indexOf(0x200B)
+      val end = reply.lastIndexOf(0x200B)
+      if (begin >= 0 && end >= 0)
+        // `console.log` inserts a space between every two arguments,
+        // so + 1 and - 1 is necessary to get correct length.
+        L(reply.substring(begin + 1, end))
+      else
+        R(reply)
     }
 
     private def send(code: Str): Unit = {
@@ -456,9 +473,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       stdin.flush()
     }
 
-    def query(code: Str): Str = {
-      send(code)
-      consumeUntilPrompt()
+    def query(prelude: Str, code: Str): Str \/ Str = {
+      val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+      send(wrapped)
+      consumeUntilPrompt() flatMap { _ =>
+        send("res")
+        consumeUntilPrompt()
+      }
     }
 
     def execute(code: Str): Unit = {
