@@ -52,13 +52,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def unapply(mt: MethodType): S[(Int, SimpleType, List[TypeName])] = S((mt.level, mt.body, mt.parents))
   }
 
-  class AbstractConstructor(val absMths: Set[TypeName])(body: SimpleType) extends PolymorphicType(0, body) {
+  class AbstractConstructor(val absMths: Set[Var])(body: SimpleType) extends PolymorphicType(0, body) {
     override def toString: Str = s"AbstractConstructor($absMths)"
   }
   object AbstractConstructor {
-    def apply(absMths: Set[TypeName])(implicit prov: TypeProvenance): AbstractConstructor =
+    def apply(absMths: Set[Var])(implicit prov: TypeProvenance): AbstractConstructor =
       new AbstractConstructor(absMths)(errType(prov))
-    def unapply(ctor: AbstractConstructor): S[Set[TypeName]] = S(ctor.absMths)
+    def unapply(ctor: AbstractConstructor): S[Set[Var]] = S(ctor.absMths)
   }
   
   /** A type without universally quantified type variables. */

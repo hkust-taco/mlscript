@@ -295,13 +295,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-        def gatherMthNames(td: TypeDef): (Set[TypeName], Set[TypeName]) =
+        def gatherMthNames(td: TypeDef): (Set[Var], Set[Var]) =
           td.baseClasses.iterator.flatMap(bn => ctx.tyDefs.get(bn.name)).map(gatherMthNames(_)).fold(
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
             td.mthDefs.iterator.map(md => md.nme.copy().withLocOf(md)).toSet)
           ) { case ((decls1, defns1), (decls2, defns2)) => (
             (decls1.toSeq ++ decls2.toSeq).groupBy(identity).map { case (mn, mns) =>
-              if (mns.size > 1) TypeName(mn.name).withLoc(td.toLoc) else mn }.toSet,
+              if (mns.size > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
@@ -818,7 +818,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
               :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
-              :: absMths.map { case mn => msg"Hint: method $mn is abstract" -> mn.toLoc }.toList)
+              :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList)
           case ty => ty
         }.instantiate
         mkProxy(ty, prov)
