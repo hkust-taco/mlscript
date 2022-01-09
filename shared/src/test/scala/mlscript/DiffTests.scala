@@ -282,7 +282,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val ttd = ctx.tyDefs(td.nme.name)
                 (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, nme, _, rhs) =>
                   val fullName = td.nme.name + "." + nme.name
-                  val mthTyOpt = ctx.mthenv.get(rhs.fold(_ => td.nme.name + "#" + nme.name, _ => fullName))
+                  val mthTyOpt = ctx.getMth(rhs.fold(_ => td.nme.name + "#" + nme.name, _ => fullName))
                   mthTyOpt.map(res => 
                     output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${fullName}: ${getType(res).show}"))
                 }

@@ -683,7 +683,7 @@ trait Test7B
 
 :e
 class Test7C: Test7A & Test7B
-//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
 //│ ║  l.685: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
@@ -703,7 +703,7 @@ class Test7D: Test7A & Test7B
 :e // TODO: suppress?
 class Test7E: Test7C
   method Mth7A = 0
-//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
 //│ ║  l.685: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
@@ -723,7 +723,7 @@ trait Test7F
 
 :e
 class Test7G: Test7C & Test7F
-//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
 //│ ║  l.685: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
@@ -733,7 +733,7 @@ class Test7G: Test7C & Test7F
 //│ ╟── • Test7B
 //│ ║  l.676: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
-//│ ╔══[ERROR] A method definition must be given when inheriting multiple method definitions
+//│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
 //│ ║  l.725: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:

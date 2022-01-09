@@ -160,7 +160,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(RhsBases(p, S(R(RhsField(n1, t1 | that._2)))))
       case _: RhsField | _: RhsBases => N
     }
-    def <:< (that: RhsNf): Bool = this.toType().<:<(that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
+    def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
   }
   case class RhsField(name: Var, ty: SimpleType) extends RhsNf
     { def name_ty: Var -> ST = name -> ty }
@@ -203,7 +203,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // }(r => s"!! $r")
     def & (that: Conjunct): Opt[Conjunct] =
       // trace(s"?? $this & $that ${lnf & that.lnf} ${rnf | that.rnf}") {
-      if (lnf.toType().<:<(that.rnf.toType())(Ctx.empty)) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
+      if ((lnf.toType() <:< that.rnf.toType())(Ctx.empty)) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
       else S(Conjunct.mk(lnf & that.lnf getOrElse (return N), vars | that.vars
         , rnf | that.rnf getOrElse (return N)
         , nvars | that.nvars))
