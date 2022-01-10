@@ -92,7 +92,7 @@ foo 42
 //│ ║  l.87: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: foo is not defined
 //│ foo: 1
 //│    = 1
@@ -106,7 +106,7 @@ foo 42
 //│ ║  l.89: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   TypeError: foo is not a function
 
 42: TypeA
@@ -144,7 +144,7 @@ type Lol = { x: 'a -> 'a }
 
 error: Lol -> Lol
 //│ res: {x: 'a -> 'a} -> {x: 'a0 -> 'a0}
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 { x = id } : Lol
@@ -191,7 +191,7 @@ id: Runaway2
 
 error: Runaway2
 //│ res: {x: 'a -> 'a} -> 'b as 'b
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 :e
@@ -206,11 +206,11 @@ error: {x: int} -> nothing : Runaway2
 //│ ║  l.198: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: {x: 'a -> 'a} -> 'b as 'b
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 error: {x: 'x -> 'x} -> nothing : Runaway2
 //│ res: {x: 'a -> 'a} -> 'b as 'b
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 

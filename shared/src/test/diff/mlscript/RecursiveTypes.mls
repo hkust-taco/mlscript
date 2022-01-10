@@ -154,21 +154,21 @@ def foo_ty2: (C['r] as 'r) -> nothing
 :ns
 foo_ty2
 //│ res: (C['r .. C['r .. 'r0] as 'r0] as 'r) -> nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: foo_ty2 is not defined
 
 foo_ty = foo_ty2
 //│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
 //│   <:  foo_ty:
 //│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: foo_ty2 is not defined
 
 foo_ty2 = foo_ty
 //│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
 //│   <:  foo_ty2:
 //│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: foo_ty1 is not defined
 
 foo_ty2 = foo
@@ -181,7 +181,7 @@ foo_ty2 = foo
 
 rec def bar = C { a = bar }
 //│ bar: (C[?] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar is not defined
 
 type Rec2 = C[Rec2]
@@ -193,7 +193,7 @@ bar_ty = bar
 //│ (C[?] with {a: 'a}) as 'a
 //│   <:  bar_ty:
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar is not defined
 
 def bar_ty2: C['r] as 'r
@@ -202,33 +202,33 @@ def bar_ty2: C['r] as 'r
 :ns
 bar_ty2
 //│ res: C[C['r0 .. 'r] as 'r0 .. 'r] as 'r
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar_ty2 is not defined
 
 bar_ty2
 //│ res: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar_ty2 is not defined
 
 bar_ty = bar_ty2
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty:
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar_ty2 is not defined
 
 bar_ty2 = bar_ty
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar_ty1 is not defined
 
 bar_ty2 = bar
 //│ (C[?] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar is not defined
 
 
@@ -246,14 +246,14 @@ bar2_ty = bar2_ty2
 //│ {x: 'a} as 'a
 //│   <:  bar2_ty:
 //│ {x: 'a} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar2_ty2 is not defined
 
 bar2_ty2 = bar2_ty
 //│ {x: 'a} as 'a
 //│   <:  bar2_ty2:
 //│ {x: 'a} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar2_ty is not defined
 
 :e
@@ -273,7 +273,7 @@ bar2_ty2 = bar_ty2
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.242: 	def bar2_ty2: { x: 'r } as 'r
 //│ ╙──       	              ^^^^^^^^^
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar_ty21 is not defined
 
 :e
@@ -317,7 +317,7 @@ bar_ty2 = bar2_ty2
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.199: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar2_ty21 is not defined
 
 
@@ -360,7 +360,7 @@ f 1
 //│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | 1 | 'a)\a & {a: int} as 'a)
-//│ Unexpected runtime error
+//│ Runtime error
 //│   RangeError: Maximum call stack size exceeded
 
 :e
@@ -382,14 +382,14 @@ f { a = 1 }
 
 f error
 //│ res: 'a\a & {a: int} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 :e
 rec def infina = 0 with { a = infina }
 f infina
 //│ infina: 0 & {a: 'a} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: infina is not defined
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.390: 	f infina
@@ -404,7 +404,7 @@ f infina
 //│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | (0 & {a: 'c} as 'c) | 'a)\a & {a: int} as 'a)
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: infina is not defined
 
 
@@ -415,12 +415,12 @@ rec def f x = if error then f (x with { a = x - 1 }) else x
 
 r = f 1
 //│ r: 1 | 'a\a & {a: int} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 r + 1
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r7 is not defined
 
 :e
@@ -435,32 +435,32 @@ r.a
 //│ ║  l.427: 	r.a
 //│ ╙──       	^
 //│ res: error | int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r7 is not defined
 
 case r of {int -> 0 | _ -> r.a}
 //│ res: 0
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r7 is not defined
 
 r2 = case r of {int -> error | _ -> r}
 //│ r2: ('b | 1 | 'a)\a & {a: int} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r7 is not defined
 
 r2.a
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r21 is not defined
 
 r2 + 1
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r21 is not defined
 
 r: int
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r7 is not defined
 
 
@@ -471,12 +471,12 @@ rec def f x = if error then f (x with { a = 1 }) else x
 
 r = f 1
 //│ r: 1 | 'a\a & {a: 1} as 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 r: int
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: r8 is not defined
 
 
@@ -489,7 +489,7 @@ def fancyBottom2: 'a\x as 'a
 
 fancyBottom2: nothing
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: fancyBottom2 is not defined
 
 
@@ -518,10 +518,10 @@ rec def f x = (case x of {int -> f "ok" | string -> f (impossible x)}) + 1
 f 1
 f "a"
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: impossible is not defined
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: impossible is not defined
 
 rec def f x = case x of {int -> f "ok" | string -> f (impossible x) | _ -> x}
@@ -532,10 +532,10 @@ f 1
 f "a"
 f false
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: impossible is not defined
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: impossible is not defined
 //│ res: false
 //│    = false

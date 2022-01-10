@@ -103,7 +103,7 @@ def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
 
 fooManual 123
 //│ res: 42
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: fooManual is not defined
 
 def foo x =

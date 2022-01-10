@@ -34,7 +34,7 @@ D
 
 error: A & B
 //│ res: {x: int, y: string} & a & b
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 :e
@@ -131,12 +131,12 @@ def t = T1 (A { x = 1 })
 //│ ║  l.116: 	trait T1: C & A
 //│ ╙──       	          ^
 //│ t: error | {x: 1} & a & t1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: T1 is not defined
 
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: T1 is not defined
 
 class CA: C & A
@@ -144,7 +144,7 @@ class CA: C & A
 
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: T1 is not defined
 
 

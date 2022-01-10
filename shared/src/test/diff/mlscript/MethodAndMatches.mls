@@ -40,10 +40,10 @@ bar0 d1
 bar0 d1 0
 //│ bar0: Base1[int] -> int -> Base1[int]
 //│ res: int -> Base1[int]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar0 is not defined
 //│ res: Base1[int]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar0 is not defined
 
 // This is ill-typed because type `Base1[int]` includes things like `Derived1\x` (a `Derived` instance without an `x` field)
@@ -77,10 +77,10 @@ bar1 d1
 bar1 d1 0
 //│ bar1: (Derived1 | Derived2['a, 'b]) -> int -> (Derived1 | Derived2['a0, 'b0])
 //│ res: int -> (Derived1 | Derived2['a, 'b])
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar1 is not defined
 //│ res: Derived1 | Derived2['a, 'b]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar1 is not defined
 
 :e
@@ -259,10 +259,10 @@ bar2 d1
 bar2 d1 0
 //│ bar2: Base1['a] -> 'a -> Base1['a]
 //│ res: int -> Base1[int]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar2 is not defined
 //│ res: Base1[int]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: bar2 is not defined
 
 // Note that typing this would require GADT reasoning! Though it also suffers from the previous "Derived1 with missing x field" problem.

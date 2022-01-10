@@ -47,7 +47,7 @@ def fn = foo None
 // :d
 fn{} // foo None {}
 //│ res: None
-//│ Unexpected runtime error
+//│ Runtime error
 //│   TypeError: Class constructor None cannot be invoked without 'new'
 
 // :d
@@ -98,7 +98,7 @@ res 1
 //│ ║  l.81: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: 1 | error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   Error: non-exhaustive case expression
 
 

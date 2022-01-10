@@ -42,7 +42,7 @@ def c = Child(Parent1{name="A"})
 //│ ║  l.17: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	                      ^^^^^^^
 //│ c: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: Child is not defined
 
 :e
@@ -80,12 +80,12 @@ def Crazy: 'a -> (Crazy['a] & 'a)
 
 Crazy
 //│ res: 'a -> (Crazy['a] & 'a)
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: Crazy1 is not defined
 
 def c = Crazy({ name = "Bob"; age = 42 })
 //│ c: Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a | (Crazy['a .. 'a | {age: 42, name: "Bob"}] with {age: 42, name: "Bob" & {age: 42, name: "Bob"} | "Bob" & 'a})
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: Crazy1 is not defined
 
 :e
@@ -103,17 +103,17 @@ c: nothing
 //│ ║  l.92: 	c: nothing
 //│ ╙──      	   ^^^^^^^
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: c1 is not defined
 
 def d = Crazy(Parent1{name = "Bob"})
 //│ d: (Crazy['a .. 'a | Parent1 & {name: "Bob"}] with {name: 'a | Parent1 & {name: "Bob"}}) & 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: Crazy1 is not defined
 
 d: nothing
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: d is not defined
 
 
@@ -162,13 +162,13 @@ c: Cycle1
 //│ ║  l.159: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: Cycle1 is not defined
 //│ ╔══[ERROR] type identifier not found: Cycle1
 //│ ║  l.160: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: c2 is not defined
 
 
@@ -192,7 +192,7 @@ class D: int
 
 add (D{}) 2
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: D is not defined
 
 
@@ -209,7 +209,7 @@ E{}: int
 //│ ║         	^^^
 //│ ╙── expression of type `E` does not match type `1`
 //│ res: 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: E is not defined
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.206: 	E{}: int
@@ -219,7 +219,7 @@ E{}: int
 //│ ║  l.206: 	E{}: int
 //│ ╙──       	     ^^^
 //│ res: int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: E is not defined
 
 

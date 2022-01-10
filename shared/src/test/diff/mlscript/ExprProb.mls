@@ -63,22 +63,22 @@ eval1
 
 error: ~Add[?]
 //│ res: ~Add[?]
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 error: ('a & ~Lit) -> 'a
 //│ res: ('a & ~{val: int} | 'a & ~lit) -> 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 error: ('a & ~Add[?]) -> 'a
 //│ res: ('a & ~{Add#E} | 'a & ~{lhs: anything} | 'a & ~{rhs: anything} | 'a & ~add) -> 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 error: ('a & ~add) -> 'a
 //│ res: ('a & ~add) -> 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 :ns
@@ -87,7 +87,7 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
 //│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: eval1_ty_ugly is not defined
 
 def eval1_ty_ugly = eval1
@@ -102,7 +102,7 @@ def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 
 eval1_ty
 //│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: eval1_ty is not defined
 
 def eval1_ty = eval1
@@ -173,10 +173,10 @@ prettier1 done (eval1 done) e1
 //│ res: int
 //│    = 6
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: concat is not defined
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: intToString is not defined
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -191,10 +191,10 @@ prettier1 done (eval1 done) e1
 //│ res: int
 //│    = 6
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: concat is not defined
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: intToString is not defined
 
 
@@ -258,7 +258,7 @@ prettier2 done (eval1 done) e1
 //│ res: ((Add[?] with {lhs: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit as 'b, rhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit as 'c}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: intToString is not defined
 
 prettier2 done (eval2 done)
@@ -267,10 +267,10 @@ prettier2 done (eval2 done) d2
 //│ res: (((Add[?] with {lhs: 'c & ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'd), rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'g}) as 'b) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: intToString is not defined
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: concat is not defined
 
 
@@ -306,7 +306,7 @@ eval1 done e2
 //│ ║  l.53: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ╙──      	                                   ^^^^^
 //│ res: error | int
-//│ Unexpected runtime error
+//│ Runtime error
 //│   Error: non-exhaustive case expression
 
 
@@ -354,7 +354,7 @@ prettier2 done eval1 e1
 //│ ║  l.152: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: intToString is not defined
 
 

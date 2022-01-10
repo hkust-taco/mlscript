@@ -19,12 +19,12 @@ def arg: A | B | C
 
 foo arg
 //│ res: bool | int | string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: arg is not defined
 
 foo (arg with { fC = true })
 //│ res: int | string | true
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: arg is not defined
 
 
@@ -54,11 +54,11 @@ foo arg
 //│ ║  l.31: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: arg is not defined
 
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: arg is not defined
 

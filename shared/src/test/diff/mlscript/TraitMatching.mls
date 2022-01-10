@@ -22,12 +22,12 @@ test1 1
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
 //│ res: 0 | error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 test1 { value = 1 }
 //│ res: 0 | 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 def mt = MyTrait { value = 1 }
@@ -36,7 +36,7 @@ def mt = MyTrait { value = 1 }
 
 test1 mt
 //│ res: 0 | 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 class C1: MyTrait[int]
@@ -44,7 +44,7 @@ class C1: MyTrait[int]
 
 test1 (C1 { value = 1 })
 //│ res: 0 | 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 
@@ -67,7 +67,7 @@ test2 1
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 :e
@@ -85,22 +85,22 @@ test2 { value = 1 }
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: 1 | error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 test2 { value = 1; default = "hi" }
 //│ res: "hi" | 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 test2 mt
 //│ res: 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 test2 (C1 { value = 1 })
 //│ res: 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 
@@ -123,7 +123,7 @@ test2 (C2 { default = "oops" })
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 // Note: `value` is unused here; would deserve a warning
@@ -149,12 +149,12 @@ test2 c2
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
 //│ res: "oops" | error
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 test2 (c2 with { value = 1 })
 //│ res: "oops" | 1
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: MyTrait is not defined
 
 
@@ -172,12 +172,12 @@ def strawman: C2 & ~MyTrait[anything]
 
 test2 strawman
 //│ res: string
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: strawman is not defined
 
 strawman: C2
 //│ res: C2
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: strawman is not defined
 
 :e
@@ -195,6 +195,6 @@ strawman: ~{ value: anything }
 //│ ║  l.184: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: strawman is not defined
 

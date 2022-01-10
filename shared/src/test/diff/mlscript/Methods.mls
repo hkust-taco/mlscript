@@ -27,7 +27,7 @@ f.(Foo.Fun)
 
 Foo.Fun f
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
-//│ Unexpected runtime error
+//│ Runtime error
 //│   TypeError: Foo.Fun is not a function
 
 f.Fun
@@ -53,10 +53,10 @@ g.(Bar.Fun)
 Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
-//│ Unexpected runtime error
+//│ Runtime error
 //│   TypeError: Foo.Fun is not a function
 //│ res: 'a -> 'a
-//│ Unexpected runtime error
+//│ Runtime error
 //│   TypeError: Bar.Fun is not a function
 
 g.Fun

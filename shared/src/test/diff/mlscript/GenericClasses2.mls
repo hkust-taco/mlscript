@@ -98,7 +98,7 @@ error: {A: 1}
 //│ ║  l.96: 	error: {A: 1}
 //│ ╙──      	        ^
 //│ res: {A: 1}
-//│ Unexpected runtime error
+//│ Runtime error
 //│   ReferenceError: error is not defined
 
 b = Bar2{x = 1}
