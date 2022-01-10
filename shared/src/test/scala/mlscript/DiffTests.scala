@@ -322,7 +322,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 case R(S(head :: next)) =>
                   val text = head match {
                     case (false, err) =>
-                      output("Runtime error")
+                      output("Runtime error:")
                       err.split('\n') foreach { s => output("  " + s) }
                     case (true, result) =>
                       result.split('\n').zipWithIndex foreach { case (s, i) =>
