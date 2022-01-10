@@ -18,8 +18,7 @@ tx = t with { x = 1 }
 //│   return copy;
 //│ }
 //│ // Query 1
-//│ let tx;
-//│ tx = withConstruct(t, { x: 1 });
+//│ globalThis.tx = withConstruct(t, { x: 1 });
 //│ res = tx;
 //│ // End of generated code
 //│ tx: (1, 2, 3,) & {x: 1}
@@ -35,16 +34,16 @@ trait Hey: { x: int }
 :e
 Hey t
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.36: 	Hey t
+//│ ║  l.35: 	Hey t
 //│ ║        	^^^^^
 //│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
-//│ ║  l.36: 	Hey t
+//│ ║  l.35: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.32: 	trait Hey: { x: int }
+//│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
 //│ Unexpected runtime error
@@ -58,26 +57,24 @@ htx = Hey tx
 htx.x
 //│ res: 1
 //│ Unexpected runtime error
-//│   TypeError: Cannot read properties of undefined (reading 'x')
+//│   ReferenceError: htx is not defined
 
 f ((a, b, c)) = { a; b; c }
 //│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
-//│  = 1
+//│  = [Function: f]
 
 f t
 //│ res: {a: 1, b: 2, c: 3}
-//│ Unexpected runtime error
-//│   ReferenceError: f is not defined
+//│    = { a: 1, b: 2, c: 3 }
 
 f tx
 //│ res: {a: 1, b: 2, c: 3}
-//│ Unexpected runtime error
-//│   ReferenceError: f is not defined
+//│    = { a: undefined, b: undefined, c: undefined }
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
 //│ Unexpected runtime error
-//│   ReferenceError: f is not defined
+//│   ReferenceError: htx is not defined
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
@@ -88,48 +85,48 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.87: 	f t
+//│ ║  l.84: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.87: 	f t
+//│ ║  l.84: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.79: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	f tx
+//│ ║  l.85: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.88: 	f tx
+//│ ║  l.85: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.79: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	f htx
+//│ ║  l.86: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~hey | (?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.89: 	f htx
+//│ ║  l.86: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.79: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│ Unexpected runtime error
-//│   TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))
+//│   ReferenceError: htx is not defined
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -140,7 +137,7 @@ g htx
 g tx
 //│ res: () | 1
 //│ Unexpected runtime error
-//│   ReferenceError: Hey is not defined
+//│   ReferenceError: htx is not defined
 //│ res: () | 1
 //│ Unexpected runtime error
 //│   ReferenceError: Hey is not defined
@@ -153,7 +150,7 @@ g htx
 g (tx with { y = 2 })
 //│ res: 1
 //│ Unexpected runtime error
-//│   ReferenceError: Hey is not defined
+//│   ReferenceError: htx is not defined
 //│ res: 1 | 2
 //│ Unexpected runtime error
 //│   ReferenceError: Hey is not defined
@@ -161,19 +158,19 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.162: 	g tx
+//│ ║  l.159: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.162: 	g tx
+//│ ║  l.159: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.145: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.145: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
 //│ Unexpected runtime error

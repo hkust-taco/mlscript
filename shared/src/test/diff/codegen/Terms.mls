@@ -106,8 +106,9 @@ A { a = 0 }
 def f x = x
 f 0
 //│ // Query 1
-//│ let f;
-//│ f = (x) => x;
+//│ globalThis.f = function f(x) {
+//│   return x;
+//│ };
 //│ res = f;
 //│ // Query 2
 //│ res = f(0);
@@ -219,8 +220,7 @@ let x = 0 in x + 1
 :js
 def f x = case x of { }
 //│ // Query 1
-//│ let f1;
-//│ f1 = (x) => {
+//│ globalThis.f1 = function f(x) {
 //│   let temp;
 //│   return (temp = x, (function () {
 //│     throw new Error("non-exhaustive case expression");
@@ -229,7 +229,7 @@ def f x = case x of { }
 //│ res = f1;
 //│ // End of generated code
 //│ f: nothing -> nothing
-//│  = [Function: f1]
+//│  = [Function: f]
 
 // CaseOf: Just the wildcard
 :js

@@ -168,7 +168,8 @@ foo_ty2 = foo_ty
 //│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
 //│   <:  foo_ty2:
 //│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
-//│        = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: foo_ty1 is not defined
 
 foo_ty2 = foo
 //│ ((C[?] with {a: 'c & 'b & 'a}) as 'b) -> nothing
@@ -180,7 +181,8 @@ foo_ty2 = foo
 
 rec def bar = C { a = bar }
 //│ bar: (C[?] with {a: 'a}) as 'a
-//│    = C { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: bar is not defined
 
 type Rec2 = C[Rec2]
 def bar_ty: Rec2
@@ -191,7 +193,8 @@ bar_ty = bar
 //│ (C[?] with {a: 'a}) as 'a
 //│   <:  bar_ty:
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
-//│       = C { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: bar is not defined
 
 def bar_ty2: C['r] as 'r
 //│ bar_ty2: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
@@ -218,13 +221,15 @@ bar_ty2 = bar_ty
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
-//│        = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: bar_ty1 is not defined
 
 bar_ty2 = bar
 //│ (C[?] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
-//│        = C { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: bar is not defined
 
 
 
@@ -248,7 +253,8 @@ bar2_ty2 = bar2_ty
 //│ {x: 'a} as 'a
 //│   <:  bar2_ty2:
 //│ {x: 'a} as 'a
-//│         = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: bar2_ty is not defined
 
 :e
 bar2_ty2 = bar_ty2
@@ -256,18 +262,19 @@ bar2_ty2 = bar_ty2
 //│   <:  bar2_ty2:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.254: 	bar2_ty2 = bar_ty2
+//│ ║  l.260: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `C[?r]` does not match type `'r | {x: ?r0}`
-//│ ║  l.196: 	def bar_ty2: C['r] as 'r
+//│ ║  l.199: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
 //│ ╟── but it flows into reference with expected type `'r | {x: ?r1}`
-//│ ║  l.254: 	bar2_ty2 = bar_ty2
+//│ ║  l.260: 	bar2_ty2 = bar_ty2
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.237: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║  l.242: 	def bar2_ty2: { x: 'r } as 'r
 //│ ╙──       	              ^^^^^^^^^
-//│         = C { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: bar_ty21 is not defined
 
 :e
 bar_ty2 = bar2_ty2
@@ -275,42 +282,43 @@ bar_ty2 = bar2_ty2
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
-//│ ║  l.237: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║  l.242: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.196: 	def bar_ty2: C['r] as 'r
+//│ ║  l.199: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
-//│ ║  l.237: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║  l.242: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.196: 	def bar_ty2: C['r] as 'r
+//│ ║  l.199: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
-//│ ║  l.237: 	def bar2_ty2: { x: 'r } as 'r
+//│ ║  l.242: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
-//│ ║  l.273: 	bar_ty2 = bar2_ty2
+//│ ║  l.280: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.196: 	def bar_ty2: C['r] as 'r
+//│ ║  l.199: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
-//│        = C { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: bar2_ty21 is not defined
 
 
 
@@ -340,16 +348,16 @@ f
 :e
 f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.341: 	f 1
+//│ ║  l.349: 	f 1
 //│ ║         	^^^
 //│ ╟── expression of type `int` does not have field 'a'
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into integer literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.341: 	f 1
+//│ ║  l.349: 	f 1
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | 1 | 'a)\a & {a: int} as 'a)
 //│ Unexpected runtime error
@@ -358,16 +366,16 @@ f 1
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.359: 	f { a = 1 }
+//│ ║  l.367: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into record literal with expected type `~{a: ?a} | {a: ?b}`
-//│ ║  l.359: 	f { a = 1 }
+//│ ║  l.367: 	f { a = 1 }
 //│ ║         	  ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | ({a: 1} | 'a\a & {a: int} as 'a)
 //│    = { a: 1 }
@@ -381,21 +389,23 @@ f error
 rec def infina = 0 with { a = infina }
 f infina
 //│ infina: 0 & {a: 'a} as 'a
-//│       = [Number: 0] { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: infina is not defined
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.382: 	f infina
+//│ ║  l.390: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `int` does not have field 'a'
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── but it flows into reference with expected type `(~{a: ?a} | {a: ?b})\a`
-//│ ║  l.382: 	f infina
+//│ ║  l.390: 	f infina
 //│ ║         	  ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.326: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.334: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | (0 & {a: 'c} as 'c) | 'a)\a & {a: int} as 'a)
-//│    = [Number: 0] { a: undefined }
+//│ Unexpected runtime error
+//│   ReferenceError: infina is not defined
 
 
 // FIXME why does type printing show `nothing`?
@@ -410,44 +420,48 @@ r = f 1
 
 r + 1
 //│ res: int
-//│    = NaN
+//│ Unexpected runtime error
+//│   ReferenceError: r7 is not defined
 
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.416: 	r.a
+//│ ║  l.427: 	r.a
 //│ ║         	^^^
 //│ ╟── expression of type `1` does not have field 'a'
-//│ ║  l.406: 	r = f 1
+//│ ║  l.416: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.416: 	r.a
+//│ ║  l.427: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Unexpected runtime error
-//│   TypeError: Cannot read properties of undefined (reading 'a')
+//│   ReferenceError: r7 is not defined
 
 case r of {int -> 0 | _ -> r.a}
 //│ res: 0
 //│ Unexpected runtime error
-//│   TypeError: Cannot read properties of undefined (reading 'a')
+//│   ReferenceError: r7 is not defined
 
 r2 = case r of {int -> error | _ -> r}
 //│ r2: ('b | 1 | 'a)\a & {a: int} as 'a
-//│   = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: r7 is not defined
 
 r2.a
 //│ res: nothing
 //│ Unexpected runtime error
-//│   TypeError: Cannot read properties of undefined (reading 'a')
+//│   ReferenceError: r21 is not defined
 
 r2 + 1
 //│ res: int
-//│    = NaN
+//│ Unexpected runtime error
+//│   ReferenceError: r21 is not defined
 
 r: int
 //│ res: int
-//│    = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: r7 is not defined
 
 
 
@@ -462,7 +476,8 @@ r = f 1
 
 r: int
 //│ res: int
-//│    = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: r8 is not defined
 
 
 // Field removal also blocks proper simplification

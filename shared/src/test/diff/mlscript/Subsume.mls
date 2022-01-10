@@ -294,7 +294,8 @@ ty2 = ty1
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
-//│    = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: ty1 is not defined
 
 ty1 = twice
 ty2 = twice

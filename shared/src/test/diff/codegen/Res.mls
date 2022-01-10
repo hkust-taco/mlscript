@@ -55,8 +55,7 @@ res == 4
 :js
 def res = 0
 //│ // Query 1
-//│ let res1;
-//│ res1 = 0;
+//│ globalThis.res1 = 0;
 //│ res = res1;
 //│ // End of generated code
 //│ res: 0

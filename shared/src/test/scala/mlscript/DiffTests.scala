@@ -468,8 +468,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
         R(reply)
     }
 
-    private def send(code: Str): Unit = {
-      stdin.write(if (code endsWith "\n") code else code + "\n")
+    private def send(code: Str, useEval: Bool = false): Unit = {
+      stdin.write(
+        if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
+        else if (code endsWith "\n") code
+        else code + "\n"
+      )
       stdin.flush()
     }
 

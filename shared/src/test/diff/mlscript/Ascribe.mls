@@ -24,7 +24,7 @@ def foo(n: 'a) = add n 1
 //│    = [Function: foo]
 def foo(n: 'a) = add n 1: 'a
 //│ foo: int -> int
-//│    = [Function: foo1]
+//│    = [Function: foo]
 
 
 class Foo[A]: { field: A }
@@ -32,7 +32,7 @@ class Foo[A]: { field: A }
 
 def foo(f: Foo['a]) = f.field
 //│ foo: Foo['a] -> 'a
-//│    = [Function: foo2]
+//│    = [Function: foo]
 
 
 (succ 1): int
@@ -42,7 +42,7 @@ def foo(f: Foo['a]) = f.field
 
 def foo({ a; b }: { a: int; b: string}) = { b; a }
 //│ foo: {a: int, b: string} -> {a: int, b: string}
-//│    = 2
+//│    = [Function: foo]
 
 :e
 def foo({ a = "hey" }: { a: string}) = 0
@@ -56,7 +56,7 @@ def foo({ a = "hey" }: { a: string}) = 0
 //│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ╙──      	              ^^^^^
 //│ foo: {a: string} -> 0
-//│    = [Function: foo4]
+//│    = [Function: foo]
 
 :e
 def foo({ a; b }: { a: int }) = b
@@ -67,5 +67,5 @@ def foo({ a; b }: { a: int }) = b
 //│ ║  l.62: 	def foo({ a; b }: { a: int }) = b
 //│ ╙──      	                  ^^^^^^^^^^
 //│ foo: {a: int} -> nothing
-//│    = [Function: foo5]
+//│    = [Function: foo]
 

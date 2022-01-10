@@ -181,7 +181,7 @@ def c = Cons 1
 c.head
 //│ res: 1
 //│ Unexpected runtime error
-//│   TypeError: Cannot read properties of undefined (reading 'head')
+//│   ReferenceError: c1 is not defined
 
 
 
@@ -190,13 +190,13 @@ c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
 //│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
 //│ Unexpected runtime error
-//│   TypeError: c1 is not a function
+//│   ReferenceError: c1 is not defined
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
 //│ c: 'a -> (((Cons['b] with {tail: 'd & ('c | Nil)}) as 'c) & 'l | Nil & 'l) -> (Cons[anything] with {head: 'a, tail: ((Cons[anything] with {tail: 'f | 'e | Nil}) as 'e) & 'l | Nil & 'l})
 //│ res: Cons[anything] with {head: 1, tail: Cons[anything] with {head: 2, tail: Nil}}
 //│ Unexpected runtime error
-//│   TypeError: c1 is not a function
+//│   ReferenceError: c1 is not defined
 
 

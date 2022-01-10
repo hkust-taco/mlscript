@@ -317,6 +317,19 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
       case L(expr)  => expr.toSourceCode.parenthesized(expr.precedence < precedence)
       case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
     })
+  def toFuncExpr(name: Opt[Str]): JSFuncExpr = JSFuncExpr(name, params, body match {
+    case L(expr) => expr.`return` :: Nil
+    case R(stmts) => stmts
+  })
+}
+
+final case class JSFuncExpr(name: Opt[Str], params: Ls[JSPattern], body: Ls[JSStmt]) extends JSExpr {
+  def precedence: Int = 22
+  def toSourceCode: SourceCode =
+    SourceCode(s"function ${name getOrElse ""}") ++
+      JSExpr.params(params) ++
+      SourceCode.space ++
+      SourceCode.concat(body map { _.toSourceCode }).block
 }
 
 // IIFE: immediately invoked function expression

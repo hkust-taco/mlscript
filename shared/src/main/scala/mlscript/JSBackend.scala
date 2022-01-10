@@ -518,8 +518,11 @@ class JSTestBackend extends JSBackend {
           val translatedBody = translateTerm(body)(topLevelScope)
           val jsName = topLevelScope declare mlsName
           S(
-            S(JSLetDecl.from(jsName :: topLevelScope.getTempVars())) ->
-             ((JSIdent(jsName) := translatedBody) ::
+            topLevelScope.emitTempVarDecls() ->
+             ((JSIdent("globalThis").member(jsName) := (translatedBody match {
+                case t: JSArrowFn => t.toFuncExpr(S(jsName))
+                case t            => t
+              })) ::
                 (resultIdent := JSIdent(jsName)) ::
                 Nil)
           )

@@ -44,8 +44,7 @@ n = 123 with { x = 1 }
 //│ }
 //│ let res;
 //│ // Query 1
-//│ let n;
-//│ n = withConstruct(123, { x: 1 });
+//│ globalThis.n = withConstruct(123, { x: 1 });
 //│ res = n;
 //│ // End of generated code
 //│ n: 123 & {x: 1}

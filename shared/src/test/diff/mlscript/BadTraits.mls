@@ -80,26 +80,28 @@ def t = T error
 
 t: nothing
 //│ res: nothing
-//│    = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: t is not defined
 
 type Als = A & B
 //│ Defined type alias Als
 
 t: Als
 //│ res: nothing
-//│    = undefined
+//│ Unexpected runtime error
+//│   ReferenceError: t is not defined
 
 
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.94: 	class D0: T
+//│ ║  l.96: 	class D0: T
 //│ ╙──      	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.100: 	class D1: B & T
+//│ ║  l.102: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
 
 
@@ -117,13 +119,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.118: 	t.x
+//│ ║  l.120: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.113: 	t = s: s
+//│ ║  l.115: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.118: 	t.x
+//│ ║  l.120: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1
