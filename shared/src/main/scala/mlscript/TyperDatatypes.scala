@@ -260,8 +260,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def compare(that: ObjectTag): Int = this.id compare that.id
   }
   
-  case class ClassTag(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType with ObjectTag {
-    lazy val parentsST = parents.map(identity[SimpleTerm]) // TODO inefficient... improve
+  case class ClassTag(id: SimpleTerm, parents: Set[TypeName])(val prov: TypeProvenance) extends BaseType with ObjectTag {
+    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[SimpleTerm]
     def glb(that: ClassTag): Opt[ClassTag] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)

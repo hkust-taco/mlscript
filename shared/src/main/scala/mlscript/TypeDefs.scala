@@ -33,13 +33,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
-    baseClasses: Set[Var],
+    baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
   ) {
-    def allBaseClasses(ctx: Ctx)(implicit traversed: Set[Var]): Set[Var] =
-      baseClasses.map(v => Var(v.name.decapitalize)) ++
+    def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
+      baseClasses.map(v => TypeName(v.name.decapitalize)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
-          ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
+          ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
     var tvarVariances: Opt[VarianceStore] = N
@@ -112,12 +112,12 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     TraitTag(Var(td.nme.name.decapitalize))(prov)
   }
   
-  def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
+  def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
     if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)
   
-  private def baseClassesOf(ty: Type): Set[Var] = ty match {
+  private def baseClassesOf(ty: Type): Set[TypeName] = ty match {
       case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
-      case TypeName(nme) => Set.single(Var(nme))
+      case TypeName(nme) => Set.single(TypeName(nme))
       case AppliedType(b, _) => baseClassesOf(b)
       case Record(_) => Set.empty
       case _: Union => Set.empty
@@ -374,7 +374,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           // This is because implicit method calls always default to the parent methods.
           case S(MethodType(_, _, parents, _)) if {
             val bcs = ctx.allBaseClassesOf(tn.name)
-            parents.forall(prt => bcs(Var(prt.name.decapitalize)))
+            parents.forall(prt => bcs(TypeName(prt.name.decapitalize)))
           } =>
           // If this class is one of the base classes of the parent(s) of the currently registered method,
           // then we need to register the new method. Only happens when the class definitions are "out-of-order",
@@ -387,7 +387,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             // class A
             //   method F: int
           case S(MethodType(_, _, parents, _)) if {
-            val v = Var(tn.name.decapitalize)
+            val v = TypeName(tn.name.decapitalize)
             parents.forall(prt => ctx.allBaseClassesOf(prt.name).contains(v)) 
           } => ctx.addMth(N, mn, mthTy)
           // If this class is unrelated to the parent(s) of the currently registered method,

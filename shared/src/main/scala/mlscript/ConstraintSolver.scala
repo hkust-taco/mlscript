@@ -318,7 +318,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(l1, l0, false)
             rec(r0, r1, false)
           case (prim: ClassTag, ot: ObjectTag)
-            if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
+            if prim.parentsST.contains(ot.id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))

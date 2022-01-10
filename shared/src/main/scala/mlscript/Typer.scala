@@ -51,9 +51,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
-    private val abcCache: MutMap[Str, Set[Var]] = MutMap.empty
-    def allBaseClassesOf(name: Str): Set[Var] = abcCache.getOrElseUpdate(name,
-      tyDefs.get(name).fold(Set.empty[Var])(_.allBaseClasses(this)(Set.empty)))
+    private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
+    def allBaseClassesOf(name: Str): Set[TypeName] = abcCache.getOrElseUpdate(name,
+      tyDefs.get(name).fold(Set.empty[TypeName])(_.allBaseClasses(this)(Set.empty)))
   }
   object Ctx {
     def init: Ctx = Ctx(
@@ -91,9 +91,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val BotType: ExtrType = ExtrType(true)(noTyProv)
   val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noTyProv)
   val BoolType: ClassTag = ClassTag(Var("bool"), Set.empty)(noTyProv)
-  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(Var("bool")))(noTyProv)
-  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(Var("bool")))(noTyProv)
-  val IntType: ClassTag = ClassTag(Var("int"), Set.single(Var("number")))(noTyProv)
+  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(TypeName("bool")))(noTyProv)
+  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(TypeName("bool")))(noTyProv)
+  val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
   
@@ -105,11 +105,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TypeName("int"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("number")), N) ::
+    TypeDef(Cls, TypeName("int"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("number")), N) ::
     TypeDef(Cls, TypeName("number"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("bool"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
-    TypeDef(Cls, TypeName("true"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, TypeName("false"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, TypeName("true"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N) ::
+    TypeDef(Cls, TypeName("false"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N) ::
     TypeDef(Cls, TypeName("string"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Als, TypeName("undefined"), Nil, Nil, ClassTag(UnitLit(true), Set.empty)(noProv), Nil, Nil, Set.empty, N) ::
     TypeDef(Als, TypeName("null"), Nil, Nil, ClassTag(UnitLit(false), Set.empty)(noProv), Nil, Nil, Set.empty, N) ::
