@@ -38,8 +38,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def thisTy(implicit prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
-    def wrapMethod(bodyTy: PolymorphicType)(implicit prov: TypeProvenance): MethodType =
-      MethodType(bodyTy.level, FunctionType(singleTup(thisTy), bodyTy.body)(prov), nme)
+    def wrapMethod(pt: PolymorphicType)(implicit prov: TypeProvenance): MethodType =
+      MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)
+    def wrapMethod(mt: MethodType)(implicit prov: TypeProvenance): MethodType =
+      if (mt.body.nonEmpty) wrapMethod(mt.toPT) else mt.copy(parents = nme :: Nil)
   }
 
   private case class MethodDefs(
@@ -59,12 +61,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case mn -> defns if newdefns(mn) => N
           case mn -> defns =>
             implicit val prov: TypeProvenance = TypeProvenance(tn.toLoc, "inherited method declaration")
-            S(mn -> MethodType(defns.head.level,
-              err(msg"An overriding method definition must be given when inheriting from multiple method definitions" -> tn.toLoc
-                :: msg"Definitions of method $mn inherited from:" -> N
-                :: defns.iterator.map(mt => msg"• ${mt.parents.head}" -> mt.prov.loco).toList),
-              tn :: Nil
-            ))
+            err(msg"An overriding method definition must be given when inheriting from multiple method definitions" -> tn.toLoc
+              :: msg"Definitions of method $mn inherited from:" -> N
+              :: defns.iterator.map(mt => msg"• ${mt.parents.head}" -> mt.prov.loco).toList)
+            S(mn -> MethodType(defns.head.level, N, tn :: Nil))
         }
       )
     private def ++(that: MethodDefs): MethodDefs = {
@@ -77,7 +77,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       )
     }
     private def addParent(prt: TypeName): MethodDefs =
-      copy(decls = decls.view.mapValues(mt => mt.copyMT(parents = prt :: mt.parents)).toMap)
+      copy(decls = decls.view.mapValues(mt => mt.copy(parents = prt :: mt.parents)).toMap)
     def propagate(top: Bool = true)(implicit raise: Raise): MethodDefs =
       parents.map(_.propagate(false)).reduceOption(_.&(_)(tn, defns.keySet)).map(_.addParent(tn))
         .foldRight(if (top) copy(parents = Nil, decls = Map.empty, defns = Map.empty) else copy(parents = Nil))(_ ++ _)
@@ -510,7 +510,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
               thisCtx.addMth(N, nme.name, mthTy)
             }
-            nme.name -> MethodType(thisCtx.lvl, ProvType(bodyTy.body)(prov), td2.nme)
+            nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)
           }
           MethodDefs(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
@@ -527,8 +527,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate()
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
-        def ss(mt: PolymorphicType, bmt: PolymorphicType)(implicit prov: TypeProvenance) =
-          constrain(subst(mt, targsMap).instantiate, subst(bmt, targsMap).rigidify)
+        def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
+          constrain(subst(mt.toPT, targsMap).instantiate, subst(bmt.toPT, targsMap).rigidify)
         def registerImplicit(nme: Str, mthTy: MethodType) = ctx.getMth(N, nme) match {
           case S(MethodType(_, _, parents)) if parents.iterator.map(prt => Var(prt.name.decapitalize)).toSet
               .subsetOf(ctx.allBaseClassesOf(tn.name)) =>

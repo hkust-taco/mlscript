@@ -35,25 +35,30 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
-  class MethodType(level: Int, body: SimpleType, val parents: List[TypeName], val single: Bool)
-      extends PolymorphicType(level, body) {
+  class MethodType(val level: Int, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
+      (implicit val prov: TypeProvenance = body.fold(noProv)(_.prov)) {
     def &(that: MethodType): MethodType = {
       require(this.level === that.level)
-      MethodType(level, this.body & that.body, (this.parents ::: that.parents).distinct, false)
+      MethodType(level, mergeOptions(this.body, that.body)(_ & _), (this.parents ::: that.parents).distinct, false)
     }
     def +(that: MethodType): MethodType =
       if (this.parents === that.parents) that
-      else MethodType(0, errType(noProv), (this.parents ::: that.parents).distinct)
-    override def toString: Str = s"MethodType($level, $body, $parents)"
-    def copyMT(level: Int = this.level, body: SimpleType = this.body, parents: List[TypeName] = this.parents): MethodType =
+      else MethodType(0, N, (this.parents ::: that.parents).distinct)
+    val toPT: PolymorphicType = body.fold(PolymorphicType(0, errType))(PolymorphicType(level, _))
+    def instantiate(implicit lvl: Int): SimpleType = toPT.instantiate
+    def rigidify(implicit lvl: Int): SimpleType = toPT.rigidify
+    def copy(level: Int = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
       MethodType(level, body, parents, this.single)
   }
   object MethodType {
-    def apply(level: Int, body: SimpleType, parent: TypeName): MethodType = new MethodType(level, body, parent :: Nil, true)
-    def apply(level: Int, body: SimpleType, parents: List[TypeName]): MethodType = new MethodType(level, body, parents, true)
-    private def apply(level: Int, body: SimpleType, parents: List[TypeName], single: Bool): MethodType =
+    def apply(level: Int, body: Opt[SimpleType], parent: TypeName)(implicit prov: TypeProvenance): MethodType =
+      MethodType(level, body, parent :: Nil, true)
+    def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName])(implicit prov: TypeProvenance): MethodType =
+      MethodType(level, body, parents, true)
+    private def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
+        (implicit prov: TypeProvenance): MethodType =
       new MethodType(level, body, parents, single)
-    def unapply(mt: MethodType): S[(Int, SimpleType, List[TypeName])] = S((mt.level, mt.body, mt.parents))
+    def unapply(mt: MethodType): S[(Int, Opt[SimpleType], List[TypeName])] = S((mt.level, mt.body, mt.parents))
   }
   
   /** A type without universally quantified type variables. */
