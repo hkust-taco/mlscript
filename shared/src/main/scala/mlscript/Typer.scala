@@ -83,14 +83,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         .foldRight(if (top) copy(parents = Nil, decls = Map.empty, defns = Map.empty) else copy(parents = Nil))(_ ++ _)
   }
   
-  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], mthEnv: MutMap[Str, MethodType],
+  /** Keys of `mthEnv`:
+   *  `L` represents the inferred types of method definitions. The first value is the parent name, and the second value is the method name.
+   *  `R` represents the actual method types. The first optional value is the parent name, with `N` representing implicit calls,
+   *    and the second value is the method name.
+   *  The public helper functions should be preferred for manipulating `mthEnv`
+   */
+  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
     def +=(b: Binding): Unit = env += b
     def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeScheme] = env.get(name) orElse parent.dlof(_.get(name))(N)
-    def getMth(name: Str): Opt[MethodType] = mthEnv.get(name) orElse parent.dlof(_.getMth(name))(N)
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
-    def containsMth(name: Str): Bool = mthEnv.contains(name) || parent.exists(_.containsMth(name))
+    def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
+    def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
+    private def getMth(key: (Str, Str) \/ (Opt[Str], Str)): Opt[MethodType] = mthEnv.get(key) orElse parent.dlof(_.getMth(key))(N)
+    def getMth(parent: Opt[Str], nme: Str): Opt[MethodType] = getMth(R(parent, nme))
+    def getMthDefn(parent: Str, nme: Str): Opt[MethodType] = getMth(L(parent, nme))
+    private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
+    def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
     private val abcCache: MutMap[Str, Set[Var]] = MutMap.empty
@@ -496,8 +507,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             ), reverseRigid2)
             val mthTy = td2.wrapMethod(bodyTy)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
-              if (top) thisCtx.mthEnv += fullName -> mthTy
-              thisCtx.mthEnv += nme.name -> mthTy
+              if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
+              thisCtx.addMth(N, nme.name, mthTy)
             }
             nme.name -> MethodType(thisCtx.lvl, ProvType(bodyTy.body)(prov), td2.nme)
           }
@@ -518,14 +529,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: PolymorphicType, bmt: PolymorphicType)(implicit prov: TypeProvenance) =
           constrain(subst(mt, targsMap).instantiate, subst(bmt, targsMap).rigidify)
-        def registerImplicit(nme: Str, mthTy: MethodType) = ctx.getMth(nme) match {
+        def registerImplicit(nme: Str, mthTy: MethodType) = ctx.getMth(N, nme) match {
           case S(MethodType(_, _, parents)) if parents.iterator.map(prt => Var(prt.name.decapitalize)).toSet
               .subsetOf(ctx.allBaseClassesOf(tn.name)) =>
           case S(MethodType(_, _, parents)) if parents.forall(prt =>
               ctx.allBaseClassesOf(prt.name).contains(Var(tn.name.decapitalize))) =>
-            ctx.mthEnv += nme -> mthTy
-          case S(mt2) => ctx.mthEnv += nme -> (mt2 + mthTy)
-          case N => ctx.mthEnv += nme -> mthTy
+            ctx.addMth(N, nme, mthTy)
+          case S(mt2) => ctx.addMth(N, nme, mt2 + mthTy)
+          case N => ctx.addMth(N, nme, mthTy)
         }
         def overrideError(nme: Str, mt: MethodType, mt2: MethodType) = {
           mt2.parents.foreach(parent => 
@@ -535,32 +546,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
         declsInherit.foreach { case nme -> mt =>
           implicit val prov: TypeProvenance = mt.prov
-          val fullName = s"${tn.name}.${nme}"
           val mthTy = td.wrapMethod(mt)
-          ctx.mthEnv += fullName -> mthTy
+          ctx.addMth(S(tn.name), nme, mthTy)
         }
         defnsInherit.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
-          val fullName = s"${tn.name}.${nme}"
           println(s">> Checking subsumption for inferred type of $nme : $mt")
           (if (decls.isDefinedAt(nme) && !defns.isDefinedAt(nme)) decls.get(nme) else N).orElse(declsInherit.get(nme))
             .foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
           if (!declsInherit.get(nme).exists(decl => decl.single && decl.parents.last === mt.parents.head))
-            ctx.mthEnv += fullName -> mthTy
+            ctx.addMth(S(tn.name), nme, mthTy)
         }
         decls.foreach { case nme -> mt =>
           implicit val prov: TypeProvenance = mt.prov
-          val fullName = s"${tn.name}.${nme}"
           println(s">> Checking subsumption for declared type of $nme : $mt")
           declsInherit.get(nme).orElse(defnsInherit.get(nme).tap(_.foreach(overrideError(nme, mt, _)))).foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
-          ctx.mthEnv += fullName -> mthTy
+          ctx.addMth(S(tn.name), nme, mthTy)
           registerImplicit(nme, mthTy)
         }
         defns.foreach { case nme -> mt => 
           implicit val prov: TypeProvenance = mt.prov
-          val fullName = s"${tn.name}.${nme}"
           println(s">> Checking subsumption for inferred type of $nme : $mt")
           decls.get(nme).orElse((declsInherit.get(nme), defnsInherit.get(nme)) match {
             case (S(decl), S(defn)) if defn.parents.toSet.subsetOf(decl.parents.toSet) => S(decl)
@@ -571,8 +578,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case (N, N) => N
           }).foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
-          if (!ctx.containsMth(fullName) || !decls.isDefinedAt(nme)) ctx.mthEnv += fullName -> mthTy
-          ctx.mthEnv += s"${tn.name}#${nme}" -> mthTy
+          if (!ctx.containsMth(S(tn.name), nme) || !decls.isDefinedAt(nme)) ctx.addMth(S(tn.name), nme, mthTy)
+          ctx.addMthDefn(tn.name, nme, mthTy)
           if (!decls.isDefinedAt(nme) && !declsInherit.isDefinedAt(nme)) registerImplicit(nme, mthTy)
         }
       }
@@ -888,8 +895,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           con(obj_ty, RecordType.mk((fieldName, res) :: Nil)(prov), res)
         }
-        def mthCall(obj: Term, fieldName: Var) =
-          ctx.getMth(fieldName.name) match {
+        def mthCall(obj: Term, fieldName: Var) = 
+          (fieldName.name match {
+            case s"$parent.$nme" => ctx.getMth(S(parent), nme)
+            case nme => ctx.getMth(N, nme)
+          }) match {
             case S(mth_ty) =>
               if (mth_ty.parents.size > 1)
                 err(msg"Implicit call to method ${fieldName.name} is forbidden because it is ambiguous." -> term.toLoc
@@ -905,7 +915,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           }
         obj match {
           case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) =>
-            ctx.getMth(s"${name}.${fieldName.name}") match {
+            ctx.getMth(S(name), fieldName.name) match {
               case S(mth_ty) => mth_ty.instantiate
               case N =>
                 err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)

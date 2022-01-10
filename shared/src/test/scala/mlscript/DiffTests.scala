@@ -278,13 +278,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
-                output(s"Defined " + td.kind.str + " " + td.nme.name)
-                val ttd = ctx.tyDefs(td.nme.name)
-                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, nme, _, rhs) =>
-                  val fullName = td.nme.name + "." + nme.name
-                  val mthTyOpt = ctx.getMth(rhs.fold(_ => td.nme.name + "#" + nme.name, _ => fullName))
-                  mthTyOpt.map(res => 
-                    output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${fullName}: ${getType(res).show}"))
+                val tn = td.nme.name
+                output(s"Defined " + td.kind.str + " " + tn)
+                val ttd = ctx.tyDefs(tn)
+                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, Var(mn), _, rhs) =>
+                  rhs.fold(_ => ctx.getMthDefn(tn, mn), _ => ctx.getMth(S(tn), mn)).foreach(res => 
+                    output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${tn}.${mn}: ${getType(res).show}"))
                 }
               }
             )
