@@ -6,7 +6,6 @@ import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
 import mlscript.codegen.{CodeGenError, Scope}
-import javax.xml.transform.Source
 
 class JSBackend {
   // This object contains all classNames.
