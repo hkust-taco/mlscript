@@ -653,10 +653,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
         (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
+    case Def(false, Var("_"), L(rhs)) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs)) => // TODO reject R(..)
-      val ty_sch = typeLetRhs(isrec, nme, rhs)
-      ctx += nme -> ty_sch
-      R(nme -> ty_sch :: Nil)
+      if (nme.name === "_")
+        err(msg"Illegal definition name: ${nme.name}", nme.toLoc)(raise, noProv)
+      val ty_sch = typeLetRhs(isrec, nme.name, rhs)
+      ctx += nme.name -> ty_sch
+      R(nme.name -> ty_sch :: Nil)
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -758,8 +761,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       res
     }
     term match {
-      case v @ Var("_") => // TODO parse this differently... or handle consistently everywhere
-        freshVar(tp(v.toLoc, "wildcard"))
+      case v @ Var("_") =>
+        if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"))
+        else err(msg"Widlcard in expression position.", v.toLoc)
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
@@ -877,9 +881,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ => mthCall(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        val n_ty = typeLetRhs(isrec, nme, rhs)
+        val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
-        newCtx += nme -> n_ty
+        newCtx += nme.name -> n_ty
         typeTerm(bod)(newCtx, raise)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)

@@ -13,7 +13,7 @@ class JSBackend(pgrm: Pgrm) {
 
   // All names used in `def`s.
   private val defNames: HashSet[Str] = HashSet.from(pgrm.desugared._2._2 flatMap {
-    case Def(rec, nme, rhs) => S(nme)
+    case Def(rec, nme, rhs) => S(nme.name)
     case _                  => N
   })
 
@@ -150,9 +150,9 @@ class JSBackend(pgrm: Pgrm) {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      val letScope = Scope(name :: Nil, scope)
+      val letScope = Scope(name.name :: Nil, scope)
       JSImmEvalFn(
-        name :: Nil,
+        name.name :: Nil,
         letScope withTempVarDecls translateTerm(body)(letScope),
         translateTerm(value)(letScope) :: Nil
       )
@@ -424,7 +424,7 @@ class JSBackend(pgrm: Pgrm) {
           .concat(otherStmts.flatMap {
             case Def(_, mlsName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
-              val jsName = topLevelScope declare mlsName
+              val jsName = topLevelScope declare mlsName.name
               topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
                 JSInvoke(JSMember(resultsIdent, "push"), JSIdent(jsName) :: Nil).stmt :: Nil
             // Ignore type declarations.

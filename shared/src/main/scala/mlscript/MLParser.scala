@@ -13,8 +13,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   val keywords = Set(
     "def", "class", "trait", "type", "method",
     "let", "rec", "in", "fun", "with",
-    "if", "then", "else", "match", "case", "of",
-    "_")
+    "if", "then", "else", "match", "case", "of")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -64,7 +63,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2))
   def let[_: P]: P[Term] = locate(P(
-      kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ ident ~ term.rep ~ "=" ~ term ~ kw("in") ~ term
+      kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ variable ~ term.rep ~ "=" ~ term ~ kw("in") ~ term
     ) map {
       case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(toParams(i), acc)), bod)
     })
@@ -81,11 +80,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def _match[_: P]: P[CaseOf] =
     P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled)
   def matchArms[_: P]: P[CaseBranches] = P(
-    ((lit | variable) ~ "->" ~ term ~ matchArms2).map {
-      case (t, b, rest) => Case(t, b, rest)
-    } | (kw("_") ~ "->" ~ term).?.map {
+    ( ("_" ~ "->" ~ term).map(Wildcard)
+    | ((lit | variable) ~ "->" ~ term ~ matchArms2)
+      .map { case (t, b, rest) => Case(t, b, rest) }
+    ).?.map {
       case None => NoCases
-      case Some(b) => Wildcard(b)
+      case Some(b) => b
     }
   )
   def matchArms2[_: P]: P[CaseBranches] = ("|" ~ matchArms).?.map(_.getOrElse(NoCases))
@@ -145,9 +145,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def expr[_: P]: P[Term] = P( term ~ End )
   
   def defDecl[_: P]: P[Def] =
-    P((kw("def") ~ ident ~ tyParams ~ ":" ~/ ty map {
+    P((kw("def") ~ variable ~ tyParams ~ ":" ~/ ty map {
       case (id, tps, t) => Def(true, id, R(PolyType(tps, t)))
-    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ ident ~ subterm.rep ~ "=" ~ term map {
+    }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ variable ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))))
     }))
   
