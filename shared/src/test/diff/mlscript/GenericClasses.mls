@@ -115,6 +115,7 @@ Foo2
 //│ res: anything -> Foo2['A]
 //│    = [class Foo2]
 
+:re
 error: Foo2[int]
 //│ res: Foo2[int]
 //│ Runtime error:
@@ -128,6 +129,7 @@ f (Foo2 {})
 //│ res: Foo2['A]
 //│    = Foo2 {}
 
+:re
 error: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[anything .. nothing] & 'a) -> 'a
 //│ Runtime error:

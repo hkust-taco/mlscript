@@ -52,6 +52,7 @@ def foo x = case x of {
 // ====== 2 ====== //
 
 :stats
+:re
 def foo x = case x of {
   | A -> x.fA
   | B -> x.fB
@@ -71,6 +72,7 @@ foo arg
 // ====== 3 ====== //
 
 :stats
+:re
 def foo x = case x of {
   | A -> x.fA
   | B -> x.fB
@@ -91,6 +93,7 @@ foo arg
 // ====== 4 ====== //
 
 :stats
+:re
 def foo x = case x of {
   | A -> x.fA
   | B -> x.fB
@@ -109,6 +112,7 @@ foo arg
 //│ annoying  calls: 993
 
 :stats
+:re
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
 //│ Runtime error:
@@ -117,6 +121,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ annoying  calls: 996
 
 :stats
+:re
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
 //│ Runtime error:

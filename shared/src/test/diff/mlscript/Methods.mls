@@ -25,6 +25,7 @@ f.(Foo.Fun)
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
 
+:re
 Foo.Fun f
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 //│ Runtime error:
@@ -50,6 +51,7 @@ g.(Bar.Fun)
 //│ res: 'a -> 'a
 //│    = undefined
 
+:re
 Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
@@ -243,19 +245,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.244: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.244: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.244: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.228: 	class Class2C: Class2B[int, bool]
+//│ ║  l.230: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.227: 	    method MtdB: B
+//│ ║  l.229: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -291,10 +293,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.291: 	class Test4A[A]: { x: A }
+//│ ║  l.293: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.292: 	    method Mth4A[A]: A
+//│ ║  l.294: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing

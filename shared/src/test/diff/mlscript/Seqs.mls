@@ -28,18 +28,19 @@ def Nil = Nil { size = 0 }
 //│    = Nil { size: 0 }
 
 // FIXME
+:re
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	Cons 1 Nil
+//│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` does not match type `{size: ?size, tail: ?tail, head: ?head}`
-//│ ║  l.31: 	Cons 1 Nil
+//│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	Cons 1 Nil
+//│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` does not match type `?a -> ?b`
-//│ ║  l.31: 	Cons 1 Nil
+//│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -64,10 +65,10 @@ def Cons head tail =
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.65: 	Nil: ListBase[anything]
+//│ ║  l.66: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── expression of type `anything` does not match type `nothing`
-//│ ║  l.65: 	Nil: ListBase[anything]
+//│ ║  l.66: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}

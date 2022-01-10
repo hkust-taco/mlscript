@@ -45,6 +45,7 @@ def fn = foo None
 //│   = [class None]
 
 // :d
+:re
 fn{} // foo None {}
 //│ res: None
 //│ Runtime error:
@@ -89,13 +90,13 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.90: 	res 1
+//│ ║  l.91: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.90: 	res 1
+//│ ║  l.91: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.81: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.82: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: 1 | error
 //│ Runtime error:

@@ -78,13 +78,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      expectRuntimeError: Bool)
+      expectRuntimeErrors: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
+    var allowRuntimeErrors = false
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -105,11 +106,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "stats" => mode.copy(stats = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
+          case "re" => mode.copy(expectRuntimeErrors = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -160,6 +163,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             
             var totalTypeErrors = 0
             var totalWarnings = 0
+            var totalRuntimeErrors = 0
             
             def report(diags: Ls[Diagnostic]): Unit = {
               diags.foreach { diag =>
@@ -278,7 +282,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             )
 
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
-                file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
+                file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
                 if (mode.showGeneratedJS) {
@@ -322,11 +326,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 case R(S(head :: next)) =>
                   val text = head match {
                     case (false, err) =>
+                      if (!(mode.expectTypeErrors || mode.expectRuntimeErrors || allowRuntimeErrors))
+                        failures += blockLineNum
+                      totalRuntimeErrors += 1
                       output("Runtime error:")
                       err.split('\n') foreach { s => output("  " + s) }
                     case (true, result) =>
                       result.split('\n').zipWithIndex foreach { case (s, i) =>
-                        if (i == 0) output(" " * prefixLength + "= " + s)
+                        if (i =:= 0) output(" " * prefixLength + "= " + s)
                         else output(" " * (prefixLength + 2) + s)
                       }
                   }
@@ -401,6 +408,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)
+              failures += blockLineNum
+            if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum
         } catch {
           case err: Throwable =>

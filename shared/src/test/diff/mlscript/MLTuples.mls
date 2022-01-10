@@ -49,11 +49,13 @@ Hey t
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
+:re
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
+:re
 htx.x
 //│ res: 1
 //│ Runtime error:
@@ -71,6 +73,7 @@ f tx
 //│ res: {a: 1, b: 2, c: 3}
 //│    = { a: undefined, b: undefined, c: undefined }
 
+:re
 f htx
 //│ res: {a: 1, b: 2, c: 3}
 //│ Runtime error:
@@ -85,44 +88,44 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	f t
+//│ ║  l.87: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.84: 	f t
+//│ ║  l.87: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.79: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	f tx
+//│ ║  l.88: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.85: 	f tx
+//│ ║  l.88: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.79: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.86: 	f htx
+//│ ║  l.89: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~hey | (?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.86: 	f htx
+//│ ║  l.89: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.79: 	f ((a, b)) = add a b
+//│ ║  l.82: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│ Runtime error:
@@ -133,6 +136,7 @@ g arg = case arg of { Hey -> arg.x | _ -> () }
 //│ g: ({x: 'a} & hey | ~hey) -> (() | 'a)
 //│  = [Function: g]
 
+:re
 g htx
 g tx
 //│ res: () | 1
@@ -146,6 +150,7 @@ g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
 //│  = [Function: g1]
 
+:re
 g htx
 g (tx with { y = 2 })
 //│ res: 1
@@ -158,40 +163,43 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	g tx
+//│ ║  l.164: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.159: 	g tx
+//│ ║  l.164: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.145: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.149: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.145: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.149: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
-
+:re
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) else (2, 3)
 //│ res: anything
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: {b: 2 | 3}
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) else fun x -> x
 //│ res: anything
 //│ Runtime error:

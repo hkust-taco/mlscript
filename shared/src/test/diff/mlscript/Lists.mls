@@ -91,6 +91,7 @@ Cons 2
 //│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'c | Nil & 'c) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'c})
 //│    = [Function (anonymous)]
 
+:re
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│ Runtime error:
@@ -103,13 +104,13 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.104: 	Cons 1 res
+//│ ║  l.105: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
-//│ ║  l.94: 	Cons 2 Nil
+//│ ║  l.95: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `List[?A0]`
-//│ ║  l.104: 	Cons 1 res
+//│ ║  l.105: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
@@ -133,27 +134,31 @@ Cons 1 res
 //    have used a different "delayed with" type to be cleaner, though it's just not necessary.
 // But then I reverted to the use of simple field-hiding types, as they are simpler!
 // 
+:re
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
 //│ Runtime error:
 //│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
+:re
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'head')
 
-
+:re
 Cons 2 Nil
 //│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│ Runtime error:
 //│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
+:re
 Cons 1 (id res)
 //│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
 //│ Runtime error:
 //│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
+:re
 { a = res.head; b = res.tail.head; c = res.tail.tail }
 //│ res: {a: 1, b: 2, c: Nil}
 //│ Runtime error:
@@ -164,6 +169,7 @@ def Cons head = originalCons { head=0; tail=Nil } with { head }
 //│ Cons: 'a -> (Cons['A .. 0 | 'A] with {head: 'a, tail: Nil})
 //│     = [Function: Cons3]
 
+:re
 Cons 1
 //│ res: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
 //│ Runtime error:
@@ -173,18 +179,20 @@ res.head
 //│ res: 1
 //│    = undefined
 
+:re
 def c = Cons 1
 //│ c: Cons['A .. 0 | 'A] with {head: 1, tail: Nil}
 //│ Runtime error:
 //│   TypeError: Class constructor Cons cannot be invoked without 'new'
 
+:re
 c.head
 //│ res: 1
 //│ Runtime error:
 //│   ReferenceError: c1 is not defined
 
 
-
+:re
 def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
@@ -192,6 +200,7 @@ c 1 (c 2 Nil)
 //│ Runtime error:
 //│   ReferenceError: c1 is not defined
 
+:re
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
 //│ c: 'a -> (((Cons['b] with {tail: 'd & ('c | Nil)}) as 'c) & 'l | Nil & 'l) -> (Cons[anything] with {head: 'a, tail: ((Cons[anything] with {tail: 'f | 'e | Nil}) as 'e) & 'l | Nil & 'l})

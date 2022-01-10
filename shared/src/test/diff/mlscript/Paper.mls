@@ -114,6 +114,7 @@ def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
 //│       = [Function: tryDiv]
 // ^ Note: `0 | int & ~0` could be further simplified
 
+:re
 tryDiv 1 1
 tryDiv 1 0
 //│ res: None | Some[int]

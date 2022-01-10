@@ -61,21 +61,25 @@ eval1
 //│ res: 'a | ('b & 'c -> ('d & int) & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | add & 'h & {rhs: 'e} & {lhs: 'e} & ~lit | 'c & ~add & ~lit as 'e) -> ('g | 'i | int | 'd)
 //│    = [Function: eval1]
 
+:re
 error: ~Add[?]
 //│ res: ~Add[?]
 //│ Runtime error:
 //│   ReferenceError: error is not defined
 
+:re
 error: ('a & ~Lit) -> 'a
 //│ res: ('a & ~{val: int} | 'a & ~lit) -> 'a
 //│ Runtime error:
 //│   ReferenceError: error is not defined
 
+:re
 error: ('a & ~Add[?]) -> 'a
 //│ res: ('a & ~{Add#E} | 'a & ~{lhs: anything} | 'a & ~{rhs: anything} | 'a & ~add) -> 'a
 //│ Runtime error:
 //│   ReferenceError: error is not defined
 
+:re
 error: ('a & ~add) -> 'a
 //│ res: ('a & ~add) -> 'a
 //│ Runtime error:
@@ -85,6 +89,7 @@ error: ('a & ~add) -> 'a
 def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
 //│ eval1_ty_ugly: ('a -> int) -> (Lit | Add['b .. Lit | Add['b .. 'b0] | 'a & ~Lit & ~Add[?] as 'b0] | 'a & ~Lit & ~Add[?] as 'b) -> int
 
+:re
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
 //│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | 'a & 'b & ~add & ~lit as 'c) -> int
 //│ Runtime error:
@@ -100,6 +105,7 @@ def eval1_ty_ugly = eval1
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 //│ eval1_ty: ('a -> int) -> (Lit | Add['b .. Lit | Add['b .. 'b0] | 'a & ~lit & ~add as 'b0] | 'a & ~lit & ~add as 'b) -> int
 
+:re
 eval1_ty
 //│ res: ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│ Runtime error:
@@ -160,7 +166,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 
 
-
+:re
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
 eval1 done e1
 pretty1 done e1
@@ -179,6 +185,7 @@ prettier1 done (eval1 done) e1
 //│ Runtime error:
 //│   ReferenceError: intToString is not defined
 
+:re
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
 pretty1 done e1
@@ -253,6 +260,7 @@ prettier2 done
 //│ res: ('a -> int) -> ((Add[?] with {lhs: 'c & ((Add[?] with {lhs: 'd, rhs: 'd}) | Lit | (Nega[?] with {arg: 'b}) as 'd), rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | (Nega[?] with {arg: 'b}) as 'e}) & 'a | Lit | (Nega[?] with {arg: 'b}) as 'b) -> string
 //│    = [Function (anonymous)]
 
+:re
 prettier2 done (eval1 done)
 prettier2 done (eval1 done) e1
 //│ res: ((Add[?] with {lhs: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit as 'b, rhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit as 'c}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
@@ -261,6 +269,7 @@ prettier2 done (eval1 done) e1
 //│ Runtime error:
 //│   ReferenceError: intToString is not defined
 
+:re
 prettier2 done (eval2 done)
 prettier2 done (eval2 done) e2
 prettier2 done (eval2 done) d2
@@ -327,19 +336,19 @@ prettier2 done eval1 e1
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.156: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.162: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.222: 	  }) ev
+//│ ║  l.229: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.220: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.227: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.182: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.189: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e1
@@ -348,10 +357,10 @@ prettier2 done eval1 e1
 //│ ║  l.54: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from reference:
-//│ ║  l.156: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.162: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.152: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.158: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
