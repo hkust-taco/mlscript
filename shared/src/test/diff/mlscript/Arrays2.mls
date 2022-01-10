@@ -1,0 +1,52 @@
+:ShowRelativeLineNums
+
+class Array[A]: { size: int }
+  method Set: (int, A) -> ()
+  method Get: int -> A 
+//│ Defined class Array
+//│ Declared Array.Set: Array['A] -> (int, 'A,) -> ()
+//│ Declared Array.Get: Array['A] -> int -> 'A
+
+
+
+class Dummy[A]: Array[A] & { size: 0 }
+  method Set (i, a) = ()
+  method Get i = error
+//│ Defined class Dummy
+//│ Defined Dummy.Set: Dummy['A] -> (anything, anything,) -> ()
+//│ Defined Dummy.Get: Dummy['A] -> anything -> nothing
+
+
+dummy = Dummy { size = 0 }
+//│ dummy: Dummy['A]
+//│      = Dummy { size: 0 }
+
+dummy: Array[int]
+//│ res: Array[int]
+//│    = Dummy { size: 0 }
+
+
+def ty4B: Array[Array[Array['a]]] as 'a
+//│ ty4B: 'a | Array['c & Array['d .. Array[?]] .. Array['e & Array[?] .. Array['g & Array[Array[Array['h .. 'g] .. 'f] .. 'c] & 'a .. 'b] as 'f]] as 'b
+
+
+
+
+:e
+Array{ size = 0 }
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.+1: 	Array{ size = 0 }
+//│ ║        	^^^^^
+//│ ╟── Note that class Array is abstract:
+//│ ║  l.3: 	class Array[A]: { size: int }
+//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Hint: method Set is abstract
+//│ ║  l.4: 	  method Set: (int, A) -> ()
+//│ ║       	         ^^^^^^^^^^^^
+//│ ╟── Hint: method Get is abstract
+//│ ║  l.5: 	  method Get: int -> A 
+//│ ╙──     	         ^^^^^^^^^^^^^
+//│ res: error
+//│    = Array { size: 0 }
+
+

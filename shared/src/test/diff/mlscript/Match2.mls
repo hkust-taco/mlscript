@@ -82,7 +82,27 @@ baz "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.67: 	def baz x = case x of
 //│ ╙──      	                 ^
-//│ res: "oops" | error
+//│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
+
+
+
+def test3 x = case x of
+  { 1 -> true
+  | true -> true
+  | _ -> false
+  }
+//│ test3: (1 | true | ~1 & ~true) -> bool
+//│      = [Function: test3]
+
+
+def test3 x = case x of
+  { 1 -> x
+  | true -> true
+  | _ -> false
+  }
+//│ test3: (1 & 'a | true | ~1 & ~true) -> (false | true | 'a)
+//│      = [Function: test31]
+
 

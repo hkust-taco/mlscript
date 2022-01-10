@@ -129,9 +129,9 @@ class JSBackend {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      val letScope = Scope(name :: Nil, scope)
+      val letScope = Scope(name.name :: Nil, scope)
       JSImmEvalFn(
-        name :: Nil,
+        name.name :: Nil,
         letScope withTempVarDecls translateTerm(body)(letScope),
         translateTerm(value)(letScope) :: Nil
       )
@@ -423,7 +423,7 @@ class JSWebBackend extends JSBackend {
           .concat(otherStmts.flatMap {
             case Def(_, mlsName, L(body)) =>
               val translatedBody = translateTerm(body)(topLevelScope)
-              val jsName = topLevelScope declare mlsName
+              val jsName = topLevelScope declare mlsName.name
               topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
                 JSInvoke(JSMember(resultsIdent, "push"), JSIdent(jsName) :: Nil).stmt :: Nil
             // Ignore type declarations.
@@ -515,7 +515,7 @@ class JSTestBackend extends JSBackend {
         // catch (e) { console.log(e); }
         case Def(_, mlsName, L(body)) =>
           val translatedBody = translateTerm(body)(topLevelScope)
-          val jsName = topLevelScope declare mlsName
+          val jsName = topLevelScope declare mlsName.name
           S(
             topLevelScope.emitTempVarDecls() ->
              ((JSIdent("globalThis").member(jsName) := (translatedBody match {

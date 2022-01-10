@@ -13,6 +13,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   // The data types used for type inference:
   
   case class TypeProvenance(loco: Opt[Loc], desc: Str) {
+    def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
   
@@ -35,12 +36,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val prov: TypeProvenance
     def level: Int
     def instantiate(implicit lvl: Int) = this
+    constructedTypes += 1
   }
   type ST = SimpleType
   
   sealed abstract class BaseTypeOrTag extends SimpleType
   sealed abstract class BaseType extends BaseTypeOrTag
   sealed abstract class MiscBaseType extends BaseType
+  sealed trait Factorizable extends SimpleType
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = lhs.level max rhs.level
@@ -99,6 +102,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"~(${negated})"
   }
   
+  /** Represents a type `base` from which we have removed the fields in `names`. */
   case class Without(base: SimpleType, names: Set[Var])(val prov: TypeProvenance) extends MiscBaseType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
@@ -177,7 +181,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = id.idStr+s"<${parents.mkString(",")}>"
   }
   
-  case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag {
+  case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
     def level: Int = 0
     override def toString = id.idStr
   }
@@ -201,7 +205,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
       val nameHint: Opt[Str] = N
-  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] {
+  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
@@ -218,5 +222,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   trait CompactTypeOrVariable
   type PolarVariable = (TypeVariable, Boolean)
+  
+  case class NegVar(tv: TV) extends ProxyType with Factorizable {
+    lazy val underlying: SimpleType = tv.neg()
+    val prov = noProv
+  }
+  case class NegTrait(tt: TraitTag) extends ProxyType with Factorizable {
+    lazy val underlying: SimpleType = tt.neg()
+    val prov = noProv
+  }
   
 }

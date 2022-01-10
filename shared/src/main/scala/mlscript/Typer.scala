@@ -594,7 +594,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(r.fields.mapValues(rec))(tp(r.toLoc, "extension record")))(tp(ty.toLoc, "extension type"))
-      case Literal(lit) => ClassTag(lit, Set.single(lit.baseClass))(tp(ty.toLoc, "literal type"))
+      case Literal(lit) => ClassTag(lit, lit.baseClasses)(tp(ty.toLoc, "literal type"))
       case TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tp(tyLoc, "type reference")
@@ -610,7 +610,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 case R(td) => td.kind match {
                   case Cls => clsNameToNomTag(td)(tp(tyLoc, "class tag"), ctx)
                   case Trt => trtNameToNomTag(td)(tp(tyLoc, "trait tag"), ctx)
-                  case Als => err(msg"Type alias $name cannot be used as a type tag", tyLoc)(raise, tpr)
+                  case Als => err(
+                    msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise, tpr)
                 }
                 case L(_) => e()
               }
@@ -652,10 +653,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
         (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
+    case Def(false, Var("_"), L(rhs)) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs)) => // TODO reject R(..)
-      val ty_sch = typeLetRhs(isrec, nme, rhs)
-      ctx += nme -> ty_sch
-      R(nme -> ty_sch :: Nil)
+      if (nme.name === "_")
+        err(msg"Illegal definition name: ${nme.name}", nme.toLoc)(raise, noProv)
+      val ty_sch = typeLetRhs(isrec, nme.name, rhs)
+      ctx += nme.name -> ty_sch
+      R(nme.name -> ty_sch :: Nil)
     case t @ Tup(fs) if !allowPure => // Note: not sure this is still used!
       val thing = fs match {
         case (S(_), _) :: Nil => "field"
@@ -732,20 +736,34 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
-      var alreadyReportedAnError = false
+      var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: TypeError if alreadyReportedAnError => () // silence further errors from this location
         case err: TypeError =>
-          alreadyReportedAnError = true
-          constrain(errType, res)(_ => (), noProv, ctx) // This is just to get error types leak into the result
-          raise(err)
+          // Note that we do not immediately abort constraining because we still
+          //  care about getting the non-erroneous parts of the code return meaningful types.
+          // In other words, this is so that errors do not interfere too much
+          //  with the rest of the (hopefully good) code.
+          if (errorsCount === 0) {
+            constrain(errType, res)(_ => (), noProv, ctx)
+            // ^ This is just to get error types leak into the result
+            raise(err)
+          } else if (errorsCount < 3) {
+            // Silence further errors from this location.
+          } else {
+            return res
+            // ^ Stop constraining, at this point.
+            //    This is to avoid rogue (explosive) constraint solving from badly-behaved error cases.
+            //    For instance see the StressTraits.mls test.
+          }
+          errorsCount += 1
         case diag => raise(diag)
       }, prov, ctx)
       res
     }
     term match {
-      case v @ Var("_") => // TODO parse this differently... or handle consistently everywhere
-        freshVar(tp(v.toLoc, "wildcard"))
+      case v @ Var("_") =>
+        if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"))
+        else err(msg"Widlcard in expression position.", v.toLoc)
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
@@ -772,7 +790,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"
         // but we used to get the better "flows into object receiver" or "flows into applied expression"...
-      case lit: Lit => ClassTag(lit, Set.single(lit.baseClass))(prov)
+      case lit: Lit => ClassTag(lit, lit.baseClasses)(prov)
       case App(Var("neg" | "~"), trm) => typeTerm(trm).neg(prov)
       case App(App(Var("|"), lhs), rhs) =>
         typeTerm(lhs) | (typeTerm(rhs), prov)
@@ -863,9 +881,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ => mthCall(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
-        val n_ty = typeLetRhs(isrec, nme, rhs)
+        val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
-        newCtx += nme -> n_ty
+        newCtx += nme.name -> n_ty
         typeTerm(bod)(newCtx, raise)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
@@ -918,7 +936,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     case Case(pat, bod, rest) =>
       val patTy = pat match {
         case lit: Lit =>
-          ClassTag(lit, Set.single(lit.baseClass))(tp(pat.toLoc, "literal pattern"))
+          ClassTag(lit, lit.baseClasses)(tp(pat.toLoc, "literal pattern"))
         case Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {

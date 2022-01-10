@@ -14,21 +14,42 @@ def foo x = case x of {
 //│ foo: ((A with {fA: 'a}) | (B with {fB: 'a}) | (C with {fC: 'a})) -> 'a
 //│    = [Function: foo]
 
+
+b = B { fB = "test" }
+//│ b: B & {fB: "test"}
+//│  = B { fB: 'test' }
+
+:stats
+foo b
+//│ res: "test"
+//│    = 'test'
+//│ constrain calls  : 16
+//│ annoying  calls  : 10
+//│ subtyping calls  : 20
+
+
 def arg: A | B | C
 //│ arg: A | B | C
 
 :re
+:stats
 foo arg
 //│ res: bool | int | string
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
+//│ constrain calls  : 31
+//│ annoying  calls  : 30
+//│ subtyping calls  : 75
 
 :re
+:stats
 foo (arg with { fC = true })
 //│ res: int | string | true
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-
+//│ constrain calls  : 21
+//│ annoying  calls  : 28
+//│ subtyping calls  : 82
 
 def foo x = case x of {
   | A -> add x.fA x.payload
@@ -39,29 +60,37 @@ def foo x = case x of {
 //│    = [Function: foo1]
 
 :e
+:stats
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	foo arg
+//│ ║  l.64: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `A` does not match type `{payload: ?a}`
-//│ ║  l.17: 	def arg: A | B | C
+//│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `A & ?b | B & ?c | C & ?d`
-//│ ║  l.42: 	foo arg
+//│ ║  l.64: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.34: 	  | A -> add x.fA x.payload
+//│ ║  l.55: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.33: 	def foo x = case x of {
+//│ ║  l.54: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
+//│ constrain calls  : 38
+//│ annoying  calls  : 40
+//│ subtyping calls  : 148
 
 :re
+:stats
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
+//│ constrain calls  : 30
+//│ annoying  calls  : 38
+//│ subtyping calls  : 91
 

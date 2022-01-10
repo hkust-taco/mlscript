@@ -261,10 +261,10 @@ trait TermImpl extends StatementImpl { self: Term =>
 private class NotAType(val trm: Term) extends Throwable
 
 trait LitImpl { self: Lit =>
-  def baseClass: Var = this match {
-    case _: IntLit => Var("int")
-    case _: StrLit => Var("string")
-    case _: DecLit => Var("number")
+  def baseClasses: Set[Var] = this match {
+    case _: IntLit => Set.single(Var("int")) + Var("number")
+    case _: StrLit => Set.single(Var("string"))
+    case _: DecLit => Set.single(Var("number"))
   }
 }
 
@@ -342,7 +342,7 @@ trait StatementImpl extends Located { self: Statement =>
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
-      diags -> (Def(isrec, v.name, L(args.foldRight(rhs)(Lam(_, _)))).withLocOf(l) :: Nil) // TODO use v, not v.name
+      diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _)))).withLocOf(l) :: Nil) // TODO use v, not v.name
     case d @ DataDefn(body) => desugarCases(body :: Nil, Nil)
     case d @ DatatypeDefn(hd, bod) =>
       val (diags, v, args) = desugDefnPattern(hd, Nil)
@@ -427,7 +427,7 @@ trait StatementImpl extends Located { self: Statement =>
           val params = args.flatMap(getFields)
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
-          val ctor = Def(false, v.name, R(PolyType(tps,
+          val ctor = Def(false, v, R(PolyType(tps,
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList)).withLocOf(stmt)
           td :: ctor :: cs

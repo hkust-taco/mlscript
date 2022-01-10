@@ -144,16 +144,29 @@ x => foo { v: x }
 //│ res: (0 & 'a | 1 & 'a) -> (2 | 'a)
 
 
+// Notice that in MLscript, `(0, 0) | (1, 1)` is equivalent to `(0 | 1, 0 | 1)`
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
 //│ bar: (r: (0 | 1, 0 | 1,) & {_1: int & 'a, _2: 'a},) -> 'a
 
-// :e
 bar(0, 1)
-bar(2, 2)
 //│ res: 0 | 1
-//│ res: 2
 
-// TODO
+:e
+bar(2, 2)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.155: 	bar(2, 2)
+//│ ║         	^^^^^^^^^
+//│ ╟── expression of type `2` does not match type `0 | 1`
+//│ ║  l.155: 	bar(2, 2)
+//│ ║         	    ^
+//│ ╟── but it flows into argument with expected type `(r: ?a,)`
+//│ ║  l.155: 	bar(2, 2)
+//│ ║         	   ^^^^^^
+//│ ╟── Note: constraint arises from type union:
+//│ ║  l.148: 	let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
+//│ ╙──       	           ^^^^^^^^^^^^^^^
+//│ res: 2 | error
+
 bar(0, 0)
 bar(1, 1)
 bar(0, _)
@@ -163,41 +176,55 @@ bar(_, 1)
 //│ res: 0
 //│ res: 1
 
-// TODO
-x => bar(x, x) // TODO simplify better
+let f x = bar(x, x)
+//│ f: (0 & 'a | 1 & 'a) -> 'a
+
+f 0
+f 1
+//│ res: 0
+//│ res: 1
+
+:e
+f 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.188: 	f 2
+//│ ║         	^^^
+//│ ╟── expression of type `2` does not match type `0 | 1`
+//│ ║  l.188: 	f 2
+//│ ║         	  ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.179: 	let f x = bar(x, x)
+//│ ╙──       	              ^
+//│ res: 2 | error
+
 x => bar(1, x)
 x => bar(x, 0)
-//│ res: (int & 'a) -> 'a
-//│ res: 'a -> (1 | 'a)
-//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (1 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
 
-// :e
 bar(_, _)
 (x, y) => bar(x, y)
 //│ res: nothing
-//│ res: (int & 'a, 'a,) -> 'a
+//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> 'a
 
 // ^ TODO allow explicit request for inferring an overloaded type in case of ambiguities
 
-// TODO
 x => bar(bar(0, x), 0)
 x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
-//│ res: (int & 'a) -> (0 | 'a)
-//│ res: (int & 'a) -> (0 | 'a)
-//│ res: (int & 'a) -> (0 | 'a)
-//│ res: (int & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
 
-// :e
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
-//│ res: (int & 'a) -> (0 | 1 | 'a)
-//│ res: (int & 'a, int & 'a,) -> 'a
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 1 | 'a)
+//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> 'a
 
-// :e // TODO delay tricky constraints for later (instead of eager) resolution:
 (x, y) => bar(bar(x, y), 0)
-//│ res: (int & 'a, int & 'a,) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> (0 | 'a)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
@@ -206,19 +233,19 @@ let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 :e
 baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	baz(0)
+//│ ║  l.234: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.207: 	baz(0)
+//│ ║  l.234: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a,)`
-//│ ║  l.207: 	baz(0)
+//│ ║  l.234: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.203: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.230: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                     ^^^
 //│ ╟── from parameter type:
-//│ ║  l.203: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.230: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^
 //│ res: error
 
@@ -246,24 +273,23 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.246: 	baz(0)
+//│ ║  l.273: 	baz(0)
 //│ ║         	^^^^^^
 //│ ╟── expression of type `0` does not have field '_2'
-//│ ║  l.246: 	baz(0)
+//│ ║  l.273: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a,)`
-//│ ║  l.246: 	baz(0)
+//│ ║  l.273: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.242: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.269: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ║         	                                                          ^^^
 //│ ╟── from parameter type:
-//│ ║  l.242: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.269: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error
 //│ res: 0 | 1
 
-// TODO
 baz(0, 0)
 baz(1, 1)
 x => baz(0, x)
@@ -273,13 +299,12 @@ x => baz(x, 1)
 //│ res: 1
 //│ res: 'a -> (0 | 'a)
 //│ res: 'a -> (1 | 'a)
-//│ res: (int & 'a) -> (1 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> (1 | 'a)
 
-// :e
 x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
-//│ res: (int & 'a) -> (0 | 'a)
-//│ res: (int & 'a) -> 'a
-//│ res: (int & 'a, 'a,) -> 'a
+//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: (0 & 'a | 1 & 'a) -> 'a
+//│ res: (0 & 'a | 1 & 'a, 'a,) -> 'a
 

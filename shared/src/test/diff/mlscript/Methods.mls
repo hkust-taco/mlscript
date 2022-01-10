@@ -310,3 +310,52 @@ class Test[A]: { x: A }
 //│ Defined Test.Mth: Test['A] -> ('A -> 'B) -> 'B
 
 
+
+trait D
+  method G = 1
+trait E
+  method G: int
+class H: D & E
+//│ Defined trait D
+//│ Defined D.G: d -> 1
+//│ Defined trait E
+//│ Declared E.G: e -> int
+//│ Defined class H
+
+((H{}): D).(D.G)
+//│ res: 1
+//│    = undefined
+
+
+
+class Fee
+    method F: 1 | 2
+//│ Defined class Fee
+//│ Declared Fee.F: Fee -> (1 | 2)
+
+trait Fee2
+    method F: 2 | 3
+//│ Defined trait Fee2
+//│ Declared Fee2.F: fee2 -> (2 | 3)
+
+class Ber: Fee & Fee2
+//│ Defined class Ber
+
+Ber.F
+//│ res: (Ber & fee2) -> 2
+//│    = undefined
+
+:e
+Ber
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.349: 	Ber
+//│ ║         	^^^
+//│ ╟── Note that class Ber is abstract:
+//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ║         	      ^^^^^^^^^^^^^^^
+//│ ╟── Hint: method F is abstract
+//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ╙──       	      ^^^^^^^^^^^^^^^
+//│ res: error
+//│    = [class Ber extends Fee]
+

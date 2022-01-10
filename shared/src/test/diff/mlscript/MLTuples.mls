@@ -118,10 +118,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.89: 	f htx
 //│ ║        	^^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~hey | (?a, ?b,)`
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
 //│ ║  l.89: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:

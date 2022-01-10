@@ -519,32 +519,48 @@ class Dup[A, A]: { x: A }
 t = Dup { x = 42 }
 //│ t: Dup['A | 'A0 .. 42 & 'A | 'A & 'A0, 'A | 'A0 .. 42 & 'A | 'A & 'A0] with {x: 42}
 
+:stats
 t : Dup[bool, int]
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+//│ constrain calls  : 53
+//│ annoying  calls  : 72
+//│ subtyping calls  : 162
 
+:stats
 t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.525: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── expression of type `42` does not match type `bool`
 //│ ║  l.519: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── but it flows into reference with expected type `Dup[int, bool]`
-//│ ║  l.525: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.525: 	t : Dup[int, bool]
+//│ ║  l.530: 	t : Dup[int, bool]
 //│ ║         	             ^^^^
 //│ ╟── from record type:
 //│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+//│ constrain calls  : 70
+//│ annoying  calls  : 72
+//│ subtyping calls  : 161
 
-// SOF... (other than 'A -> T, anything -> T)
-// t.MthDup (fun x -> mul 2 x)
+:stats
+t.MthDup (fun x -> mul 2 x)
+//│ res: int
+//│ constrain calls  : 65
+//│ annoying  calls  : 33
+//│ subtyping calls  : 43
 
+:stats
 t.MthDup id
 //│ res: 42
+//│ constrain calls  : 47
+//│ annoying  calls  : 31
+//│ subtyping calls  : 58
 
 
 // We don't currently analyze forward method declarations
@@ -556,7 +572,7 @@ class B: { x: int }
   method F: int
   method F = 1
 //│ ╔══[ERROR] identifier not found: Yes
-//│ ║  l.554: 	  method Nope = Yes.F
+//│ ║  l.570: 	  method Nope = Yes.F
 //│ ╙──       	                ^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})
@@ -564,4 +580,69 @@ class B: { x: int }
 //│ Defined class B
 //│ Declared B.F: B -> int
 //│ Defined B.F: B -> 1
+
+
+trait D
+  method G = 1
+trait E
+  method G: int
+class H: D & E
+  method G = 2
+//│ ╔══[ERROR] Overriding method D.G without explicit declaration is not allowed.
+//│ ║  l.590: 	  method G = 2
+//│ ╙──       	         ^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.590: 	  method G = 2
+//│ ║         	         ^^^^^
+//│ ╟── expression of type `2` does not match type `1`
+//│ ║  l.590: 	  method G = 2
+//│ ║         	             ^
+//│ ╟── but it flows into method definition with expected type `1`
+//│ ║  l.590: 	  method G = 2
+//│ ║         	         ^^^^^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.586: 	  method G = 1
+//│ ╙──       	             ^
+//│ Defined trait D
+//│ Defined D.G: d -> 1
+//│ Defined trait E
+//│ Declared E.G: e -> int
+//│ Defined class H
+//│ Defined H.G: (H & d & e) -> 2
+
+h = H{}
+//│ h: H
+
+d = h: D
+//│ d: d
+
+d.(D.G)
+//│ res: 1
+
+((H{}): D).(D.G)
+//│ res: 1
+
+
+trait D2
+  method G2 = 1
+trait E2
+  method G2: bool
+class H2: D2 & E2
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.627: 	  method G2 = 1
+//│ ║         	         ^^^^^^
+//│ ╟── expression of type `1` does not match type `bool`
+//│ ║  l.627: 	  method G2 = 1
+//│ ║         	              ^
+//│ ╟── but it flows into method definition with expected type `bool`
+//│ ║  l.627: 	  method G2 = 1
+//│ ║         	         ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.629: 	  method G2: bool
+//│ ╙──       	             ^^^^
+//│ Defined trait D2
+//│ Defined D2.G2: d2 -> 1
+//│ Defined trait E2
+//│ Declared E2.G2: e2 -> bool
+//│ Defined class H2
 

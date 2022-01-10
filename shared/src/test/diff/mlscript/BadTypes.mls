@@ -25,7 +25,7 @@ type Hello = int
 
 :e
 42: hello
-//│ ╔══[ERROR] Type alias hello cannot be used as a type tag
+//│ ╔══[ERROR] Type alias Hello cannot be used as a type tag
 //│ ║  l.27: 	42: hello
 //│ ╙──      	    ^^^^^
 //│ res: error
@@ -79,4 +79,54 @@ aa.a
 aa: { a: 'a }
 //│ res: {a: 1}
 //│    = { a: 'oops' }
+
+
+
+
+// It is not sound to allow free type variables in type definitions
+
+
+type Bad = { x: 'a }
+//│ Defined type alias Bad
+
+{x = 123}: Bad
+//│ res: {x: nothing}
+//│    = { x: 123 }
+
+
+type BadRec = { x: 'a; y: BadRec }
+//│ Defined type alias BadRec
+
+def someRec: { y: 'a } as 'a
+//│ someRec: {y: 'a} as 'a
+
+// FIXME: causes SOF
+// someRec: BadRec
+// //│ ╔══[ERROR] Type mismatch in type ascription:
+// //│ ║  l.97: 	someRec: BadRec
+// //│ ║        	^^^^^^^
+// //│ ╟── expression of type `{y: ?a}` does not have field 'x'
+// //│ ║  l.93: 	def someRec: { y: 'a } as 'a
+// //│ ║        	             ^^^^^^^^^
+// //│ ╟── but it flows into reference with expected type `BadRec`
+// //│ ║  l.97: 	someRec: BadRec
+// //│ ║        	^^^^^^^
+// //│ ╟── Note: constraint arises from record type:
+// //│ ║  l.90: 	type BadRec = { x: 'a; y: BadRec }
+// //│ ║        	              ^^^^^^^^^^^^^^^^^^^^
+// //│ ╟── from type reference:
+// //│ ║  l.97: 	someRec: BadRec
+// //│ ╙──      	         ^^^^^^
+// //│ /!!!\ Uncaught error: java.lang.StackOverflowError
+// //│ 	at: mlscript.Typer$$Lambda$23743/1675470327.<init>(Unknown Source)
+// //│ 	at: mlscript.Typer$$Lambda$23743/1675470327.get$Lambda(Unknown Source)
+// //│ 	at: mlscript.Typer.rec$3(Typer.scala:624)
+// //│ 	at: mlscript.Typer.$anonfun$typeType$12(Typer.scala:592)
+// //│ 	at: scala.collection.immutable.List.map(List.scala:246)
+// //│ 	at: mlscript.Typer.rec$3(Typer.scala:589)
+// //│ 	at: mlscript.Typer.typeType(Typer.scala:647)
+// //│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:144)
+// //│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:142)
+// //│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:329)
+
 

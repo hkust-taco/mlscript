@@ -56,6 +56,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
     
+    print(s"Processing  $fileName")
+    // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
+    // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    
+    val beginTime = System.nanoTime()
+    
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
     
@@ -65,9 +71,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
+    var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def funkyTuples = file.ext =:= "fun"
-      override def emitDbg(str: String): Unit = output(str)
+      override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
@@ -77,10 +84,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
-      noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
+      stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
       expectRuntimeErrors: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false)
+      false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -105,6 +112,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
           case "ns" | "no-simpl" => mode.copy(noSimplification = true)
           case "stats" => mode.copy(stats = true)
+          case "stdout" => mode.copy(stdout = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
@@ -160,6 +168,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
+            stdout = mode.stdout
             
             var totalTypeErrors = 0
             var totalWarnings = 0
@@ -347,26 +356,26 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
                     vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
-                ctx += nme -> ty_sch
-                declared += nme -> ty_sch
+                ctx += nme.name -> ty_sch
+                declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
               case d @ Def(isrec, nme, L(rhs)) =>
-                val ty_sch = typer.typeLetRhs(isrec, nme, rhs)(ctx, raise)
+                val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
-                declared.get(nme) match {
+                declared.get(nme.name) match {
                   case N =>
-                    ctx += nme -> ty_sch
+                    ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
                   case S(sign) =>
-                    ctx += nme -> sign
+                    ctx += nme.name -> sign
                     val sign_exp = getType(sign)
                     output(exp.show)
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                 }
-                showResult(nme.length())
+                showResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
@@ -400,9 +409,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             }
             
             if (mode.stats) {
-              val (co, an) = typer.stats
-              output(s"constrain calls: " + co)
-              output(s"annoying  calls: " + an)
+              val (co, an, su, ty) = typer.stats
+              output(s"constrain calls  : " + co)
+              output(s"annoying  calls  : " + an)
+              output(s"subtyping calls  : " + su)
+              // output(s"constructed types: " + ty)
             }
             
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
@@ -429,12 +440,18 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     try rec(allLines, defaultMode) finally {
       out.close()
     }
+    val testFaield = failures.nonEmpty
     val result = strw.toString
+    val endTime = System.nanoTime()
+    val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
+    val testColor = if (testFaield) Console.RED else Console.GREEN
+    println(s"${" " * (30 - fileName.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}")
     if (result =/= fileContents) {
-      println(s"Updating $file...")
+      println(s"! Updating $file")
       write.over(file, result)
     }
-    if (failures.nonEmpty)
+    if (testFaield)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     host.terminate()
   }}
