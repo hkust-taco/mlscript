@@ -277,7 +277,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               }
             )
 
-            var results: (Str, Bool) \/ Opt[Ls[Str \/ Str]] = if (!allowTypeErrors &&
+            var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext == "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
@@ -321,10 +321,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               results match {
                 case R(S(head :: next)) =>
                   val text = head match {
-                    case L(err) =>
+                    case (false, err) =>
                       output("Unexpected runtime error")
                       err.split('\n') foreach { s => output("  " + s) }
-                    case R(result) =>
+                    case (true, result) =>
                       result.split('\n').zipWithIndex foreach { case (s, i) =>
                         if (i == 0) output(" " * prefixLength + "= " + s)
                         else output(" " * (prefixLength + 2) + s)
@@ -451,7 +451,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       ()
     }
 
-    private def consumeUntilPrompt(): Str \/ Str = {
+    private def consumeUntilPrompt(): (Bool, Str) = {
       val buffer = new StringBuilder()
       while (!buffer.endsWith("\n> ")) {
         buffer.append(stdout.read().toChar)
@@ -463,9 +463,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       if (begin >= 0 && end >= 0)
         // `console.log` inserts a space between every two arguments,
         // so + 1 and - 1 is necessary to get correct length.
-        L(reply.substring(begin + 1, end))
+        (false, reply.substring(begin + 1, end))
       else
-        R(reply)
+        (true, reply)
     }
 
     private def send(code: Str, useEval: Bool = false): Unit = {
@@ -477,12 +477,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       stdin.flush()
     }
 
-    def query(prelude: Str, code: Str): Str \/ Str = {
+    def query(prelude: Str, code: Str): (Bool, Str) = {
       val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
       send(wrapped)
-      consumeUntilPrompt() flatMap { _ =>
-        send("res")
-        consumeUntilPrompt()
+      consumeUntilPrompt() match {
+        case (true, _) =>
+          send("res")
+          consumeUntilPrompt()
+        case t => t
       }
     }
 

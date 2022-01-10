@@ -220,7 +220,7 @@ let x = 0 in x + 1
 :js
 def f x = case x of { }
 //│ // Query 1
-//│ globalThis.f1 = function f(x) {
+//│ globalThis.f1 = function f1(x) {
 //│   let temp;
 //│   return (temp = x, (function () {
 //│     throw new Error("non-exhaustive case expression");
@@ -229,7 +229,7 @@ def f x = case x of { }
 //│ res = f1;
 //│ // End of generated code
 //│ f: nothing -> nothing
-//│  = [Function: f]
+//│  = [Function: f1]
 
 // CaseOf: Just the wildcard
 :js
