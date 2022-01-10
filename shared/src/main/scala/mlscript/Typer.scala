@@ -89,11 +89,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
    *    and the second value is the method name.
    *  The public helper functions should be preferred for manipulating `mthEnv`
    */
-  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeScheme], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
+  case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeInfo], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
-    def +=(b: Binding): Unit = env += b
-    def ++=(bs: IterableOnce[Binding]): Unit = bs.iterator.foreach(+=)
-    def get(name: Str): Opt[TypeScheme] = env.get(name) orElse parent.dlof(_.get(name))(N)
+    def +=(b: Str -> TypeInfo): Unit = env += b
+    def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
+    def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
@@ -763,7 +763,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   object ValidPatVar {
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
-        ctx.parent.dlof(_.get(v.name))(N).map(_.instantiate(0).unwrapProxies) |>? {
+        ctx.parent.dlof(_.get(v.name))(N) |>? { case S(ts: TypeScheme) => ts.instantiate(0).unwrapProxies } |>? {
           case S(ClassTag(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
@@ -816,7 +816,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         else ty_ty
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
-        ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!
+        // Note: only look at ctx.env, and not the outer ones!
+        ctx.env.get(nme).collect { case ts: TypeScheme => ts.instantiate }
           .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
@@ -826,7 +827,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
               :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
               :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList)
-          case ty => ty
+          case ty: TypeScheme => ty
         }.instantiate
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?

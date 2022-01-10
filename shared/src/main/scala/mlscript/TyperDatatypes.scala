@@ -16,10 +16,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
+
+  sealed abstract class TypeInfo
+
+  case class AbstractConstructor(absMths: Set[Var]) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
-  sealed abstract class TypeScheme {
+  sealed abstract class TypeScheme extends TypeInfo {
     def instantiate(implicit lvl: Int): SimpleType
   }
   
@@ -50,15 +54,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private def apply(level: Int, body: SimpleType, parents: List[TypeName], single: Bool): MethodType =
       new MethodType(level, body, parents, single)
     def unapply(mt: MethodType): S[(Int, SimpleType, List[TypeName])] = S((mt.level, mt.body, mt.parents))
-  }
-
-  class AbstractConstructor(val absMths: Set[Var])(body: SimpleType) extends PolymorphicType(0, body) {
-    override def toString: Str = s"AbstractConstructor($absMths)"
-  }
-  object AbstractConstructor {
-    def apply(absMths: Set[Var])(implicit prov: TypeProvenance): AbstractConstructor =
-      new AbstractConstructor(absMths)(errType(prov))
-    def unapply(ctor: AbstractConstructor): S[Set[Var]] = S(ctor.absMths)
   }
   
   /** A type without universally quantified type variables. */
