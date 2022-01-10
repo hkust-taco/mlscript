@@ -62,7 +62,7 @@ foo arg
 //│    = [Function: foo1]
 //│ arg: A[int] | B[int]
 //│ res: int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: arg is not defined
 //│ constrain calls: 44
 //│ annoying  calls: 78
@@ -82,7 +82,7 @@ foo arg
 //│    = [Function: foo2]
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: arg is not defined
 //│ constrain calls: 106
 //│ annoying  calls: 301
@@ -103,7 +103,7 @@ foo arg
 //│    = [Function: foo3]
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: arg is not defined
 //│ constrain calls: 273
 //│ annoying  calls: 993
@@ -111,7 +111,7 @@ foo arg
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: arg is not defined
 //│ constrain calls: 245
 //│ annoying  calls: 996
@@ -119,7 +119,7 @@ foo (arg with { x = 1} with { y = 2 })
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: arg is not defined
 //│ constrain calls: 245
 //│ annoying  calls: 996

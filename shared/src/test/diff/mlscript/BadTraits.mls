@@ -40,7 +40,7 @@ T a
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	             ^
 //│ res: A & t | error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: T is not defined
 
 :e
@@ -55,7 +55,7 @@ T A
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: anything -> A & t | error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: T is not defined
 
 :e
@@ -70,17 +70,17 @@ T (B {})
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: B & t | error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: T is not defined
 
 def t = T error
 //│ t: nothing
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: T is not defined
 
 t: nothing
 //│ res: nothing
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: t is not defined
 
 type Als = A & B
@@ -88,7 +88,7 @@ type Als = A & B
 
 t: Als
 //│ res: nothing
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: t is not defined
 
 

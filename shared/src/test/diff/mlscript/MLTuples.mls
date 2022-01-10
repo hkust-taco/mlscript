@@ -46,17 +46,17 @@ Hey t
 //│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
 htx.x
 //│ res: 1
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: htx is not defined
 
 f ((a, b, c)) = { a; b; c }
@@ -73,7 +73,7 @@ f tx
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: htx is not defined
 
 f ((a, b)) = add a b
@@ -125,7 +125,7 @@ f htx
 //│ ║  l.79: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: htx is not defined
 
 
@@ -136,10 +136,10 @@ g arg = case arg of { Hey -> arg.x | _ -> () }
 g htx
 g tx
 //│ res: () | 1
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: htx is not defined
 //│ res: () | 1
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
@@ -149,10 +149,10 @@ g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 g htx
 g (tx with { y = 2 })
 //│ res: 1
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: htx is not defined
 //│ res: 1 | 2
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
 :e
@@ -173,27 +173,27 @@ g tx
 //│ ║  l.145: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
 
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: bool is not defined
 
 if bool then (1,) else (2, 3)
 //│ res: anything
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: bool is not defined
 
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: {b: 2 | 3}
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: bool is not defined
 
 if bool then (1,) else fun x -> x
 //│ res: anything
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: bool is not defined
 

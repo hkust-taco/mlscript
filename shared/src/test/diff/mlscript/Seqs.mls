@@ -42,7 +42,7 @@ Cons 1 Nil
 //│ ║  l.31: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
-//│ Runtime error
+//│ Runtime error:
 //│   TypeError: (intermediate value) is not a function
 
 Cons

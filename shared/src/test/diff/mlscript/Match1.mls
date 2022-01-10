@@ -10,7 +10,7 @@ case 1 of { }
 //│ ║       	     ^
 //│ ╙── expression of type `1` does not match type `nothing`
 //│ res: nothing
-//│ Runtime error
+//│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 :e
@@ -19,7 +19,7 @@ case 1 of { A -> 0 }
 //│ ║  l.17: 	case 1 of { A -> 0 }
 //│ ╙──      	            ^
 //│ res: error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: A is not defined
 
 :e
@@ -28,7 +28,7 @@ case 1 of { A -> 0 | B -> 1 }
 //│ ║  l.26: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	            ^
 //│ res: error
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: A is not defined
 
 :e

@@ -72,7 +72,7 @@ safeDiv 1 0
 //│ ║  l.59: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                        ^^
 //│ res: error | int
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: div is not defined
 
 fun x -> safeDiv 1 x
@@ -117,7 +117,7 @@ def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
 tryDiv 1 1
 tryDiv 1 0
 //│ res: None | Some[int]
-//│ Runtime error
+//│ Runtime error:
 //│   ReferenceError: div is not defined
 //│ res: None | Some[int]
 //│    = None {}

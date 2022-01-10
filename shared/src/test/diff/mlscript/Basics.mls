@@ -80,7 +80,7 @@ def z = x + y
 //│ ║  l.72: 	1
 //│ ╙──      	^
 //│ res: error
-//│ Runtime error
+//│ Runtime error:
 //│   TypeError: 1 is not a function
 
 def f x y z = add x y 

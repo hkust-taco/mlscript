@@ -142,6 +142,6 @@ q q
 //│ ║  l.134: 	q q
 //│ ╙──       	^
 //│ res: error
-//│ Runtime error
+//│ Runtime error:
 //│   TypeError: q is not a function
 
