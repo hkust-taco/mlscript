@@ -561,7 +561,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         decls.foreach { case nme -> mt =>
           implicit val prov: TypeProvenance = mt.prov
           println(s">> Checking subsumption for declared type of $nme : $mt")
-          declsInherit.get(nme).orElse(defnsInherit.get(nme).tap(_.foreach(overrideError(nme, mt, _)))).foreach(ss(mt, _))
+          ((declsInherit.get(nme), defnsInherit.get(nme)) match {
+            case (S(decl), S(defn)) =>
+              if (mt.body =/= decl.body && !defns.isDefinedAt(nme)) defn.parents.foreach(parent => 
+                err(msg"Overriding method ${parent}.${nme} without an overriding definition is not allowed." -> mt.prov.loco ::
+                  msg"Note: method definition inherited from" -> defn.prov.loco :: Nil)(raise, noProv))
+              S(decl)
+            case (S(decl), N) => S(decl)
+            case (N, S(defn)) =>
+              overrideError(nme, mt, defn)
+              S(defn)
+            case (N, N) => N
+          }).foreach(ss(mt, _))
           val mthTy = td.wrapMethod(mt)
           ctx.addMth(S(tn.name), nme, mthTy)
           registerImplicit(nme, mthTy)

@@ -409,6 +409,12 @@ class Test4B: Test4A
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.399: 	    method Mth4A: int
 //│ ╙──       	                  ^^^
+//│ ╔══[ERROR] Overriding method Test4A.Mth4A without an overriding definition is not allowed.
+//│ ║  l.399: 	    method Mth4A: int
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.393: 	    method Mth4A = true
+//│ ╙──       	           ^^^^^^^^^^^^
 //│ Defined class Test4B
 //│ Declared Test4B.Mth4A: Test4B -> int
 
@@ -425,16 +431,16 @@ class Test5A
 class Test5B: Test5A
     method Mth5A = 43
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.426: 	    method Mth5A = 43
+//│ ║  l.432: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── expression of type `43` does not match type `42`
-//│ ║  l.426: 	    method Mth5A = 43
+//│ ║  l.432: 	    method Mth5A = 43
 //│ ║         	                   ^^
 //│ ╟── but it flows into method definition with expected type `42`
-//│ ║  l.426: 	    method Mth5A = 43
+//│ ║  l.432: 	    method Mth5A = 43
 //│ ║         	           ^^^^^^^^^^
 //│ ╟── Note: constraint arises from inherited method declaration:
-//│ ║  l.424: 	    method Mth5A: 42
+//│ ║  l.430: 	    method Mth5A: 42
 //│ ╙──       	           ^^^^^
 //│ Defined class Test5A
 //│ Declared Test5A.Mth5A: Test5A -> 42
@@ -458,45 +464,45 @@ class Test6C: Test6A[int] & Test6B
 :e
 Test6A
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.459: 	Test6A
+//│ ║  l.465: 	Test6A
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6A is abstract:
-//│ ║  l.445: 	class Test6A[A]
+//│ ║  l.451: 	class Test6A[A]
 //│ ║         	      ^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.446: 	    method Mth6A: A
+//│ ║  l.452: 	    method Mth6A: A
 //│ ║         	           ^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.447: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.453: 	    method Mth6B[B]: (A -> B) -> B
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 :e
 Test6B
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.475: 	Test6B
+//│ ║  l.481: 	Test6B
 //│ ║         	^^^^^^
 //│ ╟── Note that trait Test6B is abstract:
-//│ ║  l.448: 	trait Test6B
+//│ ║  l.454: 	trait Test6B
 //│ ║         	      ^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.449: 	    method Mth6A: bool
+//│ ║  l.455: 	    method Mth6A: bool
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: error
 
 :e
 Test6C
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.488: 	Test6C
+//│ ║  l.494: 	Test6C
 //│ ║         	^^^^^^
 //│ ╟── Note that class Test6C is abstract:
-//│ ║  l.450: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.456: 	class Test6C: Test6A[int] & Test6B
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6B is abstract
-//│ ║  l.447: 	    method Mth6B[B]: (A -> B) -> B
+//│ ║  l.453: 	    method Mth6B[B]: (A -> B) -> B
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Mth6A is abstract
-//│ ║  l.450: 	class Test6C: Test6A[int] & Test6B
+//│ ║  l.456: 	class Test6C: Test6A[int] & Test6B
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -509,24 +515,24 @@ class Dup[A, A]: { x: A }
         B]: (A -> B) -> B
     method MthDup f = f this.x
 //│ ╔══[ERROR] Multiple declarations of type parameter A in class definition
-//│ ║  l.507: 	class Dup[A, A]: { x: A }
+//│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.507: 	class Dup[A, A]: { x: A }
+//│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ║         	          ^
 //│ ╟── Declared at
-//│ ║  l.507: 	class Dup[A, A]: { x: A }
+//│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Multiple declarations of type parameter B in method declaration
-//│ ║  l.508: 	    method MthDup[B, C, // random comment
+//│ ║  l.514: 	    method MthDup[B, C, // random comment
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.509: 	        B]: (A -> B) -> B
+//│ ║  l.515: 	        B]: (A -> B) -> B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.508: 	    method MthDup[B, C, // random comment
+//│ ║  l.514: 	    method MthDup[B, C, // random comment
 //│ ║         	                  ^
 //│ ╟── Declared at
-//│ ║  l.509: 	        B]: (A -> B) -> B
+//│ ║  l.515: 	        B]: (A -> B) -> B
 //│ ╙──       	        ^
 //│ Defined class Dup
 //│ Declared Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'B) -> 'B
@@ -545,19 +551,19 @@ t : Dup[bool, int]
 :stats
 t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.546: 	t : Dup[int, bool]
+//│ ║  l.552: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.535: 	t = Dup { x = 42 }
+//│ ║  l.541: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── but it flows into reference with expected type `Dup[int, bool]`
-//│ ║  l.546: 	t : Dup[int, bool]
+//│ ║  l.552: 	t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.546: 	t : Dup[int, bool]
+//│ ║  l.552: 	t : Dup[int, bool]
 //│ ║         	             ^^^^
 //│ ╟── from record type:
-//│ ║  l.507: 	class Dup[A, A]: { x: A }
+//│ ║  l.513: 	class Dup[A, A]: { x: A }
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
 //│ constrain calls  : 58
@@ -588,7 +594,7 @@ class B: { x: int }
   method F1: int
   method F1 = 1
 //│ ╔══[ERROR] Method F1 not found
-//│ ║  l.586: 	  method Nope = this.Yes.F1
+//│ ║  l.592: 	  method Nope = this.Yes.F1
 //│ ╙──       	                ^^^^^^^^^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})
@@ -605,22 +611,22 @@ trait E
 class H: D & E
   method G = 2
 //│ ╔══[ERROR] Overriding method D.G without explicit declaration is not allowed.
-//│ ║  l.606: 	  method G = 2
+//│ ║  l.612: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.602: 	  method G = 1
+//│ ║  l.608: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.606: 	  method G = 2
+//│ ║  l.612: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── expression of type `2` does not match type `1`
-//│ ║  l.606: 	  method G = 2
+//│ ║  l.612: 	  method G = 2
 //│ ║         	             ^
 //│ ╟── but it flows into method definition with expected type `1`
-//│ ║  l.606: 	  method G = 2
+//│ ║  l.612: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.602: 	  method G = 1
+//│ ║  l.608: 	  method G = 1
 //│ ╙──       	             ^
 //│ Defined trait D
 //│ Defined D.G: d -> 1
@@ -648,16 +654,16 @@ trait E2
   method G2: bool
 class H2: D2 & E2
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.646: 	  method G2 = 1
+//│ ║  l.652: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── expression of type `1` does not match type `bool`
-//│ ║  l.646: 	  method G2 = 1
+//│ ║  l.652: 	  method G2 = 1
 //│ ║         	              ^
 //│ ╟── but it flows into inherited method definition with expected type `bool`
-//│ ║  l.646: 	  method G2 = 1
+//│ ║  l.652: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.648: 	  method G2: bool
+//│ ║  l.654: 	  method G2: bool
 //│ ╙──       	             ^^^^
 //│ Defined trait D2
 //│ Defined D2.G2: d2 -> 1
@@ -684,14 +690,14 @@ trait Test7B
 :e
 class Test7C: Test7A & Test7B
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║  l.691: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.673: 	  method Mth7A = 42
+//│ ║  l.679: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.676: 	  method Mth7A = 43
+//│ ║  l.682: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7C
 
@@ -704,14 +710,14 @@ class Test7D: Test7A & Test7B
 class Test7E: Test7C
   method Mth7A = 0
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║  l.691: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.673: 	  method Mth7A = 42
+//│ ║  l.679: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.676: 	  method Mth7A = 43
+//│ ║  l.682: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7E
 //│ Defined Test7E.Mth7A: (Test7E & test7A & test7B) -> 0
@@ -724,23 +730,58 @@ trait Test7F
 :e
 class Test7G: Test7C & Test7F
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║  l.691: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.673: 	  method Mth7A = 42
+//│ ║  l.679: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.676: 	  method Mth7A = 43
+//│ ║  l.682: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.725: 	class Test7G: Test7C & Test7F
+//│ ║  l.731: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7C
-//│ ║  l.685: 	class Test7C: Test7A & Test7B
+//│ ║  l.691: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── • Test7F
-//│ ║  l.720: 	  method Mth7A = 0
+//│ ║  l.726: 	  method Mth7A = 0
 //│ ╙──       	         ^^^^^^^^^
 //│ Defined class Test7G
+
+
+
+
+class Test8A
+    method F: int
+    method F = 1
+//│ Defined class Test8A
+//│ Declared Test8A.F: Test8A -> int
+//│ Defined Test8A.F: Test8A -> 1
+
+:e
+class Test8B: Test8A
+    method F: 1
+//│ ╔══[ERROR] Overriding method Test8A.F without an overriding definition is not allowed.
+//│ ║  l.766: 	    method F: 1
+//│ ║         	           ^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.759: 	    method F = 1
+//│ ╙──       	           ^^^^^
+//│ Defined class Test8B
+//│ Declared Test8B.F: Test8B -> 1
+
+class Test8C[A]
+    method F: A
+    method F = error
+//│ Defined class Test8C
+//│ Declared Test8C.F: Test8C['A] -> 'A
+//│ Defined Test8C.F: Test8C['A] -> nothing
+
+// Allow syntactically identitcal declarations for documentation
+class Test8D: Test8C[int]
+    method F: int
+//│ Defined class Test8D
+//│ Declared Test8D.F: Test8D -> int
