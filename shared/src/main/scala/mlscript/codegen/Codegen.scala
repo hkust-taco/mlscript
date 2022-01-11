@@ -219,7 +219,10 @@ abstract class JSExpr extends JSCode {
   def isSimple: Bool = false
 
   def stmt: JSExprStmt = JSExprStmt(this)
+  
   def `return`: JSReturnStmt = JSReturnStmt(this)
+
+  def `throw`: JSThrowStmt = JSThrowStmt(this)
 
   def member(name: Str): JSMember = JSMember(this, name)
 
@@ -562,9 +565,9 @@ final case class JSCatchClause(param: JSIdent, body: Ls[JSStmt]) extends JSCode 
 }
 
 // Throw statement currently only used in non-exhaustive pattern matchings.
-final case class JSThrowStmt() extends JSStmt {
-  def toSourceCode =
-    SourceCode("throw new Error(\"non-exhaustive case expression\");")
+final case class JSThrowStmt(arg: JSExpr) extends JSStmt {
+  def toSourceCode: SourceCode =
+    SourceCode("throw ") ++ arg.toSourceCode.clause ++ SourceCode.semicolon
 }
 
 final case class JSSwitchStmt(

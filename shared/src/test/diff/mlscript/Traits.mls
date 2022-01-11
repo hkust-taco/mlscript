@@ -36,7 +36,7 @@ D
 error: A & B
 //│ res: {x: int, y: string} & a & b
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 :e
 def dv = D{}

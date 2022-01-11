@@ -87,6 +87,8 @@ class JSBackend {
 
   // Returns: temp identifiers and the expression
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+    // TODO: when scope symbol is ready, udpate here
+    case Var("error") => JSIdent("error")()
     case Var(mlsName) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
       // If it is a class name and the name is declared in the top-level scope.
@@ -186,7 +188,10 @@ class JSBackend {
     case Case(pat, body, rest) =>
       translateCase(scrut, pat)(translateTerm(body), translateCaseBranch(scrut, rest))
     case Wildcard(body) => translateTerm(body)
-    case NoCases        => JSImmEvalFn(Nil, R(JSThrowStmt() :: Nil), Nil)
+    case NoCases        => JSImmEvalFn(Nil, R(JSInvoke(
+      JSIdent("Error", true),
+      JSExpr("non-exhaustive case expression") :: Nil
+    ).`throw` :: Nil), Nil)
   }
 
   private def translateCase(scrut: JSExpr, pat: SimpleTerm) = {
@@ -467,6 +472,7 @@ class JSTestBackend extends JSBackend {
     // TODO: insert them via the prelude manager.
     lazy val preludeFuncs =
       JSBackend.makeIdentity(topLevelScope allocateJavaScriptName "id") ::
+        JSBackend.makeError(topLevelScope allocateJavaScriptName "error") ::
         JSBackend.makeSuccessor(topLevelScope allocateJavaScriptName "succ") ::
         JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "add", "+") ::
         JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "mul", "*") ::
@@ -692,6 +698,15 @@ object JSBackend {
       JSNamePattern("x") :: Nil,
       (JSIdent("x").unary(op)).`return` :: Nil
     )
+  
+  def makeError(name: Str): JSFuncDecl = JSFuncDecl(
+    name,
+    Nil,
+    JSInvoke(
+      JSIdent("Error", true),
+      JSExpr("unexpected runtime error") :: Nil
+    ).`throw` :: Nil
+  )
 
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER

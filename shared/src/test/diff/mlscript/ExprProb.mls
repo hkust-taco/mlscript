@@ -69,25 +69,25 @@ eval1
 error: ~Add[?]
 //│ res: ~Add[?]
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 :re
 error: ('a & ~Lit) -> 'a
 //│ res: ('a & ~{val: int} | 'a & ~lit) -> 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 :re
 error: ('a & ~Add[?]) -> 'a
 //│ res: ('a & ~{Add#E} | 'a & ~{lhs: anything} | 'a & ~{rhs: anything} | 'a & ~add) -> 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 :re
 error: ('a & ~add) -> 'a
 //│ res: ('a & ~add) -> 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 :ns
 def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int

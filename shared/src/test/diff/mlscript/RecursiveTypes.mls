@@ -390,7 +390,7 @@ f { a = 1 }
 f error
 //│ res: 'a\a & {a: int} as 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 
 :e
@@ -532,7 +532,7 @@ rec def f x = if error then f (x with { a = x - 1 }) else x
 r = f 1
 //│ r: 1 | 'a\a & {a: int} as 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 r + 1
 //│ res: int
@@ -588,7 +588,7 @@ rec def f x = if error then f (x with { a = 1 }) else x
 r = f 1
 //│ r: 1 | 'a\a & {a: 1} as 'a
 //│ Runtime error:
-//│   ReferenceError: error is not defined
+//│   Error: unexpected runtime error
 
 r: int
 //│ res: int
