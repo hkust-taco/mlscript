@@ -132,23 +132,18 @@ def t = T1 (A { x = 1 })
 //│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^
 //│ t: error | {x: 1} & a & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = { x: 1 }
 
-:re
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = C { x: 1 }
 
 class CA: C & A
 //│ Defined class CA
 
-:re
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = CA { x: 1 }
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
@@ -157,10 +152,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	def c1 = C1 { }
+//│ ║  l.153: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.158: 	def c1 = C1 { }
+//│ ║  l.153: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined }

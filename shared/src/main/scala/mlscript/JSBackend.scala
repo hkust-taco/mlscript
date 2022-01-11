@@ -116,8 +116,9 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Trait construction.
-    case App(Var(callee), Tup(N -> (rcd: Rcd) :: Nil)) if (traitNames contains callee) =>
-      translateTerm(rcd)
+    // TODO: when scope symbol is ready, udpate here
+    case App(Var(callee), Tup(N -> (trm: Term) :: Nil)) if (traitNames contains callee) =>
+      translateTerm(trm)
     // Function application.
     case App(callee, Tup(args)) =>
       JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })

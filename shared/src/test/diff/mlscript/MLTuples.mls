@@ -46,20 +46,16 @@ Hey t
 //│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
-//│ Runtime error:
-//│   ReferenceError: Hey is not defined
+//│    = [ 1, 2, 3 ]
 
-:re
+// TODO: fix `withConstruct` on arrays
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
-//│ Runtime error:
-//│   ReferenceError: Hey is not defined
+//│    = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
-:re
 htx.x
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: htx is not defined
+//│    = 1
 
 f ((a, b, c)) = { a; b; c }
 //│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
@@ -73,11 +69,9 @@ f tx
 //│ res: {a: 1, b: 2, c: 3}
 //│    = { a: undefined, b: undefined, c: undefined }
 
-:re
 f htx
 //│ res: {a: 1, b: 2, c: 3}
-//│ Runtime error:
-//│   ReferenceError: htx is not defined
+//│    = { a: undefined, b: undefined, c: undefined }
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
@@ -88,48 +82,47 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.87: 	f t
+//│ ║  l.81: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.87: 	f t
+//│ ║  l.81: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	f tx
+//│ ║  l.82: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.88: 	f tx
+//│ ║  l.82: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	f htx
+//│ ║  l.83: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.89: 	f htx
+//│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.82: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
-//│ Runtime error:
-//│   ReferenceError: htx is not defined
+//│    = NaN
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -141,11 +134,12 @@ g htx
 g tx
 //│ res: () | 1
 //│ Runtime error:
-//│   ReferenceError: htx is not defined
+//│   ReferenceError: Hey is not defined
 //│ res: () | 1
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
+// TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
 //│  = [Function: g1]
@@ -155,7 +149,7 @@ g htx
 g (tx with { y = 2 })
 //│ res: 1
 //│ Runtime error:
-//│   ReferenceError: htx is not defined
+//│   ReferenceError: Hey is not defined
 //│ res: 1 | 2
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -163,19 +157,19 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.164: 	g tx
+//│ ║  l.158: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.164: 	g tx
+//│ ║  l.158: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.149: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.149: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
 //│ Runtime error:
