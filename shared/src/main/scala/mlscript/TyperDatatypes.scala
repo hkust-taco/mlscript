@@ -35,6 +35,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
+  // single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
   class MethodType(val level: Int, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
       (implicit val prov: TypeProvenance = body.fold(noProv)(_.prov)) {
     def &(that: MethodType): MethodType = {
@@ -49,6 +50,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = toPT.rigidify
     def copy(level: Int = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
       MethodType(level, body, parents, this.single)
+    override def toString: Str = s"MethodType($level,$body,$parents,$single)"
   }
   object MethodType {
     def apply(level: Int, body: Opt[SimpleType], parent: TypeName)(implicit prov: TypeProvenance): MethodType =
