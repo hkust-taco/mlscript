@@ -94,7 +94,10 @@ class JSBackend {
       // If it is a class name and the name is declared in the top-level scope.
       if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
         // `mlsName === jsName` means no re-declaration, so it refers to the class.
-        JSIdent(jsName, mlsName === jsName)
+        if (mlsName === jsName)
+          JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(jsName, true)(JSIdent("x"))))
+        else
+          JSIdent(jsName)
       } else {
         JSIdent(jsName)
       }

@@ -47,14 +47,12 @@ foo 1
 
 def fn = foo None
 //│ fn: anything -> None
-//│   = [class None]
+//│   = [Function (anonymous)]
 
 // :d
-:re
 fn{} // foo None {}
 //│ res: None
-//│ Runtime error:
-//│   TypeError: Class constructor None cannot be invoked without 'new'
+//│    = None {}
 
 // :d
 foo (None{})
@@ -95,13 +93,13 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.96: 	res 1
+//│ ║  l.94: 	res 1
 //│ ║        	^^^^^
 //│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.96: 	res 1
+//│ ║  l.94: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.87: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.85: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: error
 //│ Runtime error:

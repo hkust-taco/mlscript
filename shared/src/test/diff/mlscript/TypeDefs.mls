@@ -4,7 +4,7 @@ class Test1: { x: int }
 
 Test1
 //│ res: {x: int & 'x} -> (Test1 with {x: 'x})
-//│    = [class Test1]
+//│    = [Function: res]
 
 Test1 { x = 123 }
 //│ res: Test1 & {x: 123}

@@ -6,11 +6,11 @@ class Bar1: Foo1[int]
 
 Foo1
 //│ res: {x: 'x & 'A} -> (Foo1['A] with {x: 'x})
-//│    = [class Foo1]
+//│    = [Function: res]
 
 Bar1
 //│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
-//│    = [class Bar1 extends Foo1]
+//│    = [Function: res]
 
 b = Bar1{x = 1}
 //│ b: Bar1 & {x: 1}
@@ -54,7 +54,7 @@ class Bar3: Foo2[int]
 Bar2
 Bar3
 //│ res: {x: 'x & int} -> (bar2 & {Foo2#A = int, x: 'x})
-//│    = [class Bar2 extends Foo2]
+//│    = [Function: res]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.55: 	Bar3
 //│ ║        	^^^^
@@ -65,13 +65,13 @@ Bar3
 //│ ║  l.41: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error
-//│    = [class Bar3 extends Foo2]
+//│    = [Function: res]
 
 :e
 Bar2
 Bar3
 //│ res: {x: int & 'x} -> (Bar2 with {x: 'x})
-//│    = [class Bar2 extends Foo2]
+//│    = [Function: res]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.72: 	Bar3
 //│ ║        	^^^^
@@ -82,7 +82,7 @@ Bar3
 //│ ║  l.41: 	  method M2: A
 //│ ╙──      	         ^^^^^
 //│ res: error
-//│    = [class Bar3 extends Foo2]
+//│    = [Function: res]
 
 :e
 {A = 1}

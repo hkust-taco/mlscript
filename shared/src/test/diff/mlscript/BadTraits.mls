@@ -43,26 +43,30 @@ T a
 //│    = A {}
 
 :e
+:js
 T A
+//│ // Query 1
+//│ res = ((x) => new A(x));
+//│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	^^^
 //│ ╟── expression of type `anything -> A` does not match type `A`
-//│ ║  l.46: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: anything -> A & t | error
-//│    = [class A]
+//│    = [Function: res]
 
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.60: 	T (B {})
+//│ ║  l.64: 	T (B {})
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ║  l.60: 	T (B {})
+//│ ║  l.64: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
@@ -95,13 +99,13 @@ t: Als
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.96: 	class D0: T
-//│ ╙──      	      ^^^^^
+//│ ║  l.100: 	class D0: T
+//│ ╙──       	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.102: 	class D1: B & T
+//│ ║  l.106: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
 
 
@@ -119,13 +123,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.120: 	t.x
+//│ ║  l.124: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.115: 	t = s: s
+//│ ║  l.119: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.120: 	t.x
+//│ ║  l.124: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1

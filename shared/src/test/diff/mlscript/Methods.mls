@@ -29,7 +29,7 @@ f.(Foo.Fun)
 Foo.Fun f
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 //│ Runtime error:
-//│   TypeError: Foo.Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 
 f.Fun
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
@@ -38,7 +38,7 @@ f.Fun
 // :d
 Bar
 //│ res: {x: int & 'x, y: bool & 'y} -> (Bar with {x: 'x, y: 'y})
-//│    = [class Bar extends Foo]
+//│    = [Function: res]
 
 g = Bar { x = 42; y = true }
 //│ g: Bar & {x: 42, y: true}
@@ -56,10 +56,10 @@ Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│ Runtime error:
-//│   TypeError: Foo.Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 //│ res: 'a -> 'a
 //│ Runtime error:
-//│   TypeError: Bar.Fun is not a function
+//│   TypeError: (intermediate value).Fun is not a function
 
 g.Fun
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
@@ -112,7 +112,7 @@ res.Apply2 (fun x -> mul x 2)
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (Wrapper['A] with {x: 'x})
-//│    = [class Wrapper]
+//│    = [Function: res]
 
 
 
@@ -357,5 +357,5 @@ Ber
 //│ ║  l.341: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
-//│    = [class Ber extends Fee]
+//│    = [Function: res]
 

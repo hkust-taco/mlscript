@@ -11,7 +11,7 @@ def False: False
 
 True: Boolean
 //│ res: bool
-//│    = [class True]
+//│    = [Function: res]
 
 :e
 Boolean

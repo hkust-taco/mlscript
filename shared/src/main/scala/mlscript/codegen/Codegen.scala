@@ -307,7 +307,8 @@ final case class JSPlaceholderExpr() extends JSExpr {
 }
 
 final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) extends JSExpr {
-  def precedence: Int = 22
+  // If the precedence is 2. We will have x => (x, 0) and (x => x)(1).
+  def precedence: Int = 2
   def toSourceCode: SourceCode =
     params.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
@@ -364,9 +365,7 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
 final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
   def precedence: Int = 20
   def toSourceCode = {
-    val body = callee.toSourceCode.parenthesized(
-      callee.precedence < precedence
-    ) ++ arguments.zipWithIndex
+    val body = callee.embed(precedence) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.toSourceCode ++ (if (i === arguments.length - 1) SourceCode.empty
                                 else SourceCode(", "))

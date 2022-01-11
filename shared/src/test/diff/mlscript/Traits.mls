@@ -30,7 +30,7 @@ class D: C & A & B
 
 D
 //│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (D with {x: 'x, y: 'y})
-//│    = [class D extends C]
+//│    = [Function: res]
 
 :re
 error: A & B

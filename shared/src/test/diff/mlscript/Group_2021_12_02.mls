@@ -8,7 +8,7 @@ class Const
 
 Lit
 //│ res: anything -> Lit
-//│    = [class Lit]
+//│    = [Function: res]
 
 // TODO: support `as` types in parser and typer:
 // def eval: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
