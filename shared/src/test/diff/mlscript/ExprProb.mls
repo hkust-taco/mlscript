@@ -61,13 +61,9 @@ rec def eval1 k e = case e of {
 //│ subtyping calls  : 655
 
 :ns
-:stats
 eval1
 //│ res: 'a | ('b & 'c -> ('d & int) & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | (add & 'h & {rhs: 'e} & {lhs: 'e} | 'c & ~add) & ~lit as 'e) -> ('g | 'i | int | 'd)
 //│    = [Function: eval1]
-//│ constrain calls  : 0
-//│ annoying  calls  : 0
-//│ subtyping calls  : 0
 
 :re
 error: ~Add[?]
@@ -394,19 +390,19 @@ prettier2 done eval1 e1
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.228: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.224: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e1
@@ -415,10 +411,10 @@ prettier2 done eval1 e1
 //│ ║  l.55: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
@@ -450,10 +446,10 @@ prettier2 done (eval1 done) e2
 //│ ║  l.54: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	                                   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
@@ -480,13 +476,13 @@ prettier2 done eval2
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ res: (Lit | (Nega[?] with {arg: 'a}) as 'a) -> string | error
 //│    = [Function (anonymous)]
@@ -512,31 +508,31 @@ prettier2 done eval2 e1
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.228: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.224: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.258: 	  | _ -> k x
+//│ ║  l.254: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
@@ -563,31 +559,31 @@ prettier2 done eval2 e2
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.286: 	e2 = add (lit 1) (nega e1)
+//│ ║  l.282: 	e2 = add (lit 1) (nega e1)
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.258: 	  | _ -> k x
+//│ ║  l.254: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error
 //│ Runtime error:
@@ -614,40 +610,40 @@ prettier2 done eval2 d2
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.249: 	def nega arg = Nega { arg }
+//│ ║  l.245: 	def nega arg = Nega { arg }
 //│ ║         	                      ^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.258: 	  | _ -> k x
+//│ ║  l.254: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ║         	                                ^
 //│ ╟── from field selection:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ║         	                                       ^^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.266: 	rec def prettier2 k ev = prettier1 (fun x -> case x of {
+//│ ║  l.262: 	rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│ ║         	                                                  ^
 //│ ╟── from reference:
-//│ ║  l.195: 	  | _ -> k e
+//│ ║  l.191: 	  | _ -> k e
 //│ ╙──       	           ^
 //│ res: error | string
 //│ Runtime error:
@@ -674,19 +670,19 @@ prettier2 done eval1 e2
 //│ ║        	               ^^^^^
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.269: 	  }) ev
+//│ ║  l.265: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.267: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.263: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.286: 	e2 = add (lit 1) (nega e1)
+//│ ║  l.282: 	e2 = add (lit 1) (nega e1)
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e2
@@ -695,10 +691,10 @@ prettier2 done eval1 e2
 //│ ║  l.55: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from reference:
-//│ ║  l.194: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+//│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	               ^
 //│ ╟── from refined scrutinee:
-//│ ║  l.190: 	rec def prettier1 k ev e = case e of {
+//│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error
 //│ Runtime error:
