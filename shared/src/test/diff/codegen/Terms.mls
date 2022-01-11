@@ -96,7 +96,7 @@ T { x = 0 }
 :js
 A { a = 0 }
 //│ // Query 1
-//│ res = ((x) => new A(x))({ a: 0 });
+//│ res = new A({ a: 0 });
 //│ // End of generated code
 //│ res: A & {a: 0}
 //│    = A { a: 0 }
@@ -274,7 +274,7 @@ case A { a = 0 } of
   }
 //│ // Query 1
 //│ let temp1;
-//│ res = (temp1 = ((x) => new A(x))({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
+//│ res = (temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code

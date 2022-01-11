@@ -167,7 +167,7 @@ c: Cycle1
 //│ ╙──       	        ^^^^^^
 //│ c: error
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   ReferenceError: Cycle1 is not defined
 //│ ╔══[ERROR] type identifier not found: Cycle1
 //│ ║  l.164: 	c: Cycle1
 //│ ╙──       	   ^^^^^^

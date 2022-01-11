@@ -122,6 +122,16 @@ class JSBackend {
     // TODO: when scope symbol is ready, udpate here
     case App(Var(callee), Tup(N -> (trm: Term) :: Nil)) if (traitNames contains callee) =>
       translateTerm(trm)
+    // TODO: when scope symbol is ready, remove the branch here
+    case App(Var(mlsName), Tup(N -> (trm: Term) :: Nil)) =>
+      val (jsName, srcScope) = scope resolveWithScope mlsName
+      // If it is a class name and the name is declared in the top-level scope.
+      (if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
+        // `mlsName === jsName` means no re-declaration, so it refers to the class.
+        JSIdent(jsName, mlsName === jsName)
+      } else {
+        JSIdent(jsName)
+      })((translateTerm(trm)))
     // Function application.
     case App(callee, Tup(args)) =>
       JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
