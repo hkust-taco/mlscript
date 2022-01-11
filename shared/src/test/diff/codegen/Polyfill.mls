@@ -28,42 +28,42 @@ n = 123 with { x = 1 }
 //│   if (arguments.length === 2) {
 //│     return x + y;
 //│   }else {
-//│     return (y) => (x + y);
+//│     return (y) => x + y;
 //│   }
 //│ }
 //│ function add(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x + y;
 //│   }else {
-//│     return (y) => (x + y);
+//│     return (y) => x + y;
 //│   }
 //│ }
 //│ function sub(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x - y;
 //│   }else {
-//│     return (y) => (x - y);
+//│     return (y) => x - y;
 //│   }
 //│ }
 //│ function mul(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x * y;
 //│   }else {
-//│     return (y) => (x * y);
+//│     return (y) => x * y;
 //│   }
 //│ }
 //│ function div(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x / y;
 //│   }else {
-//│     return (y) => (x / y);
+//│     return (y) => x / y;
 //│   }
 //│ }
 //│ function gt(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x > y;
 //│   }else {
-//│     return (y) => (x > y);
+//│     return (y) => x > y;
 //│   }
 //│ }
 //│ function not(x) {
