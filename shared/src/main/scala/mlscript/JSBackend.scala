@@ -16,6 +16,8 @@ class JSBackend {
 
   protected val topLevelScope = Scope()
 
+  protected val polyfill = Polyfill()
+
   // Sometimes, identifiers declared by `let` use the same name as class names.
   // JavaScript does not allow this. So, we need to replace them.
   // The key is the name of the class, and the value is the name of the function.
@@ -75,12 +77,6 @@ class JSBackend {
     case Tup(params) => params map { case _ -> p => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
-
-  // This will be changed during code generation.
-  protected var hasWithConstruct = false
-
-  // Name of the helper function for `with` construction.
-  protected val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
 
   // For inheritance usage.
   protected val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
@@ -182,9 +178,11 @@ class JSBackend {
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`
     case With(trm, Rcd(fields)) =>
-      hasWithConstruct = true
       JSInvoke(
-        JSIdent(withConstructFnName),
+        JSIdent(polyfill get "withConstruct" match {
+          case S(fnName) => fnName
+          case N         => polyfill.use("withConstruct", topLevelScope allocateJavaScriptName "withConstruct")
+        }),
         translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
           name -> translateTerm(value)
         }) :: Nil
@@ -399,6 +397,12 @@ class JSBackend {
 }
 
 class JSWebBackend extends JSBackend {
+  // This will be changed during code generation.
+  private var hasWithConstruct = false
+
+  // Name of the helper function for `with` construction.
+  private val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
+
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope allocateJavaScriptName "results"
 
@@ -455,11 +459,7 @@ class JSWebBackend extends JSBackend {
               ).stmt :: Nil
           })
     SourceCode
-      .concat(
-        (if (hasWithConstruct) {
-           JSBackend.makeWithConstructDecl(withConstructFnName) :: stmts
-         } else { stmts }) map { _.toSourceCode }
-      )
+      .concat((polyfill.emit() ::: stmts) map { _.toSourceCode })
       .lines map { _.toString }
   }
 }
@@ -468,8 +468,6 @@ class JSTestBackend extends JSBackend {
   private val resultName = topLevelScope allocateJavaScriptName "res"
 
   private var numRun = 0
-
-  private var withConstructInserted = false
 
   // TODO: make the return type more readable
   def apply(pgrm: Pgrm): (Str, Bool) \/ TestCode = try {
@@ -564,17 +562,11 @@ class JSTestBackend extends JSBackend {
       prelude = preludeFuncs ::: (JSLetDecl(resultName -> N :: Nil) :: prelude)
     }
 
-    // If `withConstruct` used but not inserted yet.
-    if (hasWithConstruct && !withConstructInserted) {
-      withConstructInserted = true
-      prelude = JSBackend.makeWithConstructDecl(withConstructFnName) :: prelude
-    }
-
     // Increase the run number.
     numRun = numRun + 1
 
     TestCode(
-      SourceCode.fromStmts(prelude).toLines,
+      SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines,
       queries map { case (decls -> stmts) =>
         val prelude = decls match {
           case S(stmt) => stmt.toSourceCode.toLines
@@ -716,7 +708,7 @@ object JSBackend {
       JSNamePattern("x") :: Nil,
       (JSIdent("x").unary(op)).`return` :: Nil
     )
-  
+
   def makeError(name: Str): JSFuncDecl = JSFuncDecl(
     name,
     Nil,
