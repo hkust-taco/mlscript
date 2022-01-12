@@ -38,7 +38,7 @@ v0: int
 //│ ║        	^^
 //│ ╟── expression of type `~X` does not match type `int`
 //│ ║  l.31: 	def v0: (~(X\x))\y
-//│ ║        	           ^
+//│ ║        	         ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.35: 	v0: int
 //│ ║        	^^

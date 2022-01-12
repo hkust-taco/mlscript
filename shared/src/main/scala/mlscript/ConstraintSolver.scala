@@ -119,8 +119,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
-        case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls))
-        case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv)
+        case ((tv: TypeVariable) :: ls, _) => recImpl(tv, mkRhs(ls))
+        case (_, (tv: TypeVariable) :: rs) => recImpl(mkLhs(rs), tv)
         case (TypeBounds(lb, ub) :: ls, _) => annoying(ub :: ls, done_ls, rs, done_rs)
         case (_, TypeBounds(lb, ub) :: rs) => annoying(ls, done_ls, lb :: rs, done_rs)
         case (ComposedType(true, ll, lr) :: ls, _) =>
@@ -224,10 +224,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
-      val pushed = lhs.pushPosWithout
-      if (pushed isnt lhs) println(s"Push LHS  $lhs  ~>  $pushed")
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
-      recImpl(pushed, rhs, outerProv)
+      recImpl(lhs, rhs, outerProv)
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
           (implicit raise: Raise, cctx: ConCtx): Unit =

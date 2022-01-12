@@ -522,7 +522,7 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
-//│ constrain calls  : 53
+//│ constrain calls  : 41
 //│ annoying  calls  : 72
 //│ subtyping calls  : 162
 
@@ -544,21 +544,21 @@ t : Dup[int, bool]
 //│ ║  l.491: 	class Dup[A, A]: { x: A }
 //│ ╙──       	                 ^^^^^^^^
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
-//│ constrain calls  : 70
+//│ constrain calls  : 58
 //│ annoying  calls  : 72
 //│ subtyping calls  : 161
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 65
+//│ constrain calls  : 63
 //│ annoying  calls  : 33
 //│ subtyping calls  : 43
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 47
+//│ constrain calls  : 45
 //│ annoying  calls  : 31
 //│ subtyping calls  : 58
 

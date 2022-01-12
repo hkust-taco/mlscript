@@ -105,7 +105,7 @@ def eval1_ty_ugly = eval1
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 //│              = [Function: eval1]
-//│ constrain calls  : 58
+//│ constrain calls  : 55
 //│ annoying  calls  : 36
 //│ subtyping calls  : 6988
 
@@ -125,7 +125,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 58
+//│ constrain calls  : 55
 //│ annoying  calls  : 36
 //│ subtyping calls  : 1393
 
@@ -167,7 +167,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 62
+//│ constrain calls  : 59
 //│ annoying  calls  : 38
 //│ subtyping calls  : 1136
 
@@ -213,7 +213,7 @@ prettier1 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 452
+//│ constrain calls  : 432
 //│ annoying  calls  : 240
 //│ subtyping calls  : 741
 
@@ -269,7 +269,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 eval2 done e1
 //│ res: int
 //│    = 6
-//│ constrain calls  : 108
+//│ constrain calls  : 103
 //│ annoying  calls  : 60
 //│ subtyping calls  : 136
 
@@ -284,7 +284,7 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│    = -5
-//│ constrain calls  : 154
+//│ constrain calls  : 145
 //│ annoying  calls  : 103
 //│ subtyping calls  : 192
 
@@ -296,7 +296,7 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 eval2 done d2
 //│ res: int
 //│    = 0
-//│ constrain calls  : 106
+//│ constrain calls  : 99
 //│ annoying  calls  : 71
 //│ subtyping calls  : 99
 
@@ -323,7 +323,7 @@ prettier2 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 643
+//│ constrain calls  : 612
 //│ annoying  calls  : 335
 //│ subtyping calls  : 63770
 
@@ -444,7 +444,7 @@ prettier2 done (eval1 done) e2
 //│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 309
+//│ constrain calls  : 292
 //│ annoying  calls  : 198
 //│ subtyping calls  : 643
 
@@ -526,7 +526,7 @@ prettier2 done eval2 e1
 //│ ╙──       	                                ^
 //│ res: error | string
 //│    = '123'
-//│ constrain calls  : 145
+//│ constrain calls  : 140
 //│ annoying  calls  : 64
 //│ subtyping calls  : 494
 
@@ -576,7 +576,7 @@ prettier2 done eval2 e2
 //│ ╙──       	                                ^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 111
+//│ constrain calls  : 107
 //│ annoying  calls  : 36
 //│ subtyping calls  : 1014
 
@@ -635,7 +635,7 @@ prettier2 done eval2 d2
 //│ ╙──       	           ^
 //│ res: error | string
 //│    = '-1-1'
-//│ constrain calls  : 144
+//│ constrain calls  : 137
 //│ annoying  calls  : 75
 //│ subtyping calls  : 578
 
@@ -685,7 +685,7 @@ prettier2 done eval1 e2
 //│ ╙──       	                                ^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 110
+//│ constrain calls  : 106
 //│ annoying  calls  : 36
 //│ subtyping calls  : 1008
 
