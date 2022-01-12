@@ -3,11 +3,7 @@ package mlscript.codegen
 import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 
-class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
-  def this() = this(Nil, None)
-
-  def this(symbols: Seq[Str]) = this(symbols, None)
-
+class Scope(name: Str, initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
   // Declared JavaScript names in current scope.
   private val symbols = scala.collection.mutable.HashSet[Str](initialSymbols: _*)
 
@@ -152,9 +148,11 @@ class Scope(initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
 }
 
 object Scope {
-  def apply(): Scope = new Scope()
-  def apply(symbols: Seq[Str]): Scope = new Scope(symbols)
-  def apply(symbols: Seq[Str], enclosing: Scope): Scope = new Scope(symbols, Some(enclosing))
+  def apply(): Scope = new Scope("", Nil, N)
+  def apply(name: Str): Scope = new Scope(name, Nil, N)
+  def apply(symbols: Seq[Str]): Scope = new Scope("", symbols, N)
+  def apply(symbols: Seq[Str], enclosing: Scope): Scope = new Scope("", symbols, Some(enclosing))
+  def apply(name: Str, symbols: Seq[Str], enclosing: Scope): Scope = new Scope(name, symbols, Some(enclosing))
 
   private val nameAlphabet = Ls.from("abcdefghijklmnopqrstuvwxyz")
 }

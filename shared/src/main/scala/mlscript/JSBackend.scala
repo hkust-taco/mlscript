@@ -14,7 +14,7 @@ class JSBackend {
   // TODO: let `Scope` track symbol kinds.
   protected val traitNames = HashSet[Str]()
 
-  protected val topLevelScope = Scope()
+  protected val topLevelScope = Scope("root")
 
   protected val polyfill = Polyfill()
 
@@ -83,8 +83,7 @@ class JSBackend {
 
   // Returns: temp identifiers and the expression
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    // TODO: when scope symbol is ready, udpate here
-    case Var("error") => JSIdent("error")()
+    // TODO: when scope symbol is ready, update here
     case Var(mlsName) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
       // If it is a class name and the name is declared in the top-level scope.
@@ -94,13 +93,21 @@ class JSBackend {
           JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(jsName, true)(JSIdent("x"))))
         else
           JSIdent(jsName)
+      } else if (
+          (Polyfill isPreludeFunction mlsName) &&
+          (srcScope.isEmpty || srcScope.exists({ _.isTopLevel }))
+      ) {
+        if (!polyfill.used(mlsName))
+          topLevelScope declare mlsName
+        val ident = JSIdent(polyfill.use(mlsName, mlsName))
+        if (mlsName === "error") ident() else ident
       } else {
         JSIdent(jsName)
       }
     // TODO: need scope to track variables so that we can rename reserved words
     case Lam(params, body) =>
       val patterns = translateParams(params)
-      val lamScope = Scope(patterns flatMap { _.bindings }, scope)
+      val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
       JSArrowFn(patterns, lamScope withTempVarDecls translateTerm(body)(lamScope))
     // TODO: when scope symbols are ready, rewrite this
     // Binary expressions called by function names.
@@ -125,6 +132,13 @@ class JSBackend {
       (if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
         // `mlsName === jsName` means no re-declaration, so it refers to the class.
         JSIdent(jsName, mlsName === jsName)
+      } else if (
+          (Polyfill isPreludeFunction mlsName) &&
+          srcScope.isEmpty
+      ) {
+        if (!polyfill.used(mlsName))
+          topLevelScope declare mlsName
+        JSIdent(polyfill.use(mlsName, mlsName))
       } else {
         JSIdent(jsName)
       })((translateTerm(trm)))
@@ -141,14 +155,14 @@ class JSBackend {
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, name, value, body) =>
-      val letScope = Scope(name.name :: Nil, scope)
+      val letScope = Scope("Let", name.name :: Nil, scope)
       JSImmEvalFn(
         name.name :: Nil,
         letScope withTempVarDecls translateTerm(body)(letScope),
         translateTerm(value)(letScope) :: Nil
       )
     case Blk(stmts) =>
-      val blkScope = Scope(Nil, scope)
+      val blkScope = Scope("Blk", Nil, scope)
       JSImmEvalFn(
         Nil,
         R(blkScope withTempVarDecls (stmts flatMap (_.desugared._2) map {
@@ -481,20 +495,6 @@ class JSTestBackend extends JSBackend {
   private def generate(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // TODO: insert them via the prelude manager.
-    lazy val preludeFuncs =
-      JSBackend.makeIdentity(topLevelScope allocateJavaScriptName "id") ::
-        JSBackend.makeError(topLevelScope allocateJavaScriptName "error") ::
-        JSBackend.makeSuccessor(topLevelScope allocateJavaScriptName "succ") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "concat", "+") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "add", "+") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "sub", "-") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "mul", "*") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "div", "/") ::
-        JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "gt", ">") ::
-        JSBackend.makeUnaryFunc(topLevelScope allocateJavaScriptName "not", "!") ::
-        Nil
-
     // Collect type aliases into a map so we can normalize them.
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
@@ -558,7 +558,7 @@ class JSTestBackend extends JSBackend {
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = defStmts
     if (numRun === 0) {
-      prelude = preludeFuncs ::: (JSLetDecl(resultName -> N :: Nil) :: prelude)
+      prelude = JSLetDecl(resultName -> N :: Nil) :: prelude
     }
 
     // Increase the run number.
@@ -616,46 +616,6 @@ object JSBackend {
     case StrLit(value) => s"StrLit($value)"
   }
 
-  /** 
-    * This function makes the following function.
-    *
-    * ```js
-    * function withConstruct(target, fields) {
-    *   if (typeof target === "string" || typeof target === "number") {
-    *     return Object.assign(target, fields);
-    *   }
-    *   if (target instanceof String || target instanceof Number) {
-    *     return Object.assign(target.valueOf(), target, fields);
-    *   }
-    *   const copy = Object.assign({}, target, fields);
-    *   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
-    *   return copy;
-    * }
-    * ```
-    */
-  def makeWithConstructDecl(name: Str): JSFuncDecl = {
-    val obj = JSIdent("Object")
-    val tgt = JSIdent("target")
-    val body: Ls[JSStmt] = JSIfStmt(
-      (tgt.typeof() :=== JSExpr("string")) :|| (tgt.typeof() :=== JSExpr("number")) :||
-        (tgt.typeof() :=== JSExpr("boolean")) :|| (tgt.typeof() :=== JSExpr("bigint")) :||
-        (tgt.typeof() :=== JSExpr("symbol")),
-      obj("assign")(tgt, JSIdent("fields")).`return` :: Nil,
-    ) :: JSIfStmt(
-      tgt.instanceOf(JSIdent("String")) :|| tgt.instanceOf(JSIdent("Number")) :||
-        tgt.instanceOf(JSIdent("Boolean")) :|| tgt.instanceOf(JSIdent("BigInt")),
-      obj("assign")(tgt("valueOf")(), tgt, JSIdent("fields")).`return` :: Nil,
-    ) :: JSConstDecl("copy", obj("assign")(JSRecord(Nil), tgt, JSIdent("fields"))) ::
-      obj("setPrototypeOf")(JSIdent("copy"), obj("getPrototypeOf")(tgt)).stmt ::
-      JSIdent("copy").`return` ::
-      Nil
-    JSFuncDecl(
-      name,
-      JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
-      body
-    )
-  }
-
   private def makePrettyPrinter(name: Str, indent: Bool) = {
     val arg = JSIdent("value")
     val default = arg.member("constructor").member("name") + JSExpr(" ") +
@@ -680,42 +640,6 @@ object JSBackend {
         ) :: Nil,
     )
   }
-
-  def makeIdentity(name: Str): JSFuncDecl =
-    JSFuncDecl(name, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
-
-  def makeSuccessor(name: Str): JSFuncDecl =
-    JSFuncDecl(name, JSNamePattern("x") :: Nil, (JSIdent("x") + JSLit("1")).`return` :: Nil)
-
-  def makeBinaryFunc(name: Str, op: Str): JSFuncDecl =
-    JSFuncDecl(
-      name,
-      JSNamePattern("x") :: JSNamePattern("y") :: Nil,
-      JSIfStmt(
-        JSIdent("arguments").member("length") :=== JSLit("2"),
-        (JSIdent("x").binary(op, JSIdent("y"))).`return` :: Nil,
-        JSArrowFn(
-          JSNamePattern("y") :: Nil,
-          L(JSIdent("x").binary(op, JSIdent("y")))
-        ).`return` :: Nil
-      ) :: Nil
-    )
-
-  def makeUnaryFunc(name: Str, op: Str): JSFuncDecl =
-    JSFuncDecl(
-      name,
-      JSNamePattern("x") :: Nil,
-      (JSIdent("x").unary(op)).`return` :: Nil
-    )
-
-  def makeError(name: Str): JSFuncDecl = JSFuncDecl(
-    name,
-    Nil,
-    JSInvoke(
-      JSIdent("Error", true),
-      JSExpr("unexpected runtime error") :: Nil
-    ).`throw` :: Nil
-  )
 
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER

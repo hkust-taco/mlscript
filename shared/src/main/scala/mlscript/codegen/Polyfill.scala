@@ -12,6 +12,8 @@ class Polyfill {
     fnName
   }
 
+  def used(feat: Str): Bool = featFnNameMap.contains(feat)
+
   def get(feat: Str): Opt[Str] = featFnNameMap get feat
 
   def emit(): Ls[JSStmt] = (featFnNameMap flatMap { case (feat, fnName) =>
@@ -52,6 +54,52 @@ object Polyfill {
         JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
         body
       )
-    }) :: Nil
+    }) :: "id" -> {
+      JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
+    } :: "succ" -> {
+      JSFuncDecl(_, JSNamePattern("x") :: Nil, (JSIdent("x") + JSLit("1")).`return` :: Nil)
+    } :: "error" -> {
+      JSFuncDecl(
+        _,
+        Nil,
+        JSInvoke(
+          JSIdent("Error", true),
+          JSExpr("unexpected runtime error") :: Nil
+        ).`throw` :: Nil
+      )
+    } :: 
+      "concat" -> { makeBinaryFunc(_, "+") } ::
+      "add" -> { makeBinaryFunc(_, "+") } ::
+      "sub" -> { makeBinaryFunc(_, "-") } ::
+      "mul" -> { makeBinaryFunc(_, "*") } ::
+      "div" -> { makeBinaryFunc(_, "/") } ::
+      "gt" -> { makeBinaryFunc(_, ">") } ::
+      "not" -> { makeUnaryFunc(_, "!") } ::
+      Nil
   )
+
+  def isPreludeFunction(name: Str): Bool = {
+    !(name === "withConstruct") && featFactoryMap.keySet.contains(name)
+  }
+
+  private def makeBinaryFunc(name: Str, op: Str): JSFuncDecl =
+    JSFuncDecl(
+      name,
+      JSNamePattern("x") :: JSNamePattern("y") :: Nil,
+      JSIfStmt(
+        JSIdent("arguments").member("length") :=== JSLit("2"),
+        (JSIdent("x").binary(op, JSIdent("y"))).`return` :: Nil,
+        JSArrowFn(
+          JSNamePattern("y") :: Nil,
+          L(JSIdent("x").binary(op, JSIdent("y")))
+        ).`return` :: Nil
+      ) :: Nil
+    )
+
+  private def makeUnaryFunc(name: Str, op: Str): JSFuncDecl =
+    JSFuncDecl(
+      name,
+      JSNamePattern("x") :: Nil,
+      (JSIdent("x").unary(op)).`return` :: Nil
+    )
 }

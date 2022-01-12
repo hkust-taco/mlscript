@@ -16,7 +16,7 @@ def add lhs rhs = Add { lhs; rhs }
 //│ lit: (int & 'a) -> (Lit with {val: 'a})
 //│    = [Function: lit]
 //│ add: 'a -> 'b -> (Add['E .. 'E | 'a | 'b] with {lhs: 'a, rhs: 'b})
-//│    = [Function: add1]
+//│    = [Function: add]
 
 
 
