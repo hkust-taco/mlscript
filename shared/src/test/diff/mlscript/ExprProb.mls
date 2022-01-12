@@ -196,7 +196,7 @@ rec def prettier1 k ev e = case e of {
 //│ annoying  calls  : 0
 //│ subtyping calls  : 1489
 
-
+:re
 :stats
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
 eval1 done e1
@@ -210,13 +210,16 @@ prettier1 done (eval1 done) e1
 //│ res: int
 //│    = 6
 //│ res: string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ res: string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 452
 //│ annoying  calls  : 240
 //│ subtyping calls  : 741
 
+:re
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
 pretty1 done e1
@@ -229,9 +232,11 @@ prettier1 done (eval1 done) e1
 //│ res: int
 //│    = 6
 //│ res: string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ res: string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 
 
 
@@ -313,6 +318,7 @@ prettier2 done (eval1 done)
 //│ annoying  calls  : 0
 //│ subtyping calls  : 4485
 
+:re
 :stats
 prettier2 done (eval2 done)
 prettier2 done (eval2 done) e2
@@ -320,9 +326,11 @@ prettier2 done (eval2 done) d2
 //│ res: (((Add[?] with {lhs: 'c & ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'd), rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | (Lit | (Nega[?] with {arg: 'f & ('b | 'e)}) as 'e) as 'g}) as 'b) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
-//│    = '1-123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ res: string
-//│    = '-1'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 643
 //│ annoying  calls  : 335
 //│ subtyping calls  : 63770
@@ -384,16 +392,16 @@ prettier2 done eval1 e1
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.220: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.223: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e1
@@ -408,7 +416,8 @@ prettier2 done eval1 e1
 //│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 
 
 :e
@@ -443,7 +452,7 @@ prettier2 done (eval1 done) e2
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 309
 //│ annoying  calls  : 198
 //│ subtyping calls  : 643
@@ -469,10 +478,10 @@ prettier2 done eval2
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ res: (Lit | (Nega[?] with {arg: 'a}) as 'a) -> string | error
 //│    = [Function (anonymous)]
@@ -501,22 +510,22 @@ prettier2 done eval2 e1
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.220: 	e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ ║  l.223: 	e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.248: 	  | _ -> k x
+//│ ║  l.253: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
@@ -525,7 +534,8 @@ prettier2 done eval2 e1
 //│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
-//│    = '123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 145
 //│ annoying  calls  : 64
 //│ subtyping calls  : 494
@@ -551,22 +561,22 @@ prettier2 done eval2 e2
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.276: 	e2 = add (lit 1) (nega e1)
+//│ ║  l.281: 	e2 = add (lit 1) (nega e1)
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.248: 	  | _ -> k x
+//│ ║  l.253: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
@@ -575,7 +585,8 @@ prettier2 done eval2 e2
 //│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error
-//│    = '1-123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 111
 //│ annoying  calls  : 36
 //│ subtyping calls  : 1014
@@ -601,22 +612,22 @@ prettier2 done eval2 d2
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.239: 	def nega arg = Nega { arg }
+//│ ║  l.244: 	def nega arg = Nega { arg }
 //│ ║         	                      ^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.248: 	  | _ -> k x
+//│ ║  l.253: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from reference:
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
@@ -625,16 +636,17 @@ prettier2 done eval2 d2
 //│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ║         	                                ^
 //│ ╟── from field selection:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ║         	                                       ^^^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.256: 	rec def prettier2 k ev = prettier1 (fun x -> case x of {
+//│ ║  l.261: 	rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│ ║         	                                                  ^
 //│ ╟── from reference:
 //│ ║  l.191: 	  | _ -> k e
 //│ ╙──       	           ^
 //│ res: error | string
-//│    = '-1-1'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 144
 //│ annoying  calls  : 75
 //│ subtyping calls  : 578
@@ -660,16 +672,16 @@ prettier2 done eval1 e2
 //│ ║  l.190: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
 //│ ║         	            ^^^^
 //│ ╟── from reference:
-//│ ║  l.259: 	  }) ev
+//│ ║  l.264: 	  }) ev
 //│ ║         	     ^^
 //│ ╟── from reference:
-//│ ║  l.257: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
+//│ ║  l.262: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
 //│ ╙──       	                                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
-//│ ║  l.276: 	e2 = add (lit 1) (nega e1)
+//│ ║  l.281: 	e2 = add (lit 1) (nega e1)
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Lit & ?c | Add[?] & ?d | ?e & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done eval1 e2
@@ -684,7 +696,8 @@ prettier2 done eval1 e2
 //│ ║  l.186: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error
-//│    = '1-123'
+//│ Runtime error:
+//│   ReferenceError: intToString is not defined
 //│ constrain calls  : 110
 //│ annoying  calls  : 36
 //│ subtyping calls  : 1008

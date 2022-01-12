@@ -21,9 +21,6 @@ n = 123 with { x = 1 }
 //│ function succ(x) {
 //│   return x + 1;
 //│ }
-//│ function intToString(x) {
-//│   return x.toString();
-//│ }
 //│ function concat(x, y) {
 //│   if (arguments.length === 2) {
 //│     return x + y;

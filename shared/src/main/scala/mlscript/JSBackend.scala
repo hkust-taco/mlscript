@@ -486,7 +486,6 @@ class JSTestBackend extends JSBackend {
       JSBackend.makeIdentity(topLevelScope allocateJavaScriptName "id") ::
         JSBackend.makeError(topLevelScope allocateJavaScriptName "error") ::
         JSBackend.makeSuccessor(topLevelScope allocateJavaScriptName "succ") ::
-        JSBackend.makeIntToString(topLevelScope allocateJavaScriptName "intToString") ::
         JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "concat", "+") ::
         JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "add", "+") ::
         JSBackend.makeBinaryFunc(topLevelScope allocateJavaScriptName "sub", "-") ::
@@ -716,12 +715,6 @@ object JSBackend {
       JSIdent("Error", true),
       JSExpr("unexpected runtime error") :: Nil
     ).`throw` :: Nil
-  )
-
-  def makeIntToString(name: Str): JSFuncDecl = JSFuncDecl(
-    name,
-    JSNamePattern("x") :: Nil,
-    JSIdent("x").member("toString")().`return` :: Nil
   )
 
   // For integers larger than this value, use BigInt notation.
