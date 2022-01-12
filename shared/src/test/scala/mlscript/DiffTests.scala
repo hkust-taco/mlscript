@@ -439,6 +439,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     }
     try rec(allLines, defaultMode) finally {
       out.close()
+      host.terminate()
     }
     val testFaield = failures.nonEmpty
     val result = strw.toString
@@ -453,7 +454,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     }
     if (testFaield)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
-    host.terminate()
+    
   }}
   
   case class ReplHost() {
