@@ -742,18 +742,4 @@ object JSBackend {
 
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
-
-  val builtinFnOpMap =
-    immutable.HashMap(
-      "add" -> "+",
-      "sub" -> "-",
-      "mul" -> "*",
-      "div" -> "/",
-      "lt" -> "<",
-      "le" -> "<=",
-      "gt" -> ">",
-      "ge" -> ">=",
-      "eq" -> "==",
-      "ne" -> "!=",
-    )
 }

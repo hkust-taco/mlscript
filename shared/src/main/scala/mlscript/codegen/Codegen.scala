@@ -55,7 +55,7 @@ class SourceCode(val lines: Ls[SourceLine]) {
     case Nil => this
   }
 
-  def isSingleLine: Bool = lines.length == 1
+  def isSingleLine: Bool = lines.length === 1
 
   def isMultipleLine: Bool = lines.length > 1
 
