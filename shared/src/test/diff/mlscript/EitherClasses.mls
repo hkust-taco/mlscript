@@ -2,33 +2,41 @@ class Left[A]: { value: A }
 def Left value = Left{ value }
 //│ Defined class Left
 //│ Left: 'a -> (Left['A .. 'A | 'a] with {value: 'a})
+//│     = [Function: Left1]
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
 //│ Defined class Right
 //│ Right: 'a -> (Right['A .. 'A | 'a] with {value: 'a})
+//│      = [Function: Right1]
 
 def testVal = if true then Left 1 else Right 2
 //│ testVal: (Left['A .. 1 | 'A] with {value: 1}) | (Right['A0 .. 2 | 'A0] with {value: 2})
+//│        = Left { value: 1 }
 
 testVal.value
 //│ res: 1 | 2
+//│    = 1
 
 def res = case testVal of
   { Left -> testVal.value
   | Right -> 1
   }
 //│ res: 1
+//│    = 1
 
 res: 1
 //│ res: 1
+//│    = 1
 
 case res of { 1 -> "ok" }
 //│ res: "ok"
+//│    = 'ok'
 
 def res = case testVal of
   { Left -> testVal
   | Right -> 1
   }
 //│ res: 1 | (Left['A .. 1 | 'A] with {value: 1})
+//│    = Left { value: 1 }
 

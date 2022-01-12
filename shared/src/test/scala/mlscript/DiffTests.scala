@@ -29,7 +29,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       Set.empty
     }
   
-  // Allow overriding which specific tests to run, soemtimes easier for development:
+  // Allow overriding which specific tests to run, sometimes easier for development:
   private val focused = Set[Str](
     // "Ascribe",
     // "Repro",
@@ -83,11 +83,19 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool, stdout: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false, false, false, false, false)
+      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
+      stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
+      expectRuntimeErrors: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false,
+      false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
+    var noJavaScript = false
+    var allowRuntimeErrors = false
+
+    val backend = new JSTestBackend()
+    val host = ReplHost()
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
       case "" :: Nil =>
@@ -106,7 +114,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
+          case "NoJS" => noJavaScript = true; mode
+          case "ne" => mode.copy(noExecution = true)
+          case "ng" => mode.copy(noGeneration = true)
+          case "js" => mode.copy(showGeneratedJS = true)
+          case "re" => mode.copy(expectRuntimeErrors = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -158,6 +172,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             
             var totalTypeErrors = 0
             var totalWarnings = 0
+            var totalRuntimeErrors = 0
             
             def report(diags: Ls[Diagnostic]): Unit = {
               diags.foreach { diag =>
@@ -274,6 +289,67 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 }
               }
             )
+
+            var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
+                file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
+              backend(p) map { testCode =>
+                // Display the generated code.
+                if (mode.showGeneratedJS) {
+                  if (!testCode.prelude.isEmpty) {
+                    output("// Prelude")
+                    testCode.prelude foreach { line =>
+                      output(line)
+                    }
+                  }
+                  testCode.queries.zipWithIndex foreach { case (query, i) =>
+                    output(s"// Query ${i + 1}")
+                    query.prelude foreach { output(_) }
+                    query.code foreach { output(_) }
+                  }
+                  output("// End of generated code")
+                }
+                // Execute code.
+                if (!mode.noExecution) {
+                  testCode.prelude match {
+                    case Nil => ()
+                    case lines => host.execute(lines mkString " ")
+                  }
+                  S(testCode.queries map { query =>
+                    // Useful for find out what is really happening.
+                    // println(s"In test $file:")
+                    // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
+                    val res = host.query(query.prelude.mkString(""), query.code.mkString(""))
+                    // println(s"Response: ${JSLit.makeStringLiteral(res)}")
+                    res
+                  })
+                } else {
+                  N
+                }
+              }
+            } else {
+              R(N)
+            }
+
+            def showResult(prefixLength: Int) = {
+              results match {
+                case R(S(head :: next)) =>
+                  val text = head match {
+                    case (false, err) =>
+                      if (!(mode.expectTypeErrors || mode.expectRuntimeErrors || allowRuntimeErrors))
+                        failures += blockLineNum
+                      totalRuntimeErrors += 1
+                      output("Runtime error:")
+                      err.split('\n') foreach { s => output("  " + s) }
+                    case (true, result) =>
+                      result.split('\n').zipWithIndex foreach { case (s, i) =>
+                        if (i =:= 0) output(" " * prefixLength + "= " + s)
+                        else output(" " * (prefixLength + 2) + s)
+                      }
+                  }
+                  results = R(S(next))
+                case _ => ()
+              }
+            }
             
             stmts.foreach {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
@@ -299,21 +375,37 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                 }
+                showResult(nme.name.length())
               case desug: DesugaredStatement =>
+                var prefixLength = 0
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
                   case R(binds) =>
                     binds.foreach {
                       case (nme, pty) =>
                         ctx += nme -> pty
                         output(s"$nme: ${getType(pty).show}")
+                        prefixLength = nme.length()
                     }
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
+                      prefixLength = 3
                     }
                 }
+                showResult(prefixLength)
+            }
+
+            // If code generation fails, show the error message.
+            results match {
+              case L((message, crashed)) =>
+                if (crashed)
+                  output("Code generation crashed:")
+                else
+                  output("Code generation met an error:")
+                output(s"  $message")
+              case _ => ()
             }
             
             if (mode.stats) {
@@ -327,6 +419,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)
+              failures += blockLineNum
+            if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum
         } catch {
           case err: Throwable =>
@@ -345,6 +439,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     }
     try rec(allLines, defaultMode) finally {
       out.close()
+      host.terminate()
     }
     val testFaield = failures.nonEmpty
     val result = strw.toString
@@ -362,4 +457,69 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     
   }}
   
+  case class ReplHost() {
+    import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
+    private val builder = new java.lang.ProcessBuilder()
+    builder.command("node", "--interactive")
+    private val proc = builder.start()
+
+    private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
+    private val stdout = new BufferedReader(new InputStreamReader(proc.getInputStream))
+    private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
+
+    skipUntilPrompt()
+
+    private def skipUntilPrompt(): Unit = {
+      val buffer = new StringBuilder()
+      while (!buffer.endsWith("\n> ")) {
+        buffer.append(stdout.read().toChar)
+      }
+      buffer.delete(buffer.length - 3, buffer.length)
+      ()
+    }
+
+    private def consumeUntilPrompt(): (Bool, Str) = {
+      val buffer = new StringBuilder()
+      while (!buffer.endsWith("\n> ")) {
+        buffer.append(stdout.read().toChar)
+      }
+      buffer.delete(buffer.length - 3, buffer.length)
+      val reply = buffer.toString()
+      val begin = reply.indexOf(0x200B)
+      val end = reply.lastIndexOf(0x200B)
+      if (begin >= 0 && end >= 0)
+        // `console.log` inserts a space between every two arguments,
+        // so + 1 and - 1 is necessary to get correct length.
+        (false, reply.substring(begin + 1, end))
+      else
+        (true, reply)
+    }
+
+    private def send(code: Str, useEval: Bool = false): Unit = {
+      stdin.write(
+        if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
+        else if (code endsWith "\n") code
+        else code + "\n"
+      )
+      stdin.flush()
+    }
+
+    def query(prelude: Str, code: Str): (Bool, Str) = {
+      val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
+      send(wrapped)
+      consumeUntilPrompt() match {
+        case (true, _) =>
+          send("res")
+          consumeUntilPrompt()
+        case t => t
+      }
+    }
+
+    def execute(code: Str): Unit = {
+      send(code)
+      skipUntilPrompt()
+    }
+
+    def terminate(): Unit = proc.destroy()
+  }
 }

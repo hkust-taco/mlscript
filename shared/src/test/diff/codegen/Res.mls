@@ -1,0 +1,80 @@
+// This test tracks how `res` works.
+
+0
+//│ res: 0
+//│    = 0
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 2
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 3
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 4
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 5
+
+:js
+res == 4
+//│ // Query 1
+//│ res = res == 4;
+//│ // End of generated code
+//│ res: bool
+//│    = false
+
+:js
+def res = 0
+//│ // Query 1
+//│ globalThis.res1 = 0;
+//│ res = res1;
+//│ // End of generated code
+//│ res: 0
+//│    = 0
+
+// However, we can shadow `res`!
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res1 + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+:js
+res + 1
+//│ // Query 1
+//│ res = res1 + 1;
+//│ // End of generated code
+//│ res: int
+//│    = 1

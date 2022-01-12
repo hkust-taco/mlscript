@@ -1,12 +1,32 @@
 
 t = (1, 2, 3)
 //│ t: (1, 2, 3,)
+//│  = [ 1, 2, 3 ]
 
+:js
 tx = t with { x = 1 }
+//│ // Prelude
+//│ function withConstruct(target, fields) {
+//│   if (typeof target === "string" || typeof target === "number" || typeof target === "boolean" || typeof target === "bigint" || typeof target === "symbol") {
+//│     return Object.assign(target, fields);
+//│   }
+//│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
+//│     return Object.assign(target.valueOf(), target, fields);
+//│   }
+//│   const copy = Object.assign({}, target, fields);
+//│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+//│   return copy;
+//│ }
+//│ // Query 1
+//│ globalThis.tx = withConstruct(t, { x: 1 });
+//│ res = tx;
+//│ // End of generated code
 //│ tx: (1, 2, 3,) & {x: 1}
+//│   = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
 tx.x
 //│ res: 1
+//│    = 1
 
 trait Hey: { x: int }
 //│ Defined trait Hey
@@ -14,130 +34,168 @@ trait Hey: { x: int }
 :e
 Hey t
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.15: 	Hey t
+//│ ║  l.35: 	Hey t
 //│ ║        	^^^^^
 //│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
-//│ ║  l.15: 	Hey t
+//│ ║  l.35: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.11: 	trait Hey: { x: int }
+//│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
+//│    = [ 1, 2, 3 ]
 
+// TODO: fix `withConstruct` on arrays
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
+//│    = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
 htx.x
 //│ res: 1
+//│    = 1
 
 f ((a, b, c)) = { a; b; c }
 //│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
+//│  = [Function: f]
 
 f t
 //│ res: {a: 1, b: 2, c: 3}
+//│    = { a: 1, b: 2, c: 3 }
 
 f tx
 //│ res: {a: 1, b: 2, c: 3}
+//│    = { a: undefined, b: undefined, c: undefined }
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
+//│    = { a: undefined, b: undefined, c: undefined }
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
+//│  = [Function: f1]
 
 :e
 f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	f t
+//│ ║  l.81: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.52: 	f t
+//│ ║  l.81: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.48: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	f tx
+//│ ║  l.82: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
-//│ ║  l.5: 	tx = t with { x = 1 }
+//│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.53: 	f tx
+//│ ║  l.82: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.48: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	f htx
+//│ ║  l.83: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
-//│ ║  l.5: 	tx = t with { x = 1 }
+//│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.54: 	f htx
+//│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.48: 	f ((a, b)) = add a b
+//│ ║  l.76: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
+//│    = NaN
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
 //│ g: ({x: 'a} & hey | ~hey) -> (() | 'a)
+//│  = [Function: g]
 
+:re
 g htx
 g tx
 //│ res: () | 1
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 //│ res: () | 1
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 
+// TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
+//│  = [Function: g1]
 
+:re
 g htx
 g (tx with { y = 2 })
 //│ res: 1
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 //│ res: 1 | 2
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	g tx
+//│ ║  l.158: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
-//│ ║  l.5: 	tx = t with { x = 1 }
+//│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.113: 	g tx
+//│ ║  l.158: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.104: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.104: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 
-
+:re
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
+//│ Runtime error:
+//│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) else (2, 3)
 //│ res: anything
+//│ Runtime error:
+//│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: {b: 2 | 3}
+//│ Runtime error:
+//│   ReferenceError: bool is not defined
 
+:re
 if bool then (1,) else fun x -> x
 //│ res: anything
+//│ Runtime error:
+//│   ReferenceError: bool is not defined
 

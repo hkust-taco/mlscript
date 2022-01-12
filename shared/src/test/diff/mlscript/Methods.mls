@@ -13,44 +13,64 @@ class Bar: Foo[int, bool]
 Foo.Fun
 Bar.Fun
 //│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
+//│    = undefined
 //│ res: Bar -> 'a -> 'a
+//│    = undefined
 
 f = Foo { x = 1; y = 2 }
 //│ f: Foo['A .. 1 | 'A, 'B .. 2 | 'B] with {x: 1, y: 2}
+//│  = Foo { x: 1, y: 2 }
 
 f.(Foo.Fun)
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
+//│    = undefined
 
+:re
 Foo.Fun f
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
+//│ Runtime error:
+//│   TypeError: (intermediate value).Fun is not a function
 
 f.Fun
 //│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
+//│    = [Function: Fun]
 
 // :d
 Bar
 //│ res: {x: int & 'x, y: bool & 'y} -> (Bar with {x: 'x, y: 'y})
+//│    = [Function: res]
 
 g = Bar { x = 42; y = true }
 //│ g: Bar & {x: 42, y: true}
+//│  = Bar { x: 42, y: true }
 
 g.(Foo.Fun)
 g.(Bar.Fun)
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│    = undefined
 //│ res: 'a -> 'a
+//│    = undefined
 
+:re
 Foo.Fun g
 Bar.Fun g
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│ Runtime error:
+//│   TypeError: (intermediate value).Fun is not a function
 //│ res: 'a -> 'a
+//│ Runtime error:
+//│   TypeError: (intermediate value).Fun is not a function
 
 g.Fun
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│    = [Function: Fun]
 
 h = Bar { x = 43; y = true }
 h.Fun
 //│ h: Bar & {x: 43, y: true}
+//│  = Bar { x: 43, y: true }
 //│ res: (int -> bool -> 'C) -> int -> bool -> 'C
+//│    = [Function: Fun]
 
 
 
@@ -84,12 +104,15 @@ class WrapperWrapper[A]: Wrapper[Wrapper[A]]
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: WrapperWrapper['A .. 0 | 'A] with {x: Psyduck['A .. 0 | 'A] with {x: 0}}
+//│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 res.Apply2 (fun x -> mul x 2)
 //│ res: WrapperWrapper['B .. 'B | int] with {x: Wrapper['B .. 'B | int]}
+//│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 Wrapper
 //│ res: {x: 'x & 'A} -> (Wrapper['A] with {x: 'x})
+//│    = [Function: res]
 
 
 
@@ -152,26 +175,37 @@ fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
 //│ p: Pair['A .. 42 | 'A, 'B .. 'B | true] with {x: 42, y: true}
+//│  = Pair { x: 42, y: true }
 //│ fx: int -> int
+//│   = [Function: fx]
 //│ fy: bool -> bool
+//│   = [Function: fy]
 //│ ft: int -> bool -> bool
+//│   = [Function: ft]
 
 p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
 //│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool]
+//│    = Pair { x: 84, y: false }
 //│ res: bool
+//│    = true
 //│ res: bool
+//│    = false
 
 t = True { x = "foo"; y = false }
 t.(True.True)
 //│ t: true & {x: "foo", y: false}
+//│  = True { x: 'foo', y: false }
 //│ res: true
+//│    = undefined
 
 t = True2 { x = "bar"; y = false }
 t.(True2.True)
 //│ t: True2['A .. "bar" | 'A, 'B .. 'B | false] with {x: "bar", y: false}
+//│  = True2 { x: 'bar', y: false }
 //│ res: bool
+//│    = undefined
 
 
 class Class1A[A]
@@ -211,19 +245,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.212: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.212: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.212: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.196: 	class Class2C: Class2B[int, bool]
+//│ ║  l.230: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from method declaration:
-//│ ║  l.195: 	    method MtdB: B
+//│ ║  l.229: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -245,11 +279,13 @@ class Test3A: Test1['a -> 'a]
 Test3A.F
 //│ Defined class Test3A
 //│ res: (Test3A with {x: 'a -> 'a}) -> 'a0 -> 'a0
+//│    = undefined
 
 class Test3B: Test1['a -> 'a] & { x: 'a }
 Test3B.F
 //│ Defined class Test3B
 //│ res: (Test3B with {x: 'a -> 'a & 'a}) -> 'a0 -> 'a0
+//│    = undefined
 
 
 
@@ -257,10 +293,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.257: 	class Test4A[A]: { x: A }
+//│ ║  l.293: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.258: 	    method Mth4A[A]: A
+//│ ║  l.294: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing
@@ -288,6 +324,7 @@ class H: D & E
 
 ((H{}): D).(D.G)
 //│ res: 1
+//│    = undefined
 
 
 
@@ -306,17 +343,19 @@ class Ber: Fee & Fee2
 
 Ber.F
 //│ res: (Ber & fee2) -> 2
+//│    = undefined
 
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.311: 	Ber
+//│ ║  l.349: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.304: 	class Ber: Fee & Fee2
+//│ ║  l.341: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.304: 	class Ber: Fee & Fee2
+//│ ║  l.341: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
+//│    = [Function: res]
 

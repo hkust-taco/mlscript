@@ -1,3 +1,4 @@
+:NoJS
 
 class A
 class B
@@ -41,69 +42,69 @@ ty1 = ty0
 //│   <:  ty1:
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `A & 'a` does not match type `'b`
-//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.14: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                                                                       ^^
 //│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?b & ?c | C & ?c & ?d | D & ?d & ?e | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	      ^^^
 //│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.25: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                              ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `B & 'b` does not match type `'c`
-//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.14: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                                                                           ^^
 //│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?b & ?c | C & ?c & ?d | D & ?d & ?e | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	      ^^^
 //│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.25: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                  ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `C & 'c` does not match type `'d`
-//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.14: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                                                                               ^^
 //│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?b & ?c | C & ?c & ?d | D & ?d & ?e | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	      ^^^
 //│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.25: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                      ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `D & 'd` does not match type `'e`
-//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.14: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                                                                                   ^^
 //│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?b & ?c | C & ?c & ?d | D & ?d & ?e | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	      ^^^
 //│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.25: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                          ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `E & 'e` does not match type `'f`
-//│ ║  l.13: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.14: 	def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                                                                                       ^^
 //│ ╟── but it flows into reference of type `(A & ?a & ?b | B & ?b & ?c | C & ?c & ?d | D & ?d & ?e | E & ?e & ?f) -> (?a, ?b, ?c, ?d, ?e, ?f,)`
-//│ ║  l.39: 	ty1 = ty0
+//│ ║  l.40: 	ty1 = ty0
 //│ ║        	      ^^^
 //│ ╟── which does not match type `(A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, 'f,)`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.25: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
+//│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                              ^^
 //│ constrain calls  : 55
 //│ annoying  calls  : 60

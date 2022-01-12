@@ -7,53 +7,61 @@ c = C{}
 //│ Defined class B
 //│ Defined class C
 //│ c: C
+//│  = C {}
 
 c: C
 //│ res: C
+//│    = C {}
 
 c: B
 //│ res: B
+//│    = C {}
 
 res: A
 //│ res: A
+//│    = C {}
 
 c: A
 //│ res: A
+//│    = C {}
 
 a = res
 //│ a: A
+//│  = C {}
 
 :e
 a: B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ║        	^
 //│ ╟── expression of type `A` does not match type `B`
-//│ ║  l.20: 	c: A
+//│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `B`
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.27: 	a: B
+//│ ║  l.33: 	a: B
 //│ ╙──      	   ^
 //│ res: B
+//│    = C {}
 
 :e
 a: C
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	a: C
+//│ ║  l.50: 	a: C
 //│ ║        	^
 //│ ╟── expression of type `A` does not match type `C`
-//│ ║  l.20: 	c: A
+//│ ║  l.24: 	c: A
 //│ ║        	   ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.43: 	a: C
+//│ ║  l.50: 	a: C
 //│ ║        	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.43: 	a: C
+//│ ║  l.50: 	a: C
 //│ ╙──      	   ^
 //│ res: C
+//│    = C {}
 
 
 // Transitivity is currently broken for primitive literals:
@@ -61,8 +69,11 @@ a: C
 42: int
 res: number
 //│ res: int
+//│    = 42
 //│ res: number
+//│    = 42
 
 42: number
 //│ res: number
+//│    = 42
 

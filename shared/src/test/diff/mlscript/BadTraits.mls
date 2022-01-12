@@ -19,76 +19,94 @@ T {}
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: error | t
+//│    = {}
 
 def a = A{}
 //│ a: A
+//│  = A {}
 
 :e
 T a
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	T a
+//│ ║  l.29: 	T a
 //│ ║        	^^^
 //│ ╟── expression of type `A` does not match type `B`
-//│ ║  l.23: 	def a = A{}
+//│ ║  l.24: 	def a = A{}
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `B`
-//│ ║  l.27: 	T a
+//│ ║  l.29: 	T a
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	             ^
 //│ res: A & t | error
+//│    = A {}
 
 :e
+:js
 T A
+//│ // Query 1
+//│ res = ((x) => new A(x));
+//│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	^^^
 //│ ╟── expression of type `anything -> A` does not match type `A`
-//│ ║  l.43: 	T A
+//│ ║  l.47: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: anything -> A & t | error
+//│    = [Function: res]
 
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.56: 	T (B {})
+//│ ║  l.64: 	T (B {})
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ║  l.56: 	T (B {})
+//│ ║  l.64: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: B & t | error
+//│    = B {}
 
+:re
 def t = T error
 //│ t: nothing
+//│ Runtime error:
+//│   Error: unexpected runtime error
 
+:re
 t: nothing
 //│ res: nothing
+//│ Runtime error:
+//│   ReferenceError: t is not defined
 
 type Als = A & B
 //│ Defined type alias Als
 
+:re
 t: Als
 //│ res: nothing
+//│ Runtime error:
+//│   ReferenceError: t is not defined
 
 
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.82: 	class D0: T
-//│ ╙──      	      ^^^^^
+//│ ║  l.100: 	class D0: T
+//│ ╙──       	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.88: 	class D1: B & T
-//│ ╙──      	      ^^^^^^^^^
+//│ ║  l.106: 	class D1: B & T
+//│ ╙──       	      ^^^^^^^^^
 
 
 trait S: { x: int }
@@ -96,26 +114,31 @@ trait S: { x: int }
 
 s = S{ x = 1 }
 //│ s: {x: 1} & s
+//│  = { x: 1 }
 
 t = s: s
 //│ t: s
+//│  = { x: 1 }
 
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.104: 	t.x
+//│ ║  l.124: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.100: 	t = s: s
+//│ ║  l.119: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.104: 	t.x
+//│ ║  l.124: 	t.x
 //│ ╙──       	^
 //│ res: error
+//│    = 1
 
 t = s: S
 //│ t: {x: int} & s
+//│  = { x: 1 }
 
 t.x
 //│ res: int
+//│    = 1
 

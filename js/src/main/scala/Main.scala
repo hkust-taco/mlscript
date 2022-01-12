@@ -105,8 +105,8 @@ object Main {
   // Returns `Right[Str]` if successful, `Left[Str]` if not.
   private def generateRuntimeCode(pgrm: Pgrm): Either[Str, Str] = {
     try {
-      val backend = JSBackend(pgrm)
-      val lines = backend()
+      val backend = new JSWebBackend()
+      val lines = backend(pgrm)
       val code = s"""(() => {
                     |function ${backend.prettyPrinterName}(value) {
                     |  switch (typeof value) {

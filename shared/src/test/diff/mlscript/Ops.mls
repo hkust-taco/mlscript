@@ -4,18 +4,21 @@
 //│ Parsed: ((+ (2,)) (2,));
 //│ Desugared: ((+ (2,)) (2,))
 //│ res: int
+//│    = 4
 
 :p
 1 + 2 * 2 + 3
 //│ Parsed: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,));
 //│ Desugared: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,))
 //│ res: int
+//│    = 8
 
 :p
 1 + 2 / 2 + 3
 //│ Parsed: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,));
 //│ Desugared: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,))
 //│ res: int
+//│    = 5
 
 :e
 :p
@@ -23,29 +26,31 @@
 //│ Parsed: ((|| (((|> (1,)) (2,)),)) (3,));
 //│ Desugared: ((|| (((|> (1,)) (2,)),)) (3,))
 //│ ╔══[ERROR] identifier not found: |>
-//│ ║  l.22: 	1 |> 2 || 3
+//│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.22: 	1 |> 2 || 3
+//│ ║  l.25: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `3` does not match type `bool`
-//│ ║  l.22: 	1 |> 2 || 3
+//│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
+//│    = 5
 
 :p
 true || false && true || false
 //│ Parsed: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,));
 //│ Desugared: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,))
 //│ res: bool
+//│    = true
 
 
 // Infix operators not yet supported:
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.46:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.51:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.50:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.55:1: - 1

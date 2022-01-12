@@ -21,58 +21,64 @@ type Hello = int
 
 42: Hello
 //│ res: int
+//│    = 42
 
 :e
 42: hello
 //│ ╔══[ERROR] Type alias Hello cannot be used as a type tag
-//│ ║  l.26: 	42: hello
+//│ ║  l.27: 	42: hello
 //│ ╙──      	    ^^^^^
 //│ res: error
+//│    = 42
 
 
 :e
 aa = { a = 1; a = "oops" }
 //│ ╔══[ERROR] Multiple declarations of field name a in record literal
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	       ^
 //│ ╟── Declared at
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ╙──      	              ^
 //│ aa: {a: 1, a: "oops"}
+//│   = { a: 'oops' }
 
 :e
 aa: { a: int; a: string }
 //│ ╔══[ERROR] Multiple declarations of field name a in record type
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	      ^
 //│ ╟── Declared at
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── expression of type `1` does not match type `string`
-//│ ║  l.34: 	aa = { a = 1; a = "oops" }
+//│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── but it flows into reference with expected type `{a: int, a: string}`
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.47: 	aa: { a: int; a: string }
+//│ ║  l.50: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^
 //│ res: {a: int, a: string}
+//│    = { a: 'oops' }
 
 aa.a
 //│ res: 1
+//│    = 'oops'
 
 aa: { a: 'a }
 //│ res: {a: 1}
+//│    = { a: 'oops' }
 
 
 
@@ -85,6 +91,7 @@ type Bad = { x: 'a }
 
 {x = 123}: Bad
 //│ res: {x: nothing}
+//│    = { x: 123 }
 
 
 type BadRec = { x: 'a; y: BadRec }

@@ -1,4 +1,4 @@
-
+:NoJS
 def foo: ~int\x
 //│ foo: ~int
 

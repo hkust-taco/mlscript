@@ -1,3 +1,4 @@
+:NoJS
 
 class A[T]: { fA: T }
 class B[T]: { fB: T }

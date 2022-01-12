@@ -1,18 +1,29 @@
+:AllowRuntimeErrors
 // Weird features to eventually remove
 
 
 anything
 //│ res: anything
+//│ Runtime error:
+//│   ReferenceError: anything is not defined
 
 nothing
 //│ res: nothing
+//│ Runtime error:
+//│   ReferenceError: nothing is not defined
 
 Nothing
 //│ res: nothing
+//│ Runtime error:
+//│   ReferenceError: Nothing is not defined
 
 int
 //│ res: int
+//│ Runtime error:
+//│   ReferenceError: int is not defined
 
 int + 1
 //│ res: int
+//│ Runtime error:
+//│   ReferenceError: int is not defined
 

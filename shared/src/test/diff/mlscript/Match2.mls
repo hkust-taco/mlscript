@@ -7,16 +7,20 @@ def foo x = case x of
   | _ -> 1
   }
 //│ foo: ((Test with {value: 'a}) | ~Test) -> (1 | 'a)
+//│    = [Function: foo]
 
 // Q: why type of `value` widened?
 def t = Test { value = 0 }
 //│ t: Test & {value: 0}
+//│  = Test { value: 0 }
 
 foo Test
 //│ res: 1
+//│    = 1
 
 foo t
 //│ res: 0 | 1
+//│    = 0
 
 
 class Toast: { name: string }
@@ -27,32 +31,37 @@ def bar x = case x of
   | Toast -> x.name
   }
 //│ bar: ((Test with {value: 'a}) | (Toast with {name: 'a})) -> 'a
+//│    = [Function: bar]
 
 :e
 bar Test
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	bar Test
+//│ ║  l.37: 	bar Test
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `{value: ?value} -> (Test & {value: ?value})` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.32: 	bar Test
+//│ ║  l.37: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	def bar x = case x of
+//│ ║  l.29: 	def bar x = case x of
 //│ ╙──      	                 ^
 //│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.45: 	bar "ops"
+//│ ║  l.52: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.45: 	bar "ops"
+//│ ║  l.52: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.25: 	def bar x = case x of
+//│ ║  l.29: 	def bar x = case x of
 //│ ╙──      	                 ^
 //│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 
 def baz x = case x of
@@ -60,19 +69,22 @@ def baz x = case x of
   | Toast -> x
   }
 //│ baz: (Test & 'a | Toast & 'a) -> 'a
+//│    = [Function: baz]
 
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	baz "oops"
+//│ ║  l.75: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.65: 	baz "oops"
+//│ ║  l.75: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.58: 	def baz x = case x of
+//│ ║  l.67: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 
 
@@ -82,6 +94,7 @@ def test3 x = case x of
   | _ -> false
   }
 //│ test3: (1 | true | ~1 & ~true) -> bool
+//│      = [Function: test3]
 
 
 def test3 x = case x of
@@ -90,5 +103,6 @@ def test3 x = case x of
   | _ -> false
   }
 //│ test3: (1 & 'a | true | ~1 & ~true) -> (false | true | 'a)
+//│      = [Function: test31]
 
 

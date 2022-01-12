@@ -19,9 +19,11 @@ class Dummy[A]: Array[A] & { size: 0 }
 
 dummy = Dummy { size = 0 }
 //│ dummy: Dummy['A]
+//│      = Dummy { size: 0 }
 
 dummy: Array[int]
 //│ res: Array[int]
+//│    = Dummy { size: 0 }
 
 
 def ty4B: Array[Array[Array['a]]] as 'a
@@ -45,5 +47,6 @@ Array{ size = 0 }
 //│ ║  l.5: 	  method Get: int -> A 
 //│ ╙──     	         ^^^^^^^^^^^^^
 //│ res: error
+//│    = Array { size: 0 }
 
 

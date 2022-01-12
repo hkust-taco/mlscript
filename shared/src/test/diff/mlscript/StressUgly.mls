@@ -140,6 +140,8 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ╙──      	              ^^^^^^^^
+//│ Runtime error:
+//│   ReferenceError: eval1_ty_ugly is not defined
 //│ constrain calls  : 55
 //│ annoying  calls  : 68
 //│ subtyping calls  : 477

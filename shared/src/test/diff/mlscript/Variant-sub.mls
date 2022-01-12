@@ -6,36 +6,45 @@ class Some[A]: { v: A }
 def Some v = Some{v}
 def None = None{}
 //│ Some: 'a -> (Some['A .. 'A | 'a] with {v: 'a})
+//│     = [Function: Some1]
 //│ None: None
+//│     = None {}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
 //│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
+//│        = [Function: flatMap]
 
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
 //│ f: 'a -> (Some['A .. 'A | 'a] with {v: 'a})
+//│  = [Function: f]
 //│ res: Some['A .. 1 | 'A] with {v: 1}
+//│    = Some { v: 1 }
 //│ res: None | (Some['A] with {v: nothing})
+//│    = None {}
 
 :e
 flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.23: 	flatMap f "oops"
+//│ ║  l.29: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Some[?] & ?a | None & ?b`
-//│ ║  l.23: 	flatMap f "oops"
+//│ ║  l.29: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.12: 	  case opt of { Some -> f opt.v | None -> opt }
+//│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
 //│ res: error | (Some['A] with {v: nothing})
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
 //│ res: NoneBecause & {reason: "uh uh"} | (Some['A] with {v: nothing})
+//│    = NoneBecause { reason: 'uh uh' }
 
 type Expr = Lit | Neg | Var | Plus
 class Lit: {v: int}
@@ -65,6 +74,8 @@ rec def evalOpt x = case x of {
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
 //│ evalOpt: (Lit & {v: int & 'b} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A .. 'A | 'b] with {v: 'b}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
+//│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: NoneBecause | (Some['A .. 2 | 3 | 'A] with {v: 2 | 3}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int})
+//│    = Some { v: 5 }
