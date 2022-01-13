@@ -360,7 +360,7 @@ f 1
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── but it flows into integer literal with expected type `{a: ?a} | ~{a: ?b} | ~{}`
+//│ ╟── but it flows into integer literal with expected type `({a: ?a} | ~{a: ?b} | ~{})\a`
 //│ ║  l.356: 	f 1
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from field selection:
@@ -378,7 +378,7 @@ f { a = 1 }
 //│ ╟── expression of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
-//│ ╟── but it flows into record literal with expected type `{a: ?a} | ~{a: ?b} | ~{}`
+//│ ╟── but it flows into record literal with expected type `({a: ?a} | ~{a: ?b} | ~{})\a`
 //│ ║  l.374: 	f { a = 1 }
 //│ ║         	  ^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

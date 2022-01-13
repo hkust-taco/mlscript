@@ -335,8 +335,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 case R(S(head :: next)) =>
                   val text = head match {
                     case (false, err) =>
-                      if (!(mode.expectTypeErrors || mode.expectRuntimeErrors || allowRuntimeErrors))
-                        failures += blockLineNum
+                      if (!(mode.expectTypeErrors
+                          || mode.expectRuntimeErrors
+                          || allowRuntimeErrors
+                          || mode.fixme
+                      )) failures += blockLineNum
                       totalRuntimeErrors += 1
                       output("Runtime error:")
                       err.split('\n') foreach { s => output("  " + s) }
