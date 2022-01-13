@@ -94,6 +94,8 @@ object Polyfill {
         JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
         body
       )
+    }) :: BuiltinFunc("toString", {
+      JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("String")(JSIdent("x")).`return` :: Nil)
     }) :: BuiltinFunc("id", {
       JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
     }) :: BuiltinFunc("succ", {
