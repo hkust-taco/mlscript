@@ -321,3 +321,31 @@ case A { a = 0 } of
 //│ // End of generated code
 //│ res: (0, 1,)
 //│    = [ 0, 1 ]
+
+// With
+:js
+n = 42 with { x = 1 }
+n + n.x
+//│ // Prelude
+//│ function withConstruct(target, fields) {
+//│   if (typeof target === "string" || typeof target === "number" || typeof target === "boolean" || typeof target === "bigint" || typeof target === "symbol") {
+//│     return Object.assign(target, fields);
+//│   }
+//│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
+//│     return Object.assign(target.valueOf(), target, fields);
+//│   }
+//│   const copy = Object.assign({}, target, fields);
+//│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+//│   return copy;
+//│ }
+//│ // Query 1
+//│ globalThis.n = withConstruct(42, { x: 1 });
+//│ res = n;
+//│ // Query 2
+//│ res = n + n.x;
+//│ // End of generated code
+//│ n: 42 & {x: 1}
+//│  = [Number: 42] { x: 1 }
+//│ res: int
+//│    = 43
+
