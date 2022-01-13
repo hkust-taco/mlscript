@@ -41,6 +41,14 @@ def Box value = Box { inner = value }
 :js
 def box1 = Box 1
 def box2 = box1.Map (fun x -> add x 1)
+//│ // Prelude
+//│ function add(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x + y;
+//│   }else {
+//│     return (y) => x + y;
+//│   }
+//│ }
 //│ // Query 1
 //│ globalThis.box1 = Box1(1);
 //│ res = box1;

@@ -46,6 +46,10 @@ def f x = case 1 of { 1 -> x }
 :js
 def tmp = 1
 def tmp = succ tmp
+//│ // Prelude
+//│ function succ(x) {
+//│   return x + 1;
+//│ }
 //│ // Query 1
 //│ globalThis.tmp = 1;
 //│ res = tmp;
