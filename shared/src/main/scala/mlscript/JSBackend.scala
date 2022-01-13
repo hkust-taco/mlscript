@@ -422,6 +422,8 @@ class JSWebBackend extends JSBackend {
 
   val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
 
+  polyfill.use("prettyPrint", prettyPrinterName)
+
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
@@ -471,9 +473,8 @@ class JSWebBackend extends JSBackend {
                 translateTerm(term)(topLevelScope) :: Nil
               ).stmt :: Nil
           })
-    SourceCode
-      .concat((polyfill.emit() ::: stmts) map { _.toSourceCode })
-      .lines map { _.toString }
+    val epilogue = resultsIdent.member("map")(JSIdent(prettyPrinterName)).`return` :: Nil
+    JSImmEvalFn(Nil, R(polyfill.emit() ::: stmts ::: epilogue), Nil).toSourceCode.toLines
   }
 }
 
@@ -613,31 +614,6 @@ object JSBackend {
     case IntLit(value) => s"IntLit($value)"
     case DecLit(value) => s"DecLit($value)"
     case StrLit(value) => s"StrLit($value)"
-  }
-
-  private def makePrettyPrinter(name: Str, indent: Bool) = {
-    val arg = JSIdent("value")
-    val default = arg.member("constructor").member("name") + JSExpr(" ") +
-      (if (indent) JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
-       else JSIdent("JSON").member("stringify")(arg));
-    JSFuncDecl(
-      name,
-      JSNamePattern("value") :: Nil,
-      JSIdent(name)
-        .typeof()
-        .switch(
-          default.`return` :: Nil,
-          JSExpr("number") -> Nil,
-          JSExpr("boolean") -> Nil,
-          // Returns `"[Function: <name>]"`
-          JSExpr("function") -> {
-            val name = arg.member("name") ?? JSExpr("<anonymous>")
-            val repr = JSExpr("[Function: ") + name + JSExpr("]")
-            (repr.`return` :: Nil)
-          },
-          JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
-        ) :: Nil,
-    )
   }
 
   // For integers larger than this value, use BigInt notation.

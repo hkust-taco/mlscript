@@ -7,23 +7,26 @@ class Polyfill {
   private val featFnNameMap = collection.mutable.HashMap[Str, Str]()
   private val emittedFeatSet = collection.mutable.HashSet[Str]()
 
-  def use(feat: Str, fnName: Str): Str = {
-    featFnNameMap += feat -> fnName
-    fnName
+  def use(feat: Str, jsFnName: Str): Str = {
+    featFnNameMap += feat -> jsFnName
+    jsFnName
   }
 
+  /**
+    * Check whether a feature has been already used.
+    */
   def used(feat: Str): Bool = featFnNameMap.contains(feat)
 
   def get(feat: Str): Opt[Str] = featFnNameMap get feat
 
-  def emit(): Ls[JSStmt] = (featFnNameMap flatMap { case (feat, fnName) =>
-    if (emittedFeatSet contains feat)
+  def emit(): Ls[JSStmt] = (featFnNameMap flatMap { case (featName, fnName) =>
+    if (emittedFeatSet contains featName)
       N
     else
-      Polyfill.featFactoryMap get feat match {
-        case S(factory) =>
-          emittedFeatSet += feat
-          S(factory(fnName))
+      Polyfill.getFeature(featName) match {
+        case S(feature) =>
+          emittedFeatSet += featName
+          S(feature(fnName))
         case N          => N
       }
   }).toList
@@ -32,8 +35,45 @@ class Polyfill {
 object Polyfill {
   def apply(): Polyfill = new Polyfill()
 
-  val featFactoryMap: HashMap[Str, Str => JSStmt] = HashMap.from(
-    "withConstruct" -> ((name: Str) => {
+  abstract class Feature {
+    val name: Str
+    def apply(name: Str): JSStmt
+  }
+
+  final case class BuiltinFunc(val name: Str, maker: Str => JSStmt) extends Feature {
+    def apply(name: Str): JSStmt = maker(name)
+  }
+
+  final case class RuntimeHelper(val name: Str, maker: Str => JSStmt) extends Feature {
+    def apply(name: Str): JSStmt = maker(name)
+  }
+
+  val features: Ls[Feature] =
+    RuntimeHelper("prettyPrint", (name: Str) => {
+      val arg = JSIdent("value")
+      val default = arg.member("constructor").member("name") + JSExpr(" ") +
+        JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
+      JSFuncDecl(
+        name,
+        JSNamePattern("value") :: Nil,
+        arg
+          .typeof()
+          .switch(
+            default.`return` :: Nil,
+            JSExpr("number") -> Nil,
+            JSExpr("boolean") -> {
+              arg.member("toString")().`return` :: Nil
+            },
+            // Returns `"[Function: <name>]"`
+            JSExpr("function") -> {
+              val name = arg.member("name") ?? JSExpr("<anonymous>")
+              val repr = JSExpr("[Function: ") + name + JSExpr("]")
+              (repr.`return` :: Nil)
+            },
+            JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
+          ) :: Nil,
+      )
+    }) :: RuntimeHelper("withConstruct", (name: Str) => {
       val obj = JSIdent("Object")
       val tgt = JSIdent("target")
       val body: Ls[JSStmt] = JSIfStmt(
@@ -54,11 +94,11 @@ object Polyfill {
         JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
         body
       )
-    }) :: "id" -> {
+    }) :: BuiltinFunc("id", {
       JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
-    } :: "succ" -> {
+    }) :: BuiltinFunc("succ", {
       JSFuncDecl(_, JSNamePattern("x") :: Nil, (JSIdent("x") + JSLit("1")).`return` :: Nil)
-    } :: "error" -> {
+    }) :: BuiltinFunc("error", {
       JSFuncDecl(
         _,
         Nil,
@@ -67,20 +107,23 @@ object Polyfill {
           JSExpr("unexpected runtime error") :: Nil
         ).`throw` :: Nil
       )
-    } :: 
-      "concat" -> { makeBinaryFunc(_, "+") } ::
-      "add" -> { makeBinaryFunc(_, "+") } ::
-      "sub" -> { makeBinaryFunc(_, "-") } ::
-      "mul" -> { makeBinaryFunc(_, "*") } ::
-      "div" -> { makeBinaryFunc(_, "/") } ::
-      "gt" -> { makeBinaryFunc(_, ">") } ::
-      "not" -> { makeUnaryFunc(_, "!") } ::
+    }) :: BuiltinFunc("concat", { makeBinaryFunc(_, "+") }) ::
+      BuiltinFunc("add", { makeBinaryFunc(_, "+") }) ::
+      BuiltinFunc("sub", { makeBinaryFunc(_, "-") }) ::
+      BuiltinFunc("mul", { makeBinaryFunc(_, "*") }) ::
+      BuiltinFunc("div", { makeBinaryFunc(_, "/") }) ::
+      BuiltinFunc("gt", { makeBinaryFunc(_, ">") }) ::
+      BuiltinFunc("not", { makeUnaryFunc(_, "!") }) ::
       Nil
-  )
+  
+  private val nameFeatureMap = HashMap.from(features map { feature => (feature.name, feature) })
 
-  def isPreludeFunction(name: Str): Bool = {
-    !(name === "withConstruct") && featFactoryMap.keySet.contains(name)
-  }
+  def getFeature(name: Str): Opt[Feature] = nameFeatureMap get name
+
+  def isPreludeFunction(name: Str): Bool = nameFeatureMap.get(name).map({
+    case BuiltinFunc(_, _) => true
+    case _                 => false
+  }).getOrElse(false)
 
   private def makeBinaryFunc(name: Str, op: Str): JSFuncDecl =
     JSFuncDecl(
