@@ -43,22 +43,22 @@ sealed trait TypeSourceCode { self: Type =>
 
     // function changes how bound variables are processed so
     // they have to be handled in a look ahead style
-    // function input is positive polarity and takes upper bound
-    // function output is negative polarity and takes lower bound
+    // function output is positive polarity and takes upper bound
+    // function input is negative polarity and takes lower bound
     // otherwise handle normally
     def funcTypeHelper(lhs: Type, rhs: Type): SourceCode = {
         (lhs, rhs) match {
-            case (Bounds(llb, lub), Bounds(rlb, rub)) => SourceCode.concat(List(
-                                                (SourceCode("arg0") ++ SourceCode.colon ++ lub.toSourceCode).parenthesized,
-                                                rlb.toSourceCode
+            case (Bounds(llb, _), Bounds(_, rub)) => SourceCode.concat(List(
+                                                (SourceCode("arg0") ++ SourceCode.colon ++ llb.toSourceCode).parenthesized,
+                                                rub.toSourceCode
                                             ))
-            case (Bounds(lb, ub), rhs) => SourceCode.concat(List(
-                                                (SourceCode("arg0") ++ SourceCode.colon ++ ub.toSourceCode).parenthesized,
+            case (Bounds(llb, _), rhs) => SourceCode.concat(List(
+                                                (SourceCode("arg0") ++ SourceCode.colon ++ llb.toSourceCode).parenthesized,
                                                 rhs.toSourceCode
                                             ))
-            case (lhs, Bounds(lb, ub)) => SourceCode.concat(List(
+            case (lhs, Bounds(_, rub)) => SourceCode.concat(List(
                                                 (SourceCode("arg0") ++ SourceCode.colon ++ lhs.toSourceCode).parenthesized,
-                                                lb.toSourceCode
+                                                rub.toSourceCode
                                             ))
             case (lhs, rhs) => SourceCode.concat(List(
                                                 (SourceCode("arg0") ++ SourceCode.colon ++ lhs.toSourceCode).parenthesized,
@@ -66,7 +66,6 @@ sealed trait TypeSourceCode { self: Type =>
                                             ))
         }
     }
-
 }
 
 object Typegen {
