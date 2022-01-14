@@ -36,6 +36,9 @@ package object utils {
       else newStr
     }
     def isCapitalized: Bool = self.nonEmpty && self.head.isUpper
+    def decapitalize: String =
+      if (self.length === 0 || !self.charAt(0).isUpper) self
+      else self.updated(0, self.charAt(0).toLower)
   }
   
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {

@@ -167,11 +167,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyParams[_: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
   def mthDecl[_: P](prt: TypeName): P[R[MethodDef[Right[Term, Type]]]] = 
-    P(kw("method") ~ tyName ~ tyParams ~ ":" ~/ ty map {
+    P(kw("method") ~ variable ~ tyParams ~ ":" ~/ ty map {
       case (id, ts, t) => R(MethodDef[Right[Term, Type]](true, prt, id, ts, R(t)))
     })
   def mthDef[_: P](prt: TypeName): P[L[MethodDef[Left[Term, Type]]]] = 
-    P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
+    P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ variable ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
       case (rec, id, ts, ps, bod) =>
         L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc)))))
     })

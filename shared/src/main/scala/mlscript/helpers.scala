@@ -298,14 +298,15 @@ trait Located {
     spanEnd = e
     this
   }
-  def withLocOf(that: Located): this.type = {
-    that.toLoc.foreach { that =>
+  def withLoc(loco: Opt[Loc]): this.type = {
+    loco.foreach { that =>
       spanStart = that.spanStart
       spanEnd = that.spanEnd
       origin = S(that.origin)
     }
     this
   }
+  def withLocOf(that: Located): this.type = withLoc(that.toLoc)
   def hasLoc: Bool = origin.isDefined
   lazy val toLoc: Opt[Loc] = getLoc
   private def getLoc: Opt[Loc] = {

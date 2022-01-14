@@ -250,20 +250,20 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
-                val cty = typer.canonicalizeType(wty)
+                val cty = typer.canonicalizeType(wty)(ctx)
                 if (mode.dbg) output(s"Canon: ${cty}")
                 if (mode.dbg) output(s" where: ${cty.showBounds}")
-                val sim = typer.simplifyType(cty)
+                val sim = typer.simplifyType(cty)(ctx)
                 if (mode.dbg) output(s"Type after simplification: ${sim}")
                 if (mode.dbg) output(s" where: ${sim.showBounds}")
                 // val exp = typer.expandType(sim)
                 
                 // TODO: would be better toa void having to do a second pass,
                 // but would require more work:
-                val reca = typer.canonicalizeType(sim)
+                val reca = typer.canonicalizeType(sim)(ctx)
                 if (mode.dbg) output(s"Recanon: ${reca}")
                 if (mode.dbg) output(s" where: ${reca.showBounds}")
-                val resim = typer.simplifyType(reca)
+                val resim = typer.simplifyType(reca)(ctx)
                 if (mode.dbg) output(s"Resimplified: ${resim}")
                 if (mode.dbg) output(s" where: ${resim.showBounds}")
                 val recons = typer.reconstructClassTypes(resim, true, ctx)
@@ -278,18 +278,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
-                output(s"Defined " + td.kind.str + " " + td.nme.name)
-                val ttd = ctx.tyDefs(td.nme.name)
-                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, nme, tps, rhs) =>
-                  val fullName = td.nme.name + "." + nme.name
-                  val bodyTy = rhs.fold(_ => ctx.mthDefs, _ => ctx.mthDecls)(td.nme.name)(nme.name)
-                  val mthTy = typer.wrapMethod(ttd.nme.name, bodyTy)(bodyTy.prov, ctx)
-                  val res = getType(mthTy.instantiate(0))
-                  output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${fullName}: ${res.show}")
+                val tn = td.nme.name
+                output(s"Defined " + td.kind.str + " " + tn)
+                val ttd = ctx.tyDefs(tn)
+                (ttd.mthDecls ++ ttd.mthDefs).foreach {
+                  case MethodDef(_, _, Var(mn), _, rhs) =>
+                    rhs.fold(
+                      _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)(md.prov)),
+                      _ => ctx.getMth(S(tn), mn)
+                    ).foreach(res => output(s"${rhs.fold(
+                      _ => "Defined",
+                      _ => "Declared"
+                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
               }
             )
-
+            
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>

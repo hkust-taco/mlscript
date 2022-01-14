@@ -8,7 +8,7 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
-  def canonicalizeType(ty: SimpleType, pol: Bool = true): SimpleType = {
+  def canonicalizeType(ty: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
     type PolarType = (DNF, Bool)
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
@@ -110,7 +110,7 @@ trait TypeSimplifier { self: Typer =>
   }
   
   
-  def simplifyType(st: SimpleType, pol: Bool = true, removePolarVars: Bool = true): SimpleType = {
+  def simplifyType(st: SimpleType, pol: Bool = true, removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
@@ -148,7 +148,7 @@ trait TypeSimplifier { self: Typer =>
         }
       case NegType(und) => analyze(und, !pol)
       case ProxyType(underlying) => analyze(underlying, pol)
-      case tr @ TypeRef(defn, targs) => analyze(tr.expand(_ => ()), pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
+      case tr @ TypeRef(defn, targs) => analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze(ub, true) else analyze(ub, false)
@@ -277,7 +277,7 @@ trait TypeSimplifier { self: Typer =>
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
       case NegType(und) => transform(und, !pol).neg()
       case ProxyType(underlying) => transform(underlying, pol)
-      case tr @ TypeRef(defn, targs) => transform(tr.expand(_ => ()), pol) // FIXME may diverge; and we should try to keep these!
+      case tr @ TypeRef(defn, targs) => transform(tr.expand, pol) // FIXME may diverge; and we should try to keep these!
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol)
         else Without(transform(base, pol), names)(wo.prov)
@@ -290,6 +290,7 @@ trait TypeSimplifier { self: Typer =>
   
   def reconstructClassTypes(st: SimpleType, pol: Bool, ctx: Ctx): SimpleType = {
     
+    implicit val ctxi: Ctx = ctx
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
     
     def renew(tv: TypeVariable): TypeVariable =
@@ -317,7 +318,7 @@ trait TypeSimplifier { self: Typer =>
       case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
-        })(tr.prov, tr.ctx)
+        })(tr.prov)
       case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol)
       case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
         val dnf @ DNF(cs) = DNF.mk(ty, pol)
@@ -328,16 +329,16 @@ trait TypeSimplifier { self: Typer =>
                 case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
                   val clsNme = tagNme.capitalize
                   val td = ctx.tyDefs(clsNme)
-                  val typeRef = TypeRef(td, td.tparams.map { tp =>
+                  val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
                     rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
                       case (_, FunctionType(ub, lb)) if lb >:< ub => lb
                       case (_, FunctionType(lb, ub)) =>
                         TypeBounds.mk(go(lb, false), go(ub, true))
                     }.getOrElse(TypeBounds(BotType, TopType)(noProv))
-                  })(noProv, ctx)
+                  })(noProv)
                   val clsFields = fieldsOf(
-                    typeRef.expandWith(paramTags = false)(_ => ()), paramTags = false)(_ => ()) // FIXME swallowing diags
+                    typeRef.expandWith(paramTags = false), paramTags = false)
                   val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme
                   val cleanedRcd = rcd.copy(
                     rcd.fields.filterNot { case (field, fty) =>

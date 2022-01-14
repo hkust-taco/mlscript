@@ -63,8 +63,8 @@ def bar0 = foo
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                             ^^^^^^^^^^
 //│ ╟── from method definition:
-//│ ║  l.4: 	  method M1 y = Derived1 { x = add this.x y }
-//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.5: 	  method M2 = Derived1 { x = add this.x 1 }
+//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.21: 	  | Derived1 -> b.M2
 //│ ║        	                ^
@@ -262,8 +262,8 @@ def bar2 = foo
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                      ^^^
 //│ ╟── from method definition:
-//│ ║  l.4: 	  method M1 y = Derived1 { x = add this.x y }
-//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.5: 	  method M2 = Derived1 { x = add this.x 1 }
+//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.21: 	  | Derived1 -> b.M2
 //│ ║        	                ^
@@ -280,8 +280,8 @@ def bar2 = foo
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                             ^^^^^^^^^^
 //│ ╟── from method definition:
-//│ ║  l.4: 	  method M1 y = Derived1 { x = add this.x y }
-//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.5: 	  method M2 = Derived1 { x = add this.x 1 }
+//│ ║       	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.21: 	  | Derived1 -> b.M2
 //│ ║        	                ^
