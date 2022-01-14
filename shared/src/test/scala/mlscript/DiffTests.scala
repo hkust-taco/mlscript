@@ -8,7 +8,7 @@ import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
+class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
   private val dir = pwd/"shared"/"src"/"test"/"diff"
   
@@ -56,7 +56,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   files.foreach { file => val fileName = file.baseName
       if (validExt(file.ext) && filter(fileName)) test(fileName) {
     
-    print(s"Processing  $fileName")
+    val buf = collection.mutable.ArrayBuffer.empty[Char]
+    buf ++= s"Processed  $fileName"
     // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
     // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
     
@@ -453,12 +454,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFaield) Console.RED else Console.GREEN
-    println(s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}")
+    buf ++= s"${" " * (30 - fileName.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
-      println(s"! Updating $file")
+      buf ++= s"! Updated $file\n"
       write.over(file, result)
     }
+    print(buf.mkString)
     if (testFaield)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
