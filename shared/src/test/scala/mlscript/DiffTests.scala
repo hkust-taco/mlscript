@@ -281,13 +281,19 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 val tn = td.nme.name
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
-                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, Var(mn), _, rhs) =>
-                  rhs.fold(_ => ctx.getMthDefn(tn, mn), _ => ctx.getMth(S(tn), mn)).foreach(res => 
-                    output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${tn}.${mn}: ${getType(res.toPT).show}"))
+                (ttd.mthDecls ++ ttd.mthDefs).foreach {
+                  case MethodDef(_, _, Var(mn), _, rhs) =>
+                    rhs.fold(
+                      _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)(md.prov)),
+                      _ => ctx.getMth(S(tn), mn)
+                    ).foreach(res => output(s"${rhs.fold(
+                      _ => "Defined",
+                      _ => "Declared"
+                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
               }
             )
-
+            
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>

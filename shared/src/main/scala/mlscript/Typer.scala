@@ -91,12 +91,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
-    private def getMth(key: (Str, Str) \/ (Opt[Str], Str)): Opt[MethodType] = mthEnv.get(key) orElse parent.dlof(_.getMth(key))(N)
+    private def getMth(key: (Str, Str) \/ (Opt[Str], Str)): Opt[MethodType] =
+      mthEnv.get(key) orElse parent.dlof(_.getMth(key))(N)
     def getMth(parent: Opt[Str], nme: Str): Opt[MethodType] = getMth(R(parent, nme))
-    def getMthDefn(parent: Str, nme: Str, wrap: Bool = true): Opt[MethodType] = {
-      val body = getMth(L(parent, nme))
-      if (wrap) body.map(b => tyDefs(parent).wrapMethod(b)(b.prov)) else body
-    }
+    def getMthDefn(parent: Str, nme: Str): Opt[MethodType] = getMth(L(parent, nme))
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
@@ -461,61 +459,63 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
             case _ => Nil
           }
-          def go(md: MethodDef[_]): (Str, MethodType) = md match { case MethodDef(rec, prt, nme, tparams, rhs) =>
-            implicit val prov: TypeProvenance = tp(md.toLoc, (if (!top) "inherited " else "") + "method "
-              + rhs.fold(_ => "definition", _ => "declaration"))
-            val fullName = s"${td.nme.name}.${nme.name}"
-            if (top) {
-              if (!nme.name.isCapitalized)
-                err(msg"Method names must start with a capital letter", nme.toLoc)
-              rhs.fold(_ => defined, _ => declared).get(nme.name) match {
-                case S(loco) => err(
-                  msg"Method '$fullName' is already ${rhs.fold(_ => "defined", _ => "declared")}" -> nme.toLoc ::
-                  msg"at" -> loco :: Nil)
-                case N =>
+          def go(md: MethodDef[_]): (Str, MethodType) = md match {
+            case MethodDef(rec, prt, nme, tparams, rhs) =>
+              implicit val prov: TypeProvenance = tp(md.toLoc,
+                (if (!top) "inherited " else "")
+                + "method " + rhs.fold(_ => "definition", _ => "declaration"))
+              val fullName = s"${td.nme.name}.${nme.name}"
+              if (top) {
+                if (!nme.name.isCapitalized)
+                  err(msg"Method names must start with a capital letter", nme.toLoc)
+                rhs.fold(_ => defined, _ => declared).get(nme.name) match {
+                  case S(loco) => err(
+                    msg"Method '$fullName' is already ${rhs.fold(_ => "defined", _ => "declared")}" -> nme.toLoc ::
+                    msg"at" -> loco :: Nil)
+                  case N =>
+                }
+                tparams.groupBy(_.name).foreach {
+                  case s -> tps if tps.size > 1 => err(
+                    msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
+                    tps.map(tp => msg"Declared at" -> tp.toLoc))
+                  case _ =>
+                }
+                val tp1s = td2.tparams.iterator.map(tp => tp.name -> tp).toMap
+                tparams.foreach(tp2 => tp1s.get(tp2.name) match {
+                  case S(tp1) => warn(
+                    msg"Method type parameter ${tp1}" -> tp1.toLoc ::
+                    msg"shadows class type parameter ${tp2}" -> tp2.toLoc :: Nil)
+                  case N =>
+                })
               }
-              tparams.groupBy(_.name).foreach {
-                case s -> tps if tps.size > 1 => err(
-                  msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
-                  tps.map(tp => msg"Declared at" -> tp.toLoc))
-                case _ =>
+              rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
+              val dummyTargs2 = tparams.map(p =>
+                TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter")))
+              val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
+              val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
+                t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
+              val bodyTy = subst(rhs.fold(
+                term => ctx.getMthDefn(prt.name, nme.name)
+                  .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
+                    subst(mt.toPT, td2.targs.lazyZip(tr.targs).toMap) match {
+                      // Try to wnwrap one layer of prov, which would have been wrapped by the original call to `go`,
+                      // and will otherwise mask the more precise new prov that contains "inherited"
+                      case PolymorphicType(level, ProvType(underlying)) =>
+                        PolymorphicType(level, underlying)
+                      case pt => pt
+                    }
+                  ),
+                ty => PolymorphicType(thisCtx.lvl,
+                  typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
+                  // ^ Note: we need to go to the next level here,
+                  //    which is also done automatically by `typeLetRhs` in the case above
+              ), reverseRigid2)
+              val mthTy = td2.wrapMethod(bodyTy)
+              if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
+                if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
+                thisCtx.addMth(N, nme.name, mthTy)
               }
-              val tp1s = td2.tparams.iterator.map(tp => tp.name -> tp).toMap
-              tparams.foreach(tp2 => tp1s.get(tp2.name) match {
-                case S(tp1) => warn(
-                  msg"Method type parameter ${tp1}" -> tp1.toLoc ::
-                  msg"shadows class type parameter ${tp2}" -> tp2.toLoc :: Nil)
-                case N =>
-              })
-            }
-            rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
-            val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter")))
-            val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
-            val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
-            val bodyTy = subst(rhs.fold(
-              term => ctx.getMthDefn(prt.name, nme.name, false)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
-                  subst(mt.toPT, td2.targs.lazyZip(tr.targs).toMap) match {
-                    // Try to wnwrap one layer of prov, which would have been wrapped by the original call to `go`,
-                    // and will otherwise mask the more precise new prov with "inherited"
-                    case PolymorphicType(level, ProvType(underlying)) =>
-                      PolymorphicType(level, underlying)
-                    case pt => pt
-                  }
-                ),
-              ty => PolymorphicType(thisCtx.lvl,
-                typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
-                // ^ Note: we need to go to the next level here,
-                //    which is also done automatically by `typeLetRhs` in the case above
-            ), reverseRigid2)
-            val mthTy = td2.wrapMethod(bodyTy)
-            if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
-              if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
-              thisCtx.addMth(N, nme.name, mthTy)
-            }
-            nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)
+              nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)
           }
           MethodDefs(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
