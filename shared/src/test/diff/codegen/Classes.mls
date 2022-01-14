@@ -1,8 +1,8 @@
 
 // To generate the prelude without printing it in the next test case
-() with { x = 1 }
-//│ res: () & {x: 1}
-//│    = Array { x: 1 }
+() with { x = add 1 }
+//│ res: () & {x: int -> int}
+//│    = Array { x: [Function (anonymous)] }
 
 :js
 class Box[T]: { inner: T }
@@ -41,14 +41,6 @@ def Box value = Box { inner = value }
 :js
 def box1 = Box 1
 def box2 = box1.Map (fun x -> add x 1)
-//│ // Prelude
-//│ function add(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x + y;
-//│   }else {
-//│     return (y) => x + y;
-//│   }
-//│ }
 //│ // Query 1
 //│ globalThis.box1 = Box1(1);
 //│ res = box1;
