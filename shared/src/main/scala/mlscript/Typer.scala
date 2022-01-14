@@ -78,6 +78,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** Keys of `mthEnv`:
    *  `L` represents the inferred types of method definitions. The first value is the parent name, and the second value is the method name.
+   *    The method definitions are *not* wrapped with the implicit `this` parameter, but are instead wrapped at `getMthDefn`.
    *  `R` represents the actual method types. The first optional value is the parent name, with `N` representing implicit calls,
    *    and the second value is the method name. (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
    *  The public helper functions should be preferred for manipulating `mthEnv`
@@ -92,7 +93,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     def addMthDefn(parent: Str, nme: Str, ty: MethodType): Unit = mthEnv += L(parent, nme) -> ty
     private def getMth(key: (Str, Str) \/ (Opt[Str], Str)): Opt[MethodType] = mthEnv.get(key) orElse parent.dlof(_.getMth(key))(N)
     def getMth(parent: Opt[Str], nme: Str): Opt[MethodType] = getMth(R(parent, nme))
-    def getMthDefn(parent: Str, nme: Str): Opt[MethodType] = getMth(L(parent, nme))
+    def getMthDefn(parent: Str, nme: Str, wrap: Bool = true): Opt[MethodType] = {
+      val body = getMth(L(parent, nme))
+      if (wrap) body.map(b => tyDefs(parent).wrapMethod(b)(b.prov)) else body
+    }
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
@@ -491,8 +495,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
               t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
             val bodyTy = subst(rhs.fold(
-              term =>
-                typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2),
+              term => ctx.getMthDefn(prt.name, nme.name, false)
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
+                  subst(mt.toPT, td2.targs.lazyZip(tr.targs).toMap) match {
+                    // Try to wnwrap one layer of prov, which would have been wrapped by the original call to `go`,
+                    // and will otherwise mask the more precise new prov with "inherited"
+                    case PolymorphicType(level, ProvType(underlying)) =>
+                      PolymorphicType(level, underlying)
+                    case pt => pt
+                  }
+                ),
               ty => PolymorphicType(thisCtx.lvl,
                 typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
                 // ^ Note: we need to go to the next level here,
@@ -608,7 +620,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             ctx.addMth(S(tn.name), mn, mthTy)
             registerImplicit(mn, mthTy)
           }
-          ctx.addMthDefn(tn.name, mn, mthTy)
+          ctx.addMthDefn(tn.name, mn, mt)
         }
       }
       newDefs.foreach(td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) typeMethodsSingle(td))

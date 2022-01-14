@@ -785,3 +785,31 @@ class Test8D: Test8C[int]
     method F: int
 //│ Defined class Test8D
 //│ Declared Test8D.F: Test8D -> int
+
+
+
+
+class Test9A[A]: { x: A }
+    method Mth9A = this.x
+//│ Defined class Test9A
+//│ Defined Test9A.Mth9A: Test9A['A] -> 'A
+
+class Test9B: Test9A[int]
+//│ Defined class Test9B
+
+:e
+:NoJS
+error.(Test9B.Mth9A): nothing
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.802: 	error.(Test9B.Mth9A): nothing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `int` does not match type `nothing`
+//│ ║  l.797: 	class Test9B: Test9A[int]
+//│ ║         	                     ^^^
+//│ ╟── but it flows into field selection with expected type `nothing`
+//│ ║  l.802: 	error.(Test9B.Mth9A): nothing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.802: 	error.(Test9B.Mth9A): nothing
+//│ ╙──       	                      ^^^^^^^
+//│ res: nothing
