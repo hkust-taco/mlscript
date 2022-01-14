@@ -198,17 +198,66 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
   }
   
+  class Choice(possible: Array[Bool]) {
+    private var correlated: List[Any/*TODO*/] = Nil
+  }
+  
+  class ChoiceType
+        (c: Choice, cases: Array[SimpleType], override val level: Int, var resolved: Opt[SimpleType])
+        (val prov: TypeProvenance)
+      extends ProxyType {
+    
+    // class ChoiceVariable ... // this can be referred to from the outside as ChoiceType#ChoiceVariable
+    
+    var unresolved: BoundedVariable = // TODO make this a proper ChoiceVariable subtype to special-case in type simplification and pretty-printing!
+      new BoundedVariable(level, Nil, Nil, N)(prov) {
+        override def addLowerBounds(bnd: SimpleType): Unit = {
+          // TODO: try to exclude invalidated cases, updating the Choice's cases array
+          //  When only one choice is left, update `resolved`;
+          //    if no choices are left, raise an error.
+          // TODO: find out a good thing to do in case the bound itself is a choice type
+          //    – we probably want a way of correlating different choice types...
+          // ...
+          super.addLowerBounds(bnd)
+        }
+        override def addUpperBounds(bnd: SimpleType): Unit = {
+          // ...
+          super.addUpperBounds(bnd)
+        }
+      }
+    
+    def underlying: SimpleType = resolved.getOrElse(unresolved)
+  }
+  
+  // TODO: when ready, remove this – rename TypeVariableImpl to TypeVariable; and correctly handle the different kinds of BoundedVariable everywhere
+  type TypeVariable = BoundedVariable
+  
+  final class TypeVariableImpl (
+      level: Int,
+      lowerBounds: List[SimpleType],
+      upperBounds: List[SimpleType],
+      nameHint: Opt[Str] = N
+  )(prov: TypeProvenance) extends BoundedVariable(level, lowerBounds, upperBounds, nameHint)(prov)
+  
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
-   *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
-  final class TypeVariable(
+   *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`.
+   *  Methods addLowerBounds and addUpperBounds should be the only entry point used to update
+   *    a type variable's bounds. */
+  sealed abstract class BoundedVariable(
       val level: Int,
-      var lowerBounds: List[SimpleType],
-      var upperBounds: List[SimpleType],
-      val nameHint: Opt[Str] = N
-  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
+      private var _lowerBounds: List[SimpleType],
+      private var _upperBounds: List[SimpleType],
+      val nameHint: Opt[Str]
+  )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[BoundedVariable] with Factorizable {
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
-    def compare(that: TV): Int = this.uid compare that.uid
+    def compare(that: BoundedVariable): Int = this.uid compare that.uid
+    def lowerBounds: List[SimpleType] = _lowerBounds
+    def upperBounds: List[SimpleType] = _upperBounds
+    def addLowerBounds(bnd: SimpleType): Unit = _lowerBounds ::= bnd
+    def addUpperBounds(bnd: SimpleType): Unit = _upperBounds ::= bnd
+    final def :>! (bnd: SimpleType): Unit = addLowerBounds(bnd)
+    final def <:! (bnd: SimpleType): Unit = addUpperBounds(bnd)
     override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
     override def hashCode: Int = uid
   }
@@ -216,7 +265,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   private var freshCount = 0
   def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil)
         (implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, lbs, ubs, nameHint)(p)
+    new TypeVariableImpl(lvl, lbs, ubs, nameHint)(p)
+  /** Like `freshVar` but with a different parameter order... */
+  def mkVar(lvl: Int, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil, nameHint: Opt[Str] = N)
+      (p: TypeProvenance): TypeVariableImpl =
+    new TypeVariableImpl(lvl, lbs, ubs, nameHint)(p)
   def resetState(): Unit = {
     freshCount = 0
   }

@@ -341,8 +341,8 @@ f { prap: 1 }
 //│ ║  l.+1: 	f 42
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
-//│ ╙──       	   ^^^^^
+//│ ║  l.327: 	  log / succ x.prop
+//│ ╙──       	              ^^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	f { prap: 1 }
@@ -351,8 +351,8 @@ f { prap: 1 }
 //│ ║  l.+2: 	f { prap: 1 }
 //│ ║        	  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
-//│ ╙──       	   ^^^^^
+//│ ║  l.327: 	  log / succ x.prop
+//│ ╙──       	              ^^^^^
 //│ res: error
 
 :e
@@ -385,8 +385,8 @@ f arg
 //│ ║  l.+2: 	f arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
-//│ ╙──       	   ^^^^^
+//│ ║  l.327: 	  log / succ x.prop
+//│ ╙──       	              ^^^^^
 //│ res: error
 
 :e
@@ -478,8 +478,8 @@ f arg2
 //│ ║  l.+3: 	f arg1
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
-//│ ╙──       	   ^^^^^
+//│ ║  l.327: 	  log / succ x.prop
+//│ ╙──       	              ^^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	f arg2
@@ -491,8 +491,8 @@ f arg2
 //│ ║  l.+4: 	f arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.328: 	  x.prop
-//│ ╙──       	   ^^^^^
+//│ ║  l.327: 	  log / succ x.prop
+//│ ╙──       	              ^^^^^
 //│ res: error
 
 let h = y =>
@@ -625,21 +625,15 @@ test arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.393: 	let arg = {prop: not true}
-//│ ║         	                 ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{fld: ?a}`
+//│ ╟── expression of type `{fld: {prop: ?a}}` does not have field 'prop'
+//│ ║  l.466: 	let arg2 = {fld: arg}
+//│ ║         	           ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{prop: ?b}`
 //│ ║  l.+1: 	test arg2
 //│ ║        	     ^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
-//│ ╟── from argument:
-//│ ║  l.584: 	  succ / f y.fld
-//│ ║         	           ^^^^^
-//│ ╟── from argument:
+//│ ╟── Note: constraint arises from field selection:
 //│ ║  l.620: 	let test x y = if x.prop then i x else y
-//│ ╙──       	                                ^
+//│ ╙──       	                   ^^^^^
 //│ res: 'a -> (int | 'a) | error
 
 let mkArg = a => {prop: a}
@@ -658,7 +652,7 @@ i / mkArg 1
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a}` does not match type `int`
-//│ ║  l.645: 	let mkArg = a => {prop: a}
+//│ ║  l.639: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into record with expected type `{fld: ?b}`
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
@@ -706,7 +700,7 @@ i / mkArg 1
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `{prop: ?a}` does not have field 'fld'
-//│ ║  l.645: 	let mkArg = a => {prop: a}
+//│ ║  l.639: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{fld: ?b}`
 //│ ║  l.+4: 	i / mkArg 1
@@ -724,4 +718,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.725:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.719:3: ba)r

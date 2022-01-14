@@ -235,7 +235,7 @@ baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.234: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── expression of type `0` does not have field '_2'
+//│ ╟── expression of type `0` does not have field '_1'
 //│ ║  l.234: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `(r: ?a,)`
@@ -243,7 +243,7 @@ baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.230: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                                                     ^^^
+//│ ║         	                             ^^^
 //│ ╟── from parameter type:
 //│ ║  l.230: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^
@@ -275,16 +275,13 @@ baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.273: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── expression of type `0` does not have field '_2'
+//│ ╟── expression of type `0` does not match type `(0, 0,) | (1, ?a,)`
 //│ ║  l.273: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `(r: ?a,)`
+//│ ╟── but it flows into argument with expected type `(r: ?b,)`
 //│ ║  l.273: 	baz(0)
 //│ ║         	   ^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.269: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                                                          ^^^
-//│ ╟── from parameter type:
+//│ ╟── Note: constraint arises from type union:
 //│ ║  l.269: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	           ^^^^^^^^^^^^^^^
 //│ res: error

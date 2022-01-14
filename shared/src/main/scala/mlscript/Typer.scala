@@ -378,7 +378,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                     else f._1 ->
                       freshVar(noProv,
                         S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                      )(1).tap(_.upperBounds ::= f._2)
+                      )(1).tap(_ <:! f._2)
                     ).toList
                   PolymorphicType(0, FunctionType(
                     singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
@@ -388,7 +388,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 case Trt =>
                   val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait"), ctx)
                   val tv = freshVar(noProv)(1)
-                  tv.upperBounds ::= body_ty
+                  tv <:! body_ty
                   PolymorphicType(0, FunctionType(
                     singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                   )(originProv(td.nme.toLoc, "trait constructor")))
@@ -620,7 +620,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, new TypeVariable(ctx.lvl, Nil, Nil, tv.identifier.toOption)(noProv))
+          localVars.getOrElseUpdate(tv, mkVar(ctx.lvl, Nil, Nil, tv.identifier.toOption)(noProv))
             .withProv(tp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
         val prov = tp(ty.toLoc, "applied type reference")
@@ -638,8 +638,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Recursive(uv, body) =>
         val tv = freshVar(tp(ty.toLoc, "local type binding"), uv.identifier.toOption)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
-        tv.upperBounds ::= bod
-        tv.lowerBounds ::= bod
+        tv <:! bod
+        tv :>! bod
         tv
       case Rem(base, fs) => Without(rec(base), fs
         .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov
@@ -774,7 +774,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         ctx.env.get(nme).map(_.instantiate) // Note: only look at ctx.env, and not the outer ones!
-          .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
+          .getOrElse(mkVar(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).getOrElse {
           // TODO: delay type expansion to message display and show the expected type here!
@@ -994,7 +994,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val prov = tp(trm.toLoc, "parameter type")
           val t_ty =
             // TODO in positive position, this should create a new VarType instead! (i.e., an existential)
-            new TypeVariable(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
+            mkVar(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
           
           // constrain(ty, t_ty)(raise, prov)
           constrain(t_ty, ty)(raise, prov, ctx)

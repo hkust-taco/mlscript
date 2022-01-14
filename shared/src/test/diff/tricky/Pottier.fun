@@ -15,7 +15,7 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│ f: ({tail: 'a} as 'a) -> ({tail: 'b} as 'b) -> int
 //│ f: {tail: {tail: 'a} as 'a} -> {tail: {tail: 'a} as 'a} -> int
 //│ f: ({tail: 'a} as 'a) -> {tail: {tail: 'a} as 'a} -> int
-//│ f: ({tail: 'a} as 'a) -> {tail: {tail: 'a} as 'a} -> int
+//│ f: ({tail: {tail: 'a}} as 'a) -> ({tail: {tail: 'b} as 'a} as 'b) -> int
 
 let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 //│ f: 'a -> 'a -> {l: 'a, r: 'a}

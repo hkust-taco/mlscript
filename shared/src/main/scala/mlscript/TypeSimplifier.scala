@@ -95,7 +95,7 @@ trait TypeSimplifier { self: Typer =>
               case Some(v) =>
                 val bs = if (pol) v.lowerBounds else v.upperBounds
                 if (bs.isEmpty) { // it's possible we have already set the bounds in a sibling call
-                  if (pol) v.lowerBounds ::= adapted else v.upperBounds ::= adapted
+                  if (pol) v :>! adapted else v <:! adapted
                 }
                 v
               case None => adapted
@@ -223,8 +223,8 @@ trait TypeSimplifier { self: Typer =>
                 val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
                 // and record the new recursive bound for v:
                 // recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
-                if (pol) v.lowerBounds :::= b_w
-                else v.upperBounds :::= b_w
+                if (pol) b_w.foreach(b => v :>! b)
+                else b_w.foreach(b => v <:! b)
               } else { // `w` is NOT recursive
                 /* 
                 val wCoOcss = coOccurrences((!pol) -> w)
@@ -268,8 +268,8 @@ trait TypeSimplifier { self: Typer =>
               nv
             })
             if (!wasDefined) {
-              res.lowerBounds = tv.lowerBounds.map(transform(_, true))
-              res.upperBounds = tv.upperBounds.map(transform(_, false))
+              tv.lowerBounds.foreach(b => res :>! transform(b, true))
+              tv.upperBounds.foreach(b => res <:! transform(b, false))
             }
             res
         }
@@ -299,8 +299,8 @@ trait TypeSimplifier { self: Typer =>
         case N =>
           val tv2 = freshVar(tv.prov, tv.nameHint)(tv.level)
           renewed += tv -> tv2
-          tv2.lowerBounds = tv.lowerBounds.map(go(_, true))
-          tv2.upperBounds = tv.upperBounds.map(go(_, false))
+          tv.lowerBounds.foreach(b => tv2 :>! go(b, true))
+          tv.upperBounds.foreach(b => tv2 <:! go(b, false))
           tv2
       }
     

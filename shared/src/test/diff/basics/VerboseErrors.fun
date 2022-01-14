@@ -77,32 +77,17 @@ test arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.76: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.63: 	let arg = {prop: not true}
-//│ ║        	                 ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{fld: ?a}`
+//│ ╟── expression of type `{fld: {prop: ?a}}` does not have field 'prop'
+//│ ║  l.64: 	let arg2 = {fld: arg}
+//│ ║        	           ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{prop: ?b}`
 //│ ║  l.76: 	test arg2
 //│ ║        	     ^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.61: 	  log / succ x.prop
-//│ ║        	             ^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.61: 	  log / succ x.prop
-//│ ║        	              ^^^^^
-//│ ╟── from receiver:
-//│ ║  l.61: 	  log / succ x.prop
-//│ ║        	             ^
-//│ ╟── from argument:
-//│ ║  l.66: 	  succ / f y.fld
-//│ ║        	           ^^^^^
-//│ ╟── from field selection:
-//│ ║  l.66: 	  succ / f y.fld
-//│ ║        	            ^^^^
-//│ ╟── from receiver:
-//│ ║  l.66: 	  succ / f y.fld
-//│ ║        	           ^
-//│ ╟── from argument:
+//│ ╟── Note: constraint arises from field selection:
 //│ ║  l.67: 	let test = x => y => if x.prop then i x else y
-//│ ╙──      	                                      ^
+//│ ║        	                         ^^^^^
+//│ ╟── from receiver:
+//│ ║  l.67: 	let test = x => y => if x.prop then i x else y
+//│ ╙──      	                        ^
 //│ res: 'a -> (int | 'a) | error
 

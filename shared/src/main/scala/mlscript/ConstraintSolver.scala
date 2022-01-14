@@ -259,11 +259,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = outerProv.fold(rhs)(ProvType(rhs)(_))
-            lhs.upperBounds ::= newBound // update the bound
+            lhs <:! newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
             val newBound = outerProv.fold(lhs)(ProvType(lhs)(_))
-            rhs.lowerBounds ::= newBound // update the bound
+            rhs :>! newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
@@ -467,10 +467,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
         cache += (tv -> nv)
-        if (pol) { tv.upperBounds ::= nv
-          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol)) }
-        else { tv.lowerBounds ::= nv
-          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol)) }
+        if (pol) { tv <:! nv
+          tv.lowerBounds.foreach(b => nv :>! extrude(b, lvl, pol)) }
+        else { tv :>! nv
+          tv.upperBounds.foreach(b => nv <:! extrude(b, lvl, pol)) }
         nv
       })
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
@@ -530,8 +530,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    where rv is the rigidified variables.
             // Now, since there may be recursive bounds, we do the same
             //    but through the indirection of a type variable tv2:
-            tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
-            tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            tv2 :>! tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            tv2 <:! tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
             tv2
           } else {
             freshened += tv -> rv
@@ -540,15 +540,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case None =>
           val v = freshVar(tv.prov, tv.nameHint)
           freshened += tv -> v
-          v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
-          v.upperBounds = tv.upperBounds.mapConserve(freshen)
+          tv.lowerBounds.foreach(b => v :>! freshen(b))
+          tv.upperBounds.foreach(b => v <:! freshen(b))
           v
       }
       case t @ TypeBounds(lb, ub) =>
         if (rigidify) {
           val tv = freshVar(t.prov)
-          tv.lowerBounds ::= freshen(lb)
-          tv.upperBounds ::= freshen(ub)
+          tv :>! freshen(lb)
+          tv <:! freshen(ub)
           tv
         } else TypeBounds(freshen(lb), freshen(ub))(t.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
