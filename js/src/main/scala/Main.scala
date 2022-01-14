@@ -107,22 +107,7 @@ object Main {
     try {
       val backend = new JSWebBackend()
       val lines = backend(pgrm)
-      val code = s"""(() => {
-                    |function ${backend.prettyPrinterName}(value) {
-                    |  switch (typeof value) {
-                    |    case "number":
-                    |    case "boolean":
-                    |    case "function":
-                    |      return value.toString();
-                    |    case "string":
-                    |      return '\"' + value + '\"';
-                    |    default:
-                    |      return value.constructor.name + " " + JSON.stringify(value, undefined, 2);
-                    |  }
-                    |}
-                    |${lines.mkString("\n")}
-                    |return ${backend.resultsName}.map(${backend.prettyPrinterName});
-                    |})()""".stripMargin
+      val code = lines.mkString("\n")
       println("Running code: " + code)
       R(code)
     } catch {

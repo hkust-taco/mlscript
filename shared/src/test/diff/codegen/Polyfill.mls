@@ -1,3 +1,62 @@
+// If you didn't use any prelude, it will not be inserted.
+:js
+0
+//│ // Prelude
+//│ let res;
+//│ // Query 1
+//│ res = 0;
+//│ // End of generated code
+//│ res: 0
+//│    = 0
+
+// Look, prelude is empty!
+:js
+1
+//│ // Query 1
+//│ res = 1;
+//│ // End of generated code
+//│ res: 1
+//│    = 1
+
+// If we use `concat`, it will appear.
+:js
+concat "a" "b"
+//│ // Prelude
+//│ function concat(x, y) {
+//│   if (arguments.length === 2) {
+//│     return x + y;
+//│   }else {
+//│     return (y) => x + y;
+//│   }
+//│ }
+//│ // Query 1
+//│ res = concat("a")("b");
+//│ // End of generated code
+//│ res: string
+//│    = 'ab'
+
+// Define a function with the same name will shadow the default one. Of course!
+:js
+def add x y = x + y + x + y
+//│ // Query 1
+//│ globalThis.add = function add(x) {
+//│   return (y) => x + y + x + y;
+//│ };
+//│ res = add;
+//│ // End of generated code
+//│ add: int -> int -> int
+//│    = [Function: add]
+
+// Now the add function is not the default one.
+:js
+add 1 2
+//│ // Query 1
+//│ res = add(1)(2);
+//│ // End of generated code
+//│ res: int
+//│    = 6
+
+// `withConstruct` will be inserted only when `with` is used.
 :js
 n = 123 with { x = 1 }
 //│ // Prelude
@@ -12,64 +71,6 @@ n = 123 with { x = 1 }
 //│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
 //│   return copy;
 //│ }
-//│ function id(x) {
-//│   return x;
-//│ }
-//│ function error() {
-//│   throw new Error("unexpected runtime error");
-//│ }
-//│ function succ(x) {
-//│   return x + 1;
-//│ }
-//│ function intToString(x) {
-//│   return x.toString();
-//│ }
-//│ function concat(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x + y;
-//│   }else {
-//│     return (y) => x + y;
-//│   }
-//│ }
-//│ function add(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x + y;
-//│   }else {
-//│     return (y) => x + y;
-//│   }
-//│ }
-//│ function sub(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x - y;
-//│   }else {
-//│     return (y) => x - y;
-//│   }
-//│ }
-//│ function mul(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x * y;
-//│   }else {
-//│     return (y) => x * y;
-//│   }
-//│ }
-//│ function div(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x / y;
-//│   }else {
-//│     return (y) => x / y;
-//│   }
-//│ }
-//│ function gt(x, y) {
-//│   if (arguments.length === 2) {
-//│     return x > y;
-//│   }else {
-//│     return (y) => x > y;
-//│   }
-//│ }
-//│ function not(x) {
-//│   return !x;
-//│ }
-//│ let res;
 //│ // Query 1
 //│ globalThis.n = withConstruct(123, { x: 1 });
 //│ res = n;

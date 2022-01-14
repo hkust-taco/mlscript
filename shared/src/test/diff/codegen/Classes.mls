@@ -1,8 +1,8 @@
 
 // To generate the prelude without printing it in the next test case
-() with { x = 1 }
-//│ res: () & {x: 1}
-//│    = Array { x: 1 }
+() with { x = add 1 }
+//│ res: () & {x: int -> int}
+//│    = Array { x: [Function (anonymous)] }
 
 :js
 class Box[T]: { inner: T }

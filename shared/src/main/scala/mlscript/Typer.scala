@@ -175,6 +175,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
+      "toString" -> fun(singleTup(TopType), StrType)(noProv),
       "not" -> fun(singleTup(BoolType), BoolType)(noProv),
       "succ" -> fun(singleTup(IntType), IntType)(noProv),
       "log" -> PolymorphicType(0, fun(singleTup(tv), UnitType)(noProv)),
