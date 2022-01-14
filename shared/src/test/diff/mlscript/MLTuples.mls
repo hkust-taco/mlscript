@@ -199,3 +199,59 @@ if bool then (1,) else fun x -> x
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
+
+
+t._1
+t._2
+//│ res: 1
+//│    = undefined
+//│ res: 2
+//│    = undefined
+
+
+t = (1, 2, 3) with {x = 1}
+// t = (1, 2, 3)
+//│ t: (1, 2, 3,) & {x: 1}
+//│  = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+
+t.x
+//│ res: 1
+//│    = 1
+
+// TODO (https://github.com/hkust-taco/mlscript/issues/65#issuecomment-1013010123)
+:e
+t._1
+t._2
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.223: 	t._1
+//│ ║         	^^^^
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
+//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_1: ?a}`
+//│ ║  l.223: 	t._1
+//│ ╙──       	^
+//│ res: error
+//│    = undefined
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.224: 	t._2
+//│ ║         	^^^^
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
+//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_2: ?a}`
+//│ ║  l.224: 	t._2
+//│ ╙──       	^
+//│ res: error
+//│    = undefined
+
+
+t = (1, 2, 3) with {_1 = "oops"}
+//│ t: (1, 2, 3,) & {_1: "oops"}
+//│  = Array { '0': 1, '1': 2, '2': 3, _1: 'oops' }
+
+// FIXME (https://github.com/hkust-taco/mlscript/issues/69)
+(t: (int,int,int,))._1
+//│ res: int
+//│    = 'oops'
+

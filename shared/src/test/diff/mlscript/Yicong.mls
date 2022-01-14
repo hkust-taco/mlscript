@@ -1,0 +1,120 @@
+
+trait T1
+trait T2
+//│ Defined trait T1
+//│ Defined trait T2
+
+r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
+//│ r: (1, 2, 3,) & t1 | (3, 4, 5, 4,) & t2
+//│  = [ 1, 2, 3 ]
+
+// FIXME
+case r of { T1 -> r | _ -> 0 }
+//│ res: (1, 2, 3,) & t1 | (3, 4, 5, 4,) & t1 & t2 | 0
+//│ Runtime error:
+//│   ReferenceError: T1 is not defined
+
+// FIXME
+case r of { T1 -> r | T2 -> r }
+//│ res: (1, 2, 3,) & t1 | (3, 4, 5, 4,) & t1 & t2 | (3, 4, 5, 4,) & t2 & ~t1 | (3, 4, 5, 4,) & t2 & ~'a | 'a
+//│ Runtime error:
+//│   ReferenceError: T1 is not defined
+
+
+x = 1
+//│ x: 1
+//│  = 1
+
+t2 = T2 x
+//│ t2: 1 & t2
+//│   = 1
+
+t1 = T1 t2
+//│ t1: 1 & t1 & t2
+//│   = 1
+
+t1: T1
+t1: T2
+//│ res: t1
+//│    = 1
+//│ res: t2
+//│    = 1
+
+
+class C1[A]: { a: A }
+class C2[A]: { a: A }
+//│ Defined class C1
+//│ Defined class C2
+
+r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
+//│ r: (C1['A .. 1 | 'A] with {a: 1}) | (C2['A0 .. (3, 4, 5, 4,) | 'A0] with {a: (3, 4, 5, 4,)})
+//│  = C1 { a: 1 }
+
+case r of { C1 -> r.a | _ -> 0 }
+//│ res: 0 | 1
+//│    = 1
+
+def x1: (int, bool)
+def x2: (string, unit)
+//│ x1: (int, bool,)
+//│ x2: (string, unit,)
+
+:re
+if true then x1 else x2
+//│ res: (int | string, bool | unit,)
+//│ Runtime error:
+//│   ReferenceError: x1 is not defined
+
+
+
+def f: ((1,2) | (3,4)) -> anything
+//│ f: (1 | 3, 2 | 4,) -> anything
+
+fun (x, y) -> f ((x,y))
+//│ res: (1 | 3, 2 | 4,) -> anything
+//│    = [Function: res]
+
+def f: ((1,2)&t1 | (3,4)&t2) -> anything
+//│ f: ((1, 2,) & t1 | (3, 4,) & t2) -> anything
+
+:e
+f ((true,false))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	f ((true,false))
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `true` does not match type `1 | 3`
+//│ ║  l.81: 	f ((true,false))
+//│ ║        	    ^^^^
+//│ ╟── but it flows into tuple literal with expected type `(1, 2,) & t1 | (3, 4,) & t2`
+//│ ║  l.81: 	f ((true,false))
+//│ ║        	    ^^^^^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
+//│ ╙──      	              ^^^^^^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   ReferenceError: f is not defined
+
+:e
+fun (x, y) -> f ((x,y))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.99: 	fun (x, y) -> f ((x,y))
+//│ ║        	              ^^^^^^^
+//│ ╟── expression of type `(?a, ?b,)` does not match type `(1, 2,) & t1 | (3, 4,) & t2`
+//│ ║  l.99: 	fun (x, y) -> f ((x,y))
+//│ ║        	                  ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
+//│ ╙──      	              ^^^^^^^^^^^^^
+//│ res: (nothing, nothing,) -> anything
+//│    = [Function: res]
+
+fun (x, y) -> f (T1 ((x,y)))
+//│ res: (1, 2,) -> anything
+//│    = [Function: res]
+
+fun (x, y) -> f (T2 ((x,y)))
+//│ res: (3, 4,) -> anything
+//│    = [Function: res]
+
+
