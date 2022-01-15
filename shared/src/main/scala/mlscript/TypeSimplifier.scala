@@ -66,6 +66,8 @@ trait TypeSimplifier { self: Typer =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
                       TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                    case ar @ ArrayType(inner) =>
+                      ArrayType(goDeep(inner, pol))(noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
@@ -119,6 +121,7 @@ trait TypeSimplifier { self: Typer =>
     def analyze(st: SimpleType, pol: Bool): Unit = st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
+      case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
@@ -253,6 +256,7 @@ trait TypeSimplifier { self: Typer =>
     def transform(st: SimpleType, pol: Bool): SimpleType = st match {
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
+      case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
@@ -312,6 +316,7 @@ trait TypeSimplifier { self: Typer =>
       case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
       case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
+      case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
@@ -367,6 +372,7 @@ trait TypeSimplifier { self: Typer =>
                     case ct: ClassTag => ct
                     case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
                     case tt @ TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(tt.prov)
+                    case at @ ArrayType(inner) => ArrayType(go(inner, pol))(at.prov)
                     case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
                   }, tts, newRcd).toType(sort = true)
               }

@@ -83,6 +83,7 @@ final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
 final case class Record(fields: Ls[Var -> Type])         extends Type
 final case class Tuple(fields: Ls[Opt[Var] -> Type])     extends Type
+final case class Arr(inner: Type)                        extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
 final case class Neg(base: Type)                         extends Type

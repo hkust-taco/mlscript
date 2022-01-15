@@ -261,7 +261,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: TupleType | _: TypeVariable
+      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType => Map.empty
     }
   }
@@ -327,7 +327,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val t2 = travsersed + R(tv)
             tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
           }
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: TupleType => true
+          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
         }
         // }()
         val rightParents = td.kind match {
@@ -370,6 +370,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 false
               case _: TupleType =>
                 err(msg"cannot inherit from a tuple type", prov.loco)
+                false
+              case _: ArrayType => 
+                err(msg"cannot inherit from a array type", prov.loco)
                 false
               case _: Without =>
                 err(msg"cannot inherit from a field removal type", prov.loco)
@@ -657,6 +660,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case Nil | ((N, _) :: Nil) => noProv
         case _ => tp(ty.toLoc, "tuple type")
       })
+      case Arr(inner) => ArrayType(rec(inner))(tp(ty.toLoc, "array type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tp(ty.toLoc, "intersection type"))
@@ -1172,6 +1176,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
             case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
+            case ArrayType(inner) => Arr(go(inner, polarity)) // ? not sure
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top

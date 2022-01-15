@@ -48,6 +48,7 @@ abstract class TypeImpl extends Located { self: Type =>
       else s"${nme}: ${nt._2.showIn(ctx, 0)}"
     }.mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
+    case Arr(inner) => s"Array[${inner.showIn(ctx, 0)}]"
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -70,6 +71,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Neg(b) => b :: Nil
     case Record(fs) => fs.map(_._2)
     case Tuple(fs) => fs.map(_._2)
+    case Arr(inner) => inner :: Nil
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil

@@ -204,11 +204,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => fail
                   }
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) => fail
-            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
-              if b.fields.size === ty.fields.size
-              => (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _))
-            case (LhsRefined(S(b: TupleType), ts, r), _) => fail
+            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) => fail
+            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType)))) =>
+              if (b.fields.size === ty.fields.size)
+                (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _))
+              else
+                rec(b.toArray, ty.toArray)
+                // fail
+            case (LhsRefined(S(ArrayType(i1)), ts, r), RhsBases(pts, S(L(ArrayType(i2))))) =>
+              rec(i1, i2)
+            case (LhsRefined(S(b: ArrayBase), ts, r), _) => fail
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType())
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -277,13 +282,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs)
-          case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
+          case (t1@TupleType(fs0), t2@TupleType(fs1)) if (fs0.size === fs1.size) => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/=rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r)
-            }
+            } //else {
+            //   println(s"${t1.toArray} <-> ${t2.toArray}")
+            //   rec (t1.toArray, t2.toArray)
+            // }
+          case (t@TupleType(_), a@ArrayType(_)) => rec(t.toArray, a)
+          case (ArrayType(ar1), ArrayType(ar2)) => rec(ar1, ar2)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
             rec(r, rhs, outerProv.orElse(S(lhs.prov)))
@@ -463,6 +473,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
+      case t @ ArrayType(ar) => ArrayType(extrude(ar, lvl, pol))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -555,6 +566,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
+      case t @ ArrayType(ar) => ArrayType(freshen(ar))(t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

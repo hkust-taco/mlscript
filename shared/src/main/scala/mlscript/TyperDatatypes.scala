@@ -108,8 +108,23 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
-  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends MiscBaseType {
+  // TODO: currently use MiscBaseType
+  sealed abstract class ArrayBase extends MiscBaseType {
+    def inner: SimpleType
+  }
+
+  // "normal" array type to be added in the future
+  case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
+    lazy val level: Int = inner.level
+    override def toString = s"Array[${inner}]"
+  }
+
+  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends ArrayBase {
+    // TODO: get the true inner type
+    lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    // ! this one probab;y wrong
+    lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     lazy val toRecord: RecordType =
       RecordType(
         fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!

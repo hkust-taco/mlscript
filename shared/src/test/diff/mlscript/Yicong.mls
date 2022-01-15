@@ -118,3 +118,12 @@ fun (x, y) -> f (T2 ((x,y)))
 //│    = [Function: res]
 
 
+if true then (1, 2, 3, 'hello') else (true, 4, false)
+//│ res: Array["hello" | 1 | 2 | 3 | 4 | bool]
+//│    = [ 1, 2, 3, 'hello' ]
+
+def f: (int, bool) -> int
+def g: (bool, string, int) -> int
+// def h x = (f(x), g(x))
+//│ f: (int, bool,) -> int
+//│ g: (bool, string, int,) -> int
