@@ -221,13 +221,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }()
     
-    def rec(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
+    def rec(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
-      recImpl(lhs, rhs, outerProv)
+      recImpl(lhs, rhs)
     }
-    def recImpl(lhs: SimpleType, rhs: SimpleType, outerProv: Opt[TypeProvenance]=N)
+    def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
       if (lhs === rhs) return ()  // TODO try subtyping here?
@@ -258,11 +258,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (prim: ClassTag, ot: ObjectTag)
             if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            val newBound = outerProv.fold(rhs)(ProvType(rhs)(_))
+            val newBound = rhs // TODO
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            val newBound = outerProv.fold(lhs)(ProvType(lhs)(_))
+            val newBound = lhs // TODO
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
@@ -285,13 +285,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(l, r)
             }
           case (ComposedType(true, l, r), _) =>
-            rec(l, rhs, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
-            rec(r, rhs, outerProv.orElse(S(lhs.prov)))
+            rec(l, rhs) // Q: really propagate the outerProv here?
+            rec(r, rhs)
           case (_, ComposedType(false, l, r)) =>
-            rec(lhs, l, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
-            rec(lhs, r, outerProv.orElse(S(lhs.prov)))
-          case (p @ ProxyType(und), _) => rec(und, rhs, outerProv.orElse(S(p.prov)))
-          case (_, p @ ProxyType(und)) => rec(lhs, und, outerProv.orElse(S(p.prov)))
+            rec(lhs, l) // Q: really propagate the outerProv here?
+            rec(lhs, r)
+          case (p @ ProxyType(und), _) => rec(und, rhs)
+          case (_, p @ ProxyType(und)) => rec(lhs, und)
           case (_, TupleType(f :: Nil)) if funkyTuples =>
             rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
@@ -457,7 +457,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, N)(raise, Nil)
+    rec(lhs, rhs)(raise, Nil)
   }
   
   

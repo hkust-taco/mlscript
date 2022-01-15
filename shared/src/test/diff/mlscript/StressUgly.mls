@@ -47,9 +47,6 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	              ^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── from local type binding:
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
@@ -65,9 +62,6 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── from applied type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	              ^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── from local type binding:
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
@@ -80,9 +74,6 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	              ^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── from local type binding:
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
@@ -142,7 +133,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	              ^^^^^^^^
 //│ Runtime error:
 //│   ReferenceError: eval1_ty_ugly is not defined
-//│ constrain calls  : 46
+//│ constrain calls  : 45
 //│ annoying  calls  : 53
-//│ subtyping calls  : 460
+//│ subtyping calls  : 459
 

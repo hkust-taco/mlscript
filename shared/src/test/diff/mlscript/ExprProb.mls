@@ -61,7 +61,7 @@ rec def eval1 k e = case e of {
   }
 //│ eval1: ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│      = [Function: eval1]
-//│ constrain calls  : 78
+//│ constrain calls  : 74
 //│ annoying  calls  : 0
 //│ subtyping calls  : 655
 
@@ -110,9 +110,9 @@ def eval1_ty_ugly = eval1
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit as 'c) -> int
 //│              = [Function: eval1]
-//│ constrain calls  : 55
+//│ constrain calls  : 46
 //│ annoying  calls  : 36
-//│ subtyping calls  : 6988
+//│ subtyping calls  : 6996
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -130,9 +130,9 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b | 'a & 'b & ~add & ~lit as 'c) -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 55
+//│ constrain calls  : 46
 //│ annoying  calls  : 36
-//│ subtyping calls  : 1393
+//│ subtyping calls  : 1401
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -172,7 +172,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 59
+//│ constrain calls  : 50
 //│ annoying  calls  : 38
 //│ subtyping calls  : 1136
 
@@ -197,9 +197,9 @@ rec def prettier1 k ev e = case e of {
   }
 //│ prettier1: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit as 'c, rhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit as 'd}) & 'b | Lit | 'a & ~add & ~lit) -> string
 //│          = [Function: prettier1]
-//│ constrain calls  : 135
+//│ constrain calls  : 133
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1489
+//│ subtyping calls  : 1450
 
 :stats
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
@@ -217,9 +217,9 @@ prettier1 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 432
+//│ constrain calls  : 342
 //│ annoying  calls  : 240
-//│ subtyping calls  : 741
+//│ subtyping calls  : 751
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
@@ -263,9 +263,9 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: 'd & ((Add[?] with {lhs: 'e, rhs: 'e}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'e), rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'f}) & 'b | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'c) -> string
 //│          = [Function: prettier2]
-//│ constrain calls  : 169
+//│ constrain calls  : 133
 //│ annoying  calls  : 0
-//│ subtyping calls  : 28067
+//│ subtyping calls  : 26575
 
 
 
@@ -273,7 +273,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 eval2 done e1
 //│ res: int
 //│    = 6
-//│ constrain calls  : 103
+//│ constrain calls  : 85
 //│ annoying  calls  : 60
 //│ subtyping calls  : 136
 
@@ -288,7 +288,7 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│    = -5
-//│ constrain calls  : 145
+//│ constrain calls  : 117
 //│ annoying  calls  : 103
 //│ subtyping calls  : 192
 
@@ -300,7 +300,7 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 eval2 done d2
 //│ res: int
 //│    = 0
-//│ constrain calls  : 99
+//│ constrain calls  : 79
 //│ annoying  calls  : 71
 //│ subtyping calls  : 99
 
@@ -313,9 +313,9 @@ prettier2 done
 prettier2 done (eval1 done)
 //│ res: ((Add[?] with {lhs: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit as 'b, rhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit as 'c}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
-//│ constrain calls  : 82
+//│ constrain calls  : 71
 //│ annoying  calls  : 0
-//│ subtyping calls  : 4485
+//│ subtyping calls  : 4250
 
 :stats
 prettier2 done (eval2 done)
@@ -327,9 +327,9 @@ prettier2 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 612
+//│ constrain calls  : 504
 //│ annoying  calls  : 335
-//│ subtyping calls  : 63770
+//│ subtyping calls  : 62326
 
 
 
@@ -351,18 +351,15 @@ eval1 done e2
 //│ ╟── but it flows into reference with expected type `Lit & ?a | Add[?] & ?b | ?c & ~add & ~lit`
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	           ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.4: 	def done x = case x of {}
-//│ ║       	                  ^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from wildcard pattern:
 //│ ║  l.60: 	  | _ -> k e
-//│ ║        	           ^
-//│ ╟── from reference:
-//│ ║  l.57: 	rec def eval1 k e = case e of {
-//│ ║        	                         ^
+//│ ║        	         ^^^
 //│ ╟── from field selection:
 //│ ║  l.59: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
-//│ ╙──      	                                   ^^^^^
+//│ ║        	                                   ^^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.57: 	rec def eval1 k e = case e of {
+//│ ╙──      	                         ^
 //│ res: error | int
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -386,13 +383,7 @@ prettier2 done eval1 e1
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
@@ -405,9 +396,6 @@ prettier2 done eval1 e1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.60: 	  | _ -> k e
 //│ ║        	         ^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
@@ -427,30 +415,24 @@ prettier2 done (eval1 done) e2
 //│ ╟── but it flows into reference with expected type `Lit & ?a | Add[?] & ?b | ?c & ~add & ~lit`
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	                            ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.4: 	def done x = case x of {}
-//│ ║       	                  ^
-//│ ╟── from reference:
+//│ ╟── Note: constraint arises from wildcard pattern:
 //│ ║  l.60: 	  | _ -> k e
-//│ ║        	           ^
-//│ ╟── from reference:
-//│ ║  l.57: 	rec def eval1 k e = case e of {
-//│ ║        	                         ^
+//│ ║        	         ^^^
 //│ ╟── from field selection:
 //│ ║  l.59: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	                                   ^^^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
+//│ ╟── from refined scrutinee:
+//│ ║  l.57: 	rec def eval1 k e = case e of {
+//│ ║        	                         ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 292
+//│ constrain calls  : 236
 //│ annoying  calls  : 198
-//│ subtyping calls  : 643
+//│ subtyping calls  : 619
 
 :e
 :stats
@@ -471,18 +453,12 @@ prettier2 done eval2
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ res: (Lit | (Nega[?] with {arg: 'a}) as 'a) -> string | error
 //│    = [Function (anonymous)]
-//│ constrain calls  : 59
+//│ constrain calls  : 46
 //│ annoying  calls  : 0
-//│ subtyping calls  : 329
+//│ subtyping calls  : 307
 
 :e
 :stats
@@ -503,13 +479,7 @@ prettier2 done eval2 e1
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
@@ -522,17 +492,14 @@ prettier2 done eval2 e1
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.252: 	  | _ -> k x
 //│ ║         	         ^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
 //│ res: error | string
 //│    = '123'
-//│ constrain calls  : 140
-//│ annoying  calls  : 64
-//│ subtyping calls  : 494
+//│ constrain calls  : 110
+//│ annoying  calls  : 62
+//│ subtyping calls  : 349
 
 :e
 :stats
@@ -553,13 +520,7 @@ prettier2 done eval2 e2
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
@@ -572,17 +533,14 @@ prettier2 done eval2 e2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.252: 	  | _ -> k x
 //│ ║         	         ^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
-//│ res: error
+//│ res: error | string
 //│    = '1-123'
-//│ constrain calls  : 107
-//│ annoying  calls  : 36
-//│ subtyping calls  : 1014
+//│ constrain calls  : 140
+//│ annoying  calls  : 107
+//│ subtyping calls  : 703
 
 :e
 :stats
@@ -603,13 +561,7 @@ prettier2 done eval2 d2
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
@@ -622,9 +574,6 @@ prettier2 done eval2 d2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.252: 	  | _ -> k x
 //│ ║         	         ^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ║         	                                ^
@@ -634,14 +583,14 @@ prettier2 done eval2 d2
 //│ ╟── from refined scrutinee:
 //│ ║  l.260: 	rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│ ║         	                                                  ^
-//│ ╟── from reference:
+//│ ╟── from wildcard pattern:
 //│ ║  l.196: 	  | _ -> k e
-//│ ╙──       	           ^
+//│ ╙──       	         ^^^
 //│ res: error | string
 //│    = '-1-1'
-//│ constrain calls  : 137
-//│ annoying  calls  : 75
-//│ subtyping calls  : 578
+//│ constrain calls  : 104
+//│ annoying  calls  : 73
+//│ subtyping calls  : 387
 
 :e
 :stats
@@ -662,13 +611,7 @@ prettier2 done eval1 e2
 //│ ╟── which does not match type `?f -> ?g`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	            ^^^^
-//│ ╟── from reference:
-//│ ║  l.263: 	  }) ev
-//│ ║         	     ^^
-//│ ╟── from reference:
-//│ ║  l.261: 	  | Nega -> concat "-" (prettier2 k ev x.arg)
-//│ ╙──       	                                    ^^
+//│ ╙──       	            ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
@@ -681,15 +624,12 @@ prettier2 done eval1 e2
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.60: 	  | _ -> k e
 //│ ║        	         ^^^
-//│ ╟── from reference:
-//│ ║  l.195: 	      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
-//│ ║         	               ^
 //│ ╟── from refined scrutinee:
 //│ ║  l.191: 	rec def prettier1 k ev e = case e of {
 //│ ╙──       	                                ^
-//│ res: error
+//│ res: error | string
 //│    = '1-123'
-//│ constrain calls  : 106
-//│ annoying  calls  : 36
-//│ subtyping calls  : 1008
+//│ constrain calls  : 139
+//│ annoying  calls  : 107
+//│ subtyping calls  : 697
 

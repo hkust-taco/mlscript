@@ -129,10 +129,7 @@ foo 42
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from record literal:
 //│ ║  l.87: 	def getf { f } = f
-//│ ║        	         ^^^^^
-//│ ╟── from reference:
-//│ ║  l.118: 	  in { l = getf xf; r = getf x; s = x }
-//│ ╙──       	                             ^
+//│ ╙──      	         ^^^^^
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
 
@@ -156,13 +153,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.154: 	res.z
 //│ ║         	^^^^^
 //│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.149: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.157: 	res.z
+//│ ║  l.154: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined

@@ -118,10 +118,7 @@ Cons 1 res
 //│ ║       	               ^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
-//│ ║       	                                ^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ ╙──      	                                          ^^^^
+//│ ╙──     	                                ^^^^^^^
 //│ res: (Cons['A .. 1 | 'A] with {head: 1, tail: 2}) | error
 //│    = Cons { head: 1, tail: 2 }
 

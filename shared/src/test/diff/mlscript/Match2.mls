@@ -41,9 +41,6 @@ bar Test
 //│ ╟── expression of type `{value: ?value} -> (Test & {value: ?value})` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.37: 	bar Test
 //│ ║        	    ^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.29: 	def bar x = case x of
-//│ ║        	                 ^
 //│ ╟── Note: Class constructor is defined at: 
 //│ ║  l.2: 	class Test: { value: int }
 //│ ╙──     	      ^^^^
@@ -54,14 +51,11 @@ bar Test
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	bar "ops"
+//│ ║  l.52: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.55: 	bar "ops"
-//│ ║        	    ^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.29: 	def bar x = case x of
-//│ ╙──      	                 ^
+//│ ║  l.52: 	bar "ops"
+//│ ╙──      	    ^^^^^
 //│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -77,14 +71,11 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.78: 	baz "oops"
+//│ ║  l.72: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.78: 	baz "oops"
-//│ ║        	    ^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.70: 	def baz x = case x of
-//│ ╙──      	                 ^
+//│ ║  l.72: 	baz "oops"
+//│ ╙──      	    ^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
