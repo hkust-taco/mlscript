@@ -107,10 +107,7 @@ f false
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `false` does not match type `int`
 //│ ║  l.104: 	f false
-//│ ║         	  ^^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.93: 	  if pred n then n else f (n + 1)
-//│ ╙──      	                           ^
+//│ ╙──       	  ^^^^^
 //│ res: error | false | int
 
 let take0 (x: 0) = 0

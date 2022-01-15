@@ -83,10 +83,7 @@ f (c: Parent)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.64: 	  | Child -> x.name
-//│ ║        	    ^^^^^
-//│ ╟── from reference:
-//│ ║  l.63: 	def f x = case x of {
-//│ ╙──      	               ^
+//│ ╙──      	    ^^^^^
 //│ res: error | string
 //│    = 'Bob'
 

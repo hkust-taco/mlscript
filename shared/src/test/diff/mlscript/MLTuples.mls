@@ -167,10 +167,7 @@ g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ║         	                                          ^^^^^
-//│ ╟── from reference:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ╙──       	             ^^^
+//│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -223,24 +220,24 @@ t.x
 t._1
 t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.223: 	t._1
+//│ ║  l.220: 	t._1
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
-//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.209: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.223: 	t._1
+//│ ║  l.220: 	t._1
 //│ ╙──       	^
 //│ res: error
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.224: 	t._2
+//│ ║  l.221: 	t._2
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
-//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.209: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.224: 	t._2
+//│ ║  l.221: 	t._2
 //│ ╙──       	^
 //│ res: error
 //│    = undefined

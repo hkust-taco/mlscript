@@ -1765,10 +1765,7 @@ add
 //│ ║        	             ^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
-//│ ║        	              ^^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.+1: 	(let rec x = (add x); (0 x))
-//│ ╙──      	                  ^
+//│ ╙──      	              ^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ║        	                       ^^^
@@ -2134,10 +2131,7 @@ add
 //│ ║        	             ^^^^^^^
 //│ ╟── expression of type `int -> int` does not match type `int`
 //│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
-//│ ║        	              ^^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
-//│ ╙──      	                  ^
+//│ ╙──      	              ^^^^^
 //│ res: {u: 0, v: 0}
 
 (let x = 0.u; {u: 0, v: 0})

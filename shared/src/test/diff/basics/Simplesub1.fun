@@ -85,9 +85,9 @@ x => succ (not x)
 //│ ╟── but it flows into record with expected type `{f: ?a}`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	               ^^^^^^^^^^
-//│ ╟── Note: constraint arises from argument:
+//│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
-//│ ╙──      	          ^^^
+//│ ╙──      	           ^^
 //│ res: bool | error
 
 :e

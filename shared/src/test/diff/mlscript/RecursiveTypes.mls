@@ -131,7 +131,7 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: 'b | (C['a & 'c .. 'a] as 'c) -> 'd
+//│ foo: 'b | (C['a .. 'a0] as 'a) -> 'c
 //│    = [Function: foo]
 
 // TODO figure ou why some type variables are not simplified here
@@ -339,7 +339,7 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ f: 'a | ('b & (({a: 'c} as 'c) | ~{a: 'd | int} | ~{})\a & (({a: 'c} as 'c) | ~{a: 'd | int})\a & ({a: 'c} as 'c) & (int | ~{a: 'd | int} | ~{})\a & (int | ~{a: 'd | int})\a & int & int) -> ('e | 'f | ('b | 'g\a & {a: 'd | int} as 'g))
 //│  = [Function: f1]
 
 f
