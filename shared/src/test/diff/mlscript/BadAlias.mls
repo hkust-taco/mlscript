@@ -53,12 +53,16 @@ type B = NonReg[A]
 //│ ╔══[ERROR] type identifier not found: NonReg
 //│ ║  l.49: 	type B = NonReg[A]
 //│ ╙──      	         ^^^^^^^^^
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'B'
 
 :e
 type NonReg[A] = { x: NonReg[int] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['A]
 //│ ║  l.58: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'NonReg'
 
 :e
 42: NonReg[int]
@@ -75,6 +79,8 @@ type RefToNongReg[A] = { x: NonReg[A] }
 //│ ║  l.72: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias RefToNongReg
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'NonReg'
 
 
 type Reg[A] = Reg[A] -> Reg[A]

@@ -46,16 +46,19 @@ Hey t
 //│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
-//│    = [ 1, 2, 3 ]
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 
 // TODO: fix `withConstruct` on arrays
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
-//│    = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+//│ Runtime error:
+//│   ReferenceError: Hey is not defined
 
 htx.x
 //│ res: 1
-//│    = 1
+//│ Runtime error:
+//│   ReferenceError: htx is not defined
 
 f ((a, b, c)) = { a; b; c }
 //│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
@@ -71,7 +74,8 @@ f tx
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
-//│    = { a: undefined, b: undefined, c: undefined }
+//│ Runtime error:
+//│   ReferenceError: htx is not defined
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
@@ -82,47 +86,48 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	f t
+//│ ║  l.85: 	f t
 //│ ║        	^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.81: 	f t
+//│ ║  l.85: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.80: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	f tx
+//│ ║  l.86: 	f tx
 //│ ║        	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.82: 	f tx
+//│ ║  l.86: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.80: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	f htx
+//│ ║  l.87: 	f htx
 //│ ║        	^^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.83: 	f htx
+//│ ║  l.87: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.80: 	f ((a, b)) = add a b
 //│ ╙──      	    ^^^^
 //│ res: error | int
-//│    = NaN
+//│ Runtime error:
+//│   ReferenceError: htx is not defined
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -134,7 +139,7 @@ g htx
 g tx
 //│ res: () | 1
 //│ Runtime error:
-//│   ReferenceError: Hey is not defined
+//│   ReferenceError: htx is not defined
 //│ res: () | 1
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -149,7 +154,7 @@ g htx
 g (tx with { y = 2 })
 //│ res: 1
 //│ Runtime error:
-//│   ReferenceError: Hey is not defined
+//│   ReferenceError: htx is not defined
 //│ res: 1 | 2
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -157,19 +162,19 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	g tx
+//│ ║  l.163: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.158: 	g tx
+//│ ║  l.163: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ║         	                                          ^^^^^
 //│ ╟── from reference:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.148: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	             ^^^
 //│ res: 1 | error
 //│ Runtime error:

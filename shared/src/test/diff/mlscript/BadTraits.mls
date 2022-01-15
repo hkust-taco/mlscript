@@ -19,7 +19,8 @@ T {}
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: error | t
-//│    = {}
+//│ Runtime error:
+//│   ReferenceError: T is not defined
 
 def a = A{}
 //│ a: A
@@ -28,57 +29,60 @@ def a = A{}
 :e
 T a
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	T a
+//│ ║  l.30: 	T a
 //│ ║        	^^^
 //│ ╟── expression of type `A` does not match type `B`
-//│ ║  l.24: 	def a = A{}
+//│ ║  l.25: 	def a = A{}
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `B`
-//│ ║  l.29: 	T a
+//│ ║  l.30: 	T a
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	             ^
 //│ res: A & t | error
-//│    = A {}
+//│ Runtime error:
+//│   ReferenceError: T is not defined
 
 :e
 :js
 T A
 //│ // Query 1
-//│ res = ((x) => new A(x));
+//│ res = T((x) => new A(x));
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	T A
+//│ ║  l.49: 	T A
 //│ ║        	^^^
 //│ ╟── expression of type `anything -> A` does not match type `A`
-//│ ║  l.47: 	T A
+//│ ║  l.49: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: anything -> A & t | error
-//│    = [Function: res]
+//│ Runtime error:
+//│   ReferenceError: T is not defined
 
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	T (B {})
+//│ ║  l.67: 	T (B {})
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ║  l.64: 	T (B {})
+//│ ║  l.67: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ╙──     	         ^
 //│ res: B & t | error
-//│    = B {}
+//│ Runtime error:
+//│   ReferenceError: T is not defined
 
 :re
 def t = T error
 //│ t: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   ReferenceError: T is not defined
 
 :re
 t: nothing
@@ -99,14 +103,18 @@ t: Als
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.100: 	class D0: T
+//│ ║  l.104: 	class D0: T
 //│ ╙──       	      ^^^^^
+//│ Code generation met an error:
+//│   Class T is not defined.
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.106: 	class D1: B & T
+//│ ║  l.112: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
+//│ Code generation met an error:
+//│   Cannot have two base classes: B, T
 
 
 trait S: { x: int }
@@ -114,31 +122,36 @@ trait S: { x: int }
 
 s = S{ x = 1 }
 //│ s: {x: 1} & s
-//│  = { x: 1 }
+//│ Runtime error:
+//│   ReferenceError: S is not defined
 
 t = s: s
 //│ t: s
-//│  = { x: 1 }
+//│ Runtime error:
+//│   ReferenceError: s is not defined
 
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.124: 	t.x
+//│ ║  l.134: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.119: 	t = s: s
+//│ ║  l.128: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.124: 	t.x
+//│ ║  l.134: 	t.x
 //│ ╙──       	^
 //│ res: error
-//│    = 1
+//│ Runtime error:
+//│   ReferenceError: t1 is not defined
 
 t = s: S
 //│ t: {x: int} & s
-//│  = { x: 1 }
+//│ Runtime error:
+//│   ReferenceError: s is not defined
 
 t.x
 //│ res: int
-//│    = 1
+//│ Runtime error:
+//│   ReferenceError: t2 is not defined
 

@@ -43,17 +43,19 @@ type Test1 = { x: int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
 //│ ║  l.42: 	type Test1 = { x: int }
 //│ ╙──      	     ^^^^^
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'Test1'
 
 type Test2 = { x: int }
 //│ Defined type alias Test2
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.51:12: class Test = { x: int }
+//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.53:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.55:10: type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.57:10: type Test: { x: int }
 
 type Test3 = int -> int
 //│ Defined type alias Test3
@@ -72,11 +74,13 @@ type T = int
 type T = int
 type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.72: 	type T = int
+//│ ║  l.74: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.73: 	type T = int
+//│ ║  l.75: 	type T = int
 //│ ╙──      	     ^
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'T'
 
 :e
 :re
@@ -86,7 +90,7 @@ def foo = 1
 foo 42
 //│ Defined type alias TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.84: 	foo 42
+//│ ║  l.88: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ Runtime error:
@@ -94,13 +98,13 @@ foo 42
 //│ foo: 1
 //│    = 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.86: 	foo 42
+//│ ║  l.90: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── expression of type `1` is not a function
-//│ ║  l.85: 	def foo = 1
+//│ ║  l.89: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.86: 	foo 42
+//│ ║  l.90: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ Runtime error:
@@ -117,7 +121,7 @@ def test = fun x -> (x: TypeB)
 test 42
 type TypeC = TypeA
 //│ ╔══[ERROR] illegal cycle involving type TypeOops
-//│ ║  l.114: 	type TypeOops = TypeOops
+//│ ║  l.118: 	type TypeOops = TypeOops
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias TypeB
 //│ Defined type alias TypeC
@@ -153,14 +157,16 @@ error: Lol -> Lol
 :e
 type Runaway[A] = Runaway['a]
 //│ ╔══[ERROR] illegal cycle involving type Runaway
-//│ ║  l.154: 	type Runaway[A] = Runaway['a]
+//│ ║  l.158: 	type Runaway[A] = Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
-//│ ║  l.160: 	type Runaway[A] = 'a -> Runaway['a]
+//│ ║  l.164: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Code generation met an error:
+//│   Cannot allocate a runtime name starting with 'Runaway'
 
 
 type Runaway2 = Lol -> Runaway2
@@ -169,20 +175,20 @@ type Runaway2 = Lol -> Runaway2
 :e
 id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.170: 	id: Runaway2
+//│ ║  l.176: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── expression of type `{x: ?a -> ?a}` is not a function
-//│ ║  l.139: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.143: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference of type `?b -> ?b`
-//│ ║  l.170: 	id: Runaway2
+//│ ║  l.176: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── which does not match type `Runaway2`
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.166: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.172: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.170: 	id: Runaway2
+//│ ║  l.176: 	id: Runaway2
 //│ ╙──       	    ^^^^^^^^
 //│ res: {x: 'a -> 'a} -> 'b as 'b
 //│    = [Function: id]
@@ -197,13 +203,13 @@ error: Runaway2
 :re
 error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.198: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.204: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
 //│ ╟── expression of type `?a -> ?a` does not match type `int`
-//│ ║  l.139: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.143: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.198: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.204: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: {x: 'a -> 'a} -> 'b as 'b
 //│ Runtime error:

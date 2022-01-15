@@ -5,51 +5,43 @@ import scala.util.matching.Regex
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
 import scala.collection.immutable
-import mlscript.codegen.{CodeGenError, Scope}
+import mlscript.codegen.{CodeGenError, UnimplementedError, Scope, ValueSymbol}
+import mlscript.codegen.ClassSymbol
+import mlscript.codegen.BuiltinSymbol
+import mlscript.codegen.StubValueSymbol
+import mlscript.codegen.TraitSymbol
+import mlscript.codegen.LexicalSymbol
+import mlscript.codegen.FreeSymbol
+import mlscript.codegen.ParamSymbol
+import mlscript.codegen.TypeSymbol
 
 class JSBackend {
-  // This object contains all classNames.
-  protected val classNames: HashSet[Str] = HashSet()
-
-  // TODO: let `Scope` track symbol kinds.
-  protected val traitNames = HashSet[Str]()
-
+  /**
+    * The root scope of the program.
+    */
   protected val topLevelScope = Scope("root")
 
+  /**
+    * The prelude code manager.
+    */
   protected val polyfill = Polyfill()
 
-  // Sometimes, identifiers declared by `let` use the same name as class names.
-  // JavaScript does not allow this. So, we need to replace them.
-  // The key is the name of the class, and the value is the name of the function.
-  private val ctorAliasMap: HashMap[Str, Str] = HashMap()
-
-  // I just realized `Statement` is unused.
-  private def translateStatement(stmt: DesugaredStatement)(implicit scope: Scope): JSStmt =
-    stmt match {
-      case t: Term             => JSExprStmt(translateTerm(t))
-      case _: Def | _: TypeDef => ??? // TODO
-    }
-
-  /** This function translates parameter destructions in `def` declarations.
+  /**
+    * This function translates parameter destructions in `def` declarations.
     *
     * The production rules of MLscript `def` parameters are:
     *
-    * subterm ::= "(" term ")" | record | literal | identifier term ::= let | fun | ite | withsAsc |
-    * _match
+    *     subterm ::= "(" term ")" | record | literal | identifier
+    *     term ::= let | fun | ite | withsAsc | _match
     *
     * JavaScript supports following destruction patterns:
     *
-    *   - Array patterns: `[x, y, ...]` where `x`, `y` are patterns.
-    *   - Object patterns: `{x: y, z: w, ...}` where `z`, `w` are patterns.
-    *   - Identifiers: an identifier binds the position to a name.
+    * - Array patterns: `[x, y, ...]` where `x`, `y` are patterns.
+    * - Object patterns: `{x: y, z: w, ...}` where `z`, `w` are patterns.
+    * - Identifiers: an identifier binds the position to a name.
     *
     * This function only translate name patterns and object patterns. I was thinking if we can
     * support literal parameter matching by merging multiple function `def`s into one.
-    *
-    * @param t
-    *   the term to translate
-    * @return
-    *   a `JSPattern` representing the pattern
     */
   private def translatePattern(t: Term): JSPattern = t match {
     // fun x -> ... ==> function (x) { ... }
@@ -78,37 +70,32 @@ class JSBackend {
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
-  // For inheritance usage.
-  protected val nameClsMap = collection.mutable.HashMap[Str, JSClassDecl]()
+  protected def translateVar(sym: LexicalSymbol, isCallee: Bool)(implicit scope: Scope): JSExpr =
+    sym match {
+      case sym: ClassSymbol =>
+        if (isCallee)
+          JSIdent(sym.runtimeName, true)
+        else
+          JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(sym.runtimeName, true)(JSIdent("x"))))
+      case sym: BuiltinSymbol =>
+        if (!polyfill.used(sym.feature))
+          polyfill.use(sym.feature, sym.runtimeName)
+        val ident = JSIdent(sym.runtimeName)
+        if (sym.feature === "error") ident() else ident
+      case sym: StubValueSymbol => throw new UnimplementedError(sym)
+      case _: FreeSymbol => throw new CodeGenError(s"unresolved symbol ${sym.lexicalName}")
+      case _: TraitSymbol | _: TypeSymbol => throw new CodeGenError(s"cannot use ${sym.shortName} in expressions")
+      case _ => JSIdent(sym.runtimeName)
+    }
 
   // Returns: temp identifiers and the expression
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    // TODO: when scope symbol is ready, update here
-    case Var(mlsName) =>
-      val (jsName, srcScope) = scope resolveWithScope mlsName
-      // If it is a class name and the name is declared in the top-level scope.
-      if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
-        // `mlsName === jsName` means no re-declaration, so it refers to the class.
-        if (mlsName === jsName)
-          JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(jsName, true)(JSIdent("x"))))
-        else
-          JSIdent(jsName)
-      } else if (
-          (Polyfill isPreludeFunction mlsName) &&
-          (srcScope.isEmpty || srcScope.exists({ _.isTopLevel }))
-      ) {
-        if (!polyfill.used(mlsName))
-          topLevelScope declare mlsName
-        val ident = JSIdent(polyfill.use(mlsName, mlsName))
-        if (mlsName === "error") ident() else ident
-      } else {
-        JSIdent(jsName)
-      }
+    case Var(name) => translateVar(scope.resolve(name), false)
     // TODO: need scope to track variables so that we can rename reserved words
     case Lam(params, body) =>
       val patterns = translateParams(params)
       val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
-      JSArrowFn(patterns, lamScope withTempVarDecls translateTerm(body)(lamScope))
+      JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     // TODO: when scope symbols are ready, rewrite this
     // Binary expressions called by function names.
     // case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
@@ -121,32 +108,22 @@ class JSBackend {
     // Tenary expressions.
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
-    // Trait construction.
-    // TODO: when scope symbol is ready, udpate here
-    case App(Var(callee), Tup(N -> (trm: Term) :: Nil)) if (traitNames contains callee) =>
-      translateTerm(trm)
-    // TODO: when scope symbol is ready, remove the branch here
-    case App(Var(mlsName), Tup(N -> (trm: Term) :: Nil)) =>
-      val (jsName, srcScope) = scope resolveWithScope mlsName
-      // If it is a class name and the name is declared in the top-level scope.
-      (if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
-        // `mlsName === jsName` means no re-declaration, so it refers to the class.
-        JSIdent(jsName, mlsName === jsName)
-      } else if (
-          (Polyfill isPreludeFunction mlsName) &&
-          srcScope.isEmpty
-      ) {
-        if (!polyfill.used(mlsName))
-          topLevelScope declare mlsName
-        JSIdent(polyfill.use(mlsName, mlsName))
-      } else {
-        JSIdent(jsName)
-      })((translateTerm(trm)))
-    // Function application.
-    case App(callee, Tup(args)) =>
-      JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
-    case App(callee, arg) =>
-      JSInvoke(translateTerm(callee), translateTerm(arg) :: Nil)
+    case App(trm, Tup(args)) =>
+      lazy val arguments = args map { case (_, arg) => translateTerm(arg) }
+      trm match {
+        case Var(name) => scope.resolve(name) match {
+          case sym: TraitSymbol => arguments match {
+            case head :: Nil => head
+            case _ => throw new CodeGenError("trait construction should have only one argument")
+          }
+          case sym =>
+            val callee = translateVar(sym, true)
+            callee(arguments: _*)
+        }
+        case _ =>
+          val callee = translateTerm(trm)
+          callee(arguments: _*)
+      }
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -154,19 +131,21 @@ class JSBackend {
     case Sel(receiver, fieldName) =>
       JSMember(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
-    case Let(isRec, name, value, body) =>
-      val letScope = Scope("Let", name.name :: Nil, scope)
+    case Let(isRec, Var(name), value, body) =>
+      val letScope = scope.derive("Let", name :: Nil)
       JSImmEvalFn(
-        name.name :: Nil,
-        letScope withTempVarDecls translateTerm(body)(letScope),
+        name :: Nil,
+        letScope.tempVars `with` translateTerm(body)(letScope),
         translateTerm(value)(letScope) :: Nil
       )
     case Blk(stmts) =>
-      val blkScope = Scope("Blk", Nil, scope)
+      val blkScope = scope.derive("Blk")
       JSImmEvalFn(
         Nil,
-        R(blkScope withTempVarDecls (stmts flatMap (_.desugared._2) map {
-          translateStatement(_)(blkScope)
+        R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
+          case t: Term             => JSExprStmt(translateTerm(t))
+          // TODO: find out if we need to support this.
+          case _: Def | _: TypeDef => throw new CodeGenError("unexpected definitions in blocks")
         })),
         Nil
       )
@@ -182,12 +161,14 @@ class JSBackend {
       if (arg.isSimple) {
         translateCaseBranch(arg, cases)
       } else {
-        val name = JSIdent(scope.allocateTempVar())
-        JSCommaExpr(JSAssignExpr(name, arg) :: translateCaseBranch(name, cases) :: Nil)
+        val name = scope.declareRuntimeSymbol()
+        scope.tempVars += name
+        val ident = JSIdent(name)
+        JSCommaExpr(JSAssignExpr(ident, arg) :: translateCaseBranch(ident, cases) :: Nil)
       }
     case IntLit(value) => JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n"))
     case DecLit(value) => JSLit(value.toString)
-    case StrLit(value) => JSLit(JSLit.makeStringLiteral(value))
+    case StrLit(value) => JSExpr(value)
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`
@@ -195,7 +176,7 @@ class JSBackend {
       JSInvoke(
         JSIdent(polyfill get "withConstruct" match {
           case S(fnName) => fnName
-          case N         => polyfill.use("withConstruct", topLevelScope allocateJavaScriptName "withConstruct")
+          case N         => polyfill.use("withConstruct", topLevelScope.declareRuntimeSymbol("withConstruct"))
         }),
         translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
           name -> translateTerm(value)
@@ -204,7 +185,7 @@ class JSBackend {
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
       JSArray(terms map { case (_, term) => translateTerm(term) })
-    case _: Bind | _: Test =>
+    case App(_, _) | _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
 
@@ -242,27 +223,20 @@ class JSBackend {
     )
   }
 
-  protected val typeAliasMap =
-    collection.mutable.HashMap[Str, Ls[Str] -> Type]()
-
   // This function normalizes something like `T[A, B]`.
-  private def applyTypeAlias(name: Str, targs: Ls[Type]): Type =
-    typeAliasMap get name match {
-      case S(tparams -> body) =>
-        assert(targs.length === tparams.length, targs -> tparams)
+  private def applyType(name: Str, targs: Ls[Type]): Type =
+    topLevelScope.get(name) match {
+      case sym: ClassSymbol => TypeName(name) // Note that here we erase the arguments.
+      case sym: TraitSymbol => ??? 
+      case sym: TypeSymbol =>
+        assert(targs.length === sym.params.length, targs -> sym.params)
         substitute(
-          body,
+          sym.body,
           collection.immutable.HashMap(
-            tparams zip targs map { case (k, v) => k -> v }: _*
+            sym.params zip targs map { case (k, v) => k -> v }: _*
           )
         )
-      case N =>
-        if (classNames contains name) {
-          // For classes with type parameters, we just erase the type parameters.
-          TypeName(name)
-        } else {
-          throw CodeGenError(s"type $name is not defined")
-        }
+      case _ => throw new CodeGenError(s"$name is none of class, trait or type")
     }
 
   // This function normalizes a type, removing all `AppliedType`s.
@@ -274,7 +248,7 @@ class JSBackend {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
       case AppliedType(TypeName(name), targs) =>
-        applyTypeAlias(name, targs map { substitute(_, subs) })
+        applyType(name, targs map { substitute(_, subs) })
       case Function(lhs, rhs) =>
         Function(substitute(lhs, subs), substitute(rhs, subs))
       case Inter(lhs, rhs) =>
@@ -288,13 +262,14 @@ class JSBackend {
       case TypeName(name) =>
         subs get name match {
           case N =>
-            typeAliasMap get name match {
-              case N              => TypeName(name)
-              case S(Nil -> body) => substitute(body, subs)
-              case S(tparams -> _) =>
-                throw CodeGenError(
-                  s"type $name expects ${tparams.length} type parameters but nothing provided"
-                )
+            topLevelScope.get(name) match {
+              case sym: ClassSymbol => TypeName(name)
+              case sym: TraitSymbol => TypeName(name)
+              case sym: TypeSymbol if sym.params.isEmpty => substitute(sym.body, subs)
+              case sym: TypeSymbol => throw CodeGenError(
+                  s"type $name expects ${sym.params.length} type parameters but nothing provided"
+              )
+              case _ => throw new CodeGenError(s"undeclared type name $name")
             }
           case S(ty) => ty
         }
@@ -318,22 +293,21 @@ class JSBackend {
     // If `A` is a type alias, it is replaced by its real type.
     // Otherwise just use the name.
     case TypeName(name) =>
-      if (traitNames contains name)
-        Nil -> N
-      else
-        typeAliasMap get name match {
-          // The base class is not a type alias.
-          case N => Nil -> S(name)
+      topLevelScope.get(name) match {
+        // The name refers to a class.
+        case sym: ClassSymbol => Nil -> S(name)
+        case sym: TraitSymbol => Nil -> N // TODO: traits can inherit from classes!
+        case sym: TypeSymbol if sym.params.isEmpty =>
           // The base class is a type alias with no parameters.
           // Good, just make sure all term is normalized.
-          case S(Nil -> body) => getBaseClassAndFields(substitute(body))
-          // The base class is a type alias with parameters.
-          // Oops, we don't support this.
-          case S(tparams -> _) =>
-            throw CodeGenError(
-              s"type $name expects ${tparams.length} type parameters but nothing provided"
-            )
-        }
+          getBaseClassAndFields(substitute(sym.body))
+        case sym: TypeSymbol => 
+          // The base class is a type alias with parameters. We don't support this.
+          throw CodeGenError(
+            s"type $name expects ${sym.params.length} type parameters but nothing provided"
+          )
+        case _ => throw new CodeGenError(s"undeclared type name $name")
+      }
     // `class C: { <items> } & A` ==>
     // `class C extends A { constructor(fields) { <items> } }`
     case Inter(Record(entries), ty) =>
@@ -366,10 +340,10 @@ class JSBackend {
     // For applied types such as `Id[T]`, normalize them before translation.
     // Do not forget to normalize type arguments first.
     case AppliedType(TypeName(base), targs) =>
-      if (traitNames contains base)
-        Nil -> N
-      else
-        getBaseClassAndFields(applyTypeAlias(base, targs map { substitute(_) }))
+      topLevelScope.expect[TraitSymbol](base) match {
+        case S(_) => Nil -> N
+        case N    => getBaseClassAndFields(applyType(base, targs map { substitute(_) }))
+      }
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
@@ -391,9 +365,14 @@ class JSBackend {
       case fields -> N => JSClassDecl(name, fields.distinct, N, members)
       // Case 2: has a base class and fields.
       case fields -> S(clsNme) =>
-        nameClsMap get clsNme match {
-          case N      => throw CodeGenError(s"Class $clsNme is not defined.")
-          case S(cls) => JSClassDecl(name, fields.distinct, S(cls), members)
+        topLevelScope.expect[ClassSymbol](clsNme) match {
+          case S(sym) =>sym.body match {
+            case S(cls) => JSClassDecl(name, fields.distinct, S(cls), members)
+            // TODO: resolve inheritance graph before translation.
+            case N => throw new CodeGenError("base class translated after the derived class")
+          }
+          case N =>
+            throw CodeGenError(s"undeclared base class $clsNme")
         }
     }
   }
@@ -411,75 +390,74 @@ class JSBackend {
 }
 
 class JSWebBackend extends JSBackend {
-  // This will be changed during code generation.
-  private var hasWithConstruct = false
-
-  // Name of the helper function for `with` construction.
-  private val withConstructFnName = topLevelScope allocateJavaScriptName "withConstruct"
-
   // Name of the array that contains execution results
-  val resultsName: Str = topLevelScope allocateJavaScriptName "results"
+  val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
 
-  val prettyPrinterName: Str = topLevelScope allocateJavaScriptName "prettyPrint"
+  val prettyPrinterName: Str = topLevelScope declareRuntimeSymbol "prettyPrint"
 
   polyfill.use("prettyPrint", prettyPrinterName)
 
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // Collect type aliases into a map so we can normalize them.
+    // Declare symbols for types, traits and classes.
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        val tnames = tparams map { case TypeName(nme) => nme }
-        typeAliasMap(name) = tnames -> body
+        topLevelScope.declareType(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), _, _, _, _) =>
-        traitNames += name
-      case _ => ()
+        topLevelScope.declareTrait(name)
+      case TypeDef(Cls, TypeName(name), _, _, _, members) =>
+        val sym = topLevelScope.declareClass(name)
+        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
     }
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
       JSConstDecl(resultsName, JSArray(Nil)) ::
-        typeDefs
-          .map { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
-            kind match {
-              case Cls =>
-                topLevelScope declare name
-                classNames += name
-                val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
-                nameClsMap += name -> cls
-                cls
-              case Trt => JSComment(s"trait $name")
-              case Als => JSComment(s"type alias $name")
+        // Hoist class declarations.
+        typeDefs.flatMap {
+          case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
+            val body = S(translateClassDeclaration(name, actualType, mthDefs)(topLevelScope))
+            topLevelScope.expect[ClassSymbol](name) match {
+              case S(sym) => sym.body = body
+              // Should crash if the class is not defined.
+              case N => throw new Exception(s"class $name should be declared")
             }
-          }
-          // Generate something like:
-          // ```js
-          // const <name> = <expr>;
-          // <results>.push(<name>);
-          // ```
-          .concat(otherStmts.flatMap {
-            case Def(_, mlsName, L(body)) =>
+            body
+          case _ => N
+        }
+        // Generate something like:
+        // ```js
+        // const <name> = <expr>;
+        // <results>.push(<name>);
+        // ```
+        .concat(otherStmts.flatMap {
+          case Def(recursive, Var(name), L(body)) =>
+            val (translatedBody, sym) = if (recursive) {
+              val sym = topLevelScope.declareValue(name)
+              (translateTerm(body)(topLevelScope), sym)
+            } else {
               val translatedBody = translateTerm(body)(topLevelScope)
-              val jsName = topLevelScope declare mlsName.name
-              topLevelScope withTempVarDecls JSConstDecl(jsName, translatedBody) ::
-                JSInvoke(JSMember(resultsIdent, "push"), JSIdent(jsName) :: Nil).stmt :: Nil
-            // Ignore type declarations.
-            case Def(_, _, R(_)) => Nil
-            // `exprs.push(<expr>)`.
-            case term: Term =>
-              topLevelScope withTempVarDecls JSInvoke(
-                JSMember(resultsIdent, "push"),
-                translateTerm(term)(topLevelScope) :: Nil
-              ).stmt :: Nil
-          })
+              (translatedBody, topLevelScope.declareValue(name))
+            }
+            topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
+              JSInvoke(JSMember(resultsIdent, "push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
+          // Ignore type declarations.
+          case Def(_, _, R(_)) => Nil
+          // `exprs.push(<expr>)`.
+          case term: Term =>
+            topLevelScope.tempVars `with` JSInvoke(
+              JSMember(resultsIdent, "push"),
+              translateTerm(term)(topLevelScope) :: Nil
+            ).stmt :: Nil
+        })
     val epilogue = resultsIdent.member("map")(JSIdent(prettyPrinterName)).`return` :: Nil
     JSImmEvalFn(Nil, R(polyfill.emit() ::: stmts ::: epilogue), Nil).toSourceCode.toLines
   }
 }
 
 class JSTestBackend extends JSBackend {
-  private val resultName = topLevelScope allocateJavaScriptName "res"
+  private val resultName = topLevelScope declareRuntimeSymbol "res"
 
   private var numRun = 0
 
@@ -491,36 +469,37 @@ class JSTestBackend extends JSBackend {
     case e: Throwable => L(e.getMessage() -> true) // Unexpected crashes
   }
 
-  // Generate code for test.
+  /**
+    * Generate JavaScript code which targets MLscript test from the given block.
+    */
   private def generate(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // Collect type aliases into a map so we can normalize them.
+    // Declare symbols for types, traits and classes.
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        val tnames = tparams map { case TypeName(nme) => nme }
-        typeAliasMap(name) = tnames -> body
+        topLevelScope.declareType(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), _, _, _, _) =>
-        traitNames += name
-      case _ => ()
+        topLevelScope.declareTrait(name)
+      case TypeDef(Cls, TypeName(name), _, _, _, members) =>
+        val sym = topLevelScope.declareClass(name)
+        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
     }
 
     val resultIdent = JSIdent(resultName)
 
-    // Generate hoisted declarations.
-    val defStmts = typeDefs
-      .flatMap { case TypeDef(kind, TypeName(name), typeParams, actualType, _, mthDefs) =>
-        kind match {
-          case Cls =>
-            topLevelScope declare name
-            classNames += name
-            val cls = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
-            nameClsMap += name -> cls
-            S(cls)
-          case Trt => N
-          case Als => N
+    // Hoist class declarations.
+    val defStmts = typeDefs.flatMap {
+      case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
+        val body = S(translateClassDeclaration(name, actualType, mthDefs)(topLevelScope))
+        topLevelScope.expect[ClassSymbol](name) match {
+          case S(sym) => sym.body = body
+          // Should crash if the class is not defined.
+          case N => throw new Exception(s"class $name should be declared")
         }
-      }
+        body
+      case _ => N
+    }
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
@@ -534,25 +513,31 @@ class JSTestBackend extends JSBackend {
         // let <name>;
         // try { <name> = <expr>; res = <name>; }
         // catch (e) { console.log(e); }
-        case Def(_, mlsName, L(body)) =>
+        case Def(rec, Var(name), L(body)) =>
           val translatedBody = translateTerm(body)(topLevelScope)
-          val jsName = topLevelScope declare mlsName.name
+          val sym = topLevelScope.declareValue(name)
           S(
-            topLevelScope.emitTempVarDecls() ->
-             ((JSIdent("globalThis").member(jsName) := (translatedBody match {
-                case t: JSArrowFn => t.toFuncExpr(S(jsName))
+            topLevelScope.tempVars.emit() ->
+             ((JSIdent("globalThis").member(sym.runtimeName) := (translatedBody match {
+                case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
               })) ::
-                (resultIdent := JSIdent(jsName)) ::
+                (resultIdent := JSIdent(sym.runtimeName)) ::
                 Nil)
           )
-        // Ignore type declarations.
-        case Def(_, _, R(_)) => N
+        case Def(_, Var(name), R(_)) =>
+          // Check if the symbol has been implemented.
+          topLevelScope.get(name) match {
+            case N => topLevelScope.declareStubValue(name)
+            case _ => ()
+          }
+          // Emit nothing for type declarations.
+          N
         // try { res = <expr>; }
         // catch (e) { console.log(e); }
         case term: Term =>
           val body = translateTerm(term)(topLevelScope)
-          S(topLevelScope.emitTempVarDecls() -> ((resultIdent := body) :: Nil))
+          S(topLevelScope.tempVars.emit() -> ((resultIdent := body) :: Nil))
       }
 
     // If this is the first time, insert the declaration of `res`.
