@@ -276,21 +276,21 @@ class JSBackend {
     }
   }
 
-  // Translate MLscript class declaration to JavaScript class declaration.
-  // First, we will analyze its fields and base class name.
-  // Then, we will check if the base class exists.
+  /**
+    * Translate MLscript class declaration to JavaScript class declaration.
+    * First, we will analyze its fields and base class name.
+    * Then, we will check if the base class exists.
+    */
   protected def translateClassDeclaration(
       name: Str,
-      actualType: Type,
       methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
     val members = methods map { translateClassMember(_) }
     topLevelScope.expect[ClassSymbol](name) match {
       case S(sym) => sym.baseClass match {
         case N => JSClassDecl(name, sym.fields.distinct, N, members)
-        case S(clsNme) => sym.body match {
+        case S(baseClassSym) => baseClassSym.body match {
           case S(cls) => JSClassDecl(name, sym.fields.distinct, S(cls), members)
-          // TODO: resolve inheritance graph before translation.
           case N => throw new CodeGenError("base class translated after the derived class")
         }
       }
@@ -422,7 +422,7 @@ class JSBackend {
     * Make sure call `declareTypeDefs` before calling this.
     */
   protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): Unit =
-    classSymbols foreach { sym => resolveClassBase(sym.base) }
+    classSymbols foreach { sym => sym.baseClass = resolveClassBase(sym.base) }
 
   /**
     * Sort class symbols topologically.
@@ -449,20 +449,22 @@ class JSBackend {
   }
 
   protected def generateClassDeclarations(typeDefs: Ls[TypeDef]): Ls[JSClassDecl] = {
-    val stmtsWithOrder = typeDefs flatMap {
+    // Ahhhhhhhh! This is the most ugly part of the code generator. I am sorry.
+    typeDefs.toSeq flatMap {
       case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
         topLevelScope.expect[ClassSymbol](name) match {
           case S(sym) =>
-            val body = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
-            sym.body = S(body)
-            S(body -> sym.order)
+            println(s"bruh ${sym.lexicalName} ${sym.order}")
+            S((sym, mthDefs, sym.order))
           // Should crash if the class is not defined.
           case N => throw new Exception(s"class $name should be declared")
         }
       case _ => N
+    } sortWith { _._3 < _._3 } map { case (sym, mthDefs, _) =>
+      val body = translateClassDeclaration(sym.runtimeName, mthDefs)(topLevelScope)
+      sym.body = S(body)
+      body
     }
-    // TODO: this is ugly!
-    stmtsWithOrder.sortWith(_._2 < _._2).map(_._1)
   }
 }
 
