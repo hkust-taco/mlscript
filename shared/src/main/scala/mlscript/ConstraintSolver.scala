@@ -382,7 +382,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val tighestLocatedRHS = cctx.flatMap { subCtx =>
         subCtx.flatMap { case (l, r) =>
-          val considered =  (r, r.prov) :: Nil
+          val considered = (r, r.prov) :: Nil
           considered.filter { case (_, p) =>
             p.loco =/= prov.loco && (p.loco match {
               case Some(loco) =>
