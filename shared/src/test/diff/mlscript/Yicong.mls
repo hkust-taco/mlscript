@@ -362,3 +362,31 @@ q = (1,1)
 //│ Array[int]
 //│  = [ 1, 1 ]
 
+def sum: Array[int] -> int
+t1 = (1,2,3,4,5,6)
+sum t1
+t2 = (1,1,2, true)
+sum t2
+//│ sum: Array[int] -> int
+//│ t1: (1, 2, 3, 4, 5, 6,)
+//│   = [ 1, 2, 3, 4, 5, 6 ]
+//│ res: int
+//│ Runtime error:
+//│   ReferenceError: sum is not defined
+//│ t2: (1, 1, 2, true,)
+//│   = [ 1, 1, 2, true ]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.369: 	sum t2
+//│ ║         	^^^^^^
+//│ ╟── expression of type `true` does not match type `int`
+//│ ║  l.368: 	t2 = (1,1,2, true)
+//│ ║         	             ^^^^
+//│ ╟── but it flows into reference with expected type `Array[int]`
+//│ ║  l.369: 	sum t2
+//│ ║         	    ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.365: 	def sum: Array[int] -> int
+//│ ╙──       	               ^^^
+//│ res: error | int
+//│ Runtime error:
+//│   ReferenceError: sum is not defined
