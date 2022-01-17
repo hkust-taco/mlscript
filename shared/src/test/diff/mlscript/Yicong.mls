@@ -308,54 +308,6 @@ q = if true then (1,1) else (1,1,1)
 //│ Array[1]
 //│   <:  q:
 //│ Array[int]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, 1,)` does not match type `Array[?]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	                  ^^^
-//│ ╟── but it flows into application with expected type `Array[int]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.305: 	def q: Array[int]
-//│ ╙──       	       ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, 1,)` does not have field 'Array#A'
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	                  ^^^
-//│ ╟── but it flows into application with expected type `Array[int]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.305: 	def q: Array[int]
-//│ ╙──       	       ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, 1, 1,)` does not match type `Array[?]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	                             ^^^^^
-//│ ╟── but it flows into application with expected type `Array[int]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.305: 	def q: Array[int]
-//│ ╙──       	       ^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, 1, 1,)` does not have field 'Array#A'
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	                             ^^^^^
-//│ ╟── but it flows into application with expected type `Array[int]`
-//│ ║  l.306: 	q = if true then (1,1) else (1,1,1)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.305: 	def q: Array[int]
-//│ ╙──       	       ^^^^^^^^^^
 //│  = [ 1, 1 ]
 
 def h f = (f (1,2,false), f (1,true))
@@ -374,30 +326,39 @@ fx q2
 //│ fx: (int, int, int,) -> int
 //│   = [Function: fx]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.368: 	fx q1
+//│ ║  l.320: 	fx q1
 //│ ║         	^^^^^
 //│ ╟── expression of type `(1, 1, 1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.365: 	q1 = (1,1,1,1)
+//│ ║  l.317: 	q1 = (1,1,1,1)
 //│ ║         	      ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.368: 	fx q1
+//│ ║  l.320: 	fx q1
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.367: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.319: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	     ^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.369: 	fx q2
+//│ ║  l.321: 	fx q2
 //│ ║         	^^^^^
 //│ ╟── expression of type `(1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.366: 	q2 = (1,1)
+//│ ║  l.318: 	q2 = (1,1)
 //│ ║         	      ^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.369: 	fx q2
+//│ ║  l.321: 	fx q2
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.367: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.319: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	     ^^^^^
 //│ res: error | int
 //│    = NaN
+
+
+// :d
+q = (1,1)
+//│ (1, 1,)
+//│   <:  q:
+//│ Array[int]
+//│  = [ 1, 1 ]
+
