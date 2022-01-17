@@ -127,7 +127,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       //│ ║  l.6: 	    method Map[B]: B -> A
       //│ ║       	               ^
     // So we should keep the info but not shadow the more relevant later provenances
-    //noProv
   }
   
   val noProv: TypeProvenance = tp(N, "expression")
