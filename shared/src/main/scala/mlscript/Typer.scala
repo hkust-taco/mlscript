@@ -160,6 +160,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Als, TypeName("nothing"), Nil, Nil, BotType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Cls, TypeName("Array"), List(TypeName("A") -> freshVar(noProv)(1)) /* ??? */, Nil, TopType, Nil, Nil, Set.empty, N) ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet

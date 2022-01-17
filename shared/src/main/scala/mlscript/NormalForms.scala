@@ -45,7 +45,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(TupleType(fs0)), TupleType(fs1)) if fs0.size === fs1.size =>
             S(TupleType(tupleIntersection(fs0, fs1))(noProv))
           case (S(ArrayType(i1)), ArrayType(i2)) =>
-            // TODO: array intersection
             // Array[p] & Array[q] => Array[p & q]
             S(ArrayType(i1 & i2)(noProv /* ? not sure */))
           case (S(w1 @ Without(b1, ns1)), w2 @ Without(b2, ns2)) if ns1 === ns2 =>
@@ -236,11 +235,21 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(Conjunct(
               LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(TupleType(fs1)), S(TupleType(fs2))) => // TODO Q: records ok here?!
-            if (fs1.size =/= fs2.size) S(Conjunct(LhsRefined(S(ArrayType(tupleMerge(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+            if (fs1.size =/= fs2.size) S(Conjunct(
+              LhsRefined(S(ArrayType(tupleMerge(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+          // not sure
+          case (S(TupleType(fs)), S(ArrayType(ar))) =>
+            S(Conjunct(
+              LhsRefined(S(ArrayType(fs.map(_._2).fold(ar)(_|_))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+          case (S(ArrayType(ar)), S(TupleType(fs))) =>
+            S(Conjunct(
+              LhsRefined(S(ArrayType(fs.map(_._2).fold(ar)(_|_))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+          case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
+            S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (N, N)
-            | (S(_: FunctionType), S(_: TupleType)) | (S(_: TupleType), S(_: FunctionType))
+            | (S(_: FunctionType), S(_: ArrayBase)) | (S(_: ArrayBase), S(_: FunctionType))
           =>
             S(Conjunct(LhsRefined(N, ts, rcdU), vs1, RhsBot, nvs1))
           case _ => N
