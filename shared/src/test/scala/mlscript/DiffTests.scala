@@ -8,55 +8,13 @@ import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
+class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
-  
-  private val files = ls.rec(dir).filter(_.isFile)
-  
-  private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[Str] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
-      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
-  // Allow overriding which specific tests to run, sometimes easier for development:
-  private val focused = Set[Str](
-    // "Ascribe",
-    // "Repro",
-    // "RecursiveTypes",
-    // "Simple",
-    // "Inherit",
-    // "Basics",
-    // "Paper",
-    // "Negations",
-    // "RecFuns",
-    // "With",
-    // "Annoying",
-    // "Tony",
-    // "Lists",
-    // "Traits",
-    // "BadTraits",
-    // "TraitMatching",
-    // "Subsume",
-    // "Methods",
-  )
-  private def filter(name: Str): Bool =
-    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
-  
-  files.foreach { file => val fileName = file.baseName
-      if (validExt(file.ext) && filter(fileName)) test(fileName) {
+  import DiffTests._
+  files.foreach { file => val fileName = file.baseName; test(fileName) {
     
-    print(s"Processing  $fileName")
+    val buf = mutable.ArrayBuffer.empty[Char]
+    buf ++= s"Processed  $fileName"
     // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
     // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
     
@@ -448,23 +406,77 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       out.close()
       host.terminate()
     }
-    val testFaield = failures.nonEmpty
+    val testFailed = failures.nonEmpty
     val result = strw.toString
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
-    val testColor = if (testFaield) Console.RED else Console.GREEN
-    println(s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}")
+    val testColor = if (testFailed) Console.RED else Console.GREEN
+    buf ++= s"${" " * (30 - fileName.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
-      println(s"! Updating $file")
+      buf ++= s"! Updated $file\n"
       write.over(file, result)
     }
-    if (testFaield)
+    print(buf.mkString)
+    if (testFailed)
       fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
+}
+
+object DiffTests {
   
-  case class ReplHost() {
+  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  
+  private val allFiles = ls.rec(dir).filter(_.isFile)
+  
+  private val validExt = Set("fun", "mls")
+  
+  // Aggregate unstaged modified files to only run the tests on them, if there are any
+  private val modified: Set[Str] =
+    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
+      println(" [git] " + gitStr)
+      val prefix = gitStr.take(2)
+      val filePath = gitStr.drop(3)
+      val fileName = RelPath(filePath).baseName
+      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+    }.toSet catch {
+      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+      Set.empty
+    }
+  
+  // Allow overriding which specific tests to run, sometimes easier for development:
+  private val focused = Set[Str](
+    // "Ascribe",
+    // "Repro",
+    // "RecursiveTypes",
+    // "Simple",
+    // "Inherit",
+    // "Basics",
+    // "Paper",
+    // "Negations",
+    // "RecFuns",
+    // "With",
+    // "Annoying",
+    // "Tony",
+    // "Lists",
+    // "Traits",
+    // "BadTraits",
+    // "TraitMatching",
+    // "Subsume",
+    // "Methods",
+  )
+  private def filter(name: Str): Bool =
+    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
+  
+  private val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      validExt(file.ext) && filter(fileName)
+  }
+  
+  
+  /** Helper to run NodeJS on test input. */
+  final case class ReplHost() {
     import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
     private val builder = new java.lang.ProcessBuilder()
     builder.command("node", "--interactive")
