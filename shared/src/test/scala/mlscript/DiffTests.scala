@@ -11,8 +11,7 @@ import mlscript.utils._, shorthands._
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
   import DiffTests._
-  files.foreach { file => val fileName = file.baseName
-      if (validExt(file.ext) && filter(fileName)) test(fileName) {
+  files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
     buf ++= s"Processed  $fileName"
@@ -429,7 +428,7 @@ object DiffTests {
   
   private val dir = pwd/"shared"/"src"/"test"/"diff"
   
-  private val files = ls.rec(dir).filter(_.isFile)
+  private val allFiles = ls.rec(dir).filter(_.isFile)
   
   private val validExt = Set("fun", "mls")
   
@@ -470,6 +469,13 @@ object DiffTests {
   private def filter(name: Str): Bool =
     if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
   
+  private val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      validExt(file.ext) && filter(fileName)
+  }
+  
+  
+  /** Helper to run NodeJS on test input. */
   final case class ReplHost() {
     import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
     private val builder = new java.lang.ProcessBuilder()
