@@ -339,8 +339,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
     def reportError(error: Message)(implicit cctx: ConCtx): Unit = {
-      val (lhs_rhs @ (lhs, rhs)) = cctx.head.head
-      val failure = error
+      val (lhs, rhs) = cctx.head.head
+      
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
       
@@ -382,12 +382,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val tighestLocatedRHS = cctx.flatMap { subCtx =>
         subCtx.flatMap { case (l, r) =>
-          val considered = (true, r, r.prov) :: Nil
-          considered.filter { case (isMainProv, _, p) =>
+          val considered =  (r, r.prov) :: Nil
+          considered.filter { case (_, p) =>
             p.loco =/= prov.loco && (p.loco match {
               case Some(loco) =>
                 !shownLocs(loco) &&
-                (verboseConstraintProvenanceHints && isMainProv || !shownLocs.exists(loco touches _)) && {
+                (verboseConstraintProvenanceHints || !shownLocs.exists(loco touches _)) && {
                   shownLocs += loco
                   true
                 }
@@ -398,18 +398,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       
       var first = true
-      val constraintProvenanceHints = tighestLocatedRHS.map { case (isMainProv, r, p) =>
-        if (isMainProv) {
+      val constraintProvenanceHints = tighestLocatedRHS.map { case (r, p) =>
           val msgHead = if (first) msg"Note: constraint arises " else msg""
           first = false
           msg"${msgHead}from ${p.desc}:" -> p.loco
-        }
-        else msg"in the context of ${p.desc}" -> p.loco
       }
       
       val msgs: Ls[Message -> Opt[Loc]] = List(
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-        msg"expression of type `${lhs.expPos}` $failure" ->
+        msg"expression of type `${lhs.expPos}` $error" ->
           (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
         tighestRelevantFailure.map { case (l, r, isSameType) =>
           // Note: used to have `val isSameType = l.unwrapProxies === lhs.unwrapProxies`
