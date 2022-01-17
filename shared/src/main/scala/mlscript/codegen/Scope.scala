@@ -4,6 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
+import mlscript.TypeName
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalSymbols = scala.collection.mutable.HashMap[Str, LexicalSymbol]()
@@ -19,6 +20,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     // TODO: read built-in symbols from `Typer`.
     Ls("id", "succ", "error", "concat", "add", "sub", "mul", "div", "gt", "not") foreach { name =>
       register(BuiltinSymbol(name, name))
+    }
+    Ls("int", "number", "bool", "true", "false", "string", "anything", "nothing", "error", "unit") foreach { name =>
+      register(TypeSymbol(name, name, Nil, TypeName(name)))
     }
   }
 
@@ -115,16 +119,23 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       }
     }
 
-  def declareClass(lexicalName: Str): ClassSymbol = {
+  def declareClass(lexicalName: Str, params: Ls[Str], base: Type): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, this)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, this)
     register(symbol)
     symbol
   }
 
-  def declareTrait(lexicalName: Str): TraitSymbol = {
+  def declareTrait(lexicalName: Str, params: Ls[Str], base: Type): TraitSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = TraitSymbol(lexicalName, runtimeName)
+    val symbol = TraitSymbol(lexicalName, runtimeName, params, base)
+    register(symbol)
+    symbol
+  }
+
+  def declareType(lexicalName: Str, params: Ls[Str], ty: Type): TypeSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = TypeSymbol(lexicalName, runtimeName, params, ty)
     register(symbol)
     symbol
   }
@@ -142,13 +153,6 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   def declareStubValue(lexicalName: Str): StubValueSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
     val symbol = StubValueSymbol(lexicalName, runtimeName)
-    register(symbol)
-    symbol
-  }
-
-  def declareType(lexicalName: Str, params: Ls[Str], ty: Type): TypeSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = TypeSymbol(lexicalName, runtimeName, params, ty)
     register(symbol)
     symbol
   }

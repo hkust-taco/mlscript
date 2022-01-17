@@ -8,6 +8,11 @@ trait RuntimeSymbol {
   def runtimeName: Str
 }
 
+// trait TypeSymbol {
+//   def baseType: Ls[Str] -> Type
+//   def isParametric: Bool
+// }
+
 trait LexicalSymbol extends RuntimeSymbol {
   def lexicalName: Str
 
@@ -38,6 +43,8 @@ final case class StubValueSymbol(val lexicalName: Str, val runtimeName: Str) ext
 final case class ClassSymbol(
     val lexicalName: Str,
     val runtimeName: Str,
+    params: Ls[Str],
+    base: Type,
     enclosingScope: Scope
 ) extends LexicalSymbol {
   private val scope = enclosingScope.derive(s"class $lexicalName")
@@ -49,10 +56,23 @@ final case class ClassSymbol(
     * Fill up this field after the class translation.
     */
   var body: Opt[JSClassDecl] = N
+  /**
+    * Fill up this field after resolving classes.
+    */
+  var baseClass: Opt[ClassSymbol] = N
+  /**
+    * Fill up this field after resolving classes.
+    */
+  var fields: Ls[Str] = Nil
+  /**
+    * Fill up this field after sorting.
+    */
+  var order: Int = 0
+  
   def shortName: Str = s"class $lexicalName"
 }
 
-final case class TraitSymbol(val lexicalName: Str, val runtimeName: Str) extends LexicalSymbol {
+final case class TraitSymbol(val lexicalName: Str, val runtimeName: Str, params: Ls[Str], base: Type) extends LexicalSymbol {
   def shortName: Str = s"trait $lexicalName"
 }
 

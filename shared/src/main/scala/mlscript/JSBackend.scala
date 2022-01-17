@@ -14,6 +14,7 @@ import mlscript.codegen.LexicalSymbol
 import mlscript.codegen.FreeSymbol
 import mlscript.codegen.ParamSymbol
 import mlscript.codegen.TypeSymbol
+import scala.collection.mutable.ArrayBuffer
 
 class JSBackend {
   /**
@@ -221,23 +222,7 @@ class JSBackend {
       _,
       _
     )
-  }
-
-  // This function normalizes something like `T[A, B]`.
-  private def applyType(name: Str, targs: Ls[Type]): Type =
-    topLevelScope.get(name) match {
-      case sym: ClassSymbol => TypeName(name) // Note that here we erase the arguments.
-      case sym: TraitSymbol => ??? 
-      case sym: TypeSymbol =>
-        assert(targs.length === sym.params.length, targs -> sym.params)
-        substitute(
-          sym.body,
-          collection.immutable.HashMap(
-            sym.params zip targs map { case (k, v) => k -> v }: _*
-          )
-        )
-      case _ => throw new CodeGenError(s"$name is none of class, trait or type")
-    }
+  } 
 
   // This function normalizes a type, removing all `AppliedType`s.
   private def substitute(
@@ -248,7 +233,19 @@ class JSBackend {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
       case AppliedType(TypeName(name), targs) =>
-        applyType(name, targs map { substitute(_, subs) })
+        topLevelScope.get(name) match {
+          case sym: ClassSymbol => TypeName(name) // Note that here we erase the arguments.
+          case sym: TraitSymbol => ??? 
+          case sym: TypeSymbol =>
+            assert(targs.length === sym.params.length, targs -> sym.params)
+            substitute(
+              sym.body,
+              collection.immutable.HashMap(
+                sym.params zip targs map { case (k, v) => k -> v }: _*
+              )
+            )
+          case _ => throw new CodeGenError(s"$name is none of class, trait or type")
+        }
       case Function(lhs, rhs) =>
         Function(substitute(lhs, subs), substitute(rhs, subs))
       case Inter(lhs, rhs) =>
@@ -279,80 +276,6 @@ class JSBackend {
     }
   }
 
-  /**
-    * This function collects two things:
-    * 1. fields from a series of intersection of records,
-    * 2. name of the base class.
-    * Only one base class is allowed.
-    */
-  private def getBaseClassAndFields(ty: Type): (Ls[Str], Opt[Str]) = ty match {
-    // `class A` ==> `class A {}`
-    case Top => Nil -> N
-    // `class A { <items> }` ==>
-    // `class A { constructor(fields) { <items> } }`
-    case Record(fields) => fields.map(_._1.name) -> N
-    // `class B: A` ==> `class B extends A {}`
-    // If `A` is a type alias, it is replaced by its real type.
-    // Otherwise just use the name.
-    case TypeName(name) =>
-      topLevelScope.get(name) match {
-        // The name refers to a class.
-        case sym: ClassSymbol => Nil -> S(name)
-        case sym: TraitSymbol => Nil -> N // TODO: traits can inherit from classes!
-        case sym: TypeSymbol if sym.params.isEmpty =>
-          // The base class is a type alias with no parameters.
-          // Good, just make sure all term is normalized.
-          getBaseClassAndFields(substitute(sym.body))
-        case sym: TypeSymbol => 
-          // The base class is a type alias with parameters. We don't support this.
-          throw CodeGenError(
-            s"type $name expects ${sym.params.length} type parameters but none provided"
-          )
-        case _ => throw new CodeGenError(s"undeclared type name $name")
-      }
-    // `class C: { <items> } & A` ==>
-    // `class C extends A { constructor(fields) { <items> } }`
-    case Inter(Record(entries), ty) =>
-      val (fields, cls) = getBaseClassAndFields(ty)
-      entries.map(_._1.name) ++ fields -> cls
-    // `class C: { <items> } & A` ==>
-    // `class C extends A { constructor(fields) { <items> } }`
-    case Inter(ty, Record(entries)) =>
-      val (fields, cls) = getBaseClassAndFields(ty)
-      fields ++ entries.map(_._1.name) -> cls
-    // `class C: <X> & <Y>`: resolve X and Y respectively.
-    case Inter(ty1, ty2) =>
-      val (fields1, cls1) = getBaseClassAndFields(ty1)
-      val (fields2, cls2) = getBaseClassAndFields(ty2)
-      (cls1, cls2) match {
-        case (N, N) =>
-          fields1 ++ fields2 -> N
-        case (N, S(cls)) =>
-          fields1 ++ fields2 -> S(cls)
-        case (S(cls), N) =>
-          fields1 ++ fields2 -> S(cls)
-        case (S(cls1), S(cls2)) =>
-          if (cls1 === cls2) {
-            fields1 ++ fields2 -> S(cls1)
-          } else {
-            throw CodeGenError(s"cannot have two base classes: $cls1, $cls2")
-          }
-      }
-    // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
-    // For applied types such as `Id[T]`, normalize them before translation.
-    // Do not forget to normalize type arguments first.
-    case AppliedType(TypeName(base), targs) =>
-      topLevelScope.expect[TraitSymbol](base) match {
-        case S(_) => Nil -> N
-        case N    => getBaseClassAndFields(applyType(base, targs map { substitute(_) }))
-      }
-    // There is some other possibilities such as `class Fun[A]: A -> A`.
-    // But it is not achievable in JavaScript.
-    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
-      throw CodeGenError(s"unable to derive from type $ty")
-  }
-
   // Translate MLscript class declaration to JavaScript class declaration.
   // First, we will analyze its fields and base class name.
   // Then, we will check if the base class exists.
@@ -362,20 +285,16 @@ class JSBackend {
       methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
     val members = methods map { translateClassMember(_) }
-    getBaseClassAndFields(actualType) match {
-      // Case 1: no base class, just fields.
-      case fields -> N => JSClassDecl(name, fields.distinct, N, members)
-      // Case 2: has a base class and fields.
-      case fields -> S(clsNme) =>
-        topLevelScope.expect[ClassSymbol](clsNme) match {
-          case S(sym) =>sym.body match {
-            case S(cls) => JSClassDecl(name, fields.distinct, S(cls), members)
-            // TODO: resolve inheritance graph before translation.
-            case N => throw new CodeGenError("base class translated after the derived class")
-          }
-          case N =>
-            throw CodeGenError(s"undeclared base class $clsNme")
+    topLevelScope.expect[ClassSymbol](name) match {
+      case S(sym) => sym.baseClass match {
+        case N => JSClassDecl(name, sym.fields.distinct, N, members)
+        case S(clsNme) => sym.body match {
+          case S(cls) => JSClassDecl(name, sym.fields.distinct, S(cls), members)
+          // TODO: resolve inheritance graph before translation.
+          case N => throw new CodeGenError("base class translated after the derived class")
         }
+      }
+      case N => throw new Exception(s"undeclared class $name, did you call `declareTypeDefs`?")
     }
   }
 
@@ -388,6 +307,162 @@ class JSBackend {
         JSClassMethod(name, translateParams(params), L(translateTerm(body)))
       case term => JSClassGetter(name, L(translateTerm(term)))
     }
+  }
+
+  /**
+    * Declare symbols for types, traits and classes.
+    * Call this before the code generation.
+    */
+  protected def declareTypeDefs(typeDefs: Ls[TypeDef]): Ls[ClassSymbol] = {
+    val classes = new ArrayBuffer[ClassSymbol]()
+    typeDefs foreach {
+      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+        topLevelScope.declareType(name, tparams map { _.name }, body)
+      case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
+        topLevelScope.declareTrait(name, tparams map { _.name }, body)
+      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+        val sym = topLevelScope.declareClass(name, tparams map { _.name }, baseType)
+        sym.fields = resolveClassFields(baseType) // TODO: make it a constructor field
+        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
+        classes += sym
+    }
+    classes.toList
+  }
+
+  private def resolveClassFields(ty: Type): Ls[Str] = ty match {
+    case Top => Nil
+    case Record(fields) => fields.map(_._1.name)
+    case TypeName(_) => Nil
+    case Inter(Record(entries), ty) =>
+      entries.map(_._1.name) ++ resolveClassFields(ty)
+    case Inter(ty, Record(entries)) =>
+      resolveClassFields(ty) ++ entries.map(_._1.name)
+    case Inter(ty1, ty2) => resolveClassFields(ty1) ++ resolveClassFields(ty2)
+    case AppliedType(TypeName(_), _) => Nil
+    // Others are considered as ill-formed.
+    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
+      throw CodeGenError(s"unable to derive from type $ty")
+  }
+
+  /**
+    * Find the base class for a specific class.
+    */
+  private def resolveClassBase(ty: Type): Opt[ClassSymbol] = ty match {
+    // `class A` ==> `class A {}`
+    case Top => N
+    // `class A { <items> }` ==>
+    // `class A { constructor(fields) { <items> } }`
+    case Record(_) => N
+    // `class B: A` ==> `class B extends A {}`
+    // If `A` is a type alias, it is replaced by its real type.
+    // Otherwise just use the name.
+    case TypeName(name) =>
+      topLevelScope.get(name) match {
+        // The name refers to a class.
+        case sym: ClassSymbol => S(sym)
+        // TODO: traits can inherit from classes!
+        case sym: TraitSymbol => N
+        case sym: TypeSymbol if sym.params.isEmpty =>
+          // The base class is a type alias with no parameters.
+          // Good, just make sure all term is normalized.
+          resolveClassBase(substitute(sym.body))
+        case sym: TypeSymbol => 
+          throw CodeGenError(
+            s"type $name expects ${sym.params.length} type parameters but none provided"
+          )
+        case _ => throw new CodeGenError(s"undeclared type name $name")
+      }
+    // `class C: <X> & <Y>`: resolve X and Y respectively.
+    case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
+      case (N, N) =>
+        N
+      case (N, S(cls)) =>
+        S(cls)
+      case (S(cls), N) =>
+        S(cls)
+      case (S(cls1), S(cls2)) =>
+        if (cls1 === cls2) {
+          S(cls1)
+        } else {
+          throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
+        }
+    }
+    // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
+    // For applied types such as `Id[T]`, normalize them before translation.
+    // Do not forget to normalize type arguments first.
+    case AppliedType(TypeName(name), targs) =>
+      topLevelScope.get(name) match {
+        // The name refers to a class.
+        case sym: ClassSymbol => S(sym)
+        // TODO: traits can inherit from classes!
+        case sym: TraitSymbol => N
+        case sym: TypeSymbol if sym.params.isEmpty =>
+          // The base class is a type alias with no parameters.
+          // Good, just make sure all term is normalized.
+          resolveClassBase(substitute(sym.body))
+        case sym: TypeSymbol => 
+          assert(targs.length === sym.params.length, targs -> sym.params)
+          val normalized = substitute(
+            sym.body,
+            collection.immutable.HashMap(sym.params zip targs map { case (k, v) => k -> v }: _*)
+          )
+          resolveClassBase(normalized)
+        case _ => throw new CodeGenError(s"undeclared type name $name")
+      }
+    // There is some other possibilities such as `class Fun[A]: A -> A`.
+    // But it is not achievable in JavaScript.
+    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
+      throw CodeGenError(s"unable to derive from type $ty")
+  }
+
+  /**
+    * Resolve inheritance of all declared classes.
+    * Make sure call `declareTypeDefs` before calling this.
+    */
+  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): Unit =
+    classSymbols foreach { sym => resolveClassBase(sym.base) }
+
+  /**
+    * Sort class symbols topologically.
+    * Therefore, all classes are declared before their derived classes.
+    */
+  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Unit = {
+    import collection.mutable.{HashMap, HashSet, Queue}
+    val derivedClasses = HashMap[ClassSymbol, HashSet[ClassSymbol]]()
+    classSymbols foreach { sym =>
+      sym.baseClass foreach { base =>
+        derivedClasses.getOrElseUpdate(base, HashSet()) += sym
+      }
+    }
+    val queue = Queue.from(classSymbols filter { _.baseClass.isEmpty })
+    var order = 0
+    while (!queue.isEmpty) {
+      val sym = queue.dequeue()
+      sym.order = order
+      order += 1
+      derivedClasses.get(sym) foreach { derived =>
+        derived foreach { queue += _ }
+      }
+    }
+  }
+
+  protected def generateClassDeclarations(typeDefs: Ls[TypeDef]): Ls[JSClassDecl] = {
+    val stmtsWithOrder = typeDefs flatMap {
+      case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
+        topLevelScope.expect[ClassSymbol](name) match {
+          case S(sym) =>
+            val body = translateClassDeclaration(name, actualType, mthDefs)(topLevelScope)
+            sym.body = S(body)
+            S(body -> sym.order)
+          // Should crash if the class is not defined.
+          case N => throw new Exception(s"class $name should be declared")
+        }
+      case _ => N
+    }
+    // TODO: this is ugly!
+    stmtsWithOrder.sortWith(_._2 < _._2).map(_._1)
   }
 }
 
@@ -402,32 +477,14 @@ class JSWebBackend extends JSBackend {
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // Declare symbols for types, traits and classes.
-    typeDefs foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        topLevelScope.declareType(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), _, _, _, _) =>
-        topLevelScope.declareTrait(name)
-      case TypeDef(Cls, TypeName(name), _, _, _, members) =>
-        val sym = topLevelScope.declareClass(name)
-        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
-    }
+    var classSymbols = declareTypeDefs(typeDefs)
+    resolveInheritance(classSymbols)
+    sortClassSymbols(classSymbols)
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
       JSConstDecl(resultsName, JSArray(Nil)) ::
-        // Hoist class declarations.
-        typeDefs.flatMap {
-          case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
-            val body = S(translateClassDeclaration(name, actualType, mthDefs)(topLevelScope))
-            topLevelScope.expect[ClassSymbol](name) match {
-              case S(sym) => sym.body = body
-              // Should crash if the class is not defined.
-              case N => throw new Exception(s"class $name should be declared")
-            }
-            body
-          case _ => N
-        }
+        generateClassDeclarations(typeDefs)
         // Generate something like:
         // ```js
         // const <name> = <expr>;
@@ -477,31 +534,13 @@ class JSTestBackend extends JSBackend {
   private def generate(pgrm: Pgrm): TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    // Declare symbols for types, traits and classes.
-    typeDefs foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        topLevelScope.declareType(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), _, _, _, _) =>
-        topLevelScope.declareTrait(name)
-      case TypeDef(Cls, TypeName(name), _, _, _, members) =>
-        val sym = topLevelScope.declareClass(name)
-        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
-    }
+    var classSymbols = declareTypeDefs(typeDefs)
+    resolveInheritance(classSymbols)
+    sortClassSymbols(classSymbols)
 
     val resultIdent = JSIdent(resultName)
 
-    // Hoist class declarations.
-    val defStmts = typeDefs.flatMap {
-      case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
-        val body = S(translateClassDeclaration(name, actualType, mthDefs)(topLevelScope))
-        topLevelScope.expect[ClassSymbol](name) match {
-          case S(sym) => sym.body = body
-          // Should crash if the class is not defined.
-          case N => throw new Exception(s"class $name should be declared")
-        }
-        body
-      case _ => N
-    }
+    val defStmts = generateClassDeclarations(typeDefs)
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
