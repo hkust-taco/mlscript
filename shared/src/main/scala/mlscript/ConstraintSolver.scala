@@ -290,11 +290,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 if (ln =/=rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r)
-            } //else {
-            //   println(s"${t1.toArray} <-> ${t2.toArray}")
-            //   rec (t1.toArray, t2.toArray)
-            // }
-          case (t@TupleType(_), a@ArrayType(_)) => rec(t.toArray, a)
+            } // TODO This part is too tricky (lhs: pass-in, rhs: accept)
+              // may be possible when fs0.size >= fs1.size (but may not typesafe)
+          case (t: TupleType, _: ArrayType) => rec(t.toArray, rhs)
           case (ArrayType(ar1), ArrayType(ar2)) => rec(ar1, ar2)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, outerProv.orElse(S(lhs.prov))) // Q: really propagate the outerProv here?
@@ -312,8 +310,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (FunctionType(l0, r0), err @ ClassTag(ErrTypeId, _)) =>
             rec(err, l0)
             rec(r0, err)
-          case (tup: TupleType, _: RecordType) =>
-            rec(tup.toRecord, rhs) // Q: really support this? means we'd put names into tuple reprs at runtime
+          // ! just to see what will happen
+          // case (tup: TupleType, _: RecordType) =>
+          //   rec(tup.toRecord, rhs) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>

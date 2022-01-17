@@ -3,9 +3,9 @@
 class Array[A]: { size: int }
   method Set: (int, A) -> ()
   method Get: int -> A 
-//│ Defined class Array
-//│ Declared Array.Set: Array['A] -> (int, 'A,) -> ()
-//│ Declared Array.Get: Array['A] -> int -> 'A
+//│ ╔══[ERROR] Type 'Array' is already defined.
+//│ ║  l.+1: 	class Array[A]: { size: int }
+//│ ╙──      	      ^^^^^
 
 
 
