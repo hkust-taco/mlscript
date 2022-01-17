@@ -136,7 +136,10 @@ def bar1 = foo
 //│ ║       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.77: 	def bar1: Type1[int] -> int -> Type1[int]
-//│ ╙──      	                               ^^^^^^^^^^
+//│ ║        	                               ^^^^^^^^^^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.1: 	class Base1[A]
+//│ ╙──     	            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.89: 	def bar1 = foo
 //│ ║        	           ^^^
@@ -187,7 +190,10 @@ def bar1 = foo
 //│ ║       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.77: 	def bar1: Type1[int] -> int -> Type1[int]
-//│ ╙──      	                               ^^^^^^^^^^
+//│ ║        	                               ^^^^^^^^^^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.1: 	class Base1[A]
+//│ ╙──     	            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.89: 	def bar1 = foo
 //│ ║        	           ^^^
@@ -206,7 +212,10 @@ def bar1 = foo
 //│ ║       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.77: 	def bar1: Type1[int] -> int -> Type1[int]
-//│ ╙──      	                               ^^^^^^^^^^
+//│ ║        	                               ^^^^^^^^^^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.1: 	class Base1[A]
+//│ ╙──     	            ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.89: 	def bar1 = foo
 //│ ║        	           ^^^

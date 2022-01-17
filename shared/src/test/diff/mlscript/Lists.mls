@@ -74,7 +74,10 @@ res.tail.head
 //│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
 //│ ║  l.68: 	res.tail.head
-//│ ╙──      	^^^
+//│ ║        	^^^
+//│ ╟── Note: Type class is defined at: 
+//│ ║  l.2: 	class Nil: {}
+//│ ╙──     	      ^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'head')

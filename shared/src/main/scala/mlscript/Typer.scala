@@ -121,13 +121,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   def originProv(loco: Opt[Loc], desc: Str): TypeProvenance = {
     // TODO make a new sort of provenance for where types and type varianles are defined
-    // tp(loco, desc)
+    tp(loco, desc,true)
     // ^ This yields unnatural errors like:
       //│ ╟── expression of type `B` is not a function
       //│ ║  l.6: 	    method Map[B]: B -> A
       //│ ║       	               ^
     // So we should keep the info but not shadow the more relevant later provenances
-    noProv
+    //noProv
   }
   
   val noProv: TypeProvenance = tp(N, "expression")

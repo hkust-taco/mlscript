@@ -40,6 +40,9 @@ E{} : E[?]
 //│ ╟── which does not match type `E[?]`
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.32: 	E{} : E[?]
+//│ ║        	        ^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.28: 	class E[A]
 //│ ╙──      	        ^
 //│ res: E[?]
 //│    = E {}

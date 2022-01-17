@@ -360,7 +360,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }}.toList
         else Nil
       
-      val lhsProv = cctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
+      val lhsProv = cctx.head.find(l => l._1.prov.loco.isDefined && !l._1.prov.isOrigin).map(_._1.prov).getOrElse(lhs.prov)
       
       // TODO re-enable
       // assert(lhsProv.loco.isDefined) // TODO use soft assert
@@ -404,6 +404,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           msg"${msgHead}from ${p.desc}:" -> p.loco
       }
       
+      val originProvList = cctx.flatMap{ subCtx =>
+        subCtx.iterator.flatMap { case (l,r) => 
+          //we only one origin prov for each subCtx
+          val considered = List(l optionIf (_.prov.isOrigin), r optionIf (_.prov.isOrigin)).flatten
+          considered
+        }.nextOption()
+      }
+
+      first = true
+      val originProvHints = originProvList.map { l => 
+        val msgHead = if (first) msg"Note: " else msg""
+          first = false
+          msg"${msgHead}Type ${l.prov.desc} is defined at: " -> l.prov.loco 
+      }
+
       val msgs: Ls[Message -> Opt[Loc]] = List(
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
         msg"expression of type `${lhs.expPos}` $error" ->
@@ -436,6 +451,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
         }.toList.flatten,
         constraintProvenanceHints,
+        originProvHints,
         detailedContext,
       ).flatten
       raise(TypeError(msgs))

@@ -212,7 +212,10 @@ E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.210: 	E{}: 1
 //│ ║         	^^^
-//│ ╙── expression of type `E` does not match type `1`
+//│ ╟── expression of type `E` does not match type `1`
+//│ ╟── Note: Type class is defined at: 
+//│ ║  l.206: 	class E: 1
+//│ ╙──       	      ^
 //│ res: 1
 //│ Runtime error:
 //│   ReferenceError: E is not defined
@@ -222,7 +225,10 @@ E{}: int
 //│ ╟── expression of type `E` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.211: 	E{}: int
-//│ ╙──       	     ^^^
+//│ ║         	     ^^^
+//│ ╟── Note: Type class is defined at: 
+//│ ║  l.206: 	class E: 1
+//│ ╙──       	      ^
 //│ res: int
 //│ Runtime error:
 //│   ReferenceError: E is not defined

@@ -38,7 +38,10 @@ T a
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
-//│ ╙──     	             ^
+//│ ║       	             ^
+//│ ╟── Note: Type class is defined at: 
+//│ ║  l.1: 	class A
+//│ ╙──     	      ^
 //│ res: A & t | error
 //│    = A {}
 
@@ -56,7 +59,10 @@ T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
-//│ ╙──     	         ^
+//│ ║       	         ^
+//│ ╟── Note: Type class constructor is defined at: 
+//│ ║  l.1: 	class A
+//│ ╙──     	      ^
 //│ res: anything -> A & t | error
 //│    = [Function: res]
 
@@ -70,7 +76,10 @@ T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
-//│ ╙──     	         ^
+//│ ║       	         ^
+//│ ╟── Note: Type class is defined at: 
+//│ ║  l.2: 	class B
+//│ ╙──     	      ^
 //│ res: B & t | error
 //│    = B {}
 

@@ -9,9 +9,14 @@ class Bar[A]: Foo[A]
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
 //│ ║       	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `B` is not a function
+//│ ║  l.6: 	    method Map[B]: B -> A
+//│ ║       	               ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.7: 	    rec method Map f = f Map (fun x -> Map)
-//│ ╙──     	                       ^^^^^
+//│ ║       	                       ^^^^^
+//│ ╟── Note: Type method type parameter is defined at: 
+//│ ║  l.6: 	    method Map[B]: B -> A
+//│ ╙──     	               ^
 //│ Defined class Foo
 //│ Declared Foo.Map: Foo['A] -> ('A -> anything) -> 'A
 //│ Defined class Bar
@@ -125,7 +130,10 @@ class BadSelf[A]: { x: A }
 //│ ║         	               ^^^^^^^^^
 //│ ╟── expression of type `A` is not a function
 //│ ║  l.122: 	    method F = this.x 42
-//│ ╙──       	               ^^^^^^
+//│ ║         	               ^^^^^^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.121: 	class BadSelf[A]: { x: A }
+//│ ╙──       	              ^
 //│ Defined class BadSelf
 //│ Defined BadSelf.F: BadSelf['A] -> error
 
@@ -148,9 +156,15 @@ class Simple3[A, B]: Simple2[A]
 //│ ║  l.146: 	    method Get: B
 //│ ║         	           ^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ╟── Note: constraint arises from inherited method declaration:
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.145: 	class Simple3[A, B]: Simple2[A]
+//│ ║         	              ^
+//│ ╟── from inherited method declaration:
 //│ ║  l.141: 	    method Get: A
-//│ ╙──       	           ^^^^^^
+//│ ║         	           ^^^^^^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.145: 	class Simple3[A, B]: Simple2[A]
+//│ ╙──       	                 ^
 //│ Defined class Simple3
 //│ Declared Simple3.Get: Simple3['A, 'B] -> 'B
 
@@ -172,7 +186,13 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `A` does not match type `B`
 //│ ║  l.168: 	    method Test f = f this.x this.x
-//│ ╙──       	                             ^^^^^^
+//│ ║         	                             ^^^^^^
+//│ ╟── Note: constraint arises from class type parameter:
+//│ ║  l.167: 	class BadPair[A, B]: AbstractPair[A, B]
+//│ ║         	                 ^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.167: 	class BadPair[A, B]: AbstractPair[A, B]
+//│ ╙──       	              ^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.169: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -183,23 +203,37 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║  l.169: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── which does not match type `(B -> D) -> AbstractPair[C, D]`
-//│ ╟── Note: constraint arises from record type:
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	                  ^
+//│ ╟── from record type:
 //│ ║  l.160: 	class AbstractPair[A, B]: { x: A; y: B }
 //│ ║         	                          ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
 //│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
+//│ ║         	                                              ^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: Type method type parameter is defined at: 
+//│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.169: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `C` does not match type `D`
+//│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	               ^
 //│ ╟── but it flows into application of type `?a`
 //│ ║  l.169: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── which does not match type `AbstractPair[C, D]`
-//│ ╟── Note: constraint arises from applied type reference:
+//│ ╟── Note: constraint arises from method type parameter:
 //│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
-//│ ╙──       	                                              ^^^^^^^^^^^^^^^^^^
+//│ ║         	                  ^
+//│ ╟── from applied type reference:
+//│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	                                              ^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: Type method type parameter is defined at: 
+//│ ║  l.162: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	               ^
 //│ Defined class BadPair
 //│ Defined BadPair.Test: BadPair['A, 'B] -> ('A -> 'A -> 'a) -> 'a
 //│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
@@ -215,7 +249,10 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.208: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
-//│ ╙──       	                                         ^
+//│ ║         	                                         ^
+//│ ╟── Note: Type class type parameter is defined at: 
+//│ ║  l.167: 	class BadPair[A, B]: AbstractPair[A, B]
+//│ ╙──       	              ^
 //│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
