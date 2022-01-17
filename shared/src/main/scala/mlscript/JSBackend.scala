@@ -279,10 +279,12 @@ class JSBackend {
     }
   }
 
-  // This function collects two things:
-  // 1. fields from a series of intersection of records,
-  // 2. name of the base class.
-  // Only one base class is allowed.
+  /**
+    * This function collects two things:
+    * 1. fields from a series of intersection of records,
+    * 2. name of the base class.
+    * Only one base class is allowed.
+    */
   private def getBaseClassAndFields(ty: Type): (Ls[Str], Opt[Str]) = ty match {
     // `class A` ==> `class A {}`
     case Top => Nil -> N
@@ -304,7 +306,7 @@ class JSBackend {
         case sym: TypeSymbol => 
           // The base class is a type alias with parameters. We don't support this.
           throw CodeGenError(
-            s"type $name expects ${sym.params.length} type parameters but nothing provided"
+            s"type $name expects ${sym.params.length} type parameters but none provided"
           )
         case _ => throw new CodeGenError(s"undeclared type name $name")
       }
@@ -333,7 +335,7 @@ class JSBackend {
           if (cls1 === cls2) {
             fields1 ++ fields2 -> S(cls1)
           } else {
-            throw CodeGenError(s"Cannot have two base classes: $cls1, $cls2")
+            throw CodeGenError(s"cannot have two base classes: $cls1, $cls2")
           }
       }
     // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
