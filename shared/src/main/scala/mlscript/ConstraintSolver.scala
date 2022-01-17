@@ -488,14 +488,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
   
   
-  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
+  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {
     err(msg -> loco :: Nil)
   }
-  def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
+  def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
     raise(TypeError(msgs))
     errType
   }
-  def errType(implicit prov: TypeProvenance): SimpleType = ClassTag(ErrTypeId, Set.empty)(prov)
+  def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     warn(msg -> loco :: Nil)
