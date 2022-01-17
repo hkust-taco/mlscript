@@ -34,7 +34,7 @@ object Main {
       val lines = str.splitSane('\n').toIndexedSeq
       val processedBlock = MLParser.addTopLevelSeparators(lines).mkString
       val fph = new mlscript.FastParseHelpers(str, lines)
-      val parser = new MLParser(Origin("<input>", 0, fph))
+      val parser = new MLParser(Origin("<input>", 1, fph))
       parse(processedBlock, parser.pgrm(_), verboseFailures = false) match {
         case f: Failure =>
           val Failure(err, index, extra) = f
@@ -297,7 +297,7 @@ object Main {
       sb.toString
     }
     
-    var declared: Map[Str, typer.PolymorphicType] = Map.empty
+    var declared: Map[Var, typer.PolymorphicType] = Map.empty
     
     var decls = stmts
     while (decls.nonEmpty) {
@@ -310,23 +310,31 @@ object Main {
           println(s"Typed `$nme` as: $inst")
           println(s" where: ${inst.showBounds}")
           val exp = getType(ty_sch)
-          ctx += nme.name -> ty_sch
-          declared.get(nme.name).foreach { sign =>
-            // ctx += nme -> sign  // override with less precise declared type?
-            subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
+          declared.get(nme) match {
+            case S(sign) =>
+              subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
+              // Note: keeping the less precise declared type signature here (no ctx update)
+            case N =>
+              ctx += nme.name -> ty_sch
           }
           res ++= formatBinding(d.nme.name, ty_sch)
           results append S(d.nme.name) -> (getType(ty_sch).show)
         case d @ Def(isrec, nme, R(PolyType(tps, rhs))) =>
-          val errProv = TypeProvenance(rhs.toLoc, "def signature")
+          declared.get(nme) match {
+            case S(sign) =>
+              import Message.MessageContext
+              typer.err(msg"illegal redeclaration of ${nme.name}" -> d.toLoc
+                :: msg"already defined here:" ->
+                  declared.keysIterator.find(_.name === nme.name).flatMap(_.toLoc)
+                :: Nil)
+            case N => ()
+          }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
             vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme.name -> ty_sch
-          declared += nme.name -> ty_sch
+          declared += nme -> ty_sch
           results append S(d.nme.name) -> getType(ty_sch).show
         case s: DesugaredStatement =>
-          val errProv =
-            TypeProvenance(s.toLoc, "expression in statement position")
           typer.typeStatement(s, allowPure = true) match {
             case R(binds) =>
               binds.foreach { case (nme, pty) =>
