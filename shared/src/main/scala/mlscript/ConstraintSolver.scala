@@ -416,7 +416,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val originProvHints = originProvList.map { l => 
         val msgHead = if (first) msg"Note: " else msg""
           first = false
-          msg"${msgHead}Type ${l.prov.desc} is defined at: " -> l.prov.loco 
+          msg"${msgHead}${l.prov.desc.capitalize} is defined at: " -> l.prov.loco 
       }
 
       val msgs: Ls[Message -> Opt[Loc]] = List(
