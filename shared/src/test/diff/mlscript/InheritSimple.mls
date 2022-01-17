@@ -24,7 +24,7 @@ c.name
 //│ ╟── but it flows into reference with expected type `{name: ?a}`
 //│ ║  l.17: 	c.name
 //│ ║        	^
-//│ ╟── Note: Type class is defined at: 
+//│ ╟── Note: Class is defined at: 
 //│ ║  l.5: 	class Child: Parent
 //│ ╙──     	      ^^^^^
 //│ res: error
