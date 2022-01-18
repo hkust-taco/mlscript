@@ -69,7 +69,7 @@ res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `Nil` does not have field 'tail'
+//│ ╟── application of type `Nil` does not have field 'tail'
 //│ ║  l.13: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
@@ -107,7 +107,7 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
-//│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
+//│ ╟── integer literal of type `2` does not match type `Nil | Cons[?A]`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
 //│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`

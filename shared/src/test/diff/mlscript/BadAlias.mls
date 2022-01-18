@@ -22,7 +22,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	add res 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `int`
+//│ ╟── type `"oops"` does not match type `int`
 //│ ║  l.16: 	res: "oops"
 //│ ║        	     ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`

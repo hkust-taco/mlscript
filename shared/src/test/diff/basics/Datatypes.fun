@@ -168,7 +168,7 @@ not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.167: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `42` does not match type `bool`
+//│ ╟── integer literal of type `42` does not match type `bool`
 //│ ║  l.167: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
@@ -181,7 +181,7 @@ not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.180: 	(Cons 4).head
 //│ ║         	        ^^^^^
-//│ ╟── expression of type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
+//│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.109: 	data type List a of
 //│ ║         	               ^^^^
 //│ ║  l.110: 	  Nil
@@ -198,7 +198,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.197: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `2` does not match type `Nil[?a] | Cons[?a]`
+//│ ╟── integer literal of type `2` does not match type `Nil[?a] | Cons[?a]`
 //│ ║  l.197: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:

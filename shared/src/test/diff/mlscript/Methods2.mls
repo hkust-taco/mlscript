@@ -86,7 +86,7 @@ case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in case of:
 //│ ║  l.85: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
+//│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
@@ -133,7 +133,7 @@ case o of {
 //│ ║         	     ^^^^^^
 //│ ║  l.130: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
+//│ ╟── type `Option[?A]` does not match type `Some[?] & ?a | None[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`

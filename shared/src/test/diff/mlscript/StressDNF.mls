@@ -44,7 +44,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `A & 'a` is not an instance of type 'b
+//│ ╟── type `A & 'a` is not an instance of type 'b
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -53,7 +53,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `B & 'b` is not an instance of type 'c
+//│ ╟── type `B & 'b` is not an instance of type 'c
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                   ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -62,7 +62,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `C & 'c` is not an instance of type 'd
+//│ ╟── type `C & 'c` is not an instance of type 'd
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -71,7 +71,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `D & 'd` is not an instance of type 'e
+//│ ╟── type `D & 'd` is not an instance of type 'e
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                     ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -80,7 +80,7 @@ ty1 = ty0
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.40: 	ty1 = ty0
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `E & 'e` is not an instance of type 'f
+//│ ╟── type `E & 'e` is not an instance of type 'f
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ║        	                                              ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

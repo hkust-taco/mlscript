@@ -656,25 +656,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
         .toRight(() => err("type identifier not found: " + name, loc)(raise))
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
+    def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
+      TypeProvenance(loco, desc, originName, isType = true)
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
-      case Top => ExtrType(false)(tp(ty.toLoc, "top type"))
-      case Bot => ExtrType(true)(tp(ty.toLoc, "bottom type"))
-      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tp(ty.toLoc,
+      case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
+      case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
+      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
         if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
       // case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
       case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(fields match {
         case Nil | ((N, _) :: Nil) => noProv
-        case _ => tp(ty.toLoc, "tuple type")
+        case _ => tyTp(ty.toLoc, "tuple type")
       })
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
-        )(tp(ty.toLoc, "intersection type"))
+        )(tyTp(ty.toLoc, "intersection type"))
       case Union(lhs, rhs) => (if (simplify) rec(lhs) | (rec(rhs), _: TypeProvenance)
           else ComposedType(true, rec(lhs), rec(rhs)) _
-        )(tp(ty.toLoc, "union type"))
-      case Neg(t) => NegType(rec(t))(tp(ty.toLoc, "type negation"))
+        )(tyTp(ty.toLoc, "union type"))
+      case Neg(t) => NegType(rec(t))(tyTp(ty.toLoc, "type negation"))
       case Record(fs) => 
-        val prov = tp(ty.toLoc, "record type")
+        val prov = tyTp(ty.toLoc, "record type")
         fs.groupMap(_._1.name)(_._1).foreach { case s -> fieldNames if fieldNames.size > 1 => err(
             msg"Multiple declarations of field name ${s} in ${prov.desc}" -> ty.toLoc
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
@@ -685,13 +687,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
           nt._1 -> rec(nt._2)
         })(prov)
-      case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tp(ty.toLoc, "function type"))
+      case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
-        RecordType(r.fields.mapValues(rec))(tp(r.toLoc, "extension record")))(tp(ty.toLoc, "extension type"))
-      case Literal(lit) => ClassTag(lit, lit.baseClasses)(tp(ty.toLoc, "literal type"))
+        RecordType(r.fields.mapValues(rec))(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
+      case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
-        val tpr = tp(tyLoc, "type reference")
+        val tpr = tyTp(tyLoc, "type reference")
         vars.get(name).getOrElse {
           typeNamed(tyLoc, name) match {
             case R((_, tpnum)) =>
@@ -702,8 +704,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               if (name.isEmpty || !name.head.isLower) e()
               else (typeNamed(tyLoc, name.capitalize), ctx.tyDefs.get(name.capitalize)) match {
                 case (R((kind, _)), S(td)) => kind match {
-                  case Cls => clsNameToNomTag(td)(tp(tyLoc, "class tag"), ctx)
-                  case Trt => trtNameToNomTag(td)(tp(tyLoc, "trait tag"), ctx)
+                  case Cls => clsNameToNomTag(td)(tyTp(tyLoc, "class tag"), ctx)
+                  case Trt => trtNameToNomTag(td)(tyTp(tyLoc, "trait tag"), ctx)
                   case Als => err(
                     msg"Type alias ${name.capitalize} cannot be used as a type tag", tyLoc)(raise)
                 }
@@ -715,9 +717,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
           localVars.getOrElseUpdate(tv, freshVar(noProv, tv.identifier.toOption))
-            .withProv(tp(ty.toLoc, "type variable")))
+            .withProv(tyTp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
-        val prov = tp(ty.toLoc, "applied type reference")
+        val prov = tyTp(ty.toLoc, "applied type reference")
         typeNamed(ty.toLoc, base.name) match {
           case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map(rec) else {
@@ -729,13 +731,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case L(e) => e()
         }
       case Recursive(uv, body) =>
-        val tv = freshVar(tp(ty.toLoc, "local type binding"), uv.identifier.toOption)
+        val tv = freshVar(tyTp(ty.toLoc, "local type binding"), uv.identifier.toOption)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
         tv.upperBounds ::= bod
         tv.lowerBounds ::= bod
         tv
-      case Rem(base, fs) => Without(rec(base), fs
-        .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov
+      case Rem(base, fs) => Without(rec(base), fs.toSet)(tyTp(ty.toLoc, "field removal type"))
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
   }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")

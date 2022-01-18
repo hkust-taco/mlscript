@@ -345,7 +345,7 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── expression of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
 //│ ║  l.243: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -364,7 +364,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -377,7 +377,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -399,7 +399,7 @@ prettier2 done (eval1 done) e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
 //│ ║  l.243: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -421,7 +421,7 @@ prettier2 done eval2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -443,7 +443,7 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -456,7 +456,7 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -480,7 +480,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -493,7 +493,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -517,7 +517,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -530,7 +530,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -551,7 +551,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
 //│ ║  l.57: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.58: 	  | Lit -> e.val
@@ -564,7 +564,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`

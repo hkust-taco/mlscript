@@ -8,7 +8,7 @@
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.7: 	"hello": 'a -> 'a
 //│ ║       	^^^^^^^
-//│ ╟── expression of type `"hello"` is not a function
+//│ ╟── string literal of type `"hello"` is not a function
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.7: 	"hello": 'a -> 'a
 //│ ╙──     	         ^^^^^^^^
@@ -49,7 +49,7 @@ def foo({ a = "hey" }: { a: string}) = 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	        ^^^^^^^^^^^^^
-//│ ╟── expression of type `string` does not match type `"hey"`
+//│ ╟── type `string` does not match type `"hey"`
 //│ ║  l.48: 	def foo({ a = "hey" }: { a: string}) = 0
 //│ ║        	                            ^^^^^^
 //│ ╟── Note: constraint arises from string literal:
@@ -63,7 +63,7 @@ def foo({ a; b }: { a: int }) = b
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.62: 	def foo({ a; b }: { a: int }) = b
 //│ ║        	        ^^^^^^^^
-//│ ╟── expression of type `{a: int}` does not have field 'b'
+//│ ╟── type `{a: int}` does not have field 'b'
 //│ ║  l.62: 	def foo({ a; b }: { a: int }) = b
 //│ ╙──      	                  ^^^^^^^^^^
 //│ foo: {a: int} -> nothing

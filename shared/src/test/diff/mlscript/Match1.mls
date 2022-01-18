@@ -8,7 +8,7 @@ case 1 of { }
 //│ ╔══[ERROR] Type mismatch in case of:
 //│ ║  l.7: 	case 1 of { }
 //│ ║       	     ^
-//│ ╙── expression of type `1` does not match type `nothing`
+//│ ╙── integer literal of type `1` does not match type `nothing`
 //│ res: nothing
 //│ Runtime error:
 //│   Error: non-exhaustive case expression

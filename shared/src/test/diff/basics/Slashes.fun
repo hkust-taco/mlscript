@@ -30,7 +30,7 @@ foo / foo / x => succ / succ / x
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	foo / foo / x => succ / succ / x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` is not a function
+//│ ╟── application of type `int` is not a function
 //│ ║  l.29: 	foo / foo / x => succ / succ / x
 //│ ║        	                 ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `1 -> ?a`
@@ -49,7 +49,7 @@ foo / foo
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.48: 	foo / foo
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `1` is not a function
+//│ ╟── integer literal of type `1` is not a function
 //│ ║  l.7: 	let foo = f => f 1
 //│ ║       	                 ^
 //│ ╟── Note: constraint arises from application:

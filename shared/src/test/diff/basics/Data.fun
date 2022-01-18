@@ -37,7 +37,7 @@ bar {age: 1} // TODO B/E
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.34: 	bar {}
 //│ ║        	^^^^^^
-//│ ╟── expression of type `anything` does not have field 'age'
+//│ ╟── tuple of type `anything` does not have field 'age'
 //│ ║  l.34: 	bar {}
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -50,7 +50,7 @@ bar {age: 1} // TODO B/E
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.35: 	bar {name: "Bob"}
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{name: "Bob"}` does not have field 'age'
+//│ ╟── record of type `{name: "Bob"}` does not have field 'age'
 //│ ║  l.35: 	bar {name: "Bob"}
 //│ ║        	    ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
