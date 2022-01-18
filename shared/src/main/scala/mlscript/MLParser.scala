@@ -205,7 +205,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (N -> ty :: Nil, N) => ty
     case (fs, _) => Tuple(fs)
   }
-  def litTy[_: P]: P[Type] = P( lit.map(Literal) )
+  def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   
   def toplvl[_: P]: P[Statement] =
     P( defDecl | tyDecl | termOrAssign )

@@ -106,7 +106,10 @@ ty1A = ty1B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: Array[int]
-//│ ╙──      	                ^^^
+//│ ║        	                ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.18: 	def ty1B: Array[0 | 1]
+//│ ╙──      	                ^^^^^
 //│ constrain calls  : 25
 //│ annoying  calls  : 29
 //│ subtyping calls  : 98
@@ -122,7 +125,10 @@ ty1B = ty1A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `0 | 1`
 //│ ║  l.17: 	def ty1A: Array[int]
-//│ ╙──      	                ^^^
+//│ ║        	                ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.18: 	def ty1B: Array[0 | 1]
+//│ ╙──      	                ^^^^^
 //│ constrain calls  : 25
 //│ annoying  calls  : 29
 //│ subtyping calls  : 103
