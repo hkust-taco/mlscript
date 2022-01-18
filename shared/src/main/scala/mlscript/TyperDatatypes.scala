@@ -109,6 +109,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   // TODO: currently use MiscBaseType
+  // ? change to simple type ?
   sealed abstract class ArrayBase extends MiscBaseType {
     def inner: SimpleType
   }

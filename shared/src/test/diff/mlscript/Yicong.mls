@@ -492,63 +492,40 @@ tb = T2 ((1,2,3))
 //│ | | C (α7 & t2) <! T2
 //│ | | | C (α7 & t2) <! t2
 //│ | | | | ARGH  DNF({}∧t2∧α7)  <!  DNF({}∧t2)
-//│ | | | | | C α7 <! (t2 | ~((t2 & α7)))
-//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (t2 | ~((t2 & α7)))
-//│ | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF({}∧t2 | ~α7 | ~t2|None)
-//│ | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF({}∧t2 | ~α7 | ~t2|None)
-//│ | | | | | | | | Possible: List({}∧t2, ~α7, ~t2|None)
-//│ | | | | | | | | Factorized: List(t2, ~(α7), ~(t2))
-//│ | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(t2, ~(α7), ~(t2))  %  ⊥
-//│ | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~(α7), ~(t2))  %  t2|None
-//│ | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(α7)  <!  List(~(t2))  %  t2|None
-//│ | | | | | | | | | | | C α7 <! ((~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) | t2)
-//│ | | | | | | | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! ((~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) | t2)
-//│ | | | | | | | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None | {}∧t2)
-//│ | | | | | | | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None | {}∧t2)
-//│ | | | | | | | | | | | | | | Possible: List(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))), ~t2|None, {}∧t2)
-//│ | | | | | | | | | | | | | | Factorized: List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2), t2)
-//│ | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2), t2)  %  ⊥
-//│ | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(~(t2), t2)  %  ⊥
-//│ | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(t2, (1<int,number>, 2<int,number>, 3<int,number>))  <!  List(t2)  %  ⊥
-//│ | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(t2)  %  ⊥
-//│ | | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List(t2)  %  ⊥
-//│ | | | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List()  %  t2|None
+//│ | | | | | C α7 <! ⊤
 //│ | | C (α7 & t2) <! Array[Int]
 //│ | | | C (α7 & t2) <! Array[Int]
 //│ | | | | ARGH  DNF({}∧t2∧α7)  <!  DNF(Array[Int]{})
-//│ | | | | | C α7 <! (Array[Int] | ~((t2 & α7)))
-//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (Array[Int] | ~((t2 & α7)))
-//│ | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(Array[Int]{} | ~α7 | ~t2|None)
-//│ | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(Array[Int]{} | ~α7 | ~t2|None)
-//│ | | | | | | | | Possible: List(~α7, ~t2|None)
-//│ | | | | | | | | Factorized: List(~(α7), ~(t2))
-//│ | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~(α7), ~(t2))  %  ⊥
-//│ | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(α7)  <!  List(~(t2))  %  ⊥
-//│ | | | | | | | | | | C α7 <! (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
-//│ | | | | | | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
-//│ | | | | | | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None)
-//│ | | | | | | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None)
-//│ | | | | | | | | | | | | | Possible: List(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))), ~t2|None)
-//│ | | | | | | | | | | | | | Factorized: List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2))
-//│ | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2))  %  ⊥
-//│ | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(~(t2))  %  ⊥
-//│ | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(t2, (1<int,number>, 2<int,number>, 3<int,number>))  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List()  %  ⊥
-//│ | | | | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (1<int,number>, 2<int,number>, 3<int,number>) <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
-//│ | | | | | | | | | | | | | | | | | | CTX: List(List((1<int,number>, 2<int,number>, 3<int,number>) <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], α7 <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) [‹expression›] [‹expression›], (1<int,number>, 2<int,number>, 3<int,number>) <: (Array[Int] | ~((t2 & α7))) [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], α7 <: (Array[Int] | ~((t2 & α7))) [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹applied type reference:Loc(13,23,Yicong:+322)›], (α7 & t2) <: (T2 & Array[Int]) [‹expression›] [‹intersection type:Loc(8,23,Yicong:+322)›], α6 <: (T2 & Array[Int]) [‹application:Loc(29,39,Yicong:+322)›] [‹intersection type:Loc(8,23,Yicong:+322)›]))
+//│ | | | | | C α7 <! (Array[Int] | ~(t2))
+//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (Array[Int] | ~(t2))
+//│ | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(Array[Int]{} | ~t2|None)
+//│ | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(Array[Int]{} | ~t2|None)
+//│ | | | | | | | | Possible: List(Array[Int]{}, ~t2|None)
+//│ | | | | | | | | Factorized: List(Array[Int], ~(t2))
+//│ | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(Array[Int], ~(t2))  %  ⊥
+//│ | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~(t2))  %  |Some(Left(Array[Int]))
+//│ | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(t2)  <!  List()  %  |Some(Left(Array[Int]))
+//│ | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List()  %  |Some(Left(Array[Int]))
+//│ | | | | | | | | | | | | C Array[((1<int,number> | 2<int,number>) | 3<int,number>)] <! Int
+//│ | | | | | | | | | | | | | C Array[((1<int,number> | 2<int,number>) | 3<int,number>)] <! int<number>
+//│ | | | | | | | | | | | | | | CONSTRAINT FAILURE: Array[((1<int,number> | 2<int,number>) | 3<int,number>)] <: int<number>
+//│ | | | | | | | | | | | | | | CTX: List(List(Array[((1<int,number> | 2<int,number>) | 3<int,number>)] <: int<number> [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], Array[((1<int,number> | 2<int,number>) | 3<int,number>)] <: Int [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹type reference:Loc(19,22,Yicong:+322)›], (1<int,number>, 2<int,number>, 3<int,number>) <: (Array[Int] | ~(t2)) [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], α7 <: (Array[Int] | ~(t2)) [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹applied type reference:Loc(13,23,Yicong:+322)›], (α7 & t2) <: (T2 & Array[Int]) [‹expression›] [‹intersection type:Loc(8,23,Yicong:+322)›], α6 <: (T2 & Array[Int]) [‹application:Loc(29,39,Yicong:+322)›] [‹intersection type:Loc(8,23,Yicong:+322)›]))
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.323: 	tb = T2 ((1,2,3))
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not match type `~(1, 2, 3,) | ~t2`
+//│ ╟── expression of type `Array[1 | 2 | 3]` does not match type `int`
 //│ ║  l.323: 	tb = T2 ((1,2,3))
 //│ ║         	          ^^^^^
 //│ ╟── but it flows into application with expected type `Array[int] & t2`
 //│ ║  l.323: 	tb = T2 ((1,2,3))
 //│ ║         	     ^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
+//│ ╟── Note: constraint arises from type reference:
 //│ ║  l.322: 	def tb: T2 & Array[int]
-//│ ╙──       	             ^^^^^^^^^^
+//│ ╙──       	                   ^^^
+
+
+def k: (true, false, 3) & Array[int | bool]
+//│ k: (true, false, 3,)
 
 def gett1 p q = case p of {T1 -> p | _ -> q}
 gett1 ta (T1 123)

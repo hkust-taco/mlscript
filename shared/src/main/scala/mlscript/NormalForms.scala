@@ -44,10 +44,18 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
           case (S(TupleType(fs0)), TupleType(fs1)) if fs0.size === fs1.size =>
             S(TupleType(tupleIntersection(fs0, fs1))(noProv))
-          // ? Tuple & Array 
+          // ? not sure
+          case (S(ArrayType(ar)), TupleType(fs)) =>
+            S(TupleType(fs.map { ty =>
+              ty._1 -> (ar & ty._2)
+            })(noProv))
+          case (S(TupleType(fs)), ArrayType(ar)) =>
+            S(TupleType(fs.map { ty =>
+              ty._1 -> (ty._2 & ar)
+            })(noProv))
           case (S(ArrayType(i1)), ArrayType(i2)) =>
             // Array[p] & Array[q] => Array[p & q]
-            S(ArrayType(i1 & i2)(noProv /* ? not sure */))
+            S(ArrayType(i1 & i2)(noProv))
           case (S(w1 @ Without(b1, ns1)), w2 @ Without(b2, ns2)) if ns1 === ns2 =>
             // This case is quite hacky... if we find two incompatible Without types,
             //  just make a new dummy Without type to merge them.
