@@ -406,7 +406,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val originProvList = cctx.flatMap{ subCtx =>
         subCtx.iterator.flatMap { case (l,r) => 
-          //we only one origin prov for each subCtx
+          // We only keep one origin prov for each subCtx.
           val considered = List(l optionIf (_.prov.isOrigin), r optionIf (_.prov.isOrigin)).flatten
           considered
         }.nextOption()
