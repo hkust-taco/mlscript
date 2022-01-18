@@ -24,8 +24,8 @@ jesus(water: w)
 //│ ║  l.21: 	jesus w
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `Wine` does not match type `~Wine`
-//│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
-//│ ║        	                                 ^^^^
+//│ ║  l.17: 	let w = jesus(water: "Evian")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(water: ?a,)`
 //│ ║  l.21: 	jesus w
 //│ ║        	      ^
@@ -37,8 +37,8 @@ jesus(water: w)
 //│ ║  l.22: 	jesus(water: w)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Wine` does not match type `~Wine`
-//│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
-//│ ║        	                                 ^^^^
+//│ ║  l.17: 	let w = jesus(water: "Evian")
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into argument with expected type `(water: ?a,)`
 //│ ║  l.22: 	jesus(water: w)
 //│ ║        	     ^^^^^^^^^^

@@ -586,10 +586,10 @@ add
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
-//│ ║        	                          ^^^
-//│ ╟── but it flows into field selection with expected type `int`
+//│ ║        	                              ^^
+//│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
-//│ ╙──      	                              ^^
+//│ ╙──      	                      ^^^^^^^^^^
 //│ res: int -> int | error
 
 ((let rec x = x; add) {v: 0})
@@ -1031,7 +1031,7 @@ add
 //│ ╟── expression of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                ^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
+//│ ╟── but it flows into field selection with expected type `?a`
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -1045,10 +1045,10 @@ add
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
-//│ ║        	                ^^^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
-//│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                    ^^
+//│ ╟── but it flows into argument with expected type `?a`
+//│ ║  l.+1: 	((x => x.u) {u: add}.u)
+//│ ║        	            ^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ╙──      	        ^^

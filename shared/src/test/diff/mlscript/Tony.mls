@@ -19,7 +19,7 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = 65
-//│ constrain calls  : 61
+//│ constrain calls  : 57
 //│ annoying  calls  : 23
 //│ subtyping calls  : 42
 

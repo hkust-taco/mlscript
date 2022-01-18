@@ -15,12 +15,12 @@ def Nil = Nil {}
 //│    = Nil {}
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│ Cons: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 
 Cons 2
-//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'c | Nil & 'c) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'c})
+//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'tail})
 //│    = [Function (anonymous)]
 
 def c = Cons 2 Nil
@@ -70,8 +70,8 @@ res.tail.head
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Nil` does not have field 'tail'
-//│ ║  l.13: 	def Nil = Nil {}
-//│ ║        	          ^^^^^^
+//│ ║  l.63: 	res.tail
+//│ ║        	^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^
@@ -86,12 +86,12 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│ Cons: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons2]
 
 
 Cons 2
-//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'c | Nil & 'c) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'c})
+//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'tail})
 //│    = [Function (anonymous)]
 
 Cons 2 Nil
@@ -110,7 +110,7 @@ Cons 1 res
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `List[?A0]`
+//│ ╟── but it flows into reference with expected type `?a`
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:

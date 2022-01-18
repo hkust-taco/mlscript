@@ -298,5 +298,5 @@ x => (y => (x (y y)))
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
 //│ x: 'b -> ('c | 'a | 'b) as 'a
-//│ res: (({u: 'b} & 'c) -> ('d | 'a | 'b | 'c) as 'a) | 'c
+//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
 

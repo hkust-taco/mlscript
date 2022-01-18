@@ -39,7 +39,7 @@ Hey t
 //│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
-//│ ╟── but it flows into reference with expected type `{x: int}`
+//│ ╟── but it flows into reference with expected type `?a`
 //│ ║  l.35: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
@@ -162,7 +162,7 @@ g tx
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
+//│ ╟── but it flows into reference with expected type `?b`
 //│ ║  l.158: 	g tx
 //│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:

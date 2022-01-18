@@ -236,12 +236,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
+          case (_: ProvType, _) | (_, _: ProvType) => ()
           // There is no need to remember the subtyping tests performed that did not involve
           // type variables or type references, as these will necessary be part of any possible
           // cycles. Since these types form regular trees, there will necessarily be a point where
           // a variable or type ref part of a cycle will be matched against the same type periodically.
           case (_: TypeVariable | _: TypeRef, _) | (_, _: TypeVariable | _: TypeRef) =>
-            if (cache(lhs_rhs)) return
+            if (cache(lhs_rhs)) return println(s"Cached!")
             cache += lhs_rhs
           case _ => ()
         }
@@ -251,6 +252,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (TypeBounds(lb, ub), _) => rec(ub, rhs)
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
+          case (p @ ProvType(und), _) => rec(und, rhs)
+          case (_, p @ ProvType(und)) => rec(lhs, und)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0)(raise, Nil)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)

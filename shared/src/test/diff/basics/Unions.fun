@@ -47,7 +47,7 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `?a`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
@@ -60,7 +60,7 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `?a`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
@@ -82,7 +82,7 @@ f (0 as Int)
 //│ ╟── expression of type `3` does not match type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	        ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `?a`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	  ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:
@@ -95,7 +95,7 @@ f (0 as Int)
 //│ ╟── expression of type `int` does not match type `0 | 1`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	        ^^^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into argument with expected type `?a`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	  ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type union:

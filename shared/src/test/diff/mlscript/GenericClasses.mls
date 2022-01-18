@@ -8,7 +8,7 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> (Some['A .. 'A | 'a] with {value: 'a})
+//│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
 //│     = [Function: Some1]
 
 Some 42
@@ -141,7 +141,7 @@ f: (Foo2[?] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> ('a | Foo2[?] & 'b as 'b)
+//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> (Foo2[?] & 'a0 as 'a0)
 //│    = [Function: f]
 
 f

@@ -241,7 +241,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
     override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
-    override def hashCode: Int = uid
   }
   type TV = TypeVariable
   private var freshCount = 0

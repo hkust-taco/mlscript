@@ -27,7 +27,7 @@ def Nil = Nil { size = 0 }
 //│ Nil: Nil & {size: 0}
 //│    = Nil { size: 0 }
 
-// FIXME
+:e
 :re
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
@@ -53,12 +53,12 @@ Cons
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│ Cons_old: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: 'a -> (((Cons['A | 'a .. 'A] with {tail: 'c & ('b | Nil)}) as 'b) & 'd | Nil & 'd) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'd})
+//│ Cons: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
