@@ -36,7 +36,7 @@ id
 //│ ║        	^
 //│ ╟── expression of type `1` is not a record (expected a record with fields: x, y)
 //│ ║  l.33: 	1: 1 & int: { x: int; y: string }
-//│ ║        	       ^^^
+//│ ║        	   ^^^^^^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.33: 	1: 1 & int: { x: int; y: string }
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^
@@ -48,7 +48,7 @@ id
 //│ ║        	^
 //│ ╟── expression of type `1` does not match type `{x: int, y: string} | string`
 //│ ║  l.45: 	1: 1 & int: { x: int; y: string } | string
-//│ ║        	       ^^^
+//│ ║        	   ^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.45: 	1: 1 & int: { x: int; y: string } | string
 //│ ╙──      	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
