@@ -30,15 +30,9 @@ let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╟── expression of type `1` does not have field 'x'
 //│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	                                     ^
-//│ ╟── but it flows into record with expected type `{x: ?a}`
-//│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
-//│ ║        	                           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
-//│ ║        	                       ^^
-//│ ╟── from application:
-//│ ║  l.2: 	let twice f x = f / f x
-//│ ╙──     	                    ^^^
+//│ ╙──      	                       ^^
 //│ one: 1 | error | {x: 1}
 
 

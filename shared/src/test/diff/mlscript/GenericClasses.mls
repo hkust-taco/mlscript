@@ -100,10 +100,7 @@ g: Foo1['a]: Foo1[string]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.94: 	g: Foo1['a]: Foo1[string]
-//│ ║        	                  ^^^^^^
-//│ ╟── from record type:
-//│ ║  l.64: 	class Foo1[A]: { x: A }
-//│ ╙──      	               ^^^^^^^^
+//│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
 

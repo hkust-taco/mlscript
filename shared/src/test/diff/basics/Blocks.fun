@@ -67,7 +67,12 @@ foo
 //│ ╟── Type mismatch in application:
 //│ ║  l.63: 	  foo 1
 //│ ║        	  ^^^^^
-//│ ╙── expression of type `int` does not match type `unit`
+//│ ╟── expression of type `int` does not match type `unit`
+//│ ║  l.19: 	  u + 1
+//│ ║        	  ^^^^^
+//│ ╟── but it flows into application with expected type `unit`
+//│ ║  l.63: 	  foo 1
+//│ ╙──      	  ^^^^^
 //│ res: int
 
 :p
@@ -150,25 +155,25 @@ succ (
   1
 )
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.149: 	  succ
+//│ ║  l.154: 	  succ
 //│ ╙──       	  ^^^^
 //│ res: int
 
 :pe
 succ (succ
 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)\n" at l.158:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\n1)\n" at l.163:6: succ (succ
 
 :pe
 succ (succ
 succ 1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.163:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.168:6: succ (succ
 
 :pe
 succ (succ
 succ
   1)
-//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.168:6: succ (succ
+//│ /!\ Parse error: Expected end-of-input:1:6, found "(succ\nsucc" at l.173:6: succ (succ
 
 (let x = 1)
 (let x = 1; x)
@@ -212,7 +217,7 @@ let test =
     bbb
   bbb
 //│ ╔══[ERROR] identifier not found: bbb
-//│ ║  l.213: 	  bbb
+//│ ║  l.218: 	  bbb
 //│ ╙──       	  ^^^
 //│ test: error
 
@@ -226,7 +231,7 @@ let test =
 :e
 aaa
 //│ ╔══[ERROR] identifier not found: aaa
-//│ ║  l.227: 	aaa
+//│ ║  l.232: 	aaa
 //│ ╙──       	^^^
 //│ res: error
 
@@ -237,16 +242,16 @@ succ
     let x = 1
     x
 )
-//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.235:1: succ
+//│ /!\ Parse error: Expected expression:1:1, found "succ\n  (\n " at l.240:1: succ
 
 :pe
 let a =
     succ
   1
   "?"
-//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"\n" at l.245:3:   1
+//│ /!\ Parse error: Expected end-of-input:3:3, found "1\n  \"?\"\n" at l.250:3:   1
 
 :pe
   1
-//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1\n" at l.250:1:   1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "  1\n" at l.255:1:   1
 

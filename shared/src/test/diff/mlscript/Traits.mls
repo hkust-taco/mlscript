@@ -125,12 +125,15 @@ def t = T1 (A { x = 1 })
 //│ ╟── expression of type `{x: 1}` does not match type `C | ~a`
 //│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into application with expected type `?a`
+//│ ╟── but it flows into application with expected type `C | ~a`
 //│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.117: 	trait T1: C & A
-//│ ╙──       	          ^
+//│ ║         	          ^
+//│ ╟── from intersection type:
+//│ ║  l.117: 	trait T1: C & A
+//│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & a & t1
 //│  = { x: 1 }
 
@@ -152,10 +155,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.153: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.153: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined }

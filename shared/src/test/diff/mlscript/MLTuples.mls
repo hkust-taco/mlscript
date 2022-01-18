@@ -39,7 +39,7 @@ Hey t
 //│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a`
+//│ ╟── but it flows into reference with expected type `{x: int}`
 //│ ║  l.35: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
@@ -115,7 +115,7 @@ f htx
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
 //│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -160,11 +160,6 @@ g tx
 //│ ║  l.158: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
-//│ ║  l.7: 	tx = t with { x = 1 }
-//│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?b`
-//│ ║  l.158: 	g tx
-//│ ║         	  ^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
@@ -220,24 +215,24 @@ t.x
 t._1
 t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.220: 	t._1
+//│ ║  l.215: 	t._1
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
-//│ ║  l.209: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.220: 	t._1
+//│ ║  l.215: 	t._1
 //│ ╙──       	^
 //│ res: error
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.221: 	t._2
+//│ ║  l.216: 	t._2
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
-//│ ║  l.209: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.221: 	t._2
+//│ ║  l.216: 	t._2
 //│ ╙──       	^
 //│ res: error
 //│    = undefined

@@ -23,7 +23,7 @@ b = B { fB = "test" }
 foo b
 //│ res: "test"
 //│    = 'test'
-//│ constrain calls  : 13
+//│ constrain calls  : 22
 //│ annoying  calls  : 10
 //│ subtyping calls  : 20
 
@@ -37,7 +37,7 @@ foo arg
 //│ res: bool | int | string
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 22
+//│ constrain calls  : 39
 //│ annoying  calls  : 30
 //│ subtyping calls  : 75
 
@@ -47,7 +47,7 @@ foo (arg with { fC = true })
 //│ res: int | string | true
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 15
+//│ constrain calls  : 32
 //│ annoying  calls  : 28
 //│ subtyping calls  : 82
 
@@ -68,21 +68,21 @@ foo arg
 //│ ╟── expression of type `A` does not match type `{payload: ?a}`
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `?b`
+//│ ╟── but it flows into reference with expected type `{payload: ?b}`
 //│ ║  l.64: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.55: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
-//│ ╟── from refined scrutinee:
+//│ ╟── from reference:
 //│ ║  l.54: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 27
+//│ constrain calls  : 53
 //│ annoying  calls  : 40
-//│ subtyping calls  : 148
+//│ subtyping calls  : 124
 
 :re
 :stats
@@ -90,7 +90,7 @@ foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 21
+//│ constrain calls  : 48
 //│ annoying  calls  : 38
 //│ subtyping calls  : 91
 

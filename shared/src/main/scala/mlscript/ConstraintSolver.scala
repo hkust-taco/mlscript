@@ -20,7 +20,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
     
-    type ConCtx = Ls[Ls[SimpleType -> SimpleType]]
+    type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
     
     
     def mkCase[A](str: Str)(k: Str => A)(implicit dbgHelp: Str): A = {
@@ -40,7 +40,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       lhs.cs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
         vars.headOption match {
           case S(v) =>
-            rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg())
+            rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
             val fullRhs = nvars.iterator.map(DNF.mk(_, true))
               .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
@@ -50,10 +50,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //  on type variables and type variable negations:
             lnf match {
               case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd) =>
-                return rec((fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns).neg(), tv)
+                return rec((fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns).neg(), tv, true)
               case LhsRefined(S(Without(b, ns)), tts, rcd) =>
                 assert(b.isInstanceOf[TV])
-                return rec(b, (fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns))
+                return rec(b, (fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns), true)
               case _ => ()
             }
             
@@ -119,8 +119,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
-        case ((tv: TypeVariable) :: ls, _) => recImpl(tv, mkRhs(ls))
-        case (_, (tv: TypeVariable) :: rs) => recImpl(mkLhs(rs), tv)
+        case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls), done_ls.isTop && ls.forall(_.isTop))
+        case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv, done_rs.isBot && rs.forall(_.isBot))
         case (TypeBounds(lb, ub) :: ls, _) => annoying(ub :: ls, done_ls, rs, done_rs)
         case (_, TypeBounds(lb, ub) :: rs) => annoying(ls, done_ls, lb :: rs, done_rs)
         case (ComposedType(true, ll, lr) :: ls, _) =>
@@ -172,9 +172,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // TODO improve:
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
-          def fail = reportError(doesntMatch(cctx.head.head._2))
+          def fail = { reportError(doesntMatch(cctx._2.head)) }
           (done_ls, done_rs) match {
-            case (LhsRefined(S(Without(b, _)), _, _), RhsBot) => rec(b, BotType)
+            case (LhsRefined(S(Without(b, _)), _, _), RhsBot) => rec(b, BotType, true)
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
               | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
@@ -182,7 +182,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
-              rec(f0, f1)
+              rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r), RhsBases(pts, _)) =>
               annoying(Nil, LhsRefined(N, ts, r), Nil, done_rs)
             case (LhsRefined(S(pt: ClassTag), ts, r), RhsBases(pts, bf)) =>
@@ -195,22 +195,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf))))
             case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
               r.fields.find(_._1 === n) match {
-                case S(nt1) => rec(nt1._2, t2)
+                case S(nt1) => rec(nt1._2, t2, false)
                 case N =>
                   bo match {
                     case S(Without(b, ns)) =>
-                      if (ns(n)) rec(b, RhsBases(ots, N).toType())
-                      else rec(b, done_rs.toType())
+                      if (ns(n)) rec(b, RhsBases(ots, N).toType(), true)
+                      else rec(b, done_rs.toType(), true)
                     case _ => fail
                   }
               }
             case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) => fail
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size
-              => (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _))
+              => (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
             case (LhsRefined(S(b: TupleType), ts, r), _) => fail
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
-              rec(b, done_rs.toType())
+              rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
               // rec((pts.map(_.neg()).foldLeft(done_ls.toType())(_ & _)).without(ns), base)
               // ^ This less efficient version creates a slightly different error message
@@ -221,18 +221,27 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }()
     
-    def rec(lhs: SimpleType, rhs: SimpleType)
+    def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
-      recImpl(lhs, rhs)
+      recImpl(lhs, rhs)(raise,
+        if (sameLevel)
+          (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
+          ->
+          (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
+        else (lhs :: Nil) -> (rhs :: Nil)
+      )
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
+    // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
+      // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
+      // println(s"{{ ${cache.mkString(", ")} }}")
       if (lhs === rhs) return ()  // TODO try subtyping here?
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
-      ((lhs -> rhs :: cctx.headOr(Nil)) :: cctx.tailOr(Nil)) |> { implicit cctx =>
+      else {
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
@@ -249,72 +258,75 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         lhs_rhs match {
           case (ExtrType(true), _) => ()
           case (_, ExtrType(false) | RecordType(Nil)) => ()
-          case (TypeBounds(lb, ub), _) => rec(ub, rhs)
-          case (_, TypeBounds(lb, ub)) => rec(lhs, lb)
-          case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs)
-          case (p @ ProvType(und), _) => rec(und, rhs)
-          case (_, p @ ProvType(und)) => rec(lhs, und)
+          case (TypeBounds(lb, ub), _) => rec(ub, rhs, true)
+          case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
+          case (p @ ProvType(und), _) => rec(und, rhs, true)
+          case (_, p @ ProvType(und)) => rec(lhs, und, true)
+          case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            rec(l1, l0)(raise, Nil)
+            rec(l1, l0, false)
             // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
-            rec(r0, r1)(raise, Nil :: cctx)
+            rec(r0, r1, false)
           case (prim: ClassTag, ot: ObjectTag)
             if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
-            val newBound = rhs // TODO
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.lowerBounds.foreach(rec(_, rhs)) // propagate from the bound
+            lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
-            val newBound = lhs // TODO
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.upperBounds.foreach(rec(lhs, _)) // propagate from the bound
+            rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
             println(s" where ${rhs.showBounds}")
             println(s"   and ${rhs0.showBounds}")
-            rec(lhs, rhs)
+            rec(lhs, rhs, true)
           case (lhs0, _: TypeVariable) =>
             val lhs = extrude(lhs0, rhs.level, true)
             println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
-            rec(lhs, rhs)
+            rec(lhs, rhs, true)
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/=rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
-              rec(l, r)
+              rec(l, r, false)
             }
           case (ComposedType(true, l, r), _) =>
-            rec(l, rhs) // Q: really propagate the outerProv here?
-            rec(r, rhs)
+            rec(l, rhs, true) // Q: really propagate the outerProv here?
+            rec(r, rhs, true)
           case (_, ComposedType(false, l, r)) =>
-            rec(lhs, l) // Q: really propagate the outerProv here?
-            rec(lhs, r)
-          case (p @ ProxyType(und), _) => rec(und, rhs)
-          case (_, p @ ProxyType(und)) => rec(lhs, und)
+            rec(lhs, l, true) // Q: really propagate the outerProv here?
+            rec(lhs, r, true)
+          case (p @ ProxyType(und), _) => rec(und, rhs, true)
+          case (_, p @ ProxyType(und)) => rec(lhs, und, true)
           case (_, TupleType(f :: Nil)) if funkyTuples =>
-            rec(lhs, f._2) // FIXME actually needs reified coercion! not a true subtyping relationship
+            rec(lhs, f._2, true) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
-            rec(l1, err)
-            rec(err, r1)
+            rec(l1, err, false)
+            rec(err, r1, false)
           case (FunctionType(l0, r0), err @ ClassTag(ErrTypeId, _)) =>
-            rec(err, l0)
-            rec(r0, err)
+            rec(err, l0, false)
+            rec(r0, err, false)
           case (tup: TupleType, _: RecordType) =>
-            rec(tup.toRecord, rhs) // Q: really support this? means we'd put names into tuple reprs at runtime
+            rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
-            fs1.foreach(f => rec(err, f._2))
+            fs1.foreach(f => rec(err, f._2, false))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
-            fs1.foreach(f => rec(f._2, err))
-          case (tr: TypeRef, _) => rec(tr.expand, rhs)
-          case (_, tr: TypeRef) => rec(lhs, tr.expand)
+            fs1.foreach(f => rec(f._2, err, false))
+          case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
+          case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
-          case (_, w @ Without(b, ns)) => rec(Without(lhs, ns)(w.prov), b)
-          case (_, n @ NegType(w @ Without(b, ns))) => rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov))
+          case (_, w @ Without(b, ns)) => rec(Without(lhs, ns)(w.prov), b, true)
+          case (_, n @ NegType(w @ Without(b, ns))) =>
+            rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
@@ -328,139 +340,106 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 fs1.foreach { case (n1, t1) =>
                   fs0.find(_._1 === n1).fold {
                     if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1.name))
-                  } { case (n0, t0) => rec(t0, t1) }
+                  } { case (n0, t0) => rec(t0, t1, false) }
                 }
                 fieldErr
               case (_, FunctionType(_, _)) => S(msg"is not a function")
               case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n.name))
               case _ => S(doesntMatch(lhs_rhs._2))
             }
-            failureOpt.foreach(f => reportError(f))
+            failureOpt.foreach(reportError)
       }
     }}()
     
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
+    
     def reportError(error: Message)(implicit cctx: ConCtx): Unit = {
-      val (lhs, rhs) = cctx.head.head
+      val lhs = cctx._1.head
+      val rhs = cctx._2.head
       
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
-      println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      // println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      
+      val lhsChain: List[ST] = cctx._1
+      val rhsChain: List[ST] = cctx._2
+      
+      // The first located provenance coming from the left
+      val lhsProv = lhsChain.iterator
+        .filterNot(_.prov.isOrigin)
+        .find(_.prov.loco.isDefined)
+        .map(_.prov).getOrElse(lhs.prov)
+      
+      // The first located provenance coming from the right
+      val rhsProv = rhsChain.iterator
+        .filterNot(_.prov.isOrigin)
+        .find(_.prov.loco.isDefined)
+        .map(_.prov).getOrElse(rhs.prov)
+      
+      // The last located provenance coming from the right (this is a bit arbitrary)
+      val rhsProv2 = rhsChain.reverseIterator
+        .filterNot(_.prov.isOrigin)
+        .find(_.prov.loco.isDefined)
+        .map(_.prov).getOrElse(rhs.prov)
       
       val detailedContext =
         if (explainErrors)
-          msg"[info] Additional Explanations below:" -> N ::
-          cctx.reverseIterator.flatMap { case subCtx => if (subCtx.isEmpty) Nil else {
-            val (lhss, rhss) = subCtx.unzip
-            val prefixes = "" #:: LazyList.continually("i.e., ")
-            msg"[info] While constraining..." -> N ::
-            lhss.filter(_.prov =/= noProv).filterOutConsecutive(_.prov.loco === _.prov.loco).zip(prefixes).map {
-              case (l, pre) => msg"[info]     ${pre}${l.prov.desc} of type ${l.expPos}" -> l.prov.loco
-            } :::
-            rhss.filter(_.prov =/= noProv).filterOutConsecutive(_.prov.loco === _.prov.loco).zip(prefixes).map {
-              case (r, pre) => msg"[info]     ${pre}to match type ${r.expNeg} from ${r.prov.desc}" -> r.prov.loco
-            }
-          }}.toList
+          msg"========= Additional explanations below =========" -> N ::
+          lhsChain.flatMap { lhs =>
+            if (dbg) msg"[info] LHS >> ${lhs.prov.toString} : ${lhs.expPos}" -> lhs.prov.loco :: Nil
+            else msg"[info] flowing from ${lhs.prov.desc} of type `${lhs.expPos}`" -> lhs.prov.loco :: Nil
+          } ::: rhsChain.reverse.flatMap { rhs =>
+            if (dbg) msg"[info] RHS << ${rhs.prov.toString} : ${rhs.expNeg}" -> rhs.prov.loco :: Nil
+            else msg"[info] flowing into ${rhs.prov.desc} of type `${rhs.expNeg}`" -> rhs.prov.loco :: Nil
+          }
         else Nil
       
-      val lhsProv = cctx.head.find(l => l._1.prov.loco.isDefined && !l._1.prov.isOrigin).map(_._1.prov).getOrElse(lhs.prov)
-      
-      // TODO re-enable
-      // assert(lhsProv.loco.isDefined) // TODO use soft assert
-      
-      val relevantFailures = cctx.zipWithIndex.map { case (subCtx, i) =>
-        subCtx.collectFirst {
-          case (l, r)
-            if l.prov.loco =/= lhsProv.loco
-            && l.prov.loco.exists(ll => prov.loco/* .exists */.forall(ll touches _))
-          => (l, r, i === 0)
-        }
+      val relevantFailures = lhsChain.collect {
+        case st
+          if st.prov.loco =/= lhsProv.loco
+          && st.prov.loco.exists(ll => prov.loco.forall(ll touches _))
+        => st
       }
-      val tighestRelevantFailure = relevantFailures.firstSome
-      // Don't seem to make a difference in the tests:
-      // val tighestRelevantFailure = relevantFailures.collect { case Some(v) => v }.reverse
-      // val tighestRelevantFailure = relevantFailures.reverse.firstSome // TODO try w/o rev
+      val tighestRelevantFailure = relevantFailures.headOption
       
-      var shownLocs = MutSet.empty[Loc]
-      
-      val tighestLocatedRHS = cctx.flatMap { subCtx =>
-        subCtx.flatMap { case (l, r) =>
-          val considered = (r, r.prov) :: Nil
-          considered.filter { case (_, p) =>
-            p.loco =/= prov.loco && (p.loco match {
-              case Some(loco) =>
-                !shownLocs(loco) &&
-                (verboseConstraintProvenanceHints || !shownLocs.exists(loco touches _)) && {
-                  shownLocs += loco
-                  true
-                }
-              case None => false
-            })
+      val originProvList = (lhsChain.headOption ++ rhsChain.lastOption).iterator
+        .map(_.prov).collect {
+            case tp @ TypeProvenance(loco, desc, S(nme)) if loco.isDefined => nme -> tp
           }
-        }
-      }
+        .toList.distinctBy(_._2.loco)
       
       var first = true
-      val constraintProvenanceHints = tighestLocatedRHS.map { case (r, p) =>
-          val msgHead = if (first) msg"Note: constraint arises " else msg""
-          first = false
-          msg"${msgHead}from ${p.desc}:" -> p.loco
+      val originProvHints = originProvList.map { case (nme, l) => 
+        val msgHead =
+          if (first)
+                msg"Note: ${l.desc} $nme"
+          else  msg"      ${l.desc} $nme"
+        first = false
+        msg"${msgHead} is defined at: " -> l.loco 
       }
       
-      val originProvList = cctx.flatMap{ subCtx =>
-        subCtx.iterator.flatMap { case (l,r) => 
-          // We only keep one origin prov for each subCtx.
-          val considered = List(l optionIf (_.prov.isOrigin), r optionIf (_.prov.isOrigin)).flatten
-          considered
-        }.nextOption()
-      }
-
-      first = true
-      val originProvHints = originProvList.map { l => 
-        val msgHead = if (first) msg"Note: " else msg""
-          first = false
-          msg"${msgHead}${l.prov.desc.capitalize} is defined at: " -> l.prov.loco 
-      }
-
-      val msgs: Ls[Message -> Opt[Loc]] = List(
+      val msgs: Ls[Message -> Opt[Loc]] = Ls[Ls[Message -> Opt[Loc]]](
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
         msg"expression of type `${lhs.expPos}` $error" ->
           (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
-        tighestRelevantFailure.map { case (l, r, isSameType) =>
-          // Note: used to have `val isSameType = l.unwrapProxies === lhs.unwrapProxies`
-          //  which was only an approximation, and considered things like `?a | int` not the same as `int`.
-          val expTyMsg =
-            if (isSameType) msg" with expected type `${r.expNeg}`"
-            // ^ This used to say "of expected type", but in fact we're describing a term with the wrong type;
-            //   the expected type is not its type so that was not a good formulation.
-            else msg" of type `${l.expPos}`"
-          val lunw = l.unwrapProxies
-          lazy val fail = (l, r) match {
-            case (RecordType(fs0), RecordType(fs1)) =>
-              (fs0.map(_._1).toSet -- fs1.map(_._1).toSet).headOption.fold(doesntMatch(r)) { n1 =>
-                doesntHaveField(n1.name)
-              }
-            case (_, FunctionType(_, _))
-              if !lunw.isInstanceOf[FunctionType]
-              && !lunw.isInstanceOf[TypeVariable]
-              => msg"is not a function"
-            case (_, RecordType((n, _) :: Nil))
-              if !lunw.isInstanceOf[RecordType]
-              && !lunw.isInstanceOf[TypeVariable]
-              => doesntHaveField(n.name)
-            case _ => doesntMatch(r)
-          }
-          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco ::
-          (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
+        tighestRelevantFailure.map { l =>
+          val expTyMsg = msg" with expected type `${rhs.expNeg}`"
+          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil
         }.toList.flatten,
-        constraintProvenanceHints,
+        if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
+          msg"Note: constraint arises from ${rhsProv.desc}:" -> rhsProv.loco :: Nil
+        else Nil,
+        if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
+          msg"from ${rhsProv2.desc}:" -> rhsProv2.loco :: Nil
+        else Nil,
         originProvHints,
         detailedContext,
       ).flatten
+      
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs)(raise, Nil)
+    rec(lhs, rhs, true)(raise, Nil -> Nil)
   }
   
   

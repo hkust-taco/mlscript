@@ -24,24 +24,24 @@ jesus(water: w)
 //│ ║  l.21: 	jesus w
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `Wine` does not match type `~Wine`
-//│ ║  l.17: 	let w = jesus(water: "Evian")
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(water: ?a,)`
+//│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
+//│ ║        	                                 ^^^^
+//│ ╟── but it flows into reference with expected type `~Wine`
 //│ ║  l.21: 	jesus w
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
-//│ ╙──      	                    ^^^^^^^^
+//│ ║        	                    ^^^^^^^^
+//│ ╟── from binding:
+//│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
+//│ ╙──      	             ^^^^^^^^^^^^^^^
 //│ res: error | Wine
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	jesus(water: w)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Wine` does not match type `~Wine`
-//│ ║  l.17: 	let w = jesus(water: "Evian")
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `(water: ?a,)`
-//│ ║  l.22: 	jesus(water: w)
-//│ ║        	     ^^^^^^^^^^
+//│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
+//│ ║        	                                 ^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.14: 	let jesus = (water: neg Wine) => Wine
 //│ ╙──      	                    ^^^^^^^^

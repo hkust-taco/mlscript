@@ -78,12 +78,12 @@ f (c: Parent)
 //│ ╟── expression of type `Parent` does not match type `Child`
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^
-//│ ╟── but it flows into argument with expected type `(?a,)`
-//│ ║  l.74: 	f (c: Parent)
-//│ ║        	   ^
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.64: 	  | Child -> x.name
-//│ ╙──      	    ^^^^^
+//│ ║        	    ^^^^^
+//│ ╟── from reference:
+//│ ║  l.63: 	def f x = case x of {
+//│ ╙──      	               ^
 //│ res: error | string
 //│    = 'Bob'
 
