@@ -89,7 +89,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `~int`
+//│ ╟── expression of type `int` does not match type `Add[?] | Lit`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add[int]`
@@ -101,7 +101,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `~int | {lhs: int}`
+//│ ╟── expression of type `int` does not match type `{lhs: int, rhs: int} | Lit`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add[int]`
@@ -116,7 +116,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `~int | {rhs: int}`
+//│ ╟── expression of type `int` does not match type `{lhs: int, rhs: int} | Lit`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add[int]`
@@ -131,7 +131,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `~int | {Add#E = int}`
+//│ ╟── expression of type `int` does not match type `{Add#E = int} | Lit`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                             ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Add[int]`
@@ -142,7 +142,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	              ^^^^^^^^
 //│ Runtime error:
 //│   ReferenceError: eval1_ty_ugly is not defined
-//│ constrain calls  : 50
-//│ annoying  calls  : 68
-//│ subtyping calls  : 477
+//│ constrain calls  : 46
+//│ annoying  calls  : 53
+//│ subtyping calls  : 460
 

@@ -40,7 +40,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       lhs.cs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
         vars.headOption match {
           case S(v) =>
-            rec(v, rhs.toType() | Conjunct(lnf, vars, rnf, nvars).toType().neg())
+            rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg())
           case N =>
             val fullRhs = nvars.iterator.map(DNF.mk(_, true))
               .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
