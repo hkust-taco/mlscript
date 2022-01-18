@@ -17,7 +17,7 @@ Nil{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.16: 	Nil{}
 //│ ║        	^^^^^
-//│ ╟── expression of type `anything` does not have field 'size'
+//│ ╟── record literal of type `anything` does not have field 'size'
 //│ ║  l.16: 	Nil{}
 //│ ╙──      	   ^^
 //│ res: error | Nil & {size: nothing}
@@ -33,13 +33,13 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` is not a record (expected a record with fields: size, tail, head)
+//│ ╟── integer literal of type `1` is not a record (expected a record with fields: size, tail, head)
 //│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` is not a function
+//│ ╟── application of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` is not a function
 //│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
@@ -67,7 +67,7 @@ Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.66: 	Nil: ListBase[anything]
 //│ ║        	^^^
-//│ ╟── expression of type `anything` does not match type `nothing`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.66: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

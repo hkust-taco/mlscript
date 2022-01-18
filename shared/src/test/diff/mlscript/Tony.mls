@@ -95,7 +95,7 @@ res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.94: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
+//│ ╟── integer literal of type `1` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.94: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:

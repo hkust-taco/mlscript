@@ -15,7 +15,7 @@ Test1 { x = "oops" }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` does not match type `int`
 //│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -93,7 +93,7 @@ foo 42
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	foo 42
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` is not a function
+//│ ╟── integer literal of type `1` is not a function
 //│ ║  l.82: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
@@ -168,7 +168,7 @@ id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.167: 	id: Runaway2
 //│ ║         	^^
-//│ ╟── expression of type `{x: ?a -> ?a}` is not a function
+//│ ╟── type `{x: ?a -> ?a}` is not a function
 //│ ║  l.136: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
@@ -192,7 +192,7 @@ error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.191: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
-//│ ╟── expression of type `?a -> ?a` does not match type `int`
+//│ ╟── type `?a -> ?a` does not match type `int`
 //│ ║  l.136: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:

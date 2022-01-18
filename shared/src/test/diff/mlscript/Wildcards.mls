@@ -5,7 +5,7 @@
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.4: 	42: ?
 //│ ║       	^^
-//│ ╟── expression of type `42` does not match type `nothing`
+//│ ╟── integer literal of type `42` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.4: 	42: ?
 //│ ╙──     	    ^
@@ -33,7 +33,7 @@ E{} : E[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.32: 	E{} : E[?]
 //│ ║        	^^^
-//│ ╟── expression of type `anything` does not match type `nothing`
+//│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.32: 	E{} : E[?]
 //│ ║        	        ^
 //│ ╟── Note: constraint arises from type wildcard:
@@ -83,7 +83,7 @@ add 1 : Als2[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.82: 	add 1 : Als2[?]
 //│ ║        	^^^^^
-//│ ╟── expression of type `anything` does not match type `int`
+//│ ╟── type `anything` does not match type `int`
 //│ ║  l.82: 	add 1 : Als2[?]
 //│ ╙──      	             ^
 //│ res: nothing -> int
@@ -112,7 +112,7 @@ q + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.111: 	q + 1
 //│ ║         	^^^
-//│ ╟── expression of type `anything` does not match type `int`
+//│ ╟── type `anything` does not match type `int`
 //│ ║  l.101: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `int`
@@ -126,7 +126,7 @@ q q
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.125: 	q q
 //│ ║         	^^^
-//│ ╟── expression of type `anything` is not a function
+//│ ╟── type `anything` is not a function
 //│ ║  l.101: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `anything -> ?a`

@@ -12,7 +12,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // The data types used for type inference:
   
-  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) {
+  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
     val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"

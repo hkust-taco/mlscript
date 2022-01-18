@@ -13,7 +13,7 @@ succ x3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.12: 	succ x3
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `false` does not match type `int`
+//│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.4: 	x1 = false
 //│ ║       	     ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -49,7 +49,7 @@ f3 true
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.48: 	f3 true
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `true` does not match type `int`
+//│ ╟── reference of type `true` does not match type `int`
 //│ ║  l.48: 	f3 true
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -89,7 +89,7 @@ f3 x3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.88: 	f3 x3
 //│ ║        	^^^^^
-//│ ╟── expression of type `false` does not match type `int`
+//│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.4: 	x1 = false
 //│ ║       	     ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -148,7 +148,7 @@ h3 f3 x3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.147: 	h3 f3 x3
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `false` does not match type `int`
+//│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.4: 	x1 = false
 //│ ║       	     ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -218,7 +218,7 @@ h3 f3 x3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.217: 	(fun x -> succ x) false
 //│ ║         	     ^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `false` does not match type `int`
+//│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.217: 	(fun x -> succ x) false
 //│ ║         	                  ^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -243,7 +243,7 @@ rec def x = add x
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.242: 	rec def x = add x
 //│ ║         	            ^^^^^
-//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ╟── application of type `int -> int` does not match type `int`
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.242: 	rec def x = add x
 //│ ║         	                ^
@@ -271,7 +271,7 @@ succ foo
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.270: 	succ foo
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `string` does not match type `int`
+//│ ╟── type `string` does not match type `int`
 //│ ║  l.266: 	def foo: int | string
 //│ ║         	               ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -318,7 +318,7 @@ ty00 = ty11
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.314: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `B & 'b` is not an instance of type 'a
+//│ ╟── type `B & 'b` is not an instance of type 'a
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -346,7 +346,7 @@ ty00 = ty11
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.314: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `A & 'a` is not an instance of type 'b
+//│ ╟── type `A & 'a` is not an instance of type 'b
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

@@ -36,7 +36,7 @@ v0: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.35: 	v0: int
 //│ ║        	^^
-//│ ╟── expression of type `~X` does not match type `int`
+//│ ╟── type `~X` does not match type `int`
 //│ ║  l.31: 	def v0: (~(X\x))\y
 //│ ║        	         ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -119,7 +119,7 @@ test (error: B & { c: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	test (error: B & { c: int })
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
+//│ ╟── type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.118: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -143,7 +143,7 @@ test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
+//│ ╟── type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.142: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -180,7 +180,7 @@ negInt: A | { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.179: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
-//│ ╟── expression of type `~int` does not match type `A | {x: ?a}`
+//│ ╟── type `~int` does not match type `A | {x: ?a}`
 //│ ║  l.166: 	def negInt: ~int
 //│ ║         	            ^^^^
 //│ ╟── but it flows into reference with expected type `A | {x: ?a}`
@@ -227,7 +227,7 @@ funny.x
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.226: 	(error: { x: int }): int | string
 //│ ║         	 ^^^^^
-//│ ╟── expression of type `{x: int}` does not match type `int | string`
+//│ ╟── type `{x: int}` does not match type `int | string`
 //│ ║  l.226: 	(error: { x: int }): int | string
 //│ ║         	        ^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -302,7 +302,7 @@ ty = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `{x: int} & tT` does not match type `AA | 'a\x`
+//│ ╟── type `{x: int} & tT` does not match type `AA | 'a\x`
 //│ ║  l.290: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `AA | 'a\x`

@@ -333,7 +333,7 @@ foo_manual arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.332: 	foo_manual arg
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── expression of type `{fB: int} & b` does not match type `{fA: ?a} & a | {fB: ?a} & b & ~a | {fC: ?a} & c & ~a & ~b | {fD: ?a} & d & ~a & ~b & ~c | {fE: ?a} & e & ~a & ~b & ~c & ~d | {fF: ?a} & f & ~a & ~b & ~c & ~d & ~e | {fG: ?a} & g & ~a & ~b & ~c & ~d & ~e & ~f`
+//│ ╟── type `{fB: int} & b` does not match type `{fA: ?a} & a | {fB: ?a} & b & ~a | {fC: ?a} & c & ~a & ~b | {fD: ?a} & d & ~a & ~b & ~c | {fE: ?a} & e & ~a & ~b & ~c & ~d | {fF: ?a} & f & ~a & ~b & ~c & ~d & ~e | {fG: ?a} & g & ~a & ~b & ~c & ~d & ~e & ~f`
 //│ ║  l.308: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
 //│ ╟── but it flows into reference with expected type `{fA: ?a0} & a | {fB: ?a0} & b & ~a | {fC: ?a0} & c & ~a & ~b | {fD: ?a0} & d & ~a & ~b & ~c | {fE: ?a0} & e & ~a & ~b & ~c & ~d | {fF: ?a0} & f & ~a & ~b & ~c & ~d & ~e | {fG: ?a0} & g & ~a & ~b & ~c & ~d & ~e & ~f`

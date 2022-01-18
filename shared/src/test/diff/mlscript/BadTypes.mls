@@ -60,7 +60,7 @@ aa: { a: int; a: string }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.50: 	aa: { a: int; a: string }
 //│ ║        	^^
-//│ ╟── expression of type `1` does not match type `string`
+//│ ╟── integer literal of type `1` does not match type `string`
 //│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:

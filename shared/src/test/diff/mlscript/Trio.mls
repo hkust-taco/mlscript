@@ -65,7 +65,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.64: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `A` does not have field 'payload'
+//│ ╟── type `A` does not have field 'payload'
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `{payload: ?a}`

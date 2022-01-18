@@ -419,7 +419,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val originProvList = (lhsChain.headOption ++ rhsChain.lastOption).iterator
         .map(_.prov).collect {
-            case tp @ TypeProvenance(loco, desc, S(nme)) if loco.isDefined => nme -> tp
+            case tp @ TypeProvenance(loco, desc, S(nme), _) if loco.isDefined => nme -> tp
           }
         .toList.distinctBy(_._2.loco)
       
@@ -435,8 +435,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val msgs: Ls[Message -> Opt[Loc]] = Ls[Ls[Message -> Opt[Loc]]](
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-        msg"expression of type `${lhs.expPos}` $failure" ->
-          (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
+        (if (lhsProv.isType) msg"type `${lhs.expPos}` $failure"
+          else msg"${lhsProv.desc} of type `${lhs.expPos}` $failure")
+        ->
+        (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
         tighestRelevantFailure.map { l =>
           val expTyMsg = msg" with expected type `${rhs.expNeg}`"
           msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil

@@ -25,7 +25,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.20: 	f 3
 //│ ║        	^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.20: 	f 3
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type union:
@@ -38,7 +38,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	   ^^^^^^^^^^
-//│ ╟── expression of type `0` does not match type `1 | 3`
+//│ ╟── integer literal of type `0` does not match type `1 | 3`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from type union:
@@ -47,7 +47,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	            ^
 //│ ╟── but it flows into argument with expected type `0 | 1`
@@ -63,7 +63,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	            ^
 //│ ╟── but it flows into argument with expected type `0 | 1`
@@ -79,7 +79,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	   ^^^^^^^^^^
-//│ ╟── expression of type `0` does not match type `3 | 4`
+//│ ╟── integer literal of type `0` does not match type `3 | 4`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from type union:
@@ -88,7 +88,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `0 | 1`
+//│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	        ^
 //│ ╟── but it flows into argument with expected type `0 | 1`
@@ -104,7 +104,7 @@ f (0 as Int)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `0 | 1`
+//│ ╟── reference of type `int` does not match type `0 | 1`
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	        ^^^
 //│ ╟── but it flows into argument with expected type `0 | 1`
@@ -156,7 +156,7 @@ bar(2, 2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.155: 	bar(2, 2)
 //│ ║         	^^^^^^^^^
-//│ ╟── expression of type `2` does not match type `0 | 1`
+//│ ╟── integer literal of type `2` does not match type `0 | 1`
 //│ ║  l.155: 	bar(2, 2)
 //│ ╙──       	    ^
 //│ res: 2 | error
@@ -183,7 +183,7 @@ f 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.182: 	f 2
 //│ ║         	^^^
-//│ ╟── expression of type `2` does not match type `0 | 1`
+//│ ╟── integer literal of type `2` does not match type `0 | 1`
 //│ ║  l.182: 	f 2
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from reference:
@@ -229,7 +229,7 @@ baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.228: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── expression of type `0` does not have field '_2'
+//│ ╟── integer literal of type `0` does not have field '_2'
 //│ ║  l.228: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`
@@ -269,7 +269,7 @@ baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.267: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── expression of type `0` does not have field '_2'
+//│ ╟── integer literal of type `0` does not have field '_2'
 //│ ║  l.267: 	baz(0)
 //│ ║         	    ^
 //│ ╟── but it flows into argument with expected type `{_2: ?a}`

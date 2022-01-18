@@ -27,7 +27,7 @@ let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not have field 'x'
+//│ ╟── integer literal of type `1` does not have field 'x'
 //│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	                                     ^
 //│ ╟── Note: constraint arises from field selection:

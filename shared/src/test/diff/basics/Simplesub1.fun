@@ -56,7 +56,7 @@ succ true
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `true` does not match type `int`
+//│ ╟── reference of type `true` does not match type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
 //│ res: error | int
@@ -66,7 +66,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	     ^^^^^^^^^^^^
-//│ ╟── expression of type `bool` does not match type `int`
+//│ ╟── application of type `bool` does not match type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -79,7 +79,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `123` does not match type `bool`
+//│ ╟── integer literal of type `123` does not match type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
 //│ ╟── Note: constraint arises from argument:
@@ -95,7 +95,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `false` is not a function
+//│ ╟── reference of type `false` is not a function
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
 //│ ║        	                        ^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -141,7 +141,7 @@ if true then { a: 1, b: true } else { b: false, c: 42 }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	{ a: 123, b: true }.c
 //│ ║        	                   ^^
-//│ ╟── expression of type `{a: 123, b: true}` does not have field 'c'
+//│ ╟── record of type `{a: 123, b: true}` does not have field 'c'
 //│ ║  l.+1: 	{ a: 123, b: true }.c
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ res: error
@@ -151,7 +151,7 @@ x => { a: x }.b
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	x => { a: x }.b
 //│ ║        	             ^^
-//│ ╟── expression of type `{a: ?a}` does not have field 'b'
+//│ ╟── record of type `{a: ?a}` does not have field 'b'
 //│ ║  l.+1: 	x => { a: x }.b
 //│ ╙──      	     ^^^^^^^^
 //│ res: anything -> error
@@ -254,7 +254,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ╔══[ERROR] Type mismatch in binding of block of statements:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `0` is not a function
+//│ ╟── integer literal of type `0` is not a function
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
 //│ ╟── Note: constraint arises from application:

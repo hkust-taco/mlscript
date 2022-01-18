@@ -76,7 +76,7 @@ def z = x + y
 //│ ║        	^
 //│ ║  l.73: 	 2
 //│ ║        	^^
-//│ ╟── expression of type `1` is not a function
+//│ ╟── integer literal of type `1` is not a function
 //│ ║  l.72: 	1
 //│ ╙──      	^
 //│ res: error

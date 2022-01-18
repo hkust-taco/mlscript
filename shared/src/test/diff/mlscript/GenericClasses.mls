@@ -33,7 +33,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.32: 	res.value
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `None` does not have field 'value'
+//│ ╟── type `None` does not have field 'value'
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
@@ -50,7 +50,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `Some[int] | None`
+//│ ╟── integer literal of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
@@ -95,7 +95,7 @@ g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.94: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── expression of type `int` does not match type `string`
+//│ ╟── type `int` does not match type `string`
 //│ ║  l.65: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:

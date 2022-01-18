@@ -53,7 +53,7 @@ discard foo
 //│ ║        	^^^^^^^^^^^
 //│ ║  l.50: 	  1
 //│ ║        	^^^
-//│ ╟── expression of type `unit` is not a function
+//│ ╟── application of type `unit` is not a function
 //│ ║  l.49: 	discard foo
 //│ ╙──      	^^^^^^^^^^^
 //│ res: error
@@ -67,7 +67,7 @@ foo
 //│ ╟── Type mismatch in application:
 //│ ║  l.63: 	  foo 1
 //│ ║        	  ^^^^^
-//│ ╟── expression of type `int` does not match type `unit`
+//│ ╟── operator application of type `int` does not match type `unit`
 //│ ║  l.19: 	  u + 1
 //│ ║        	  ^^^^^
 //│ ╟── but it flows into application with expected type `unit`

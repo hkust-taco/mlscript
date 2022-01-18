@@ -266,7 +266,7 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.262: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `C[?r]` does not match type `'r | {x: ?r0}`
+//│ ╟── type `C[?r]` does not match type `'r | {x: ?r0}`
 //│ ║  l.201: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
 //│ ╟── but it flows into reference with expected type `'r | {x: ?r1}`
@@ -286,7 +286,7 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.282: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ╟── type `{x: ?r}` does not match type `'r | C[?r0]`
 //│ ║  l.244: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
@@ -298,7 +298,7 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.282: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ╟── type `{x: ?r}` does not match type `'r | C[?r0]`
 //│ ║  l.244: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
@@ -310,7 +310,7 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.282: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: ?r}` does not match type `'r | C[?r0]`
+//│ ╟── type `{x: ?r}` does not match type `'r | C[?r0]`
 //│ ║  l.244: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'r | C[?r1]`
@@ -357,7 +357,7 @@ f 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.356: 	f 1
 //│ ║         	^^^
-//│ ╟── expression of type `int` does not have field 'a'
+//│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -372,7 +372,7 @@ f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.371: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `int` does not have field 'a'
+//│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -396,7 +396,7 @@ f ainf
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.392: 	f ainf
 //│ ║         	^^^^^^
-//│ ╟── expression of type `int` does not have field 'a'
+//│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -415,7 +415,7 @@ f infina
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.411: 	f infina
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `int` does not have field 'a'
+//│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -434,7 +434,7 @@ f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.433: 	f_manual 1
 //│ ║         	^^^^^^^^^^
-//│ ╟── expression of type `1` does not have field 'a'
+//│ ╟── integer literal of type `1` does not have field 'a'
 //│ ║  l.433: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
@@ -452,7 +452,7 @@ f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.451: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not have field 'a'
+//│ ╟── integer literal of type `1` does not have field 'a'
 //│ ║  l.451: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
@@ -517,7 +517,7 @@ r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.516: 	r.a
 //│ ║         	^^^
-//│ ╟── expression of type `1` does not have field 'a'
+//│ ╟── integer literal of type `1` does not have field 'a'
 //│ ║  l.505: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`

@@ -6,7 +6,7 @@ class C0
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
 //│ ║       	                         ^^^
-//│ ╟── expression of type `A` does not match type `int`
+//│ ╟── reference of type `A` does not match type `int`
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
 //│ ║       	                         ^
 //│ ╟── Note: method type parameter A is defined at: 
@@ -61,7 +61,7 @@ class C5[A]
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
-//│ ╟── expression of type `A` does not match type `int`
+//│ ╟── reference of type `A` does not match type `int`
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^
 //│ ╟── Note: class type parameter A is defined at: 

@@ -176,7 +176,7 @@ strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.175: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `C2 & ~myTrait` does not match type `~{value: anything}`
+//│ ╟── type `C2 & ~myTrait` does not match type `~{value: anything}`
 //│ ║  l.161: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
