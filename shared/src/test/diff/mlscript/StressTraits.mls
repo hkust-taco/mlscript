@@ -56,7 +56,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.50: 	def arg: A[int] | B[int]
 //│ ║        	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.51: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -81,7 +81,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.75: 	def arg: A[int] | B[int] | C[int]
 //│ ║        	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.76: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -106,7 +106,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.100: 	def arg: A[int] | B[int] | D[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.101: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -139,7 +139,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.132: 	def arg: A[int] | B[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.133: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -173,7 +173,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.166: 	def arg: A[int] | B[int] | C[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.167: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -208,7 +208,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.201: 	def arg: A[int] | B[int] | C[int] | D[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.202: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -284,7 +284,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.277: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.278: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -321,7 +321,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.314: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.315: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -359,7 +359,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.352: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.353: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -392,7 +392,7 @@ foo_manual arg
 //│ ║  l.376: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
-//│ constrain calls  : 25
+//│ constrain calls  : 27
 //│ annoying  calls  : 90
 //│ subtyping calls  : 877
 
@@ -401,7 +401,7 @@ foo_manual = foo
 //│ ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│   <:  foo_manual:
 //│ ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
-//│ constrain calls  : 51
+//│ constrain calls  : 59
 //│ annoying  calls  : 183
 //│ subtyping calls  : 1108
 
@@ -430,7 +430,7 @@ foo arg
 //│ ╟── expression of type `{fB: int} & a & b | {fB: int} & b & ~?a` does not match type `{fA: ?b}`
 //│ ║  l.423: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `a & ?c | b & ?d & ~a | c & ?e & ~a & ~b | d & ?f & ~a & ~b & ~c | e & ?g & ~a & ~b & ~c & ~d | f & ?h & ~a & ~b & ~c & ~d & ~e | g & ?i & ~a & ~b & ~c & ~d & ~e & ~f | h & ?j & ~a & ~b & ~c & ~d & ~e & ~f & ~g`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.424: 	foo arg
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from field selection:

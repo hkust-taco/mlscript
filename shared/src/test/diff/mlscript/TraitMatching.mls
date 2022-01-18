@@ -135,7 +135,7 @@ test2 c2
 //│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not match type `{value: ?b}`
 //│ ║  l.126: 	def c2 = C2 { value = 1; default = "oops" }
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `myTrait & ?c | ?d & ~myTrait`
+//│ ╟── but it flows into reference with expected type `?c`
 //│ ║  l.131: 	test2 c2
 //│ ║         	      ^^
 //│ ╟── Note: constraint arises from field selection:

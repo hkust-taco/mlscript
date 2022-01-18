@@ -157,6 +157,41 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    // Note: we implement hashCode and equals manually because:
+    //  1. On one hand, we want a ProvType to compare equal to its underlying type,
+    //      which is necessary for recursive types to associate type provenances to
+    //      their recursive uses without making the constraint solver diverge; and
+    //  2. Additionally, caching hashCode shoudl have performace benefits
+    //      — though I'm not sure whether it's best as a `lazy val` or a `val`.
+    override lazy val hashCode: Int = this match {
+      case tv: TypeVariable => tv.uid
+      case ProvType(und) => und.hashCode
+      case p: Product => scala.runtime.ScalaRunTime._hashCode(p)
+    }
+    override def equals(that: Any): Bool = this match {
+      case ProvType(und) => (und: Any) === that
+      case tv1: TV => that match {
+        case tv2: Typer#TV => tv1.uid === tv2.uid
+        case _ => false
+      }
+      case p1: Product => that match {
+        case that: ST => that match {
+          case ProvType(und) => this === und
+          case tv: TV => false
+          case p2: Product =>
+            p1.canEqual(p2) && {
+              val it1 = p1.productIterator
+              val it2 = p2.productIterator
+              while(it1.hasNext && it2.hasNext) {
+                if (it1.next() =/= it2.next()) return false
+              }
+              return !it1.hasNext && !it2.hasNext
+            }
+        }
+        case _ => false
+      }
+    }
+    
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
       case (BotType, _) => that
@@ -329,6 +364,10 @@ abstract class TyperHelpers { self: Typer =>
     
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
+      case _ => this
+    }
+    def unwrapProvs: SimpleType = this match {
+      case ProvType(und) => und.unwrapProvs
       case _ => this
     }
     

@@ -47,7 +47,7 @@ foo (arg with { fC = true })
 //│ res: int | string | true
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 14
+//│ constrain calls  : 15
 //│ annoying  calls  : 28
 //│ subtyping calls  : 82
 
@@ -68,7 +68,7 @@ foo arg
 //│ ╟── expression of type `A` does not match type `{payload: ?a}`
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `A & ?b | B & ?c | C & ?d`
+//│ ╟── but it flows into reference with expected type `?b`
 //│ ║  l.64: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:

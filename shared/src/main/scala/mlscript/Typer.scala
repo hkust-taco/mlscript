@@ -421,7 +421,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
             case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
             case Some(tys) =>
-              // TODO less syntactic check...
+              // Note: this check *has* to be relatively syntactic because
+              //    the termination of constraint solving relies on recursive type occurrences
+              //    obtained from unrolling a recursive type to be *equal* to the original type
+              //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
                   expandType(tr, true).show
@@ -633,18 +636,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
    * If the key is found in `newDefsInfo`, the type is typed as a `TypeRef`, where the associated value
    *   is used to check the kind of the definition and the number of type arguments expected. Use case:
    *   for typing bodies of type definitions with mutually recursive references. */
-  def typeType(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty,
-      newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): SimpleType = 
+  def typeType(ty: Type, simplify: Bool = true)
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType =
     typeType2(ty, simplify)._1
   /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
    * Useful for instantiating them by substitution when expanding a `TypeRef`. */
   // TODO better record type provenances!
-  def typeType2(ty: Type, simplify: Bool = true)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty,
-      newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) = {
-    val typeType = ()
+  def typeType2(ty: Type, simplify: Bool = true)
+        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
+        newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
+      trace(s"$lvl. Typing type $ty") {
+    println(s"vars=$vars newDefsInfo=$newDefsInfo")
+    val typeType2 = ()
     def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
-      newDefsInfo.get(name).orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size))).toRight(() =>
-        err("type identifier not found: " + name, loc)(raise))
+      newDefsInfo.get(name)
+        .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
+        .toRight(() => err("type identifier not found: " + name, loc)(raise))
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
       case Top => ExtrType(false)(tp(ty.toLoc, "top type"))
@@ -728,7 +735,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         .toSet)(tp(ty.toLoc, "function type")) // TODO use ty's prov
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
-  }
+  }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
   
   def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
     typeTerm(pat)(ctx.copy(inPattern = true), raise, vars)
@@ -1141,7 +1148,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     //    see: duplication of recursive.get(st_pol) logic
     
     val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
-    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
+    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type =
+      goImpl(st.unwrapProvs, polarity)
+    def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
       val st_pol = st -> polarity
       if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
         case tv: TypeVariable => tv.nameHint

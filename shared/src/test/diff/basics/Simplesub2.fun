@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a}} as 'a}
+//│ produce3: bool -> {head: 123, tail: {head: int, tail: 'b | {head: int, tail: 'a}} as 'a}
 //│ res: bool -> int
 
 let consume2 =
