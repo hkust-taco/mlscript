@@ -377,10 +377,10 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?c`
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
@@ -456,10 +456,10 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?c`
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
@@ -493,10 +493,10 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?c`
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:
@@ -530,7 +530,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -564,10 +564,10 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?c`
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	                     ^^
 //│ ╟── Note: constraint arises from application:

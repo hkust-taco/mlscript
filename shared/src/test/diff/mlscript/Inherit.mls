@@ -18,7 +18,7 @@ def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Parent & {name: ?name}` does not match type `{name: ?name0, age: ?age}`
+//│ ╟── expression of type `Parent & {name: ?name}` is not a record (expected a record with fields: name, age)
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ c: Child & {age: nothing, name: "Bob"} | error
@@ -75,7 +75,7 @@ f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	^^^^
-//│ ╟── expression of type `Parent` does not match type `Child`
+//│ ╟── expression of type `Parent` is not an instance of type Child
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from class pattern:

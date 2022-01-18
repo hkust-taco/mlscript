@@ -12,7 +12,7 @@ T {}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.11: 	T {}
 //│ ║        	^^^^
-//│ ╟── expression of type `anything` does not match type `A`
+//│ ╟── expression of type `anything` is not an instance of type A
 //│ ║  l.11: 	T {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -33,7 +33,7 @@ T a
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	T a
 //│ ║        	^^^
-//│ ╟── expression of type `A` does not match type `B`
+//│ ╟── expression of type `A` is not an instance of type B
 //│ ║  l.27: 	def a = A{}
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `B`
@@ -60,7 +60,7 @@ T A
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.56: 	T A
 //│ ║        	^^^
-//│ ╟── expression of type `anything -> A` does not match type `A`
+//│ ╟── expression of type `anything -> A` is not an instance of type A
 //│ ║  l.56: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
@@ -80,7 +80,7 @@ T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.79: 	T (B {})
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `B` does not match type `A`
+//│ ╟── expression of type `B` is not an instance of type A
 //│ ║  l.79: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:

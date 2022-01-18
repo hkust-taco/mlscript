@@ -33,13 +33,13 @@ Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^
-//│ ╟── expression of type `1` does not match type `{size: ?size, tail: ?tail, head: ?head}`
+//│ ╟── expression of type `1` is not a record (expected a record with fields: size, tail, head)
 //│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` does not match type `?a -> ?b`
+//│ ╟── expression of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` is not a function
 //│ ║  l.32: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error

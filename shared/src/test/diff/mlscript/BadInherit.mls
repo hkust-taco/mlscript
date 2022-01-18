@@ -35,7 +35,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.34: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Parent1 & {name: ?name}` does not match type `Parent2`
+//│ ╟── expression of type `Parent1 & {name: ?name}` is not an instance of type Parent2
 //│ ║  l.34: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
