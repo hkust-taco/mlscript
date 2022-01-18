@@ -12,9 +12,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // The data types used for type inference:
   
-  case class TypeProvenance(loco: Opt[Loc], desc: Str) {
+  case class TypeProvenance(loco: Opt[Loc], desc: Str, isOrigin: Bool = false) {
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
-    override def toString: Str = "‹"+loco.fold(desc)(desc+":"+_)+"›"
+    override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
 
   sealed abstract class TypeInfo

@@ -339,8 +339,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
     def reportError(error: Message)(implicit cctx: ConCtx): Unit = {
-      val (lhs_rhs @ (lhs, rhs)) = cctx.head.head
-      val failure = error
+      val (lhs, rhs) = cctx.head.head
+      
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
       
@@ -360,7 +360,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }}.toList
         else Nil
       
-      val lhsProv = cctx.head.find(_._1.prov.loco.isDefined).map(_._1.prov).getOrElse(lhs.prov)
+      val lhsProv = cctx.head.find(l => l._1.prov.loco.isDefined && !l._1.prov.isOrigin).map(_._1.prov).getOrElse(lhs.prov)
       
       // TODO re-enable
       // assert(lhsProv.loco.isDefined) // TODO use soft assert
@@ -382,12 +382,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val tighestLocatedRHS = cctx.flatMap { subCtx =>
         subCtx.flatMap { case (l, r) =>
-          val considered = (true, r, r.prov) :: Nil
-          considered.filter { case (isMainProv, _, p) =>
+          val considered = (r, r.prov) :: Nil
+          considered.filter { case (_, p) =>
             p.loco =/= prov.loco && (p.loco match {
               case Some(loco) =>
                 !shownLocs(loco) &&
-                (verboseConstraintProvenanceHints && isMainProv || !shownLocs.exists(loco touches _)) && {
+                (verboseConstraintProvenanceHints || !shownLocs.exists(loco touches _)) && {
                   shownLocs += loco
                   true
                 }
@@ -398,18 +398,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       
       var first = true
-      val constraintProvenanceHints = tighestLocatedRHS.map { case (isMainProv, r, p) =>
-        if (isMainProv) {
+      val constraintProvenanceHints = tighestLocatedRHS.map { case (r, p) =>
           val msgHead = if (first) msg"Note: constraint arises " else msg""
           first = false
           msg"${msgHead}from ${p.desc}:" -> p.loco
-        }
-        else msg"in the context of ${p.desc}" -> p.loco
       }
       
+      val originProvList = cctx.flatMap{ subCtx =>
+        subCtx.iterator.flatMap { case (l,r) => 
+          // We only keep one origin prov for each subCtx.
+          val considered = List(l optionIf (_.prov.isOrigin), r optionIf (_.prov.isOrigin)).flatten
+          considered
+        }.nextOption()
+      }
+
+      first = true
+      val originProvHints = originProvList.map { l => 
+        val msgHead = if (first) msg"Note: " else msg""
+          first = false
+          msg"${msgHead}${l.prov.desc.capitalize} is defined at: " -> l.prov.loco 
+      }
+
       val msgs: Ls[Message -> Opt[Loc]] = List(
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-        msg"expression of type `${lhs.expPos}` $failure" ->
+        msg"expression of type `${lhs.expPos}` $error" ->
           (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
         tighestRelevantFailure.map { case (l, r, isSameType) =>
           // Note: used to have `val isSameType = l.unwrapProxies === lhs.unwrapProxies`
@@ -439,6 +451,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (isSameType) Nil else msg"which $fail" -> N :: Nil)
         }.toList.flatten,
         constraintProvenanceHints,
+        originProvHints,
         detailedContext,
       ).flatten
       raise(TypeError(msgs))
@@ -488,14 +501,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
   
   
-  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
+  def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {
     err(msg -> loco :: Nil)
   }
-  def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise, prov: TypeProvenance): SimpleType = {
+  def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
     raise(TypeError(msgs))
     errType
   }
-  def errType(implicit prov: TypeProvenance): SimpleType = ClassTag(ErrTypeId, Set.empty)(prov)
+  def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
   
   def warn(msg: Message, loco: Opt[Loc])(implicit raise: Raise): Unit =
     warn(msg -> loco :: Nil)
