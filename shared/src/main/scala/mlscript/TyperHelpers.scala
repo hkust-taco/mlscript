@@ -24,7 +24,7 @@ abstract class TyperHelpers { self: Typer =>
   private val noPostTrace: Any => String = _ => ""
   
   protected var indent = 0
-  def trace[T](pre: String)(thunk: => T)(post: T => String = noPostTrace): T = {
+  def trace[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T = {
     println(pre)
     indent += 1
     val res = try thunk finally indent -= 1
@@ -35,7 +35,20 @@ abstract class TyperHelpers { self: Typer =>
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   // Shadow Predef functions with debugging-flag-enabled ones:
+  
   def println(msg: => Any): Unit = if (dbg) emitDbg("| " * indent + msg)
+  
+  /** A more advanced println version to show where things are printed from. */
+  // def println(msg: => Any)(implicit file: sourcecode.FileName, line: sourcecode.Line): Unit =
+  //   if (dbg) {
+  //     emitDbg((if (showPrintPrefix) {
+  //       val prefix = s"[${file.value}:${line.value}]"
+  //       prefix + " " * (30 - prefix.length)
+  //     } else "") + "| " * indent + msg)
+  //   }
+  // val showPrintPrefix =
+  //   // false
+  //   true
   
   def dbg_assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
@@ -139,6 +152,8 @@ abstract class TyperHelpers { self: Typer =>
         cs.map(_.toType())
     }
   }
+  
+  
   
   trait SimpleTypeImpl { self: SimpleType =>
     
