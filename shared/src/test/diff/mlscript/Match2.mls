@@ -43,7 +43,10 @@ bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
-//│ ╙──      	                 ^
+//│ ║        	                 ^
+//│ ╟── Note: Class constructor is defined at: 
+//│ ║  l.2: 	class Test: { value: int }
+//│ ╙──     	      ^^^^
 //│ res: error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
@@ -51,10 +54,10 @@ bar Test
 :e
 bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	bar "ops"
+//│ ║  l.55: 	bar "ops"
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.52: 	bar "ops"
+//│ ║  l.55: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
@@ -74,13 +77,13 @@ def baz x = case x of
 :e
 baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.75: 	baz "oops"
+//│ ║  l.78: 	baz "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
-//│ ║  l.75: 	baz "oops"
+//│ ║  l.78: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.67: 	def baz x = case x of
+//│ ║  l.70: 	def baz x = case x of
 //│ ╙──      	                 ^
 //│ res: error
 //│ Runtime error:

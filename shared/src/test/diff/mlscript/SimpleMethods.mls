@@ -8,7 +8,10 @@ class C0
 //│ ║       	                         ^^^
 //│ ╟── expression of type `A` does not match type `int`
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
-//│ ╙──     	                         ^
+//│ ║       	                         ^
+//│ ╟── Note: Method type parameter is defined at: 
+//│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
+//│ ╙──     	              ^
 //│ Defined class C0
 //│ Defined C0.Foo0: C0 -> anything -> (error | int)
 //│ Defined C0.Foo1: C0 -> 'A -> {a: 'A}
@@ -56,11 +59,14 @@ class C4: C3
 class C5[A]
   method F(x: A) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.57: 	  method F(x: A) = x + 1
+//│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
 //│ ╟── expression of type `A` does not match type `int`
-//│ ║  l.57: 	  method F(x: A) = x + 1
-//│ ╙──      	                   ^
+//│ ║  l.60: 	  method F(x: A) = x + 1
+//│ ║        	                   ^
+//│ ╟── Note: Class type parameter is defined at: 
+//│ ║  l.59: 	class C5[A]
+//│ ╙──      	         ^
 //│ Defined class C5
 //│ Defined C5.F: C5['A] -> 'A -> (error | int)
 
@@ -78,7 +84,7 @@ class Hey
     rec method A = B
     rec method B = 1
 //│ ╔══[ERROR] identifier not found: B
-//│ ║  l.78: 	    rec method A = B
+//│ ║  l.84: 	    rec method A = B
 //│ ╙──      	                   ^
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error
