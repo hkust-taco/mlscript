@@ -1,0 +1,287 @@
+:AllowTypeErrors
+
+
+x1 = false
+x2 = x1
+x3 = x2
+//│ x1: false
+//│ x2: false
+//│ x3: false
+
+:ex
+succ x3
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	succ x3
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `false` does not match type `int`
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.12: 	succ x3
+//│ ║        	     ^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     reference of type false
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.5: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.6: 	x3 = x2
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., argument of type (false,)
+//│ ║  l.12: 	succ x3
+//│ ╙──      	     ^^
+//│ res: error | int
+
+
+f1 y1 = succ y1
+f2 y2 = f1 y2
+f3 y3 = f2 y3
+//│ f1: int -> int
+//│ f2: int -> int
+//│ f3: int -> int
+
+:ex
+f3 true
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.47: 	f3 true
+//│ ║        	^^^^^^^
+//│ ╟── expression of type `true` does not match type `int`
+//│ ║  l.47: 	f3 true
+//│ ║        	   ^^^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     argument of type (true,)
+//│ ║  l.47: 	f3 true
+//│ ║        	   ^^^^
+//│ ╙── [info]     to match type ?a from variable
+//│ res: error | int
+
+
+:ex
+f3 x3
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.64: 	f3 x3
+//│ ║        	^^^^^
+//│ ╟── expression of type `false` does not match type `int`
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── but it flows into reference with expected type `?a`
+//│ ║  l.64: 	f3 x3
+//│ ║        	   ^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     reference of type false
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.5: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.6: 	x3 = x2
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., argument of type (false,)
+//│ ║  l.64: 	f3 x3
+//│ ║        	   ^^
+//│ ╙── [info]     to match type ?b from variable
+//│ res: error | int
+
+
+h1 f x = f x
+h2 f x = h1 f x
+h3 f x = h2 f x
+//│ h1: ('a -> 'b) -> 'a -> 'b
+//│ h2: ('a -> 'b) -> 'a -> 'b
+//│ h3: ('a -> 'b) -> 'a -> 'b
+
+:ex
+h3 f3 x3
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.100: 	h3 f3 x3
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `false` does not match type `int`
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── but it flows into reference with expected type `?a`
+//│ ║  l.100: 	h3 f3 x3
+//│ ║         	      ^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     reference of type false
+//│ ║  l.4: 	x1 = false
+//│ ║       	     ^^^^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.5: 	x2 = x1
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., reference of type false
+//│ ║  l.6: 	x3 = x2
+//│ ║       	     ^^
+//│ ╟── [info]     i.e., argument of type (false,)
+//│ ║  l.100: 	h3 f3 x3
+//│ ║         	      ^^
+//│ ╙── [info]     to match type ?b from variable
+//│ res: error | int
+
+
+:ex
+(fun x -> succ x) false
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.129: 	(fun x -> succ x) false
+//│ ║         	     ^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `false` does not match type `int`
+//│ ║  l.129: 	(fun x -> succ x) false
+//│ ║         	                  ^^^^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     argument of type (false,)
+//│ ║  l.129: 	(fun x -> succ x) false
+//│ ║         	                  ^^^^^
+//│ ╙── [info]     to match type ?a from variable
+//│ res: error | int
+
+// :d
+:ex
+rec def x = add x
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.146: 	rec def x = add x
+//│ ║         	            ^^^^^
+//│ ╟── expression of type `int -> int` does not match type `int`
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     application of type ?a
+//│ ║  l.146: 	rec def x = add x
+//│ ║         	            ^^^^^
+//│ ╟── [info]     to match type ?b from let-bound value
+//│ ║  l.146: 	rec def x = add x
+//│ ╙──       	            ^^^^^
+//│ x: int -> int
+
+
+def foo: int | string
+//│ foo: int | string
+
+:ex
+succ foo
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.166: 	succ foo
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `string` does not match type `int`
+//│ ║  l.162: 	def foo: int | string
+//│ ║         	               ^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.166: 	succ foo
+//│ ║         	     ^^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     type reference of type string
+//│ ║  l.162: 	def foo: int | string
+//│ ║         	               ^^^^^^
+//│ ╟── [info]     i.e., union type of type int | string
+//│ ║  l.162: 	def foo: int | string
+//│ ║         	         ^^^^^^^^^^^^
+//│ ╟── [info]     i.e., argument of type (int | string,)
+//│ ║  l.166: 	succ foo
+//│ ╙──       	     ^^^
+//│ res: error | int
+
+
+
+class A
+class B
+//│ Defined class A
+//│ Defined class B
+
+def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ty00: (A & 'a | B & 'b) -> ('a, 'b,)
+
+def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ty11: (A & 'a | B & 'a) -> ('a, 'a,)
+
+ty11 = ty00
+//│ (A & 'a | B & 'b) -> ('a, 'b,)
+//│   <:  ty11:
+//│ (A & 'a | B & 'a) -> ('a, 'a,)
+
+// :d
+:ex
+ty00 = ty11
+//│ (A & 'a | B & 'a) -> ('a, 'a,)
+//│   <:  ty00:
+//│ (A & 'a | B & 'b) -> ('a, 'b,)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	^^^^^^^^^^^
+//│ ╟── expression of type `B & 'b` does not match type `'a`
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                ^^
+//│ ╟── but it flows into reference of type `(A & ?a | B & ?a) -> (?a, ?a,)`
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	       ^^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b) -> ('a, 'b,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	                                ^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     function type of type (A & ?a0 | B & ?a0) -> (?a0, ?a0,)
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── [info]     i.e., reference of type (A & ?a1 | B & ?a1) -> (?a1, ?a1,)
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	       ^^^^
+//│ ╟── [info]     to match type (A & 'a | B & 'b) -> ('a, 'b,) from function type
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     type variable of type ?a2
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                ^^
+//│ ╟── [info]     i.e., tuple type of type (?a3, ?a3,)
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                ^^^^^^
+//│ ╟── [info]     to match type 'a from type variable
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	                                ^^
+//│ ╟── [info]     i.e., to match type ('a, 'b,) from tuple type
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ╙──       	                                ^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	^^^^^^^^^^^
+//│ ╟── expression of type `A & 'a` does not match type `'b`
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                    ^^
+//│ ╟── but it flows into reference of type `(A & ?a | B & ?a) -> (?a, ?a,)`
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	       ^^^^
+//│ ╟── which does not match type `(A & 'a | B & 'b) -> ('a, 'b,)`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	                                    ^^
+//│ ╟── [info] Additional Explanations below:
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     function type of type (A & ?a0 | B & ?a0) -> (?a0, ?a0,)
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── [info]     i.e., reference of type (A & ?a1 | B & ?a1) -> (?a1, ?a1,)
+//│ ║  l.209: 	ty00 = ty11
+//│ ║         	       ^^^^
+//│ ╟── [info]     to match type (A & 'a | B & 'b) -> ('a, 'b,) from function type
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── [info] While constraining...
+//│ ╟── [info]     type variable of type ?a2
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                    ^^
+//│ ╟── [info]     i.e., tuple type of type (?a3, ?a3,)
+//│ ║  l.199: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║         	                                ^^^^^^
+//│ ╟── [info]     to match type 'b from type variable
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║         	                                    ^^
+//│ ╟── [info]     i.e., to match type ('a, 'b,) from tuple type
+//│ ║  l.196: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ╙──       	                                ^^^^^^
+
