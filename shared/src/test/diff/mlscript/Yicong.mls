@@ -122,76 +122,12 @@ res = if true then (1,2, "hello") else (true, 3)
 //│ res: 'a | (1, 2, "hello",) | (true, 3,)
 //│    = [ 1, 2, 'hello' ]
 
-:d
-res._1
-//│ 0. Typing term res._1
-//│ | 0. Typing term res
-//│ | 0. : [α0]
-//│ | CONSTRAIN [[α0]] <! {_1: α1}
-//│ |   where α0 :> [(1<int,number>, 2<int,number>, "hello"<string>)] | [([true<bool>], 3<int,number>)]
-//│ | C [[α0]] <! {_1: α1}
-//│ | | C [α0] <! {_1: α1}
-//│ | | | C α0 <! {_1: α1}
-//│ | | | | C [(1<int,number>, 2<int,number>, "hello"<string>)] <! {_1: α1}
-//│ | | | | | C (1<int,number>, 2<int,number>, "hello"<string>) <! {_1: α1}
-//│ | | | | | | CONSTRAINT FAILURE: (1<int,number>, 2<int,number>, "hello"<string>) <: {_1: α1}
-//│ | | | | | | CTX: List(List((1<int,number>, 2<int,number>, "hello"<string>) <: {_1: α1} [‹tuple literal:Loc(20,32,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], [(1<int,number>, 2<int,number>, "hello"<string>)] <: {_1: α1} [‹argument:Loc(20,32,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], α0 <: {_1: α1} [‹application:Loc(9,47,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], [α0] <: {_1: α1} [‹reference:Loc(0,3,Yicong:+126)›] [‹field selection:Loc(0,6,Yicong:+126)›], [[α0]] <: {_1: α1} [‹receiver:Loc(0,3,Yicong:+126)›] [‹field selection:Loc(0,6,Yicong:+126)›]))
-//│ | | | | | | CONSTRAIN error<> <! α1
-//│ | | | | | |   where 
-//│ | | | | | | C error<> <! α1
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.126: 	res._1
-//│ ║         	^^^^^^
-//│ ╟── expression of type `(1, 2, "hello",)` does not have field '_1'
-//│ ║  l.121: 	res = if true then (1,2, "hello") else (true, 3)
-//│ ║         	                    ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.126: 	res._1
-//│ ╙──       	^^^
-//│ | | | | C [([true<bool>], 3<int,number>)] <! {_1: α1}
-//│ | | | | | C ([true<bool>], 3<int,number>) <! {_1: α1}
-//│ | | | | | | CONSTRAINT FAILURE: ([true<bool>], 3<int,number>) <: {_1: α1}
-//│ | | | | | | CTX: List(List(([true<bool>], 3<int,number>) <: {_1: α1} [‹tuple literal:Loc(40,47,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], [([true<bool>], 3<int,number>)] <: {_1: α1} [‹argument:Loc(40,47,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], α0 <: {_1: α1} [‹application:Loc(9,47,Yicong:+121)›] [‹field selection:Loc(0,6,Yicong:+126)›], [α0] <: {_1: α1} [‹reference:Loc(0,3,Yicong:+126)›] [‹field selection:Loc(0,6,Yicong:+126)›], [[α0]] <: {_1: α1} [‹receiver:Loc(0,3,Yicong:+126)›] [‹field selection:Loc(0,6,Yicong:+126)›]))
-//│ 0. : α1
-//│ Typed as: α1
-//│  where: α1 :> error<>
-//│ ty[true] α1
-//│ | Consider α1 List(error<>) List()
-//│ -> DNF(α1 | error<>{})
-//│ DNF[true] DNF(α1 | error<>{})
-//│ | Renewed α1 ~> α3
-//│ ~> (error<> | α3)
-//│ Canon: (error<> | α3)
-//│  where: 
-//│ [occs] LinkedHashMap((true,α3) -> HashSet(α3, error<>))
-//│ [vars] TreeSet(α3)
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [!] α3
-//│ [sub] α3 -> None
-//│ Type after simplification: error<>
-//│  where: 
-//│ ty[true] error<>
-//│ -> DNF(error<>{})
-//│ DNF[true] DNF(error<>{})
-//│ ~> error<>
-//│ Recanon: error<>
-//│  where: 
-//│ [occs] LinkedHashMap()
-//│ [vars] TreeSet()
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [sub] 
-//│ Resimplified: error<>
-//│  where: 
-//│ Recons: error<>
-//│ res: error
-//│    = undefined
-
 res = if true then (1, 2, 3, 'hello') else (true, 4, false)
 hhh = if false then (45,345, 'bye', true) else (false, 3)
 t = if false then res else hhh
 g = if true then (6,6,6) else res
+gwx = g with {x=123}
+gwx.x with {y = gwx}
 //│ res: Array["hello" | 1 | 2 | 3 | 4 | bool]
 //│    = [ 1, 2, 3, 'hello' ]
 //│ hhh: Array["bye" | 345 | 3 | 45 | bool]
@@ -200,6 +136,10 @@ g = if true then (6,6,6) else res
 //│  = [ false, 3 ]
 //│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool]
 //│  = [ 6, 6, 6 ]
+//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool] & {x: 123}
+//│    = Array { '0': 6, '1': 6, '2': 6, x: 123 }
+//│ res: 123 & {y: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool] & {x: 123}}
+//│    = [Number: 123] { y: Array { '0': 6, '1': 6, '2': 6, x: 123 } }
 
 def f: (int, bool) -> int
 def g: (bool, string, int) -> int
@@ -207,100 +147,9 @@ def g: (bool, string, int) -> int
 //│ f: (int, bool,) -> int
 //│ g: (bool, string, int,) -> int
 
-:d
 p1 = if true then (1, 2, 2) else (true, false)
-//│ 1. Typing term (((if true) (1, 2, 2,)) (true, false,))
-//│ | 1. Typing term ((if true) (1, 2, 2,))
-//│ | | 1. Typing term (if true)
-//│ | | | 1. Typing term if
-//│ | | | 1. : [(bool<> -> (α0' -> (α0' -> α0')))]
-//│ | | | 1. Typing term true
-//│ | | | 1. : [true<bool>]
-//│ | | | CONSTRAIN [[(bool<> -> (α0' -> (α0' -> α0')))]] <! ([[true<bool>]] -> α1')
-//│ | | |   where 
-//│ | | | C [[(bool<> -> (α0' -> (α0' -> α0')))]] <! ([[true<bool>]] -> α1')
-//│ | | | | C [(bool<> -> (α0' -> (α0' -> α0')))] <! ([[true<bool>]] -> α1')
-//│ | | | | | C (bool<> -> (α0' -> (α0' -> α0'))) <! ([[true<bool>]] -> α1')
-//│ | | | | | | C [[true<bool>]] <! bool<>
-//│ | | | | | | | C [true<bool>] <! bool<>
-//│ | | | | | | | | C true<bool> <! bool<>
-//│ | | | | | | C (α0' -> (α0' -> α0')) <! α1'
-//│ | | 1. : α1'
-//│ | | 1. Typing term (1, 2, 2,)
-//│ | | | 1. Typing term 1
-//│ | | | 1. : 1<int,number>
-//│ | | | 1. Typing term 2
-//│ | | | 1. : 2<int,number>
-//│ | | | 1. Typing term 2
-//│ | | | 1. : 2<int,number>
-//│ | | 1. : (1<int,number>, 2<int,number>, 2<int,number>)
-//│ | | CONSTRAIN [α1'] <! ([(1<int,number>, 2<int,number>, 2<int,number>)] -> α2')
-//│ | |   where α1' :> (α0' -> (α0' -> α0'))
-//│ | | C [α1'] <! ([(1<int,number>, 2<int,number>, 2<int,number>)] -> α2')
-//│ | | | C α1' <! ([(1<int,number>, 2<int,number>, 2<int,number>)] -> α2')
-//│ | | | | C (α0' -> (α0' -> α0')) <! ([(1<int,number>, 2<int,number>, 2<int,number>)] -> α2')
-//│ | | | | | C [(1<int,number>, 2<int,number>, 2<int,number>)] <! α0'
-//│ | | | | | C (α0' -> α0') <! α2'
-//│ | 1. : α2'
-//│ | 1. Typing term (true, false,)
-//│ | | 1. Typing term true
-//│ | | 1. : [true<bool>]
-//│ | | 1. Typing term false
-//│ | | 1. : [false<bool>]
-//│ | 1. : ([true<bool>], [false<bool>])
-//│ | CONSTRAIN [α2'] <! ([([true<bool>], [false<bool>])] -> α3')
-//│ |   where α0' :> [(1<int,number>, 2<int,number>, 2<int,number>)], α2' :> (α0' -> α0')
-//│ | C [α2'] <! ([([true<bool>], [false<bool>])] -> α3')
-//│ | | C α2' <! ([([true<bool>], [false<bool>])] -> α3')
-//│ | | | C (α0' -> α0') <! ([([true<bool>], [false<bool>])] -> α3')
-//│ | | | | C [([true<bool>], [false<bool>])] <! α0'
-//│ | | | | C α0' <! α3'
-//│ | | | | | C [([true<bool>], [false<bool>])] <! α3'
-//│ | | | | | C [(1<int,number>, 2<int,number>, 2<int,number>)] <! α3'
-//│ 1. : α3'
-//│ Typed as: α4
-//│  where: α4 :> [(1<int,number>, 2<int,number>, 2<int,number>)] | [([true<bool>], [false<bool>])]
-//│ ty[true] α4
-//│ | Consider α4 List([(1<int,number>, 2<int,number>, 2<int,number>)], [([true<bool>], [false<bool>])]) List()
-//│ -> DNF(α4 | Array[((((1<int,number> | 2<int,number>) | 2<int,number>) | [true<bool>]) | [false<bool>])]{})
-//│ DNF[true] DNF(α4 | Array[((((1<int,number> | 2<int,number>) | 2<int,number>) | [true<bool>]) | [false<bool>])]{})
-//│ | Renewed α4 ~> α5
-//│ | ty[true] ((((1<int,number> | 2<int,number>) | 2<int,number>) | [true<bool>]) | [false<bool>])
-//│ | -> DNF(1<int,number>{} | 2<int,number>{} | true<bool>{} | false<bool>{})
-//│ | DNF[true] DNF(1<int,number>{} | 2<int,number>{} | true<bool>{} | false<bool>{})
-//│ | ~> (1<int,number> | (2<int,number> | (false<bool> | true<bool>)))
-//│ ~> (Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))] | α5)
-//│ Canon: (Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))] | α5)
-//│  where: 
-//│ [occs] LinkedHashMap((true,α5) -> HashSet(α5, Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]))
-//│ [vars] TreeSet(α5)
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [!] α5
-//│ [sub] α5 -> None
-//│ Type after simplification: Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
-//│  where: 
-//│ ty[true] Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
-//│ -> DNF(Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]{})
-//│ DNF[true] DNF(Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]{})
-//│ | ty[true] (1<int,number> | (2<int,number> | (false<bool> | true<bool>)))
-//│ | -> DNF(1<int,number>{} | 2<int,number>{} | false<bool>{} | true<bool>{})
-//│ | DNF[true] DNF(1<int,number>{} | 2<int,number>{} | false<bool>{} | true<bool>{})
-//│ | ~> (1<int,number> | (2<int,number> | (false<bool> | true<bool>)))
-//│ ~> Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
-//│ Recanon: Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
-//│  where: 
-//│ [occs] LinkedHashMap()
-//│ [vars] TreeSet()
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [sub] 
-//│ Resimplified: Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
-//│  where: 
-//│ Recons: Array[(1<int,number> | (2<int,number> | (false<bool> | true<bool>)))]
 //│ p1: Array[1 | 2 | bool]
 //│   = [ 1, 2, 2 ]
-
 
 def q: Array[int]
 q = if true then (1,1) else (1,1,1)
@@ -317,39 +166,41 @@ def h f = (f (1,2,false), f (1,true))
 q1 = (1,1,1,1)
 q2 = (1,1)
 fx ((a,b,c)) = a + b + c
-fx q1
-fx q2
 //│ q1: (1, 1, 1, 1,)
 //│   = [ 1, 1, 1, 1 ]
 //│ q2: (1, 1,)
 //│   = [ 1, 1 ]
 //│ fx: (int, int, int,) -> int
 //│   = [Function: fx]
+
+:e
+fx q1
+fx q2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.320: 	fx q1
+//│ ║  l.177: 	fx q1
 //│ ║         	^^^^^
 //│ ╟── expression of type `(1, 1, 1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.317: 	q1 = (1,1,1,1)
+//│ ║  l.166: 	q1 = (1,1,1,1)
 //│ ║         	      ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.320: 	fx q1
+//│ ║  l.177: 	fx q1
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.319: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.168: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	     ^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.321: 	fx q2
+//│ ║  l.178: 	fx q2
 //│ ║         	^^^^^
 //│ ╟── expression of type `(1, 1,)` does not match type `(?a, ?b, ?c,)`
-//│ ║  l.318: 	q2 = (1,1)
+//│ ║  l.167: 	q2 = (1,1)
 //│ ║         	      ^^^
 //│ ╟── but it flows into reference with expected type `(?d, ?e, ?f,)`
-//│ ║  l.321: 	fx q2
+//│ ║  l.178: 	fx q2
 //│ ║         	   ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.319: 	fx ((a,b,c)) = a + b + c
+//│ ║  l.168: 	fx ((a,b,c)) = a + b + c
 //│ ╙──       	     ^^^^^
 //│ res: error | int
 //│    = NaN
@@ -362,31 +213,349 @@ q = (1,1)
 //│ Array[int]
 //│  = [ 1, 1 ]
 
+:NoJS
 def sum: Array[int] -> int
 t1 = (1,2,3,4,5,6)
 sum t1
-t2 = (1,1,2, true)
-sum t2
 //│ sum: Array[int] -> int
 //│ t1: (1, 2, 3, 4, 5, 6,)
-//│   = [ 1, 2, 3, 4, 5, 6 ]
 //│ res: int
-//│ Runtime error:
-//│   ReferenceError: sum is not defined
+
+:e
+t2 = (1,1,2,true)
+sum t2
 //│ t2: (1, 1, 2, true,)
-//│   = [ 1, 1, 2, true ]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.369: 	sum t2
+//│ ║  l.226: 	sum t2
 //│ ║         	^^^^^^
 //│ ╟── expression of type `true` does not match type `int`
-//│ ║  l.368: 	t2 = (1,1,2, true)
-//│ ║         	             ^^^^
+//│ ║  l.225: 	t2 = (1,1,2,true)
+//│ ║         	            ^^^^
 //│ ╟── but it flows into reference with expected type `Array[int]`
-//│ ║  l.369: 	sum t2
+//│ ║  l.226: 	sum t2
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.365: 	def sum: Array[int] -> int
+//│ ║  l.217: 	def sum: Array[int] -> int
 //│ ╙──       	               ^^^
 //│ res: error | int
-//│ Runtime error:
-//│   ReferenceError: sum is not defined
+
+t2: (1, 1, 2, bool)
+t2: Array[int | bool]
+//│ res: (1, 1, 2, bool,)
+//│ res: Array[bool | int]
+
+class Wrapped[A]: {len: int; inner: Array[A]}
+//│ Defined class Wrapped
+
+:NoJS
+def tk: Array['a] -> Wrapped['a]
+tk ((1,2,3,true,false))
+//│ tk: Array['a] -> (Wrapped['a] with {inner: Array['a]})
+//│ res: Wrapped['a .. 'a | 1 | 2 | 3 | bool] with {inner: Array['a | 1 | 2 | 3 | bool]}
+
+class Two[A, B]: {fst: Array[A]; snd: Array[B]}
+two = Two {fst=(1,2,3); snd=(true,false)}
+two.fst
+tk (two.snd)
+//│ Defined class Two
+//│ two: Two['A .. 1 | 2 | 3 | 'A, 'B .. 'B | bool] with {fst: (1, 2, 3,), snd: (true, false,)}
+//│ res: (1, 2, 3,)
+//│ res: Wrapped['a .. 'a | bool] with {inner: Array['a | bool]}
+
+:e
+def a1: Array[int]
+a1 = (1,2,true,'hello')
+//│ a1: Array[int]
+//│ (1, 2, true, "hello",)
+//│   <:  a1:
+//│ Array[int]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `true` does not match type `int`
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	          ^^^^
+//│ ╟── but it flows into tuple literal with expected type `Array[int]`
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	      ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.266: 	def a1: Array[int]
+//│ ╙──       	              ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `"hello"` does not match type `int`
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	               ^^^^^^^
+//│ ╟── but it flows into tuple literal with expected type `Array[int]`
+//│ ║  l.267: 	a1 = (1,2,true,'hello')
+//│ ║         	      ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.266: 	def a1: Array[int]
+//│ ╙──       	              ^^^
+
+def getx p = p.x
+def a123: Array[int]
+a123 = (1,2,3)
+getx (a123 with {x=('hello', a123)})
+//│ getx: {x: 'a} -> 'a
+//│ a123: Array[int]
+//│ (1, 2, 3,)
+//│   <:  a123:
+//│ Array[int]
+//│ res: ("hello", Array[int],)
+
+:NoJS
+def append: Array['a] -> Array['b] -> Array['a | 'b]
+append ((1,2,false))(((), 'hi'))
+//│ append: Array['a] -> Array['a] -> Array['a]
+//│ res: Array["hi" | () | 1 | 2 | false]
+
+def ta: T1 & Array[int]
+ta = T1 a123
+//│ ta: Array[int] & t1
+//│ Array[int] & t1
+//│   <:  ta:
+//│ Array[int] & t1
+
+:d
+def tb: T2 & Array[int]
+tb = T2 ((1,2,3))
+//│ Typed as: (T2 & Array[Int])
+//│  where: 
+//│ ty[true] (T2 & Array[Int])
+//│ -> DNF(Array[Int]{}∧t2)
+//│ DNF[true] DNF(Array[Int]{}∧t2)
+//│ | ty[true] Int
+//│ | -> DNF(int<number>{})
+//│ | DNF[true] DNF(int<number>{})
+//│ | ~> int<number>
+//│ ~> (Array[int<number>] & t2)
+//│ Canon: (Array[int<number>] & t2)
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Type after simplification: (Array[int<number>] & t2)
+//│  where: 
+//│ ty[true] (Array[int<number>] & t2)
+//│ -> DNF(Array[int<number>]{}∧t2)
+//│ DNF[true] DNF(Array[int<number>]{}∧t2)
+//│ | ty[true] int<number>
+//│ | -> DNF(int<number>{})
+//│ | DNF[true] DNF(int<number>{})
+//│ | ~> int<number>
+//│ ~> (Array[int<number>] & t2)
+//│ Recanon: (Array[int<number>] & t2)
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Resimplified: (Array[int<number>] & t2)
+//│  where: 
+//│ Recons: (Array[int<number>] & t2)
+//│ tb: Array[int] & t2
+//│ 1. Typing term (T2 (((1, 2, 3,)),))
+//│ | 1. Typing term T2
+//│ | 1. : [((α0') -> (α0' & t2))]
+//│ | 1. Typing term (((1, 2, 3,)),)
+//│ | | 1. Typing term ((1, 2, 3,))
+//│ | | | 1. Typing term (1, 2, 3,)
+//│ | | | | 1. Typing term 1
+//│ | | | | 1. : 1<int,number>
+//│ | | | | 1. Typing term 2
+//│ | | | | 1. : 2<int,number>
+//│ | | | | 1. Typing term 3
+//│ | | | | 1. : 3<int,number>
+//│ | | | 1. : (1<int,number>, 2<int,number>, 3<int,number>)
+//│ | | 1. : (1<int,number>, 2<int,number>, 3<int,number>)
+//│ | 1. : ((1<int,number>, 2<int,number>, 3<int,number>))
+//│ | CONSTRAIN [[((α0') -> (α0' & t2))]] <! ([((1<int,number>, 2<int,number>, 3<int,number>))] -> α1')
+//│ |   where α0' <: ⊤
+//│ | C [[((α0') -> (α0' & t2))]] <! ([((1<int,number>, 2<int,number>, 3<int,number>))] -> α1')
+//│ | | C [((α0') -> (α0' & t2))] <! ([((1<int,number>, 2<int,number>, 3<int,number>))] -> α1')
+//│ | | | C ((α0') -> (α0' & t2)) <! ([((1<int,number>, 2<int,number>, 3<int,number>))] -> α1')
+//│ | | | | C [((1<int,number>, 2<int,number>, 3<int,number>))] <! (α0')
+//│ | | | | | C ((1<int,number>, 2<int,number>, 3<int,number>)) <! (α0')
+//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! α0'
+//│ | | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! ⊤
+//│ | | | | C (α0' & t2) <! α1'
+//│ 1. : α1'
+//│ Typed as: α2
+//│  where: α2 :> (α3 & t2), α3 :> (1<int,number>, 2<int,number>, 3<int,number>) <: ⊤
+//│ ty[true] α2
+//│ | Consider α2 List((α3 & t2)) List()
+//│ | Consider α3 List((1<int,number>, 2<int,number>, 3<int,number>)) List(⊤)
+//│ -> DNF(α2 | {}∧t2∧α3 | (1<int,number>, 2<int,number>, 3<int,number>){}∧t2)
+//│ DNF[true] DNF(α2 | {}∧t2∧α3 | (1<int,number>, 2<int,number>, 3<int,number>){}∧t2)
+//│ | Renewed α2 ~> α4
+//│ | Renewed α3 ~> α5
+//│ | ty[true] 1<int,number>
+//│ | -> DNF(1<int,number>{})
+//│ | DNF[true] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[true] 2<int,number>
+//│ | -> DNF(2<int,number>{})
+//│ | DNF[true] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[true] 3<int,number>
+//│ | -> DNF(3<int,number>{})
+//│ | DNF[true] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ ~> (((1<int,number>, 2<int,number>, 3<int,number>) & t2) | ((t2 & α5) | α4))
+//│ Canon: (((1<int,number>, 2<int,number>, 3<int,number>) & t2) | ((t2 & α5) | α4))
+//│  where: 
+//│ ! true α5 None
+//│ [occs] LinkedHashMap((true,α5) -> HashSet(α5), (true,α4) -> HashSet(α4))
+//│ [vars] TreeSet(α4, α5)
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [!] α4
+//│ [!] α5
+//│ [sub] α4 -> None, α5 -> None
+//│ Type after simplification: ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│  where: 
+//│ ty[true] ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│ -> DNF((1<int,number>, 2<int,number>, 3<int,number>){}∧t2)
+//│ DNF[true] DNF((1<int,number>, 2<int,number>, 3<int,number>){}∧t2)
+//│ | ty[true] 1<int,number>
+//│ | -> DNF(1<int,number>{})
+//│ | DNF[true] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[true] 2<int,number>
+//│ | -> DNF(2<int,number>{})
+//│ | DNF[true] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[true] 3<int,number>
+//│ | -> DNF(3<int,number>{})
+//│ | DNF[true] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ ~> ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│ Recanon: ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Resimplified: ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│  where: 
+//│ Recons: ((1<int,number>, 2<int,number>, 3<int,number>) & t2)
+//│ Typed as: (T2 & Array[Int])
+//│  where: 
+//│ ty[true] (T2 & Array[Int])
+//│ -> DNF(Array[Int]{}∧t2)
+//│ DNF[true] DNF(Array[Int]{}∧t2)
+//│ | ty[true] Int
+//│ | -> DNF(int<number>{})
+//│ | DNF[true] DNF(int<number>{})
+//│ | ~> int<number>
+//│ ~> (Array[int<number>] & t2)
+//│ Canon: (Array[int<number>] & t2)
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Type after simplification: (Array[int<number>] & t2)
+//│  where: 
+//│ ty[true] (Array[int<number>] & t2)
+//│ -> DNF(Array[int<number>]{}∧t2)
+//│ DNF[true] DNF(Array[int<number>]{}∧t2)
+//│ | ty[true] int<number>
+//│ | -> DNF(int<number>{})
+//│ | DNF[true] DNF(int<number>{})
+//│ | ~> int<number>
+//│ ~> (Array[int<number>] & t2)
+//│ Recanon: (Array[int<number>] & t2)
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Resimplified: (Array[int<number>] & t2)
+//│  where: 
+//│ Recons: (Array[int<number>] & t2)
+//│ (1, 2, 3,) & t2
+//│   <:  tb:
+//│ Array[int] & t2
+//│ CONSTRAIN α6 <! (T2 & Array[Int])
+//│   where α6 :> (α7 & t2), α7 :> (1<int,number>, 2<int,number>, 3<int,number>) <: ⊤
+//│ C α6 <! (T2 & Array[Int])
+//│ | C (α7 & t2) <! (T2 & Array[Int])
+//│ | | C (α7 & t2) <! T2
+//│ | | | C (α7 & t2) <! t2
+//│ | | | | ARGH  DNF({}∧t2∧α7)  <!  DNF({}∧t2)
+//│ | | | | | C α7 <! (t2 | ~((t2 & α7)))
+//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (t2 | ~((t2 & α7)))
+//│ | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF({}∧t2 | ~α7 | ~t2|None)
+//│ | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF({}∧t2 | ~α7 | ~t2|None)
+//│ | | | | | | | | Possible: List({}∧t2, ~α7, ~t2|None)
+//│ | | | | | | | | Factorized: List(t2, ~(α7), ~(t2))
+//│ | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(t2, ~(α7), ~(t2))  %  ⊥
+//│ | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~(α7), ~(t2))  %  t2|None
+//│ | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(α7)  <!  List(~(t2))  %  t2|None
+//│ | | | | | | | | | | | C α7 <! ((~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) | t2)
+//│ | | | | | | | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! ((~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) | t2)
+//│ | | | | | | | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None | {}∧t2)
+//│ | | | | | | | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None | {}∧t2)
+//│ | | | | | | | | | | | | | | Possible: List(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))), ~t2|None, {}∧t2)
+//│ | | | | | | | | | | | | | | Factorized: List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2), t2)
+//│ | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2), t2)  %  ⊥
+//│ | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(~(t2), t2)  %  ⊥
+//│ | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(t2, (1<int,number>, 2<int,number>, 3<int,number>))  <!  List(t2)  %  ⊥
+//│ | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(t2)  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List(t2)  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List()  %  t2|None
+//│ | | C (α7 & t2) <! Array[Int]
+//│ | | | C (α7 & t2) <! Array[Int]
+//│ | | | | ARGH  DNF({}∧t2∧α7)  <!  DNF(Array[Int]{})
+//│ | | | | | C α7 <! (Array[Int] | ~((t2 & α7)))
+//│ | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (Array[Int] | ~((t2 & α7)))
+//│ | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(Array[Int]{} | ~α7 | ~t2|None)
+//│ | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(Array[Int]{} | ~α7 | ~t2|None)
+//│ | | | | | | | | Possible: List(~α7, ~t2|None)
+//│ | | | | | | | | Factorized: List(~(α7), ~(t2))
+//│ | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~(α7), ~(t2))  %  ⊥
+//│ | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(α7)  <!  List(~(t2))  %  ⊥
+//│ | | | | | | | | | | C α7 <! (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
+//│ | | | | | | | | | | | C (1<int,number>, 2<int,number>, 3<int,number>) <! (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
+//│ | | | | | | | | | | | | ARGH  DNF((1<int,number>, 2<int,number>, 3<int,number>){})  <!  DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None)
+//│ | | | | | | | | | | | | | Consider (1<int,number>, 2<int,number>, 3<int,number>){} <: DNF(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))) | ~t2|None)
+//│ | | | | | | | | | | | | | Possible: List(~|Some(Left((1<int,number>, 2<int,number>, 3<int,number>))), ~t2|None)
+//│ | | | | | | | | | | | | | Factorized: List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2))
+//│ | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List()  <!  List(~((1<int,number>, 2<int,number>, 3<int,number>)), ~(t2))  %  ⊥
+//│ | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List(~(t2))  %  ⊥
+//│ | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}  %  List(t2, (1<int,number>, 2<int,number>, 3<int,number>))  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List((1<int,number>, 2<int,number>, 3<int,number>))  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | | | | A  (1<int,number>, 2<int,number>, 3<int,number>){}∧t2  %  List()  <!  List()  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (1<int,number>, 2<int,number>, 3<int,number>) <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2))
+//│ | | | | | | | | | | | | | | | | | | CTX: List(List((1<int,number>, 2<int,number>, 3<int,number>) <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], α7 <: (~((1<int,number>, 2<int,number>, 3<int,number>)) | ~(t2)) [‹expression›] [‹expression›], (1<int,number>, 2<int,number>, 3<int,number>) <: (Array[Int] | ~((t2 & α7))) [‹tuple literal:Loc(34,39,Yicong:+322)›] [‹expression›], α7 <: (Array[Int] | ~((t2 & α7))) [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹expression›], (α7 & t2) <: Array[Int] [‹expression›] [‹applied type reference:Loc(13,23,Yicong:+322)›], (α7 & t2) <: (T2 & Array[Int]) [‹expression›] [‹intersection type:Loc(8,23,Yicong:+322)›], α6 <: (T2 & Array[Int]) [‹application:Loc(29,39,Yicong:+322)›] [‹intersection type:Loc(8,23,Yicong:+322)›]))
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.323: 	tb = T2 ((1,2,3))
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── expression of type `(1, 2, 3,)` does not match type `~(1, 2, 3,) | ~t2`
+//│ ║  l.323: 	tb = T2 ((1,2,3))
+//│ ║         	          ^^^^^
+//│ ╟── but it flows into application with expected type `Array[int] & t2`
+//│ ║  l.323: 	tb = T2 ((1,2,3))
+//│ ║         	     ^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.322: 	def tb: T2 & Array[int]
+//│ ╙──       	             ^^^^^^^^^^
+
+def gett1 p q = case p of {T1 -> p | _ -> q}
+gett1 ta (T1 123)
+def gt: (T1 & Array[int | bool]) -> Array[int]
+gt ta
+//│ gett1: (t1 & 'a | ~t1) -> 'a -> 'a
+//│ res: 123 & t1 | Array[int] & t1
+//│ gt: (Array[bool | int] & t1) -> Array[int]
+//│ res: Array[int]
+

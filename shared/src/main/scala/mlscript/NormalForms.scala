@@ -44,6 +44,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
           case (S(TupleType(fs0)), TupleType(fs1)) if fs0.size === fs1.size =>
             S(TupleType(tupleIntersection(fs0, fs1))(noProv))
+          // ? Tuple & Array 
           case (S(ArrayType(i1)), ArrayType(i2)) =>
             // Array[p] & Array[q] => Array[p & q]
             S(ArrayType(i1 & i2)(noProv /* ? not sure */))

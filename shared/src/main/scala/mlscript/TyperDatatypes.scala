@@ -123,8 +123,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // TODO: get the true inner type
     lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
-    // ! this one probab;y wrong
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
+    // still keep this?
     lazy val toRecord: RecordType =
       RecordType(
         fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
