@@ -211,7 +211,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               else
                 rec(b.toArray, ty.toArray)  // ?
                 // fail
-            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ArrayType(ar))))) =>
+            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
               rec(b.toArray, ar)
             case (LhsRefined(S(ArrayType(i1)), ts, r), RhsBases(pts, S(L(ArrayType(i2))))) =>
               rec(i1, i2)
