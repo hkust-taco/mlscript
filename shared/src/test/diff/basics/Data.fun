@@ -43,9 +43,9 @@ bar {age: 1} // TODO B/E
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
 //│ ║        	                         ^^^^
-//│ ╟── from parameter type:
+//│ ╟── from binding:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
-//│ ╙──      	            ^^^^^^^^
+//│ ╙──      	         ^^^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.35: 	bar {name: "Bob"}
@@ -56,9 +56,9 @@ bar {age: 1} // TODO B/E
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
 //│ ║        	                         ^^^^
-//│ ╟── from parameter type:
+//│ ╟── from binding:
 //│ ║  l.27: 	let bar (q: Person _) = q.age
-//│ ╙──      	            ^^^^^^^^
+//│ ╙──      	         ^^^^^^^^^^^
 //│ res: error
 //│ res: 1
 

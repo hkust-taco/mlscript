@@ -157,6 +157,10 @@ abstract class TyperHelpers { self: Typer =>
   
   trait SimpleTypeImpl { self: SimpleType =>
     
+    def showProvOver(enabled: Bool)(str: Str): Str =
+      if (enabled) str + prov.toString
+      else str
+    
     // Note: we implement hashCode and equals manually because:
     //  1. On one hand, we want a ProvType to compare equal to its underlying type,
     //      which is necessary for recursive types to associate type provenances to
@@ -290,6 +294,9 @@ abstract class TyperHelpers { self: Typer =>
       })
     }
     // }(r => s"! $r")
+    
+    def isTop: Bool = (TopType <:< this)(Ctx.empty)
+    def isBot: Bool = (this <:< BotType)(Ctx.empty)
     
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // sometimes behind a single negation,

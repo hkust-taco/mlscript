@@ -17,7 +17,10 @@ T {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
-//│ ╙──     	         ^
+//│ ║       	         ^
+//│ ╟── from intersection type:
+//│ ║  l.7: 	trait T: A & B
+//│ ╙──     	         ^^^^^
 //│ res: error | t
 //│    = {}
 
@@ -28,18 +31,21 @@ def a = A{}
 :e
 T a
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	T a
+//│ ║  l.32: 	T a
 //│ ║        	^^^
 //│ ╟── expression of type `A` does not match type `B`
-//│ ║  l.24: 	def a = A{}
+//│ ║  l.27: 	def a = A{}
 //│ ║        	        ^^^
-//│ ╟── but it flows into reference with expected type `?a`
-//│ ║  l.29: 	T a
+//│ ╟── but it flows into reference with expected type `B`
+//│ ║  l.32: 	T a
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	             ^
-//│ ╟── Note: Class is defined at: 
+//│ ╟── from intersection type:
+//│ ║  l.7: 	trait T: A & B
+//│ ║       	         ^^^^^
+//│ ╟── Note: class A is defined at: 
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: A & t | error
@@ -52,15 +58,18 @@ T A
 //│ res = ((x) => new A(x));
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.50: 	T A
+//│ ║  l.56: 	T A
 //│ ║        	^^^
 //│ ╟── expression of type `anything -> A` does not match type `A`
-//│ ║  l.50: 	T A
+//│ ║  l.56: 	T A
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^
-//│ ╟── Note: Class constructor is defined at: 
+//│ ╟── from intersection type:
+//│ ║  l.7: 	trait T: A & B
+//│ ║       	         ^^^^^
+//│ ╟── Note: class constructor A is defined at: 
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: anything -> A & t | error
@@ -69,15 +78,18 @@ T A
 :e
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	T (B {})
+//│ ║  l.79: 	T (B {})
 //│ ║        	^^^^^^^
 //│ ╟── expression of type `B` does not match type `A`
-//│ ║  l.70: 	T (B {})
+//│ ║  l.79: 	T (B {})
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^
-//│ ╟── Note: Class is defined at: 
+//│ ╟── from intersection type:
+//│ ║  l.7: 	trait T: A & B
+//│ ║       	         ^^^^^
+//│ ╟── Note: class B is defined at: 
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
 //│ res: B & t | error
@@ -108,13 +120,13 @@ t: Als
 :e
 class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
-//│ ║  l.109: 	class D0: T
+//│ ║  l.121: 	class D0: T
 //│ ╙──       	      ^^^^^
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.115: 	class D1: B & T
+//│ ║  l.127: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
 
 
@@ -132,13 +144,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.133: 	t.x
+//│ ║  l.145: 	t.x
 //│ ║         	^^^
 //│ ╟── expression of type `s` does not have field 'x'
-//│ ║  l.128: 	t = s: s
+//│ ║  l.140: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.133: 	t.x
+//│ ║  l.145: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1

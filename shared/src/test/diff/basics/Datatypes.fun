@@ -204,7 +204,7 @@ Cons 1 2
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.109: 	data type List a of
 //│ ║         	               ^
-//│ ╟── from applied type reference:
+//│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
 //│ res: ((Cons['b .. 1 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 'b]}) as 'a) | error

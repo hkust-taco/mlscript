@@ -17,36 +17,30 @@ h / mkArg false
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `false` does not match type `int`
-//│ ║  l.8: 	let mkArg = a => {prop: a}
-//│ ║       	            ^
-//│ ╟── but it flows into application with expected type `?a`
 //│ ║  l.15: 	h / mkArg false
-//│ ║        	    ^^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
+//│ ║        	          ^^^^^
+//│ ╟── Note: constraint arises from argument:
 //│ ║  l.7: 	  succ / f y
 //│ ║       	         ^^^
 //│ ╟── from field selection:
 //│ ║  l.5: 	  x.prop
-//│ ║       	   ^^^^^
-//│ ╟── from variable:
-//│ ║  l.3: 	let f = x =>
-//│ ║       	        ^
-//│ ╟── from variable:
-//│ ║  l.6: 	let h = y =>
-//│ ╙──     	        ^
+//│ ╙──     	   ^^^^^
 //│ res: error | int
 
 :v
 :e
 (x => succ x) false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.41: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `false` does not match type `int`
-//│ ║  l.41: 	(x => succ x) false
+//│ ║  l.32: 	(x => succ x) false
 //│ ║        	              ^^^^^
-//│ ╟── Note: constraint arises from variable:
-//│ ║  l.41: 	(x => succ x) false
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.32: 	(x => succ x) false
+//│ ║        	           ^
+//│ ╟── from variable:
+//│ ║  l.32: 	(x => succ x) false
 //│ ╙──      	 ^
 //│ res: error | int
 
@@ -69,22 +63,16 @@ let test = x => y => if x.prop then i x else y
 :verbose
 test arg2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	test arg2
+//│ ║  l.64: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── expression of type `bool` does not match type `int`
-//│ ║  l.57: 	let arg = {prop: not true}
+//│ ║  l.51: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a`
-//│ ║  l.70: 	test arg2
-//│ ║        	     ^^^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.60: 	  succ / f y.fld
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.54: 	  succ / f y.fld
 //│ ║        	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.56: 	  x.prop
-//│ ║        	   ^^^^^
-//│ ╟── from field selection:
-//│ ║  l.60: 	  succ / f y.fld
-//│ ╙──      	            ^^^^
+//│ ║  l.50: 	  x.prop
+//│ ╙──      	   ^^^^^
 //│ res: 'a -> (int | 'a) | error
 

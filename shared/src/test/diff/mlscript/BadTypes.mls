@@ -63,9 +63,6 @@ aa: { a: int; a: string }
 //│ ╟── expression of type `1` does not match type `string`
 //│ ║  l.36: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
-//│ ╟── but it flows into reference with expected type `{a: int, a: string}`
-//│ ║  l.50: 	aa: { a: int; a: string }
-//│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.50: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^

@@ -119,9 +119,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   import TypeProvenance.{apply => tp}
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
-  def originProv(loco: Opt[Loc], desc: Str): TypeProvenance = {
+  def originProv(loco: Opt[Loc], desc: Str, name: Str): TypeProvenance = {
     // TODO make a new sort of provenance for where types and type varianles are defined
-    tp(loco, desc, true)
+    tp(loco, desc, S(name))
     // ^ This yields unnatural errors like:
       //│ ╟── expression of type `B` is not a function
       //│ ║  l.6: 	    method Map[B]: B -> A
@@ -129,7 +129,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     // So we should keep the info but not shadow the more relevant later provenances
   }
   
-  val noProv: TypeProvenance = tp(N, "expression")
+  object NoProv extends TypeProvenance(N, "expression") {
+    override def toString: Str = "[NO PROV]"
+  }
+  def noProv: TypeProvenance = NoProv
   
   val TopType: ExtrType = ExtrType(false)(noProv)
   val BotType: ExtrType = ExtrType(true)(noProv)
@@ -285,7 +288,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case _ =>
       }
       val dummyTargs = td.tparams.map(p =>
-        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter"), S(p.name))(ctx.lvl + 1))
+        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
         typeType2(td.body, simplify = false)(ctx.nextLevel, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
@@ -390,7 +393,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                     tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
                   val ctor = k match {
                     case Cls =>
-                      val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class"), ctx)
+                      val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
                         else f._1 ->
@@ -402,14 +405,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
-                        )(noProv))(originProv(td.nme.toLoc, "class constructor")))
+                        )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
-                      val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait"), ctx)
+                      val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
                       val tv = freshVar(noProv)(1)
                       tv.upperBounds ::= td.bodyTy
                       PolymorphicType(0, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
-                      )(originProv(td.nme.toLoc, "trait constructor")))
+                      )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
                   ctx += n.name -> ctor
               }
@@ -493,7 +496,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               }
               rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
               val dummyTargs2 = tparams.map(p =>
-                TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter")))
+                TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
               val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
               val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
                 t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
@@ -781,7 +784,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def typeLetRhs(isrec: Boolean, nme: Str, rhs: Term)(implicit ctx: Ctx, raise: Raise,
       vars: Map[Str, SimpleType] = Map.empty): PolymorphicType = {
     val res = if (isrec) {
-      val e_ty = freshVar(TypeProvenance(rhs.toLoc, "let-bound value"))(lvl + 1)
+      val e_ty = freshVar(
+        // It turns out it is better to NOT store a provenance here,
+        //    or it will obscure the true provenance of constraints causing errors
+        //    across recursive references.
+        noProv
+        // TypeProvenance(rhs.toLoc, "let-bound value")
+      )(lvl + 1)
       ctx += nme -> e_ty
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
@@ -931,10 +940,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val res = freshVar(prov)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default
-        val appProv = tp(f.toCoveringLoc, "applied expression")
-        val fun_ty = mkProxy(f_ty, appProv)
-        val resTy = con(fun_ty, FunctionType(arg_ty, res)(prov), res)
-        val raw_fun_ty = fun_ty.unwrapProxies
+        val funProv = tp(f.toCoveringLoc, "applied expression")
+        val fun_ty = mkProxy(f_ty, funProv)
+          // ^ This is mostly not useful, except in test Tuples.fun with `(1, true, "hey").2`
+        val resTy = con(fun_ty, FunctionType(arg_ty, res)(
+          prov
+          // funProv // TODO: better?
+          ), res)
         resTy
       case Sel(obj, fieldName) =>
         // Explicit method calls have the form `x.(Class.Method)`
@@ -949,7 +961,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           con(obj_ty, RecordType.mk((fieldName, res) :: Nil)(prov), res)
         }
-        def mthCall(obj: Term, fieldName: Var) = 
+        def mthCallOrSel(obj: Term, fieldName: Var) = 
           (fieldName.name match {
             case s"$parent.$nme" => ctx.getMth(S(parent), nme) // explicit calls
             case nme => ctx.getMth(N, nme) // implicit calls
@@ -975,9 +987,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case S(mth_ty) => mth_ty.instantiate
               case N =>
                 err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-                mthCall(obj, fieldName)
+                mthCallOrSel(obj, fieldName)
             }
-          case _ => mthCall(obj, fieldName)
+          case _ => mthCallOrSel(obj, fieldName)
         }
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme.name, rhs)

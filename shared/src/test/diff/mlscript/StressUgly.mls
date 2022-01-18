@@ -29,15 +29,9 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── expression of type `Add[?b]` does not match type `int`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                   ^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[int]`
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ╙──     	              ^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                  ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,9 +53,6 @@ eval1_ty = eval1_ty_ugly
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
 //│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	              ^^^^^^^^
 //│ ╟── from local type binding:
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
@@ -81,9 +72,9 @@ eval1_ty = eval1_ty_ugly
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `Add[?] | Lit`
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ║       	                             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[int]`
+//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
+//│ ║        	                  ^^^
+//│ ╟── but it flows into reference with expected type `Add[?] | Lit`
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -93,9 +84,9 @@ eval1_ty = eval1_ty_ugly
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ║       	                             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[int]`
+//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
+//│ ║        	                  ^^^
+//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -108,9 +99,9 @@ eval1_ty = eval1_ty_ugly
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ║       	                             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[int]`
+//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
+//│ ║        	                  ^^^
+//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -123,9 +114,9 @@ eval1_ty = eval1_ty_ugly
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `int` does not match type `{Add#E = int} | Lit`
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ║       	                             ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[int]`
+//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
+//│ ║        	                  ^^^
+//│ ╟── but it flows into reference with expected type `{Add#E = int} | Lit`
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -133,7 +124,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	              ^^^^^^^^
 //│ Runtime error:
 //│   ReferenceError: eval1_ty_ugly is not defined
-//│ constrain calls  : 45
+//│ constrain calls  : 62
 //│ annoying  calls  : 53
-//│ subtyping calls  : 459
+//│ subtyping calls  : 462
 

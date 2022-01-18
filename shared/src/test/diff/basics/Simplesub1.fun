@@ -82,10 +82,10 @@ x => succ (not x)
 //│ ╟── expression of type `123` does not match type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
-//│ ╟── but it flows into record with expected type `{f: ?a}`
+//│ ╟── Note: constraint arises from argument:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
-//│ ║        	               ^^^^^^^^^^
-//│ ╟── Note: constraint arises from field selection:
+//│ ║        	          ^^^
+//│ ╟── from field selection:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ╙──      	           ^^
 //│ res: bool | error
@@ -100,7 +100,10 @@ x => succ (not x)
 //│ ║        	                        ^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
-//│ ╙──      	                ^^^^^
+//│ ║        	                ^^^^^
+//│ ╟── from reference:
+//│ ║  l.+1: 	(f => x => not (f x.u)) false
+//│ ╙──      	                ^
 //│ res: {u: anything} -> bool | error
 
 
@@ -256,7 +259,10 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                           ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                    ^^^
+//│ ║        	                                    ^^^
+//│ ╟── from reference:
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ╙──      	                                    ^
 //│ x: 0
 //│ res: 0
 

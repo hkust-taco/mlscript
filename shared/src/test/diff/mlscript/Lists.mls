@@ -70,12 +70,12 @@ res.tail.head
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Nil` does not have field 'tail'
-//│ ║  l.63: 	res.tail
-//│ ║        	^^^^^^^^
+//│ ║  l.13: 	def Nil = Nil {}
+//│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^
-//│ ╟── Note: Class is defined at: 
+//│ ╟── Note: class Nil is defined at: 
 //│ ║  l.2: 	class Nil: {}
 //│ ╙──     	      ^^^
 //│ res: error
@@ -110,15 +110,15 @@ Cons 1 res
 //│ ╟── expression of type `2` does not match type `Nil | Cons[?A]`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `?a`
+//│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.3: 	class Cons[A]: { head: A; tail: List[A] }
-//│ ╙──     	                                ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ╙──      	                                          ^^^^
 //│ res: (Cons['A .. 1 | 'A] with {head: 1, tail: 2}) | error
 //│    = Cons { head: 1, tail: 2 }
 

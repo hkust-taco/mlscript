@@ -32,7 +32,10 @@ flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `"oops"` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.29: 	flatMap f "oops"
-//│ ╙──      	          ^^^^^^
+//│ ║        	          ^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
+//│ ╙──      	       ^^^
 //│ res: error | (Some['A] with {v: nothing})
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
