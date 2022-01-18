@@ -35,7 +35,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `Add[?]`
+//│ ╟── expression of type `int` is not an instance of type Add
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -47,7 +47,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `{lhs: int, rhs: int}`
+//│ ╟── expression of type `int` is not a record (expected a record with fields: lhs, rhs)
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
 //│ ╟── Note: constraint arises from record type:

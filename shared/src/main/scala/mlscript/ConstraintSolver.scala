@@ -172,13 +172,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // TODO improve:
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
-          def fail = { reportError(doesntMatch(cctx._2.head)) }
           (done_ls, done_rs) match {
             case (LhsRefined(S(Without(b, _)), _, _), RhsBot) => rec(b, BotType, true)
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
               | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
-              fail
+              reportError
             case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
@@ -188,7 +187,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(S(pt: ClassTag), ts, r), RhsBases(pts, bf)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
-              // else f.fold(fail)(f => annoying(Nil, done_ls, Nil, f))
+              // else f.fold(reportError)(f => annoying(Nil, done_ls, Nil, f))
               else annoying(Nil, LhsRefined(N, ts, r), Nil, RhsBases(Nil, bf))
             case (lr @ LhsRefined(bo, ts, r), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
@@ -201,14 +200,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case S(Without(b, ns)) =>
                       if (ns(n)) rec(b, RhsBases(ots, N).toType(), true)
                       else rec(b, done_rs.toType(), true)
-                    case _ => fail
+                    case _ => reportError
                   }
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) => fail
+            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) =>
+              reportError
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size
               => (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
-            case (LhsRefined(S(b: TupleType), ts, r), _) => fail
+            case (LhsRefined(S(b: TupleType), ts, r), _) => reportError
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -314,6 +314,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (FunctionType(l0, r0), err @ ClassTag(ErrTypeId, _)) =>
             rec(err, l0, false)
             rec(r0, err, false)
+          case (RecordType(fs0), RecordType(fs1)) =>
+            fs1.foreach { case (n1, t1) =>
+              fs0.find(_._1 === n1).fold {
+                reportError
+              } { case (n0, t0) => rec(t0, t1, false) }
+            }
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
@@ -333,33 +339,42 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
-          case _ =>
-            val failureOpt = lhs_rhs match {
-              case (RecordType(fs0), RecordType(fs1)) =>
-                var fieldErr: Opt[Message] = N
-                fs1.foreach { case (n1, t1) =>
-                  fs0.find(_._1 === n1).fold {
-                    if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1.name))
-                  } { case (n0, t0) => rec(t0, t1, false) }
-                }
-                fieldErr
-              case (_, FunctionType(_, _)) => S(msg"is not a function")
-              case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n.name))
-              case _ => S(doesntMatch(lhs_rhs._2))
-            }
-            failureOpt.foreach(reportError)
+          case _ => reportError
       }
     }}()
     
     def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
     def doesntHaveField(n: Str) = msg"does not have field '$n'"
     
-    def reportError(error: Message)(implicit cctx: ConCtx): Unit = {
+    def reportError(implicit cctx: ConCtx): Unit = {
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       // println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      
+      val failure = (lhs.unwrapProvs, rhs.unwrapProvs) match {
+        // case (lunw, _) if lunw.isInstanceOf[TV] || lunw.isInstanceOf => doesntMatch(rhs)
+        case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
+        case (RecordType(fs0), RecordType(fs1)) =>
+          (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
+            .headOption.fold(doesntMatch(rhs)) { n1 => doesntHaveField(n1.name) }
+        case (lunw, obj: ObjectTag)
+          if obj.id.isInstanceOf[Var]
+          && !primitiveTypes(obj.id.idStr)
+          => msg"is not an instance of type ${obj.id.idStr.capitalize}"
+        case (lunw, TupleType(fs))
+          if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
+        case (lunw, FunctionType(_, _))
+          if !lunw.isInstanceOf[FunctionType] => msg"is not a function"
+        case (lunw, RecordType((n, _) :: Nil))
+          if !lunw.isInstanceOf[RecordType] => doesntHaveField(n.name)
+        case (lunw, RecordType(fs @ (_ :: _)))
+          if !lunw.isInstanceOf[RecordType] =>
+            msg"is not a record (expected a record with field${
+              if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
+        case _ => doesntMatch(rhs)
+      }
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
@@ -420,7 +435,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val msgs: Ls[Message -> Opt[Loc]] = Ls[Ls[Message -> Opt[Loc]]](
         msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-        msg"expression of type `${lhs.expPos}` $error" ->
+        msg"expression of type `${lhs.expPos}` $failure" ->
           (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
         tighestRelevantFailure.map { l =>
           val expTyMsg = msg" with expected type `${rhs.expNeg}`"

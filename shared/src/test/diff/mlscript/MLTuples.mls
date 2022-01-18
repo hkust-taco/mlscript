@@ -98,10 +98,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	f tx
 //│ ║        	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
 //│ ║  l.82: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -159,7 +159,7 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.158: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
@@ -217,7 +217,7 @@ t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.215: 	t._1
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
 //│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
@@ -228,7 +228,7 @@ t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.216: 	t._2
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
 //│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`

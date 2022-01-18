@@ -318,7 +318,7 @@ ty00 = ty11
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.314: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `B & 'b` does not match type `'a`
+//│ ╟── expression of type `B & 'b` is not an instance of type 'a
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -346,7 +346,7 @@ ty00 = ty11
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.314: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
-//│ ╟── expression of type `A & 'a` does not match type `'b`
+//│ ╟── expression of type `A & 'a` is not an instance of type 'b
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^
 //│ ╟── Note: constraint arises from type variable:

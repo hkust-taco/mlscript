@@ -56,7 +56,7 @@ def bar0 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.52: 	def bar0 = foo
 //│ ║        	           ^^^
-//│ ╟── expression of type `Base1[int] & ~?a | Derived1` does not match type `{x: int}`
+//│ ╟── expression of type `Base1[int] & ~?a | Derived1` does not have field 'x'
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                             ^^^^^^^^^^
@@ -85,7 +85,7 @@ def bar1 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.81: 	def bar1 = foo
 //│ ║        	           ^^^
-//│ ╟── expression of type `int` does not match type `{c: ?a, d: ?b}`
+//│ ╟── expression of type `int` is not a record (expected a record with fields: c, d)
 //│ ║  l.69: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ║        	                        ^^^
 //│ ╟── Note: constraint arises from record type:
@@ -109,7 +109,7 @@ def bar1 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.81: 	def bar1 = foo
 //│ ║        	           ^^^
-//│ ╟── expression of type `int` does not match type `{c: ?a, d: ?b}`
+//│ ╟── expression of type `int` is not a record (expected a record with fields: c, d)
 //│ ║  l.69: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ║        	                        ^^^
 //│ ╟── Note: constraint arises from record type:
@@ -192,7 +192,7 @@ def bar2 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.188: 	def bar2 = foo
 //│ ║         	           ^^^
-//│ ╟── expression of type `int` does not match type `'a`
+//│ ╟── expression of type `int` is not an instance of type 'a
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                      ^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -210,7 +210,7 @@ def bar2 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.188: 	def bar2 = foo
 //│ ║         	           ^^^
-//│ ╟── expression of type `Base1['a] & ~?a | Derived1` does not match type `{x: int}`
+//│ ╟── expression of type `Base1['a] & ~?a | Derived1` does not have field 'x'
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                             ^^^^^^^^^^

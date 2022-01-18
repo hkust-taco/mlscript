@@ -43,7 +43,7 @@ def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.42: 	def dv = D{}
 //│ ║        	         ^^^
-//│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
+//│ ╟── expression of type `anything` is not a record (expected a record with fields: y, x)
 //│ ║  l.42: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
@@ -157,7 +157,7 @@ def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.156: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
-//│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
+//│ ╟── expression of type `anything` is not a record (expected a record with fields: y, x)
 //│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error

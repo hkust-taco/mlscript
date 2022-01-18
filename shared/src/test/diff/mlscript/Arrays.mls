@@ -137,7 +137,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `'a` does not match type `Array[?]`
+//│ ╟── expression of type `'a` is not an instance of type Array
 //│ ║  l.23: 	def ty2A: Array['a]
 //│ ║        	                ^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -146,7 +146,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `'a` does not match type `{size: int, set: (int, ?a,) -> (), get: int -> ?a}`
+//│ ╟── expression of type `'a` is not a record (expected a record with fields: size, set, get)
 //│ ║  l.23: 	def ty2A: Array['a]
 //│ ║        	                ^^
 //│ ╟── Note: constraint arises from record type:
@@ -167,7 +167,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `Array[?a]` does not match type `'a`
+//│ ╟── expression of type `Array[?a]` is not an instance of type 'a
 //│ ║  l.35: 	def ty2B: Array[Array['a]]
 //│ ║        	                ^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:

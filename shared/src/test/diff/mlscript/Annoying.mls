@@ -61,7 +61,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not match type `{f: ?b}`
+//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -71,14 +71,14 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{y: 'a} & ~int` does not match type `{x: ?a}`
+//│ ╟── expression of type `{y: 'a} & ~int` does not have field 'x'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                                           ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {y: 'a} | {y: 'a} & ~?a` does not match type `{f: ?b}`
+//│ ╟── expression of type `int & {y: 'a} | {y: 'a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.57: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
