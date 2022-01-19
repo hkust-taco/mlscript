@@ -265,6 +265,7 @@ tk (two.snd)
 :e
 def a1: Array[int]
 a1 = (1,2,true,'hello')
+a1._2
 //│ a1: Array[int]
 //│ (1, 2, true, "hello",)
 //│   <:  a1:
@@ -293,6 +294,16 @@ a1 = (1,2,true,'hello')
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.266: 	def a1: Array[int]
 //│ ╙──       	              ^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.268: 	a1._2
+//│ ║         	^^^^^
+//│ ╟── expression of type `Array[int]` does not have field '_2'
+//│ ║  l.266: 	def a1: Array[int]
+//│ ║         	        ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_2: ?a}`
+//│ ║  l.268: 	a1._2
+//│ ╙──       	^^
+//│ res: error
 
 def getx p = p.x
 def a123: Array[int]
@@ -372,29 +383,29 @@ iarr = intersect ((1,2,3,false)) ((1,5,true,'hi',false))
 fst iarr
 snd (T1 ((1,2,3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.372: 	fst iarr
+//│ ║  l.383: 	fst iarr
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Array[?a & ?b]` does not match type `(?c, ?d,)`
-//│ ║  l.366: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
+//│ ║  l.377: 	def intersect: Array['a] -> Array['b] -> Array['a & 'b]
 //│ ║         	                                         ^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.372: 	fst iarr
+//│ ║  l.383: 	fst iarr
 //│ ║         	    ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.352: 	def fst ((a, b)) = a
+//│ ║  l.363: 	def fst ((a, b)) = a
 //│ ╙──       	          ^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.373: 	snd (T1 ((1,2,3)))
+//│ ║  l.384: 	snd (T1 ((1,2,3)))
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,) | ~t1`
-//│ ║  l.373: 	snd (T1 ((1,2,3)))
+//│ ║  l.384: 	snd (T1 ((1,2,3)))
 //│ ║         	          ^^^^^
 //│ ╟── but it flows into application with expected type `(?a, ?b,)`
-//│ ║  l.373: 	snd (T1 ((1,2,3)))
+//│ ║  l.384: 	snd (T1 ((1,2,3)))
 //│ ║         	     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.353: 	def snd ((a, b)) = b
+//│ ║  l.364: 	def snd ((a, b)) = b
 //│ ╙──       	          ^^^^
 //│ res: error
 
@@ -426,29 +437,29 @@ inn2 (T2 r1)
 inn (T1 v3)
 inn2 v1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.426: 	inn (T1 v3)
+//│ ║  l.437: 	inn (T1 v3)
 //│ ║         	^^^^^^^^^^
 //│ ╟── expression of type `Array[Array[(int, true,)]]` does not match type `t2 | ~t1`
-//│ ║  l.407: 	def v3: Array[Array[(int, true)]]
+//│ ║  l.418: 	def v3: Array[Array[(int, true)]]
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `t2 | ~t1`
-//│ ║  l.426: 	inn (T1 v3)
+//│ ║  l.437: 	inn (T1 v3)
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.403: 	def inn: (T1 & T2 & Array['a]) -> 'a
+//│ ║  l.414: 	def inn: (T1 & T2 & Array['a]) -> 'a
 //│ ╙──       	               ^^
 //│ res: Array[(int, true,)] | error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.427: 	inn2 v1
+//│ ║  l.438: 	inn2 v1
 //│ ║         	^^^^^^^
 //│ ╟── expression of type `1` does not match type `Array[?a]`
-//│ ║  l.401: 	v1 = T1 (T2 ((1,2,true)))
+//│ ║  l.412: 	v1 = T1 (T2 ((1,2,true)))
 //│ ║         	              ^
 //│ ╟── but it flows into reference with expected type `Array[Array[?a]]`
-//│ ║  l.427: 	inn2 v1
+//│ ║  l.438: 	inn2 v1
 //│ ║         	     ^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.404: 	def inn2: (T2 & Array[Array['a]]) -> Array[T1 & 'a]
+//│ ║  l.415: 	def inn2: (T2 & Array[Array['a]]) -> Array[T1 & 'a]
 //│ ╙──       	                      ^^^^^^^^^
 //│ res: Array[nothing] | error
 
@@ -465,28 +476,49 @@ ra: (Array['a], Array['a]) as 'a
 ra: ('a, 'a, 'a) as 'a
 ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.465: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.476: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── expression of type `(?a, ?a,)` does not match type `(?a0, ?a0, ?a0,)`
-//│ ║  l.455: 	def ra: ('a, 'a) as 'a
+//│ ║  l.466: 	def ra: ('a, 'a) as 'a
 //│ ║         	         ^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a1, ?a1, ?a1,)`
-//│ ║  l.465: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.476: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.465: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.476: 	ra: ('a, 'a, 'a) as 'a
 //│ ╙──       	     ^^^^^^^^^^
 //│ res: Array['a] | error as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.466: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.477: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── expression of type `(?a, ?a,)` does not match type `(Array[?a0], Array[?a0], Array[?a0],)`
-//│ ║  l.455: 	def ra: ('a, 'a) as 'a
+//│ ║  l.466: 	def ra: ('a, 'a) as 'a
 //│ ║         	         ^^^^^^
 //│ ╟── but it flows into reference with expected type `(Array[?a1], Array[?a1], Array[?a1],)`
-//│ ║  l.466: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.477: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.466: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.477: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Array[Array['a]] | error as 'a
+
+def tktup t = (t._2, t._3)
+tktup ((1,2,3,true))
+//│ tktup: {_2: 'a, _3: 'b} -> ('a, 'b,)
+//│ res: (2, 3,)
+
+:e
+tktup a123
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.511: 	tktup a123
+//│ ║         	^^^^^^^^^^
+//│ ╟── expression of type `Array[int]` does not have field '_3'
+//│ ║  l.309: 	def a123: Array[int]
+//│ ║         	          ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_3: ?a}`
+//│ ║  l.511: 	tktup a123
+//│ ║         	      ^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.505: 	def tktup t = (t._2, t._3)
+//│ ╙──       	                     ^^^^
+//│ res: (nothing, nothing,) | error

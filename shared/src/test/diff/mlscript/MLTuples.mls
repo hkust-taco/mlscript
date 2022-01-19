@@ -36,7 +36,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.35: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not have field 'x'
+//│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -203,27 +203,9 @@ if bool then (1,) else fun x -> x
 
 t._1
 t._2
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.204: 	t._1
-//│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not have field '_1'
-//│ ║  l.2: 	t = (1, 2, 3)
-//│ ║       	     ^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.204: 	t._1
-//│ ╙──       	^
-//│ res: error
+//│ res: 1
 //│    = undefined
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.205: 	t._2
-//│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not have field '_2'
-//│ ║  l.2: 	t = (1, 2, 3)
-//│ ║       	     ^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.205: 	t._2
-//│ ╙──       	^
-//│ res: error
+//│ res: 2
 //│    = undefined
 
 
@@ -241,24 +223,24 @@ t.x
 t._1
 t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.241: 	t._1
+//│ ║  l.223: 	t._1
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
-//│ ║  l.230: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.241: 	t._1
+//│ ║  l.223: 	t._1
 //│ ╙──       	^
 //│ res: error
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.242: 	t._2
+//│ ║  l.224: 	t._2
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
-//│ ║  l.230: 	t = (1, 2, 3) with {x = 1}
+//│ ║  l.212: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.242: 	t._2
+//│ ║  l.224: 	t._2
 //│ ╙──       	^
 //│ res: error
 //│    = undefined
@@ -270,15 +252,6 @@ t = (1, 2, 3) with {_1 = "oops"}
 
 // FIXME (https://github.com/hkust-taco/mlscript/issues/69)
 (t: (int,int,int,))._1
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.272: 	(t: (int,int,int,))._1
-//│ ║         	 ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(int, int, int,)` does not have field '_1'
-//│ ║  l.272: 	(t: (int,int,int,))._1
-//│ ║         	     ^^^^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{_1: ?a}`
-//│ ║  l.272: 	(t: (int,int,int,))._1
-//│ ╙──       	 ^
-//│ res: error
+//│ res: int
 //│    = 'oops'
 
