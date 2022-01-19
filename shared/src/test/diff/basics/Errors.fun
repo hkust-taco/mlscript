@@ -663,6 +663,9 @@ i / mkArg 1
 //│ ╟── record of type `{prop: ?a}` does not match type `int`
 //│ ║  l.648: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
+//│ ║        	         ^^^^^^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.327: 	  log / succ x.prop
 //│ ║         	             ^^^^^^
@@ -721,4 +724,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.722:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.725:3: ba)r

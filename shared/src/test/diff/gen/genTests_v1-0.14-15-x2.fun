@@ -338,9 +338,9 @@ add
 //│ ╟── reference of type `int -> int -> int` does not match type `int`
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
 //│ ║        	                           ^^^
-//│ ╟── but it flows into argument with expected type `int`
+//│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
-//│ ╙──      	                  ^^^^^^^^^^^^^^^^
+//│ ╙──      	                                ^
 //│ res: int -> int | error
 
 ((let x = 0; add) (let rec x = x; x))
