@@ -400,7 +400,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val relevantFailures = lhsChain.collect {
         case st
           if st.prov.loco =/= lhsProv.loco
-          && st.prov.loco.exists(ll => prov.loco.forall(ll touches _))
+          && st.prov.loco.exists(ll => prov.loco.forall(pl => (ll touches pl) || (pl covers ll)))
         => st
       }
       val tighestRelevantFailure = relevantFailures.headOption

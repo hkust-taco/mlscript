@@ -50,9 +50,9 @@ f (0 as Int)
 //│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into type union with expected type `0 | 1`
 //│ ║  l.21: 	f (0 as 1 | 3)
-//│ ║        	  ^^^^^^^^^^^^
+//│ ║        	        ^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
@@ -66,9 +66,9 @@ f (0 as Int)
 //│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	            ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into type union with expected type `0 | 1`
 //│ ║  l.22: 	f (0 as 0 | 3)
-//│ ║        	  ^^^^^^^^^^^^
+//│ ║        	        ^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
@@ -91,9 +91,9 @@ f (0 as Int)
 //│ ╟── integer literal of type `3` does not match type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	        ^
-//│ ╟── but it flows into argument with expected type `0 | 1`
+//│ ╟── but it flows into type union with expected type `0 | 1`
 //│ ║  l.23: 	f (0 as 3 | 4)
-//│ ║        	  ^^^^^^^^^^^^
+//│ ║        	        ^^^^^
 //│ ╟── Note: constraint arises from type union:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ║       	                ^^^^^
