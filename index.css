@@ -1,90 +1,74 @@
 body {
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    font-size: 16px;
     background-color: #eee8d5;
     max-width: 1200px;
     margin: 0px auto;
     padding: 5px;
     color: #073642;
+    --keyword-color: #93a1a1;
+    --name-color: LightGreen;
+    --type-color: LightBlue;
+    --no-value-color: Gray;
+    --panel-background: #002b36;
 }
+
 h1, p{
-    font-family: sans-serif;
     padding: 0px 10px;
 }
+
 #content {
     width: 100%;
     padding: 0px;
-    height: 450px;
-}
-#content::after {
-    content: ".";
-    visibility: hidden;
-    display: block;
-    height: 0;
-    clear: both;
+    height: 600px;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 100%;
+    grid-gap: 1.5rem;
 }
 
-#left, #right, textarea {
-    width: 50%;
-    height: 100%;
-    padding: 10px;
+.panel {
+    padding: 1rem;
     box-sizing: border-box;
-    font-family: monospace;
-}
-
-#left {
-    float: left;
-}
-
-#right {
-    float: right;
-}
-
-#mlscript-input, #mlscript-output {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     width: 100%;
     height: 100%;
     box-sizing: border-box;
     border-radius: 10px;
-    padding: 10px;
-    background-color: #002b36;
+    background: var(--panel-background);
     /* color: #93a1a1; */
     /* color: #cacaca; */
     color: #efefef;
     font-size: 14px;
     overflow: auto;
 }
+
 #mlscript-input {
     resize: none;
     outline: none;
 }
 
-#mlscript-output {
-    border: 1px solid black;
-    overflow: auto;
+#mlscript-output > table {
+    border-collapse: collapse;
 }
 
-.binding {
-    font-family: monospace;
-    white-space: pre;
-}
-
-.name::before {
-    content: "val ";
-    color: #839496;
-}
-
-.name::after {
-    content: " : ";
-    color: #839496;
-}
-
-.name, .type {
-    display: inline;
-}
-.name {
-    color: #93a1a1;
+#mlscript-output > table > thead {
     font-weight: bold;
 }
-.type {
-    color: #859900;
-    font-weight: bold;
-    display: inline-block;
+
+#mlscript-output td {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid white;
+}
+
+#mlscript-output td.name {
+    color: var(--name-color);
+}
+
+#mlscript-output td.type {
+    color: var(--type-color);
+}
+
+#mlscript-output td.no-value {
+    color: var(--no-value-color);
 }

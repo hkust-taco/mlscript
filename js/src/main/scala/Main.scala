@@ -62,6 +62,15 @@ object Main {
                   htmlBuilder ++= errorHtml
                   Nil
               }
+              htmlBuilder ++= """<table>
+                  |  <thead>
+                  |    <tr>
+                  |       <td>Name</td>
+                  |       <td>Type</td>
+                  |       <td>Value</td>
+                  |    </tr>
+                  |  </thead>
+                  |""".stripMargin
               // Assemble something like: `val <name>: <type> = <value>`.
               // If error occurred, leave `<no value>`.
               typeCheckResult.zip(pgrm.desugared._2._2) foreach { case ((name, ty), origin) =>
@@ -76,13 +85,18 @@ object Main {
                     case Nil => N
                   }
                 }
-                htmlBuilder ++= s"""<b>
-                  |  <font color="#93a1a1">val </font>
-                  |  <font color="LightGreen">${name getOrElse "res"}</font>: 
-                  |  <font color="LightBlue">$ty</font>
-                  |</b> = ${value getOrElse "<font color=\"gray\">no value</font>"}
-                  |$htmlLineBreak""".stripMargin
+                val valueHtml = value match {
+                  case S(text) => s"<td>$text</td>"
+                  case N => "<td class=\"no-value\">no value</td>"
+                }
+                htmlBuilder ++= s"""<tr>
+                  |  <td class="name">${name getOrElse "res"}</td>
+                  |  <td class="type">$ty</td>
+                  |  $valueHtml
+                  |</tr>
+                  |""".stripMargin
               }
+              htmlBuilder ++= "</table>"
               htmlBuilder.toString
             }
           }
