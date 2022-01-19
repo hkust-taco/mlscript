@@ -83,4 +83,6 @@ class Hey
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error
 //│ Defined Hey.B: Hey -> 1
+//│ Code generation met an error:
+//│   unresolved symbol B
 

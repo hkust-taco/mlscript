@@ -31,7 +31,7 @@ rec def eval f e = case e of {
 //│ ('a -> int) -> (Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval:
 //│ ('b -> int) -> (Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
-//│     = [Function: eval]
+//│     = [Function: eval1]
 
 :e
 eval {} (Lit{} with { val = 1 })

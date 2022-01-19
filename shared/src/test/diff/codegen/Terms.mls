@@ -87,11 +87,10 @@ trait T: { x: int }
 T { x = 0 }
 //│ Defined trait T
 //│ // Query 1
-//│ res = T({ x: 0 });
+//│ res = { x: 0 };
 //│ // End of generated code
 //│ res: {x: 0} & t
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│    = { x: 0 }
 
 // App(callee, Tup(args)): Call a constructor
 :js
@@ -222,8 +221,8 @@ let x = 0 in x + 1
 def f x = case x of { }
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
-//│   let temp;
-//│   return (temp = x, (function () {
+//│   let a;
+//│   return (a = x, (function () {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
@@ -261,8 +260,8 @@ case 0 of
   | _ -> 0
   }
 //│ // Query 1
-//│ let temp;
-//│ res = (temp = 0, temp instanceof A ? 1 : temp instanceof B ? 2 : 0);
+//│ let a;
+//│ res = (a = 0, a instanceof A ? 1 : a instanceof B ? 2 : 0);
 //│ // End of generated code
 //│ res: 0 | 1 | 2
 //│    = 0
@@ -274,8 +273,8 @@ case A { a = 0 } of
   | B -> "B"
   }
 //│ // Query 1
-//│ let temp1;
-//│ res = (temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
+//│ let b;
+//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code

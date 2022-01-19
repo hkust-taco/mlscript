@@ -116,6 +116,7 @@ object Polyfill {
       BuiltinFunc("div", { makeBinaryFunc(_, "/") }) ::
       BuiltinFunc("gt", { makeBinaryFunc(_, ">") }) ::
       BuiltinFunc("not", { makeUnaryFunc(_, "!") }) ::
+      BuiltinFunc("negate", { makeUnaryFunc(_, "-") }) ::
       Nil
   
   private val nameFeatureMap = HashMap.from(features map { feature => (feature.name, feature) })

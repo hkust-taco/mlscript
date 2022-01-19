@@ -8,29 +8,25 @@ class C: { x: 0 | 1 }
 
 A { x = 1 }
 //│ res: {x: 1} & a
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│    = { x: 1 }
 
 :e
 A {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.15: 	A {}
+//│ ║  l.14: 	A {}
 //│ ║        	^^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.15: 	A {}
+//│ ║  l.14: 	A {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.1: 	trait A: { x: int }
 //│ ╙──     	         ^^^^^^^^^^
 //│ res: error | a
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│    = {}
 
 
 class D: C & A & B
 //│ Defined class D
-//│ Code generation met an error:
-//│   Cannot have two base classes: C, A
 
 D
 //│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (D with {x: 'x, y: 'y})
@@ -45,57 +41,52 @@ error: A & B
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	def dv = D{}
+//│ ║  l.42: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.46: 	def dv = D{}
+//│ ║  l.42: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
-//│ Runtime error:
-//│   ReferenceError: D is not defined
+//│   = D { x: undefined }
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: D & {x: 0, y: "hello"}
-//│ Runtime error:
-//│   ReferenceError: D is not defined
+//│   = D { x: 0 }
 
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.63: 	dv: nothing
+//│ ║  l.57: 	dv: nothing
 //│ ║        	^^
 //│ ╟── expression of type `D with {x: ?x, y: ?y}` does not match type `nothing`
-//│ ║  l.57: 	def dv = D { x = 0; y = "hello" }
+//│ ║  l.52: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.63: 	dv: nothing
+//│ ║  l.57: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.63: 	dv: nothing
+//│ ║  l.57: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: dv1 is not defined
+//│    = D { x: 0 }
 
 dv: A & B
 //│ res: {x: int, y: string} & a & b
-//│ Runtime error:
-//│   ReferenceError: dv1 is not defined
+//│    = D { x: 0 }
 
 :e
 dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.86: 	dv: A & B: nothing
+//│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	^^
 //│ ╟── expression of type `{x: int, y: string} & a & b` does not match type `nothing`
-//│ ║  l.86: 	dv: A & B: nothing
+//│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.86: 	dv: A & B: nothing
+//│ ║  l.78: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: dv1 is not defined
+//│    = D { x: 0 }
 
 
 trait Indirect: C
@@ -103,29 +94,24 @@ trait Indirect: C
 
 class E: Indirect
 //│ Defined class E
-//│ Code generation met an error:
-//│   Class Indirect is not defined.
 
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.110: 	E{}
-//│ ║         	^^^
+//│ ║  l.99: 	E{}
+//│ ║        	^^^
 //│ ╟── expression of type `anything` does not have field 'x'
-//│ ║  l.110: 	E{}
-//│ ╙──       	 ^^
+//│ ║  l.99: 	E{}
+//│ ╙──      	 ^^
 //│ res: E & {x: nothing} | error
-//│ Runtime error:
-//│   ReferenceError: E is not defined
+//│    = E {}
 
 def ev = E { x = 1 }
 ev: C
 //│ ev: E & {x: 1}
-//│ Runtime error:
-//│   ReferenceError: E is not defined
+//│   = E {}
 //│ res: C
-//│ Runtime error:
-//│   ReferenceError: ev is not defined
+//│    = E {}
 
 
 trait T1: C & A
@@ -134,75 +120,62 @@ trait T1: C & A
 :e
 def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.135: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{x: 1}` does not match type `~{x: 1} | ~a | C`
-//│ ║  l.135: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `?a`
-//│ ║  l.135: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.131: 	trait T1: C & A
+//│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^
 //│ t: error | {x: 1} & a & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = { x: 1 }
 
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = C { x: 1 }
 
 class CA: C & A
 //│ Defined class CA
-//│ Code generation met an error:
-//│   Cannot have two base classes: C, A
 
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│ Runtime error:
-//│   ReferenceError: T1 is not defined
+//│  = CA { x: 1 }
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
 //│ Defined class C1
-//│ Code generation met an error:
-//│   Cannot have two base classes: B, T1
 
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.174: 	def c1 = C1 { }
+//│ ║  l.153: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── expression of type `anything` does not match type `{y: ?y, x: ?x}`
-//│ ║  l.174: 	def c1 = C1 { }
+//│ ║  l.153: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
-//│ Runtime error:
-//│   ReferenceError: C1 is not defined
+//│   = C1 { y: undefined }
 
 def c1 = C1 { x = 1; y = "hi" }
 //│ c1: C1 & {x: 1, y: "hi"}
-//│ Runtime error:
-//│   ReferenceError: C1 is not defined
+//│   = C1 { y: 'hi' }
 
 c1: T1
 //│ res: C & a & t1
-//│ Runtime error:
-//│   ReferenceError: c11 is not defined
+//│    = C1 { y: 'hi' }
 
 c1: A
 //│ res: {x: int} & a
-//│ Runtime error:
-//│   ReferenceError: c11 is not defined
+//│    = C1 { y: 'hi' }
 
 c1.x
 c1.y
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: c11 is not defined
+//│    = undefined
 //│ res: "hi"
-//│ Runtime error:
-//│   ReferenceError: c11 is not defined
+//│    = 'hi'
 

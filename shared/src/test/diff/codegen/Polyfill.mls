@@ -39,19 +39,19 @@ concat "a" "b"
 :js
 def add x y = x + y + x + y
 //│ // Query 1
-//│ globalThis.add = function add(x) {
+//│ globalThis.add1 = function add1(x) {
 //│   return (y) => x + y + x + y;
 //│ };
-//│ res = add;
+//│ res = add1;
 //│ // End of generated code
 //│ add: int -> int -> int
-//│    = [Function: add]
+//│    = [Function: add1]
 
 // Now the add function is not the default one.
 :js
 add 1 2
 //│ // Query 1
-//│ res = add(1)(2);
+//│ res = add1(1)(2);
 //│ // End of generated code
 //│ res: int
 //│    = 6

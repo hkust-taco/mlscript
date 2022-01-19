@@ -7,6 +7,9 @@ import sourcecode.Line
 import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
+import mlscript.JSTestBackend.IllFormedCode
+import mlscript.JSTestBackend.Unimplemented
+import mlscript.JSTestBackend.UnexpectedCrash
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
@@ -252,7 +255,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             )
             
-            var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
+            var results: JSTestBackend.ErrorMessage \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
                 // Display the generated code.
@@ -364,12 +367,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
             // If code generation fails, show the error message.
             results match {
-              case L((message, crashed)) =>
-                if (crashed)
-                  output("Code generation crashed:")
-                else
-                  output("Code generation met an error:")
-                output(s"  $message")
+              case L(message) =>
+                message match {
+                  case IllFormedCode(message) => output("Code generation met an error:")
+                  case Unimplemented(message) =>
+                    output("Unable to execute the code:")
+                  case UnexpectedCrash(message) => output("Code generation crashed:")
+                }
+                output(s"  ${message.content}")
               case _ => ()
             }
             

@@ -35,7 +35,8 @@
 //│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
-//│    = 5
+//│ Code generation met an error:
+//│   unresolved symbol |>
 
 :p
 true || false && true || false
@@ -49,8 +50,8 @@ true || false && true || false
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.51:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.52:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.55:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.56:1: - 1

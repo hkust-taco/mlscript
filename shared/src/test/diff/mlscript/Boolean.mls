@@ -19,5 +19,6 @@ Boolean
 //│ ║  l.17: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
-//│    = [Function: Boolean]
+//│ Code generation met an error:
+//│   type Boolean is not a valid expression
 

@@ -7,7 +7,8 @@ import scala.reflect.ClassTag
 import mlscript.TypeName
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
-  private val lexicalSymbols = scala.collection.mutable.HashMap[Str, LexicalSymbol]()
+  private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
+  private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, ValueSymbol]()
   private val runtimeSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
 
   val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
@@ -17,11 +18,28 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     */
   def this(name: Str) = {
     this(name, N)
+    // TODO: allow types and values to have the same name
     // TODO: read built-in symbols from `Typer`.
-    Ls("id", "succ", "error", "concat", "add", "sub", "mul", "div", "gt", "not") foreach { name =>
+    Ls(
+      "true",
+      "false",
+      "id",
+      "succ",
+      "error",
+      "concat",
+      "add",
+      "sub",
+      "mul",
+      "div",
+      "gt",
+      "not",
+      "toString",
+      "negate"
+    ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }
-    Ls("int", "number", "bool", "true", "false", "string", "anything", "nothing", "error", "unit") foreach { name =>
+    // TODO: add `true`, `false`, and `error` to this list
+    Ls("int", "number", "bool", "string", "anything", "nothing", "unit") foreach { name =>
       register(TypeSymbol(name, name, Nil, TypeName(name)))
     }
   }
@@ -65,7 +83,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       return prefix
     }
     // Try prefix with an integer.
-    for (i <- 0 to Int.MaxValue) {
+    for (i <- 1 to Int.MaxValue) {
       val name = s"$prefix$i"
       if (!runtimeSymbols.contains(name)) {
         return name
@@ -83,8 +101,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   /**
     * Register a lexical symbol in both runtime name set and lexical name set.
     */
-  private def register(symbol: LexicalSymbol): Unit = {
-    lexicalSymbols.put(symbol.lexicalName, symbol)
+  private def register(symbol: TypeSymbol): Unit = {
+    lexicalTypeSymbols.put(symbol.lexicalName, symbol)
+    runtimeSymbols.put(symbol.runtimeName, symbol)
+    ()
+  }
+
+  /**
+    * Register a lexical symbol in both runtime name set and lexical name set.
+    */
+  private def register(symbol: ValueSymbol): Unit = {
+    lexicalValueSymbols.put(symbol.lexicalName, symbol)
     runtimeSymbols.put(symbol.runtimeName, symbol)
     ()
   }
@@ -93,30 +120,45 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
    * Look up for a symbol locally. 
    */
   def get(name: Str): LexicalSymbol =
-    lexicalSymbols.get(name).getOrElse(FreeSymbol(name))
+    lexicalValueSymbols
+      .get(name)
+      .getOrElse(lexicalTypeSymbols.get(name).getOrElse(FreeSymbol(name)))
+
+  def getType(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
 
   /**
    * Look up for a class symbol locally.
    */
-  def expect[T <: LexicalSymbol](name: Str)(implicit tag: ClassTag[T]): Opt[T] =
-    lexicalSymbols.get(name) flatMap {
+  def expect[T <: TypeSymbol](name: Str)(implicit tag: ClassTag[T]): Opt[T] =
+    lexicalTypeSymbols.get(name) flatMap {
       _ match {
         case c: T => S(c)
         case _    => N
       }
     }
-  
+
+  /**
+   * Check whether a lexical name is used.
+   */
+  def declared(lexicalName: Str): Boolean =
+    lexicalValueSymbols.contains(lexicalName) ||
+      lexicalTypeSymbols.contains(lexicalName)
 
   /**
     * Look up for a symbol recursively.
     */
   def resolve(name: Str): LexicalSymbol =
-    lexicalSymbols.get(name) match {
+    lexicalValueSymbols.get(name) match {
       case S(sym) => sym
-      case N      => enclosing match {
-        case S(scope) => scope.resolve(name)
-        case N => FreeSymbol(name)
-      }
+      case N =>
+        lexicalTypeSymbols.get(name) match {
+          case S(sym) => sym
+          case N =>
+            enclosing match {
+              case S(scope) => scope.resolve(name)
+              case N        => FreeSymbol(name)
+            }
+        }
     }
 
   def declareClass(lexicalName: Str, params: Ls[Str], base: Type): ClassSymbol = {
@@ -141,9 +183,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareValue(lexicalName: Str): ValueSymbol = {
-    val runtimeName = lexicalSymbols.get(name) match {
+    val runtimeName = lexicalValueSymbols.get(name) match {
       case S(sym: StubValueSymbol) => sym.runtimeName
-      case _ => allocateRuntimeName(lexicalName)
+      case _                       => allocateRuntimeName(lexicalName)
     }
     val symbol = ValueSymbol(lexicalName, runtimeName)
     register(symbol)
@@ -181,6 +223,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 }
 
 object Scope {
+
   /**
   * Shorthands for creating top-level scopes.
   */
@@ -189,7 +232,8 @@ object Scope {
   /**
     * Shorthands for creating function scopes.
     */
-  def apply(name: Str, params: Ls[Str], enclosing: Scope): Scope = new Scope(name, params, enclosing)
+  def apply(name: Str, params: Ls[Str], enclosing: Scope): Scope =
+    new Scope(name, params, enclosing)
 
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
 }
@@ -198,7 +242,7 @@ final case class TemporaryVariableEmitter() {
   private val names = scala.collection.mutable.HashSet[Str]()
 
   def +=(name: Str): Unit = names += name
-  
+
   def emit(): Opt[JSLetDecl] = if (names.isEmpty) {
     N
   } else {

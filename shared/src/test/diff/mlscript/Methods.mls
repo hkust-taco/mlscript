@@ -220,8 +220,6 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Declared Trait1A.MtdA: trait1A -> 'B
 //│ Defined class Class1B
 //│ Defined Class1B.MtdA: (Class1B & trait1A) -> "b"
-//│ Code generation met an error:
-//│   type Trait1A is not defined
 
 
 trait Trait2A[A]
@@ -240,8 +238,6 @@ class Class2C: Class2B[int, bool]
 //│ Defined class Class2C
 //│ Defined Class2C.MtdA: (Class2C & trait2A) -> 42
 //│ Defined Class2C.MtdB: (Class2C & trait2A) -> true
-//│ Code generation met an error:
-//│   type Trait2A is not defined
 
 
 :e
@@ -249,16 +245,16 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── expression of type `42` does not match type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.250: 	    method MtdB = 42
+//│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.232: 	class Class2C: Class2B[int, bool]
+//│ ║  l.230: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from inherited method declaration:
 //│ ║  l.229: 	    method MtdB: B
@@ -266,8 +262,6 @@ class Class3C: Class2C
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
 //│ Defined Class3C.MtdB: (Class3C & trait2A) -> 42
-//│ Code generation met an error:
-//│   Class Class2C is not defined.
 
 type Id[T] = T
 class Test1[A]: { x: A }
@@ -299,10 +293,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.299: 	class Test4A[A]: { x: A }
+//│ ║  l.293: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.300: 	    method Mth4A[A]: A
+//│ ║  l.294: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing
@@ -327,13 +321,10 @@ class H: D & E
 //│ Defined trait E
 //│ Declared E.G: e -> int
 //│ Defined class H
-//│ Code generation met an error:
-//│   Cannot have two base classes: D, E
 
 ((H{}): D).(D.G)
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: H is not defined
+//│    = undefined
 
 
 
@@ -349,8 +340,6 @@ trait Fee2
 
 class Ber: Fee & Fee2
 //│ Defined class Ber
-//│ Code generation met an error:
-//│   Cannot have two base classes: Fee, Fee2
 
 Ber.F
 //│ res: (Ber & fee2) -> 2
@@ -359,13 +348,13 @@ Ber.F
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.360: 	Ber
+//│ ║  l.349: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.350: 	class Ber: Fee & Fee2
+//│ ║  l.341: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.350: 	class Ber: Fee & Fee2
+//│ ║  l.341: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function: res]

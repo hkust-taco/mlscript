@@ -180,6 +180,10 @@ abstract class JSPattern extends JSCode {
   def bindings: Ls[Str]
 }
 
+object JSPattern {
+  def bindings(patterns: Ls[JSPattern]): Ls[Str] = patterns.flatMap(_.bindings)
+}
+
 final case class JSArrayPattern(elements: Ls[JSPattern]) extends JSPattern {
   def bindings: Ls[Str] = elements flatMap { _.bindings }
   def toSourceCode: SourceCode = SourceCode.array(elements map { _.toSourceCode })

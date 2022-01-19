@@ -85,7 +85,8 @@ class JSBackend {
         if (sym.feature === "error") ident() else ident
       case sym: StubValueSymbol => throw new UnimplementedError(sym)
       case _: FreeSymbol => throw new CodeGenError(s"unresolved symbol ${sym.lexicalName}")
-      case _: TraitSymbol | _: TypeSymbol => throw new CodeGenError(s"cannot use ${sym.shortName} in expressions")
+      case _: TraitSymbol | _: TypeSymbol =>
+        throw new CodeGenError(s"${sym.shortName} is not a valid expression")
       case _ => JSIdent(sym.runtimeName)
     }
 
@@ -233,18 +234,18 @@ class JSBackend {
       case Neg(ty) =>
         Neg(substitute(ty, subs))
       case AppliedType(TypeName(name), targs) =>
-        topLevelScope.get(name) match {
-          case sym: ClassSymbol => TypeName(name) // Note that here we erase the arguments.
-          case sym: TraitSymbol => ??? 
-          case sym: TypeSymbol =>
+        topLevelScope.getType(name) match {
+          case S(sym: ClassSymbol) => TypeName(name) // Note that here we erase the arguments.
+          case S(sym: TraitSymbol) => ??? 
+          case S(sym: TypeSymbol) =>
             assert(targs.length === sym.params.length, targs -> sym.params)
             substitute(
-              sym.body,
+              sym.actualType,
               collection.immutable.HashMap(
                 sym.params zip targs map { case (k, v) => k -> v }: _*
               )
             )
-          case _ => throw new CodeGenError(s"$name is none of class, trait or type")
+          case N => throw new CodeGenError(s"$name is none of class, trait or type")
         }
       case Function(lhs, rhs) =>
         Function(substitute(lhs, subs), substitute(rhs, subs))
@@ -259,14 +260,14 @@ class JSBackend {
       case TypeName(name) =>
         subs get name match {
           case N =>
-            topLevelScope.get(name) match {
-              case sym: ClassSymbol => TypeName(name)
-              case sym: TraitSymbol => TypeName(name)
-              case sym: TypeSymbol if sym.params.isEmpty => substitute(sym.body, subs)
-              case sym: TypeSymbol => throw CodeGenError(
+            topLevelScope.getType(name) match {
+              case S(sym: ClassSymbol) => TypeName(name)
+              case S(sym: TraitSymbol) => TypeName(name)
+              case S(sym: TypeSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
+              case S(sym: TypeSymbol) => throw CodeGenError(
                   s"type $name expects ${sym.params.length} type parameters but nothing provided"
               )
-              case _ => throw new CodeGenError(s"undeclared type name $name")
+              case N => throw new CodeGenError(s"undeclared type name $name")
             }
           case S(ty) => ty
         }
@@ -304,8 +305,14 @@ class JSBackend {
     val name = method.nme.name
     method.rhs.value match {
       case Lam(params, body) =>
-        JSClassMethod(name, translateParams(params), L(translateTerm(body)))
-      case term => JSClassGetter(name, L(translateTerm(term)))
+        val methodParams = translateParams(params)
+        val methodScope = scope.derive(s"Method $name", JSPattern.bindings(methodParams))
+        methodScope.declareValue("this")
+        JSClassMethod(name, methodParams, L(translateTerm(body)(methodScope)))
+      case term =>
+        val getterScope = scope.derive(s"Getter $name")
+        getterScope.declareValue("this")
+        JSClassGetter(name, L(translateTerm(term)(getterScope)))
     }
   }
 
@@ -358,20 +365,20 @@ class JSBackend {
     // If `A` is a type alias, it is replaced by its real type.
     // Otherwise just use the name.
     case TypeName(name) =>
-      topLevelScope.get(name) match {
+      topLevelScope.getType(name) match {
         // The name refers to a class.
-        case sym: ClassSymbol => S(sym)
+        case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
-        case sym: TraitSymbol => N
-        case sym: TypeSymbol if sym.params.isEmpty =>
+        case S(sym: TraitSymbol) => N
+        case S(sym: TypeSymbol) if sym.params.isEmpty =>
           // The base class is a type alias with no parameters.
           // Good, just make sure all term is normalized.
-          resolveClassBase(substitute(sym.body))
-        case sym: TypeSymbol => 
+          resolveClassBase(substitute(sym.actualType))
+        case S(sym: TypeSymbol) => 
           throw CodeGenError(
             s"type $name expects ${sym.params.length} type parameters but none provided"
           )
-        case _ => throw new CodeGenError(s"undeclared type name $name")
+        case N => throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     // `class C: <X> & <Y>`: resolve X and Y respectively.
     case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
@@ -392,23 +399,24 @@ class JSBackend {
     // For applied types such as `Id[T]`, normalize them before translation.
     // Do not forget to normalize type arguments first.
     case AppliedType(TypeName(name), targs) =>
-      topLevelScope.get(name) match {
+      topLevelScope.getType(name) match {
         // The name refers to a class.
-        case sym: ClassSymbol => S(sym)
+        case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
-        case sym: TraitSymbol => N
-        case sym: TypeSymbol if sym.params.isEmpty =>
+        case S(sym: TraitSymbol) => N
+        case S(sym: TypeSymbol) if sym.params.isEmpty =>
           // The base class is a type alias with no parameters.
           // Good, just make sure all term is normalized.
-          resolveClassBase(substitute(sym.body))
-        case sym: TypeSymbol => 
+          resolveClassBase(substitute(sym.actualType))
+        case S(sym: TypeSymbol) => 
           assert(targs.length === sym.params.length, targs -> sym.params)
           val normalized = substitute(
-            sym.body,
+            sym.actualType,
             collection.immutable.HashMap(sym.params zip targs map { case (k, v) => k -> v }: _*)
           )
           resolveClassBase(normalized)
-        case _ => throw new CodeGenError(s"undeclared type name $name")
+        case _ =>
+          throw new CodeGenError(s"undeclared applied type name $name when resolving base classes")
       }
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
@@ -453,9 +461,7 @@ class JSBackend {
     typeDefs.toSeq flatMap {
       case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
         topLevelScope.expect[ClassSymbol](name) match {
-          case S(sym) =>
-            println(s"bruh ${sym.lexicalName} ${sym.order}")
-            S((sym, mthDefs, sym.order))
+          case S(sym) => S((sym, mthDefs, sym.order))
           // Should crash if the class is not defined.
           case N => throw new Exception(s"class $name should be declared")
         }
@@ -518,16 +524,19 @@ class JSWebBackend extends JSBackend {
 }
 
 class JSTestBackend extends JSBackend {
-  private val resultName = topLevelScope declareRuntimeSymbol "res"
+  private val lastResultSymbol = topLevelScope declareValue "res"
 
   private var numRun = 0
 
-  // TODO: make the return type more readable
-  def apply(pgrm: Pgrm): (Str, Bool) \/ TestCode = try {
+  /**
+    * Generate a piece of code for test purpose. It can be invoked repeatedly.
+    */
+  def apply(pgrm: Pgrm): JSTestBackend.ErrorMessage \/ TestCode = try {
     R(generate(pgrm))
   } catch {
-    case e: CodeGenError => L(e.getMessage() -> false) // Intended errors
-    case e: Throwable => L(e.getMessage() -> true) // Unexpected crashes
+    case e: CodeGenError => L(JSTestBackend.IllFormedCode(e.getMessage()))
+    case e: UnimplementedError => L(JSTestBackend.Unimplemented(e.getMessage()))
+    case e: Throwable => L(JSTestBackend.UnexpectedCrash(e.getMessage()))
   }
 
   /**
@@ -540,7 +549,7 @@ class JSTestBackend extends JSBackend {
     resolveInheritance(classSymbols)
     sortClassSymbols(classSymbols)
 
-    val resultIdent = JSIdent(resultName)
+    val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
     val defStmts = generateClassDeclarations(typeDefs)
 
@@ -556,9 +565,16 @@ class JSTestBackend extends JSBackend {
         // let <name>;
         // try { <name> = <expr>; res = <name>; }
         // catch (e) { console.log(e); }
-        case Def(rec, Var(name), L(body)) =>
-          val translatedBody = translateTerm(body)(topLevelScope)
-          val sym = topLevelScope.declareValue(name)
+        case Def(recursive, Var(name), L(body)) =>
+          // TODO: if error, replace the symbol with a dummy symbol.
+          val (translatedBody, sym) = if (recursive) {
+            val sym = topLevelScope.declareValue(name)
+            (translateTerm(body)(topLevelScope), sym)
+          } else {
+            val translatedBody = translateTerm(body)(topLevelScope)
+            (translatedBody, topLevelScope.declareValue(name))
+          }
+          sym.location = numRun
           S(
             topLevelScope.tempVars.emit() ->
              ((JSIdent("globalThis").member(sym.runtimeName) := (translatedBody match {
@@ -569,9 +585,16 @@ class JSTestBackend extends JSBackend {
                 Nil)
           )
         case Def(_, Var(name), R(_)) =>
-          // Check if the symbol has been implemented.
+          // Check if the symbol has been implemented. If the type definition
+          // is not in the same block as the implementation, we consider it as a
+          // re-declaration.
           topLevelScope.get(name) match {
-            case N => topLevelScope.declareStubValue(name)
+            case _: FreeSymbol =>
+              val sym = topLevelScope.declareStubValue(name)
+              sym.location = numRun
+            case t: ValueSymbol if t.location =/= numRun =>
+              val sym = topLevelScope.declareStubValue(name)
+              sym.location = numRun
             case _ => ()
           }
           // Emit nothing for type declarations.
@@ -586,7 +609,7 @@ class JSTestBackend extends JSBackend {
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = defStmts
     if (numRun === 0) {
-      prelude = JSLetDecl(resultName -> N :: Nil) :: prelude
+      prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: prelude
     }
 
     // Increase the run number.
@@ -604,6 +627,14 @@ class JSTestBackend extends JSBackend {
       }
     )
   }
+}
+
+object JSTestBackend {
+  // TODO: still not a very good pattern.
+  sealed abstract class ErrorMessage(val content: Str)
+  final case class IllFormedCode(override val content: Str) extends ErrorMessage(content)
+  final case class Unimplemented(override val content: Str) extends ErrorMessage(content)
+  final case class UnexpectedCrash(override val content: Str) extends ErrorMessage(content)
 }
 
 final case class Query(prelude: Ls[Str], code: Ls[Str])

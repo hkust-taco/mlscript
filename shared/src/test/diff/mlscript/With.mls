@@ -101,11 +101,10 @@ foo 123
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
 //│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
 
-:re
 fooManual 123
 //│ res: 42
-//│ Runtime error:
-//│   ReferenceError: fooManual is not defined
+//│ Unable to execute the code:
+//│   value fooManual is not implemented
 
 def foo x =
   let xf = x with { f = 42 }
@@ -122,16 +121,16 @@ def foo x =
 :e
 foo 42
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	foo 42
+//│ ║  l.122: 	foo 42
 //│ ║         	^^^^^^
 //│ ╟── expression of type `42` does not have field 'f'
-//│ ║  l.123: 	foo 42
+//│ ║  l.122: 	foo 42
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from record literal:
 //│ ║  l.87: 	def getf { f } = f
 //│ ║        	         ^^^^^
 //│ ╟── from reference:
-//│ ║  l.118: 	  in { l = getf xf; r = getf x; s = x }
+//│ ║  l.117: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──       	                             ^
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
@@ -156,13 +155,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.156: 	res.z
 //│ ║         	^^^^^
 //│ ╟── expression of type `{x: 1, y: 2}` does not match type `{z: ?a}`
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.151: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.157: 	res.z
+//│ ║  l.156: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined
