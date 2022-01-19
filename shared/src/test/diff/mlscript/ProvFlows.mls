@@ -279,10 +279,10 @@ succ foo
 //│ ║         	     ^^^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from expression of type `string`
-//│ ╟── [info] flowing from type reference of type `string`
+//│ ╟── [info] flowing from type `string`
 //│ ║  l.266: 	def foo: int | string
 //│ ║         	               ^^^^^^
-//│ ╟── [info] flowing from union type of type `int | string`
+//│ ╟── [info] flowing from type `int | string`
 //│ ║  l.266: 	def foo: int | string
 //│ ║         	         ^^^^^^^^^^^^
 //│ ╟── [info] flowing from reference of type `int | string`
@@ -326,20 +326,20 @@ ty00 = ty11
 //│ ║         	                                ^^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from expression of type `B & 'b`
-//│ ╟── [info] flowing from intersection type of type `B & 'b`
+//│ ╟── [info] flowing from type `B & 'b`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
-//│ ╟── [info] flowing from union type of type `B & 'b`
+//│ ╟── [info] flowing from type `B & 'b`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^^^^^^^^^^
-//│ ╟── [info] flowing from union type of type `B & 'b`
+//│ ╟── [info] flowing from type `B & 'b`
 //│ ║  l.304: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
-//│ ╟── [info] flowing from type variable of type `?a0`
+//│ ╟── [info] flowing from type `?a0`
 //│ ║  l.304: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	                                ^^
-//│ ╟── [info] flowing into type variable of type `'a`
+//│ ╟── [info] flowing into type `'a`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                ^^
 //│ ╙── [info] flowing into expression of type `'a`
@@ -354,20 +354,20 @@ ty00 = ty11
 //│ ║         	                                    ^^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from expression of type `A & 'a`
-//│ ╟── [info] flowing from intersection type of type `A & 'a`
+//│ ╟── [info] flowing from type `A & 'a`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^
-//│ ╟── [info] flowing from union type of type `A & 'a`
+//│ ╟── [info] flowing from type `A & 'a`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^^^^^^^^^^
-//│ ╟── [info] flowing from union type of type `A & 'a`
+//│ ╟── [info] flowing from type `A & 'a`
 //│ ║  l.304: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
-//│ ╟── [info] flowing from type variable of type `?a0`
+//│ ╟── [info] flowing from type `?a0`
 //│ ║  l.304: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	                                    ^^
-//│ ╟── [info] flowing into type variable of type `'b`
+//│ ╟── [info] flowing into type `'b`
 //│ ║  l.301: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                    ^^
 //│ ╙── [info] flowing into expression of type `'b`

@@ -343,15 +343,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }}()
     
-    def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
-    def doesntHaveField(n: Str) = msg"does not have field '$n'"
-    
     def reportError(implicit cctx: ConCtx): Unit = {
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
       println(s"CONSTRAINT FAILURE: $lhs <: $rhs")
       // println(s"CTX: ${cctx.map(_.map(lr => s"${lr._1} <: ${lr._2} [${lr._1.prov}] [${lr._2.prov}]"))}")
+      
+      def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
+      def doesntHaveField(n: Str) = msg"does not have field '$n'"
       
       val failure = (lhs.unwrapProvs, rhs.unwrapProvs) match {
         // case (lunw, _) if lunw.isInstanceOf[TV] || lunw.isInstanceOf => doesntMatch(rhs)
@@ -397,18 +397,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         .find(_.prov.loco.isDefined)
         .map(_.prov).getOrElse(rhs.prov)
       
-      val detailedContext =
-        if (explainErrors)
-          msg"========= Additional explanations below =========" -> N ::
-          lhsChain.flatMap { lhs =>
-            if (dbg) msg"[info] LHS >> ${lhs.prov.toString} : ${lhs.expPos}" -> lhs.prov.loco :: Nil
-            else msg"[info] flowing from ${lhs.prov.desc} of type `${lhs.expPos}`" -> lhs.prov.loco :: Nil
-          } ::: rhsChain.reverse.flatMap { rhs =>
-            if (dbg) msg"[info] RHS << ${rhs.prov.toString} : ${rhs.expNeg}" -> rhs.prov.loco :: Nil
-            else msg"[info] flowing into ${rhs.prov.desc} of type `${rhs.expNeg}`" -> rhs.prov.loco :: Nil
-          }
-        else Nil
-      
       val relevantFailures = lhsChain.collect {
         case st
           if st.prov.loco =/= lhsProv.loco
@@ -423,6 +411,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         .toList.distinctBy(_._2.loco)
       
+      def printProv(prov: TP): Message =
+        if (prov.isType) msg"type"
+        else msg"${prov.desc} of type"
+      
+      val mismatchMessage =
+        msg"Type mismatch in ${prov.desc}:" -> prov.loco :: (
+          msg"${printProv(lhsProv)} `${lhs.expPos}` $failure"
+        ) -> (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil
+      
+      val flowHint = 
+        tighestRelevantFailure.map { l =>
+          val expTyMsg = msg" with expected type `${rhs.expNeg}`"
+          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil
+        }.toList.flatten
+      
+      val constraintProvenanceHints = 
+        if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
+          msg"Note: constraint arises from ${rhsProv.desc}:" -> rhsProv.loco :: (
+            if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
+              msg"from ${rhsProv2.desc}:" -> rhsProv2.loco :: Nil
+            else Nil
+          )
+        else Nil
+      
       var first = true
       val originProvHints = originProvList.map { case (nme, l) => 
         val msgHead =
@@ -433,22 +445,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         msg"${msgHead} is defined at: " -> l.loco 
       }
       
+      val detailedContext =
+        if (explainErrors)
+          msg"========= Additional explanations below =========" -> N ::
+          lhsChain.flatMap { lhs =>
+            if (dbg) msg"[info] LHS >> ${lhs.prov.toString} : ${lhs.expPos}" -> lhs.prov.loco :: Nil
+            else msg"[info] flowing from ${printProv(lhs.prov)} `${lhs.expPos}`" -> lhs.prov.loco :: Nil
+          } ::: rhsChain.reverse.flatMap { rhs =>
+            if (dbg) msg"[info] RHS << ${rhs.prov.toString} : ${rhs.expNeg}" -> rhs.prov.loco :: Nil
+            else msg"[info] flowing into ${printProv(rhs.prov)} `${rhs.expNeg}`" -> rhs.prov.loco :: Nil
+          }
+        else Nil
+      
       val msgs: Ls[Message -> Opt[Loc]] = Ls[Ls[Message -> Opt[Loc]]](
-        msg"Type mismatch in ${prov.desc}:" -> prov.loco :: Nil,
-        (if (lhsProv.isType) msg"type `${lhs.expPos}` $failure"
-          else msg"${lhsProv.desc} of type `${lhs.expPos}` $failure")
-        ->
-        (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil,
-        tighestRelevantFailure.map { l =>
-          val expTyMsg = msg" with expected type `${rhs.expNeg}`"
-          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil
-        }.toList.flatten,
-        if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
-          msg"Note: constraint arises from ${rhsProv.desc}:" -> rhsProv.loco :: Nil
-        else Nil,
-        if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
-          msg"from ${rhsProv2.desc}:" -> rhsProv2.loco :: Nil
-        else Nil,
+        mismatchMessage,
+        flowHint,
+        constraintProvenanceHints,
         originProvHints,
         detailedContext,
       ).flatten
