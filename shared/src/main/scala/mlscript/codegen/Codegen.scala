@@ -143,6 +143,7 @@ object SourceCode {
   val closeCurlyBrace: SourceCode = SourceCode("}")
   val openAngleBracket: SourceCode = SourceCode("<")
   val closeAngleBracket: SourceCode = SourceCode(">")
+  val fatArrow: SourceCode = SourceCode(" => ")
 
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }

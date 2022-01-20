@@ -76,7 +76,7 @@ sealed trait Terms extends DesugaredStatement
 
 // Types
 
-sealed abstract class Type extends TypeImpl with TypeSourceCode
+sealed abstract class Type extends TypeImpl
 
 final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
