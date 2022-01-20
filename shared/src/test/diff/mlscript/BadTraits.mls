@@ -163,3 +163,44 @@ t.x
 //│ res: int
 //│    = 1
 
+
+trait Lol
+  method Foo = 1
+class Hey
+  method Foo = "oops"
+//│ Defined trait Lol
+//│ Defined Lol.Foo: lol -> 1
+//│ Defined class Hey
+//│ Defined Hey.Foo: Hey -> "oops"
+
+:e
+class H: Lol & Hey
+//│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
+//│ ║  l.177: 	class H: Lol & Hey
+//│ ║         	      ^
+//│ ╟── Definitions of method Foo inherited from:
+//│ ╟── • Lol
+//│ ║  l.168: 	  method Foo = 1
+//│ ║         	         ^^^^^^^
+//│ ╟── • Hey
+//│ ║  l.170: 	  method Foo = "oops"
+//│ ╙──       	         ^^^^^^^^^^^^
+//│ Defined class H
+
+// FIXME: should probably forbid trait constructors when the trait contains method defs as well:
+
+h = Hey{}
+l = Lol h
+//│ h: Hey
+//│  = Hey {}
+//│ l: Hey & lol
+//│  = Hey {}
+
+l.(Lol.Foo)
+//│ res: 1
+//│    = undefined
+
+l.(Hey.Foo)
+//│ res: "oops"
+//│    = undefined
+

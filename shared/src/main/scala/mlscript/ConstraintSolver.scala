@@ -265,7 +265,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
             rec(l1, l0, false)
-            // ^ disregard error context: keep it from reversing polarity (or the messages become redundant)
             rec(r0, r1, false)
           case (prim: ClassTag, ot: ObjectTag)
             if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
