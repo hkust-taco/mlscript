@@ -105,6 +105,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(lhs, rhs) => SourceCode.concat(
       List(
         (SourceCode("arg0") ++ SourceCode.colon ++ lhs.toTsType(Some(false))).parenthesized,
+        SourceCode.fatArrow,
         rhs.toTsType(Some(true))
       )
     )
