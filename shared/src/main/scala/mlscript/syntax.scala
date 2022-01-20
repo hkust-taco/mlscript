@@ -100,7 +100,7 @@ case object Bot                                          extends NullaryType
 // which is the literal integer 0 itself
 final case class Literal(lit: Lit)                       extends NullaryType
 
-// declare a new type with a given name
+// reference an existing type with the given name
 final case class TypeName(name: Str)                    extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType {
