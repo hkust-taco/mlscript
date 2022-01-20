@@ -48,6 +48,10 @@ h1, p{
     outline: none;
 }
 
+#mlscript-output {
+    width: 130%;
+}
+
 #mlscript-output > table {
     border-collapse: collapse;
 }
