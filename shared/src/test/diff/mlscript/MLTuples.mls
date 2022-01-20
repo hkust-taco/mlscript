@@ -36,7 +36,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.35: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
+//│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -84,7 +84,7 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	f t
 //│ ║        	^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
+//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
@@ -98,10 +98,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	f tx
 //│ ║        	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
 //│ ║  l.82: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -112,10 +112,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	f htx
 //│ ║        	^^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
 //│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -159,18 +159,10 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.158: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
-//│ ║  l.7: 	tx = t with { x = 1 }
-//│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.158: 	g tx
-//│ ║         	  ^^
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ║         	                                          ^^^^^
-//│ ╟── from reference:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ╙──       	             ^^^
+//│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -198,4 +190,60 @@ if bool then (1,) else fun x -> x
 //│ res: anything
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
+
+
+
+t._1
+t._2
+//│ res: 1
+//│    = undefined
+//│ res: 2
+//│    = undefined
+
+
+t = (1, 2, 3) with {x = 1}
+// t = (1, 2, 3)
+//│ t: (1, 2, 3,) & {x: 1}
+//│  = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+
+t.x
+//│ res: 1
+//│    = 1
+
+// TODO (https://github.com/hkust-taco/mlscript/issues/65#issuecomment-1013010123)
+:e
+t._1
+t._2
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.215: 	t._1
+//│ ║         	^^^^
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
+//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_1: ?a}`
+//│ ║  l.215: 	t._1
+//│ ╙──       	^
+//│ res: error
+//│    = undefined
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.216: 	t._2
+//│ ║         	^^^^
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
+//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_2: ?a}`
+//│ ║  l.216: 	t._2
+//│ ╙──       	^
+//│ res: error
+//│    = undefined
+
+
+t = (1, 2, 3) with {_1 = "oops"}
+//│ t: (1, 2, 3,) & {_1: "oops"}
+//│  = Array { '0': 1, '1': 2, '2': 3, _1: 'oops' }
+
+// FIXME (https://github.com/hkust-taco/mlscript/issues/69)
+(t: (int,int,int,))._1
+//│ res: int
+//│    = 'oops'
 

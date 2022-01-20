@@ -1,0 +1,146 @@
+
+// To generate the prelude without printing it in the next test case
+() with { x = add 1 }
+//│ res: () & {x: int -> int}
+//│    = Array { x: [Function (anonymous)] }
+
+:js
+class Box[T]: { inner: T }
+  method Map: (T -> 'a) -> Box['a]
+  method Map f = Box { inner = f this.inner }
+  method Get = this.inner
+//│ Defined class Box
+//│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
+//│ Defined Box.Map: Box['T] -> ('T -> ('a & 'T0)) -> (Box['T0] with {inner: 'a})
+//│ Defined Box.Get: Box['T] -> 'T
+//│ // Prelude
+//│ class Box {
+//│   constructor(fields) {
+//│     this.inner = fields.inner;
+//│   }
+//│   Map(f) {
+//│     return new Box({ inner: f(this.inner) });
+//│   }
+//│   get Get() {
+//│     return this.inner;
+//│   }
+//│ }
+//│ // End of generated code
+
+:js
+def Box value = Box { inner = value }
+//│ // Query 1
+//│ globalThis.Box1 = function Box1(value) {
+//│   return new Box({ inner: value });
+//│ };
+//│ res = Box1;
+//│ // End of generated code
+//│ Box: ('inner & 'T) -> (Box['T] with {inner: 'inner})
+//│    = [Function: Box1]
+
+:js
+def box1 = Box 1
+def box2 = box1.Map (fun x -> add x 1)
+//│ // Query 1
+//│ globalThis.box1 = Box1(1);
+//│ res = box1;
+//│ // Query 2
+//│ globalThis.box2 = box1.Map((x) => add(x)(1));
+//│ res = box2;
+//│ // End of generated code
+//│ box1: Box['T .. 1 | 'T] with {inner: 1}
+//│     = Box { inner: 1 }
+//│ box2: Box['a .. 'a | int]
+//│     = Box { inner: 2 }
+
+:js
+box2.inner + box2.Get
+//│ // Query 1
+//│ res = box2.inner + box2.Get;
+//│ // End of generated code
+//│ res: int
+//│    = 4
+
+:js
+class MyBox: Box[int] & { info: string }
+  method Map f = Box (f this.inner) with { info = this.info }
+  method Inc = MyBox { inner = this.inner + 1; info = this.info }
+def MyBox inner info = MyBox { inner; info }
+//│ Defined class MyBox
+//│ Defined MyBox.Map: MyBox -> (int -> ('a & 'T)) -> (Box['T] with {info: string, inner: 'a})
+//│ Defined MyBox.Inc: MyBox -> MyBox
+//│ // Prelude
+//│ class MyBox extends Box {
+//│   constructor(fields) {
+//│     super(fields);
+//│     this.info = fields.info;
+//│   }
+//│   Map(f) {
+//│     return withConstruct(Box1(f(this.inner)), { info: this.info });
+//│   }
+//│   get Inc() {
+//│     return (new MyBox({
+//│       inner: this.inner + 1,
+//│       info: this.info
+//│     }));
+//│   }
+//│ }
+//│ // Query 1
+//│ globalThis.MyBox1 = function MyBox1(inner) {
+//│   return ((info) => new MyBox({
+//│     inner: inner,
+//│     info: info
+//│   }));
+//│ };
+//│ res = MyBox1;
+//│ // End of generated code
+//│ MyBox: (int & 'inner) -> (string & 'info) -> (MyBox with {info: 'info, inner: 'inner})
+//│      = [Function: MyBox1]
+
+:js
+mb = MyBox 1 "hello"
+mb = mb.Inc
+mb.Get
+mb2 = mb.Map (fun x -> x * 3)
+mb2.Get
+//│ // Query 1
+//│ globalThis.mb = MyBox1(1)("hello");
+//│ res = mb;
+//│ // Query 2
+//│ globalThis.mb1 = mb.Inc;
+//│ res = mb1;
+//│ // Query 3
+//│ res = mb1.Get;
+//│ // Query 4
+//│ globalThis.mb2 = mb1.Map((x) => x * 3);
+//│ res = mb2;
+//│ // Query 5
+//│ res = mb2.Get;
+//│ // End of generated code
+//│ mb: MyBox & {info: "hello", inner: 1}
+//│   = MyBox { inner: 1, info: 'hello' }
+//│ mb: MyBox
+//│   = MyBox { inner: 2, info: 'hello' }
+//│ res: int
+//│    = 2
+//│ mb2: Box['a .. 'a | int]
+//│    = Box { inner: 6, info: 'hello' }
+//│ res: int
+//│    = 6
+
+// FIXME
+:js
+mb.(MyBox.Map) (fun x -> x * 3)
+MyBox.Map mb (fun x -> x * 3)
+//│ // Query 1
+//│ res = mb1["MyBox.Map"]((x) => x * 3);
+//│ // Query 2
+//│ res = MyBox1.Map(mb1)((x) => x * 3);
+//│ // End of generated code
+//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ Runtime error:
+//│   TypeError: mb1.MyBox.Map is not a function
+//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ Runtime error:
+//│   TypeError: MyBox1.Map is not a function
+

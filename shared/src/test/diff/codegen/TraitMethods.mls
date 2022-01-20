@@ -1,0 +1,71 @@
+
+// To generate the prelude without printing it in the next test case
+()
+//│ res: ()
+//│    = []
+
+:js
+trait T0
+  method Foo: int
+//│ Defined trait T0
+//│ Declared T0.Foo: t0 -> int
+//│ // End of generated code
+
+:js
+trait T1
+  method Foo = 1
+//│ Defined trait T1
+//│ Defined T1.Foo: t1 -> 1
+//│ // End of generated code
+
+:js
+class A: T0
+//│ Defined class A
+//│ // Prelude
+//│ class A {}
+//│ // End of generated code
+
+:js
+class B: A & T1
+//│ Defined class B
+//│ // Prelude
+//│ class B extends A {
+//│   constructor(fields) {
+//│     super(fields);
+//│   }
+//│ }
+//│ // End of generated code
+
+:e
+:js
+A{}
+//│ // Query 1
+//│ res = new A({});
+//│ // End of generated code
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.41: 	A{}
+//│ ║        	^
+//│ ╟── Note that class A is abstract:
+//│ ║  l.22: 	class A: T0
+//│ ║        	      ^^^^^
+//│ ╟── Hint: method Foo is abstract
+//│ ║  l.9: 	  method Foo: int
+//│ ╙──     	         ^^^^^^^^
+//│ res: error
+//│    = A {}
+
+// FIXME
+:js
+b = B{}
+B.Foo
+//│ // Query 1
+//│ globalThis.b = new B({});
+//│ res = b;
+//│ // Query 2
+//│ res = ((x) => new B(x)).Foo;
+//│ // End of generated code
+//│ b: B
+//│  = B {}
+//│ res: (B & t0 & t1) -> 1
+//│    = undefined
+

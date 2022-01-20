@@ -8,55 +8,13 @@ import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
+class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
-  
-  private val files = ls.rec(dir).filter(_.isFile)
-  
-  private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[Str] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
-      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
-  // Allow overriding which specific tests to run, sometimes easier for development:
-  private val focused = Set[Str](
-    // "Ascribe",
-    // "Repro",
-    // "RecursiveTypes",
-    // "Simple",
-    // "Inherit",
-    // "Basics",
-    // "Paper",
-    // "Negations",
-    // "RecFuns",
-    // "With",
-    // "Annoying",
-    // "Tony",
-    // "Lists",
-    // "Traits",
-    // "BadTraits",
-    // "TraitMatching",
-    // "Subsume",
-    // "Methods",
-  )
-  private def filter(name: Str): Bool =
-    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
-  
-  files.foreach { file => val fileName = file.baseName
-      if (validExt(file.ext) && filter(fileName)) test(fileName) {
+  import DiffTests._
+  files.foreach { file => val fileName = file.baseName; test(fileName) {
     
-    print(s"Processing  $fileName")
+    val buf = mutable.ArrayBuffer.empty[Char]
+    buf ++= s"Processed  $fileName"
     // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
     // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
     
@@ -64,6 +22,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
+    
+    val diffBegMarker = "<<<<<<<"
+    val diffMidMarker = "======="
+    val diffEndMarker = ">>>>>>>"
     
     val fileContents = read(file)
     val allLines = fileContents.splitSane('\n').toList
@@ -79,6 +41,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
+    val unmergedChanges = mutable.Buffer.empty[Int]
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
@@ -135,9 +98,27 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       case line :: ls if line.isEmpty || line.startsWith("//") =>
         out.println(line)
         rec(ls, defaultMode)
+      case line :: ls if line.startsWith(diffBegMarker) => // Check if there are unmerged git conflicts
+        val diff = ls.takeWhile(l => !l.startsWith(diffEndMarker))
+        assert(diff.exists(_.startsWith(diffMidMarker)), diff)
+        val rest = ls.drop(diff.length)
+        val hdo = rest.headOption
+        assert(hdo.exists(_.startsWith(diffEndMarker)), hdo)
+        val blankLines = diff.count(_.isEmpty)
+        val hasBlankLines = diff.exists(_.isEmpty)
+        if (diff.forall(l => l.startsWith(outputMarker) || l.startsWith(diffMidMarker) || l.isEmpty)) {
+          for (_ <- 1 to blankLines) out.println()
+        } else {
+          unmergedChanges += allLines.size - lines.size + 1
+          out.println(diffBegMarker)
+          diff.foreach(out.println)
+          out.println(diffEndMarker)
+        }
+        rec(rest.tail, if (hasBlankLines) defaultMode else mode)
       case l :: ls =>
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
+          || l.startsWith(diffBegMarker)
           // || l.startsWith(oldOutputMarker)
         ))).toIndexedSeq
         block.foreach(out.println)
@@ -250,20 +231,20 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
-                val cty = typer.canonicalizeType(wty)
+                val cty = typer.canonicalizeType(wty)(ctx)
                 if (mode.dbg) output(s"Canon: ${cty}")
                 if (mode.dbg) output(s" where: ${cty.showBounds}")
-                val sim = typer.simplifyType(cty)
+                val sim = typer.simplifyType(cty)(ctx)
                 if (mode.dbg) output(s"Type after simplification: ${sim}")
                 if (mode.dbg) output(s" where: ${sim.showBounds}")
                 // val exp = typer.expandType(sim)
                 
                 // TODO: would be better toa void having to do a second pass,
                 // but would require more work:
-                val reca = typer.canonicalizeType(sim)
+                val reca = typer.canonicalizeType(sim)(ctx)
                 if (mode.dbg) output(s"Recanon: ${reca}")
                 if (mode.dbg) output(s" where: ${reca.showBounds}")
-                val resim = typer.simplifyType(reca)
+                val resim = typer.simplifyType(reca)(ctx)
                 if (mode.dbg) output(s"Resimplified: ${resim}")
                 if (mode.dbg) output(s" where: ${resim.showBounds}")
                 val recons = typer.reconstructClassTypes(resim, true, ctx)
@@ -278,18 +259,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
-                output(s"Defined " + td.kind.str + " " + td.nme.name)
-                val ttd = ctx.tyDefs(td.nme.name)
-                (ttd.mthDecls ++ ttd.mthDefs).foreach { case MethodDef(_, _, nme, tps, rhs) =>
-                  val fullName = td.nme.name + "." + nme.name
-                  val bodyTy = rhs.fold(_ => ctx.mthDefs, _ => ctx.mthDecls)(td.nme.name)(nme.name)
-                  val mthTy = typer.wrapMethod(ttd.nme.name, bodyTy)(bodyTy.prov, ctx)
-                  val res = getType(mthTy.instantiate(0))
-                  output(s"${rhs.fold(_ => "Defined", _ => "Declared")} ${fullName}: ${res.show}")
+                val tn = td.nme.name
+                output(s"Defined " + td.kind.str + " " + tn)
+                val ttd = ctx.tyDefs(tn)
+                (ttd.mthDecls ++ ttd.mthDefs).foreach {
+                  case MethodDef(_, _, Var(mn), _, rhs) =>
+                    rhs.fold(
+                      _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)(md.prov)),
+                      _ => ctx.getMth(S(tn), mn)
+                    ).foreach(res => output(s"${rhs.fold(
+                      _ => "Defined",
+                      _ => "Declared"
+                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
               }
             )
-
+            
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
@@ -335,8 +320,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
                 case R(S(head :: next)) =>
                   val text = head match {
                     case (false, err) =>
-                      if (!(mode.expectTypeErrors || mode.expectRuntimeErrors || allowRuntimeErrors))
-                        failures += blockLineNum
+                      if (!(mode.expectTypeErrors
+                          || mode.expectRuntimeErrors
+                          || allowRuntimeErrors
+                          || mode.fixme
+                      )) failures += blockLineNum
                       totalRuntimeErrors += 1
                       output("Runtime error:")
                       err.split('\n') foreach { s => output("  " + s) }
@@ -441,23 +429,79 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
       out.close()
       host.terminate()
     }
-    val testFaield = failures.nonEmpty
+    val testFailed = failures.nonEmpty || unmergedChanges.nonEmpty
     val result = strw.toString
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
-    val testColor = if (testFaield) Console.RED else Console.GREEN
-    println(s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}")
+    val testColor = if (testFailed) Console.RED else Console.GREEN
+    buf ++= s"${" " * (30 - fileName.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
-      println(s"! Updating $file")
+      buf ++= s"! Updated $file\n"
       write.over(file, result)
     }
-    if (testFaield)
-      fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
+    print(buf.mkString)
+    if (testFailed)
+      if (unmergedChanges.nonEmpty)
+        fail(s"Unmerged non-output changes around: " + unmergedChanges.map("l."+_).mkString(", "))
+      else fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
+}
+
+object DiffTests {
   
-  case class ReplHost() {
+  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  
+  private val allFiles = ls.rec(dir).filter(_.isFile)
+  
+  private val validExt = Set("fun", "mls")
+  
+  // Aggregate unstaged modified files to only run the tests on them, if there are any
+  private val modified: Set[Str] =
+    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
+      println(" [git] " + gitStr)
+      val prefix = gitStr.take(2)
+      val filePath = gitStr.drop(3)
+      val fileName = RelPath(filePath).baseName
+      if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
+    }.toSet catch {
+      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
+      Set.empty
+    }
+  
+  // Allow overriding which specific tests to run, sometimes easier for development:
+  private val focused = Set[Str](
+    // "Ascribe",
+    // "Repro",
+    // "RecursiveTypes",
+    // "Simple",
+    // "Inherit",
+    // "Basics",
+    // "Paper",
+    // "Negations",
+    // "RecFuns",
+    // "With",
+    // "Annoying",
+    // "Tony",
+    // "Lists",
+    // "Traits",
+    // "BadTraits",
+    // "TraitMatching",
+    // "Subsume",
+    // "Methods",
+  )
+  private def filter(name: Str): Bool =
+    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
+  
+  private val files = allFiles.filter { file =>
+      val fileName = file.baseName
+      validExt(file.ext) && filter(fileName)
+  }
+  
+  
+  /** Helper to run NodeJS on test input. */
+  final case class ReplHost() {
     import java.io.{BufferedWriter, BufferedReader, InputStreamReader, OutputStreamWriter}
     private val builder = new java.lang.ProcessBuilder()
     builder.command("node", "--interactive")

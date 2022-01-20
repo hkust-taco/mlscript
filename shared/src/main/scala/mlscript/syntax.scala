@@ -22,7 +22,7 @@ final case class TypeDef(
 final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
   prt: TypeName,
-  nme: TypeName,
+  nme: Var,
   tparams: List[TypeName],
   rhs: RHS,
 ) extends Located {

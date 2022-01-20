@@ -78,7 +78,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def mkApp(lhs: Term, rhs: Term): Term = App(lhs, toParams(rhs))
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
   def _match[_: P]: P[CaseOf] =
-    P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled)
+    locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
   def matchArms[_: P]: P[CaseBranches] = P(
     ( ("_" ~ "->" ~ term).map(Wildcard)
     | ((lit | variable) ~ "->" ~ term ~ matchArms2)
@@ -145,11 +145,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def expr[_: P]: P[Term] = P( term ~ End )
   
   def defDecl[_: P]: P[Def] =
-    P((kw("def") ~ variable ~ tyParams ~ ":" ~/ ty map {
+    locate(P((kw("def") ~ variable ~ tyParams ~ ":" ~/ ty map {
       case (id, tps, t) => Def(true, id, R(PolyType(tps, t)))
     }) | (kw("rec").!.?.map(_.isDefined) ~ kw("def") ~/ variable ~ subterm.rep ~ "=" ~ term map {
       case (rec, id, ps, bod) => Def(rec, id, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc))))
-    }))
+    })))
   
   def tyKind[_: P]: P[TypeDefKind] = (kw("class") | kw("trait") | kw("type")).! map {
     case "class" => Cls
@@ -167,11 +167,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyParams[_: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
   def mthDecl[_: P](prt: TypeName): P[R[MethodDef[Right[Term, Type]]]] = 
-    P(kw("method") ~ tyName ~ tyParams ~ ":" ~/ ty map {
+    P(kw("method") ~ variable ~ tyParams ~ ":" ~/ ty map {
       case (id, ts, t) => R(MethodDef[Right[Term, Type]](true, prt, id, ts, R(t)))
     })
   def mthDef[_: P](prt: TypeName): P[L[MethodDef[Left[Term, Type]]]] = 
-    P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ tyName ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
+    P(kw("rec").!.?.map(_.isDefined) ~ kw("method") ~ variable ~ tyParams ~ subterm.rep ~ "=" ~/ term map {
       case (rec, id, ts, ps, bod) =>
         L(MethodDef(rec, prt, id, ts, L(ps.foldRight(bod)((i, acc) => Lam(toParams(i), acc)))))
     })
@@ -205,7 +205,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (N -> ty :: Nil, N) => ty
     case (fs, _) => Tuple(fs)
   }
-  def litTy[_: P]: P[Type] = P( lit.map(Literal) )
+  def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   
   def toplvl[_: P]: P[Statement] =
     P( defDecl | tyDecl | termOrAssign )

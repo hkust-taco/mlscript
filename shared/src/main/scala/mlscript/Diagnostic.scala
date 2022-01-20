@@ -24,7 +24,7 @@ object Warning {
 final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
   assert(spanStart >= 0)
   assert(spanEnd >= spanStart)
-  def isWithin(that: Loc): Bool = that.origin === this.origin && (
+  def covers(that: Loc): Bool = that.origin === this.origin && (
     that.spanStart >= this.spanStart && that.spanEnd <= this.spanEnd
   )
   def touches(that: Loc): Bool = that.origin === this.origin && (

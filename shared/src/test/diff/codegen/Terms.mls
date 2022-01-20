@@ -321,3 +321,49 @@ case A { a = 0 } of
 //│ // End of generated code
 //│ res: (0, 1,)
 //│    = [ 0, 1 ]
+
+// With
+:js
+rcd1 = { x = "a"; y = "b" }
+rcd2 = rcd1 with { x = 1; z = 2 }
+(rcd1.x, rcd1.y, rcd2.x, rcd2.y, rcd2.z)
+//│ // Prelude
+//│ function withConstruct(target, fields) {
+//│   if (typeof target === "string" || typeof target === "number" || typeof target === "boolean" || typeof target === "bigint" || typeof target === "symbol") {
+//│     return Object.assign(target, fields);
+//│   }
+//│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
+//│     return Object.assign(target.valueOf(), target, fields);
+//│   }
+//│   const copy = Object.assign({}, target, fields);
+//│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
+//│   return copy;
+//│ }
+//│ // Query 1
+//│ globalThis.rcd1 = {
+//│   x: "a",
+//│   y: "b"
+//│ };
+//│ res = rcd1;
+//│ // Query 2
+//│ globalThis.rcd2 = withConstruct(rcd1, {
+//│   x: 1,
+//│   z: 2
+//│ });
+//│ res = rcd2;
+//│ // Query 3
+//│ res = [
+//│   rcd1.x,
+//│   rcd1.y,
+//│   rcd2.x,
+//│   rcd2.y,
+//│   rcd2.z
+//│ ];
+//│ // End of generated code
+//│ rcd1: {x: "a", y: "b"}
+//│     = { x: 'a', y: 'b' }
+//│ rcd2: {x: 1, y: "b", z: 2}
+//│     = { x: 1, y: 'b', z: 2 }
+//│ res: ("a", "b", 1, "b", 2,)
+//│    = [ 'a', 'b', 1, 'b', 2 ]
+

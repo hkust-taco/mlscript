@@ -12,14 +12,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // The data types used for type inference:
   
-  case class TypeProvenance(loco: Opt[Loc], desc: Str) {
+  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
+    val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
-    override def toString: Str = "‹"+loco.fold(desc)(desc+":"+_)+"›"
+    override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
+  type TP = TypeProvenance
+
+  sealed abstract class TypeInfo
+
+  case class AbstractConstructor(absMths: Set[Var]) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
    *  and which can be isntantiated to a given level. */
-  sealed abstract class TypeScheme {
+  sealed abstract class TypeScheme extends TypeInfo {
     def instantiate(implicit lvl: Int): SimpleType
   }
   
@@ -29,6 +35,34 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val prov: TypeProvenance = body.prov
     def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
+  }
+  
+  // single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
+  class MethodType(val level: Int, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
+      (implicit val prov: TypeProvenance = body.fold(noProv)(_.prov)) {
+    def &(that: MethodType): MethodType = {
+      require(this.level === that.level)
+      MethodType(level, mergeOptions(this.body, that.body)(_ & _), (this.parents ::: that.parents).distinct, false)
+    }
+    def +(that: MethodType): MethodType =
+      if (this.parents === that.parents) that
+      else MethodType(0, N, (this.parents ::: that.parents).distinct)
+    val toPT: PolymorphicType = body.fold(PolymorphicType(0, errType))(PolymorphicType(level, _))
+    def instantiate(implicit lvl: Int): SimpleType = toPT.instantiate
+    def rigidify(implicit lvl: Int): SimpleType = toPT.rigidify
+    def copy(level: Int = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
+      MethodType(level, body, parents, this.single)
+    override def toString: Str = s"MethodType($level,$body,$parents,$single)"
+  }
+  object MethodType {
+    def apply(level: Int, body: Opt[SimpleType], parent: TypeName)(implicit prov: TypeProvenance): MethodType =
+      MethodType(level, body, parent :: Nil, true)
+    def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName])(implicit prov: TypeProvenance): MethodType =
+      MethodType(level, body, parents, true)
+    private def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
+        (implicit prov: TypeProvenance): MethodType =
+      new MethodType(level, body, parents, single)
+    def unapply(mt: MethodType): S[(Int, Opt[SimpleType], List[TypeName])] = S((mt.level, mt.body, mt.parents))
   }
   
   /** A type without universally quantified type variables. */
@@ -122,7 +156,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** The sole purpose of ProvType is to store additional type provenance info. */
   case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
+    override def toString = s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
+    // override def toString = s"$underlying[${prov.toString.take(5)}]"
+    // override def toString = s"$underlying@${prov}"
+    // override def toString = showProvOver(true)(""+underlying)
     
     // TOOD override equals/hashCode? — could affect hash consing...
     // override def equals(that: Any): Bool = super.equals(that) || underlying.equals(that)
@@ -135,26 +173,25 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       base.without(rcd.fields.iterator.map(_._1).toSet) & rcd
   }
   
-  case class TypeRef(defn: TypeDef, targs: Ls[SimpleType])
-      (val prov: TypeProvenance, val ctx: Ctx) extends SimpleType {
-    assert(targs.size === defn.tparams.size)
+  case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
-    def expand(implicit raise: Raise): SimpleType = expandWith(paramTags = true)
-    def expandWith(paramTags: Bool)(implicit raise: Raise): SimpleType = {
-      val body_ty = typeType(defn.body)(ctx, raise, vars = defn.tparams.map(_.name).zip(targs).toMap)
+    def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
+    def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = {
+      val td = ctx.tyDefs(defn.name)
+      require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
-        if (paramTags) RecordType.mk(defn.tparams.lazyZip(targs).map((tp, tv) =>
-          tparamField(defn.nme, tp) -> FunctionType(tv, tv)(noProv)).toList)(noProv)
+        if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
+          tparamField(defn, tp) -> FunctionType(tv, tv)(noProv) }.toList)(noProv)
         else TopType
-      defn.kind match {
-        case Als => body_ty
-        case Cls => clsNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
-        case Trt => trtNameToNomTag(defn)(noProv/*TODO*/, ctx) & body_ty & tparamTags
-      }
+      subst(td.kind match {
+        case Als => td.bodyTy
+        case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
+        case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
+      }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
     }
-    override def toString = {
+    override def toString = showProvOver(false) {
       val displayName =
-        if (primitiveTypes.contains(defn.nme.name)) defn.nme.name.capitalize else defn.nme.name
+        if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name
       if (targs.isEmpty) displayName else s"$displayName[${targs.mkString(",")}]"
     }
   }
@@ -178,7 +215,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // else this.parentsST.union(that.parentsST)
       else Set(this, that)
     def level: Int = 0
-    override def toString = id.idStr+s"<${parents.mkString(",")}>"
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
   }
   
   case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
@@ -194,7 +231,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
-    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType =
+    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
   }
   
@@ -209,8 +246,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
-    override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
-    override def hashCode: Int = uid
+    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
   }
   type TV = TypeVariable
   private var freshCount = 0

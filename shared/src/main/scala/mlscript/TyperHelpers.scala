@@ -24,7 +24,7 @@ abstract class TyperHelpers { self: Typer =>
   private val noPostTrace: Any => String = _ => ""
   
   protected var indent = 0
-  def trace[T](pre: String)(thunk: => T)(post: T => String = noPostTrace): T = {
+  def trace[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T = {
     println(pre)
     indent += 1
     val res = try thunk finally indent -= 1
@@ -35,7 +35,20 @@ abstract class TyperHelpers { self: Typer =>
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   // Shadow Predef functions with debugging-flag-enabled ones:
+  
   def println(msg: => Any): Unit = if (dbg) emitDbg("| " * indent + msg)
+  
+  /** A more advanced println version to show where things are printed from. */
+  // def println(msg: => Any)(implicit file: sourcecode.FileName, line: sourcecode.Line): Unit =
+  //   if (dbg) {
+  //     emitDbg((if (showPrintPrefix) {
+  //       val prefix = s"[${file.value}:${line.value}]"
+  //       prefix + " " * (30 - prefix.length)
+  //     } else "") + "| " * indent + msg)
+  //   }
+  // val showPrintPrefix =
+  //   // false
+  //   true
   
   def dbg_assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
@@ -60,7 +73,7 @@ abstract class TyperHelpers { self: Typer =>
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
     case ProvType(underlying) => ProvType(subst(underlying, map))(ts.prov)
     case ProxyType(underlying) => subst(underlying, map)
-    case t@TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov, t.ctx)
+    case t @ TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov)
     case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
       cache += tv -> tv
       tv
@@ -140,7 +153,48 @@ abstract class TyperHelpers { self: Typer =>
     }
   }
   
+  
+  
   trait SimpleTypeImpl { self: SimpleType =>
+    
+    def showProvOver(enabled: Bool)(str: Str): Str =
+      if (enabled) str + prov.toString
+      else str
+    
+    // Note: we implement hashCode and equals manually because:
+    //  1. On one hand, we want a ProvType to compare equal to its underlying type,
+    //      which is necessary for recursive types to associate type provenances to
+    //      their recursive uses without making the constraint solver diverge; and
+    //  2. Additionally, caching hashCode shoudl have performace benefits
+    //      — though I'm not sure whether it's best as a `lazy val` or a `val`.
+    override lazy val hashCode: Int = this match {
+      case tv: TypeVariable => tv.uid
+      case ProvType(und) => und.hashCode
+      case p: Product => scala.runtime.ScalaRunTime._hashCode(p)
+    }
+    override def equals(that: Any): Bool = this match {
+      case ProvType(und) => (und: Any) === that
+      case tv1: TV => that match {
+        case tv2: Typer#TV => tv1.uid === tv2.uid
+        case _ => false
+      }
+      case p1: Product => that match {
+        case that: ST => that match {
+          case ProvType(und) => this === und
+          case tv: TV => false
+          case p2: Product =>
+            p1.canEqual(p2) && {
+              val it1 = p1.productIterator
+              val it2 = p2.productIterator
+              while(it1.hasNext && it2.hasNext) {
+                if (it1.next() =/= it2.next()) return false
+              }
+              return !it1.hasNext && !it2.hasNext
+            }
+        }
+        case _ => false
+      }
+    }
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
@@ -182,10 +236,10 @@ abstract class TyperHelpers { self: Typer =>
       case _ => NegType(this)(prov)
     }
     
-    def >:< (that: SimpleType): Bool =
+    def >:< (that: SimpleType)(implicit ctx: Ctx): Bool =
       (this is that) || this <:< that && that <:< this
     // TODO for composed types and negs, should better first normalize the inequation
-    def <:< (that: SimpleType)(implicit cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+    def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
     // trace(s"? $this <: $that") {
       subtypingCalls += 1
@@ -228,8 +282,8 @@ abstract class TyperHelpers { self: Typer =>
         case (_, ExtrType(false)) => true
         case (ExtrType(true), _) => true
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.nme.name => tr.expand(_ => ()) <:< that // FIXME swallow errors?
-        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.nme.name => this <:< tr.expand(_ => ()) // FIXME swallow errors?
+        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.name => tr.expand <:< that
+        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.name => this <:< tr.expand
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)
@@ -240,6 +294,9 @@ abstract class TyperHelpers { self: Typer =>
       })
     }
     // }(r => s"! $r")
+    
+    def isTop: Bool = (TopType <:< this)(Ctx.empty)
+    def isBot: Bool = (this <:< BotType)(Ctx.empty)
     
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // sometimes behind a single negation,
@@ -274,11 +331,11 @@ abstract class TyperHelpers { self: Typer =>
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
     }
-    def unwrapAll(implicit raise: Raise): SimpleType = unwrapProxies match {
+    def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll
       case u => u
     }
-    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit raise: Raise): SimpleType = unwrapAll match {
+    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit ctx: Ctx): SimpleType = unwrapAll match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
@@ -291,7 +348,7 @@ abstract class TyperHelpers { self: Typer =>
     }
     def withProvOf(ty: SimpleType): ProvType = withProv(ty.prov)
     def withProv(p: TypeProvenance): ProvType = ProvType(this)(p)
-    def pushPosWithout(implicit raise: Raise): SimpleType = this match {
+    def pushPosWithout(implicit ctx: Ctx): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else b.unwrapAll.withoutPos(ns) match {
         case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
@@ -307,13 +364,17 @@ abstract class TyperHelpers { self: Typer =>
       }
       case _ => this
     }
-    def normalize(pol: Bool): ST = DNF.mk(this, pol = pol).toType()
+    def normalize(pol: Bool)(implicit ctx: Ctx): ST = DNF.mk(this, pol = pol).toType()
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
     
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
+      case _ => this
+    }
+    def unwrapProvs: SimpleType = this match {
+      case ProvType(und) => und.unwrapProvs
       case _ => this
     }
     
@@ -354,7 +415,7 @@ abstract class TyperHelpers { self: Typer =>
     
     def expPos(implicit ctx: Ctx): Type = (
       // this
-      this.pushPosWithout(_ => ())
+      this.pushPosWithout
       // this.normalize(true)
       // |> (canonicalizeType(_, true))
       // |> (simplifyType(_, true, removePolarVars = false))

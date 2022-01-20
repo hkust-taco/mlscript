@@ -19,9 +19,9 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = 65
-//│ constrain calls  : 70
+//│ constrain calls  : 97
 //│ annoying  calls  : 23
-//│ subtyping calls  : 42
+//│ subtyping calls  : 44
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -95,7 +95,7 @@ res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.94: 	res 1
 //│ ║        	^^^^^
-//│ ╟── expression of type `1` does not match type `Some[?] & ?a | None & ?b`
+//│ ╟── integer literal of type `1` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.94: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:
