@@ -193,11 +193,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Let(isRec, name, rhs, body) => "let binding"
     case Tup((N, x) :: Nil) => x.describe
     case Tup((S(_), x) :: Nil) => "binding"
-    case Tup(xs) => "tuple expression"
+    case Tup(xs) => "tuple"
     case Bind(l, r) => "'as' binding"
     case Test(l, r) => "'is' test"
     case With(t, fs) =>  "`with` extension"
-    case CaseOf(scrut, cases) =>  "case of" 
+    case CaseOf(scrut, cases) =>  "`case` expression" 
   }
   
   override def toString: String = this match {
@@ -459,8 +459,8 @@ trait StatementImpl extends Located { self: Statement =>
     case Bind(l, r) => l :: r :: Nil
     case Test(l, r) => l :: r :: Nil
     case With(t, fs) => t :: fs :: Nil
-    case CaseOf(s, c) => s :: c.iterator.map(_.body).toList
-    case d @ Def(_, n, b) => d.body :: Nil
+    case CaseOf(s, c) => s :: c :: Nil
+    case d @ Def(_, n, b) => n :: d.body :: Nil
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
   }
   
@@ -489,11 +489,6 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case Case(pat, body, rest) => pat :: body :: rest :: Nil
     case Wildcard(body) => body :: Nil
     case NoCases => Nil
-  }
-  
-  def iterator: Ite[Case] = this match {
-    case c: Case => Ite.single(c) ++ c.rest.iterator
-    case _ => Ite.empty
   }
   
   lazy val toList: Ls[Case] = this match {

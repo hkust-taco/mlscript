@@ -38,13 +38,13 @@ bar Test
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.37: 	bar Test
 //│ ║        	^^^^^^^^
-//│ ╟── expression of type `{value: ?value} -> (Test & {value: ?value})` does not match type `Test & ?a | Toast & ?b`
+//│ ╟── reference of type `{value: ?value} -> (Test & {value: ?value})` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.37: 	bar Test
 //│ ║        	    ^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
 //│ ║        	                 ^
-//│ ╟── Note: Class constructor is defined at: 
+//│ ╟── Note: class constructor Test is defined at: 
 //│ ║  l.2: 	class Test: { value: int }
 //│ ╙──     	      ^^^^
 //│ res: error
@@ -56,7 +56,7 @@ bar "ops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.55: 	bar "ops"
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `"ops"` does not match type `Test & ?a | Toast & ?b`
+//│ ╟── string literal of type `"ops"` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.55: 	bar "ops"
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -79,7 +79,7 @@ baz "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.78: 	baz "oops"
 //│ ║        	^^^^^^^^^^
-//│ ╟── expression of type `"oops"` does not match type `Test & ?a | Toast & ?b`
+//│ ╟── string literal of type `"oops"` does not match type `Test & ?a | Toast & ?b`
 //│ ║  l.78: 	baz "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── Note: constraint arises from reference:

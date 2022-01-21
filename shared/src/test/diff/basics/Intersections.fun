@@ -43,7 +43,7 @@ foo as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.42: 	foo as Nothing
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `(int | bool) -> nothing` does not match type `nothing`
+//│ ╟── type intersection of type `(int | bool) -> nothing` does not match type `nothing`
 //│ ║  l.24: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`

@@ -82,15 +82,9 @@ f ((true,false))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	f ((true,false))
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `true` does not match type `1 | 3`
+//│ ╟── reference of type `true` does not match type `1 | 3`
 //│ ║  l.81: 	f ((true,false))
-//│ ║        	    ^^^^
-//│ ╟── but it flows into tuple literal with expected type `(1, 2,) & t1 | (3, 4,) & t2`
-//│ ║  l.81: 	f ((true,false))
-//│ ║        	    ^^^^^^^^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
-//│ ╙──      	              ^^^^^^^^^^^^^
+//│ ╙──      	    ^^^^
 //│ res: error
 //│ Runtime error:
 //│   ReferenceError: f is not defined
@@ -98,14 +92,14 @@ f ((true,false))
 :e
 fun (x, y) -> f ((x,y))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	fun (x, y) -> f ((x,y))
+//│ ║  l.93: 	fun (x, y) -> f ((x,y))
 //│ ║        	              ^^^^^^^
-//│ ╟── expression of type `(?a, ?b,)` does not match type `(1, 2,) & t1 | (3, 4,) & t2`
-//│ ║  l.99: 	fun (x, y) -> f ((x,y))
+//│ ╟── tuple literal of type `(?a, ?b,)` does not match type `(1, 2,) & t1 | (3, 4,) & t2`
+//│ ║  l.93: 	fun (x, y) -> f ((x,y))
 //│ ║        	                  ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
-//│ ╙──      	              ^^^^^^^^^^^^^
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^
 //│ res: (nothing, nothing,) -> anything
 //│    = [Function: res]
 

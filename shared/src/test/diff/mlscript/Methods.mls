@@ -247,7 +247,7 @@ class Class3C: Class2C
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.246: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
-//│ ╟── expression of type `42` does not match type `bool`
+//│ ╟── integer literal of type `42` does not match type `bool`
 //│ ║  l.246: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
