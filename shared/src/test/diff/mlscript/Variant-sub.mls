@@ -5,20 +5,20 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ Some: (('v & 'A,) & {_1: 'v & 'A}) -> (Some['A] with {v: 'v})
 //│     = [Function: Some1]
 //│ None: None
 //│     = None {}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
+//│ flatMap: (((('a,) & {_1: 'a}) -> 'b,) & {_1: (('a,) & {_1: 'a}) -> 'b}) -> ((None & 'b | (Some[?] with {v: 'a}),) & {_1: None & 'b | (Some[?] with {v: 'a})}) -> 'b
 //│        = [Function: flatMap]
 
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
-//│ f: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ f: (('v & 'A,) & {_1: 'v & 'A}) -> (Some['A] with {v: 'v})
 //│  = [Function: f]
 //│ res: Some['A .. 1 | 'A] with {v: 1}
 //│    = Some { v: 1 }
@@ -73,7 +73,7 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
+//│ evalOpt: ((Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a,) & {_1: Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a}) -> (NoneBecause | (Some['A] with {v: 'v}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})

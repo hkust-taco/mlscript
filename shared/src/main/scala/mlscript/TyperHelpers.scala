@@ -320,7 +320,21 @@ abstract class TyperHelpers { self: Typer =>
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
-      case t @ TupleType(fs) => t
+      case t @ TupleType(fs) =>
+        val relevantNames = names.filter(n =>
+          n.name.startsWith("_")
+            && {
+              val t = n.name.tail
+              t.forall(_.isDigit) && {
+                val n = t.toInt
+                1 <= 1 && n <= fs.length
+              }
+            })
+        if (relevantNames.isEmpty) t
+        else {
+          val rcd = t.toRecord
+          rcd.copy(fields = rcd.fields.filterNot(_._1 |> relevantNames))(rcd.prov)
+        }
       case t @ ArrayType(ar) => t
       case n @ NegType(_ : ClassTag | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {

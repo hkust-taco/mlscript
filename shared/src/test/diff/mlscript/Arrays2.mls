@@ -1,45 +1,45 @@
 :ShowRelativeLineNums
 
-class Array[A]: { size: int }
+class MyArray[A]: { size: int }
   method Set: (int, A) -> ()
   method Get: int -> A 
-//│ ╔══[ERROR] Type 'Array' is already defined.
-//│ ║  l.+1: 	class Array[A]: { size: int }
-//│ ╙──      	      ^^^^^
+//│ Defined class MyArray
+//│ Declared MyArray.Set: ((MyArray['A],) & {_1: MyArray['A]}) -> ((int, 'A,) & {_1: int, _2: 'A}) -> ()
+//│ Declared MyArray.Get: ((MyArray['A],) & {_1: MyArray['A]}) -> ((int,) & {_1: int}) -> 'A
 
 
 
-class Dummy[A]: Array[A] & { size: 0 }
+class Dummy[A]: MyArray[A] & { size: 0 }
   method Set (i, a) = ()
   method Get i = error
 //│ Defined class Dummy
-//│ Defined Dummy.Set: Dummy['A] -> (anything, anything,) -> ()
-//│ Defined Dummy.Get: Dummy['A] -> anything -> nothing
+//│ Defined Dummy.Set: ((Dummy['A],) & {_1: Dummy['A]}) -> ((anything, anything,) & {_1: anything, _2: anything}) -> ()
+//│ Defined Dummy.Get: ((Dummy['A],) & {_1: Dummy['A]}) -> ((anything,) & {_1: anything}) -> nothing
 
 
 dummy = Dummy { size = 0 }
 //│ dummy: Dummy['A]
 //│      = Dummy { size: 0 }
 
-dummy: Array[int]
-//│ res: Array[int]
+dummy: MyArray[int]
+//│ res: MyArray[int]
 //│    = Dummy { size: 0 }
 
 
-def ty4B: Array[Array[Array['a]]] as 'a
-//│ ty4B: 'a | Array['c & Array['d .. Array[?]] .. Array['e & Array[?] .. Array['g & Array[Array[Array['h .. 'g] .. 'f] .. 'c] & 'a .. 'b] as 'f]] as 'b
+def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
+//│ ty4B: 'a | MyArray['c & MyArray['d .. MyArray[?]] .. MyArray['e & MyArray[?] .. MyArray['g & MyArray[MyArray[MyArray['h .. 'g] .. 'f] .. 'c] & 'a .. 'b] as 'f]] as 'b
 
 
 
 
 :e
-Array{ size = 0 }
+MyArray{ size = 0 }
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.+1: 	Array{ size = 0 }
-//│ ║        	^^^^^
-//│ ╟── Note that class Array is abstract:
-//│ ║  l.3: 	class Array[A]: { size: int }
-//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+1: 	MyArray{ size = 0 }
+//│ ║        	^^^^^^^
+//│ ╟── Note that class MyArray is abstract:
+//│ ║  l.3: 	class MyArray[A]: { size: int }
+//│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Set is abstract
 //│ ║  l.4: 	  method Set: (int, A) -> ()
 //│ ║       	         ^^^^^^^^^^^^
@@ -47,6 +47,6 @@ Array{ size = 0 }
 //│ ║  l.5: 	  method Get: int -> A 
 //│ ╙──     	         ^^^^^^^^^^^^^
 //│ res: error
-//│    = Array { size: 0 }
+//│    = MyArray { size: 0 }
 
 
