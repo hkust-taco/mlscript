@@ -12,10 +12,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   // The data types used for type inference:
   
-  case class TypeProvenance(loco: Opt[Loc], desc: Str, isOrigin: Bool = false) {
+  case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
+    val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
+  type TP = TypeProvenance
 
   sealed abstract class TypeInfo
 
@@ -169,7 +171,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** The sole purpose of ProvType is to store additional type provenance info. */
   case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
+    override def toString = s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
+    // override def toString = s"$underlying[${prov.toString.take(5)}]"
+    // override def toString = s"$underlying@${prov}"
+    // override def toString = showProvOver(true)(""+underlying)
     
     // TOOD override equals/hashCode? — could affect hash consing...
     // override def equals(that: Any): Bool = super.equals(that) || underlying.equals(that)
@@ -198,7 +204,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
       }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
     }
-    override def toString = {
+    override def toString = showProvOver(false) {
       val displayName =
         if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name
       if (targs.isEmpty) displayName else s"$displayName[${targs.mkString(",")}]"
@@ -224,7 +230,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // else this.parentsST.union(that.parentsST)
       else Set(this, that)
     def level: Int = 0
-    override def toString = id.idStr+s"<${parents.mkString(",")}>"
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
   }
   
   case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
@@ -255,8 +261,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
-    override def toString: String = nameHint.getOrElse("α") + uid + "'" * level
-    override def hashCode: Int = uid
+    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
   }
   type TV = TypeVariable
   private var freshCount = 0

@@ -1,13 +1,13 @@
 class Left[A]: { value: A }
 def Left value = Left{ value }
 //│ Defined class Left
-//│ Left: 'a -> (Left['A .. 'A | 'a] with {value: 'a})
+//│ Left: ('value & 'A) -> (Left['A] with {value: 'value})
 //│     = [Function: Left1]
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
 //│ Defined class Right
-//│ Right: 'a -> (Right['A .. 'A | 'a] with {value: 'a})
+//│ Right: ('value & 'A) -> (Right['A] with {value: 'value})
 //│      = [Function: Right1]
 
 def testVal = if true then Left 1 else Right 2

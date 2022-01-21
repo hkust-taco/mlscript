@@ -8,7 +8,7 @@
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.7: 	1: ~int
 //│ ║       	^
-//│ ╟── expression of type `1` does not match type `~int`
+//│ ╟── integer literal of type `1` does not match type `~int`
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.7: 	1: ~int
 //│ ╙──     	   ^^^^
@@ -20,7 +20,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.19: 	add res 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `~int` does not match type `int`
+//│ ╟── type `~int` does not match type `int`
 //│ ║  l.7: 	1: ~int
 //│ ║       	   ^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -34,7 +34,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.33: 	(1: int): ~int
 //│ ║        	 ^
-//│ ╟── expression of type `int` does not match type `~int`
+//│ ╟── type `int` does not match type `~int`
 //│ ║  l.33: 	(1: int): ~int
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from type negation:
@@ -64,7 +64,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.63: 	1: ~(~3 & ~2)
 //│ ║        	^
-//│ ╟── expression of type `1` does not match type `~(~2 & ~3)`
+//│ ╟── integer literal of type `1` does not match type `~(~2 & ~3)`
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.63: 	1: ~(~3 & ~2)
 //│ ╙──      	   ^^^^^^^^^^

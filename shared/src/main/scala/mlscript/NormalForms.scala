@@ -38,7 +38,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (LhsRefined(b1, ts, r1), that: BaseType) =>
         ((b1, that) match {
           case (S(p0 @ ClassTag(pt0, ps0)), p1 @ ClassTag(pt1, ps1)) =>
-            println(s"!GLB! $this $that ${p0.glb(p1)}")
+            // println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
           case (S(FunctionType(l0, r0)), FunctionType(l1, r1)) =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
@@ -88,6 +88,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         implicit val ctx: Ctx = Ctx.empty
         b2.forall(b2 => b1.exists(_ <:< b2)) && ts2.forall(ts1) && rt1 <:< rt2
     }
+    def isTop: Bool = isInstanceOf[LhsTop.type]
   }
   case class LhsRefined(base: Opt[BaseType], ttags: Set[TraitTag], reft: RecordType) extends LhsNf {
     override def toString: Str = s"${base.getOrElse("")}${reft}${ttags.iterator.map("∧"+_).mkString}"
@@ -173,6 +174,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case _: RhsField | _: RhsBases => N
     }
     def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
+    def isBot: Bool = isInstanceOf[RhsBot.type]
   }
   case class RhsField(name: Var, ty: SimpleType) extends RhsNf
     { def name_ty: Var -> ST = name -> ty }

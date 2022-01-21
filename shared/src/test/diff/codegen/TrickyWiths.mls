@@ -1,0 +1,45 @@
+
+() with {}
+//│ res: ()
+//│    = Array {}
+
+:js
+n = 42 with { x = 1 }
+n + n.x
+//│ // Query 1
+//│ globalThis.n = withConstruct(42, { x: 1 });
+//│ res = n;
+//│ // Query 2
+//│ res = n + n.x;
+//│ // End of generated code
+//│ n: 42 & {x: 1}
+//│  = [Number: 42] { x: 1 }
+//│ res: int
+//│    = 43
+
+
+// TODO: make `with` actually work on arrays:
+
+:js
+a = (1,2,3) with {}
+def a: nothing // unsound escape hatch
+//│ // Query 1
+//│ globalThis.a = withConstruct([
+//│   1,
+//│   2,
+//│   3
+//│ ], {});
+//│ res = a;
+//│ // End of generated code
+//│ a: (1, 2, 3,)
+//│  = Array { '0': 1, '1': 2, '2': 3 }
+//│ a: nothing
+
+a.length
+a.map(fun x -> x + 1)
+//│ res: nothing
+//│    = 0
+//│ res: nothing
+//│    = []
+
+

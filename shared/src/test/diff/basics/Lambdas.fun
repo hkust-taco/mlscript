@@ -92,18 +92,18 @@ f (x: 42, y: 43)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(x: 42, y: 43,)` does not match type `int`
+//│ ╟── tuple of type `(x: 42, y: 43,)` does not match type `int`
 //│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	   ^^^^^^^^^^^^
-//│ ╟── but it flows into argument with expected type `(x: ?a,)`
+//│ ╟── but it flows into argument with expected type `int`
 //│ ║  l.91: 	f (x: 42, y: 43)
 //│ ║        	  ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.74: 	let f(x: int) = x + 1
 //│ ║        	                ^
-//│ ╟── from parameter type:
+//│ ╟── from binding:
 //│ ║  l.74: 	let f(x: int) = x + 1
-//│ ╙──      	         ^^^
+//│ ╙──      	      ^^^^^^
 //│ res: error | int
 
 (a, b) => a + b

@@ -54,7 +54,7 @@ bar((1, 2))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.53: 	bar((1, 2))
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
 //│ ║  l.53: 	bar((1, 2))
 //│ ║        	     ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -86,7 +86,7 @@ f((1, 2))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.85: 	f((1, 2))
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
 //│ ║  l.85: 	f((1, 2))
 //│ ║        	   ^^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -103,7 +103,7 @@ f r
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.100: 	f r
 //│ ║         	^^^
-//│ ╟── expression of type `((1, 2,),)` does not match type `(?a, ?b,)`
+//│ ╟── argument of type `((1, 2,),)` does not match type `(?a, ?b,)`
 //│ ║  l.100: 	f r
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -128,7 +128,7 @@ f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.127: 	f(1, 2)
 //│ ║         	^^^^^^
-//│ ╟── expression of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ╟── tuple literal of type `(1, 2,)` does not match type `((?a, ?b,),)`
 //│ ║  l.127: 	f(1, 2)
 //│ ╙──       	  ^^^^
 //│ res: error | int

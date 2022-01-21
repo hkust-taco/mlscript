@@ -8,7 +8,7 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'a -> (Some['A .. 'A | 'a] with {value: 'a})
+//│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
 //│     = [Function: Some1]
 
 Some 42
@@ -33,7 +33,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.32: 	res.value
 //│ ║        	^^^^^^^^^
-//│ ╟── expression of type `None` does not have field 'value'
+//│ ╟── type `None` does not have field 'value'
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
@@ -50,7 +50,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── expression of type `42` does not match type `Some[int] | None`
+//│ ╟── integer literal of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
@@ -95,15 +95,12 @@ g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.94: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── expression of type `int` does not match type `string`
+//│ ╟── type `int` does not match type `string`
 //│ ║  l.65: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.94: 	g: Foo1['a]: Foo1[string]
-//│ ║        	                  ^^^^^^
-//│ ╟── from record type:
-//│ ║  l.64: 	class Foo1[A]: { x: A }
-//│ ╙──      	               ^^^^^^^^
+//│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
 
@@ -141,7 +138,7 @@ f: (Foo2[?] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> ('a | Foo2[?] & 'b as 'b)
+//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> (Foo2[?] & 'a0 as 'a0)
 //│    = [Function: f]
 
 f
