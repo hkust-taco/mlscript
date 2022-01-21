@@ -126,6 +126,7 @@ abstract class TypeImpl extends Located { self: Type =>
         case Some(true) => {
           ub.toTsType
         }
+        // negative polarity takes lower bound
         case Some(false) => {
           lb.toTsType
         }

@@ -48,9 +48,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      expectRuntimeErrors: Bool)
+      showDeclarationTS: Bool, expectRuntimeErrors: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false)
+      false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -83,6 +83,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
+          case "ts" => mode.copy(showDeclarationTS = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case _ =>
             failures += allLines.size - lines.size
@@ -115,6 +116,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           out.println(diffEndMarker)
         }
         rec(rest.tail, if (hasBlankLines) defaultMode else mode)
+      // process block of text and show output - type, expressions, errors
       case l :: ls =>
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
@@ -126,6 +128,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
+
+        // try to parse block of text into mlscript ast
         val ans = try parse(processedBlockStr,
           p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
             else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
@@ -139,6 +143,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               failures += globalLineNum
             output("/!\\ Parse error: " + extra.trace().msg +
               s" at l.$globalLineNum:$col: $lineStr")
+
+          // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
             val blockLineNum = (allLines.size - lines.size) + 1
             if (mode.expectParseErrors)
@@ -155,6 +161,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             var totalWarnings = 0
             var totalRuntimeErrors = 0
             
+            // report errors and warnings
             def report(diags: Ls[Diagnostic]): Unit = {
               diags.foreach { diag =>
                 val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
@@ -255,6 +262,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             }
             
+            // process type definitions first
             typeDefs.foreach(td =>
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
@@ -275,6 +283,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             )
             
+            // generate js code if the correct mode has been selected
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
@@ -315,6 +324,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               R(N)
             }
 
+            // print the generated js code
             def showResult(prefixLength: Int) = {
               results match {
                 case R(S(head :: next)) =>
@@ -339,6 +349,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             }
             
+            // process statements and output mlscript types
+            // generate typescript types if showDeclarationTS flag is
+            // set in the mode
             stmts.foreach {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
@@ -348,6 +361,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
+                if (mode.showDeclarationTS) output(exp.toTsType.toString())
+
               case d @ Def(isrec, nme, L(rhs)) =>
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
@@ -355,6 +370,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
+
                   case S(sign) =>
                     ctx += nme.name -> sign
                     val sign_exp = getType(sign)
@@ -374,11 +390,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         output(s"$nme: ${getType(pty).show}")
                         prefixLength = nme.length()
                     }
+
+                  // show ts type for unbound expression
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
+                      if (mode.showDeclarationTS) output(exp.toTsType.toString())
                       prefixLength = 3
                     }
                 }
