@@ -1,0 +1,101 @@
+()
+add
+mul
+id
+//│ res: ()
+//│    = []
+//│ res: int -> int -> int
+//│    = [Function: add]
+//│ res: int -> int -> int
+//│    = [Function: mul]
+//│ res: 'a -> 'a
+//│    = [Function: id]
+
+// Simple expressions.
+:js
+1 + 1 * 2 / 4 - 5
+//│ // Query 1
+//│ res = 1 + 1 * 2 / 4 - 5;
+//│ // End of generated code
+//│ res: int
+//│    = -3.5
+
+:js
+1 * (2 + 3) / 4 - 5
+//│ // Query 1
+//│ res = 1 * (2 + 3) / 4 - 5;
+//│ // End of generated code
+//│ res: int
+//│    = -3.75
+
+:js
+x = 0
+x > 0 && x < 0
+//│ // Query 1
+//│ globalThis.x = 0;
+//│ res = x;
+//│ // Query 2
+//│ res = x > 0 && x < 0;
+//│ // End of generated code
+//│ x: 0
+//│  = 0
+//│ res: bool
+//│    = false
+
+// Some complicated expressiones.
+:js
+1 + (if (case x + 1 of { int -> 8 | string -> 9 }) == 3 then 2 else 3)
+//│ // Query 1
+//│ let temp;
+//│ res = 1 + ((temp = x + 1, Number.isInteger(temp) ? 8 : temp.constructor == String ? 9 : (function () {
+//│   throw new Error("non-exhaustive case expression");
+//│ })()) == 3 ? 2 : 3);
+//│ // End of generated code
+//│ res: int
+//│    = 4
+
+:js
+case x of { int -> 1 | string -> 0 }
+//│ // Query 1
+//│ let temp1;
+//│ res = (temp1 = x, Number.isInteger(temp1) ? 1 : temp1.constructor == String ? 0 : (function () {
+//│   throw new Error("non-exhaustive case expression");
+//│ })());
+//│ // End of generated code
+//│ res: 0 | 1
+//│    = 1
+
+// When generating comma expressions in comma-separated lists, don't forget to
+// wrap the expression in parentheses.
+:js
+(case x of { int -> 1 | string -> 0 }, case x of { int -> 1 | string -> 0 })
+//│ // Query 1
+//│ let temp2, temp3;
+//│ res = [
+//│   (temp2 = x, Number.isInteger(temp2) ? 1 : temp2.constructor == String ? 0 : (function () {
+//│     throw new Error("non-exhaustive case expression");
+//│   })()),
+//│   (temp3 = x, Number.isInteger(temp3) ? 1 : temp3.constructor == String ? 0 : (function () {
+//│     throw new Error("non-exhaustive case expression");
+//│   })())
+//│ ];
+//│ // End of generated code
+//│ res: (0 | 1, 0 | 1,)
+//│    = [ 1, 1 ]
+
+// Don't add extra parentheses when generating invocations.
+:js
+add 0 1
+//│ // Query 1
+//│ res = add(0)(1);
+//│ // End of generated code
+//│ res: int
+//│    = 1
+
+:js
+id (fun x -> x)
+//│ // Query 1
+//│ res = id((x) => x);
+//│ // End of generated code
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
