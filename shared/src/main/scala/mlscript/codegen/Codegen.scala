@@ -296,7 +296,7 @@ final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
 }
 
 object JSCommaExpr {
-  val outerPrecedence = 2
+  val outerPrecedence: Int = 2
 }
 
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
