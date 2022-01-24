@@ -8,8 +8,7 @@
   <body>
   <h1>MLscript demonstration</h1>
   <div id="content">
-    <div id="left">
-<textarea id="mlscript-input">
+    <textarea id="mlscript-input" class="panel" spellcheck="false">
 class Left[A]: { value: A }
 def Left value = Left{ value }
 
@@ -68,14 +67,9 @@ test3 {}
 <!-- let rec recursive_monster = fun x ->
   { thing = x;
     self = recursive_monster x } -->
-    </div>
-    <div id="right">
-      <div id="mlscript-output"></div>
-    </div>
+    <div id="mlscript-output" class="panel"></div>
   </div>
   <script type="text/javascript" src="js/target/scala-2.13/mlscript-fastopt/main.js"></script>
   <br/>
   <p>The code is available <a href="https://github.com/LPTK/mlscript">on github</a>.</p>
-  <br/>
-  <p>Credit: the CSS style sheet of this page was shamelessly stolen from <a href="https://www.cl.cam.ac.uk/~sd601/mlsub/">the MLsub demo page</a>.</p>
 </html>
