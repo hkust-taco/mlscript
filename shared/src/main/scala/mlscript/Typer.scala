@@ -927,10 +927,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
         val res = freshVar(prov)
-        // TODO constraint on: 
-        // TODO: t_a <: Array[anything]
-        // TODO: t_i <: number
-        t_a
+        con(t_a, ArrayType(res)(prov), t_a)
+        con(t_i, IntType, t_i)
+        res
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)

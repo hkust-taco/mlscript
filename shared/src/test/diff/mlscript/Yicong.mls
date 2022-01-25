@@ -511,9 +511,30 @@ tktup a123
 //│ ╙──       	                     ^
 //│ res: (nothing, nothing,) | error
 
-def a: anything
-def f: anything -> anything
-(f a[3])[3][f 3]
-//│ a: anything
-//│ f: anything -> anything
-//│ res: anything
+ta1 = (2,3,4,5)
+ta1[1]
+ta2 = ((1,2,4), (true, false))
+(ta2[0][1+4], ta[1])[0]
+ta3 = ((1,2,3), "hello", false)
+ta3[1-2]
+//│ ta1: (2, 3, 4, 5,)
+//│ res: 2 | 3 | 4 | 5
+//│ ta2: ((1, 2, 4,), (true, false,),)
+//│ res: false | int | true
+//│ ta3: ((1, 2, 3,), "hello", false,)
+//│ res: "hello" | (1, 2, 3,) | false
+
+:e
+def ge x = x + 1
+ta3[ge 3][ge (1+2)]
+//│ ge: int -> int
+//│ ╔══[ERROR] Type mismatch in array subscription:
+//│ ║  l.529: 	ta3[ge 3][ge (1+2)]
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
+//│ ║  l.518: 	ta3 = ((1,2,3), "hello", false)
+//│ ║         	                ^^^^^^^
+//│ ╟── but it flows into array subscription with expected type `Array[?b]`
+//│ ║  l.529: 	ta3[ge 3][ge (1+2)]
+//│ ╙──       	^^^^^^^^
+//│ res: 1 | 2 | 3
