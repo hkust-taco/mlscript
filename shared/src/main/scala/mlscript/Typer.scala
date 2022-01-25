@@ -923,6 +923,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case Nil | ((N, _) :: Nil) => noProv
           case _ => tp(term.toLoc, "tuple literal")
         })
+      case Subs(a, i) =>
+        val t_a = typeTerm(a)
+        val t_i = typeTerm(i)
+        val res = freshVar(prov)
+        // TODO constraint on: 
+        // TODO: t_a <: Array[anything]
+        // TODO: t_i <: number
+        t_a
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)

@@ -198,6 +198,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => "'is' test"
     case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "`case` expression" 
+    case Subs(arr, idx) => "array subscription"
   }
   
   override def toString: String = this match {
@@ -223,6 +224,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => s"($l is $r)"
     case With(t, fs) =>  s"$t with $fs"
     case CaseOf(s, c) => s"case $s of $c"
+    case Subs(a, i) => s"$a[$i]"
   }
   
   def toType: Diagnostic \/ Type =
@@ -462,6 +464,7 @@ trait StatementImpl extends Located { self: Statement =>
     case CaseOf(s, c) => s :: c :: Nil
     case d @ Def(_, n, b) => n :: d.body :: Nil
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
+    case Subs(a, i) => a :: i :: Nil
   }
   
   

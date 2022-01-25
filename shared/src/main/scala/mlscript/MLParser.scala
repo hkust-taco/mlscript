@@ -56,6 +56,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }))).rep ).map {
       case (st, sels) => sels.foldLeft(st)(Sel)
     }
+
+  def mkSubs(arr: Term, idx: Term): Term = Subs(arr, idx)
+  // array subscription
+  def subtermSubs[_: P]: P[Term] = P (
+    (subterm ~/ ("[" ~ term ~/ "]").rep).map { case (arr, idx) => 
+      idx.foldLeft(arr)(mkSubs(_,_))
+    })
+
   def record[_: P]: P[Rcd] = locate(P(
       "{" ~/ (variable ~ "=" ~ term map L.apply).|(variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs =>
@@ -76,7 +84,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
   def mkApp(lhs: Term, rhs: Term): Term = App(lhs, toParams(rhs))
-  def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
+  def apps[_: P]: P[Term] = P( subtermSubs.rep(1).map(_.reduce(mkApp)) )
   def _match[_: P]: P[CaseOf] =
     locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
   def matchArms[_: P]: P[CaseBranches] = P(

@@ -52,6 +52,7 @@ final case class Bind(lhs: Term, rhs: Term)                          extends Ter
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
+final case class Subs(arr: Term, idx: Term)                          extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches

@@ -510,3 +510,10 @@ tktup a123
 //│ ║  l.490: 	def tktup t = (t._2, t._3)
 //│ ╙──       	                     ^
 //│ res: (nothing, nothing,) | error
+
+def a: anything
+def f: anything -> anything
+(f a[3])[3][f 3]
+//│ a: anything
+//│ f: anything -> anything
+//│ res: anything
