@@ -56,12 +56,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }))).rep ).map {
       case (st, sels) => sels.foldLeft(st)(Sel)
     }
-
-  def mkSubs(arr: Term, idx: Term): Term = Subs(arr, idx)
   // array subscription
   def subtermSubs[_: P]: P[Term] = P (
     (subterm ~/ ("[" ~ term ~/ "]").rep).map { case (arr, idx) => 
-      idx.foldLeft(arr)(mkSubs(_,_))
+      idx.foldLeft(arr)(Subs(_,_))
     })
 
   def record[_: P]: P[Rcd] = locate(P(
