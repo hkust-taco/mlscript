@@ -42,7 +42,7 @@ x > 0 && x < 0
 //│ res: bool
 //│    = false
 
-// Some complicated expressiones.
+// Some complicated expressions.
 :js
 1 + (if (case x + 1 of { int -> 8 | string -> 9 }) == 3 then 2 else 3)
 //│ // Query 1
