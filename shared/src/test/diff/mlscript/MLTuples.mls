@@ -36,7 +36,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.35: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── expression of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
+//│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -84,7 +84,7 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	f t
 //│ ║        	^^^
-//│ ╟── expression of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
+//│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	     ^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
@@ -98,10 +98,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	f tx
 //│ ║        	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,)`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,)`
+//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
 //│ ║  l.82: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -112,10 +112,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	f htx
 //│ ║        	^^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `~((1, 2, 3,) & {x: 1}) | ~hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a, ?b,)`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
 //│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -159,18 +159,10 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.158: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not match type `{y: ?a}`
-//│ ║  l.7: 	tx = t with { x = 1 }
-//│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `hey & ?b | ?c & ~hey`
-//│ ║  l.158: 	g tx
-//│ ║         	  ^^
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ║         	                                          ^^^^^
-//│ ╟── from reference:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ ╙──       	             ^^^
+//│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
@@ -219,24 +211,24 @@ t.x
 t._1
 t._2
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.219: 	t._1
+//│ ║  l.211: 	t._1
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_1: ?a}`
-//│ ║  l.208: 	t = (1, 2, 3) with {x = 1}
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
+//│ ║  l.200: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.219: 	t._1
+//│ ║  l.211: 	t._1
 //│ ╙──       	^
 //│ res: error
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.220: 	t._2
+//│ ║  l.212: 	t._2
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {x: 1}` does not match type `{_2: ?a}`
-//│ ║  l.208: 	t = (1, 2, 3) with {x = 1}
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
+//│ ║  l.200: 	t = (1, 2, 3) with {x = 1}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.220: 	t._2
+//│ ║  l.212: 	t._2
 //│ ╙──       	^
 //│ res: error
 //│    = undefined

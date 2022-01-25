@@ -24,7 +24,7 @@ abstract class TyperHelpers { self: Typer =>
   private val noPostTrace: Any => String = _ => ""
   
   protected var indent = 0
-  def trace[T](pre: String)(thunk: => T)(post: T => String = noPostTrace): T = {
+  def trace[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T = {
     println(pre)
     indent += 1
     val res = try thunk finally indent -= 1
@@ -35,7 +35,20 @@ abstract class TyperHelpers { self: Typer =>
   def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   // Shadow Predef functions with debugging-flag-enabled ones:
+  
   def println(msg: => Any): Unit = if (dbg) emitDbg("| " * indent + msg)
+  
+  /** A more advanced println version to show where things are printed from. */
+  // def println(msg: => Any)(implicit file: sourcecode.FileName, line: sourcecode.Line): Unit =
+  //   if (dbg) {
+  //     emitDbg((if (showPrintPrefix) {
+  //       val prefix = s"[${file.value}:${line.value}]"
+  //       prefix + " " * (30 - prefix.length)
+  //     } else "") + "| " * indent + msg)
+  //   }
+  // val showPrintPrefix =
+  //   // false
+  //   true
   
   def dbg_assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
@@ -140,7 +153,48 @@ abstract class TyperHelpers { self: Typer =>
     }
   }
   
+  
+  
   trait SimpleTypeImpl { self: SimpleType =>
+    
+    def showProvOver(enabled: Bool)(str: Str): Str =
+      if (enabled) str + prov.toString
+      else str
+    
+    // Note: we implement hashCode and equals manually because:
+    //  1. On one hand, we want a ProvType to compare equal to its underlying type,
+    //      which is necessary for recursive types to associate type provenances to
+    //      their recursive uses without making the constraint solver diverge; and
+    //  2. Additionally, caching hashCode shoudl have performace benefits
+    //      — though I'm not sure whether it's best as a `lazy val` or a `val`.
+    override lazy val hashCode: Int = this match {
+      case tv: TypeVariable => tv.uid
+      case ProvType(und) => und.hashCode
+      case p: Product => scala.runtime.ScalaRunTime._hashCode(p)
+    }
+    override def equals(that: Any): Bool = this match {
+      case ProvType(und) => (und: Any) === that
+      case tv1: TV => that match {
+        case tv2: Typer#TV => tv1.uid === tv2.uid
+        case _ => false
+      }
+      case p1: Product => that match {
+        case that: ST => that match {
+          case ProvType(und) => this === und
+          case tv: TV => false
+          case p2: Product =>
+            p1.canEqual(p2) && {
+              val it1 = p1.productIterator
+              val it2 = p2.productIterator
+              while(it1.hasNext && it2.hasNext) {
+                if (it1.next() =/= it2.next()) return false
+              }
+              return !it1.hasNext && !it2.hasNext
+            }
+        }
+        case _ => false
+      }
+    }
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
@@ -241,6 +295,9 @@ abstract class TyperHelpers { self: Typer =>
     }
     // }(r => s"! $r")
     
+    def isTop: Bool = (TopType <:< this)(Ctx.empty)
+    def isBot: Bool = (this <:< BotType)(Ctx.empty)
+    
     // Sometimes, Without types are temporarily pushed to the RHS of constraints,
     // sometimes behind a single negation,
     // just for the time of massaging the constraint through a type variable.
@@ -314,6 +371,10 @@ abstract class TyperHelpers { self: Typer =>
     
     def unwrapProxies: SimpleType = this match {
       case ProxyType(und) => und.unwrapProxies
+      case _ => this
+    }
+    def unwrapProvs: SimpleType = this match {
+      case ProvType(und) => und.unwrapProvs
       case _ => this
     }
     

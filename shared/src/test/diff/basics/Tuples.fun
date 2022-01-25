@@ -25,7 +25,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ║        	                ^^^
-//│ ╟── expression of type `{_1: 1, _2: true, _3: "hey"}` does not have field '_4'
+//│ ╟── tuple of type `{_1: 1, _2: true, _3: "hey"}` does not have field '_4'
 //│ ║  l.24: 	(1, true, "hey")._4
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{_4: ?a}`
@@ -41,7 +41,7 @@ let t = x: 1, y: 2, z: 3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(1, true, "hey",)` is not a function
+//│ ╟── tuple of type `(1, true, "hey",)` is not a function
 //│ ║  l.38: 	(1, true, "hey").2
 //│ ║        	 ^^^^^^^^^^^^^^
 //│ ╟── but it flows into applied expression with expected type `0.2 -> ?a`

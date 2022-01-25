@@ -38,7 +38,7 @@ eval {} (Lit{} with { val = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.37: 	eval {} (Lit{} with { val = 1 })
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `anything` is not a function
+//│ ╟── record literal of type `anything` is not a function
 //│ ║  l.37: 	eval {} (Lit{} with { val = 1 })
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from function type:
@@ -64,7 +64,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.63: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ?b & ~add & ~lit`
+//│ ╟── record literal of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ?b & ~add & ~lit`
 //│ ║  l.63: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

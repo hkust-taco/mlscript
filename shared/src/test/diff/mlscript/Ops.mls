@@ -31,7 +31,7 @@
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.25: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
-//│ ╟── expression of type `3` does not match type `bool`
+//│ ╟── integer literal of type `3` does not match type `bool`
 //│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error

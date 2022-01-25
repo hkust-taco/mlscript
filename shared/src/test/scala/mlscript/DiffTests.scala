@@ -26,6 +26,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val outputMarker = "//│ "
     // val oldOutputMarker = "/// "
     
+    val diffBegMarker = "<<<<<<<"
+    val diffMidMarker = "======="
+    val diffEndMarker = ">>>>>>>"
+    
     val fileContents = read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
@@ -40,6 +44,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
+    val unmergedChanges = mutable.Buffer.empty[Int]
     
     case class Mode(
       expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
@@ -96,9 +101,27 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       case line :: ls if line.isEmpty || line.startsWith("//") =>
         out.println(line)
         rec(ls, defaultMode)
+      case line :: ls if line.startsWith(diffBegMarker) => // Check if there are unmerged git conflicts
+        val diff = ls.takeWhile(l => !l.startsWith(diffEndMarker))
+        assert(diff.exists(_.startsWith(diffMidMarker)), diff)
+        val rest = ls.drop(diff.length)
+        val hdo = rest.headOption
+        assert(hdo.exists(_.startsWith(diffEndMarker)), hdo)
+        val blankLines = diff.count(_.isEmpty)
+        val hasBlankLines = diff.exists(_.isEmpty)
+        if (diff.forall(l => l.startsWith(outputMarker) || l.startsWith(diffMidMarker) || l.isEmpty)) {
+          for (_ <- 1 to blankLines) out.println()
+        } else {
+          unmergedChanges += allLines.size - lines.size + 1
+          out.println(diffBegMarker)
+          diff.foreach(out.println)
+          out.println(diffEndMarker)
+        }
+        rec(rest.tail, if (hasBlankLines) defaultMode else mode)
       case l :: ls =>
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
+          || l.startsWith(diffBegMarker)
           // || l.startsWith(oldOutputMarker)
         ))).toIndexedSeq
         block.foreach(out.println)
@@ -411,7 +434,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       out.close()
       host.terminate()
     }
-    val testFailed = failures.nonEmpty
+    val testFailed = failures.nonEmpty || unmergedChanges.nonEmpty
     val result = strw.toString
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
@@ -424,7 +447,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     }
     print(buf.mkString)
     if (testFailed)
-      fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
+      if (unmergedChanges.nonEmpty)
+        fail(s"Unmerged non-output changes around: " + unmergedChanges.map("l."+_).mkString(", "))
+      else fail(s"Unexpected diagnostics (or lack thereof) at: " + failures.map("l."+_).mkString(", "))
     
   }}
 }

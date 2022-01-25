@@ -61,7 +61,7 @@ r.w
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.59: 	empty.w
 //│ ║        	     ^^
-//│ ╟── expression of type `anything` does not have field 'w'
+//│ ╟── tuple of type `anything` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
 //│ ╟── but it flows into reference with expected type `{w: ?a}`
@@ -71,7 +71,7 @@ r.w
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.60: 	r.w
 //│ ║        	 ^^
-//│ ╟── expression of type `{u: 1, v: 2}` does not have field 'w'
+//│ ╟── record of type `{u: 1, v: 2}` does not have field 'w'
 //│ ║  l.41: 	let r = { u: 1,v: 2 }
 //│ ║        	        ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{w: ?a}`
