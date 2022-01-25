@@ -97,7 +97,7 @@ rec def r (a: int) b c = if true then r else if true then b else c
 //│  = [Function: r5]
 
 if true then l else r
-//│ res: int -> ('b | ('c & 'd) -> ((int & 'c) -> ((int & 'd) -> ((int & 'c) -> ('c & 'd) -> ('a | 'c | 'd) | 'd) | 'c) | 'd)) as 'a
+//│ res: int -> ('b | ('c & 'd) -> ((int & 'd) -> ((int & 'c) -> ((int & 'd) -> ('c & 'd) -> ('a | 'c | 'd) | 'c) | 'd) | 'c)) as 'a
 //│    = [Function: l4]
 
 if true then l else r
