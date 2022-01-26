@@ -137,7 +137,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** Represents a type `base` from which we have removed the fields in `names`. */
-  case class Without(base: SimpleType, names: Set[Var])(val prov: TypeProvenance) extends MiscBaseType {
+  case class Without(base: SimpleType, names: SortedSet[Var])(val prov: TypeProvenance) extends MiscBaseType {
     def level: Int = base.level
     override def toString = s"${base}\\${names.mkString("-")}"
   }
@@ -170,7 +170,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** A proxy type, `S with {x: T; ...}` is equivalent to `S\x\... & {x: T; ...}`. */
   case class WithType(base: SimpleType, rcd: RecordType)(val prov: TypeProvenance) extends ProxyType {
     lazy val underlying: ST =
-      base.without(rcd.fields.iterator.map(_._1).toSet) & rcd
+      base.without(rcd.fields.iterator.map(_._1).toSortedSet) & rcd
   }
   
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
