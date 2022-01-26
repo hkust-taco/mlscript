@@ -21,7 +21,7 @@ final case class TypeDef(
 ) extends Decl
 final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
-  prt: TypeName,
+  parent: TypeName,
   nme: Var,
   tparams: List[TypeName],
   rhs: RHS,

@@ -37,12 +37,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    def wrapMethod(pt: PolymorphicType)(implicit prov: TypeProvenance): MethodType = {
+    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType = {
       val thisTy = TypeRef(nme, targs)(prov)
-      MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)
+      MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)(prov)
     }
-    def wrapMethod(mt: MethodType)(implicit prov: TypeProvenance): MethodType =
-      if (mt.body.nonEmpty) wrapMethod(mt.toPT) else mt.copy(parents = nme :: Nil)
+    def wrapMethod(mt: MethodType): MethodType =
+      if (mt.body.nonEmpty) wrapMethod(mt.toPT, mt.prov) else mt.copy(parents = nme :: Nil)
   }
   
   private case class MethodDefs(
@@ -61,11 +61,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case mn -> (defn :: Nil) => S(mn -> defn)
           case mn -> defns if newdefns(mn) => N
           case mn -> defns =>
-            implicit val prov: TypeProvenance = TypeProvenance(tn.toLoc, "inherited method declaration")
             err(msg"An overriding method definition must be given when inheriting from multiple method definitions" -> tn.toLoc
               :: msg"Definitions of method $mn inherited from:" -> N
               :: defns.iterator.map(mt => msg"• ${mt.parents.head}" -> mt.prov.loco).toList)
-            S(mn -> MethodType(defns.head.level, N, tn :: Nil))
+            S(mn -> MethodType(defns.head.level, N, tn :: Nil)(
+              TypeProvenance(tn.toLoc, "inherited method declaration")))
         }
       )
     private def addParent(prt: TypeName): MethodDefs =
@@ -274,14 +274,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
     val newDefsInfo = newDefs0.iterator.map { case td => td.nme.name -> (td.kind, td.tparams.size) }.toMap
-    val newDefs = newDefs0.map { td =>
-      implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
-      val n = td.nme
-      allDefs.get(n.name).foreach { other =>
+    val newDefs = newDefs0.map { td0 =>
+      val n = td0.nme.name.capitalize
+      val td = if (td0.nme.name.isCapitalized) td0
+      else {
+        err(msg"Type names must start with a capital letter", td0.nme.toLoc)
+        td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
+      }
+      allDefs.get(n).foreach { other =>
         err(msg"Type '$n' is already defined.", td.nme.toLoc)
       }
-      if (!n.name.head.isUpper) err(
-        msg"Type names must start with a capital letter", n.toLoc)
       td.tparams.groupBy(_.name).foreach { case s -> tps if tps.size > 1 => err(
           msg"Multiple declarations of type parameter ${s} in ${td.kind.str} definition" -> td.toLoc
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
@@ -294,7 +296,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         typeType2(td.body, simplify = false)(ctx.nextLevel, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
       val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
-      allDefs += n.name -> td1
+      allDefs += n -> td1
       td1
     }
     import ctx.{tyDefs => oldDefs}
@@ -467,7 +469,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           }
           def go(md: MethodDef[_]): (Str, MethodType) = md match {
             case MethodDef(rec, prt, nme, tparams, rhs) =>
-              implicit val prov: TypeProvenance = tp(md.toLoc,
+              val prov: TypeProvenance = tp(md.toLoc,
                 (if (!top) "inherited " else "")
                 + "method " + rhs.fold(_ => "definition", _ => "declaration"))
               val fullName = s"${td.nme.name}.${nme.name}"
@@ -516,12 +518,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                   // ^ Note: we need to go to the next level here,
                   //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
-              val mthTy = td2.wrapMethod(bodyTy)
+              val mthTy = td2.wrapMethod(bodyTy, prov)
               if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
                 if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
                 thisCtx.addMth(N, nme.name, mthTy)
               }
-              nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)
+              nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)(prov)
           }
           MethodDefs(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
@@ -532,7 +534,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signitures in the context */
       def checkSubsume(td: TypeDef, mds: MethodDefs): Unit = {
-        implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val tn = td.nme
         val MethodDefs(_, _, decls, defns) = mds
         val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate()
@@ -573,21 +574,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           println(s">> Checking subsumption (against inferred type) for inferred type of $mn : $mt")
         }
         declsInherit.foreach { case mn -> mt =>
-          implicit val prov: TypeProvenance = mt.prov
           val mthTy = td.wrapMethod(mt)
           ctx.addMth(S(tn.name), mn, mthTy)
         }
         defnsInherit.foreach { case mn -> mt => 
-          implicit val prov: TypeProvenance = mt.prov
           println(s">> Checking subsumption for inferred type of $mn : $mt")
           (if (decls.isDefinedAt(mn) && !defns.isDefinedAt(mn)) decls.get(mn) else N).orElse(declsInherit.get(mn))
-            .foreach(ss(mt, _))
+            .foreach(ss(mt, _)(mt.prov))
           val mthTy = td.wrapMethod(mt)
           if (!declsInherit.get(mn).exists(decl => decl.single && decl.parents.last === mt.parents.last))
             ctx.addMth(S(tn.name), mn, mthTy)
         }
         decls.foreach { case mn -> mt =>
-          implicit val prov: TypeProvenance = mt.prov
           println(s">> Checking subsumption for declared type of $mn : $mt")
           ((declsInherit.get(mn), defnsInherit.get(mn)) match {
             case (S(decl), S(defn)) =>
@@ -600,7 +598,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               overrideError(mn, mt, defn)
               S(defn)
             case (N, N) => N
-          }).foreach(ss(mt, _))
+          }).foreach(ss(mt, _)(mt.prov))
           val mthTy = td.wrapMethod(mt)
           ctx.addMth(S(tn.name), mn, mthTy)
           registerImplicit(mn, mthTy)
@@ -683,7 +681,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ =>
         }
         RecordType.mk(fs.map { nt =>
-          if (nt._1.name.head.isUpper)
+          if (nt._1.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
           nt._1 -> rec(nt._2)
         })(prov)
@@ -904,7 +902,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ =>
         }
         RecordType.mk(fs.map { case (n, t) => 
-          if (n.name.head.isUpper)
+          if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
           (n, typeTerm(t))
         })(prov)
