@@ -264,20 +264,23 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             // process type definitions first
             typeDefs.foreach(td =>
+              // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
                 val tn = td.nme.name
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
+                
+                // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
                       _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)(md.prov)),
                       _ => ctx.getMth(S(tn), mn)
                     ).foreach(res => output(s"${rhs.fold(
-                      _ => "Defined",
-                      _ => "Declared"
+                      _ => "Defined",  // the method has been defined
+                      _ => "Declared"  // the method type has just been declared
                     )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
               }
@@ -397,9 +400,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) output(exp.toTsType.toString())
+                      if (mode.showDeclarationTS) output(s"ts: ${exp.toTsType.toString()}")
                       prefixLength = 3
                     }
+                    // } else {
+                    //   if (mode.showDeclarationTS) output(s"ts: ${exp.toTsType.toString()}")
+                    // }
                 }
                 showResult(prefixLength)
             }

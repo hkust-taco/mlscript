@@ -1,0 +1,25 @@
+:ts
+true && true || false
+2 <= 3 + 5
+2 * 3 / 5 * 54 + 1 - 3
+(1, 2, 3)
+{ a = 1; b = "hello"; c = "world" }
+"nice thing here"
+//│ res: bool
+//│ ts: bool
+//│    = true
+//│ res: bool
+//│ ts: bool
+//│    = true
+//│ res: int
+//│ ts: int
+//│    = 62.8
+//│ res: (1, 2, 3,)
+//│ ts: [1, 2, 3]
+//│    = [ 1, 2, 3 ]
+//│ res: {a: 1, b: "hello", c: "world"}
+//│ ts: {a: 1, b: "hello", c: "world"}
+//│    = { a: 1, b: 'hello', c: 'world' }
+//│ res: "nice thing here"
+//│ ts: "nice thing here"
+//│    = 'nice thing here'

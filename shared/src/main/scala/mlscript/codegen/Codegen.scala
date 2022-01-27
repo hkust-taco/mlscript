@@ -178,9 +178,8 @@ object SourceCode {
           (entries
             .map(entry => entry._1 ++ colon ++ entry._2)
             .zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
-            acc + (if (index + 1 === entries.length) { entry }
-                  else { entry ++ SourceCode.comma }).indented
-          }) + SourceCode("}")
+            acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeCurlyBrace else SourceCode.commaSpace)
+          })
       }
     }
 
@@ -201,6 +200,19 @@ object SourceCode {
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("]")
     }
+
+  /**
+    * Surround source code with square brackets concatenating elements
+    * horizontally only. Single element is still wrapped in brackets
+    *
+    * @param entries
+    * @return
+    */
+  def horizontalArray(entries: Ls[SourceCode]): SourceCode =
+    (entries.zipWithIndex.foldLeft(SourceCode("[")) { case (acc, (entry, index)) =>
+      acc ++ entry ++ (if (index + 1 === entries.length) SourceCode("]") else SourceCode.commaSpace)
+    })
+
 
   def sepBy(codes: Ls[SourceCode], sep: SourceCode = this.commaSpace): SourceCode =
     codes.zipWithIndex
