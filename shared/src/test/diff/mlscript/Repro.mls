@@ -100,13 +100,12 @@ def test: {x: 1} & (1, 2, 3)
 // { 1 = 3456 }
 
 
-
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.104: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.103: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.104: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.103: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	  ^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -114,13 +113,13 @@ f(1,2,3) : 1 | 2 | 3
 
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscription:
-//│ ║  l.115: 	(arr[0])[1][2]
+//│ ║  l.114: 	(arr[0])[1][2]
 //│ ║         	 ^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscription with expected type `Array[?a]`
-//│ ║  l.115: 	(arr[0])[1][2]
+//│ ║  l.114: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Code generation crashed:
@@ -128,13 +127,13 @@ f(1,2,3) : 1 | 2 | 3
 
 f a b c
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.129: 	f a b c
+//│ ║  l.128: 	f a b c
 //│ ╙──       	  ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.129: 	f a b c
+//│ ║  l.128: 	f a b c
 //│ ╙──       	    ^
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.129: 	f a b c
+//│ ║  l.128: 	f a b c
 //│ ╙──       	      ^
 //│ res: nothing
 //│ Runtime error:
@@ -189,10 +188,10 @@ f 1
 
 f(1,2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.190: 	f(1,2)
+//│ ║  l.189: 	f(1,2)
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `(?a,)`
-//│ ║  l.190: 	f(1,2)
+//│ ║  l.189: 	f(1,2)
 //│ ╙──       	  ^^^
 //│ res: error
 //│    = 1
@@ -237,8 +236,13 @@ res: { x: int }
 //│ res: {_0: "hello", _1: 1, _2: 2, _3: true}
 //│    = Array { '0': 1, '1': 2, '2': true, _0: 'hello' }
 
-(5, 6, true, false, "hahaha") with {x = 123; _7 = "bye"; _1 = 0}
-//│ res: {_1: 0, _2: 6, _3: true, _4: false, _5: "hahaha", _7: "bye", x: 123}
+ta1 = (5, 6, true, false, "hahaha")
+ta2 = ta1 with {x = 123; _7 = "bye"; _1 = 0}
+ta1._1
+ta2._1
+//│ ta1: (5, 6, true, false, "hahaha",)
+//│    = [ 5, 6, true, false, 'hahaha' ]
+//│ ta2: {_1: 0, _2: 6, _3: true, _4: false, _5: "hahaha", _7: "bye", x: 123}
 //│    = Array {
 //│        '0': 5,
 //│        '1': 6,
@@ -249,3 +253,37 @@ res: { x: int }
 //│        _7: 'bye',
 //│        _1: 0
 //│      }
+//│ res: 5
+//│    = undefined
+//│ res: 0
+//│    = 0
+
+def rep5: 'a -> Array['a]
+def rep5 x = (x,x,x,x,x)
+//│ rep5: 'a -> Array['a]
+//│ 'a -> ('a, 'a, 'a, 'a, 'a,)
+//│   <:  rep5:
+//│ 'a -> Array['a]
+//│     = [Function: rep5]
+
+rep5 1 with {_1 = 10}
+a2 = rep5 2 with {_0 = true; x = "haha"}
+//│ res: Array[1] & {_1: 10}
+//│    = Array { '0': 1, '1': 1, '2': 1, '3': 1, '4': 1, _1: 10 }
+//│ a2: Array[2] & {_0: true, x: "haha"}
+//│   = Array { '0': 2, '1': 2, '2': 2, '3': 2, '4': 2, _0: true, x: 'haha' }
+
+:e
+a2._1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.277: 	a2._1
+//│ ║         	^^^^^
+//│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_0: true, x: "haha"}`
+//│ ║  l.261: 	def rep5: 'a -> Array['a]
+//│ ║         	                ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_0: true, x: "haha"}`
+//│ ║  l.277: 	a2._1
+//│ ╙──       	^^
+//│ res: error
+//│    = undefined
+

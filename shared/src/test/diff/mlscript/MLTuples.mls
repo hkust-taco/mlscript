@@ -1,6 +1,6 @@
 
 t = (1, 2, 3)
-//│ t: (1, 2, 3,) & {_1: 1, _2: 2, _3: 3}
+//│ t: (1, 2, 3,)
 //│  = [ 1, 2, 3 ]
 
 :js
@@ -21,7 +21,7 @@ tx = t with { x = 1 }
 //│ globalThis.tx = withConstruct(t, { x: 1 });
 //│ res = tx;
 //│ // End of generated code
-//│ tx: (1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1}
+//│ tx: (1, 2, 3,) & {x: 1}
 //│   = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
 tx.x
@@ -45,12 +45,12 @@ Hey t
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.31: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
-//│ res: (1, 2, 3,) & {_1: 1, _2: 2, _3: 3} & hey | error
+//│ res: (1, 2, 3,) & hey | error
 //│    = [ 1, 2, 3 ]
 
 // TODO: fix `withConstruct` on arrays
 htx = Hey tx
-//│ htx: (1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1} & hey
+//│ htx: (1, 2, 3,) & {x: 1} & hey
 //│    = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
 htx.x
@@ -58,7 +58,7 @@ htx.x
 //│    = 1
 
 f ((a, b, c)) = { a; b; c }
-//│ f: ((('a, 'b, 'c,) & {_1: 'a, _2: 'b, _3: 'c},) & {_1: ('a, 'b, 'c,) & {_1: 'a, _2: 'b, _3: 'c}}) -> {a: 'a, b: 'b, c: 'c}
+//│ f: ('a, 'b, 'c,) -> {a: 'a, b: 'b, c: 'c}
 //│  = [Function: f]
 
 f t
@@ -74,7 +74,7 @@ f htx
 //│    = { a: undefined, b: undefined, c: undefined }
 
 f ((a, b)) = add a b
-//│ f: (((int, int,) & {_1: int, _2: int},) & {_1: (int, int,) & {_1: int, _2: int}}) -> int
+//│ f: (int, int,) -> int
 //│  = [Function: f1]
 
 :e
@@ -98,7 +98,7 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.82: 	f tx
 //│ ║        	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1}` is not a 2-element tuple
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
@@ -112,10 +112,10 @@ f htx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.83: 	f htx
 //│ ║        	^^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1}` does not match type `(?a, ?b,) & {_1: ?a, _2: ?b} | ~hey`
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?c, ?d,) & {_1: ?c, _2: ?d} | ~hey`
+//│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
 //│ ║  l.83: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
@@ -126,7 +126,7 @@ f htx
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
-//│ g: (({x: 'a} & hey | ~hey,) & {_1: {x: 'a} & hey | ~hey}) -> (() | 'a)
+//│ g: ({x: 'a} & hey | ~hey) -> (() | 'a)
 //│  = [Function: g]
 
 :re
@@ -141,7 +141,7 @@ g tx
 
 // TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ g: (({x: 'a} & hey | {y: 'a} & ~hey,) & {_1: {x: 'a} & hey | {y: 'a} & ~hey}) -> 'a
+//│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
 //│  = [Function: g1]
 
 :re
@@ -159,7 +159,7 @@ g tx
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.158: 	g tx
 //│ ║         	^^^^
-//│ ╟── expression of type `(1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1} & ~hey` does not have field 'y'
+//│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
@@ -169,7 +169,7 @@ g tx
 
 :re
 if bool then (1,) else (2,)
-//│ res: (1 | 2,) & {_1: 1 | 2}
+//│ res: (1 | 2,)
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
@@ -203,7 +203,7 @@ t._2
 
 t = (1, 2, 3) with {x = 1}
 // t = (1, 2, 3)
-//│ t: (1, 2, 3,) & {_1: 1, _2: 2, _3: 3, x: 1}
+//│ t: (1, 2, 3,) & {x: 1}
 //│  = Array { '0': 1, '1': 2, '2': 3, x: 1 }
 
 t.x
