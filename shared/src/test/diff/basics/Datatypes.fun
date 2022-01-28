@@ -83,14 +83,14 @@ True : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
 //│ ║  l.78: 	True : Boolean
 //│ ╙──      	       ^^^^^^^
-//│ res: (True: error,)
+//│ res: (True: error,) & {_1: error}
 
 :e // Maybe we shouldn't interpret capitalized identifiers as field names...
 True : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
 //│ ║  l.89: 	True : Boolean
 //│ ╙──      	       ^^^^^^^
-//│ res: (True: error,)
+//│ res: (True: error,) & {_1: error}
 
 :pe
 (True) : Boolean

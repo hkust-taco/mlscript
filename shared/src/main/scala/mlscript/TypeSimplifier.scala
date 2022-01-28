@@ -366,15 +366,28 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  lazy val newRcd = rcd.copy(
-                    rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol)))(rcd.prov).sorted
-                  LhsRefined(bo.map {
-                    case ct: ClassTag => ct
-                    case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
-                    case tt @ TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(tt.prov)
-                    case at @ ArrayType(inner) => ArrayType(go(inner, pol))(at.prov)
-                    case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
-                  }, tts, newRcd).toType(sort = true)
+                  val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  // TODO: merge tup & rcd back to tuples
+                  // * (a, b) & {_1: a, _2: b} -> (a, b)
+                  val (res, nfs) = bo match {
+                    case S(tt @ TupleType(fs)) => 
+                      val tupres = TupleType(fs.mapValues(go(_, pol)))(tt.prov)
+                      val rcdtup = tupres.toRecord.fields.map(f => f._1.name -> f._2).toSet
+                      S(tupres) -> (
+                        if (rcdtup.subsetOf(nFields.map(f => f._1.name -> f._2).toSet))
+                          nFields.filterNot(e => rcdtup.contains(e._1.name -> e._2))
+                        else
+                          nFields
+                      )
+                    case _ => bo.map {
+                      case ct: ClassTag => ct
+                      case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
+                      case at @ ArrayType(inner) => ArrayType(go(inner, pol))(at.prov)
+                      case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
+                      case TupleType(_) => ??? // ! not reachable
+                    } -> nFields
+                  }
+                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)
               }
             case LhsTop => TopType
           }, {
