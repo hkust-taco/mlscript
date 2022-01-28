@@ -233,7 +233,7 @@ res: { x: int }
 //│    = Array { '0': 1, '1': 2, '2': 3, _4: true }
 
 (1, 2, true) with {_0 = "hello"}
-//│ res: {_0: "hello", _1: 1, _2: 2, _3: true}
+//│ res: (1, 2, true,) & {_0: "hello"}
 //│    = Array { '0': 1, '1': 2, '2': true, _0: 'hello' }
 
 ta1 = (5, 6, true, false, "hahaha")
@@ -267,22 +267,25 @@ def rep5 x = (x,x,x,x,x)
 //│     = [Function: rep5]
 
 rep5 1 with {_1 = 10}
-a2 = rep5 2 with {_0 = true; x = "haha"}
+a2 = rep5 2 with {_2 = true; x = "haha"}
+a2._2
 //│ res: Array[1] & {_1: 10}
 //│    = Array { '0': 1, '1': 1, '2': 1, '3': 1, '4': 1, _1: 10 }
-//│ a2: Array[2] & {_0: true, x: "haha"}
-//│   = Array { '0': 2, '1': 2, '2': 2, '3': 2, '4': 2, _0: true, x: 'haha' }
+//│ a2: Array[2] & {_2: true, x: "haha"}
+//│   = Array { '0': 2, '1': 2, '2': 2, '3': 2, '4': 2, _2: true, x: 'haha' }
+//│ res: true
+//│    = true
 
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.277: 	a2._1
+//│ ║  l.280: 	a2._1
 //│ ║         	^^^^^
-//│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_0: true, x: "haha"}`
+//│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
 //│ ║  l.261: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_0: true, x: "haha"}`
-//│ ║  l.277: 	a2._1
+//│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
+//│ ║  l.280: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

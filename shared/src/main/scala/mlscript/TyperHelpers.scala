@@ -327,7 +327,7 @@ abstract class TyperHelpers { self: Typer =>
               val t = n.name.tail
               t.forall(_.isDigit) && {
                 val n = t.toInt
-                1 <= 1 && n <= fs.length
+                1 <= n && n <= fs.length
               }
             })
         if (relevantNames.isEmpty) t
