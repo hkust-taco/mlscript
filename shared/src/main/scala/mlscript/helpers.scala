@@ -290,10 +290,10 @@ trait Located {
   
   // TODO just store the Loc directly...
   def withLoc(s: Int, e: Int, ori: Origin): this.type = {
-    assert(origin.isEmpty)
+    // assert(origin.isEmpty)
     origin = S(ori)
-    assert(spanStart < 0)
-    assert(spanEnd < 0)
+    // assert(spanStart < 0)
+    // assert(spanEnd < 0)
     spanStart = s
     spanEnd = e
     this

@@ -46,10 +46,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
-  def parens[_: P]: P[Term] = P( "(" ~/ term.rep(0, ",") ~ ",".!.? ~ ")" ).map {
+  def parens[_: P]: P[Term] = locate(P( "(" ~/ term.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(t), N) => Bra(false, t)
     case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
-  }
+  })
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")").map {
       case (prt, id) => Var(s"${prt}.${id}")
@@ -61,9 +61,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     ).map { fs =>
       Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> id }.toList)
     })
-  def fun[_: P]: P[Term] = P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2))
+  def fun[_: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   def let[_: P]: P[Term] = locate(P(
-      kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ variable ~ term.rep ~ "=" ~ term ~ kw("in") ~ term
+      kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ variable ~ subterm.rep ~ "=" ~ term ~ kw("in") ~ term
     ) map {
       case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(toParams(i), acc)), bod)
     })
@@ -201,10 +201,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
-  def parTy[_: P]: P[Type] = P( "(" ~/ ty.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+  def parTy[_: P]: P[Type] = locate(P( "(" ~/ ty.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
     case (N -> ty :: Nil, N) => ty
     case (fs, _) => Tuple(fs)
-  }
+  })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   
   def toplvl[_: P]: P[Statement] =

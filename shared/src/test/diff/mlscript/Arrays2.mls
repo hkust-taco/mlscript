@@ -42,7 +42,7 @@ Array{ size = 0 }
 //│ ║       	      ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Set is abstract
 //│ ║  l.4: 	  method Set: (int, A) -> ()
-//│ ║       	         ^^^^^^^^^^^^
+//│ ║       	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Hint: method Get is abstract
 //│ ║  l.5: 	  method Get: int -> A 
 //│ ╙──     	         ^^^^^^^^^^^^^
