@@ -1,25 +1,473 @@
 :ts
-true && true || false
-2 <= 3 + 5
-2 * 3 / 5 * 54 + 1 - 3
-(1, 2, 3)
-{ a = 1; b = "hello"; c = "world" }
-"nice thing here"
-//│ res: bool
-//│ ts: bool
-//│    = true
-//│ res: bool
-//│ ts: bool
-//│    = true
-//│ res: int
-//│ ts: int
-//│    = 62.8
-//│ res: (1, 2, 3,)
-//│ ts: [1, 2, 3]
-//│    = [ 1, 2, 3 ]
-//│ res: {a: 1, b: "hello", c: "world"}
-//│ ts: {a: 1, b: "hello", c: "world"}
-//│    = { a: 1, b: 'hello', c: 'world' }
-//│ res: "nice thing here"
-//│ ts: "nice thing here"
-//│    = 'nice thing here'
+:ne
+:d
+def g x y = x + y
+//│ 1. Typing term ((x,) => ((y,) => ((+ (x,)) (y,)))) as class class mlscript.Lam
+//│ | 1. Typing pattern (x,) as class class mlscript.Tup
+//│ | | 1. Typing pattern x as class class mlscript.Var
+//│ | | 1. : α0'
+//│ | 1. : (α0')
+//│ | 1. Typing term ((y,) => ((+ (x,)) (y,))) as class class mlscript.Lam
+//│ | | 1. Typing pattern (y,) as class class mlscript.Tup
+//│ | | | 1. Typing pattern y as class class mlscript.Var
+//│ | | | 1. : α1'
+//│ | | 1. : (α1')
+//│ | | 1. Typing term ((+ (x,)) (y,)) as class class mlscript.App
+//│ | | | 1. Typing term (+ (x,)) as class class mlscript.App
+//│ | | | | 1. Typing term + as class class mlscript.Var
+//│ | | | | 1. : [((int<number>) -> ((int<number>) -> int<number>))]
+//│ | | | | 1. Typing term (x,) as class class mlscript.Tup
+//│ | | | | | 1. Typing term x as class class mlscript.Var
+//│ | | | | | 1. : [α0']
+//│ | | | | 1. : ([α0'])
+//│ | | | | CONSTRAIN [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([([α0'])] -> α2')
+//│ | | | |   where 
+//│ | | | | C [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([([α0'])] -> α2')
+//│ | | | | | C [((int<number>) -> ((int<number>) -> int<number>))] <! ([([α0'])] -> α2')
+//│ | | | | | | C ((int<number>) -> ((int<number>) -> int<number>)) <! ([([α0'])] -> α2')
+//│ | | | | | | | C [([α0'])] <! (int<number>)
+//│ | | | | | | | | C ([α0']) <! (int<number>)
+//│ | | | | | | | | | C [α0'] <! int<number>
+//│ | | | | | | | | | | C α0' <! int<number>
+//│ | | | | | | | C ((int<number>) -> int<number>) <! α2'
+//│ | | | 1. : α2'
+//│ | | | 1. Typing term (y,) as class class mlscript.Tup
+//│ | | | | 1. Typing term y as class class mlscript.Var
+//│ | | | | 1. : [α1']
+//│ | | | 1. : ([α1'])
+//│ | | | CONSTRAIN [α2'] <! ([([α1'])] -> α3')
+//│ | | |   where α2' :> [((int<number>) -> int<number>)]
+//│ | | | C [α2'] <! ([([α1'])] -> α3')
+//│ | | | | C α2' <! ([([α1'])] -> α3')
+//│ | | | | | C [((int<number>) -> int<number>)] <! ([([α1'])] -> α3')
+//│ | | | | | | C ((int<number>) -> int<number>) <! ([([α1'])] -> α3')
+//│ | | | | | | | C [([α1'])] <! (int<number>)
+//│ | | | | | | | | C ([α1']) <! (int<number>)
+//│ | | | | | | | | | C [α1'] <! int<number>
+//│ | | | | | | | | | | C α1' <! int<number>
+//│ | | | | | | | C int<number> <! α3'
+//│ | | 1. : α3'
+//│ | 1. : ((α1') -> α3')
+//│ 1. : ((α0') -> ((α1') -> α3'))
+//│ Typed as: ((α4) -> ((α5) -> α6))
+//│  where: α4 <: [[int<number>]], α5 <: [[int<number>]], α6 :> [int<number>]
+//│ ty[true] ((α4) -> ((α5) -> α6))
+//│ -> DNF(((α4) -> ((α5) -> α6)){})
+//│ DNF[true] DNF(((α4) -> ((α5) -> α6)){})
+//│ | ty[false] (α4)
+//│ | -> DNF((α4){})
+//│ | DNF[false] DNF((α4){})
+//│ | | ty[false] α4
+//│ | | | Consider α4 List() List([[int<number>]])
+//│ | | -> DNF(int<number>{}∧α4)
+//│ | | DNF[false] DNF(int<number>{}∧α4)
+//│ | | | Renewed α4 ~> α7
+//│ | | ~> (int<number> & α7)
+//│ | ~> ((int<number> & α7))
+//│ | ty[true] ((α5) -> α6)
+//│ | -> DNF(((α5) -> α6){})
+//│ | DNF[true] DNF(((α5) -> α6){})
+//│ | | ty[false] (α5)
+//│ | | -> DNF((α5){})
+//│ | | DNF[false] DNF((α5){})
+//│ | | | ty[false] α5
+//│ | | | | Consider α5 List() List([[int<number>]])
+//│ | | | -> DNF(int<number>{}∧α5)
+//│ | | | DNF[false] DNF(int<number>{}∧α5)
+//│ | | | | Renewed α5 ~> α8
+//│ | | | ~> (int<number> & α8)
+//│ | | ~> ((int<number> & α8))
+//│ | | ty[true] α6
+//│ | | | Consider α6 List([int<number>]) List()
+//│ | | -> DNF(α6 | int<number>{})
+//│ | | DNF[true] DNF(α6 | int<number>{})
+//│ | | | Renewed α6 ~> α9
+//│ | | ~> (int<number> | α9)
+//│ | ~> (((int<number> & α8)) -> (int<number> | α9))
+//│ ~> (((int<number> & α7)) -> (((int<number> & α8)) -> (int<number> | α9)))
+//│ Canon: (((int<number> & α7)) -> (((int<number> & α8)) -> (int<number> | α9)))
+//│  where: 
+//│ [occs] LinkedHashMap((false,α7) -> HashSet(int<number>, α7), (false,α8) -> HashSet(int<number>, α8), (true,α9) -> HashSet(int<number>, α9))
+//│ [vars] TreeSet(α7, α8, α9)
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [!] α7
+//│ [!] α8
+//│ [!] α9
+//│ [sub] α7 -> None, α8 -> None, α9 -> None
+//│ Type after simplification: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ ty[true] ((int<number>) -> ((int<number>) -> int<number>))
+//│ -> DNF(((int<number>) -> ((int<number>) -> int<number>)){})
+//│ DNF[true] DNF(((int<number>) -> ((int<number>) -> int<number>)){})
+//│ | ty[false] (int<number>)
+//│ | -> DNF((int<number>){})
+//│ | DNF[false] DNF((int<number>){})
+//│ | | ty[false] int<number>
+//│ | | -> DNF(int<number>{})
+//│ | | DNF[false] DNF(int<number>{})
+//│ | | ~> int<number>
+//│ | ~> (int<number>)
+//│ | ty[true] ((int<number>) -> int<number>)
+//│ | -> DNF(((int<number>) -> int<number>){})
+//│ | DNF[true] DNF(((int<number>) -> int<number>){})
+//│ | | ty[false] (int<number>)
+//│ | | -> DNF((int<number>){})
+//│ | | DNF[false] DNF((int<number>){})
+//│ | | | ty[false] int<number>
+//│ | | | -> DNF(int<number>{})
+//│ | | | DNF[false] DNF(int<number>{})
+//│ | | | ~> int<number>
+//│ | | ~> (int<number>)
+//│ | | ty[true] int<number>
+//│ | | -> DNF(int<number>{})
+//│ | | DNF[true] DNF(int<number>{})
+//│ | | ~> int<number>
+//│ | ~> ((int<number>) -> int<number>)
+//│ ~> ((int<number>) -> ((int<number>) -> int<number>))
+//│ Recanon: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Resimplified: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ Recons: ((int<number>) -> ((int<number>) -> int<number>))
+//│ g: int -> int -> int
+//│ ts: (arg0: int) => (arg0: int) => int
+
+:ts
+:ne
+:d
+def g f y = f y + 1
+//│ 1. Typing term ((f,) => ((y,) => ((+ ((f (y,)),)) (1,)))) as class class mlscript.Lam
+//│ | 1. Typing pattern (f,) as class class mlscript.Tup
+//│ | | 1. Typing pattern f as class class mlscript.Var
+//│ | | 1. : α0'
+//│ | 1. : (α0')
+//│ | 1. Typing term ((y,) => ((+ ((f (y,)),)) (1,))) as class class mlscript.Lam
+//│ | | 1. Typing pattern (y,) as class class mlscript.Tup
+//│ | | | 1. Typing pattern y as class class mlscript.Var
+//│ | | | 1. : α1'
+//│ | | 1. : (α1')
+//│ | | 1. Typing term ((+ ((f (y,)),)) (1,)) as class class mlscript.App
+//│ | | | 1. Typing term (+ ((f (y,)),)) as class class mlscript.App
+//│ | | | | 1. Typing term + as class class mlscript.Var
+//│ | | | | 1. : [((int<number>) -> ((int<number>) -> int<number>))]
+//│ | | | | 1. Typing term ((f (y,)),) as class class mlscript.Tup
+//│ | | | | | 1. Typing term (f (y,)) as class class mlscript.App
+//│ | | | | | | 1. Typing term f as class class mlscript.Var
+//│ | | | | | | 1. : [α0']
+//│ | | | | | | 1. Typing term (y,) as class class mlscript.Tup
+//│ | | | | | | | 1. Typing term y as class class mlscript.Var
+//│ | | | | | | | 1. : [α1']
+//│ | | | | | | 1. : ([α1'])
+//│ | | | | | | CONSTRAIN [[α0']] <! ([([α1'])] -> α2')
+//│ | | | | | |   where 
+//│ | | | | | | C [[α0']] <! ([([α1'])] -> α2')
+//│ | | | | | | | C [α0'] <! ([([α1'])] -> α2')
+//│ | | | | | | | | C α0' <! ([([α1'])] -> α2')
+//│ | | | | | 1. : α2'
+//│ | | | | 1. : (α2')
+//│ | | | | CONSTRAIN [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([(α2')] -> α3')
+//│ | | | |   where 
+//│ | | | | C [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([(α2')] -> α3')
+//│ | | | | | C [((int<number>) -> ((int<number>) -> int<number>))] <! ([(α2')] -> α3')
+//│ | | | | | | C ((int<number>) -> ((int<number>) -> int<number>)) <! ([(α2')] -> α3')
+//│ | | | | | | | C [(α2')] <! (int<number>)
+//│ | | | | | | | | C (α2') <! (int<number>)
+//│ | | | | | | | | | C α2' <! int<number>
+//│ | | | | | | | C ((int<number>) -> int<number>) <! α3'
+//│ | | | 1. : α3'
+//│ | | | 1. Typing term (1,) as class class mlscript.Tup
+//│ | | | | 1. Typing term 1 as class class mlscript.IntLit
+//│ | | | | 1. : 1<int,number>
+//│ | | | 1. : (1<int,number>)
+//│ | | | CONSTRAIN [α3'] <! ([(1<int,number>)] -> α4')
+//│ | | |   where α3' :> [((int<number>) -> int<number>)]
+//│ | | | C [α3'] <! ([(1<int,number>)] -> α4')
+//│ | | | | C α3' <! ([(1<int,number>)] -> α4')
+//│ | | | | | C [((int<number>) -> int<number>)] <! ([(1<int,number>)] -> α4')
+//│ | | | | | | C ((int<number>) -> int<number>) <! ([(1<int,number>)] -> α4')
+//│ | | | | | | | C [(1<int,number>)] <! (int<number>)
+//│ | | | | | | | | C (1<int,number>) <! (int<number>)
+//│ | | | | | | | | | C 1<int,number> <! int<number>
+//│ | | | | | | | C int<number> <! α4'
+//│ | | 1. : α4'
+//│ | 1. : ((α1') -> α4')
+//│ 1. : ((α0') -> ((α1') -> α4'))
+//│ Typed as: ((α5) -> ((α6) -> α8))
+//│  where: α5 <: [[[[([([α6])] -> α7)]]]], α7 <: [int<number>], α8 :> [int<number>]
+//│ ty[true] ((α5) -> ((α6) -> α8))
+//│ -> DNF(((α5) -> ((α6) -> α8)){})
+//│ DNF[true] DNF(((α5) -> ((α6) -> α8)){})
+//│ | ty[false] (α5)
+//│ | -> DNF((α5){})
+//│ | DNF[false] DNF((α5){})
+//│ | | ty[false] α5
+//│ | | | Consider α5 List() List([[[[([([α6])] -> α7)]]]])
+//│ | | -> DNF(([([α6])] -> α7){}∧α5)
+//│ | | DNF[false] DNF(([([α6])] -> α7){}∧α5)
+//│ | | | ty[true] [([α6])]
+//│ | | | -> DNF(([α6]){})
+//│ | | | DNF[true] DNF(([α6]){})
+//│ | | | | ty[true] [α6]
+//│ | | | | | Consider α6 List() List()
+//│ | | | | -> DNF(α6)
+//│ | | | | DNF[true] DNF(α6)
+//│ | | | | | Renewed α6 ~> α9
+//│ | | | | ~> α9
+//│ | | | ~> (α9)
+//│ | | | ty[false] α7
+//│ | | | | Consider α7 List() List([int<number>])
+//│ | | | -> DNF(int<number>{}∧α7)
+//│ | | | DNF[false] DNF(int<number>{}∧α7)
+//│ | | | | Renewed α7 ~> α10
+//│ | | | ~> (int<number> & α10)
+//│ | | | Renewed α5 ~> α11
+//│ | | ~> (((α9) -> (int<number> & α10)) & α11)
+//│ | ~> ((((α9) -> (int<number> & α10)) & α11))
+//│ | ty[true] ((α6) -> α8)
+//│ | -> DNF(((α6) -> α8){})
+//│ | DNF[true] DNF(((α6) -> α8){})
+//│ | | ty[false] (α6)
+//│ | | -> DNF((α6){})
+//│ | | DNF[false] DNF((α6){})
+//│ | | | ty[false] α6
+//│ | | | | Consider α6 List() List()
+//│ | | | -> DNF(α6)
+//│ | | | DNF[false] DNF(α6)
+//│ | | | ~> α9
+//│ | | ~> (α9)
+//│ | | ty[true] α8
+//│ | | | Consider α8 List([int<number>]) List()
+//│ | | -> DNF(α8 | int<number>{})
+//│ | | DNF[true] DNF(α8 | int<number>{})
+//│ | | | Renewed α8 ~> α12
+//│ | | ~> (int<number> | α12)
+//│ | ~> ((α9) -> (int<number> | α12))
+//│ ~> (((((α9) -> (int<number> & α10)) & α11)) -> ((α9) -> (int<number> | α12)))
+//│ Canon: (((((α9) -> (int<number> & α10)) & α11)) -> ((α9) -> (int<number> | α12)))
+//│  where: 
+//│ ! true α9 None
+//│ ! false α9 None
+//│ [occs] LinkedHashMap((true,α9) -> HashSet(α9), (false,α10) -> HashSet(int<number>, α10), (false,α11) -> HashSet(((α9) -> (int<number> & α10)), α11), (false,α9) -> HashSet(α9), (true,α12) -> HashSet(int<number>, α12))
+//│ [vars] TreeSet(α9, α10, α11, α12)
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [!] α10
+//│ [!] α11
+//│ [!] α12
+//│ [v] α9 Some(HashSet(α9)) Some(HashSet(α9))
+//│ [sub] α10 -> None, α11 -> None, α12 -> None
+//│ Renewed α9 ~> α13
+//│ Type after simplification: ((((α13) -> int<number>)) -> ((α13) -> int<number>))
+//│  where: 
+//│ ty[true] ((((α13) -> int<number>)) -> ((α13) -> int<number>))
+//│ -> DNF(((((α13) -> int<number>)) -> ((α13) -> int<number>)){})
+//│ DNF[true] DNF(((((α13) -> int<number>)) -> ((α13) -> int<number>)){})
+//│ | ty[false] (((α13) -> int<number>))
+//│ | -> DNF((((α13) -> int<number>)){})
+//│ | DNF[false] DNF((((α13) -> int<number>)){})
+//│ | | ty[false] ((α13) -> int<number>)
+//│ | | -> DNF(((α13) -> int<number>){})
+//│ | | DNF[false] DNF(((α13) -> int<number>){})
+//│ | | | ty[true] (α13)
+//│ | | | -> DNF((α13){})
+//│ | | | DNF[true] DNF((α13){})
+//│ | | | | ty[true] α13
+//│ | | | | | Consider α13 List() List()
+//│ | | | | -> DNF(α13)
+//│ | | | | DNF[true] DNF(α13)
+//│ | | | | | Renewed α13 ~> α14
+//│ | | | | ~> α14
+//│ | | | ~> (α14)
+//│ | | | ty[false] int<number>
+//│ | | | -> DNF(int<number>{})
+//│ | | | DNF[false] DNF(int<number>{})
+//│ | | | ~> int<number>
+//│ | | ~> ((α14) -> int<number>)
+//│ | ~> (((α14) -> int<number>))
+//│ | ty[true] ((α13) -> int<number>)
+//│ | -> DNF(((α13) -> int<number>){})
+//│ | DNF[true] DNF(((α13) -> int<number>){})
+//│ | | ty[false] (α13)
+//│ | | -> DNF((α13){})
+//│ | | DNF[false] DNF((α13){})
+//│ | | | ty[false] α13
+//│ | | | | Consider α13 List() List()
+//│ | | | -> DNF(α13)
+//│ | | | DNF[false] DNF(α13)
+//│ | | | ~> α14
+//│ | | ~> (α14)
+//│ | | ty[true] int<number>
+//│ | | -> DNF(int<number>{})
+//│ | | DNF[true] DNF(int<number>{})
+//│ | | ~> int<number>
+//│ | ~> ((α14) -> int<number>)
+//│ ~> ((((α14) -> int<number>)) -> ((α14) -> int<number>))
+//│ Recanon: ((((α14) -> int<number>)) -> ((α14) -> int<number>))
+//│  where: 
+//│ ! true α14 None
+//│ ! false α14 None
+//│ [occs] LinkedHashMap((true,α14) -> HashSet(α14), (false,α14) -> HashSet(α14))
+//│ [vars] TreeSet(α14)
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [v] α14 Some(HashSet(α14)) Some(HashSet(α14))
+//│ [sub] 
+//│ Renewed α14 ~> α15
+//│ Resimplified: ((((α15) -> int<number>)) -> ((α15) -> int<number>))
+//│  where: 
+//│ Recons: ((((α15) -> int<number>)) -> ((α15) -> int<number>))
+//│ g: ('a -> int) -> 'a -> int
+//│ ts: (arg0: (arg1: type α15) => int) => (arg0: type α15) => int
+
+:js
+:ts
+:d
+def f x y = x + y
+//│ // Query 1
+//│ globalThis.f = function f(x) {
+//│   return (y) => x + y;
+//│ };
+//│ res = f;
+//│ // End of generated code
+//│ 1. Typing term ((x,) => ((y,) => ((+ (x,)) (y,)))) as class class mlscript.Lam
+//│ | 1. Typing pattern (x,) as class class mlscript.Tup
+//│ | | 1. Typing pattern x as class class mlscript.Var
+//│ | | 1. : α0'
+//│ | 1. : (α0')
+//│ | 1. Typing term ((y,) => ((+ (x,)) (y,))) as class class mlscript.Lam
+//│ | | 1. Typing pattern (y,) as class class mlscript.Tup
+//│ | | | 1. Typing pattern y as class class mlscript.Var
+//│ | | | 1. : α1'
+//│ | | 1. : (α1')
+//│ | | 1. Typing term ((+ (x,)) (y,)) as class class mlscript.App
+//│ | | | 1. Typing term (+ (x,)) as class class mlscript.App
+//│ | | | | 1. Typing term + as class class mlscript.Var
+//│ | | | | 1. : [((int<number>) -> ((int<number>) -> int<number>))]
+//│ | | | | 1. Typing term (x,) as class class mlscript.Tup
+//│ | | | | | 1. Typing term x as class class mlscript.Var
+//│ | | | | | 1. : [α0']
+//│ | | | | 1. : ([α0'])
+//│ | | | | CONSTRAIN [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([([α0'])] -> α2')
+//│ | | | |   where 
+//│ | | | | C [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([([α0'])] -> α2')
+//│ | | | | | C [((int<number>) -> ((int<number>) -> int<number>))] <! ([([α0'])] -> α2')
+//│ | | | | | | C ((int<number>) -> ((int<number>) -> int<number>)) <! ([([α0'])] -> α2')
+//│ | | | | | | | C [([α0'])] <! (int<number>)
+//│ | | | | | | | | C ([α0']) <! (int<number>)
+//│ | | | | | | | | | C [α0'] <! int<number>
+//│ | | | | | | | | | | C α0' <! int<number>
+//│ | | | | | | | C ((int<number>) -> int<number>) <! α2'
+//│ | | | 1. : α2'
+//│ | | | 1. Typing term (y,) as class class mlscript.Tup
+//│ | | | | 1. Typing term y as class class mlscript.Var
+//│ | | | | 1. : [α1']
+//│ | | | 1. : ([α1'])
+//│ | | | CONSTRAIN [α2'] <! ([([α1'])] -> α3')
+//│ | | |   where α2' :> [((int<number>) -> int<number>)]
+//│ | | | C [α2'] <! ([([α1'])] -> α3')
+//│ | | | | C α2' <! ([([α1'])] -> α3')
+//│ | | | | | C [((int<number>) -> int<number>)] <! ([([α1'])] -> α3')
+//│ | | | | | | C ((int<number>) -> int<number>) <! ([([α1'])] -> α3')
+//│ | | | | | | | C [([α1'])] <! (int<number>)
+//│ | | | | | | | | C ([α1']) <! (int<number>)
+//│ | | | | | | | | | C [α1'] <! int<number>
+//│ | | | | | | | | | | C α1' <! int<number>
+//│ | | | | | | | C int<number> <! α3'
+//│ | | 1. : α3'
+//│ | 1. : ((α1') -> α3')
+//│ 1. : ((α0') -> ((α1') -> α3'))
+//│ Typed as: ((α4) -> ((α5) -> α6))
+//│  where: α4 <: [[int<number>]], α5 <: [[int<number>]], α6 :> [int<number>]
+//│ ty[true] ((α4) -> ((α5) -> α6))
+//│ -> DNF(((α4) -> ((α5) -> α6)){})
+//│ DNF[true] DNF(((α4) -> ((α5) -> α6)){})
+//│ | ty[false] (α4)
+//│ | -> DNF((α4){})
+//│ | DNF[false] DNF((α4){})
+//│ | | ty[false] α4
+//│ | | | Consider α4 List() List([[int<number>]])
+//│ | | -> DNF(int<number>{}∧α4)
+//│ | | DNF[false] DNF(int<number>{}∧α4)
+//│ | | | Renewed α4 ~> α7
+//│ | | ~> (int<number> & α7)
+//│ | ~> ((int<number> & α7))
+//│ | ty[true] ((α5) -> α6)
+//│ | -> DNF(((α5) -> α6){})
+//│ | DNF[true] DNF(((α5) -> α6){})
+//│ | | ty[false] (α5)
+//│ | | -> DNF((α5){})
+//│ | | DNF[false] DNF((α5){})
+//│ | | | ty[false] α5
+//│ | | | | Consider α5 List() List([[int<number>]])
+//│ | | | -> DNF(int<number>{}∧α5)
+//│ | | | DNF[false] DNF(int<number>{}∧α5)
+//│ | | | | Renewed α5 ~> α8
+//│ | | | ~> (int<number> & α8)
+//│ | | ~> ((int<number> & α8))
+//│ | | ty[true] α6
+//│ | | | Consider α6 List([int<number>]) List()
+//│ | | -> DNF(α6 | int<number>{})
+//│ | | DNF[true] DNF(α6 | int<number>{})
+//│ | | | Renewed α6 ~> α9
+//│ | | ~> (int<number> | α9)
+//│ | ~> (((int<number> & α8)) -> (int<number> | α9))
+//│ ~> (((int<number> & α7)) -> (((int<number> & α8)) -> (int<number> | α9)))
+//│ Canon: (((int<number> & α7)) -> (((int<number> & α8)) -> (int<number> | α9)))
+//│  where: 
+//│ [occs] LinkedHashMap((false,α7) -> HashSet(int<number>, α7), (false,α8) -> HashSet(int<number>, α8), (true,α9) -> HashSet(int<number>, α9))
+//│ [vars] TreeSet(α7, α8, α9)
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [!] α7
+//│ [!] α8
+//│ [!] α9
+//│ [sub] α7 -> None, α8 -> None, α9 -> None
+//│ Type after simplification: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ ty[true] ((int<number>) -> ((int<number>) -> int<number>))
+//│ -> DNF(((int<number>) -> ((int<number>) -> int<number>)){})
+//│ DNF[true] DNF(((int<number>) -> ((int<number>) -> int<number>)){})
+//│ | ty[false] (int<number>)
+//│ | -> DNF((int<number>){})
+//│ | DNF[false] DNF((int<number>){})
+//│ | | ty[false] int<number>
+//│ | | -> DNF(int<number>{})
+//│ | | DNF[false] DNF(int<number>{})
+//│ | | ~> int<number>
+//│ | ~> (int<number>)
+//│ | ty[true] ((int<number>) -> int<number>)
+//│ | -> DNF(((int<number>) -> int<number>){})
+//│ | DNF[true] DNF(((int<number>) -> int<number>){})
+//│ | | ty[false] (int<number>)
+//│ | | -> DNF((int<number>){})
+//│ | | DNF[false] DNF((int<number>){})
+//│ | | | ty[false] int<number>
+//│ | | | -> DNF(int<number>{})
+//│ | | | DNF[false] DNF(int<number>{})
+//│ | | | ~> int<number>
+//│ | | ~> (int<number>)
+//│ | | ty[true] int<number>
+//│ | | -> DNF(int<number>{})
+//│ | | DNF[true] DNF(int<number>{})
+//│ | | ~> int<number>
+//│ | ~> ((int<number>) -> int<number>)
+//│ ~> ((int<number>) -> ((int<number>) -> int<number>))
+//│ Recanon: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ [occs] LinkedHashMap()
+//│ [vars] TreeSet()
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [sub] 
+//│ Resimplified: ((int<number>) -> ((int<number>) -> int<number>))
+//│  where: 
+//│ Recons: ((int<number>) -> ((int<number>) -> int<number>))
+//│ f: int -> int -> int
+//│ ts: (arg0: int) => (arg0: int) => int
+//│  = [Function: f]

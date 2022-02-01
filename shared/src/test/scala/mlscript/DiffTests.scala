@@ -373,6 +373,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
+                    if (mode.showDeclarationTS) output(s"ts: ${exp.toTsType.toString()}")
 
                   case S(sign) =>
                     ctx += nme.name -> sign
@@ -390,11 +391,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     binds.foreach {
                       case (nme, pty) =>
                         ctx += nme -> pty
+                        output("reached here")
                         output(s"$nme: ${getType(pty).show}")
                         prefixLength = nme.length()
                     }
 
-                  // show ts type for unbound expression
+                  // show ts type for terms that are not assigned to a variable
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {

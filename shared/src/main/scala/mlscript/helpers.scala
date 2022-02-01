@@ -87,10 +87,12 @@ abstract class TypeImpl extends Located { self: Type =>
     * * a type has negative polarity at function input position
     * * a type has positive polarity at function output position
     *
+    * To give unique names arguments in nested types we increment an argument
+    * counter
     * @param ctx
     * @return
     */
-  def toTsType(implicit ctx: Option[Boolean] = None): SourceCode =
+  def toTsType(implicit ctx: Option[Boolean] = None, argCounter: Int = 0): SourceCode =
     this match {
     // these types can be inferred from expression that do not need to be
     // assigned to a variable
@@ -98,7 +100,12 @@ abstract class TypeImpl extends Located { self: Type =>
     case Union(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.separator)
     case Inter(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.ampersand)
     case Record(fields) => SourceCode.recordWithEntries(fields.map(entry => (SourceCode(entry._1.name), entry._2.toTsType)))
-    case Tuple(fields) => SourceCode.horizontalArray(fields.map(field => field._2.toTsType))
+    // unwrap extra parenthesis when tuple has single element
+    case Tuple(fields) => if (fields.length === 1) {
+      fields(0)._2.toTsType
+    } else {
+      SourceCode.horizontalArray(fields.map(field => field._2.toTsType))
+    }
     case Top => SourceCode("unknown")
     case Bot => SourceCode("never")
     case TypeName(name) => SourceCode(name)
@@ -108,7 +115,15 @@ abstract class TypeImpl extends Located { self: Type =>
 
     // these types are inferred from expressions that need to be assigned to variables or definitions
     // or require information from previous declarations to be completed
-    // TODO
+
+    // typescript function types must have a named parameter
+    // e.g. (val: number) => string
+    case Function(lhs, rhs) =>
+      // arg counter only needs to be updated for lhs because new arguments
+      // are only created in rhs
+      (SourceCode(s"arg${argCounter}") ++ SourceCode.colon ++ lhs.toTsType(Some(false), argCounter + 1)).parenthesized ++
+      SourceCode.fatArrow ++
+      rhs.toTsType(Some(true), argCounter)
     case Recursive(uv, body) => SourceCode("TODO") ++ uv.toTsType ++ body.toTsType
     case AppliedType(base, targs) => SourceCode(base.name) ++ SourceCode.openAngleBracket ++ SourceCode.sepBy(targs.map(_.toTsType)) ++ SourceCode.closeAngleBracket
     // Neg requires creating a new type variable to store
@@ -142,6 +157,17 @@ abstract class TypeImpl extends Located { self: Type =>
 
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {
+  /**
+    * Create a context from a list of types. For named variables and
+    * hinted variables use what is given. For unnamed variables generate
+    * completely new names. If same name exists increment counter suffix
+    * in the name.
+    *
+    * @param tys
+    * @param pre
+    * @param debug
+    * @return
+    */
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
@@ -167,6 +193,7 @@ object ShowCtx {
       // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet
+    // generate names for unnamed variables
     val names = Iterator.unfold(0) { idx =>
       S(('a' + idx % ('z' - 'a')).toChar.toString, idx + 1)
     }.filterNot(used).map(assignName)
