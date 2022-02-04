@@ -20,7 +20,7 @@ c.name
 //│ ║        	^^^^^^
 //│ ╟── application of type `Child` does not have field 'name'
 //│ ║  l.12: 	def c = Child(p)
-//│ ║        	        ^^^^^^^
+//│ ║        	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{name: ?a}`
 //│ ║  l.17: 	c.name
 //│ ║        	^

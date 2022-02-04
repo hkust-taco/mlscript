@@ -38,7 +38,7 @@ Hey t
 //│ ║        	^^^^^
 //│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
-//│ ║       	     ^^^^^^^
+//│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
 //│ ║  l.35: 	Hey t
 //│ ║        	    ^
@@ -86,13 +86,13 @@ f htx
 //│ ║        	^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
-//│ ║       	     ^^^^^^^
+//│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
 //│ ║  l.81: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.76: 	f ((a, b)) = add a b
-//│ ╙──      	    ^^^^
+//│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
@@ -106,7 +106,7 @@ f htx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.76: 	f ((a, b)) = add a b
-//│ ╙──      	    ^^^^
+//│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = NaN
 //│ ╔══[ERROR] Type mismatch in application:
@@ -120,7 +120,7 @@ f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.76: 	f ((a, b)) = add a b
-//│ ╙──      	    ^^^^
+//│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = NaN
 

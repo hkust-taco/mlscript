@@ -244,7 +244,7 @@ h3 f3 x3
 (fun x -> succ x) false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	(fun x -> succ x) false
-//│ ║         	     ^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.244: 	(fun x -> succ x) false
 //│ ║         	                  ^^^^^
@@ -373,10 +373,10 @@ ty00 = ty11
 //│ ║         	                    ^^^^^^
 //│ ╟── [info] flowing from type `B & 'b`
 //│ ║  l.343: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
-//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from type `B & 'b`
 //│ ║  l.346: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
-//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
 //│ ╟── [info] flowing from type `?a0`
 //│ ║  l.346: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
@@ -401,10 +401,10 @@ ty00 = ty11
 //│ ║         	           ^^^^^^
 //│ ╟── [info] flowing from type `A & 'a`
 //│ ║  l.343: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
-//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from type `A & 'a`
 //│ ║  l.346: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
-//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
 //│ ╟── [info] flowing from type `?a0`
 //│ ║  l.346: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)

@@ -79,7 +79,7 @@ T A
 T (B {})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.79: 	T (B {})
-//│ ║        	^^^^^^^
+//│ ║        	^^^^^^^^
 //│ ╟── application of type `B` is not an instance of type A
 //│ ║  l.79: 	T (B {})
 //│ ║        	   ^^^^

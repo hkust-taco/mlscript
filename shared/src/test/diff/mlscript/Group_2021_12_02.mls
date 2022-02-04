@@ -43,7 +43,7 @@ eval {} (Lit{} with { val = 1 })
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
-//│ ╙──      	           ^^^^^^^^^
+//│ ╙──      	          ^^^^^^^^^^^
 //│ res: error | int
 //│    = 1
 
