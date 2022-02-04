@@ -51,16 +51,20 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
   })
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")").map {
-      case (prt, id) => Var(s"${prt}.${id}")
-    }))).rep ).map {
-      case (st, sels) => sels.foldLeft(st)(Sel)
+
+  def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
+    // fields
+    ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
+      .map {case (prt, id) => Var(s"${prt}.${id}")})))
+      .map {(t: Var) => Left(t)} |
+    // array subscription
+    ("[" ~ term ~/ "]").map {Right(_)}
+    ).rep ).map {
+      case (st, sels) => sels.foldLeft(st)((acc, t) => t match {
+        case Left(se) => Sel(acc, se)
+        case Right(su) => Subs(acc, su)
+      })
     }
-  // array subscription
-  def subtermSubs[_: P]: P[Term] = P (
-    (subterm ~/ ("[" ~ term ~/ "]").rep).map { case (arr, idx) => 
-      idx.foldLeft(arr)(Subs(_,_))
-    })
 
   def record[_: P]: P[Rcd] = locate(P(
       "{" ~/ (variable ~ "=" ~ term map L.apply).|(variable map R.apply).rep(sep = ";") ~ "}"
@@ -82,7 +86,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
   def mkApp(lhs: Term, rhs: Term): Term = App(lhs, toParams(rhs))
-  def apps[_: P]: P[Term] = P( subtermSubs.rep(1).map(_.reduce(mkApp)) )
+  def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
   def _match[_: P]: P[CaseOf] =
     locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
   def matchArms[_: P]: P[CaseBranches] = P(
