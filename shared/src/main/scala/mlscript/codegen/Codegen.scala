@@ -144,6 +144,7 @@ object SourceCode {
   val openAngleBracket: SourceCode = SourceCode("<")
   val closeAngleBracket: SourceCode = SourceCode(">")
   val fatArrow: SourceCode = SourceCode(" => ")
+  val equalSign: SourceCode = SourceCode(" = ")
 
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
@@ -179,6 +180,17 @@ object SourceCode {
             .map(entry => entry._1 ++ colon ++ entry._2)
             .zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
             acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeCurlyBrace else SourceCode.commaSpace)
+          })
+      }
+    }
+    
+    def paramList(entries: List[SourceCode]): SourceCode = {
+      entries match {
+        case Nil => SourceCode("")
+        case _ =>
+          (entries
+            .zipWithIndex.foldLeft(SourceCode.openAngleBracket) { case (acc, (entry, index)) =>
+            acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeAngleBracket else SourceCode.commaSpace)
           })
       }
     }

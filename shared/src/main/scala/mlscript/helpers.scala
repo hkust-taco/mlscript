@@ -6,6 +6,55 @@ import scala.collection.immutable.SortedSet
 
 import mlscript.utils._, shorthands._
 
+/**
+  * A class to hold to the context while converting mlscript types to
+  * typescript representation.
+  * 
+  * polarity tracks polarity of the current type.
+  * * a type has no polarity by default
+  * * a type has negative polarity at function input position
+  * * a type has positive polarity at function output position
+  * 
+  * argCounter tracks number of new argument variable names introduced
+  * and then is used to generate unique names
+  * 
+  * newTypeAlias and typeParams stores information of any new type aliases and params
+  * defined when converting. This information is collected to arrange the
+  * source code in proper order.
+  * 
+  * Existing type vars is used to maintain a mapping from originally
+  * created type variables to their names. This is then used to resolve
+  * `TypeVar` to their SourceCode representation.
+  *
+  * @param polarity
+  * @param argCounter
+  * @param existingTypeVars
+  * @param newTypeAlias
+  * @param typeParams
+  */
+class ToTsTypegenContext(
+  var polarity: Option[Boolean] = None,
+  var argCounter: Int = 0,
+  var existingTypeVars: Map[TypeVar, String] = Map.empty,
+  // adhoc type vars introduced during conversion
+  var newTypeAlias: List[String] = List.empty,
+  // adhoc type parameters introduced during conversion
+  var newTypeParams: List[String] = List.empty
+) {
+  /**
+    * Polarity follows is like multiplication where true is positive
+    * and false is negative polarity. However adding a polarity to
+    * None (no polarity) makes it a Some (giving it a polarity)
+    *
+    * @param newPolarity
+    */
+  def multiplyPolarity(newPolarity: Boolean): Unit = {
+    this.polarity = this.polarity.map(prev => prev ^ newPolarity).orElse(Some(newPolarity));
+  }
+}
+object ToTsTypegenContext {
+  def empty: ToTsTypegenContext = new ToTsTypegenContext();
+}
 
 // Auxiliary definitions for types
 
@@ -77,81 +126,118 @@ abstract class TypeImpl extends Located { self: Type =>
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
   }
+  
+  def toTsTypeSourceCode(): SourceCode = {
+    val ctx = ToTsTypegenContext.empty;
+    
+    // Create a mapping from type var to their friendly name for lookup
+    // Also add them as type parameters to the current type because typescript
+    // uses parametric polymorphism
+    ctx.existingTypeVars = ShowCtx.mk(this :: Nil).vs;
+    ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => tup._2);
+    val tsType = this.toTsType(ctx);
+    
+    val completeType = SourceCode.apply(ctx.newTypeAlias) +
+      (SourceCode("type res") ++
+        SourceCode.paramList(ctx.newTypeParams.map(param => SourceCode(param))) ++
+        SourceCode.equalSign ++
+        tsType
+      )
+      
+    completeType
+  }
 
   /**
-    * Converts an mlscript type to source code representation of a ts type
+    * Converts an mlscript type to source code representation of a ts type. It also
+    * keep tracks of extra type variables and type parameters defined through the context.
     *
-    * It takes a context parameter that keeps track of the polarity of the
-    * current type.
-    * * a type has no polarity by default
-    * * a type has negative polarity at function input position
-    * * a type has positive polarity at function output position
-    *
-    * To give unique names arguments in nested types we increment an argument
-    * counter
+    * Takes a context to maintain state.
     * @param ctx
     * @return
     */
-  def toTsType(implicit ctx: Option[Boolean] = None, argCounter: Int = 0): SourceCode =
+  def toTsType(implicit ctx: ToTsTypegenContext = ToTsTypegenContext.empty): SourceCode = {
     this match {
-    // these types can be inferred from expression that do not need to be
-    // assigned to a variable
-    case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) => SourceCode("bool")
-    case Union(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.separator)
-    case Inter(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.ampersand)
-    case Record(fields) => SourceCode.recordWithEntries(fields.map(entry => (SourceCode(entry._1.name), entry._2.toTsType)))
-    // unwrap extra parenthesis when tuple has single element
-    case Tuple(fields) => if (fields.length === 1) {
-      fields(0)._2.toTsType
-    } else {
-      SourceCode.horizontalArray(fields.map(field => field._2.toTsType))
-    }
-    case Top => SourceCode("unknown")
-    case Bot => SourceCode("never")
-    case TypeName(name) => SourceCode(name)
-    case Literal(IntLit(n)) => SourceCode(n.toString + (if (JSBackend isSafeInteger n) "" else "n"))
-    case Literal(DecLit(n)) => SourceCode(n.toString)
-    case Literal(StrLit(s)) => SourceCode(JSLit.makeStringLiteral(s))
-
-    // these types are inferred from expressions that need to be assigned to variables or definitions
-    // or require information from previous declarations to be completed
-
-    // typescript function types must have a named parameter
-    // e.g. (val: number) => string
-    case Function(lhs, rhs) =>
-      // arg counter only needs to be updated for lhs because new arguments
-      // are only created in rhs
-      (SourceCode(s"arg${argCounter}") ++ SourceCode.colon ++ lhs.toTsType(Some(false), argCounter + 1)).parenthesized ++
-      SourceCode.fatArrow ++
-      rhs.toTsType(Some(true), argCounter)
-    case Recursive(uv, body) => SourceCode("TODO") ++ uv.toTsType ++ body.toTsType
-    case AppliedType(base, targs) => SourceCode(base.name) ++ SourceCode.openAngleBracket ++ SourceCode.sepBy(targs.map(_.toTsType)) ++ SourceCode.closeAngleBracket
-    // Neg requires creating a new type variable to store
-    // the negated definition this operation might also need
-    // to update the context with the new name if the negated
-    // type is being used in other places. TODO
-    case Neg(base) => SourceCode("T extends ") ++ base.toTsType ++ SourceCode(" ? never : T")
-    case Rem(base, names) => SourceCode("Omit") ++
-      SourceCode.openAngleBracket ++ base.toTsType ++ SourceCode.commaSpace ++
-      SourceCode.record(names.map(name => SourceCode(name.name))) ++ SourceCode.closeAngleBracket
-    case Bounds(lb, ub) => {
-      ctx match {
-        // positive polarity takes upper bound
-        case Some(true) => {
-          ub.toTsType
+      // these types can be inferred from expression that do not need to be
+      // assigned to a variable
+      case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) => SourceCode("bool")
+      case Union(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.separator)
+      case Inter(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.ampersand)
+      case Record(fields) => SourceCode.recordWithEntries(fields.map(entry => (SourceCode(entry._1.name), entry._2.toTsType)))
+      // unwrap extra parenthesis when tuple has single element
+      case Tuple(fields) => if (fields.length === 1) {
+        fields(0)._2.toTsType
+      } else {
+        SourceCode.horizontalArray(fields.map(field => field._2.toTsType))
+      }
+      case Top => SourceCode("unknown")
+      case Bot => SourceCode("never")
+      case TypeName(name) => SourceCode(name)
+      case Literal(IntLit(n)) => SourceCode(n.toString + (if (JSBackend isSafeInteger n) "" else "n"))
+      case Literal(DecLit(n)) => SourceCode(n.toString)
+      case Literal(StrLit(s)) => SourceCode(JSLit.makeStringLiteral(s))
+      
+      // the below types are inferred from expressions that need to be assigned to variables or definitions
+      // or require information from previous declarations to be completed
+      
+      // typescript function types must have a named parameter
+      // e.g. (val: number) => string
+      case Function(lhs, rhs) =>
+        {
+          val currArgCount = ctx.argCounter;
+          val currPolarity = ctx.polarity;
+          
+          ctx.argCounter += 1;
+          ctx.multiplyPolarity(false)
+          val lhsTypeSource = lhs.toTsType;
+          ctx.polarity = currPolarity;
+          
+          ctx.multiplyPolarity(true)
+          val rhsTypeSource = rhs.toTsType;
+          
+          (SourceCode(s"arg${currArgCount}") ++ SourceCode.colon ++ lhsTypeSource).parenthesized ++
+          SourceCode.fatArrow ++
+          rhsTypeSource
         }
-        // negative polarity takes lower bound
-        case Some(false) => {
-          lb.toTsType
-        }
-        // TODO: Yet to handle invariant types
-        case None => {
-          SourceCode("TODO") ++ lb.toTsType ++ ub.toTsType
+      case Recursive(uv, body) => SourceCode("TODO") ++ uv.toTsType ++ body.toTsType
+      case AppliedType(base, targs) => SourceCode(base.name) ++ SourceCode.openAngleBracket ++ SourceCode.sepBy(targs.map(_.toTsType)) ++ SourceCode.closeAngleBracket
+      // Neg requires creating a parameterized type alias to hold the negated definition
+      case Neg(base) => {
+        val typeParam = s"T${ctx.argCounter}";
+        ctx.argCounter += 1;
+        val typeAliasName = s"talias${ctx.argCounter}<$typeParam>"
+        ctx.argCounter += 1;
+        val typeAlias = s"type $typeAliasName = $typeParam extends ${base.toTsType} ? never : $typeParam"
+        
+        ctx.newTypeParams = typeParam +: ctx.newTypeParams;
+        ctx.newTypeAlias = typeAlias +: ctx.newTypeAlias;
+        SourceCode(typeAliasName)
+      }
+      case Rem(base, names) => SourceCode("Omit") ++
+        SourceCode.openAngleBracket ++ base.toTsType ++ SourceCode.commaSpace ++
+        SourceCode.record(names.map(name => SourceCode(name.name))) ++ SourceCode.closeAngleBracket
+      case Bounds(lb, ub) => {
+        ctx.polarity match {
+          // positive polarity takes upper bound
+          case Some(true) => {
+            ub.toTsType
+          }
+          // negative polarity takes lower bound
+          case Some(false) => {
+            lb.toTsType
+          }
+          // TODO: Yet to handle invariant types
+          case None => {
+            SourceCode("TODO") ++ lb.toTsType ++ ub.toTsType
+          }
         }
       }
+      case WithExtension(base, rcd) => Inter(Rem(base, rcd.fields.map(tup => tup._1)), rcd).toTsType
+      // type variables friendly names have been pre-calculated in the context
+      // look up and use it or return a NOT FOUND marker
+      case t@TypeVar(_, _) => {
+        ctx.existingTypeVars.get(t).map(s => SourceCode(s)).getOrElse(SourceCode("NOT FOUND"))
+      }
     }
-    case WithExtension(base, rcd) => Inter(Rem(base, rcd.fields.map(tup => tup._1)), rcd).toTsType
-    case TypeVar(identifier, nameHint) => SourceCode("type") ++ SourceCode.space ++ SourceCode(this.toString)
   }
 }
 

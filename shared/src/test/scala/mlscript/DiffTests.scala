@@ -32,6 +32,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
+    def outputSourceCode(code: SourceCode, prefix: String = "ts: ") = code.lines.foreach(line => {
+      out.println(outputMarker + prefix + line.toString())
+    })
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
@@ -364,7 +367,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
-                if (mode.showDeclarationTS) output(exp.toTsType.toString())
+                if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
 
               case d @ Def(isrec, nme, L(rhs)) =>
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
@@ -373,7 +376,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
-                    if (mode.showDeclarationTS) output(s"ts: ${exp.toTsType.toString()}")
+                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
 
                   case S(sign) =>
                     ctx += nme.name -> sign
@@ -402,7 +405,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) output(s"ts: ${exp.toTsType.toString()}")
+                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
                       prefixLength = 3
                     }
                     // } else {
