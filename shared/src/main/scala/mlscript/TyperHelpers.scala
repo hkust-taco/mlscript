@@ -307,14 +307,14 @@ abstract class TyperHelpers { self: Typer =>
     // sometimes behind a single negation,
     // just for the time of massaging the constraint through a type variable.
     // So it's important we only push and simplify Without types only in _positive_ position!
-    def without(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
+    def without(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
     }
     def without(name: Var): SimpleType = 
-      without(Set.single(name))
+      without(SortedSet.single(name))
     
-    def withoutPos(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
+    def withoutPos(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)

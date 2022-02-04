@@ -30,7 +30,7 @@ trait TypeSimplifier { self: Typer =>
       // TODO should we also coalesce nvars? is it bad if we don't?
       def rec(dnf: DNF, done: Set[TV]): DNF = dnf.cs.iterator.map { c =>
         val vs = c.vars.filterNot(done)
-        vs.map { tv =>
+        vs.iterator.map { tv =>
           println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
           val b =
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
@@ -353,7 +353,7 @@ trait TypeSimplifier { self: Typer =>
                     }.mapValues(go(_, pol))
                   )(rcd.prov)
                   val removedFields = clsFields.keysIterator
-                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSet
+                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSortedSet
                   val needsWith = !rcd.fields.forall {
                     case (field, fty) =>
                       // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")

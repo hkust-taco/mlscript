@@ -1,19 +1,32 @@
+:ShowRelativeLineNums
+
 
 :e
 class oops: { x: int }
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.3: 	class oops: { x: int }
-//│ ╙──     	      ^^^^
-//│ Defined class oops
+//│ ║  l.+1: 	class oops: { x: int }
+//│ ╙──      	      ^^^^
 
 :e
 type oops = int
-//│ ╔══[ERROR] Type 'oops' is already defined.
-//│ ║  l.10: 	type oops = int
-//│ ╙──      	     ^^^^
 //│ ╔══[ERROR] Type names must start with a capital letter
-//│ ║  l.10: 	type oops = int
+//│ ║  l.+1: 	type oops = int
 //│ ╙──      	     ^^^^
+//│ ╔══[ERROR] Type 'Oops' is already defined.
+//│ ║  l.+1: 	type oops = int
+//│ ╙──      	     ^^^^
+
+class Oops2
+//│ Defined class Oops2
+
+:e
+class oops2
+//│ ╔══[ERROR] Type names must start with a capital letter
+//│ ║  l.+1: 	class oops2
+//│ ╙──      	      ^^^^^
+//│ ╔══[ERROR] Type 'Oops2' is already defined.
+//│ ║  l.+1: 	class oops2
+//│ ╙──      	      ^^^^^
 
 
 type Hello = int
@@ -26,7 +39,7 @@ type Hello = int
 :e
 42: hello
 //│ ╔══[ERROR] Type alias Hello cannot be used as a type tag
-//│ ║  l.27: 	42: hello
+//│ ║  l.+1: 	42: hello
 //│ ╙──      	    ^^^^^
 //│ res: error
 //│    = 42
@@ -35,13 +48,13 @@ type Hello = int
 :e
 aa = { a = 1; a = "oops" }
 //│ ╔══[ERROR] Multiple declarations of field name a in record literal
-//│ ║  l.36: 	aa = { a = 1; a = "oops" }
+//│ ║  l.+1: 	aa = { a = 1; a = "oops" }
 //│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.36: 	aa = { a = 1; a = "oops" }
+//│ ║  l.+1: 	aa = { a = 1; a = "oops" }
 //│ ║        	       ^
 //│ ╟── Declared at
-//│ ║  l.36: 	aa = { a = 1; a = "oops" }
+//│ ║  l.+1: 	aa = { a = 1; a = "oops" }
 //│ ╙──      	              ^
 //│ aa: {a: 1, a: "oops"}
 //│   = { a: 'oops' }
@@ -49,22 +62,22 @@ aa = { a = 1; a = "oops" }
 :e
 aa: { a: int; a: string }
 //│ ╔══[ERROR] Multiple declarations of field name a in record type
-//│ ║  l.50: 	aa: { a: int; a: string }
+//│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Declared at
-//│ ║  l.50: 	aa: { a: int; a: string }
+//│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	      ^
 //│ ╟── Declared at
-//│ ║  l.50: 	aa: { a: int; a: string }
+//│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.50: 	aa: { a: int; a: string }
+//│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	^^
 //│ ╟── integer literal of type `1` does not match type `string`
-//│ ║  l.36: 	aa = { a = 1; a = "oops" }
+//│ ║  l.49: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.50: 	aa: { a: int; a: string }
+//│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ╙──      	                 ^^^^^^
 //│ res: {a: int, a: string}
 //│    = { a: 'oops' }

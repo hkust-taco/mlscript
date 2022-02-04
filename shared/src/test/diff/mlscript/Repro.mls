@@ -75,9 +75,27 @@ t = (1, 2, 3) with {x = 1}
 t._1
 t._2
 t.x
-//│ res: 1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.75: 	t._1
+//│ ║        	^^^^
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
+//│ ║  l.70: 	t = (1, 2, 3) with {x = 1}
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_1: ?a}`
+//│ ║  l.75: 	t._1
+//│ ╙──      	^
+//│ res: error
 //│    = undefined
-//│ res: 2
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.76: 	t._2
+//│ ║        	^^^^
+//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
+//│ ║  l.70: 	t = (1, 2, 3) with {x = 1}
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{_2: ?a}`
+//│ ║  l.76: 	t._2
+//│ ╙──      	^
+//│ res: error
 //│    = undefined
 //│ res: 1
 //│    = 1
@@ -102,10 +120,10 @@ def test: {x: 1} & (1, 2, 3)
 
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.103: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.121: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.103: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.121: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	  ^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -113,13 +131,13 @@ f(1,2,3) : 1 | 2 | 3
 
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscription:
-//│ ║  l.114: 	(arr[0])[1][2]
+//│ ║  l.132: 	(arr[0])[1][2]
 //│ ║         	 ^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscription with expected type `Array[?a]`
-//│ ║  l.114: 	(arr[0])[1][2]
+//│ ║  l.132: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Code generation crashed:
@@ -127,13 +145,13 @@ f(1,2,3) : 1 | 2 | 3
 
 f a b c
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.128: 	f a b c
+//│ ║  l.146: 	f a b c
 //│ ╙──       	  ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.128: 	f a b c
+//│ ║  l.146: 	f a b c
 //│ ╙──       	    ^
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.128: 	f a b c
+//│ ║  l.146: 	f a b c
 //│ ╙──       	      ^
 //│ res: nothing
 //│ Runtime error:
@@ -151,7 +169,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
-//│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
+//│ tuuu: (1 | 2, true,) & {_1: 2 | 3}
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
 
@@ -188,10 +206,10 @@ f 1
 
 f(1,2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.189: 	f(1,2)
+//│ ║  l.207: 	f(1,2)
 //│ ║         	^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `(?a,)`
-//│ ║  l.189: 	f(1,2)
+//│ ║  l.207: 	f(1,2)
 //│ ╙──       	  ^^^
 //│ res: error
 //│    = 1
@@ -279,13 +297,13 @@ a2._2
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.280: 	a2._1
+//│ ║  l.282: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.261: 	def rep5: 'a -> Array['a]
+//│ ║  l.263: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.280: 	a2._1
+//│ ║  l.282: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -300,7 +318,7 @@ ht1 = (1,2,false) with {_1 = 'a'; _2 = 'hello'; _3 = false}
 
 def hg1 t = (t._1, t._2)
 hg1 ht1
-hg1 ((5,5,5))
+hg1 ((5,5,5,5))
 //│ hg1: {_1: 'a, _2: 'b} -> ('a, 'b,)
 //│    = [Function: hg1]
 //│ res: ("a", "hello",)
