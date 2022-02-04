@@ -290,3 +290,20 @@ a2._1
 //│ res: error
 //│    = undefined
 
+(1,2,3,true) with {_a = 1; _b1 = false}
+//│ res: (1, 2, 3, true,) & {_a: 1, _b1: false}
+//│    = Array { '0': 1, '1': 2, '2': 3, '3': true, _a: 1, _b1: false }
+
+ht1 = (1,2,false) with {_1 = 'a'; _2 = 'hello'; _3 = false}
+//│ ht1: {_1: "a", _2: "hello", _3: false}
+//│    = Array { '0': 1, '1': 2, '2': false, _1: 'a', _2: 'hello', _3: false }
+
+def hg1 t = (t._1, t._2)
+hg1 ht1
+hg1 ((5,5,5))
+//│ hg1: {_1: 'a, _2: 'b} -> ('a, 'b,)
+//│    = [Function: hg1]
+//│ res: ("a", "hello",)
+//│    = [ 'a', 'hello' ]
+//│ res: (5, 5,)
+//│    = [ undefined, undefined ]
