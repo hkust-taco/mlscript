@@ -110,7 +110,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
-  // TODO: currently use MiscBaseType
+  // currently use MiscBaseType
   sealed abstract class ArrayBase extends MiscBaseType {
     def inner: SimpleType
   }

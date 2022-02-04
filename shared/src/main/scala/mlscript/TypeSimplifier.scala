@@ -367,8 +367,6 @@ trait TypeSimplifier { self: Typer =>
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
                   val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
-                  // TODO: merge tup & rcd back to tuples
-                  // * (a, b) & {_1: a, _2: b} -> (a, b)
                   val (res, nfs) = bo match {
                     case S(tt @ TupleType(fs)) => 
                       val tupres = TupleType(fs.mapValues(go(_, pol)))(tt.prov)
@@ -379,13 +377,11 @@ trait TypeSimplifier { self: Typer =>
                         else
                           nFields
                       )
-                    case _ => bo.map {
-                      case ct: ClassTag => ct
-                      case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
-                      case at @ ArrayType(inner) => ArrayType(go(inner, pol))(at.prov)
-                      case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
-                      case TupleType(_) => ??? // ! not reachable
-                    } -> nFields
+                    case S(ct: ClassTag) => S(ct) -> nFields
+                    case S(ft @ FunctionType(l, r)) => S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
+                    case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
+                    case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
+                    case N => N -> nFields
                   }
                   LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)
               }

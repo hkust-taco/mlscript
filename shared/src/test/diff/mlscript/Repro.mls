@@ -40,16 +40,34 @@ def arr = (1,2)
 //│ Array[int]
 //│    = [ 1, 2 ]
 
+:re
+fr = f r
+fr : Array[int] & {b: int}
+//│ fr: (1, 2, 3,) & {b: 2}
+//│ Runtime error:
+//│   ReferenceError: r is not defined
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$6(ConstraintSolver.scala:55)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$6$adapted(ConstraintSolver.scala:40)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
+//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:344)
+
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.44: 	arr._1
+//│ ║  l.51: 	arr._1
 //│ ║        	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.44: 	arr._1
+//│ ║  l.51: 	arr._1
 //│ ╙──      	^^^
 //│ res: error
 //│    = undefined
@@ -75,30 +93,13 @@ t = (1, 2, 3) with {x = 1}
 t._1
 t._2
 t.x
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.75: 	t._1
-//│ ║        	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
-//│ ║  l.70: 	t = (1, 2, 3) with {x = 1}
-//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.75: 	t._1
-//│ ╙──      	^
-//│ res: error
+//│ res: 1
 //│    = undefined
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.76: 	t._2
-//│ ║        	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
-//│ ║  l.70: 	t = (1, 2, 3) with {x = 1}
-//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.76: 	t._2
-//│ ╙──      	^
-//│ res: error
+//│ res: 2
 //│    = undefined
 //│ res: 1
 //│    = 1
+
 
 
 // :d
@@ -117,41 +118,42 @@ def test: {x: 1} & (1, 2, 3)
 
 // { 1 = 3456 }
 
-
+:e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.121: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	  ^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
 
-
+:e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscription:
-//│ ║  l.132: 	(arr[0])[1][2]
+//│ ║  l.122: 	(arr[0])[1][2]
 //│ ║         	 ^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscription with expected type `Array[?a]`
-//│ ║  l.132: 	(arr[0])[1][2]
+//│ ║  l.122: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Code generation crashed:
 //│   (arr[0])[1][2] (of class mlscript.Subs)
 
+:e
 f a b c
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.146: 	f a b c
+//│ ║  l.137: 	f a b c
 //│ ╙──       	  ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.146: 	f a b c
+//│ ║  l.137: 	f a b c
 //│ ╙──       	    ^
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.146: 	f a b c
+//│ ║  l.137: 	f a b c
 //│ ╙──       	      ^
 //│ res: nothing
 //│ Runtime error:
@@ -169,7 +171,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
-//│ tuuu: (1 | 2, true,) & {_1: 2 | 3}
+//│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
 
@@ -204,15 +206,9 @@ f 1
 //│ res: 1
 //│    = 1
 
-f(1,2)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	f(1,2)
-//│ ║         	^^^^^
-//│ ╟── tuple literal of type `(1, 2,)` does not match type `(?a,)`
-//│ ║  l.207: 	f(1,2)
-//│ ╙──       	  ^^^
-//│ res: error
-//│    = 1
+f((1,2))
+//│ res: (1, 2,)
+//│    = [ 1, 2 ]
 
 
 trait T: { x: int }
@@ -242,9 +238,15 @@ res: { x: int }
 //│ res: (1, 2, (true, false, ("hello", "world", "bye",),),)
 //│    = [ 1, 2, [ true, false, [ 'hello', 'world', 'bye' ] ] ]
 
-(6, "hi", false) with {_5=5; _6=true}
-//│ res: (6, "hi", false,) & {_5: 5, _6: true}
-//│    = Array { '0': 6, '1': 'hi', '2': false, _5: 5, _6: true }
+k1 = (6, "hi", false) with {_5=5; _6=true}
+k1._1
+k1._3
+//│ k1: (6, "hi", false,) & {_5: 5, _6: true}
+//│   = Array { '0': 6, '1': 'hi', '2': false, _5: 5, _6: true }
+//│ res: 6
+//│    = undefined
+//│ res: false
+//│    = undefined
 
 (1,2,3) with {_4 = true}
 //│ res: (1, 2, 3,) & {_4: true}
@@ -257,7 +259,8 @@ res: { x: int }
 ta1 = (5, 6, true, false, "hahaha")
 ta2 = ta1 with {x = 123; _7 = "bye"; _1 = 0}
 ta1._1
-ta2._1
+ta2._2
+ta2._3
 //│ ta1: (5, 6, true, false, "hahaha",)
 //│    = [ 5, 6, true, false, 'hahaha' ]
 //│ ta2: {_1: 0, _2: 6, _3: true, _4: false, _5: "hahaha", _7: "bye", x: 123}
@@ -273,8 +276,10 @@ ta2._1
 //│      }
 //│ res: 5
 //│    = undefined
-//│ res: 0
-//│    = 0
+//│ res: 6
+//│    = undefined
+//│ res: true
+//│    = undefined
 
 def rep5: 'a -> Array['a]
 def rep5 x = (x,x,x,x,x)
@@ -297,13 +302,13 @@ a2._2
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.282: 	a2._1
+//│ ║  l.292: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.263: 	def rep5: 'a -> Array['a]
+//│ ║  l.273: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.282: 	a2._1
+//│ ║  l.292: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -313,12 +318,15 @@ a2._1
 //│    = Array { '0': 1, '1': 2, '2': 3, '3': true, _a: 1, _b1: false }
 
 ht1 = (1,2,false) with {_1 = 'a'; _2 = 'hello'; _3 = false}
+ht1._1
 //│ ht1: {_1: "a", _2: "hello", _3: false}
 //│    = Array { '0': 1, '1': 2, '2': false, _1: 'a', _2: 'hello', _3: false }
+//│ res: "a"
+//│    = 'a'
 
 def hg1 t = (t._1, t._2)
 hg1 ht1
-hg1 ((5,5,5,5))
+hg1 ((5,5,5))
 //│ hg1: {_1: 'a, _2: 'b} -> ('a, 'b,)
 //│    = [Function: hg1]
 //│ res: ("a", "hello",)
