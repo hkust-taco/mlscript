@@ -46,28 +46,20 @@ fr : Array[int] & {b: int}
 //│ fr: (1, 2, 3,) & {b: 2}
 //│ Runtime error:
 //│   ReferenceError: r is not defined
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$6(ConstraintSolver.scala:55)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$6$adapted(ConstraintSolver.scala:40)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
-//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:344)
+//│ res: Array[int] & {b: int}
+//│ Runtime error:
+//│   ReferenceError: fr is not defined
 
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.51: 	arr._1
+//│ ║  l.54: 	arr._1
 //│ ║        	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.51: 	arr._1
+//│ ║  l.54: 	arr._1
 //│ ╙──      	^^^
 //│ res: error
 //│    = undefined
@@ -121,10 +113,10 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.114: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.114: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	  ^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -132,13 +124,13 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscription:
-//│ ║  l.122: 	(arr[0])[1][2]
+//│ ║  l.125: 	(arr[0])[1][2]
 //│ ║         	 ^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.35: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscription with expected type `Array[?a]`
-//│ ║  l.122: 	(arr[0])[1][2]
+//│ ║  l.125: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Code generation crashed:
@@ -147,13 +139,13 @@ f(1,2,3) : 1 | 2 | 3
 :e
 f a b c
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.137: 	f a b c
+//│ ║  l.140: 	f a b c
 //│ ╙──       	  ^
 //│ ╔══[ERROR] identifier not found: b
-//│ ║  l.137: 	f a b c
+//│ ║  l.140: 	f a b c
 //│ ╙──       	    ^
 //│ ╔══[ERROR] identifier not found: c
-//│ ║  l.137: 	f a b c
+//│ ║  l.140: 	f a b c
 //│ ╙──       	      ^
 //│ res: nothing
 //│ Runtime error:
@@ -302,13 +294,13 @@ a2._2
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.292: 	a2._1
+//│ ║  l.295: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.273: 	def rep5: 'a -> Array['a]
+//│ ║  l.276: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.292: 	a2._1
+//│ ║  l.295: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

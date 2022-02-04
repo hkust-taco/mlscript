@@ -337,7 +337,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
-          case (_, w @ Without(b, ns)) => rec(Without(lhs, ns)(w.prov), b, true)
+          case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (_, ComposedType(true, l, r)) =>
