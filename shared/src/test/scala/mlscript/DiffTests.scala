@@ -356,9 +356,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             }
             
             // process statements and output mlscript types
+            // all `Def`s and `Term`s are processed here
             // generate typescript types if showDeclarationTS flag is
             // set in the mode
             stmts.foreach {
+              // statement only declares a new term with it's type
+              // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
@@ -367,17 +370,25 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
-                if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
+                if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(nme.name))
 
+              // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
+                // statement does not have a declared type for the body
+                // the inferred type must be used and stored for lookup
                 declared.get(nme.name) match {
+                  // statement has a body but it's type was not declared
+                  // infer it's type and store it for lookup and type gen
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
-                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
-
+                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(nme.name))
+                    
+                  // statement has a body and a declared type
+                  // both are used to compute a subsumption (What is this??)
+                  // the inferred type is used to for ts type gen
                   case S(sign) =>
                     ctx += nme.name -> sign
                     val sign_exp = getType(sign)
@@ -385,27 +396,33 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(nme.name))
                 }
                 showResult(nme.name.length())
+              
+              // `Term` is processed here
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
+                  // statements for terms that are bound to a variable name
                   case R(binds) =>
                     binds.foreach {
                       case (nme, pty) =>
+                        val ptType = getType(pty)
                         ctx += nme -> pty
-                        output("reached here")
-                        output(s"$nme: ${getType(pty).show}")
+                        output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
+                        if (mode.showDeclarationTS) outputSourceCode(ptType.toTsTypeSourceCode())
                     }
 
-                  // show ts type for terms that are not assigned to a variable
+                  // statements for terms that compute to a value
+                  // and are not bound to a variable name
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode)
+                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode())
                       prefixLength = 3
                     }
                     // } else {

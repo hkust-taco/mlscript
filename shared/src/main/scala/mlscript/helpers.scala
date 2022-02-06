@@ -37,9 +37,9 @@ class ToTsTypegenContext(
   var argCounter: Int = 0,
   var existingTypeVars: Map[TypeVar, String] = Map.empty,
   // adhoc type vars introduced during conversion
-  var newTypeAlias: List[String] = List.empty,
+  var newTypeAlias: List[SourceCode] = List.empty,
   // adhoc type parameters introduced during conversion
-  var newTypeParams: List[String] = List.empty
+  var newTypeParams: List[SourceCode] = List.empty
 ) {
   /**
     * Polarity follows is like multiplication where true is positive
@@ -127,19 +127,19 @@ abstract class TypeImpl extends Located { self: Type =>
     case WithExtension(b, r) => b :: r :: Nil
   }
   
-  def toTsTypeSourceCode(): SourceCode = {
+  def toTsTypeSourceCode(termName: String = "res"): SourceCode = {
     val ctx = ToTsTypegenContext.empty;
     
     // Create a mapping from type var to their friendly name for lookup
     // Also add them as type parameters to the current type because typescript
     // uses parametric polymorphism
     ctx.existingTypeVars = ShowCtx.mk(this :: Nil).vs;
-    ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => tup._2);
     val tsType = this.toTsType(ctx);
     
-    val completeType = SourceCode.apply(ctx.newTypeAlias) +
-      (SourceCode("type res") ++
-        SourceCode.paramList(ctx.newTypeParams.map(param => SourceCode(param))) ++
+    ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => SourceCode(tup._2));
+    val completeType = SourceCode.concat(ctx.newTypeAlias) +
+      (SourceCode(s"type $termName") ++
+        SourceCode.paramList(ctx.newTypeParams) ++
         SourceCode.equalSign ++
         tsType
       )
@@ -198,8 +198,35 @@ abstract class TypeImpl extends Located { self: Type =>
           SourceCode.fatArrow ++
           rhsTypeSource
         }
-      case Recursive(uv, body) => SourceCode("TODO") ++ uv.toTsType ++ body.toTsType
-      case AppliedType(base, targs) => SourceCode(base.name) ++ SourceCode.openAngleBracket ++ SourceCode.sepBy(targs.map(_.toTsType)) ++ SourceCode.closeAngleBracket
+      // a recursive type is wrapped in a self referencing Recursion type
+      // this wrapped form is used only inside it's body
+      case Recursive(uv, body) => {
+        // TODO can be added to a prelude for typescript types
+        // as recursion type alias can be shared across all recursion types
+        ctx.newTypeAlias = SourceCode("type Recurse<T> = T") +: ctx.newTypeAlias
+        val uvTsType = uv.toTsType
+        
+        // swap uv type var's string representation with it's
+        // recursion wrapped representation
+        ctx.existingTypeVars = ctx.existingTypeVars.removed(uv) + (uv -> s"Recurse<$uvTsType>")
+        
+        // use modified context for converting body type. This will replace
+        // all use of uv type var with it's wrapped type.
+        ctx.newTypeAlias = (SourceCode("type ") ++ uvTsType ++
+          SourceCode.equalSign ++ body.toTsType) +: ctx.newTypeAlias
+          
+        // remove uv type as a type var
+        ctx.existingTypeVars = ctx.existingTypeVars.removed(uv)
+
+        uvTsType
+      }
+      // this occurs when polymorphic types (usually classes) are applied
+      case AppliedType(base, targs) => if (targs.length =/= 0) {
+          SourceCode(base.name) ++ SourceCode.openAngleBracket ++ SourceCode.sepBy(targs.map(_.toTsType)) ++ SourceCode.closeAngleBracket
+        } else {
+          // no type arguments required then print without brackets
+          SourceCode(base.name)
+        }
       // Neg requires creating a parameterized type alias to hold the negated definition
       case Neg(base) => {
         val typeParam = s"T${ctx.argCounter}";
@@ -208,8 +235,8 @@ abstract class TypeImpl extends Located { self: Type =>
         ctx.argCounter += 1;
         val typeAlias = s"type $typeAliasName = $typeParam extends ${base.toTsType} ? never : $typeParam"
         
-        ctx.newTypeParams = typeParam +: ctx.newTypeParams;
-        ctx.newTypeAlias = typeAlias +: ctx.newTypeAlias;
+        ctx.newTypeParams = SourceCode(typeParam) +: ctx.newTypeParams;
+        ctx.newTypeAlias = SourceCode(typeAlias) +: ctx.newTypeAlias;
         SourceCode(typeAliasName)
       }
       case Rem(base, names) => SourceCode("Omit") ++

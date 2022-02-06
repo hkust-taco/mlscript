@@ -1,193 +1,39 @@
+// recursive functions
 :ts
 :ne
-:d
-def g f y = f y + 1
-//│ 1. Typing term ((f,) => ((y,) => ((+ ((f (y,)),)) (1,)))) as class class mlscript.Lam
-//│ | 1. Typing pattern (f,) as class class mlscript.Tup
-//│ | | 1. Typing pattern f as class class mlscript.Var
-//│ | | 1. : α0'
-//│ | 1. : (α0')
-//│ | 1. Typing term ((y,) => ((+ ((f (y,)),)) (1,))) as class class mlscript.Lam
-//│ | | 1. Typing pattern (y,) as class class mlscript.Tup
-//│ | | | 1. Typing pattern y as class class mlscript.Var
-//│ | | | 1. : α1'
-//│ | | 1. : (α1')
-//│ | | 1. Typing term ((+ ((f (y,)),)) (1,)) as class class mlscript.App
-//│ | | | 1. Typing term (+ ((f (y,)),)) as class class mlscript.App
-//│ | | | | 1. Typing term + as class class mlscript.Var
-//│ | | | | 1. : [((int<number>) -> ((int<number>) -> int<number>))]
-//│ | | | | 1. Typing term ((f (y,)),) as class class mlscript.Tup
-//│ | | | | | 1. Typing term (f (y,)) as class class mlscript.App
-//│ | | | | | | 1. Typing term f as class class mlscript.Var
-//│ | | | | | | 1. : [α0']
-//│ | | | | | | 1. Typing term (y,) as class class mlscript.Tup
-//│ | | | | | | | 1. Typing term y as class class mlscript.Var
-//│ | | | | | | | 1. : [α1']
-//│ | | | | | | 1. : ([α1'])
-//│ | | | | | | CONSTRAIN [[α0']] <! ([([α1'])] -> α2')
-//│ | | | | | |   where 
-//│ | | | | | | C [[α0']] <! ([([α1'])] -> α2')
-//│ | | | | | | | C [α0'] <! ([([α1'])] -> α2')
-//│ | | | | | | | | C α0' <! ([([α1'])] -> α2')
-//│ | | | | | 1. : α2'
-//│ | | | | 1. : (α2')
-//│ | | | | CONSTRAIN [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([(α2')] -> α3')
-//│ | | | |   where 
-//│ | | | | C [[((int<number>) -> ((int<number>) -> int<number>))]] <! ([(α2')] -> α3')
-//│ | | | | | C [((int<number>) -> ((int<number>) -> int<number>))] <! ([(α2')] -> α3')
-//│ | | | | | | C ((int<number>) -> ((int<number>) -> int<number>)) <! ([(α2')] -> α3')
-//│ | | | | | | | C [(α2')] <! (int<number>)
-//│ | | | | | | | | C (α2') <! (int<number>)
-//│ | | | | | | | | | C α2' <! int<number>
-//│ | | | | | | | C ((int<number>) -> int<number>) <! α3'
-//│ | | | 1. : α3'
-//│ | | | 1. Typing term (1,) as class class mlscript.Tup
-//│ | | | | 1. Typing term 1 as class class mlscript.IntLit
-//│ | | | | 1. : 1<int,number>
-//│ | | | 1. : (1<int,number>)
-//│ | | | CONSTRAIN [α3'] <! ([(1<int,number>)] -> α4')
-//│ | | |   where α3' :> [((int<number>) -> int<number>)]
-//│ | | | C [α3'] <! ([(1<int,number>)] -> α4')
-//│ | | | | C α3' <! ([(1<int,number>)] -> α4')
-//│ | | | | | C [((int<number>) -> int<number>)] <! ([(1<int,number>)] -> α4')
-//│ | | | | | | C ((int<number>) -> int<number>) <! ([(1<int,number>)] -> α4')
-//│ | | | | | | | C [(1<int,number>)] <! (int<number>)
-//│ | | | | | | | | C (1<int,number>) <! (int<number>)
-//│ | | | | | | | | | C 1<int,number> <! int<number>
-//│ | | | | | | | C int<number> <! α4'
-//│ | | 1. : α4'
-//│ | 1. : ((α1') -> α4')
-//│ 1. : ((α0') -> ((α1') -> α4'))
-//│ Typed as: ((α5) -> ((α6) -> α8))
-//│  where: α5 <: [[[[([([α6])] -> α7)]]]], α7 <: [int<number>], α8 :> [int<number>]
-//│ ty[true] ((α5) -> ((α6) -> α8))
-//│ -> DNF(((α5) -> ((α6) -> α8)){})
-//│ DNF[true] DNF(((α5) -> ((α6) -> α8)){})
-//│ | ty[false] (α5)
-//│ | -> DNF((α5){})
-//│ | DNF[false] DNF((α5){})
-//│ | | ty[false] α5
-//│ | | | Consider α5 List() List([[[[([([α6])] -> α7)]]]])
-//│ | | -> DNF(([([α6])] -> α7){}∧α5)
-//│ | | DNF[false] DNF(([([α6])] -> α7){}∧α5)
-//│ | | | ty[true] [([α6])]
-//│ | | | -> DNF(([α6]){})
-//│ | | | DNF[true] DNF(([α6]){})
-//│ | | | | ty[true] [α6]
-//│ | | | | | Consider α6 List() List()
-//│ | | | | -> DNF(α6)
-//│ | | | | DNF[true] DNF(α6)
-//│ | | | | | Renewed α6 ~> α9
-//│ | | | | ~> α9
-//│ | | | ~> (α9)
-//│ | | | ty[false] α7
-//│ | | | | Consider α7 List() List([int<number>])
-//│ | | | -> DNF(int<number>{}∧α7)
-//│ | | | DNF[false] DNF(int<number>{}∧α7)
-//│ | | | | Renewed α7 ~> α10
-//│ | | | ~> (int<number> & α10)
-//│ | | | Renewed α5 ~> α11
-//│ | | ~> (((α9) -> (int<number> & α10)) & α11)
-//│ | ~> ((((α9) -> (int<number> & α10)) & α11))
-//│ | ty[true] ((α6) -> α8)
-//│ | -> DNF(((α6) -> α8){})
-//│ | DNF[true] DNF(((α6) -> α8){})
-//│ | | ty[false] (α6)
-//│ | | -> DNF((α6){})
-//│ | | DNF[false] DNF((α6){})
-//│ | | | ty[false] α6
-//│ | | | | Consider α6 List() List()
-//│ | | | -> DNF(α6)
-//│ | | | DNF[false] DNF(α6)
-//│ | | | ~> α9
-//│ | | ~> (α9)
-//│ | | ty[true] α8
-//│ | | | Consider α8 List([int<number>]) List()
-//│ | | -> DNF(α8 | int<number>{})
-//│ | | DNF[true] DNF(α8 | int<number>{})
-//│ | | | Renewed α8 ~> α12
-//│ | | ~> (int<number> | α12)
-//│ | ~> ((α9) -> (int<number> | α12))
-//│ ~> (((((α9) -> (int<number> & α10)) & α11)) -> ((α9) -> (int<number> | α12)))
-//│ Canon: (((((α9) -> (int<number> & α10)) & α11)) -> ((α9) -> (int<number> | α12)))
-//│  where: 
-//│ ! true α9 None
-//│ ! false α9 None
-//│ [occs] LinkedHashMap((true,α9) -> HashSet(α9), (false,α10) -> HashSet(int<number>, α10), (false,α11) -> HashSet(((α9) -> (int<number> & α10)), α11), (false,α9) -> HashSet(α9), (true,α12) -> HashSet(int<number>, α12))
-//│ [vars] TreeSet(α9, α10, α11, α12)
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [!] α10
-//│ [!] α11
-//│ [!] α12
-//│ [v] α9 Some(HashSet(α9)) Some(HashSet(α9))
-//│ [sub] α10 -> None, α11 -> None, α12 -> None
-//│ Renewed α9 ~> α13
-//│ Type after simplification: ((((α13) -> int<number>)) -> ((α13) -> int<number>))
-//│  where: 
-//│ ty[true] ((((α13) -> int<number>)) -> ((α13) -> int<number>))
-//│ -> DNF(((((α13) -> int<number>)) -> ((α13) -> int<number>)){})
-//│ DNF[true] DNF(((((α13) -> int<number>)) -> ((α13) -> int<number>)){})
-//│ | ty[false] (((α13) -> int<number>))
-//│ | -> DNF((((α13) -> int<number>)){})
-//│ | DNF[false] DNF((((α13) -> int<number>)){})
-//│ | | ty[false] ((α13) -> int<number>)
-//│ | | -> DNF(((α13) -> int<number>){})
-//│ | | DNF[false] DNF(((α13) -> int<number>){})
-//│ | | | ty[true] (α13)
-//│ | | | -> DNF((α13){})
-//│ | | | DNF[true] DNF((α13){})
-//│ | | | | ty[true] α13
-//│ | | | | | Consider α13 List() List()
-//│ | | | | -> DNF(α13)
-//│ | | | | DNF[true] DNF(α13)
-//│ | | | | | Renewed α13 ~> α14
-//│ | | | | ~> α14
-//│ | | | ~> (α14)
-//│ | | | ty[false] int<number>
-//│ | | | -> DNF(int<number>{})
-//│ | | | DNF[false] DNF(int<number>{})
-//│ | | | ~> int<number>
-//│ | | ~> ((α14) -> int<number>)
-//│ | ~> (((α14) -> int<number>))
-//│ | ty[true] ((α13) -> int<number>)
-//│ | -> DNF(((α13) -> int<number>){})
-//│ | DNF[true] DNF(((α13) -> int<number>){})
-//│ | | ty[false] (α13)
-//│ | | -> DNF((α13){})
-//│ | | DNF[false] DNF((α13){})
-//│ | | | ty[false] α13
-//│ | | | | Consider α13 List() List()
-//│ | | | -> DNF(α13)
-//│ | | | DNF[false] DNF(α13)
-//│ | | | ~> α14
-//│ | | ~> (α14)
-//│ | | ty[true] int<number>
-//│ | | -> DNF(int<number>{})
-//│ | | DNF[true] DNF(int<number>{})
-//│ | | ~> int<number>
-//│ | ~> ((α14) -> int<number>)
-//│ ~> ((((α14) -> int<number>)) -> ((α14) -> int<number>))
-//│ Recanon: ((((α14) -> int<number>)) -> ((α14) -> int<number>))
-//│  where: 
-//│ ! true α14 None
-//│ ! false α14 None
-//│ [occs] LinkedHashMap((true,α14) -> HashSet(α14), (false,α14) -> HashSet(α14))
-//│ [vars] TreeSet(α14)
-//│ [bounds] 
-//│ [rec] HashSet()
-//│ [v] α14 Some(HashSet(α14)) Some(HashSet(α14))
-//│ [sub] 
-//│ Renewed α14 ~> α15
-//│ Resimplified: ((((α15) -> int<number>)) -> ((α15) -> int<number>))
-//│  where: 
-//│ Recons: ((((α15) -> int<number>)) -> ((α15) -> int<number>))
-//│ g: ('a -> int) -> 'a -> int
-//│ ts: type res<'a> = (arg0: (arg1: 'a) => int) => (arg2: 'a) => int
+rec def m a = m
+rec def l (a: int) (a: int) = l
+//│ m: anything -> 'a as 'a
+//│ ts: type 'a = (arg0: unknown) => Recurse<'a>
+//│ ts: type Recurse<T> = T
+//│ ts: type m = 'a
+//│ l: int -> int -> 'a as 'a
+//│ ts: type 'a = (arg0: int) => (arg1: int) => Recurse<'a>
+//│ ts: type Recurse<T> = T
+//│ ts: type l = 'a
 
+// common terms
 :ts
 :ne
-def f: (~string) -> int
-//│ f: ~string -> int
-//│ ts: type talias2<T1> = T1 extends string ? never : T1
-//│ ts: type res<T1> = (arg0: talias2<T1>) => int
+{a = "hello"; b = "world"}
+def f a = 2 + 3 - a
+def g b = if b.a > 5 then b.a else false
+rec def f x = if x == 0 then 1 else x * f (x - 1)
+//│ res: {a: "hello", b: "world"}
+//│ ts: type res = {a: "hello", b: "world"}
+//│ f: int -> int
+//│ ts: type f = (arg0: int) => int
+//│ g: {a: int & 'a} -> (false | 'a)
+//│ ts: type g<'a> = (arg0: {a: int & 'a}) => false | 'a
+//│ f: int -> int
+//│ ts: type f = (arg0: int) => int
+
+// parametric functions
+:ts
+:ne
+def h c = if c.a > 5 then c.a else c
+def h g b = if g b > 4 then "hi" else "bye"
+//│ h: ({a: int & 'a} & 'a) -> 'a
+//│ ts: type h<'a> = (arg0: {a: int & 'a} & 'a) => 'a
+//│ h: ('a -> int) -> 'a -> ("bye" | "hi")
+//│ ts: type h<'a> = (arg0: (arg1: 'a) => int) => (arg2: 'a) => "bye" | "hi"
