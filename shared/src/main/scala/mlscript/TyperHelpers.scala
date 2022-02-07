@@ -102,10 +102,6 @@ abstract class TyperHelpers { self: Typer =>
       case ((no1, t1), (no2, t2)) => (N, t1 | t2)
     }
   }
-
-  def tupleMerge(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): SimpleType = {
-    (fs1 ++ fs2).map(_._2).fold(ExtrType(true)(noProv))(_ | _)
-  }
   
   def factorize(cs: Ls[Conjunct]): Ls[ST] = {
     val factors = MutMap.empty[Factorizable, Int]

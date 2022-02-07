@@ -208,7 +208,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
             case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
-              rec(b.toArray.inner, ar.inner, false)
+              rec(b.inner, ar.inner, false)
             case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
@@ -294,11 +294,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
-                if (ln =/=rn) err(
+                if (ln =/= rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r, false)
             }
-          case (t: ArrayBase, a: ArrayType) => rec(t.toArray.inner, a.inner, false)
+          case (t: ArrayBase, a: ArrayType) => rec(t.inner, a.inner, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
             rec(r, rhs, true)

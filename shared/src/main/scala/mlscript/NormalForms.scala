@@ -257,12 +257,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
                 (fs1 ++ fs2).map(_._2).fold(ExtrType(true)(noProv))(_ | _))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-          case (S(TupleType(fs)), S(ArrayType(ar))) =>
+          case (S(tup @ TupleType(fs)), S(ArrayType(ar))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(fs.map(_._2).fold(ar)(_|_))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-          case (S(ArrayType(ar)), S(TupleType(fs))) =>
+              LhsRefined(S(ArrayType(tup.toArray | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+          case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(fs.map(_._2).fold(ar)(_|_))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup.toArray | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
             S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (N, N)

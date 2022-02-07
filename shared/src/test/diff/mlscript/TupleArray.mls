@@ -319,14 +319,14 @@ hg1 ((5,5,5))
 
 def ta1: Array[int] | (int, bool)
 def test: (string, 1) & { _1: "hello" }
-//│ ta1: Array[bool | int]
+//│ ta1: Array[Array[bool | int] | int]
 //│ test: (string, 1,) & {_1: "hello", _2: 1}
 
 :e
-def fta1: (int, int) -> int
+def fta1: (int, int) -> bool
 def tb1: Array[int]
 fta1 tb1
-//│ fta1: (int, int,) -> int
+//│ fta1: (int, int,) -> bool
 //│ tb1: Array[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.328: 	fta1 tb1
@@ -335,8 +335,8 @@ fta1 tb1
 //│ ║  l.328: 	fta1 tb1
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.326: 	def fta1: (int, int) -> int
+//│ ║  l.326: 	def fta1: (int, int) -> bool
 //│ ╙──       	          ^^^^^^^^^^
-//│ res: error | int
+//│ res: bool | error
 //│ Runtime error:
 //│   ReferenceError: fta1 is not defined
