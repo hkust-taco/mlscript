@@ -57,7 +57,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
       .map {case (prt, id) => Var(s"${prt}.${id}")})))
       .map {(t: Var) => Left(t)} |
-    // array subscription
+    // array subscript
     ("[" ~ term ~/ "]").map {Right(_)}
     ).rep ).map {
       case (st, sels) => sels.foldLeft(st)((acc, t) => t match {

@@ -198,7 +198,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => "'is' test"
     case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "`case` expression" 
-    case Subs(arr, idx) => "array subscription"
+    case Subs(arr, idx) => "array subscript"
   }
   
   override def toString: String = this match {

@@ -142,7 +142,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (RhsBases(ps, N), that: MiscBaseType) => S(RhsBases(ps, S(L(that))))
       case (RhsBases(ps, S(L(t1@TupleType(fs1)))), t2@TupleType(fs2)) =>
         if (fs1.size =/= fs2.size) 
-          RhsBases(ps, S(L(t1.toArray))) | t2.toArray // upcast tuple to array
+          RhsBases(ps, S(L(t1.toArray))) | t2.toArray // upcast tuples of different sizes to array
         else S(RhsBases(ps, S(L(TupleType(fs1.lazyZip(fs2).map {
           case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 | ty2)
           case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 | ty2)
@@ -253,10 +253,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
               LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(TupleType(fs1)), S(TupleType(fs2))) => // TODO Q: records ok here?!
             if (fs1.size =/= fs2.size) S(Conjunct(
-              LhsRefined(S(ArrayType(tupleMerge(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(
+                (fs1 ++ fs2).map(_._2).fold(ExtrType(true)(noProv))(_ | _))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-          // not sure
           case (S(TupleType(fs)), S(ArrayType(ar))) =>
             S(Conjunct(
               LhsRefined(S(ArrayType(fs.map(_._2).fold(ar)(_|_))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
