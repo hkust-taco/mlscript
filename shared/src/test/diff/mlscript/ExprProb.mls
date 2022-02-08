@@ -100,8 +100,8 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
 //│ res: ('a -> int) -> ('a & 'b & ~{val: int} & ~add | 'a & 'b & ~add & ~lit | 'a & 'b & ~{Add#E} & ~lit | 'a & 'b & ~{lhs: anything} & ~lit | 'a & 'b & ~{rhs: anything} & ~lit | (Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b as 'c) -> int
-//│ Runtime error:
-//│   ReferenceError: eval1_ty_ugly is not defined
+//│ Unable to execute the code:
+//│   value eval1_ty_ugly is not implemented
 
 :stats
 def eval1_ty_ugly = eval1
@@ -119,8 +119,8 @@ def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 
 eval1_ty
 //│ res: ('a -> int) -> ('a & 'b & ~add & ~lit | (Add['d .. 'e] with {lhs: 'c, rhs: 'c}) & 'b | Lit & 'b as 'c) -> int
-//│ Runtime error:
-//│   ReferenceError: eval1_ty is not defined
+//│ Unable to execute the code:
+//│   value eval1_ty is not implemented
 
 :stats
 def eval1_ty = eval1
@@ -162,7 +162,8 @@ def eval1_ty: ('a -> int) -> E1['a] -> int
 
 eval1_ty
 //│ res: ('a -> int) -> ('a & ~add & ~lit | (Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit as 'b) -> int
-//│    = [Function: eval1]
+//│ Unable to execute the code:
+//│   value eval1_ty is not implemented
 
 :stats
 def eval1_ty = eval1

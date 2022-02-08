@@ -116,6 +116,7 @@ fun f -> fun x ->
   let local = f (id x)
   in ()
 //│ res: ('a -> anything) -> 'a -> ()
-//│    = [Function: res]
+//│ Unable to execute the code:
+//│   value id is not implemented
 
 
