@@ -72,7 +72,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ & _).toList)(noProv)
             S(that)
           case (N, _) => S(that)
-        }) map { b => LhsRefined(S(b), ts, r1) }
+        }) map { b => LhsRefined(S(b), ts, r1Final) }
     }
     def & (that: RecordType): LhsNf = this match {
       case LhsTop => LhsRefined(N, SortedSet.empty, that)
@@ -341,7 +341,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   object DNF {
     def of(lnf: LhsNf): DNF = DNF(Conjunct(lnf, SortedSet.empty, RhsBot, SortedSet.empty) :: Nil)
-    def of(bt: BaseType): DNF = DNF.of(LhsTop & bt getOrElse (???))
+    def of(bt: BaseType): DNF = DNF.of(LhsRefined(S(bt), SortedSet.empty, bt.toRecord))
     def of(tt: TraitTag): DNF = DNF.of(LhsRefined(N, SortedSet.single(tt), RecordType.empty))
     def of(rcd: RecordType): DNF = DNF.of(LhsRefined(N, SortedSet.empty, rcd))
     def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)

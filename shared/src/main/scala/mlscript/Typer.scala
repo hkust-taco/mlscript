@@ -255,7 +255,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   
   /** Only supports getting the fields of a valid base class type.
-   * Notably, does not traverse type variables. */
+   * Notably, does not traverse type variables. 
+   * Note: this does not retrieve the positional fields implicitly defined by tuples */
   def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {

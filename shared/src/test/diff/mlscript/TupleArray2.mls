@@ -217,4 +217,3 @@ error: Array[1] & { _1: int }
 //│ res: Array[1] & {_1: int}
 //│ Runtime error:
 //│   Error: unexpected runtime error
-
