@@ -228,9 +228,9 @@ abstract class JSExpr extends JSCode {
 
   def `throw`: JSThrowStmt = JSThrowStmt(this)
 
-  def member(name: Str): JSMember = JSMember(this, name)
+  def member(name: Str): JSField = JSField(this, name)
 
-  def apply(name: Str): JSMember = JSMember(this, name)
+  def apply(name: Str): JSField = JSField(this, name)
 
   def apply(args: JSExpr*): JSInvoke = JSInvoke(this, args.toList)
 
@@ -487,20 +487,39 @@ final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExp
   def toSourceCode: SourceCode = SourceCode(name)
 }
 
-final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
+class JSMember(`object`: JSExpr, property: JSExpr) extends JSExpr {
   override def precedence: Int = 20
   override def toSourceCode: SourceCode =
-    target.toSourceCode.parenthesized(
-      target.precedence < precedence || target.isInstanceOf[JSRecord]
+    `object`.toSourceCode.parenthesized(
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+    ) ++ SourceCode("[") ++ property.toSourceCode ++ SourceCode("]")
+
+  override def isSimple: Bool = `object`.isSimple
+}
+
+object JSMember {
+  def apply(`object`: JSExpr, property: JSExpr): JSMember = new JSMember(`object`, property)
+}
+
+class JSField(`object`: JSExpr, property: JSIdent) extends JSMember(`object`, property) {
+  override def toSourceCode: SourceCode =
+    `object`.toSourceCode.parenthesized(
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
     ) ++ SourceCode(
-      if (JSMember.isValidIdentifier(field)) {
-        s".$field"
+      if (JSField.isValidIdentifier(property.name)) {
+        s".${property.name}"
       } else {
-        s"[${JSLit.makeStringLiteral(field)}]"
+        s"[${JSLit.makeStringLiteral(property.name)}]"
       }
     )
+}
 
-  override def isSimple: Bool = target.isSimple
+object JSField {
+  def apply(`object`: JSExpr, property: String): JSField = new JSField(`object`, JSIdent(property))
+
+  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
+
+  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -516,16 +535,10 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   // Make
   override def toSourceCode: SourceCode = SourceCode
     .record(entries map { case (key, value) =>
-      val body = if (JSMember.isValidIdentifier(key)) { key }
+      val body = if (JSField.isValidIdentifier(key)) { key }
       else { JSLit.makeStringLiteral(key) }
       SourceCode(body + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
     })
-}
-
-object JSMember {
-  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
-
-  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
 }
 
 abstract class JSStmt extends JSCode

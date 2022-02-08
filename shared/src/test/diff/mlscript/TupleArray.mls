@@ -130,8 +130,8 @@ f(1,2,3) : 1 | 2 | 3
 //│ ║  l.122: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
-//│ Code generation crashed:
-//│   (arr[0])[1][2] (of class mlscript.Subs)
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading '2')
 
 
 class A: { x: int }

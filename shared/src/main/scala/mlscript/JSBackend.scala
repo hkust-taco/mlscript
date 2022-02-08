@@ -62,7 +62,7 @@ class JSBackend {
     case Bra(_, trm) => translatePattern(trm)
     case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf =>
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs =>
       throw CodeGenError(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
@@ -131,7 +131,7 @@ class JSBackend {
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
-      JSMember(translateTerm(receiver), fieldName.name)
+      JSField(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
     case Let(isRec, Var(name), value, body) =>
       val letScope = scope.derive("Let", name :: Nil)
@@ -187,6 +187,8 @@ class JSBackend {
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
       JSArray(terms map { case (_, term) => translateTerm(term) })
+    case Subs(arr, idx) =>
+      JSMember(translateTerm(arr), translateTerm(idx))
     case App(_, _) | _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
@@ -207,14 +209,14 @@ class JSBackend {
     JSTenary(
       pat match {
         case Var("int") =>
-          JSInvoke(JSMember(JSIdent("Number"), "isInteger"), scrut :: Nil)
+          JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
         case Var("bool") =>
-          JSBinary("==", JSMember(scrut, "constructor"), JSLit("Boolean"))
+          JSBinary("==", scrut.member("constructor"), JSLit("Boolean"))
         case Var(s @ ("true" | "false")) =>
           JSBinary("==", scrut, JSLit(s))
         case Var("string") =>
           // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
-          JSBinary("==", JSMember(scrut, "constructor"), JSLit("String"))
+          JSBinary("==", scrut.member("constructor"), JSLit("String"))
         case Var(clsName) =>
           JSInstanceOf(scrut, JSIdent(clsName))
         case lit: Lit =>
@@ -272,7 +274,7 @@ class JSBackend {
       }
     case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
     case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
-    case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension => body
+    case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension | _: Arr => body
   }
 
   /**
@@ -346,7 +348,7 @@ class JSBackend {
     case AppliedType(TypeName(_), _) => Nil
     // Others are considered as ill-formed.
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
       throw CodeGenError(s"unable to derive from type $ty")
   }
 
@@ -419,7 +421,7 @@ class JSBackend {
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
       throw CodeGenError(s"unable to derive from type $ty")
   }
 
@@ -506,13 +508,13 @@ class JSWebBackend extends JSBackend {
               (translatedBody, topLevelScope.declareValue(name))
             }
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
-              JSInvoke(JSMember(resultsIdent, "push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
+              JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
           // Ignore type declarations.
           case Def(_, _, R(_)) => Nil
           // `exprs.push(<expr>)`.
           case term: Term =>
             topLevelScope.tempVars `with` JSInvoke(
-              JSMember(resultsIdent, "push"),
+              resultsIdent("push"),
               translateTerm(term)(topLevelScope) :: Nil
             ).stmt :: Nil
         })
@@ -671,6 +673,7 @@ object JSBackend {
     case IntLit(value) => s"IntLit($value)"
     case DecLit(value) => s"DecLit($value)"
     case StrLit(value) => s"StrLit($value)"
+    case Subs(arr, idx) => s"Subs(${inspectTerm(arr)}, ${inspectTerm(idx)})"
   }
 
   // For integers larger than this value, use BigInt notation.
