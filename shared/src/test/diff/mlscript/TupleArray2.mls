@@ -52,15 +52,16 @@ trait T
 //│ res: (2, 1, 0,) | t
 //│    = Array { '0': 1, '1': 2, x: 1 }
 
+:e
 (1,2) with { x = 1 } : (2,1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	(1,2) with { x = 1 } : (2,1)
+//│ ║  l.56: 	(1,2) with { x = 1 } : (2,1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `2`
-//│ ║  l.55: 	(1,2) with { x = 1 } : (2,1)
+//│ ║  l.56: 	(1,2) with { x = 1 } : (2,1)
 //│ ║        	 ^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.55: 	(1,2) with { x = 1 } : (2,1)
+//│ ║  l.56: 	(1,2) with { x = 1 } : (2,1)
 //│ ╙──      	                        ^
 //│ res: (2, 1,)
 //│    = Array { '0': 1, '1': 2, x: 1 }
@@ -70,6 +71,7 @@ trait T
 //│    = Array { '0': 1, '1': 2, x: 1 }
 
 
+:re
 error: (1,2) & t | Array[3]
 //│ res: (1, 2,) & t | Array[3]
 //│ Runtime error:
@@ -81,10 +83,10 @@ def arr: Array[1]
 
 arr: Array[2] | (1, 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.82: 	arr: Array[2] | (1, 1)
+//│ ║  l.84: 	arr: Array[2] | (1, 1)
 //│ ║        	^^^
 //│ ╟── type `1` does not match type `Array[1] | 2`
-//│ ║  l.79: 	def arr: Array[1]
+//│ ║  l.81: 	def arr: Array[1]
 //│ ╙──      	               ^
 //│ res: Array[2 | Array[1]]
 //│ Runtime error:
@@ -92,10 +94,10 @@ arr: Array[2] | (1, 1)
 
 arr: Array[2] | (1, 2)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.93: 	arr: Array[2] | (1, 2)
+//│ ║  l.95: 	arr: Array[2] | (1, 2)
 //│ ║        	^^^
 //│ ╟── type `1` does not match type `Array[1 | 2] | 2`
-//│ ║  l.79: 	def arr: Array[1]
+//│ ║  l.81: 	def arr: Array[1]
 //│ ╙──      	               ^
 //│ res: Array[2 | Array[1 | 2]]
 //│ Runtime error:
@@ -104,16 +106,16 @@ arr: Array[2] | (1, 2)
 :e
 arr: Array[2] & t | (1, 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.105: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.107: 	arr: Array[2] & t | (1, 1)
 //│ ║         	^^^
 //│ ╟── type `Array[1]` does not match type `Array[2] & t | (1, 1,)`
-//│ ║  l.79: 	def arr: Array[1]
+//│ ║  l.81: 	def arr: Array[1]
 //│ ║        	         ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[2] & t | (1, 1,)`
-//│ ║  l.105: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.107: 	arr: Array[2] & t | (1, 1)
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.105: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.107: 	arr: Array[2] & t | (1, 1)
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^
 //│ res: (1, 1,) | Array[2] & t
 //│ Runtime error:
@@ -122,6 +124,7 @@ arr: Array[2] & t | (1, 1)
 def arrt: Array[1] & t
 //│ arrt: Array[1] & t
 
+:re
 arrt: Array[2] & t | (1, 1)
 //│ res: (1, 1,) | Array[2] & t
 //│ Runtime error:
@@ -140,29 +143,30 @@ f_1 = f_2
 //│   <:  f_1:
 //│ 'a -> (Array['a] & t)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.138: 	f_1 = f_2
+//│ ║  l.141: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
 //│ ╟── type `1` is not an instance of type 'a
-//│ ║  l.134: 	def f_2: 'a -> (Array['a] & t | (1,))
+//│ ║  l.137: 	def f_2: 'a -> (Array['a] & t | (1,))
 //│ ║         	                                 ^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.131: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.134: 	def f_1: 'a -> (Array['a] & t)
 //│ ╙──       	                      ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.138: 	f_1 = f_2
+//│ ║  l.141: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
 //│ ╟── type `(1,)` is not an instance of type T
-//│ ║  l.134: 	def f_2: 'a -> (Array['a] & t | (1,))
+//│ ║  l.137: 	def f_2: 'a -> (Array['a] & t | (1,))
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from trait tag:
-//│ ║  l.131: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.134: 	def f_1: 'a -> (Array['a] & t)
 //│ ║         	                            ^
 //│ ╟── from intersection type:
-//│ ║  l.131: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.134: 	def f_1: 'a -> (Array['a] & t)
 //│ ╙──       	               ^^^^^^^^^^^^^^^
 //│ Runtime error:
 //│   ReferenceError: f_2 is not defined
 
+:re
 f_2 = f_1
 //│ 'a -> (Array['a] & t)
 //│   <:  f_2:
@@ -175,30 +179,50 @@ f_2 = f_1
 def test: (string, 1) & { _1: "hello" }
 //│ test: (string, 1,) & {_1: "hello", _2: 1}
 
+:e
+test = ("hi", 1)
+//│ ("hi", 1,)
+//│   <:  test:
+//│ (string, 1,) & {_1: "hello", _2: 1}
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.183: 	test = ("hi", 1)
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hi"` does not match type `"hello"`
+//│ ║  l.183: 	test = ("hi", 1)
+//│ ║         	        ^^^^
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.179: 	def test: (string, 1) & { _1: "hello" }
+//│ ╙──       	                              ^^^^^^^
+//│     = [ 'hi', 1 ]
+
+test = ("hello", 1)
+//│ ("hello", 1,)
+//│   <:  test:
+//│ (string, 1,) & {_1: "hello", _2: 1}
+//│     = [ 'hello', 1 ]
+
 (fun ((a, b)) -> a) test
 //│ res: string
-//│ Runtime error:
-//│   ReferenceError: test is not defined
+//│    = 'hello'
 
 test: { _1: 'a }
 //│ res: {_1: "hello"}
-//│ Runtime error:
-//│   ReferenceError: test is not defined
+//│    = [ 'hello', 1 ]
 
 test: ('a, 1)
 //│ res: (string, 1,)
-//│ Runtime error:
-//│   ReferenceError: test is not defined
+//│    = [ 'hello', 1 ]
 
 :e
 class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.194: 	class A: (1,2)
+//│ ║  l.217: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
 //│ Code generation met an error:
 //│   unable to derive from type Tuple(List((None,Literal(1)), (None,Literal(2))))
 
 
+:re
 error: Array[1] & { _1: int }
 //│ res: Array[1] & {_1: int}
 //│ Runtime error:
