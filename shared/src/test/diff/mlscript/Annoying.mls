@@ -38,7 +38,7 @@ v0: int
 //│ ║        	^^
 //│ ╟── type `~X` does not match type `int`
 //│ ║  l.31: 	def v0: (~(X\x))\y
-//│ ║        	         ^^^^^^
+//│ ║        	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.35: 	v0: int
 //│ ║        	^^
@@ -118,13 +118,13 @@ test (error: C & { c: int })
 test (error: B & { c: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	test (error: B & { c: int })
-//│ ║         	^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.118: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.107: 	def test: (A & { a: 'a } | B & { b: 'a } | C & { c: 'a }) -> 'a
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 
 
@@ -142,13 +142,13 @@ test (error: C & { x: int; y: string })
 test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	test (error: A & { x: int })
-//│ ║         	^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.142: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.131: 	def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
-//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | {l: int, r: nothing}
 
 
@@ -226,7 +226,7 @@ funny.x
 (error: { x: int }): int | string
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.226: 	(error: { x: int }): int | string
-//│ ║         	 ^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `{x: int}` does not match type `int | string`
 //│ ║  l.226: 	(error: { x: int }): int | string
 //│ ║         	        ^^^^^^^^^^
@@ -310,6 +310,6 @@ ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.289: 	def ty: AA | ('a \ x)
-//│ ╙──       	        ^^^^^^^^
+//│ ╙──       	        ^^^^^^^^^^^^^
 
 

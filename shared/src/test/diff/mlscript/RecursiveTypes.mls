@@ -97,7 +97,7 @@ rec def r (a: int) b c = if true then r else if true then b else c
 //│  = [Function: r5]
 
 if true then l else r
-//│ res: int -> ('b | ('c & 'd) -> ((int & 'c) -> ((int & 'd) -> ((int & 'c) -> ('c & 'd) -> ('a | 'c | 'd) | 'd) | 'c) | 'd)) as 'a
+//│ res: int -> ('b | ('c & 'd) -> ((int & 'd) -> ((int & 'c) -> ((int & 'd) -> ('c & 'd) -> ('a | 'c | 'd) | 'c) | 'd) | 'c)) as 'a
 //│    = [Function: l4]
 
 if true then l else r
@@ -360,8 +360,8 @@ f 1
 //│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | 1 | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -375,8 +375,8 @@ f { a = 1 }
 //│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = { a: 1 }
 
@@ -399,8 +399,8 @@ f ainf
 //│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Runtime error:
 //│   ReferenceError: ainf is not defined
@@ -418,8 +418,8 @@ f infina
 //│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.340: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ ╙──       	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (('b | (0 & {a: 'c} as 'c) | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
 //│   ReferenceError: infina is not defined
@@ -440,8 +440,8 @@ f_manual 1
 //│ ║  l.428: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.428: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
-//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.429: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 1 | error | (('b | 1 | 'a)\a & {a: int} as 'a)
 //│ Unable to execute the code:
 //│   value f_manual is not implemented

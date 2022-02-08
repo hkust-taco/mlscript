@@ -31,7 +31,7 @@ def foo x = case x of {
 //│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f | {fH: 'a} & h & ~a & ~b & ~c & ~d & ~e & ~f & ~g) -> 'a
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 445
+//│ subtyping calls  : 887
 
 
 // ====== 1 & all ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 50
 //│ annoying  calls  : 32
-//│ subtyping calls  : 138
+//│ subtyping calls  : 169
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 105
 //│ annoying  calls  : 84
-//│ subtyping calls  : 499
+//│ subtyping calls  : 561
 
 
 // ====== 4 ====== //
@@ -190,14 +190,14 @@ foo arg
 //│ res: error
 //│ constrain calls  : 116
 //│ annoying  calls  : 97
-//│ subtyping calls  : 557
+//│ subtyping calls  : 665
 
 :stats
 :e
 foo (arg with { x = 1} with { y = 2 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.197: 	foo (arg with { x = 1} with { y = 2 })
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{fB: int, x: 1, y: 2} & a & b | {fB: int, x: 1, y: 2} & b & ~?a` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.171: 	  | A -> x.fA
@@ -215,7 +215,7 @@ foo (arg with { x = 1} with { y = 2 })
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.215: 	foo (arg with { x = 1; y = 2; z = 3 })
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `{fB: int, x: 1, y: 2, z: 3} & a & b | {fB: int, x: 1, y: 2, z: 3} & b & ~?a` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.171: 	  | A -> x.fA
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 120
 //│ annoying  calls  : 97
-//│ subtyping calls  : 645
+//│ subtyping calls  : 814
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 124
 //│ annoying  calls  : 97
-//│ subtyping calls  : 752
+//│ subtyping calls  : 997
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 128
 //│ annoying  calls  : 97
-//│ subtyping calls  : 878
+//│ subtyping calls  : 1214
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
@@ -341,7 +341,7 @@ foo_manual arg
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
-//│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ constrain calls  : 27
 //│ annoying  calls  : 90
@@ -354,7 +354,7 @@ foo_manual = foo
 //│ ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ constrain calls  : 96
 //│ annoying  calls  : 183
-//│ subtyping calls  : 1108
+//│ subtyping calls  : 1734
 
 
 // ====== 8 ====== //
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 132
 //│ annoying  calls  : 97
-//│ subtyping calls  : 1023
+//│ subtyping calls  : 1465
 
 

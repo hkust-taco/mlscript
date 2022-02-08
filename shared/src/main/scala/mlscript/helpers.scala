@@ -48,6 +48,7 @@ abstract class TypeImpl extends Located { self: Type =>
       else s"${nme}: ${nt._2.showIn(ctx, 0)}"
     }.mkString("{", ", ", "}")
     case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
+    case Arr(inner) => s"Array[${inner.showIn(ctx, 0)}]"
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -70,6 +71,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Neg(b) => b :: Nil
     case Record(fs) => fs.map(_._2)
     case Tuple(fs) => fs.map(_._2)
+    case Arr(inner) => inner :: Nil
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
@@ -196,6 +198,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => "'is' test"
     case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "`case` expression" 
+    case Subs(arr, idx) => "array subscript"
   }
   
   override def toString: String = this match {
@@ -221,6 +224,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => s"($l is $r)"
     case With(t, fs) =>  s"$t with $fs"
     case CaseOf(s, c) => s"case $s of $c"
+    case Subs(a, i) => s"$a[$i]"
   }
   
   def toType: Diagnostic \/ Type =
@@ -290,10 +294,10 @@ trait Located {
   
   // TODO just store the Loc directly...
   def withLoc(s: Int, e: Int, ori: Origin): this.type = {
-    assert(origin.isEmpty)
+    // assert(origin.isEmpty)
     origin = S(ori)
-    assert(spanStart < 0)
-    assert(spanEnd < 0)
+    // assert(spanStart < 0)
+    // assert(spanEnd < 0)
     spanStart = s
     spanEnd = e
     this
@@ -460,6 +464,7 @@ trait StatementImpl extends Located { self: Statement =>
     case CaseOf(s, c) => s :: c :: Nil
     case d @ Def(_, n, b) => n :: d.body :: Nil
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
+    case Subs(a, i) => a :: i :: Nil
   }
   
   

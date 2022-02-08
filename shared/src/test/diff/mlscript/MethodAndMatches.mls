@@ -65,7 +65,7 @@ def bar0 = foo
 def bar1: Type1[int] -> int -> Type1[int]
 bar1 d1
 bar1 d1 0
-//│ bar1: (Derived1 | Derived2['a, 'b]) -> int -> (Derived1 | Derived2['a0, 'b0])
+//│ bar1: ((Derived1 | Derived2['a, 'b],) & {_1: Derived1 | Derived2[?, ?]}) -> int -> (Derived1 | Derived2['a0, 'b0])
 //│ res: int -> (Derived1 | Derived2['a, 'b])
 //│ res: Derived1 | Derived2['a, 'b]
 //│ Unable to execute the code:
@@ -75,7 +75,7 @@ bar1 d1 0
 def bar1 = foo
 //│ (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
 //│   <:  bar1:
-//│ (Derived1 | Derived2['a, 'b]) -> int -> (Derived1 | Derived2['a0, 'b0])
+//│ ((Derived1 | Derived2['a, 'b],) & {_1: Derived1 | Derived2[?, ?]}) -> int -> (Derived1 | Derived2['a0, 'b0])
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.75: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^

@@ -199,7 +199,7 @@ def f = impl
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int & 'a` is not a function
 //│ ║  l.185: 	def f: (int & 'a) -> 'a
-//│ ║         	        ^^^^^^^^
+//│ ║         	       ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.188: 	def impl a = a a
 //│ ║         	             ^^^
@@ -237,7 +237,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int & 'a` is not a function
 //│ ║  l.218: 	def f: (int & 'a) -> (int & 'a) -> 'a 
-//│ ║         	                      ^^^^^^^^
+//│ ║         	                     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.231: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	                                  ^^^
