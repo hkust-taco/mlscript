@@ -147,8 +147,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 | ty2)
           case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 | ty2)
         })(noProv)))))
-      case (RhsBases(ps, S(L(ArrayType(_)))), t@TupleType(_)) => this | t.toArray // ? not sure
-      case (RhsBases(ps, S(L(t@TupleType(fs)))), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray))) | ar
+      case (RhsBases(ps, S(L(ArrayType(_)))), t@TupleType(_)) => this | t.toArray
+      case (RhsBases(ps, S(L(t@TupleType(_)))), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray))) | ar
       case (RhsBases(ps, S(L(ArrayType(ar1)))), ArrayType(ar2)) => 
         S(RhsBases(ps, S(L(ArrayType(ar1 | ar2)(noProv)))))
       case (RhsBases(_, S(L(_: Without))), _) | (_, _: Without) => die // Without should be handled elsewhere
