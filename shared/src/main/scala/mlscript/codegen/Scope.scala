@@ -59,19 +59,19 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
   }
 
+  private val allocateRuntimeNameIter = for {
+    i <- (1 to Int.MaxValue).iterator
+    c <- Scope.nameAlphabet.combinations(i)
+    name = c.mkString
+    if !runtimeSymbols.contains(name)
+  } yield {
+    name
+  }
+
   /**
     * Allocate a non-sense runtime name.
     */
-  private def allocateRuntimeName(): Str = {
-    for (i <- 1 to Int.MaxValue; c <- Scope.nameAlphabet.combinations(i)) {
-      val name = c.mkString
-      if (!runtimeSymbols.contains(name)) {
-        return name
-      }
-    }
-    // Give up.
-    throw new CodeGenError("Cannot allocate a runtime name")
-  }
+  private def allocateRuntimeName(): Str = allocateRuntimeNameIter.next()
 
   /**
     * Allocate a runtime name starting with the given prefix.
