@@ -115,7 +115,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
 
   case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
-    lazy val level: Int = inner.level
+    val level: Int = inner.level
     override def toString = s"Array[${inner}]"
   }
 

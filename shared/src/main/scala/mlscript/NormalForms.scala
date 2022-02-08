@@ -147,7 +147,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 | ty2)
           case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 | ty2)
         })(noProv)))))
-      case (RhsBases(ps, S(L(ArrayType(in)))), TupleType(_)) => N
+      case (RhsBases(ps, S(L(ArrayType(_)))), tup @ TupleType(_)) => /* this | tup.toArray */ N
       case (RhsBases(ps, S(L(t@TupleType(fs)))), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray))) | ar
       case (RhsBases(ps, S(L(ArrayType(ar1)))), ArrayType(ar2)) => 
         S(RhsBases(ps, S(L(ArrayType(ar1 | ar2)(noProv)))))
@@ -251,18 +251,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(FunctionType(l1, r1)), S(FunctionType(l2, r2))) => // TODO Q: records ok here?!
             S(Conjunct(
               LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-          case (S(TupleType(fs1)), S(TupleType(fs2))) => // TODO Q: records ok here?!
+          case (S(tup1 @ TupleType(fs1)), S(tup2 @ TupleType(fs2))) => // TODO Q: records ok here?!
             if (fs1.size =/= fs2.size) S(Conjunct(
-              LhsRefined(S(ArrayType(
-                (fs1 ++ fs2).map(_._2).fold(ExtrType(true)(noProv))(_ | _))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup1.inner | tup2.inner)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(tup @ TupleType(fs)), S(ArrayType(ar))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(tup.toArray | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(tup.toArray | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
             S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (N, N)

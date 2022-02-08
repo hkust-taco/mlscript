@@ -203,7 +203,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => reportError
                   }
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) => reportError
+            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) => 
+              reportError
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))

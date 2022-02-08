@@ -68,7 +68,7 @@ abstract class TyperHelpers { self: Typer =>
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
     case TupleType(fields) => TupleType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
-    case ArrayType(inner) => ArrayType(subst(inner, map))(ts.prov)  // ? also not sure
+    case ArrayType(inner) => ArrayType(subst(inner, map))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
