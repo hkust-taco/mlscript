@@ -302,12 +302,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     case Nil => ()
                     case lines => host.execute(lines mkString " ")
                   }
+                  // Useful for find out what is really happening.
+                  // if (testCode.queries.isEmpty)
+                  //   println(s"The block at $blockLineNum is empty")
+                  // else
+                  //   println(s"At line ${blockLineNum} of file ${file.baseName}:")
                   S(testCode.queries map { query =>
-                    // Useful for find out what is really happening.
-                    // println(s"In test $file:")
-                    // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
-                    val res = host.query(query.prelude.mkString(""), query.code.mkString(""))
-                    // println(s"Response: ${JSLit.makeStringLiteral(res)}")
+                    val p = query.prelude.mkString("")
+                    val c = query.code.mkString("")
+                    // println(s"Querying: ${p} ${c}")
+                    val res = host.query(p, c)
+                    // println(s"Response: ${JSLit.makeStringLiteral(res._2)}")
                     res
                   })
                 } else {

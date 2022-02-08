@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
-import mlscript.TypeName
+import mlscript.{TypeName, Top, Bot}
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
@@ -39,7 +39,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       register(BuiltinSymbol(name, name))
     }
     // TODO: add `true`, `false`, and `error` to this list
-    Ls("int", "number", "bool", "string", "anything", "nothing", "unit") foreach { name =>
+    register(TypeSymbol("anything", "anything", Nil, Top))
+    register(TypeSymbol("nothing", "nothing", Nil, Bot))
+    // TODO: register them in the same way as `Typer` does.
+    Ls("int", "number", "bool", "string", "unit") foreach { name =>
       register(TypeSymbol(name, name, Nil, TypeName(name)))
     }
   }

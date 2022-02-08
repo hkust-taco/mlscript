@@ -229,52 +229,50 @@ class JSBackend {
   private def substitute(
       body: Type,
       subs: collection.immutable.HashMap[Str, Type] = collection.immutable.HashMap.empty
-  ): Type = {
-    body match {
-      case Neg(ty) =>
-        Neg(substitute(ty, subs))
-      case AppliedType(TypeName(name), targs) =>
-        topLevelScope.getType(name) match {
-          case S(sym: ClassSymbol) => TypeName(name) // Note that here we erase the arguments.
-          case S(sym: TraitSymbol) => ??? 
-          case S(sym: TypeSymbol) =>
-            assert(targs.length === sym.params.length, targs -> sym.params)
-            substitute(
-              sym.actualType,
-              collection.immutable.HashMap(
-                sym.params zip targs map { case (k, v) => k -> v }: _*
-              )
+  ): Type = body match {
+    case Neg(ty) =>
+      Neg(substitute(ty, subs))
+    case AppliedType(TypeName(name), targs) =>
+      topLevelScope.getType(name) match {
+        case S(sym: ClassSymbol) => TypeName(name) // Note that here we erase the arguments.
+        case S(sym: TraitSymbol) => ??? 
+        case S(sym: TypeSymbol) =>
+          assert(targs.length === sym.params.length, targs -> sym.params)
+          substitute(
+            sym.actualType,
+            collection.immutable.HashMap(
+              sym.params zip targs map { case (k, v) => k -> v }: _*
             )
-          case N => throw new CodeGenError(s"$name is none of class, trait or type")
-        }
-      case Function(lhs, rhs) =>
-        Function(substitute(lhs, subs), substitute(rhs, subs))
-      case Inter(lhs, rhs) =>
-        Inter(substitute(lhs, subs), substitute(rhs, subs))
-      case Record(fields) =>
-        Record(fields map { case (k, v) => k -> substitute(v, subs) })
-      case Union(lhs, rhs) =>
-        Union(substitute(lhs, subs), substitute(rhs, subs))
-      case Tuple(fields) =>
-        Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
-      case TypeName(name) =>
-        subs get name match {
-          case N =>
-            topLevelScope.getType(name) match {
-              case S(sym: ClassSymbol) => TypeName(name)
-              case S(sym: TraitSymbol) => TypeName(name)
-              case S(sym: TypeSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
-              case S(sym: TypeSymbol) => throw CodeGenError(
-                  s"type $name expects ${sym.params.length} type parameters but nothing provided"
-              )
-              case N => throw new CodeGenError(s"undeclared type name $name")
-            }
-          case S(ty) => ty
-        }
-      case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
-      case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
-      case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension => body
-    }
+          )
+        case N => throw new CodeGenError(s"$name is none of class, trait or type")
+      }
+    case Function(lhs, rhs) =>
+      Function(substitute(lhs, subs), substitute(rhs, subs))
+    case Inter(lhs, rhs) =>
+      Inter(substitute(lhs, subs), substitute(rhs, subs))
+    case Record(fields) =>
+      Record(fields map { case (k, v) => k -> substitute(v, subs) })
+    case Union(lhs, rhs) =>
+      Union(substitute(lhs, subs), substitute(rhs, subs))
+    case Tuple(fields) =>
+      Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
+    case TypeName(name) =>
+      subs get name match {
+        case N =>
+          topLevelScope.getType(name) match {
+            case S(sym: ClassSymbol) => TypeName(name)
+            case S(sym: TraitSymbol) => TypeName(name)
+            case S(sym: TypeSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
+            case S(sym: TypeSymbol) => throw CodeGenError(
+                s"type $name expects ${sym.params.length} type parameters but nothing provided"
+            )
+            case N => throw new CodeGenError(s"undeclared type name $name")
+          }
+        case S(ty) => ty
+      }
+    case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
+    case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
+    case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension => body
   }
 
   /**
@@ -283,19 +281,19 @@ class JSBackend {
     * Then, we will check if the base class exists.
     */
   protected def translateClassDeclaration(
-      name: Str,
+      classSymbol: ClassSymbol,
       methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
     val members = methods map { translateClassMember(_) }
-    topLevelScope.expect[ClassSymbol](name) match {
+    topLevelScope.expect[ClassSymbol](classSymbol.lexicalName) match {
       case S(sym) => sym.baseClass match {
-        case N => JSClassDecl(name, sym.fields.distinct, N, members)
+        case N => JSClassDecl(classSymbol.runtimeName, sym.fields.distinct, N, members)
         case S(baseClassSym) => baseClassSym.body match {
-          case S(cls) => JSClassDecl(name, sym.fields.distinct, S(cls), members)
+          case S(cls) => JSClassDecl(classSymbol.runtimeName, sym.fields.distinct, S(cls), members)
           case N => throw new CodeGenError("base class translated after the derived class")
         }
       }
-      case N => throw new Exception(s"undeclared class $name, did you call `declareTypeDefs`?")
+      case N => throw new Exception(s"undeclared class ${classSymbol.lexicalName}, did you call `declareTypeDefs`?")
     }
   }
 
@@ -467,7 +465,7 @@ class JSBackend {
         }
       case _ => N
     } sortWith { _._3 < _._3 } map { case (sym, mthDefs, _) =>
-      val body = translateClassDeclaration(sym.runtimeName, mthDefs)(topLevelScope)
+      val body = translateClassDeclaration(sym, mthDefs)(topLevelScope)
       sym.body = S(body)
       body
     }

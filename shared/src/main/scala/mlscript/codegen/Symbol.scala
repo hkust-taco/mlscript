@@ -31,6 +31,8 @@ abstract class LexicalSymbol extends RuntimeSymbol {
     * TODO: use a generic block number when we need to support source maps.
     */
   var location: Int = 0
+
+  override def toString(): String = shortName
 }
 
 class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends LexicalSymbol {
@@ -109,7 +111,7 @@ final case class ClassSymbol(
     */
   var order: Int = 0
 
-  override def shortName: Str = s"class $lexicalName"
+  override def shortName: Str = s"class $lexicalName ($runtimeName)"
 }
 
 final case class TraitSymbol(

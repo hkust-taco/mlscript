@@ -1,0 +1,23 @@
+()
+//│ res: ()
+//│    = []
+
+:js
+def console: nothing
+//│ // End of generated code
+//│ console: nothing
+
+:js
+// TODO: implement an escape hatch
+console.log "hello"
+//│ res: nothing
+//│ Unable to execute the code:
+//│   value console is not implemented
+
+:js
+0
+//│ // Query 1
+//│ res = 0;
+//│ // End of generated code
+//│ res: 0
+//│    = 0
