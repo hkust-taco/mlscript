@@ -203,12 +203,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => reportError
                   }
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: TupleType)))) =>
+            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
               reportError
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
-              if b.fields.size === ty.fields.size
-              => (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
-            case (LhsRefined(S(b: TupleType), ts, r), _) => reportError
+              if b.fields.size === ty.fields.size =>
+                (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
+            case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
+              rec(b.inner, ar.inner, false)
+            case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -293,10 +295,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
-                if (ln =/=rn) err(
+                if (ln =/= rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
               rec(l, r, false)
             }
+          case (t: ArrayBase, a: ArrayType) => rec(t.inner, a.inner, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
             rec(r, rhs, true)
@@ -329,7 +332,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
-          case (_, w @ Without(b, ns)) => rec(Without(lhs, ns)(w.prov), b, true)
+          case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (_, ComposedType(true, l, r)) =>
@@ -486,6 +489,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
+      case t @ ArrayType(ar) => ArrayType(extrude(ar, lvl, pol))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -578,6 +582,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
       case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
+      case t @ ArrayType(ar) => ArrayType(freshen(ar))(t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

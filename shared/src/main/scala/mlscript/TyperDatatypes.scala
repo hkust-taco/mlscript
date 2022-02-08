@@ -75,7 +75,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   type ST = SimpleType
   
   sealed abstract class BaseTypeOrTag extends SimpleType
-  sealed abstract class BaseType extends BaseTypeOrTag
+  sealed abstract class BaseType extends BaseTypeOrTag {
+    def toRecord: RecordType = RecordType.empty
+  }
   sealed abstract class MiscBaseType extends BaseType
   sealed trait Factorizable extends SimpleType
   
@@ -110,9 +112,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
-  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends MiscBaseType {
+  sealed abstract class ArrayBase extends MiscBaseType {
+    def inner: SimpleType
+  }
+
+  case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
+    def level: Int = inner.level
+    override def toString = s"Array[${inner}]"
+  }
+
+  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends ArrayBase {
+    lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
-    lazy val toRecord: RecordType =
+    lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
+    override lazy val toRecord: RecordType =
       RecordType(
         fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
         fields.collect { case (S(n), t) => (n, t) }

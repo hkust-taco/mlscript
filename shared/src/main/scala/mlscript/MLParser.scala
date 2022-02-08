@@ -51,11 +51,21 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
   })
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-  def subterm[_: P]: P[Term] = P( subtermNoSel ~ ("." ~/ ( variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")").map {
-      case (prt, id) => Var(s"${prt}.${id}")
-    }))).rep ).map {
-      case (st, sels) => sels.foldLeft(st)(Sel)
+
+  def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
+    // fields
+    ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
+      .map {case (prt, id) => Var(s"${prt}.${id}")})))
+      .map {(t: Var) => Left(t)} |
+    // array subscript
+    ("[" ~ term ~/ "]").map {Right(_)}
+    ).rep ).map {
+      case (st, sels) => sels.foldLeft(st)((acc, t) => t match {
+        case Left(se) => Sel(acc, se)
+        case Right(su) => Subs(acc, su)
+      })
     }
+
   def record[_: P]: P[Rcd] = locate(P(
       "{" ~/ (variable ~ "=" ~ term map L.apply).|(variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs =>

@@ -162,6 +162,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Als, TypeName("nothing"), Nil, Nil, BotType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    {
+      val tv = freshVar(noProv)(1)
+      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil, ArrayType(tv)(noProv), Nil, Nil, Set.empty, N)
+    } ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
@@ -251,7 +255,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   
   /** Only supports getting the fields of a valid base class type.
-   * Notably, does not traverse type variables. */
+   * Notably, does not traverse type variables. 
+   * Note: this does not retrieve the positional fields implicitly defined by tuples */
   def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
@@ -263,7 +268,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
-      case _: ObjectTag | _: FunctionType | _: TupleType | _: TypeVariable
+      case _: ObjectTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType => Map.empty
     }
   }
@@ -331,7 +336,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             val t2 = travsersed + R(tv)
             tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
           }
-          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: TupleType => true
+          case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
         }
         // }()
         val rightParents = td.kind match {
@@ -374,6 +379,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 false
               case _: TupleType =>
                 err(msg"cannot inherit from a tuple type", prov.loco)
+                false
+              case _: ArrayType => 
+                err(msg"cannot inherit from a array type", prov.loco)
                 false
               case _: Without =>
                 err(msg"cannot inherit from a field removal type", prov.loco)
@@ -666,6 +674,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case Nil | ((N, _) :: Nil) => noProv
         case _ => tyTp(ty.toLoc, "tuple type")
       })
+      case Arr(inner) => ArrayType(rec(inner))(tp(ty.toLoc, "array type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -913,6 +922,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case Nil | ((N, _) :: Nil) => noProv
           case _ => tp(term.toLoc, "tuple literal")
         })
+      case Subs(a, i) =>
+        val t_a = typeTerm(a)
+        val t_i = typeTerm(i)
+        val res = freshVar(prov)
+        con(t_a, ArrayType(res)(prov), t_a)
+        con(t_i, IntType, t_i)
+        res
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
@@ -1191,6 +1207,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
             case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
+            case ArrayType(inner) => Arr(go(inner, polarity))
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top

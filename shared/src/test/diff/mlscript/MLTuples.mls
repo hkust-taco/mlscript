@@ -175,13 +175,13 @@ if bool then (1,) else (2,)
 
 :re
 if bool then (1,) else (2, 3)
-//│ res: anything
+//│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
 :re
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
-//│ res: {b: 2 | 3}
+//│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
 //│ Runtime error:
 //│   ReferenceError: bool is not defined
 
@@ -210,40 +210,33 @@ t.x
 //│ res: 1
 //│    = 1
 
-// TODO (https://github.com/hkust-taco/mlscript/issues/65#issuecomment-1013010123)
-:e
 t._1
 t._2
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.215: 	t._1
-//│ ║         	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_1'
-//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.215: 	t._1
-//│ ╙──       	^
-//│ res: error
+//│ res: 1
 //│    = undefined
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.216: 	t._2
-//│ ║         	^^^^
-//│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not have field '_2'
-//│ ║  l.204: 	t = (1, 2, 3) with {x = 1}
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{_2: ?a}`
-//│ ║  l.216: 	t._2
-//│ ╙──       	^
-//│ res: error
+//│ res: 2
 //│    = undefined
 
 
 t = (1, 2, 3) with {_1 = "oops"}
-//│ t: (1, 2, 3,) & {_1: "oops"}
+//│ t: {_1: "oops", _2: 2, _3: 3}
 //│  = Array { '0': 1, '1': 2, '2': 3, _1: 'oops' }
 
-// FIXME (https://github.com/hkust-taco/mlscript/issues/69)
-(t: (int,int,int,))._1
-//│ res: int
+// TODO (https://github.com/hkust-taco/mlscript/issues/69)
+:e
+(t: ("oops",int,int,))._1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ║         	 ^
+//│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
+//│ ║  l.221: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `("oops", int, int,)`
+//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ║         	 ^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^
+//│ res: "oops"
 //│    = 'oops'
 
