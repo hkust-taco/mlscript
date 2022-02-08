@@ -338,3 +338,13 @@ fta1 r1
 //│ res: int
 //│ Runtime error:
 //│   ReferenceError: fta1 is not defined
+
+:NoJS
+def p1: T | Array[bool] | (int, string) | (true, 3)
+def p2: T | (string, bool) | Array[int] | (2, 4)
+def pf t = (t[1], t._1)
+pf((1,2,3))
+//│ p1: Array[bool | int | string] | {x: int} & t
+//│ p2: Array[bool | int | string] | {x: int} & t
+//│ pf: (Array['a] & {_1: 'b}) -> ('a, 'b,)
+//│ res: (1 | 2 | 3, 1,)

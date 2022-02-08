@@ -617,9 +617,11 @@ mk1[2  ]
 def s1 a = (a[1] + a[2], a[(1,2)._2])
 def s2 a = (a[1][0])._2 + (a[2])._1
 def s3 a = a._1.t[0] + a.x[1][2]
+((1, "hello"),(2, true, false),(3,3,4))[0]._1
 //│ s1: Array[int & 'a] -> (int, 'a,)
 //│ s2: Array[Array[{_2: int}] & {_1: int}] -> int
 //│ s3: {_1: {t: Array[int]}, x: Array[Array[int]]} -> int
+//│ res: 1 | 2 | 3
 
 def ara: Array[(int, bool)]
 def arb: Array[Array[(int, int)]]
@@ -638,3 +640,16 @@ dup ara[1]._1 arb[10][8]._2 + 1
 //│ at1: Array[{_1: 'a}] -> 'a
 //│ dup: int -> int -> int
 //│ res: int
+
+:e
+(1,2,3)._1[1]
+//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ║  l.645: 	(1,2,3)._1[1]
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `Array[?a]`
+//│ ║  l.645: 	(1,2,3)._1[1]
+//│ ║         	 ^
+//│ ╟── but it flows into field selection with expected type `Array[?a]`
+//│ ║  l.645: 	(1,2,3)._1[1]
+//│ ╙──       	^^^^^^^^^^
+//│ res: nothing
