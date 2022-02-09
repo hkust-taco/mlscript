@@ -258,11 +258,21 @@ object Scope {
   private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
 }
 
+/**
+  * This class collects temporary variables declared during translation and
+  * generates JavaScript declarations for them after the translation.
+  */
 final case class TemporaryVariableEmitter() {
   private val names = scala.collection.mutable.HashSet[Str]()
 
+  /**
+    * Add a new variable name. The name must be a runtime name.
+    */
   def +=(name: Str): Unit = names += name
 
+  /**
+    * Emit a `let`-declaration for collected names and clear the collection.
+    */
   def emit(): Opt[JSLetDecl] = if (names.isEmpty) {
     N
   } else {
@@ -271,6 +281,9 @@ final case class TemporaryVariableEmitter() {
     S(decl)
   }
 
+  /**
+    * Get all names and clear the collection.
+    */
   def get(): Ls[Str] = {
     val vars = names.toList
     names.clear()
@@ -278,7 +291,8 @@ final case class TemporaryVariableEmitter() {
   }
 
   /**
-    * Prepend temp variable declarations to given statements.
+    * A helper method to prepend the declaration to given statements. This calls
+    * `emit` so the name collection will be cleared.
     */
   def `with`(stmts: Ls[JSStmt]): Ls[JSStmt] =
     emit() match {
@@ -287,8 +301,9 @@ final case class TemporaryVariableEmitter() {
     }
 
   /**
-    * Prepend temp variable declarations to given expression. If no temp variables,
-    * return the expression as `Left`.
+    * A helper method to prepend temp variable declarations to given expression.
+    * If no temp variables, return the expression as `Left`. This calls `emit`
+    * so the name collection will be cleared.
     */
   def `with`(expr: JSExpr): JSExpr \/ Ls[JSStmt] =
     emit() match {
