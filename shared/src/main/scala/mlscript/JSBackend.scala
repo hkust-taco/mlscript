@@ -15,6 +15,7 @@ import mlscript.codegen.FreeSymbol
 import mlscript.codegen.ParamSymbol
 import mlscript.codegen.TypeSymbol
 import scala.collection.mutable.ArrayBuffer
+import mlscript.codegen.Helpers._
 
 class JSBackend {
   /**
@@ -63,7 +64,7 @@ class JSBackend {
     case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
     // Others are not supported yet.
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs =>
-      throw CodeGenError(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
+      throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term): Ls[JSPattern] = t match {
@@ -194,7 +195,7 @@ class JSBackend {
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
     case App(_, _) | _: Bind | _: Test =>
-      throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
+      throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
@@ -712,40 +713,6 @@ object JSTestBackend {
 }
 
 object JSBackend {
-  private def inspectTerm(t: Term): Str = t match {
-    case Var(name)     => s"Var($name)"
-    case Lam(lhs, rhs) => s"Lam(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case App(lhs, rhs) => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
-    case Tup(fields) =>
-      val entries = fields map {
-        case (S(name), value) => s"$name: ${inspectTerm(value)}"
-        case (N, value)       => s"_: ${inspectTerm(value)}"
-      }
-      s"Tup(${entries mkString ", "})"
-    case Rcd(fields)                 => s"Rcd(...)"
-    case Sel(receiver, fieldName)    => s"Sel(${inspectTerm(receiver)}, $fieldName)"
-    case Let(isRec, name, rhs, body) => s"Let($isRec, $name)"
-    case Blk(stmts)                  => s"Blk(...)"
-    case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${inspectTerm(trm)})"
-    case Asc(trm, ty)                => s"Asc(${inspectTerm(trm)}, $ty)"
-    case Bind(lhs, rhs)              => s"Bind(...)"
-    case Test(trm, ty)               => s"Test(...)"
-    case With(trm, fields) =>
-      s"With(${inspectTerm(trm)}, ${inspectTerm(fields)})"
-    case CaseOf(trm, cases) =>
-      def inspectCaseBranches(br: CaseBranches): Str = br match {
-        case Case(clsNme, body, rest) =>
-          s"Case($clsNme, ${inspectTerm(t)}, ${inspectCaseBranches(rest)})"
-        case Wildcard(body) => s"Wildcard(${inspectTerm(body)})"
-        case NoCases        => "NoCases"
-      }
-      s"CaseOf(${inspectTerm(trm)}, ${inspectCaseBranches(cases)}"
-    case IntLit(value) => s"IntLit($value)"
-    case DecLit(value) => s"DecLit($value)"
-    case StrLit(value) => s"StrLit($value)"
-    case Subs(arr, idx) => s"Subs(${inspectTerm(arr)}, ${inspectTerm(idx)})"
-  }
-
   // For integers larger than this value, use BigInt notation.
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
   val MaximalSafeInteger: BigInt = BigInt("9007199254740991")
