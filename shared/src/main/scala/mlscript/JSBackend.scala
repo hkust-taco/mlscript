@@ -569,89 +569,73 @@ class JSTestBackend extends JSBackend {
     )
 
     // Generate statements.
-    val queries: Ls[Opt[Str] \/ (Opt[JSLetDecl] -> Ls[JSStmt])] =
-      otherStmts.map {
-        // let <name>;
-        // try { <name> = <expr>; res = <name>; }
-        // catch (e) { console.log(e); }
-        case Def(recursive, Var(name), L(body)) =>
-          // TODO: if error, replace the symbol with a dummy symbol.
-          (if (recursive) {
-            val sym = scope.declareValue(name)
-            try {
-              R((translateTerm(body), sym))
-            } catch {
-              case e: UnimplementedError =>
-                scope.stubize(sym, e.symbol)
-                L(S(e.getMessage()))
-              case e: Throwable => throw e
-            }
-          } else {
-            (try R(translateTerm(body)) catch {
-              case e: UnimplementedError =>
-                scope.declareStubValue(name, e.symbol)
-                L(S(e.getMessage()))
-              case e: Throwable => throw e
-            }) map { expr => (expr, scope.declareValue(name)) }
-          }).map { case (translatedBody, sym) =>
+    val queries = otherStmts.map {
+      case Def(recursive, Var(name), L(body)) =>
+        (if (recursive) {
+          val sym = scope.declareValue(name)
+          try {
+            R((translateTerm(body), sym))
+          } catch {
+            case e: UnimplementedError =>
+              scope.stubize(sym, e.symbol)
+              L(e.getMessage())
+            case e: Throwable => throw e
+          }
+        } else {
+          (try R(translateTerm(body)) catch {
+            case e: UnimplementedError =>
+              scope.declareStubValue(name, e.symbol)
+              L(e.getMessage())
+            case e: Throwable => throw e
+          }) map { expr => (expr, scope.declareValue(name)) }
+        }) match { 
+          case R((expr, sym)) =>
             sym.location = numRun
-            scope.tempVars.emit() ->
-             ((JSIdent("globalThis").member(sym.runtimeName) := (translatedBody match {
+            JSTestBackend.CodeQuery(
+              scope.tempVars.emit(),
+              ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
                 case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
               })) ::
                 (resultIdent := JSIdent(sym.runtimeName)) ::
                 Nil)
-          }
-        case Def(_, Var(name), R(_)) =>
-          // Check if the symbol has been implemented. If the type definition
-          // is not in the same block as the implementation, we consider it as a
-          // re-declaration.
-          scope.get(name) match {
-            case _: FreeSymbol =>
-              val sym = scope.declareStubValue(name)
-              sym.location = numRun
-            case t: ValueSymbol if t.location =/= numRun =>
-              val sym = scope.declareStubValue(name)
-              sym.location = numRun
-            case _ => ()
-          }
-          // Emit nothing for type declarations.
-          L(N)
-        // try { res = <expr>; }
-        // catch (e) { console.log(e); }
-        case term: Term =>
-          try {
-            val body = translateTerm(term)(scope)
-            R(scope.tempVars.emit() -> ((resultIdent := body) :: Nil))
-          } catch {
-            case e: UnimplementedError => L(S(e.getMessage()))
-            case e: Throwable => throw e
-          }
-      }
+            )
+          case L(reason) => JSTestBackend.AbortedQuery(reason)
+        }
+      case Def(_, Var(name), _) =>
+        // Check if the symbol has been implemented. If the type definition
+        // is not in the same block as the implementation, we consider it as a
+        // re-declaration.
+        scope.get(name) match {
+          case _: FreeSymbol =>
+            scope.declareStubValue(name).location = numRun
+          case t: ValueSymbol if t.location =/= numRun =>
+            scope.declareStubValue(name).location = numRun
+          case _ => ()
+        }
+        // Emit nothing for type declarations.
+        JSTestBackend.EmptyQuery
+      case term: Term =>
+        try {
+          val body = translateTerm(term)(scope)
+          JSTestBackend.CodeQuery(scope.tempVars.emit(), (resultIdent := body) :: Nil)
+        } catch {
+          case e: UnimplementedError => JSTestBackend.AbortedQuery(e.getMessage())
+          case e: Throwable          => throw e
+        }
+    }
 
     // If this is the first time, insert the declaration of `res`.
     var prelude: Ls[JSStmt] = defStmts
-    if (numRun === 0) {
+    if (numRun === 0)
       prelude = JSLetDecl(lastResultSymbol.runtimeName -> N :: Nil) :: prelude
-    }
 
     // Increase the run number.
     numRun = numRun + 1
 
     JSTestBackend.TestCode(
       SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines,
-      queries map {
-        case R(decls -> stmts) =>
-          val prelude = decls match {
-            case S(stmt) => stmt.toSourceCode.toLines
-            case N       => Nil
-          }
-          val code = SourceCode.fromStmts(stmts).toLines
-          JSTestBackend.CodeQuery(prelude, code)
-        case L(S(reason)) => JSTestBackend.AbortedQuery(reason)
-        case L(N) => JSTestBackend.EmptyQuery
-      },
+      queries,
       {
         val warnings = warningBuffer.toList
         warningBuffer.clear()
@@ -677,7 +661,20 @@ object JSTestBackend {
   /**
     * The entry generates meaningful code.
     */
-  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query
+  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query {
+    
+  }
+
+  object CodeQuery {
+    def apply(decls: Opt[JSLetDecl], stmts: Ls[JSStmt]): CodeQuery =
+      CodeQuery(
+        decls match {
+          case S(stmt) => stmt.toSourceCode.toLines
+          case N       => Nil
+        },
+        SourceCode.fromStmts(stmts).toLines
+      )
+  }
 
   /**
     * Represents the result of code generation.
