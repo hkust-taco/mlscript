@@ -533,11 +533,6 @@ class JSTestBackend extends JSBackend {
 
   private var numRun = 0
 
-  // TODO: remove if really unuseful
-  private val warningBuffer = new ArrayBuffer[Str]()
-
-  def warn(message: Str): Unit = warningBuffer += message
-
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
@@ -633,15 +628,7 @@ class JSTestBackend extends JSBackend {
     // Increase the run number.
     numRun = numRun + 1
 
-    JSTestBackend.TestCode(
-      SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines,
-      queries,
-      {
-        val warnings = warningBuffer.toList
-        warningBuffer.clear()
-        warnings
-      }
-    )
+    JSTestBackend.TestCode(SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines, queries)
   }
 }
 
@@ -684,7 +671,7 @@ object JSTestBackend {
   /**
     * Emitted code.
     */
-  final case class TestCode(prelude: Ls[Str], queries: Ls[Query], warnings: Ls[Str]) extends Result
+  final case class TestCode(prelude: Ls[Str], queries: Ls[Query]) extends Result
 
   sealed abstract class ErrorMessage(val content: Str) extends Result
 

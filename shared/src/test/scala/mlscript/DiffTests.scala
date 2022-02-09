@@ -314,7 +314,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             var results: JSTestBackend.Result = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p, mode.allowEscape) match {
-                case TestCode(prelude, queries, _) => {
+                case TestCode(prelude, queries) => {
                   // Display the generated code.
                   if (mode.showGeneratedJS) {
                     if (!prelude.isEmpty) {
