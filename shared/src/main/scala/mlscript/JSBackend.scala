@@ -98,7 +98,6 @@ class JSBackend {
   // Returns: temp identifiers and the expression
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
     case Var(name) => translateVar(scope.resolve(name), false)
-    // TODO: need scope to track variables so that we can rename reserved words
     case Lam(params, body) =>
       val patterns = translateParams(params)
       val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)

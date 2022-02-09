@@ -82,7 +82,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       return allocateRuntimeName()
     }
     // Try just prefix.
-    if (!runtimeSymbols.contains(prefix)) {
+    if (!runtimeSymbols.contains(prefix) && !Symbol.isKeyword(prefix)) {
       return prefix
     }
     // Try prefix with an integer.

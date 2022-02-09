@@ -80,3 +80,19 @@ a = 0
 def b = a
 //│ b: int
 //│  = 0
+
+// Declare JavaScript reserved words.
+:js
+def break = 1
+def str = "str"
+//│ // Query 1
+//│ globalThis.break1 = 1;
+//│ res = break1;
+//│ // Query 2
+//│ globalThis.str = "str";
+//│ res = str;
+//│ // End of generated code
+//│ break: 1
+//│      = 1
+//│ str: "str"
+//│    = 'str'
