@@ -78,7 +78,8 @@ final case class StubValueSymbol(
     override val lexicalName: Str,
     override val runtimeName: Str,
     previous: Opt[StubValueSymbol]
-) extends ValueSymbol(lexicalName, runtimeName) {
+)(implicit val accessible: Bool)
+    extends ValueSymbol(lexicalName, runtimeName) {
   override def shortName: Str = s"value $lexicalName"
 }
 
@@ -93,10 +94,12 @@ final case class ClassSymbol(
 
   def declareMember(name: Str): ValueSymbol = scope.declareValue(name)
 
-  def declareStubMember(name: Str): StubValueSymbol =
+  def declareStubMember(name: Str)(implicit accessible: Bool): StubValueSymbol =
     scope.declareStubValue(name)
-  
-  def declareStubMember(name: Str, previous: StubValueSymbol): StubValueSymbol =
+
+  def declareStubMember(name: Str, previous: StubValueSymbol)(implicit
+      accessible: Bool
+  ): StubValueSymbol =
     scope.declareStubValue(name, previous)
 
   /**

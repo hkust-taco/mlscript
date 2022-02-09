@@ -53,9 +53,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      expectRuntimeErrors: Bool, showRepl: Bool)
+      expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false, false)
+      false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -90,6 +90,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "js" => mode.copy(showGeneratedJS = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
+          case "escape" => mode.copy(allowEscape = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -312,7 +313,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             var results: JSTestBackend.Result = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
-              backend(p) match {
+              backend(p, mode.allowEscape) match {
                 case TestCode(prelude, queries, _) => {
                   // Display the generated code.
                   if (mode.showGeneratedJS) {

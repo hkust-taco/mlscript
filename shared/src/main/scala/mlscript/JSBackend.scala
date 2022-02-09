@@ -83,7 +83,11 @@ class JSBackend {
           polyfill.use(sym.feature, sym.runtimeName)
         val ident = JSIdent(sym.runtimeName)
         if (sym.feature === "error") ident() else ident
-      case sym: StubValueSymbol => throw new UnimplementedError(sym)
+      case sym: StubValueSymbol =>
+        if (sym.accessible)
+          JSIdent(sym.runtimeName)
+        else
+          throw new UnimplementedError(sym)
       case _: FreeSymbol => throw new CodeGenError(s"unresolved symbol ${sym.lexicalName}")
       case _: TraitSymbol | _: TypeSymbol =>
         throw new CodeGenError(s"${sym.shortName} is not a valid expression")
@@ -536,8 +540,8 @@ class JSTestBackend extends JSBackend {
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
-  def apply(pgrm: Pgrm): JSTestBackend.Result =
-    try generate(pgrm)(topLevelScope) catch {
+  def apply(pgrm: Pgrm, allowEscape: Bool): JSTestBackend.Result =
+    try generate(pgrm)(topLevelScope, allowEscape) catch {
       case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
       case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
       case e: Throwable => JSTestBackend.UnexpectedCrash(e.getMessage())
@@ -546,7 +550,7 @@ class JSTestBackend extends JSBackend {
   /**
     * Generate JavaScript code which targets MLscript test from the given block.
     */
-  private def generate(pgrm: Pgrm)(implicit scope: Scope): JSTestBackend.TestCode = {
+  private def generate(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     var classSymbols = declareTypeDefs(typeDefs)

@@ -201,20 +201,20 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareStubValue(lexicalName: Str): StubValueSymbol =
+  def declareStubValue(lexicalName: Str)(implicit accessible: Bool): StubValueSymbol =
     declareStubValue(lexicalName, N)
 
-  def declareStubValue(lexicalName: Str, previous: StubValueSymbol): StubValueSymbol =
+  def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit accessible: Bool): StubValueSymbol =
     declareStubValue(lexicalName, S(previous))
 
-  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol]): StubValueSymbol = {
+  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit accessible: Bool): StubValueSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
     val symbol = StubValueSymbol(lexicalName, runtimeName, previous)
     register(symbol)
     symbol
   }
 
-  def stubize(sym: ValueSymbol, previous: StubValueSymbol): StubValueSymbol = {
+  def stubize(sym: ValueSymbol, previous: StubValueSymbol)(implicit accessible: Bool): StubValueSymbol = {
     unregister(sym)
     declareStubValue(sym.lexicalName, S(previous))
   }
