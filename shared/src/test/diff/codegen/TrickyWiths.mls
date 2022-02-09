@@ -30,10 +30,12 @@ def a: nothing // unsound escape hatch
 //│   3
 //│ ], {});
 //│ res = a;
+//│ // Query 2 is empty
 //│ // End of generated code
 //│ a: (1, 2, 3,)
 //│  = Array { '0': 1, '1': 2, '2': 3 }
 //│ a: nothing
+//│  = <missing implementation>
 
 a.length
 a.map(fun x -> x + 1)

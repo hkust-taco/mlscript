@@ -215,20 +215,22 @@ type A2[A] = A -> A2[A]
 def ty1: A1[anything]
 def ty2: A2[anything]
 //│ ty1: anything -> anything -> 'a as 'a
+//│    = <missing implementation>
 //│ ty2: anything -> 'a as 'a
+//│    = <missing implementation>
 
 ty1 = ty2
 //│ anything -> 'a as 'a
 //│   <:  ty1:
 //│ anything -> anything -> 'a as 'a
-//│ Unable to execute the code:
-//│   value ty2 is not implemented
+//│    = <no result>
+//│      ty2 is not implemented
 
 ty2 = ty1
 //│ anything -> anything -> 'a as 'a
 //│   <:  ty2:
 //│ anything -> 'a as 'a
-//│ Unable to execute the code:
-//│   value ty1 is not implemented
+//│    = <no result>
+//│      ty1 and ty2 are not implemented
 
 

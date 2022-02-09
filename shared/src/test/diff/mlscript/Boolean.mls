@@ -7,7 +7,9 @@ def False: False
 //│ Defined class True
 //│ Defined class False
 //│ True: true
+//│     = <missing implementation>
 //│ False: false
+//│      = <missing implementation>
 
 True: Boolean
 //│ res: bool
@@ -16,7 +18,7 @@ True: Boolean
 :e
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.17: 	Boolean
+//│ ║  l.19: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation met an error:

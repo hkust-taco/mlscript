@@ -14,6 +14,7 @@ trait RuntimeSymbol {
 // }
 
 abstract class LexicalSymbol extends RuntimeSymbol {
+
   /**
     * The lexical name of the symbol. This is different from the runtime name,
     * the name of the symbol in the generated code. We allow duplicates lexical
@@ -73,8 +74,11 @@ final case class BuiltinSymbol(override val lexicalName: Str, feature: Str)
   override def shortName: Str = s"function $lexicalName"
 }
 
-final case class StubValueSymbol(override val lexicalName: Str, override val runtimeName: Str)
-    extends ValueSymbol(lexicalName, runtimeName) {
+final case class StubValueSymbol(
+    override val lexicalName: Str,
+    override val runtimeName: Str,
+    previous: Opt[StubValueSymbol]
+) extends ValueSymbol(lexicalName, runtimeName) {
   override def shortName: Str = s"value $lexicalName"
 }
 
@@ -89,7 +93,11 @@ final case class ClassSymbol(
 
   def declareMember(name: Str): ValueSymbol = scope.declareValue(name)
 
-  def declareStubMember(name: Str): StubValueSymbol = scope.declareStubValue(name)
+  def declareStubMember(name: Str): StubValueSymbol =
+    scope.declareStubValue(name)
+  
+  def declareStubMember(name: Str, previous: StubValueSymbol): StubValueSymbol =
+    scope.declareStubValue(name, previous)
 
   /**
     * Fill up this field after the class translation.

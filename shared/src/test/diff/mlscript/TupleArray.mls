@@ -13,6 +13,7 @@ def f x = x with { b = 2 }
 
 def r: {b: string; c: int}\b
 //│ r: {c: int}
+//│  = <missing implementation>
 
 (1,2,3) with { _4 = "oops" }
 //│ res: (1, 2, 3,) & {_4: "oops"}
@@ -24,17 +25,21 @@ def r: {b: string; c: int}\b
 
 def r: int \ _1
 //│ r: int
+//│  = <missing implementation>
 
 def r: (1,2,3) \ _1
 //│ r: {_2: 2, _3: 3}
+//│  = <missing implementation>
 // (1,2,3).toRecord \ _1
 
 def r: (1,2,3) \ _12345
 //│ r: (1, 2, 3,)
+//│  = <missing implementation>
 
 def arr: Array[int]
 def arr = (1,2)
 //│ arr: Array[int]
+//│    = <missing implementation>
 //│ (1, 2,)
 //│   <:  arr:
 //│ Array[int]
@@ -43,20 +48,22 @@ def arr = (1,2)
 fr = f r
 fr : Array[int] & {b: int}
 //│ fr: (1, 2, 3,) & {b: 2}
+//│   = <no result>
+//│     r is not implemented
 //│ res: Array[int] & {b: int}
-//│ Unable to execute the code:
-//│   value r is not implemented
+//│    = <no result>
+//│      fr and r are not implemented
 
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.51: 	arr._1
+//│ ║  l.58: 	arr._1
 //│ ║        	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
-//│ ║  l.35: 	def arr: Array[int]
+//│ ║  l.39: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.51: 	arr._1
+//│ ║  l.58: 	arr._1
 //│ ╙──      	^^^
 //│ res: error
 //│    = undefined
@@ -94,6 +101,7 @@ t.x
 // :d
 def test: {x: 1} & (1, 2, 3)
 //│ test: (1, 2, 3,) & {x: 1}
+//│     = <missing implementation>
 
 
 // def f x = x[1]
@@ -110,10 +118,10 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.119: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.111: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.119: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -121,13 +129,13 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.122: 	(arr[0])[1][2]
+//│ ║  l.130: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.35: 	def arr: Array[int]
+//│ ║  l.39: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscript with expected type `Array[?a]`
-//│ ║  l.122: 	(arr[0])[1][2]
+//│ ║  l.130: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Runtime error:
@@ -139,6 +147,7 @@ class A: { x: int }
 
 def myval: A & { x: anything }
 //│ myval: A
+//│      = <missing implementation>
 
 // def myval: a & { x: string }
 // //│ myval: A with {x: string}
@@ -146,6 +155,7 @@ def myval: A & { x: anything }
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
 //│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
+//│     = <missing implementation>
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
 
@@ -190,11 +200,12 @@ trait T: { x: int }
 
 def t: T
 //│ t: {x: int} & t
+//│  = <missing implementation>
 
 t.x
 //│ res: int
-//│ Unable to execute the code:
-//│   value t is not implemented
+//│    = <no result>
+//│      t is not implemented
 
 rcd = { x = 1 }
 //│ rcd: {x: 1}
@@ -259,6 +270,7 @@ ta2._3
 def rep5: 'a -> Array['a]
 def rep5 x = (x,x,x,x,x)
 //│ rep5: 'a -> Array['a]
+//│     = <missing implementation>
 //│ 'a -> ('a, 'a, 'a, 'a, 'a,)
 //│   <:  rep5:
 //│ 'a -> Array['a]
@@ -280,13 +292,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.281: 	a2._1
+//│ ║  l.293: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.259: 	def rep5: 'a -> Array['a]
+//│ ║  l.270: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.281: 	a2._1
+//│ ║  l.293: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -318,7 +330,9 @@ hg1 ((5,5,5))
 def ta1: Array[int] | (int, bool)
 def test: (string, 1) & { _1: "hello" }
 //│ ta1: Array[bool | int]
+//│    = <missing implementation>
 //│ test: (string, 1,) & {_1: "hello", _2: 1}
+//│     = <missing implementation>
 
 def fta1: Array[int | bool] -> int
 def tb1: (int, true)
@@ -326,12 +340,17 @@ fta1 tb1
 r1 = if true then (1,2,3) else (1, 2)
 fta1 r1
 //│ fta1: Array[bool | int] -> int
+//│     = <missing implementation>
 //│ tb1: (int, true,)
+//│    = <missing implementation>
 //│ res: int
+//│    = <no result>
+//│      fta1 is not implemented
 //│ r1: Array[1 | 2 | 3] & {_1: 1, _2: 2}
+//│   = [ 1, 2, 3 ]
 //│ res: int
-//│ Unable to execute the code:
-//│   value fta1 is not implemented
+//│    = <no result>
+//│      fta1 is not implemented
 
 :NoJS
 def p1: T | Array[bool] | (int, string) | (true, 3)

@@ -119,6 +119,12 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     ()
   }
 
+  private def unregister(symbol: ValueSymbol): Unit = {
+    lexicalTypeSymbols.remove(symbol.lexicalName)
+    runtimeSymbols.remove(symbol.runtimeName)
+    ()
+  }
+
   /**
    * Look up for a symbol locally. 
    */
@@ -195,11 +201,22 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareStubValue(lexicalName: Str): StubValueSymbol = {
+  def declareStubValue(lexicalName: Str): StubValueSymbol =
+    declareStubValue(lexicalName, N)
+
+  def declareStubValue(lexicalName: Str, previous: StubValueSymbol): StubValueSymbol =
+    declareStubValue(lexicalName, S(previous))
+
+  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol]): StubValueSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = StubValueSymbol(lexicalName, runtimeName)
+    val symbol = StubValueSymbol(lexicalName, runtimeName, previous)
     register(symbol)
     symbol
+  }
+
+  def stubize(sym: ValueSymbol, previous: StubValueSymbol): StubValueSymbol = {
+    unregister(sym)
+    declareStubValue(sym.lexicalName, S(previous))
   }
 
   def declareRuntimeSymbol(): Str = {

@@ -160,32 +160,33 @@ class C3: { default: string } & ~MyTrait[anything]
 
 def strawman: C2 & ~MyTrait[anything]
 //│ strawman: C2 & ~myTrait
+//│         = <missing implementation>
 
 test2 strawman
 //│ res: string
-//│ Unable to execute the code:
-//│   value strawman is not implemented
+//│    = <no result>
+//│      strawman is not implemented
 
 strawman: C2
 //│ res: C2
-//│ Unable to execute the code:
-//│   value strawman is not implemented
+//│    = <no result>
+//│      strawman is not implemented
 
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.176: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── type `C2 & ~myTrait` does not match type `~{value: anything}`
 //│ ║  l.161: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.176: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.176: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
-//│ Unable to execute the code:
-//│   value strawman is not implemented
+//│    = <no result>
+//│      strawman is not implemented
 

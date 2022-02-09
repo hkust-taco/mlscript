@@ -528,21 +528,25 @@ class JSTestBackend extends JSBackend {
 
   private var numRun = 0
 
+  // TODO: remove if really unuseful
+  private val warningBuffer = new ArrayBuffer[Str]()
+
+  def warn(message: Str): Unit = warningBuffer += message
+
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
     */
-  def apply(pgrm: Pgrm): JSTestBackend.ErrorMessage \/ TestCode = try {
-    R(generate(pgrm))
-  } catch {
-    case e: CodeGenError => L(JSTestBackend.IllFormedCode(e.getMessage()))
-    case e: UnimplementedError => L(JSTestBackend.Unimplemented(e.getMessage()))
-    case e: Throwable => L(JSTestBackend.UnexpectedCrash(e.getMessage()))
-  }
+  def apply(pgrm: Pgrm): JSTestBackend.Result =
+    try generate(pgrm)(topLevelScope) catch {
+      case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
+      case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
+      case e: Throwable => JSTestBackend.UnexpectedCrash(e.getMessage())
+    }
 
   /**
     * Generate JavaScript code which targets MLscript test from the given block.
     */
-  private def generate(pgrm: Pgrm): TestCode = {
+  private def generate(pgrm: Pgrm)(implicit scope: Scope): JSTestBackend.TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     var classSymbols = declareTypeDefs(typeDefs)
@@ -560,50 +564,65 @@ class JSTestBackend extends JSBackend {
     )
 
     // Generate statements.
-    val queries: Ls[Opt[JSLetDecl] -> Ls[JSStmt]] =
-      otherStmts.flatMap {
+    val queries: Ls[Opt[Str] \/ (Opt[JSLetDecl] -> Ls[JSStmt])] =
+      otherStmts.map {
         // let <name>;
         // try { <name> = <expr>; res = <name>; }
         // catch (e) { console.log(e); }
         case Def(recursive, Var(name), L(body)) =>
           // TODO: if error, replace the symbol with a dummy symbol.
-          val (translatedBody, sym) = if (recursive) {
-            val sym = topLevelScope.declareValue(name)
-            (translateTerm(body)(topLevelScope), sym)
+          (if (recursive) {
+            val sym = scope.declareValue(name)
+            try {
+              R((translateTerm(body), sym))
+            } catch {
+              case e: UnimplementedError =>
+                scope.stubize(sym, e.symbol)
+                L(S(e.getMessage()))
+              case e: Throwable => throw e
+            }
           } else {
-            val translatedBody = translateTerm(body)(topLevelScope)
-            (translatedBody, topLevelScope.declareValue(name))
-          }
-          sym.location = numRun
-          S(
-            topLevelScope.tempVars.emit() ->
+            (try R(translateTerm(body)) catch {
+              case e: UnimplementedError =>
+                scope.declareStubValue(name, e.symbol)
+                L(S(e.getMessage()))
+              case e: Throwable => throw e
+            }) map { expr => (expr, scope.declareValue(name)) }
+          }).map { case (translatedBody, sym) =>
+            sym.location = numRun
+            scope.tempVars.emit() ->
              ((JSIdent("globalThis").member(sym.runtimeName) := (translatedBody match {
                 case t: JSArrowFn => t.toFuncExpr(S(sym.runtimeName))
                 case t            => t
               })) ::
                 (resultIdent := JSIdent(sym.runtimeName)) ::
                 Nil)
-          )
+          }
         case Def(_, Var(name), R(_)) =>
           // Check if the symbol has been implemented. If the type definition
           // is not in the same block as the implementation, we consider it as a
           // re-declaration.
-          topLevelScope.get(name) match {
+          scope.get(name) match {
             case _: FreeSymbol =>
-              val sym = topLevelScope.declareStubValue(name)
+              val sym = scope.declareStubValue(name)
               sym.location = numRun
             case t: ValueSymbol if t.location =/= numRun =>
-              val sym = topLevelScope.declareStubValue(name)
+              val sym = scope.declareStubValue(name)
               sym.location = numRun
             case _ => ()
           }
           // Emit nothing for type declarations.
-          N
+          L(N)
         // try { res = <expr>; }
         // catch (e) { console.log(e); }
         case term: Term =>
-          val body = translateTerm(term)(topLevelScope)
-          S(topLevelScope.tempVars.emit() -> ((resultIdent := body) :: Nil))
+          try {
+            val body = translateTerm(term)(scope)
+            R(scope.tempVars.emit() -> ((resultIdent := body) :: Nil))
+          } catch {
+            case e: UnimplementedError => L(S(e.getMessage()))
+            case e: Throwable => throw e
+          }
       }
 
     // If this is the first time, insert the declaration of `res`.
@@ -615,31 +634,78 @@ class JSTestBackend extends JSBackend {
     // Increase the run number.
     numRun = numRun + 1
 
-    TestCode(
+    JSTestBackend.TestCode(
       SourceCode.fromStmts(polyfill.emit() ::: prelude).toLines,
-      queries map { case (decls -> stmts) =>
-        val prelude = decls match {
-          case S(stmt) => stmt.toSourceCode.toLines
-          case N       => Nil
-        }
-        val code = SourceCode.fromStmts(stmts).toLines
-        Query(prelude, code)
+      queries map {
+        case R(decls -> stmts) =>
+          val prelude = decls match {
+            case S(stmt) => stmt.toSourceCode.toLines
+            case N       => Nil
+          }
+          val code = SourceCode.fromStmts(stmts).toLines
+          JSTestBackend.CodeQuery(prelude, code)
+        case L(S(reason)) => JSTestBackend.AbortedQuery(reason)
+        case L(N) => JSTestBackend.EmptyQuery
+      },
+      {
+        val warnings = warningBuffer.toList
+        warningBuffer.clear()
+        warnings
       }
     )
   }
 }
 
 object JSTestBackend {
-  // TODO: still not a very good pattern.
-  sealed abstract class ErrorMessage(val content: Str)
+  abstract class Query
+
+  /**
+    * The generation was aborted due to some reason.
+    */
+  final case class AbortedQuery(reason: Str) extends Query
+
+  /**
+    * The entry generates nothing.
+    */
+  final object EmptyQuery extends Query
+
+  /**
+    * The entry generates meaningful code.
+    */
+  final case class CodeQuery(prelude: Ls[Str], code: Ls[Str]) extends Query
+
+  /**
+    * Represents the result of code generation.
+    */
+  abstract class Result
+
+  /**
+    * Emitted code.
+    */
+  final case class TestCode(prelude: Ls[Str], queries: Ls[Query], warnings: Ls[Str]) extends Result
+
+  sealed abstract class ErrorMessage(val content: Str) extends Result
+
+  /**
+    * The input MLscript is ill-formed (e.g. impossible inheritance).
+    */
   final case class IllFormedCode(override val content: Str) extends ErrorMessage(content)
+
+  /**
+    * Some referenced symbols are not implemented.
+    */
   final case class Unimplemented(override val content: Str) extends ErrorMessage(content)
+
+  /**
+    * Code generation crashed.
+    */
   final case class UnexpectedCrash(override val content: Str) extends ErrorMessage(content)
+
+  /**
+    * The result is not executed for some reasons. E.g. `:NoJS` flag.
+    */
+  final object ResultNotExecuted extends JSTestBackend.Result
 }
-
-final case class Query(prelude: Ls[Str], code: Ls[Str])
-
-final case class TestCode(prelude: Ls[Str], queries: Ls[Query])
 
 object JSBackend {
   private def inspectTerm(t: Term): Str = t match {
