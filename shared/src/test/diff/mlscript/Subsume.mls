@@ -9,7 +9,7 @@ def f x = x
 //│ 'a -> 'a
 //│   <:  f:
 //│ int -> int
-//│  = [Function: f1]
+//│  = [Function: f]
 
 :e
 def f = 42
@@ -31,7 +31,7 @@ def f = 42
 f 1
 //│ res: int
 //│ Runtime error:
-//│   TypeError: f2 is not a function
+//│   TypeError: f1 is not a function
 
 fun x -> f x
 //│ res: int -> int
@@ -124,7 +124,7 @@ def id x = x
 //│ 'a -> 'a
 //│   <:  id:
 //│ 'a -> 'a
-//│   = [Function: id2]
+//│   = [Function: id1]
 
 id 1
 id true
@@ -157,7 +157,7 @@ def id n = add n 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ╙──       	              ^^
-//│   = [Function: id3]
+//│   = [Function: id2]
 
 :e
 def id (x: int) = x
@@ -185,7 +185,7 @@ def id (x: int) = x
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ╙──       	              ^^
-//│   = [Function: id4]
+//│   = [Function: id3]
 
 
 
@@ -230,7 +230,7 @@ def f a b = if gt a b then a else b
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
-//│  = [Function: f6]
+//│  = [Function: f3]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
@@ -253,7 +253,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╟── from reference:
 //│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^
-//│  = [Function: f7]
+//│  = [Function: f4]
 
 f 1 
 //│ res: (int & 'a) -> ('a | 1)
@@ -283,7 +283,7 @@ def g a = add a 1
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.270: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
-//│  = [Function: g1]
+//│  = [Function: g]
 
 
 

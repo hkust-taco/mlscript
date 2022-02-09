@@ -79,6 +79,7 @@ class JSBackend {
         else
           JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(sym.runtimeName, true)(JSIdent("x"))))
       case sym: BuiltinSymbol =>
+        sym.accessed = true
         if (!polyfill.used(sym.feature))
           polyfill.use(sym.feature, sym.runtimeName)
         val ident = JSIdent(sym.runtimeName)

@@ -282,7 +282,7 @@ bar2_ty2 = bar_ty2
 //│ ║  l.249: 	def bar2_ty2: { x: 'r } as 'r
 //│ ╙──       	              ^^^^^^^^^
 //│ Runtime error:
-//│   ReferenceError: bar_ty22 is not defined
+//│   ReferenceError: bar_ty21 is not defined
 
 :e
 bar_ty2 = bar2_ty2
@@ -326,7 +326,7 @@ bar_ty2 = bar2_ty2
 //│ ║  l.204: 	def bar_ty2: C['r] as 'r
 //│ ╙──       	             ^^^^^
 //│ Runtime error:
-//│   ReferenceError: bar2_ty22 is not defined
+//│   ReferenceError: bar2_ty21 is not defined
 
 
 

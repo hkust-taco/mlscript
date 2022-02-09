@@ -274,7 +274,7 @@ def rep5 x = (x,x,x,x,x)
 //│ 'a -> ('a, 'a, 'a, 'a, 'a,)
 //│   <:  rep5:
 //│ 'a -> Array['a]
-//│     = [Function: rep51]
+//│     = [Function: rep5]
 
 rep5 1 with {_1 = 10}
 a2 = rep5 2 with {_2 = true; x = "haha"}

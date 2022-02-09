@@ -192,8 +192,9 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   }
 
   def declareValue(lexicalName: Str): ValueSymbol = {
-    val runtimeName = lexicalValueSymbols.get(name) match {
+    val runtimeName = lexicalValueSymbols.get(lexicalName) match {
       case S(sym: StubValueSymbol) => sym.runtimeName
+      case S(sym: BuiltinSymbol) if !sym.accessed => sym.runtimeName
       case _                       => allocateRuntimeName(lexicalName)
     }
     val symbol = ValueSymbol(lexicalName, runtimeName)

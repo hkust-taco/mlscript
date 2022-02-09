@@ -72,6 +72,12 @@ final case class TemporarySymbol(val runtimeName: Str) extends RuntimeSymbol
 final case class BuiltinSymbol(override val lexicalName: Str, feature: Str)
     extends ValueSymbol(lexicalName, lexicalName) {
   override def shortName: Str = s"function $lexicalName"
+
+  /**
+    * `true` if the built-in value had been accessed before.
+    * `Scope` will reuse the `lexicalName` if `accessed` is false.
+    */
+  var accessed: Bool = false
 }
 
 final case class StubValueSymbol(

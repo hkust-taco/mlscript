@@ -139,5 +139,5 @@ q q
 //│ ╙──       	^
 //│ res: error
 //│ Runtime error:
-//│   TypeError: q1 is not a function
+//│   TypeError: q is not a function
 

@@ -7,7 +7,7 @@ def done x = case x of {}
 //│ anything -> string
 //│   <:  intToString:
 //│ int -> string
-//│            = [Function: intToString1]
+//│            = [Function: intToString]
 //│ done: nothing -> nothing
 //│     = [Function: done]
 
@@ -22,7 +22,7 @@ def add lhs rhs = Add { lhs; rhs }
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
 //│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
-//│    = [Function: add1]
+//│    = [Function: add]
 
 
 
