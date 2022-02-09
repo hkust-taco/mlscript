@@ -174,7 +174,7 @@ object Symbol {
     "return",
     "super",
     "switch",
-    "this",
+    // "this",
     "throw",
     "try",
     "typeof",
