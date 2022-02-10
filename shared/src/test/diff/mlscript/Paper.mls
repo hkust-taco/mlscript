@@ -105,6 +105,15 @@ fun (x: int) -> safeDiv 1 x
 //│ res: int -> (error | int)
 //│    = [Function: res]
 
+def x: int & ~0
+//│ x: int & ~0
+
+:re
+safeDiv 1 x
+//│ res: int
+//│ Runtime error:
+//│   ReferenceError: x is not defined
+
 fun (x: int & ~0) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
 //│    = [Function: res]

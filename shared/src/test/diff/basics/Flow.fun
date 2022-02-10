@@ -5,8 +5,8 @@ data R x
 //│ Parsed: data (L x); data (R x);
 //│ Desugared: class L[x]: {x: x}
 //│ Desugared: class R[x]: {x: x}
-//│ Desugared: def L: [x] -> x -> L[x]
-//│ Desugared: def R: [x] -> x -> R[x]
+//│ Desugared: def L: forall x. x -> L[x]
+//│ Desugared: def R: forall x. x -> R[x]
 //│ Defined class L
 //│ Defined class R
 //│ L: 'a -> L['a]

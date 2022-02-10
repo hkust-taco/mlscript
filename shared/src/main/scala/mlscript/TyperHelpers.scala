@@ -60,7 +60,7 @@ abstract class TyperHelpers { self: Typer =>
   }
 
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
-    PolymorphicType(ts.level, subst(ts.body, map))
+    PolymorphicType(ts.polymLevel, subst(ts.body, map))
 
   def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])(implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
     case _ if map.isDefinedAt(ts) => map(ts)
@@ -287,6 +287,7 @@ abstract class TyperHelpers { self: Typer =>
         case (_, tr: TypeRef) if primitiveTypes contains tr.defn.name => this <:< tr.expand
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
+        case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
@@ -346,6 +347,7 @@ abstract class TyperHelpers { self: Typer =>
       case p: ObjectTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
+      case PolymorphicType(plvl, bod) => PolymorphicType(plvl, bod.withoutPos(names))
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll
@@ -380,7 +382,6 @@ abstract class TyperHelpers { self: Typer =>
       }
       case _ => this
     }
-    def normalize(pol: Bool)(implicit ctx: Ctx): ST = DNF.mk(this, pol = pol).toType()
     
     def abs(that: SimpleType)(prov: TypeProvenance): SimpleType =
       FunctionType(this, that)(prov)
@@ -408,6 +409,7 @@ abstract class TyperHelpers { self: Typer =>
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
+      case PolymorphicType(_, und) => und :: Nil
     }
     
     def getVars: Set[TypeVariable] = {
@@ -420,6 +422,29 @@ abstract class TyperHelpers { self: Typer =>
         case Nil => ()
       }
       rec(this :: Nil)
+      SortedSet.from(res)(Ordering.by(_.uid))
+    }
+    
+    def varsBetween(lb: Level, ub: Level): Set[TV] = {
+      val res = MutSet.empty[TypeVariable]
+      val traversed = MutSet.empty[TypeVariable]
+      @tailrec def rec(lb: Level, ub: Level, queue: List[SimpleType]): Unit =
+      // trace(s"varsBetween($lb, $ub, $queue)") {
+      queue match {
+        case (tv: TypeVariable) :: tys =>
+          if (traversed(tv)) rec(lb, ub, tys)
+          else {
+            traversed += tv
+            if (tv.level > lb && tv.level <= ub) res += tv
+            rec(lb, ub, tv.children ::: tys)
+          }
+        case (pt: PolymorphicType) :: tys =>
+          rec(lb, pt.polymLevel, pt.body :: tys)
+        case ty :: tys => rec(lb, ub, ty.children ::: tys)
+        case Nil => ()
+      }
+      // }()
+      rec(lb, ub, this :: Nil)
       SortedSet.from(res)(Ordering.by(_.uid))
     }
     

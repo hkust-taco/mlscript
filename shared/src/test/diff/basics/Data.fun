@@ -3,7 +3,7 @@
 data Test a b
 //│ Parsed: data ((Test a) b);
 //│ Desugared: class Test[a, b]: {a: a, b: b}
-//│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
+//│ Desugared: def Test: forall a, b. a -> b -> Test[a, b]
 //│ Defined class Test
 //│ Test: 'a -> 'b -> Test['a, 'b]
 
@@ -11,7 +11,7 @@ data Test a b
 data Person(name: string, age: int)
 //│ Parsed: data (Person ((name: string, age: int,);));
 //│ Desugared: class Person: {age: int, name: string}
-//│ Desugared: def Person: [] -> (name: string, age: int,) -> Person[]
+//│ Desugared: def Person: (name: string, age: int,) -> Person[]
 //│ Defined class Person
 //│ Person: (name: string, age: int,) -> Person
 

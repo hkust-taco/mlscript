@@ -31,19 +31,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx): Unit =
-      constrainDNF(DNF.mk(lhs, true), DNF.mk(rhs, false), rhs)
+      constrainDNF(DNF.mk(MaxLevel, lhs, true), DNF.mk(MaxLevel, rhs, false), rhs)
     
     def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       
-      lhs.cs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
+      val lhsCs = lhs.instantiate
+      
+      lhsCs.foreach { case Conjunct(lnf, vars, rnf, nvars) =>
         vars.headOption match {
           case S(v) =>
             rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
-            val fullRhs = nvars.iterator.map(DNF.mk(_, true))
-              .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
+            val fullRhs = nvars.iterator.map(DNF.mk(MaxLevel, _, true))
+              .foldLeft(rhs | DNF.mk(MaxLevel, rnf.toType(), false))(_ | _)
             println(s"Consider ${lnf} <: ${fullRhs}")
             
             // The following crutch is necessary because the pesky Without types may get stuck
@@ -58,7 +60,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             
             // First, we filter out those RHS alternatives that obviously don't match our LHS:
-            val possible = fullRhs.cs.filter { r =>
+            val possible = fullRhs.rigidify.filter { r =>
               
               // Note that without this subtyping check,
               //  the number of constraints in the `eval1_ty_ugly = eval1_ty`
@@ -341,7 +343,23 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
+          case (poly: PolymorphicType, _) => rec(poly.instantiate, rhs, true)
           case _ => reportError
+          // case _ =>
+          //   val failureOpt = lhs_rhs match {
+          //     case (RecordType(fs0), RecordType(fs1)) =>
+          //       var fieldErr: Opt[Message] = N
+          //       fs1.foreach { case (n1, t1) =>
+          //         fs0.find(_._1 === n1).fold {
+          //           if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1.name))
+          //         } { case (n0, t0) => rec(t0, t1) }
+          //       }
+          //       fieldErr
+          //     case (_, FunctionType(_, _)) => S(msg"is not a function")
+          //     case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n.name))
+          //     case _ => S(doesntMatch(lhs_rhs._2))
+          //   }
+          //   failureOpt.foreach(f => reportError(f))
       }
     }}()
     
@@ -532,13 +550,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   // Note: maybe this and `extrude` should be merged?
-  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false)(implicit lvl: Int): SimpleType = {
+  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false, upperLim: Int = MaxLevel)(implicit lvl: Int): SimpleType = {
     val freshened = MutMap.empty[TV, SimpleType]
-    def freshen(ty: SimpleType): SimpleType =
+    def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType = {
+      def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, upperLim)
       if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...
         && ty.level <= lim) ty else ty match {
+      case tv: TypeVariable if tv.level > upperLim => tv // FIXME bounds?
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
@@ -590,8 +610,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
-    }
-    freshen(ty)
+      case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl, freshenImpl(bod, upperLim = lvl))
+    }}
+    freshenImpl(ty, upperLim)
   }
   
   

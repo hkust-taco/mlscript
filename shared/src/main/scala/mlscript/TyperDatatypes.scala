@@ -31,14 +31,28 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** A type with universally quantified type variables
    *  (by convention, those variables of level greater than `level` are considered quantified). */
-  case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
+  case class PolymorphicType(polymLevel: Level, body: SimpleType) extends SimpleType { // TODO add own prov?
+    require(polymLevel < MaxLevel, polymLevel)
     val prov: TypeProvenance = body.prov
-    def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
+    lazy val level = levelBelow(polymLevel)
+    def levelBelow(ub: Level): Level = body.levelBelow(ub min polymLevel)
+    override def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
+    override def toString = s"∀ $polymLevel. $body"
+  }
+  object PolymorphicType {
+    def mk(polymLevel: Level, body: SimpleType): SimpleType = {
+      require(polymLevel <= MaxLevel)
+      if (polymLevel === MaxLevel) body
+      else body match { // TODO see through proxies?
+        case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
+        case _ => PolymorphicType(polymLevel, body)
+      }
+    }
   }
   
   // single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
-  class MethodType(val level: Int, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
+  class MethodType(val level: Level, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
       (val prov: TypeProvenance) {
     def &(that: MethodType): MethodType = {
       require(this.level === that.level)
@@ -46,29 +60,30 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
     def +(that: MethodType): MethodType =
       if (this.parents === that.parents) that
-      else MethodType(0, N, (this.parents ::: that.parents).distinct)(prov)
-    val toPT: PolymorphicType = body.fold(PolymorphicType(0, errType))(PolymorphicType(level, _))
-    def instantiate(implicit lvl: Int): SimpleType = toPT.instantiate
-    def rigidify(implicit lvl: Int): SimpleType = toPT.rigidify
-    def copy(level: Int = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
+      else MethodType(level, N, (this.parents ::: that.parents).distinct)(prov)
+    val toPT: PolymorphicType = body.fold(PolymorphicType(level, errType))(PolymorphicType(level, _))
+    def instantiate(implicit lvl: Level): SimpleType = toPT.instantiate
+    def rigidify(implicit lvl: Level): SimpleType = toPT.rigidify
+    def copy(level: Level = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
       MethodType(level, body, parents, this.single)(prov)
     override def toString: Str = s"MethodType($level,$body,$parents,$single)"
   }
   object MethodType {
-    def apply(level: Int, body: Opt[SimpleType], parent: TypeName)(prov: TypeProvenance): MethodType =
+    def apply(level: Level, body: Opt[SimpleType], parent: TypeName)(prov: TypeProvenance): MethodType =
       MethodType(level, body, parent :: Nil, true)(prov)
-    def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName])(prov: TypeProvenance): MethodType =
+    def apply(level: Level, body: Opt[SimpleType], parents: List[TypeName])(prov: TypeProvenance): MethodType =
       MethodType(level, body, parents, true)(prov)
-    private def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
+    private def apply(level: Level, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
         (implicit prov: TypeProvenance): MethodType =
       new MethodType(level, body, parents, single)(prov)
     def unapply(mt: MethodType): S[(Int, Opt[SimpleType], List[TypeName])] = S((mt.level, mt.body, mt.parents))
   }
   
-  /** A type without universally quantified type variables. */
+  /** A general type form (TODO: rename to AnyType). */
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance
-    def level: Int
+    def level: Level
+    def levelBelow(ub: Level): Level
     def instantiate(implicit lvl: Int) = this
     constructedTypes += 1
   }
@@ -82,13 +97,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed trait Factorizable extends SimpleType
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
-    lazy val level: Int = lhs.level max rhs.level
+    lazy val level: Level = levelBelow(MaxLevel)
+    def levelBelow(ub: Level): Level = lhs.levelBelow(ub) max rhs.levelBelow(ub)
     override def toString = s"($lhs -> $rhs)"
   }
   
   case class RecordType(fields: List[(Var, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields
-    lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    lazy val level: Level = levelBelow(MaxLevel)
+    def levelBelow(ub: Level): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
     def mergeAllFields(fs: Iterable[Var -> SimpleType]): RecordType = {
@@ -115,15 +132,17 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed abstract class ArrayBase extends MiscBaseType {
     def inner: SimpleType
   }
-
+  
   case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
-    def level: Int = inner.level
+    def level: Level = inner.level
+    def levelBelow(ub: Level): Level = inner.levelBelow(ub)
     override def toString = s"Array[${inner}]"
   }
-
+  
   case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends ArrayBase {
     lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
-    lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
+    lazy val level: Level = levelBelow(MaxLevel)
+    def levelBelow(ub: Level): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
@@ -136,29 +155,34 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */
   case class ExtrType(pol: Bool)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = 0
+    def level: Level = MinLevel
+    def levelBelow(ub: Level): Level = MinLevel
     override def toString = if (pol) "⊥" else "⊤"
   }
   /** Polarity `pol` being `true` means union; `false` means intersection. */
   case class ComposedType(pol: Bool, lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = lhs.level max rhs.level
+    def level: Level = levelBelow(MaxLevel)
+    def levelBelow(ub: Level): Level = lhs.levelBelow(ub) max rhs.levelBelow(ub)
     override def toString = s"($lhs ${if (pol) "|" else "&"} $rhs)"
   }
   case class NegType(negated: SimpleType)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = negated.level
+    def level: Level = negated.level
+    def levelBelow(ub: Level): Level = negated.levelBelow(ub)
     override def toString = s"~(${negated})"
   }
   
   /** Represents a type `base` from which we have removed the fields in `names`. */
   case class Without(base: SimpleType, names: SortedSet[Var])(val prov: TypeProvenance) extends MiscBaseType {
     def level: Int = base.level
+    def levelBelow(ub: Level): Level = base.levelBelow(ub)
     override def toString = s"${base}\\${names.mkString("-")}"
   }
   
   /** A proxy type is a derived type form storing some additional information,
    * but which can always be converted into an underlying simple type. */
   sealed abstract class ProxyType extends SimpleType {
-    def level: Int = underlying.level
+    def level: Level = underlying.level
+    def levelBelow(ub: Level): Level = underlying.levelBelow(ub)
     def underlying: SimpleType
     override def toString = s"[$underlying]"
   }
@@ -187,7 +211,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
+    def level: Level = levelBelow(MaxLevel)
+    def levelBelow(ub: Level): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     def expand(implicit ctx: Ctx): SimpleType = expandWith(paramTags = true)
     def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType = {
       val td = ctx.tyDefs(defn.name)
@@ -227,12 +252,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       else if (this.parentsST.contains(that.id)) Set.single(that)
       // else this.parentsST.union(that.parentsST)
       else Set(this, that)
-    def level: Int = 0
+    def level: Level = MinLevel
+    def levelBelow(ub: Level): Level = MinLevel
     override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
   }
   
   case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
-    def level: Int = 0
+    def level: Level = MinLevel
+    def levelBelow(ub: Level): Level = MinLevel
     override def toString = id.idStr
   }
   
@@ -240,7 +267,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
    * The only way to give something such a type is to make the type part of a def or method signature,
    * as it will be replaced by a fresh bounded type variable upon subsumption checking (cf rigidification). */
   case class TypeBounds(lb: SimpleType, ub: SimpleType)(val prov: TypeProvenance) extends SimpleType {
-    def level: Int = lb.level max ub.level
+    def level: Level = lb.level max ub.level
+    def levelBelow(ubLvl: Int): Int = lb.levelBelow(ubLvl) max ub.levelBelow(ubLvl)
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
@@ -251,11 +279,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
    *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
-      val level: Int,
+      val level: Level,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
       val nameHint: Opt[Str] = N
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
+    def levelBelow(ub: Level): Level = if (level <= ub) level else MinLevel // TODO! FIXME bounds
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid

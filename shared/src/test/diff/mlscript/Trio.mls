@@ -39,7 +39,7 @@ foo arg
 //│   ReferenceError: arg is not defined
 //│ constrain calls  : 39
 //│ annoying  calls  : 30
-//│ subtyping calls  : 75
+//│ subtyping calls  : 73
 
 :re
 :stats
@@ -49,7 +49,7 @@ foo (arg with { fC = true })
 //│   ReferenceError: arg is not defined
 //│ constrain calls  : 32
 //│ annoying  calls  : 28
-//│ subtyping calls  : 82
+//│ subtyping calls  : 80
 
 def foo x = case x of {
   | A -> add x.fA x.payload
@@ -82,7 +82,7 @@ foo arg
 //│   ReferenceError: arg is not defined
 //│ constrain calls  : 53
 //│ annoying  calls  : 40
-//│ subtyping calls  : 124
+//│ subtyping calls  : 116
 
 :re
 :stats
@@ -92,5 +92,5 @@ foo (arg with { payload = 1 })
 //│   ReferenceError: arg is not defined
 //│ constrain calls  : 48
 //│ annoying  calls  : 38
-//│ subtyping calls  : 91
+//│ subtyping calls  : 89
 

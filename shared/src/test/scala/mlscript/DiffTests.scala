@@ -226,7 +226,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
             
             def getType(ty: typer.TypeScheme): Type = {
-              val wty = ty.instantiate(0)
+              // val wty = ty.instantiate(0)
+              val wty = ty.asInstanceOf[typer.ST]
               if (mode.dbg) output(s"Typed as: $wty")
               if (mode.dbg) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty, true)
@@ -251,7 +252,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbg) output(s"Recons: ${recons}")
                 val exp = typer.expandType(recons, true)
                 
-                exp
+                exp match {
+                  case PolyType(tps, body) =>
+                    // Strip top-level implicitly-quantified type variables
+                    tps.filterNot(_.isRight) match {
+                      case Nil => body
+                      case tps => PolyType(tps, body)
+                    }
+                  case ty => ty
+                }
               }
             }
             
@@ -342,8 +351,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             stmts.foreach {
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
-                  typer.typeType(rhs)(ctx.nextLevel, raise,
-                    vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
+                  typer.typeType(rhs)(ctx.nextLevel, raise, vars = tps.collect {
+                      case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)
+                    }.toMap))
                 ctx += nme.name -> ty_sch
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)

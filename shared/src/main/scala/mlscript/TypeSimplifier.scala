@@ -36,14 +36,15 @@ trait TypeSimplifier { self: Typer =>
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)
           // println(s"b $b")
-          val bd = rec(DNF.mk(b, pol), done + tv)
+          val bd = rec(DNF.mk(MaxLevel, b, pol), done + tv)
           // println(s"bd $bd")
           bd
         }
-        .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
+        .foldLeft(DNF(dnf.polymLevel, c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
       }.foldLeft(DNF.extr(false))(_ | _)
       
-      rec(DNF.mk(ty, pol), Set.empty)
+      rec(DNF.mk(MaxLevel, ty, pol) //tap (dnf => println(s"d $dnf"))
+        , Set.empty)
       
     }(r => s"-> $r")
     
@@ -53,10 +54,10 @@ trait TypeSimplifier { self: Typer =>
       if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
         if (inProcess.contains(pty))
-          recursive.getOrElseUpdate(pty, freshVar(noProv)(ty.level))
+          recursive.getOrElseUpdate(pty, freshVar(noProv)(ty.level)) // Q: ty.level here?
         else {
           (inProcess + pty) pipe { implicit inProcess =>
-            val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
+            val res = DNF(ty.polymLevel, ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
               def adapt(pol: Bool)(l: LhsNf): LhsNf = l match {
                 case LhsRefined(b, ts, RecordType(fs)) => LhsRefined(
                   b.map {
@@ -155,6 +156,7 @@ trait TypeSimplifier { self: Typer =>
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze(ub, true) else analyze(ub, false)
+      case PolymorphicType(lvl, bod) => analyze(bod, pol)
     }
     def processBounds(tv: TV, pol: Bool) = {
       if (!analyzed(tv -> pol)) {
@@ -199,6 +201,8 @@ trait TypeSimplifier { self: Typer =>
               && (recVars.contains(v) === recVars.contains(w))
               && (v.nameHint.nonEmpty || w.nameHint.isEmpty)
               // ^ Don't merge in this direction if that would override a nameHint
+              && (v.level === w.level)
+              // ^ Don't merge variables of differing levels
             =>
             // Note: We avoid merging rec and non-rec vars, because the non-rec one may not be strictly polar ^
             //       As an example of this, see [test:T1].
@@ -287,6 +291,7 @@ trait TypeSimplifier { self: Typer =>
         else Without(transform(base, pol), names)(wo.prov)
       case tb @ TypeBounds(lb, ub) =>
         if (pol) transform(ub, true) else transform(lb, false)
+      case PolymorphicType(lvl, bod) => PolymorphicType(lvl, transform(bod, pol))
     }
     transform(st, pol)
     
@@ -321,12 +326,13 @@ trait TypeSimplifier { self: Typer =>
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
       case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
+      case PolymorphicType(lvl, bod) => PolymorphicType(lvl, go(bod, pol))
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
       case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol)
       case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
-        val dnf @ DNF(cs) = DNF.mk(ty, pol)
+        val dnf @ DNF(_, cs) = DNF.mk(MinLevel, ty, pol)
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
             case LhsRefined(bo, tts, rcd) =>

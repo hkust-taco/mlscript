@@ -62,6 +62,12 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
+    case PolyType(Nil, body) => body.showIn(ctx, outerPrec)
+    case PolyType(targs, body) => parensIf(
+        s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
+          .mkString("forall ", ", ", ".")} ${body.showIn(ctx, 1)}",
+        outerPrec > 1
+      )
   }
   
   def children: List[Type] = this match {
@@ -78,6 +84,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
   }
   
 }
@@ -116,10 +123,7 @@ object ShowCtx {
   }
 }
 
-abstract class PolyTypeImpl extends Located { self: PolyType =>
-  def children: List[Located] =  targs :+ body
-  def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
-}
+trait PolyTypeImpl  { self: PolyType => }
 
 
 // Auxiliary definitions for terms
@@ -432,7 +436,7 @@ trait StatementImpl extends Located { self: Statement =>
           val params = args.flatMap(getFields)
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
-          val ctor = Def(false, v, R(PolyType(tps,
+          val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList)).withLocOf(stmt)
           td :: ctor :: cs

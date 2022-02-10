@@ -7,8 +7,8 @@ data type Either l r of
 //│ Desugared: type alias Either[l, r] = Left[l, r] | Right[l, r]
 //│ Desugared: class Left[l, r]: {l: l}
 //│ Desugared: class Right[l, r]: {r: r}
-//│ Desugared: def Left: [l, r] -> l -> Left[l, r]
-//│ Desugared: def Right: [l, r] -> r -> Right[l, r]
+//│ Desugared: def Left: forall l, r. l -> Left[l, r]
+//│ Desugared: def Right: forall l, r. r -> Right[l, r]
 //│ Defined type alias Either
 //│ Defined class Left
 //│ Defined class Right

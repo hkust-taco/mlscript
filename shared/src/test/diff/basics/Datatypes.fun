@@ -5,8 +5,8 @@ data type Boolean of True, False
 //│ Desugared: type alias Boolean = True[] | False[]
 //│ Desugared: class True: {}
 //│ Desugared: class False: {}
-//│ Desugared: def True: [] -> True[]
-//│ Desugared: def False: [] -> False[]
+//│ Desugared: def True: True[]
+//│ Desugared: def False: False[]
 //│ Defined type alias Boolean
 //│ Defined class True
 //│ Defined class False
@@ -26,7 +26,7 @@ data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of ((& True2) False2);;
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2: False2, True2: True2}
-//│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
+//│ Desugared: def &: forall True2, False2. True2 -> False2 -> &[True2, False2]
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.25: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
@@ -113,8 +113,8 @@ data type List a of
 //│ Desugared: type alias List[a] = Nil[a] | Cons[a]
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
-//│ Desugared: def Nil: [a] -> Nil[a]
-//│ Desugared: def Cons: [a] -> (head: a,) -> (tail: List[a],) -> Cons[a]
+//│ Desugared: def Nil: forall a. Nil[a]
+//│ Desugared: def Cons: forall a. (head: a,) -> (tail: List[a],) -> Cons[a]
 //│ Defined type alias List
 //│ Defined class Nil
 //│ Defined class Cons
@@ -127,7 +127,7 @@ data type Ls of LsA a
 //│ Parsed: data type Ls of (LsA a);;
 //│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
-//│ Desugared: def LsA: [a] -> a -> LsA[a]
+//│ Desugared: def LsA: forall a. a -> LsA[a]
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.126: 	data type Ls of LsA a
 //│ ╙──       	                    ^
@@ -140,7 +140,7 @@ data type Ls2 of LsA2 `a
 //│ Parsed: data type Ls2 of (LsA2 `a);;
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
-//│ Desugared: def LsA2: [] -> 'a -> LsA2[]
+//│ Desugared: def LsA2: 'a -> LsA2[]
 //│ Defined type alias Ls2
 //│ Defined class LsA2
 //│ LsA2: anything -> (LsA2 with {`a: nothing})

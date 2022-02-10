@@ -7,8 +7,8 @@ let foo = _ as (_: (Int => Int) & (Bool => Bool))
 :ns
 let foo = _ as (_: (Int => Int) & (Bool => Bool))
 let foo = (_ as (_: (Int => Int) & (Bool => Bool)))._1
-//│ foo: (_: 'a,)
-//│ foo: 'a
+//│ foo: forall 'a. (_: 'a,)
+//│ foo: forall 'a. 'a
 
 foo(1)
 //│ res: nothing

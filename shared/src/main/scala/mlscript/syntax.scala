@@ -106,5 +106,5 @@ final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends
   override def toString: Str = identifier.fold("α" + _, identity)
 }
 
-final case class PolyType(targs: Ls[TypeName], body: Type) extends PolyTypeImpl
+final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Type with PolyTypeImpl
 
