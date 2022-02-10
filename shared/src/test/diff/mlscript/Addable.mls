@@ -52,7 +52,7 @@ def addSame a = a.Add a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: 'a | number & {val: int}
+//│ res: number & {val: int}
 //│    = Number { val: 2 }
 
 
@@ -121,7 +121,7 @@ addSame n n
 //│ ╟── application of type `number & {val: ?val}` is not a function
 //│ ║  l.17: 	n = Number { val = 1 }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ╟── but it flows into reference with expected type `(forall ?a, ?val0. ?a) -> ?b`
 //│ ║  l.+1: 	addSame n n
 //│ ╙──      	        ^
 //│ res: error

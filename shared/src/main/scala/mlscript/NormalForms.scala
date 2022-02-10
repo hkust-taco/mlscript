@@ -322,8 +322,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def isBot: Bool = cs.isEmpty
     def toType(sort: Bool = false): SimpleType = if (cs.isEmpty) BotType else {
       val css = if (sort) cs.sorted else cs
-      // PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
-      css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _)
+      PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
+      // css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _)
     }
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
@@ -443,6 +443,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case ProxyType(underlying) => mk(polymLvl, underlying, pol)
         case tr @ TypeRef(defn, targs) => mk(polymLvl, tr.expand, pol) // TODO try to keep them?
         case TypeBounds(lb, ub) => mk(polymLvl, if (pol) ub else lb, pol)
+        case PolymorphicType(lvl, bod) => mk(lvl, bod, pol)
       }
       // }(r => s"!C $r")
   }

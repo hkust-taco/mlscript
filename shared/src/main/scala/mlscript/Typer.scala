@@ -833,7 +833,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   object ValidPatVar {
     def unapply(v: Var)(implicit ctx: Ctx, raise: Raise): Opt[Str] =
       if (ctx.inPattern && v.isPatVar) {
-        ctx.parent.dlof(_.get(v.name))(N) |>? { case S(ts: TypeScheme) => ts.instantiate(MinLevel).unwrapProxies } |>? {
+        ctx.parent.dlof(_.get(v.name))(N) |>? { case S(ts: TypeScheme) => ts.unwrapProxies } |>? {
           case S(ClassTag(Var(v.name), _)) =>
             warn(msg"Variable name '${v.name}' already names a symbol in scope. " +
               s"If you want to refer to that symbol, you can use `scope.${v.name}`; " +
@@ -859,7 +859,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   /** Infer the type of a term. */
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType
-        = trace(s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
+        = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
@@ -901,7 +901,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case (v @ ValidPatVar(nme)) =>
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
-        ctx.env.get(nme).collect { case ts: TypeScheme => ts.instantiate }
+        ctx.env.get(nme).collect { case ts: TypeScheme => ts }
           .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
@@ -911,8 +911,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
               :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
               :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList)
-          case ty: TypeScheme => ty
-        }.instantiate
+          // case ty: TypeScheme => ty
+          case ty: SimpleType => ty
+        }//.instantiate
         mkProxy(ty, prov)
         // ^ TODO maybe use a description passed in param?
         // currently we get things like "flows into variable reference"

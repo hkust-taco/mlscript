@@ -47,12 +47,12 @@ class C3
   method F = id
 //│ Defined class C3
 //│ Declared C3.F: C3 -> 'a -> 'a
-//│ Defined C3.F: C3 -> 'a -> 'a
+//│ Defined C3.F: C3 -> (forall 'a. 'a -> 'a)
 
 class C4: C3
   method F = id
 //│ Defined class C4
-//│ Defined C4.F: C4 -> 'a -> 'a
+//│ Defined C4.F: C4 -> (forall 'a. 'a -> 'a)
 
 
 :e

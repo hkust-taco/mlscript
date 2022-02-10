@@ -1,6 +1,10 @@
 
 let twice f x = f / f x
 //│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+// Note: the pretty-printed type of `twice` is simplified (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
+//    this simplification loses some information in the context of first-class polymorphism
+//    because function types effectively become non-mergeable without losing precsion...
+// (Also see this HN thread: https://news.ycombinator.com/item?id=13783237)
 
 twice(x => x + 1)
 //│ res: int -> int
@@ -11,13 +15,11 @@ twice twice
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)
 
-// Note: once we instantiate during constraint solving instead of on variable reference,
-//  the following should get the more useful type: 'a -> (1, (1 'a,),)
-// Note: but then the pretty-printed type of `twice` should not be simplified to ('a | 'b -> 'a) -> 'b -> 'a
-//  because function types would effectively become non-mergeable without losing precsion...
-// (I found this example while reading the HN thread: https://news.ycombinator.com/item?id=13783237)
+// Note: now that we instantiate during constraint solving instead of on variable reference,
+//    we get the more useful type: 'a -> (1, (1, 'a,),).
+//    Previously, we were getting: 'a -> ((1, 'c | 'b | 'a,) as 'b)
 twice f
-//│ res: 'a -> ((1, 'c | 'b | 'a,) as 'b)
+//│ res: 'a -> (1, (1, 'a,),)
 
 twice / x => x, x
 //│ res: 'a -> (('c | 'b | 'a, 'c | 'b | 'a,) as 'b)

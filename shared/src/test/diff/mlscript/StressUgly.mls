@@ -35,30 +35,6 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type Add
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	              ^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not a record (expected a record with fields: lhs, rhs)
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not have field 'Add#E'
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
@@ -71,45 +47,12 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Add[?] | Lit`
+//│ ╟── type `Add[?b]` does not match type `int`
+//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
+//│ ║       	                   ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
 //│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `Add[?] | Lit`
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
-//│ ║  l.22: 	eval1_ty = eval1_ty_ugly
-//│ ║        	           ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from applied type reference:
-//│ ║  l.13: 	def eval1_ty: Add[int] // ~500
-//│ ╙──      	              ^^^^^^^^
+//│ ╙──      	                  ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.22: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
@@ -125,6 +68,6 @@ eval1_ty = eval1_ty_ugly
 //│ Runtime error:
 //│   ReferenceError: eval1_ty_ugly is not defined
 //│ constrain calls  : 62
-//│ annoying  calls  : 53
-//│ subtyping calls  : 462
+//│ annoying  calls  : 41
+//│ subtyping calls  : 469
 

@@ -2399,16 +2399,16 @@ add
 //│ res: {u: {u: int -> int -> int}, v: {u: int -> int -> int}}
 
 (let rec x = {u: x}; {u: x, v: x})
-//│ res: {u: {u: 'a} as 'a, v: {u: 'b} as 'b}
+//│ res: {u: {u: 'a} as 'a, v: {u: 'a} as 'a}
 
 (let rec x = {u: x, v: 0}; {u: x, v: x})
-//│ res: {u: {u: 'a, v: 0} as 'a, v: {u: 'b, v: 0} as 'b}
+//│ res: {u: {u: 'a, v: 0} as 'a, v: {u: 'a, v: 0} as 'a}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
-//│ res: {u: {u: 'a, v: int -> int -> int} as 'a, v: {u: 'b, v: int -> int -> int} as 'b}
+//│ res: {u: {u: 'a, v: int -> int -> int} as 'a, v: {u: 'a, v: int -> int -> int} as 'a}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})
-//│ res: {u: {u: 'a, v: 'a} as 'a, v: {u: 'b, v: 'b} as 'b}
+//│ res: {u: 'a, v: 'a} as 'a
 
 (let x = {v: 0}; {u: x, v: x})
 //│ res: {u: {v: 0}, v: {v: 0}}
@@ -2417,7 +2417,7 @@ add
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x, v: x})
-//│ res: {u: {v: 'a} as 'a, v: {v: 'b} as 'b}
+//│ res: {u: {v: 'a} as 'a, v: {v: 'a} as 'a}
 
 (x => {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2918,7 +2918,7 @@ add
 //│ res: {v: int -> int -> int}
 
 (let rec x = {v: {v: x}}; x.v)
-//│ res: {v: {v: 'a}} as 'a
+//│ res: {v: 'b | {v: 'a}} as 'a
 
 0.u
 //│ ╔══[ERROR] Type mismatch in field selection:

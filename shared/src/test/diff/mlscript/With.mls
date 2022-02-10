@@ -187,15 +187,42 @@ d = c with { x = "hi"; y = 2 }
 //│  = C { x: 'hi', y: 2 }
 
 d.x
-//│ res: "hi"
-//│    = 'hi'
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
+//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:347)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 d: C['a]
-//│ res: C['a .. "hi" | 'a | 1]
-//│    = C { x: 'hi', y: 2 }
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
+//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:347)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 res.x
-//│ res: "hi" | 1
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.215: 	res.x
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `1` does not have field 'x'
+//│ ║  l.177: 	c = C{x = 1}
+//│ ║         	          ^
+//│ ╟── but it flows into reference with expected type `{x: ?a}`
+//│ ║  l.215: 	res.x
+//│ ╙──       	^^^
+//│ res: error
 //│    = 'hi'
 
 

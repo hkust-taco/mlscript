@@ -86,6 +86,7 @@ abstract class TyperHelpers { self: Typer =>
       v
     })
     case _: ObjectTag | _: ExtrType => ts
+    case PolymorphicType(lvl, bod) => PolymorphicType(lvl, subst(bod, map))
   }
   
   def tupleIntersection(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {

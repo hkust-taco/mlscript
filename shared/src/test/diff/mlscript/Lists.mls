@@ -7,7 +7,7 @@ type List[A] = Nil | Cons[A]
 //│ Defined type alias List
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
-//│ originalCons: {head: 'head & 'A, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ originalCons: {head: 'A & 'head, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, tail: 'tail})
 //│             = [Function: originalCons]
 
 def Nil = Nil {}
@@ -28,7 +28,7 @@ def c = Cons 2 Nil
 //│  = Cons { head: 2, tail: Nil {} }
 
 def d = Cons 1 c
-//│ d: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│ d: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A0 .. 2 | 'A0] with {head: 2, tail: Nil}}
 //│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
@@ -40,15 +40,15 @@ res: 1
 //│    = 1
 
 d.tail
-//│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
-//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A0 .. 2 | 'A0] with {head: 2, tail: Nil}}
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
-//│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)

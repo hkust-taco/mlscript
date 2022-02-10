@@ -1,0 +1,17 @@
+
+rec def x = {u = x}
+//│ x: {u: 'a} as 'a
+//│ Runtime error:
+//│   ReferenceError: x is not defined
+
+:ns
+{u = x; v = x}
+//│ res: {u: forall 'a. {u: 'b} as 'b, v: forall 'a. {u: 'b} as 'b}
+//│ Runtime error:
+//│   ReferenceError: x is not defined
+
+{u = x; v = x}
+//│ res: {u: {u: 'a} as 'a, v: {u: 'a} as 'a}
+//│ Runtime error:
+//│   ReferenceError: x is not defined
+

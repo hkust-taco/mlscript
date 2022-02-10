@@ -111,7 +111,7 @@ res.Apply2 (fun x -> mul x 2)
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 Wrapper
-//│ res: {x: 'x & 'A} -> (Wrapper['A] with {x: 'x})
+//│ res: {x: 'A & 'x} -> (Wrapper['A] with {x: 'x})
 //│    = [Function: res]
 
 

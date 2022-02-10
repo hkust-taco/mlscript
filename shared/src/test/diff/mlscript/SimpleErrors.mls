@@ -57,7 +57,7 @@ test1 1
 def map: 'a -> 'a
 def map f = f map (fun x -> map)
 //│ map: 'a -> 'a
-//│ (('a -> 'a) -> (anything -> 'a0 -> 'a0) -> 'b) -> 'b
+//│ ((forall 'a. 'a -> 'a) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
 //│   <:  map:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:

@@ -337,13 +337,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
+          case (poly: PolymorphicType, _) =>
+            // TODO here it might actually be better to try and put poly into a TV if the RHS contains one
+            //    Note: similar remark applies inside constrainDNF
+            rec(poly.instantiate, rhs, true)
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
             goToWork(lhs, rhs)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
-          case (poly: PolymorphicType, _) => rec(poly.instantiate, rhs, true)
           case _ => reportError
           // case _ =>
           //   val failureOpt = lhs_rhs match {

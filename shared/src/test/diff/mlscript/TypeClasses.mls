@@ -81,7 +81,7 @@ cmi = ComplexMonoid { base = IntMonoid }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	cmi = ComplexMonoid { base = IntMonoid }
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{base: ?a}` is not an instance of type Monoid
+//│ ╟── record literal of type `{base: forall ?a. ?a}` is not an instance of type Monoid
 //│ ║  l.+1: 	cmi = ComplexMonoid { base = IntMonoid }
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:

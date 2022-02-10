@@ -36,8 +36,17 @@ useCls c
 //│    = 1
 
 useCls (c with { x = 2 })
-//│ res: "oops" | 2
-//│    = 2
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
+//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:345)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 :js
 trait T
@@ -64,14 +73,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	useTrt c
+//│ ║  l.74: 	useTrt c
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.69: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.69: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│ Runtime error:
@@ -79,9 +88,17 @@ useTrt c
 
 :re
 useTrt (c with { y = 1 })
-//│ res: 1
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
+//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:345)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
