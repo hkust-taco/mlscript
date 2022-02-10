@@ -222,6 +222,8 @@ abstract class JSExpr extends JSCode {
 
   def isSimple: Bool = false
 
+  def prop(property: JSExpr): JSMember = JSMember(this, property)
+
   def stmt: JSExprStmt = JSExprStmt(this)
   
   def `return`: JSReturnStmt = JSReturnStmt(this)
@@ -559,6 +561,15 @@ final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt], `else`: Ls[JSStmt] = N
     })
 }
 
+final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSStmt]) extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode("for (const ") ++
+    pattern.toSourceCode ++
+    SourceCode(" in ") ++
+    iteratee.toSourceCode ++
+    SourceCode(")") ++
+    body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+}
+
 // A single return statement.
 final case class JSReturnStmt(value: JSExpr) extends JSStmt {
   def toSourceCode =
@@ -709,4 +720,17 @@ final case class JSClassDecl(
 
 final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
+}
+
+object JSCodeHelpers {
+  def id(name: Str): JSIdent = JSIdent(name)
+  def lit(value: Int): JSLit = JSLit(value.toString())
+  def const(name: Str, init: JSExpr): JSConstDecl = JSConstDecl(name, init)
+  def `return`(expr: JSExpr): JSReturnStmt = expr.`return`
+  def `throw`(expr: JSExpr): JSThrowStmt = expr.`throw`
+  def forIn(pattern: JSNamePattern, iteratee: JSExpr)(stmts: JSStmt*): JSForInStmt
+    = JSForInStmt(pattern, iteratee, stmts.toList)
+  def fn(name: Str, params: JSPattern*)(stmts: JSStmt*): JSFuncDecl
+    = JSFuncDecl(name, params.toList, stmts.toList)
+  def param(name: Str): JSNamePattern = JSNamePattern(name)
 }

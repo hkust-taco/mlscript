@@ -335,6 +335,16 @@ rcd2 = rcd1 with { x = 1; z = 2 }
 //│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
 //│     return Object.assign(target.valueOf(), target, fields);
 //│   }
+//│   if (Array.isArray(target)) {
+//│     const clone = Array.from(target);
+//│     for (const key in target){
+//│       clone[key] = target[key];
+//│     }
+//│     for (const key in fields){
+//│       clone[key] = fields[key];
+//│     }
+//│     return clone;
+//│   }
 //│   const copy = Object.assign({}, target, fields);
 //│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
 //│   return copy;
