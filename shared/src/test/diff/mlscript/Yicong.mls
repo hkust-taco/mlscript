@@ -113,7 +113,7 @@ fun (x, y) -> f (T2 ((x,y)))
 
 :ns
 res = if true then (1,2, "hello") else (true, 3)
-//│ res: 'a | (1, 2, "hello",) | (true, 3,)
+//│ res: forall 'a. 'a | (1, 2, "hello",) | (true, 3,)
 //│    = [ 1, 2, 'hello' ]
 
 res = if true then (1, 2, 3, 'hello') else (true, 4, false)
@@ -122,17 +122,17 @@ t = if false then res else hhh
 g = if true then (6,6,6) else res
 gwx = g with {x=123}
 gwx.x with {y = gwx}
-//│ res: Array["hello" | 1 | 2 | 3 | 4 | bool] & {_1: 1 | true, _2: 2 | 4, _3: 3 | false}
+//│ res: Array["hello" | 1 | 2 | 3 | 4 | false | true] & {_1: 1 | true, _2: 2 | 4, _3: 3 | false}
 //│    = [ 1, 2, 3, 'hello' ]
-//│ hhh: Array["bye" | 345 | 3 | 45 | bool] & {_1: 45 | false, _2: 345 | 3}
+//│ hhh: Array["bye" | 345 | 3 | 45 | false | true] & {_1: 45 | false, _2: 345 | 3}
 //│    = [ false, 3 ]
-//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | bool] & {_1: 1 | 45 | bool, _2: 2 | 345 | 3 | 4}
+//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | false | true] & {_1: 1 | 45 | false | true, _2: 2 | 345 | 3 | 4}
 //│  = [ false, 3 ]
-//│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false}
+//│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false}
 //│  = [ 6, 6, 6 ]
-//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}
+//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}
 //│    = Array { '0': 6, '1': 6, '2': 6, x: 123 }
-//│ res: 123 & {y: Array["hello" | 1 | 2 | 3 | 4 | 6 | bool] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}}
+//│ res: 123 & {y: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}}
 //│    = [Number: 123] { y: Array { '0': 6, '1': 6, '2': 6, x: 123 } }
 
 def f: (int, bool) -> int
@@ -142,7 +142,7 @@ def g: (bool, string, int) -> int
 //│ g: (bool, string, int,) -> int
 
 p1 = if true then (1, 2, 2) else (true, false)
-//│ p1: Array[1 | 2 | bool] & {_1: 1 | true, _2: 2 | false}
+//│ p1: Array[1 | 2 | false | true] & {_1: 1 | true, _2: 2 | false}
 //│   = [ 1, 2, 2 ]
 
 def q: Array[int]
@@ -154,7 +154,7 @@ q = if true then (1,1) else (1,1,1)
 //│  = [ 1, 1 ]
 
 def h f = (f (1,2,false), f (1,true))
-//│ h: ((Array[1 | 2 | bool] & {_1: 1, _2: 2 | true}) -> 'a) -> ('a, 'a,)
+//│ h: ((Array[1 | 2 | false | true] & {_1: 1, _2: 2 | true}) -> 'a) -> ('a, 'a,)
 //│  = [Function: h]
 
 q1 = (1,1,1,1)
@@ -242,16 +242,16 @@ class Wrapped[A]: {len: int; inner: Array[A]}
 def tk: Array['a] -> Wrapped['a]
 tk ((1,2,3,true,false))
 //│ tk: Array['a] -> (Wrapped['a] with {inner: Array['a]})
-//│ res: Wrapped['a .. 'a | 1 | 2 | 3 | bool] with {inner: Array['a | 1 | 2 | 3 | bool]}
+//│ res: Wrapped['a .. 'a | 1 | 2 | 3 | false | true] with {inner: Array['a | 1 | 2 | 3 | false | true]}
 
 class Two[A, B]: {fst: Array[A]; snd: Array[B]}
 two = Two {fst=(1,2,3); snd=(true,false)}
 two.fst
 tk (two.snd)
 //│ Defined class Two
-//│ two: Two['A .. 1 | 2 | 3 | 'A, 'B .. 'B | bool] with {fst: (1, 2, 3,), snd: (true, false,)}
+//│ two: Two['A .. 1 | 2 | 3 | 'A, 'B .. 'B | false | true] with {fst: (1, 2, 3,), snd: (true, false,)}
 //│ res: (1, 2, 3,)
-//│ res: Wrapped['a .. 'a | bool] with {inner: Array['a | bool]}
+//│ res: Wrapped['a .. 'a | false | true] with {inner: Array['a | false | true]}
 
 :e
 def a1: Array[int]

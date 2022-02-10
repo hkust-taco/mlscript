@@ -36,7 +36,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val prov: TypeProvenance = body.prov
     lazy val level = levelBelow(polymLevel)
     def levelBelow(ub: Level): Level = body.levelBelow(ub min polymLevel)
-    override def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
+    override def instantiate(implicit lvl: Int): SimpleType = {
+      val res = freshenAbove(polymLevel, body)
+      // println(s"INST  $this  ~>  $res")
+      // println(s"  where  ${res.showBounds}")
+      println(s"INST   $this  ~>  $res")
+      println(s"  where  ${showBounds}")
+      println(s"TO ~>  $res")
+      println(s"  where  ${res.showBounds}")
+      res
+    }
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
     override def toString = s"∀ $polymLevel. $body"
   }
@@ -193,7 +202,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   /** The sole purpose of ProvType is to store additional type provenance info. */
   case class ProvType(underlying: SimpleType)(val prov: TypeProvenance) extends ProxyType {
-    override def toString = s"[$underlying]"
+    override def toString = s"$underlying"
+    // override def toString = s"[$underlying]"
     // override def toString = s"$underlying[${prov.desc.take(5)}]"
     // override def toString = s"$underlying[${prov.toString.take(5)}]"
     // override def toString = s"$underlying@${prov}"

@@ -552,7 +552,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   // Note: maybe this and `extrude` should be merged?
   def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false, upperLim: Int = MaxLevel)(implicit lvl: Int): SimpleType = {
     val freshened = MutMap.empty[TV, SimpleType]
-    def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType = {
+    def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType =
+    // trace(s"FRESHEN $ty | $lim .. $upperLim")
+    {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, upperLim)
       if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
@@ -612,6 +614,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl, freshenImpl(bod, upperLim = lvl))
     }}
+    // (r => s"=> $r")
     freshenImpl(ty, upperLim)
   }
   
