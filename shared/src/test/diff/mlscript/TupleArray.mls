@@ -17,11 +17,11 @@ def r: {b: string; c: int}\b
 
 (1,2,3) with { _4 = "oops" }
 //│ res: (1, 2, 3,) & {_4: "oops"}
-//│    = Array { '0': 1, '1': 2, '2': 3, _4: 'oops' }
+//│    = [ 1, 2, 3, _4: 'oops' ]
 
 (1,2,3) with { _1 = "oops" }
 //│ res: {_1: "oops", _2: 2, _3: 3}
-//│    = Array { '0': 1, '1': 2, '2': 3, _1: 'oops' }
+//│    = [ 1, 2, 3, _1: 'oops' ]
 
 def r: int \ _1
 //│ r: int
@@ -70,7 +70,7 @@ arr._1
 
 rr = arr with { x = 1 }
 //│ rr: Array[int] & {x: 1}
-//│   = Array { '0': 1, '1': 2, x: 1 }
+//│   = [ 1, 2, x: 1 ]
 
 rr.x
 //│ res: 1
@@ -84,7 +84,7 @@ rr.x
 t = (1, 2, 3) with {x = 1}
 // t = (1, 2, 3)
 //│ t: (1, 2, 3,) & {x: 1}
-//│  = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+//│  = [ 1, 2, 3, x: 1 ]
 
 t._1
 t._2
@@ -228,7 +228,7 @@ k1 = (6, "hi", false) with {_5=5; _6=true}
 k1._1
 k1._3
 //│ k1: (6, "hi", false,) & {_5: 5, _6: true}
-//│   = Array { '0': 6, '1': 'hi', '2': false, _5: 5, _6: true }
+//│   = [ 6, 'hi', false, _5: 5, _6: true ]
 //│ res: 6
 //│    = undefined
 //│ res: false
@@ -236,11 +236,11 @@ k1._3
 
 (1,2,3) with {_4 = true}
 //│ res: (1, 2, 3,) & {_4: true}
-//│    = Array { '0': 1, '1': 2, '2': 3, _4: true }
+//│    = [ 1, 2, 3, _4: true ]
 
 (1, 2, true) with {_0 = "hello"}
 //│ res: (1, 2, true,) & {_0: "hello"}
-//│    = Array { '0': 1, '1': 2, '2': true, _0: 'hello' }
+//│    = [ 1, 2, true, _0: 'hello' ]
 
 ta1 = (5, 6, true, false, "hahaha")
 ta2 = ta1 with {x = 123; _7 = "bye"; _1 = 0}
@@ -250,16 +250,7 @@ ta2._3
 //│ ta1: (5, 6, true, false, "hahaha",)
 //│    = [ 5, 6, true, false, 'hahaha' ]
 //│ ta2: {_1: 0, _2: 6, _3: true, _4: false, _5: "hahaha", _7: "bye", x: 123}
-//│    = Array {
-//│        '0': 5,
-//│        '1': 6,
-//│        '2': true,
-//│        '3': false,
-//│        '4': 'hahaha',
-//│        x: 123,
-//│        _7: 'bye',
-//│        _1: 0
-//│      }
+//│    = [ 5, 6, true, false, 'hahaha', x: 123, _7: 'bye', _1: 0 ]
 //│ res: 5
 //│    = undefined
 //│ res: 6
@@ -281,9 +272,9 @@ a2 = rep5 2 with {_2 = true; x = "haha"}
 a2._2
 a2.x
 //│ res: Array[1] & {_1: 10}
-//│    = Array { '0': 1, '1': 1, '2': 1, '3': 1, '4': 1, _1: 10 }
+//│    = [ 1, 1, 1, 1, 1, _1: 10 ]
 //│ a2: Array[2] & {_2: true, x: "haha"}
-//│   = Array { '0': 2, '1': 2, '2': 2, '3': 2, '4': 2, _2: true, x: 'haha' }
+//│   = [ 2, 2, 2, 2, 2, _2: true, x: 'haha' ]
 //│ res: true
 //│    = true
 //│ res: "haha"
@@ -292,25 +283,25 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.293: 	a2._1
+//│ ║  l.284: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.270: 	def rep5: 'a -> Array['a]
+//│ ║  l.261: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.293: 	a2._1
+//│ ║  l.284: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
 
 (1,2,3,true) with {_a = 1; _b1 = false}
 //│ res: (1, 2, 3, true,) & {_a: 1, _b1: false}
-//│    = Array { '0': 1, '1': 2, '2': 3, '3': true, _a: 1, _b1: false }
+//│    = [ 1, 2, 3, true, _a: 1, _b1: false ]
 
 ht1 = (1,2,false) with {_1 = 'a'; _2 = 'hello'; _3 = false}
 ht1._1
 //│ ht1: {_1: "a", _2: "hello", _3: false}
-//│    = Array { '0': 1, '1': 2, '2': false, _1: 'a', _2: 'hello', _3: false }
+//│    = [ 1, 2, false, _1: 'a', _2: 'hello', _3: false ]
 //│ res: "a"
 //│    = 'a'
 
