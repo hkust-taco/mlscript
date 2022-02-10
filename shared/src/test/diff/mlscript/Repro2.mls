@@ -10,8 +10,27 @@ rec def x = {u = x}
 //│ Runtime error:
 //│   ReferenceError: x is not defined
 
+// > FIXME: foralls?
 {u = x; v = x}
 //│ res: {u: {u: 'a} as 'a, v: {u: 'a} as 'a}
 //│ Runtime error:
 //│   ReferenceError: x is not defined
+
+
+
+
+class C[A]: {x: A}
+  method X = this.x
+//│ Defined class C
+//│ Defined C.X: C['A] -> 'A
+
+c = C{x = 1}
+//│ c: C['A .. 1 | 'A] with {x: 1}
+//│  = C { x: 1 }
+
+// > FIXME: 'A bound?
+def arg = if true then C{x = 42} else 0
+//│ arg: 0 | (C['A] with {x: 42})
+//│    = C { x: 42 }
+
 

@@ -20,11 +20,11 @@ h / mkArg false
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.7: 	  succ / f y
-//│ ║       	         ^^^
+//│ ║  l.4: 	  log / succ x.prop
+//│ ║       	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.5: 	  x.prop
-//│ ╙──     	   ^^^^^
+//│ ║  l.4: 	  log / succ x.prop
+//│ ╙──     	              ^^^^^
 //│ res: error | int
 
 :v
@@ -69,10 +69,10 @@ test arg2
 //│ ║  l.51: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.54: 	  succ / f y.fld
-//│ ║        	         ^^^^^^^
+//│ ║  l.49: 	  log / succ x.prop
+//│ ║        	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.50: 	  x.prop
-//│ ╙──      	   ^^^^^
+//│ ║  l.49: 	  log / succ x.prop
+//│ ╙──      	              ^^^^^
 //│ res: 'a -> (int | 'a) | error
 

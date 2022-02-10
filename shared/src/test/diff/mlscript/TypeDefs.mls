@@ -218,20 +218,20 @@ type A2[A] = A -> A2[A]
 
 def ty1: A1[anything]
 def ty2: A2[anything]
-//│ ty1: anything -> anything -> 'a as 'a
+//│ ty1: anything -> ('b | anything -> 'a) as 'a
 //│ ty2: anything -> 'a as 'a
 
 :re
 ty1 = ty2
 //│ anything -> 'a as 'a
 //│   <:  ty1:
-//│ anything -> anything -> 'a as 'a
+//│ anything -> ('b | anything -> 'a) as 'a
 //│ Runtime error:
 //│   ReferenceError: ty2 is not defined
 
 :re
 ty2 = ty1
-//│ anything -> anything -> 'a as 'a
+//│ anything -> ('b | anything -> 'a) as 'a
 //│   <:  ty2:
 //│ anything -> 'a as 'a
 //│ Runtime error:

@@ -47,7 +47,7 @@ class C2[A]: { a: A }
 //│ Defined class C2
 
 r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
-//│ r: (C1['A .. 1 | 'A] with {a: 1}) | (C2['A0 .. (3, 4, 5, 4,) | 'A0] with {a: (3, 4, 5, 4,)})
+//│ r: (C1['A] with {a: 1}) | (C2['A0] with {a: (3, 4, 5, 4,)})
 //│  = C1 { a: 1 }
 
 case r of { C1 -> r.a | _ -> 0 }
@@ -425,7 +425,7 @@ inn (T1 (T2 v3))
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 //│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
 //│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:347)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:345)
 //│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
 //│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
 

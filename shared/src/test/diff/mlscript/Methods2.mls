@@ -44,7 +44,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined class Cons
 //│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
 //│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
-//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
+//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['b] with {head: 'a, tail: List['b]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -62,7 +62,7 @@ Cons.HeadOption
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ l: Cons['A .. 0 | 1 | 'A] with {head: 0, tail: Cons['A .. 0 | 1 | 'A] with {head: 1, tail: Nil['A .. 0 | 1 | 'A]}}
+//│ l: Cons['A .. 0 | 'A] with {head: 0, tail: Cons['A .. 0 | 'A] with {head: 1, tail: Nil['A .. 0 | 'A]}}
 //│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
@@ -74,11 +74,11 @@ l.Map (fun x -> mul x 2)
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
-//│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
+//│ o: Some['a .. 0 | 'a] with {payload: 0}
 //│  = undefined
 
 o = l.HeadOption
-//│ o: Option['A .. 0 | 1 | 'A]
+//│ o: Option['A .. 0 | 'A]
 //│  = Some { payload: 0 }
 
 :e
@@ -97,9 +97,9 @@ case o of {None -> 0 | Some -> o.payload}
 
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
-//│ v: None['A .. 0 | 1 | 'A] | Some['A .. 0 | 1 | 'A]
+//│ v: None['A .. 0 | 'A] | Some['A .. 0 | 'A]
 //│  = Some { payload: 0 }
-//│ res: 0 | 1
+//│ res: 0
 //│    = 0
 
 
@@ -139,11 +139,11 @@ case o of {
 //│ ╟── but it flows into reference with expected type `Some[?] & ?c | None[?] & ?b`
 //│ ║  l.129: 	case o of {
 //│ ╙──       	     ^
-//│ res: 0 | 1
+//│ res: 0
 //│    = 0
 
 case o of {
     Some -> o.Get | None -> 0 | Option -> error }
-//│ res: 0 | 1
+//│ res: 0
 //│    = 0
 

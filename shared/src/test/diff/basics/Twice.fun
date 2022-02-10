@@ -22,18 +22,18 @@ twice f
 //│ res: 'a -> (1, (1, 'a,),)
 
 twice / x => x, x
-//│ res: 'a -> (('c | 'b | 'a, 'c | 'b | 'a,) as 'b)
+//│ res: 'a -> (('a, 'a,), ('a, 'a,),)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.28: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'x'
-//│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.28: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	                                     ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.26: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.28: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╙──      	                       ^^
 //│ one: 1 | error | {x: 1}
 
