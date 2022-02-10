@@ -184,6 +184,12 @@ object SourceCode {
       }
     }
     
+    /** ',' separate and wrap in angled brackets the given source code instances
+      * and return empty string if list is empty 
+      *
+      * @param entries
+      * @return
+      */
     def paramList(entries: List[SourceCode]): SourceCode = {
       entries match {
         case Nil => SourceCode("")

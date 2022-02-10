@@ -127,7 +127,15 @@ abstract class TypeImpl extends Located { self: Type =>
     case WithExtension(b, r) => b :: r :: Nil
   }
   
-  def toTsTypeSourceCode(termName: String = "res"): SourceCode = {
+  /** Converts a term to its typescript type declarations, including
+    * any new type aliases created in order to represent it's type
+    *
+    * @param termName name of term that's been declared. If none is given
+    *                 default "res" is used to indicate type of value of result
+    *                 from evaluating the term
+    * @return
+    */
+  def toTsTypeSourceCode(termName: Option[String] = None): SourceCode = {
     val ctx = ToTsTypegenContext.empty;
     
     // Create a mapping from type var to their friendly name for lookup
@@ -137,14 +145,27 @@ abstract class TypeImpl extends Located { self: Type =>
     val tsType = this.toTsType(ctx);
     
     ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => SourceCode(tup._2));
-    val completeType = SourceCode.concat(ctx.newTypeAlias) +
-      (SourceCode(s"type $termName") ++
-        SourceCode.paramList(ctx.newTypeParams) ++
-        SourceCode.equalSign ++
-        tsType
-      )
+    val completeTypegenStatement = termName match {
+      // term definitions bound to names are exported
+      // as declared variables with their derived types
+      case S(name) => SourceCode.concat(ctx.newTypeAlias) +
+        (SourceCode(s"export declare const $name") ++
+          SourceCode.paramList(ctx.newTypeParams) ++
+          SourceCode.colon ++
+          tsType
+        )
+      // terms definitions not bound to names are not exported by default
+      // they are bound to an implicit res variable and the type of res
+      // is shown here
+      case N => SourceCode.concat(ctx.newTypeAlias) +
+        (SourceCode(s"type res") ++
+          SourceCode.paramList(ctx.newTypeParams) ++
+          SourceCode.equalSign ++
+          tsType
+        )
+    }
       
-    completeType
+    completeTypegenStatement
   }
 
   /**
@@ -159,7 +180,7 @@ abstract class TypeImpl extends Located { self: Type =>
     this match {
       // these types can be inferred from expression that do not need to be
       // assigned to a variable
-      case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) => SourceCode("bool")
+      case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) => SourceCode("boolean")
       case Union(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.separator)
       case Inter(lhs, rhs) => SourceCode.sepBy(List(lhs.toTsType, rhs.toTsType), SourceCode.ampersand)
       case Record(fields) => SourceCode.recordWithEntries(fields.map(entry => (SourceCode(entry._1.name), entry._2.toTsType)))
@@ -201,23 +222,16 @@ abstract class TypeImpl extends Located { self: Type =>
       // a recursive type is wrapped in a self referencing Recursion type
       // this wrapped form is used only inside it's body
       case Recursive(uv, body) => {
-        // TODO can be added to a prelude for typescript types
-        // as recursion type alias can be shared across all recursion types
-        ctx.newTypeAlias = SourceCode("type Recurse<T> = T") +: ctx.newTypeAlias
         val uvTsType = uv.toTsType
-        
-        // swap uv type var's string representation with it's
-        // recursion wrapped representation
-        ctx.existingTypeVars = ctx.existingTypeVars.removed(uv) + (uv -> s"Recurse<$uvTsType>")
         
         // use modified context for converting body type. This will replace
         // all use of uv type var with it's wrapped type.
         ctx.newTypeAlias = (SourceCode("type ") ++ uvTsType ++
           SourceCode.equalSign ++ body.toTsType) +: ctx.newTypeAlias
           
-        // remove uv type as a type var
+        // recursive type is no longer a type variable it's an alias instead
         ctx.existingTypeVars = ctx.existingTypeVars.removed(uv)
-
+        
         uvTsType
       }
       // this occurs when polymorphic types (usually classes) are applied
