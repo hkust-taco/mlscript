@@ -18,7 +18,7 @@ def x = x + y
 //│ // end ts
 //│ res: {b: 'a} -> 'a | 1
 //│ // start ts
-//│ export declare const res<ta>: (arg0: {b: ta}) => ta | 1
+//│ export declare const res<a>: (arg0: {b: a}) => a | 1
 //│ // end ts
 //│ x: 1
 //│ // start ts
@@ -54,7 +54,7 @@ def g = rcd with { y = "yeah "}
 //│ // end ts
 //│ funky: (('a\y & {y: "nah"}) -> 'b) -> 'a -> 'b
 //│ // start ts
-//│ export declare const funky<ta, tb>: (arg0: (arg1: Omit<ta, { y }> & {y: "nah"}) => tb) => (arg2: ta) => tb
+//│ export declare const funky<a, b>: (arg0: (arg1: Omit<a, { y }> & {y: "nah"}) => b) => (arg2: a) => b
 //│ // end ts
 //│ g: {x: 1, y: "yeah "}
 //│ // start ts
@@ -83,13 +83,13 @@ rec def m (a: int) (b: int) = m
 // recursion type functions
 //│ l: int -> 'a as 'a
 //│ // start ts
-//│ type ta = (arg0: int) => ta
-//│ export declare const l: ta
+//│ type a = (arg0: int) => a
+//│ export declare const l: a
 //│ // end ts
 //│ m: int -> int -> 'a as 'a
 //│ // start ts
-//│ type ta = (arg0: int) => (arg1: int) => ta
-//│ export declare const m: ta
+//│ type a = (arg0: int) => (arg1: int) => a
+//│ export declare const m: a
 //│ // end ts
 
 :ts
@@ -99,7 +99,7 @@ def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
 //│ f: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ // start ts
-//│ export declare const f<ta, tb, tc>: (arg0: (arg1: ta) => tb & {a: int} & tc) => (arg2: {b: int} & ta) => (arg3: unknown) => tc | tb
+//│ export declare const f<a, b, c>: (arg0: (arg1: a) => b & {a: int} & c) => (arg2: {b: int} & a) => (arg3: unknown) => c | b
 //│ // end ts
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
@@ -118,7 +118,7 @@ app 2 cont
 //│ // end ts
 //│ app: int -> (int -> 'a) -> 'a
 //│ // start ts
-//│ export declare const app<ta>: (arg0: int) => (arg1: (arg2: int) => ta) => ta
+//│ export declare const app<a>: (arg0: int) => (arg1: (arg2: int) => a) => a
 //│ // end ts
 //│ res: int
 //│ // start ts

@@ -141,7 +141,7 @@ abstract class TypeImpl extends Located { self: Type =>
     // Create a mapping from type var to their friendly name for lookup
     // Also add them as type parameters to the current type because typescript
     // uses parametric polymorphism
-    ctx.existingTypeVars = ShowCtx.mk(this :: Nil, "t").vs;
+    ctx.existingTypeVars = ShowCtx.mk(this :: Nil, "").vs;
     val tsType = this.toTsType(ctx);
     
     ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => SourceCode(tup._2));
