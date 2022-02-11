@@ -129,7 +129,7 @@ object Polyfill {
     )
     buffer += BuiltinFunc(
       "error", fn(_) {
-        `throw`(JSIdent("Error", true)(JSExpr("unexpected runtime error")))
+        `throw`(JSNew(JSIdent("Error"))(JSExpr("unexpected runtime error")))
       }
     )
     buffer += BuiltinFunc("concat", makeBinaryFunc("+"))

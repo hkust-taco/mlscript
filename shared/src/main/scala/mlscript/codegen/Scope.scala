@@ -125,14 +125,6 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     ()
   }
 
-  /**
-   * Look up for a symbol locally. 
-   */
-  def get(name: Str): LexicalSymbol =
-    lexicalValueSymbols
-      .get(name)
-      .getOrElse(lexicalTypeSymbols.get(name).getOrElse(FreeSymbol(name)))
-
   def getType(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
 
   /**
@@ -153,22 +145,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     lexicalValueSymbols.contains(lexicalName) ||
       lexicalTypeSymbols.contains(lexicalName)
 
-  /**
-    * Look up for a symbol recursively.
-    */
-  def resolve(name: Str): LexicalSymbol =
-    lexicalValueSymbols.get(name) match {
-      case S(sym) => sym
-      case N =>
-        lexicalTypeSymbols.get(name) match {
-          case S(sym) => sym
-          case N =>
-            enclosing match {
-              case S(scope) => scope.resolve(name)
-              case N        => FreeSymbol(name)
-            }
-        }
-    }
+  def resolveValue(name: Str): Opt[ValueSymbol] =
+    lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
+
+  def resolveType(name: Str): Opt[TypeSymbol] =
+    lexicalTypeSymbols.get(name).orElse(enclosing.flatMap(_.resolveType(name)))
 
   def declareClass(lexicalName: Str, params: Ls[Str], base: Type): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)

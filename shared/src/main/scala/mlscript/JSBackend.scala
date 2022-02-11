@@ -11,7 +11,6 @@ import mlscript.codegen.BuiltinSymbol
 import mlscript.codegen.StubValueSymbol
 import mlscript.codegen.TraitSymbol
 import mlscript.codegen.LexicalSymbol
-import mlscript.codegen.FreeSymbol
 import mlscript.codegen.ParamSymbol
 import mlscript.codegen.TypeSymbol
 import scala.collection.mutable.ArrayBuffer
@@ -72,33 +71,40 @@ class JSBackend {
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
-  protected def translateVar(sym: LexicalSymbol, isCallee: Bool)(implicit scope: Scope): JSExpr =
-    sym match {
-      case sym: ClassSymbol =>
-        if (isCallee)
-          JSIdent(sym.runtimeName, true)
-        else
-          JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent(sym.runtimeName, true)(JSIdent("x"))))
-      case sym: BuiltinSymbol =>
+  protected def translateVar(name: Str, isCallee: Bool)(implicit scope: Scope): JSExpr =
+    scope.resolveValue(name) match {
+      case S(sym: BuiltinSymbol) =>
         sym.accessed = true
         if (!polyfill.used(sym.feature))
           polyfill.use(sym.feature, sym.runtimeName)
         val ident = JSIdent(sym.runtimeName)
         if (sym.feature === "error") ident() else ident
-      case sym: StubValueSymbol =>
+      case S(sym: StubValueSymbol) =>
         if (sym.accessible)
           JSIdent(sym.runtimeName)
         else
           throw new UnimplementedError(sym)
-      case _: FreeSymbol => throw new CodeGenError(s"unresolved symbol ${sym.lexicalName}")
-      case _: TraitSymbol | _: TypeSymbol =>
-        throw new CodeGenError(s"${sym.shortName} is not a valid expression")
-      case _ => JSIdent(sym.runtimeName)
+      case S(sym: ValueSymbol) => JSIdent(sym.runtimeName)
+      case N =>
+        scope.resolveType(name) match {
+          case S(sym: ClassSymbol) =>
+            if (isCallee)
+              JSNew(JSIdent(sym.runtimeName))
+            else
+              // For now traits constructors do nothing (are identities):
+              JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(sym.runtimeName))(JSIdent("x"))))
+          case S(_: TraitSymbol) =>
+            import JSCodeHelpers._
+            JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
+          case S(sym: TypeSymbol) =>
+            throw new CodeGenError(s"${sym.shortName} is not a valid expression")
+          case N => throw new CodeGenError(s"unresolved symbol ${name}")
+        }
     }
 
   // Returns: temp identifiers and the expression
   protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    case Var(name) => translateVar(scope.resolve(name), false)
+    case Var(name) => translateVar(name, false)
     case Lam(params, body) =>
       val patterns = translateParams(params)
       val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
@@ -116,21 +122,11 @@ class JSBackend {
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     case App(trm, Tup(args)) =>
-      lazy val arguments = args map { case (_, arg) => translateTerm(arg) }
-      trm match {
-        case Var(name) => scope.resolve(name) match {
-          case sym: TraitSymbol => arguments match {
-            case head :: Nil => head
-            case _ => throw new CodeGenError("trait construction should have only one argument")
-          }
-          case sym =>
-            val callee = translateVar(sym, true)
-            callee(arguments: _*)
-        }
-        case _ =>
-          val callee = translateTerm(trm)
-          callee(arguments: _*)
+      val callee = trm match {
+        case Var(nme) => translateVar(nme, true)
+        case _ => translateTerm(trm)
       }
+      callee(args map { case (_, arg) => translateTerm(arg) }: _*)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -205,7 +201,7 @@ class JSBackend {
       translateCase(scrut, pat)(translateTerm(body), translateCaseBranch(scrut, rest))
     case Wildcard(body) => translateTerm(body)
     case NoCases        => JSImmEvalFn(Nil, R(JSInvoke(
-      JSIdent("Error", true),
+      JSNew(JSIdent("Error")),
       JSExpr("non-exhaustive case expression") :: Nil
     ).`throw` :: Nil), Nil)
   }
@@ -601,12 +597,12 @@ class JSTestBackend extends JSBackend {
         // Check if the symbol has been implemented. If the type definition
         // is not in the same block as the implementation, we consider it as a
         // re-declaration.
-        scope.get(name) match {
-          case _: FreeSymbol =>
+        scope.resolveValue(name) match {
+          case N =>
             scope.declareStubValue(name).location = numRun
-          case t: ValueSymbol if t.location =/= numRun =>
+          case S(t) if t.location =/= numRun =>
             scope.declareStubValue(name).location = numRun
-          case _ => ()
+          case S(_) => ()
         }
         // Emit nothing for type declarations.
         JSTestBackend.EmptyQuery
@@ -633,7 +629,7 @@ class JSTestBackend extends JSBackend {
 }
 
 object JSTestBackend {
-  abstract class Query
+  sealed abstract class Query
 
   /**
     * The generation was aborted due to some reason.

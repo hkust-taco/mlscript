@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.Type
 import mlscript.JSClassDecl
 
-trait RuntimeSymbol {
+sealed trait RuntimeSymbol {
   def runtimeName: Str
 }
 
@@ -13,7 +13,7 @@ trait RuntimeSymbol {
 //   def isParametric: Bool
 // }
 
-abstract class LexicalSymbol extends RuntimeSymbol {
+sealed abstract class LexicalSymbol extends RuntimeSymbol {
 
   /**
     * The lexical name of the symbol. This is different from the runtime name,
@@ -36,7 +36,7 @@ abstract class LexicalSymbol extends RuntimeSymbol {
   override def toString(): String = shortName
 }
 
-class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends LexicalSymbol {
+sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends LexicalSymbol {
   def shortName: Str = s"value $lexicalName"
 }
 
@@ -45,7 +45,7 @@ object ValueSymbol {
     new ValueSymbol(lexicalName, runtimeName)
 }
 
-class TypeSymbol(
+sealed class TypeSymbol(
     val lexicalName: Str,
     val runtimeName: Str,
     val params: Ls[Str],
@@ -57,14 +57,6 @@ class TypeSymbol(
 object TypeSymbol {
   def apply(lexicalName: Str, runtimeName: Str, params: Ls[Str], body: Type): TypeSymbol =
     new TypeSymbol(lexicalName, runtimeName, params, body)
-}
-
-/**
-  * The not-found symbol.
-  */
-final case class FreeSymbol(val lexicalName: Str) extends LexicalSymbol {
-  override def runtimeName: Str = throw new CodeGenError("free symbol has no runtime name")
-  def shortName: Str = s"free $lexicalName"
 }
 
 final case class TemporarySymbol(val runtimeName: Str) extends RuntimeSymbol

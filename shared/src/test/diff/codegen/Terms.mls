@@ -87,7 +87,7 @@ trait T: { x: int }
 T { x = 0 }
 //│ Defined trait T
 //│ // Query 1
-//│ res = { x: 0 };
+//│ res = ((x) => x)({ x: 0 });
 //│ // End of generated code
 //│ res: {x: 0} & t
 //│    = { x: 0 }

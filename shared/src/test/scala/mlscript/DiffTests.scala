@@ -281,7 +281,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 }
               }
             )
-
+            
             final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
               def showFirst(prefixLength: Int): Unit = replies match {
                 case ReplHost.Error(err) :: rest =>
@@ -440,12 +440,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // If code generation fails, show the error message.
             results match {
               case IllFormedCode(message) =>
+                totalRuntimeErrors += 1
                 output("Code generation met an error:")
                 output(s"  ${message}")
               case Unimplemented(message) =>
                 output("Unable to execute the code:")
                 output(s"  ${message}")
               case UnexpectedCrash(message) =>
+                failures += blockLineNum
                 output("Code generation crashed:")
                 output(s"  ${message}")
               case _ => ()

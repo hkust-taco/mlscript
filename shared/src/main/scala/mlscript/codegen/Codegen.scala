@@ -370,18 +370,13 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
 
 final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
   implicit def precedence: Int = 20
-  def toSourceCode = {
-    val body = callee.embed(precedence) ++ arguments.zipWithIndex
+  def toSourceCode =
+    callee.embed(precedence) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.embed(JSCommaExpr.outerPrecedence) ++
         (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized
-    callee match {
-      case JSIdent(_, true) => SourceCode("new ") ++ body
-      case _                => body
-    }
-  }
 }
 
 final case class JSUnary(op: Str, arg: JSExpr) extends JSExpr {
@@ -484,9 +479,14 @@ final case class JSInstanceOf(left: JSExpr, right: JSExpr) extends JSExpr {
     left.toSourceCode ++ SourceCode(" instanceof ") ++ right.toSourceCode
 }
 
-final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExpr {
+final case class JSIdent(name: Str) extends JSExpr {
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = SourceCode(name)
+}
+
+final case class JSNew(ctor: JSExpr) extends JSExpr {
+  implicit def precedence: Int = 21
+  def toSourceCode: SourceCode = SourceCode("new ") ++ ctor.toSourceCode
 }
 
 class JSMember(`object`: JSExpr, property: JSExpr) extends JSExpr {
