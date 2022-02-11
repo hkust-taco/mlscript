@@ -32,8 +32,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
-    def outputSourceCode(code: SourceCode, prefix: String = "ts: ") = code.lines.foreach(line => {
-      out.println(outputMarker + prefix + line.toString())
+    def outputSourceCode(code: SourceCode) = code.lines.foreach(line => {
+      out.println(outputMarker + line.toString())
     })
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var stdout = false
@@ -412,7 +412,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         ctx += nme -> pty
                         output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
-                        if (mode.showDeclarationTS) outputSourceCode(ptType.toTsTypeSourceCode())
+                        if (mode.showDeclarationTS) outputSourceCode(ptType.toTsTypeSourceCode(Some("res")))
                     }
 
                   // statements for terms that compute to a value
@@ -422,7 +422,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode())
+                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(Some("res")))
                       prefixLength = 3
                     }
                 }

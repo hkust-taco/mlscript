@@ -9,19 +9,33 @@ def x = x + y
 (1, 3, { a = { b = { c = "d"}}}, "hello hello")
 // common values
 //│ res: {a: "hello", b: "world"}
-//│ ts: type res = {a: "hello", b: "world"}
+//│ // start ts
+//│ export declare const res: {a: "hello", b: "world"}
+//│ // end ts
 //│ res: int
-//│ ts: type res = int
+//│ // start ts
+//│ export declare const res: int
+//│ // end ts
 //│ res: {b: 'a} -> 'a | 1
-//│ ts: type res<'a> = (arg0: {b: 'a}) => 'a | 1
+//│ // start ts
+//│ export declare const res<ta>: (arg0: {b: ta}) => ta | 1
+//│ // end ts
 //│ x: 1
-//│ ts: export declare const x: 1
+//│ // start ts
+//│ export declare const x: 1
+//│ // end ts
 //│ y: 2
-//│ ts: export declare const y: 2
+//│ // start ts
+//│ export declare const y: 2
+//│ // end ts
 //│ x: int
-//│ ts: export declare const x: int
+//│ // start ts
+//│ export declare const x: int
+//│ // end ts
 //│ res: (1, 3, {a: {b: {c: "d"}}}, "hello hello",)
-//│ ts: type res = [1, 3, {a: {b: {c: "d"}}}, "hello hello"]
+//│ // start ts
+//│ export declare const res: [1, 3, {a: {b: {c: "d"}}}, "hello hello"]
+//│ // end ts
 
 :ts
 :ne
@@ -31,13 +45,21 @@ def funky f r = let t = r with { y = "nah" } in f t
 def g = rcd with { y = "yeah "}
 // records
 //│ rcd: {x: 1}
-//│ ts: export declare const rcd: {x: 1}
+//│ // start ts
+//│ export declare const rcd: {x: 1}
+//│ // end ts
 //│ res: 1
-//│ ts: type res = 1
+//│ // start ts
+//│ export declare const res: 1
+//│ // end ts
 //│ funky: (('a\y & {y: "nah"}) -> 'b) -> 'a -> 'b
-//│ ts: export declare const funky<'a, 'b>: (arg0: (arg1: Omit<'a, { y }> & {y: "nah"}) => 'b) => (arg2: 'a) => 'b
+//│ // start ts
+//│ export declare const funky<ta, tb>: (arg0: (arg1: Omit<ta, { y }> & {y: "nah"}) => tb) => (arg2: ta) => tb
+//│ // end ts
 //│ g: {x: 1, y: "yeah "}
-//│ ts: export declare const g: {x: 1, y: "yeah "}
+//│ // start ts
+//│ export declare const g: {x: 1, y: "yeah "}
+//│ // end ts
 
 
 :ts
@@ -46,9 +68,13 @@ def f (a: int) (b: string) (c: bool) = if bool then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
 // miscellaneous functions
 //│ f: int -> string -> bool -> (int | string)
-//│ ts: export declare const f: (arg0: int) => (arg1: string) => (arg2: bool) => int | string
+//│ // start ts
+//│ export declare const f: (arg0: int) => (arg1: string) => (arg2: bool) => int | string
+//│ // end ts
 //│ fact: int -> int
-//│ ts: export declare const fact: (arg0: int) => int
+//│ // start ts
+//│ export declare const fact: (arg0: int) => int
+//│ // end ts
 
 :ts
 :ne
@@ -56,11 +82,15 @@ rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 // recursion type functions
 //│ l: int -> 'a as 'a
-//│ ts: type 'a = (arg0: int) => 'a
-//│ ts: export declare const l: 'a
+//│ // start ts
+//│ type ta = (arg0: int) => ta
+//│ export declare const l: ta
+//│ // end ts
 //│ m: int -> int -> 'a as 'a
-//│ ts: type 'a = (arg0: int) => (arg1: int) => 'a
-//│ ts: export declare const m: 'a
+//│ // start ts
+//│ type ta = (arg0: int) => (arg1: int) => ta
+//│ export declare const m: ta
+//│ // end ts
 
 :ts
 :ne
@@ -68,9 +98,13 @@ def f x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
 //│ f: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
-//│ ts: export declare const f<'a, 'b, 'c>: (arg0: (arg1: 'a) => 'b & {a: int} & 'c) => (arg2: {b: int} & 'a) => (arg3: unknown) => 'c | 'b
+//│ // start ts
+//│ export declare const f<ta, tb, tc>: (arg0: (arg1: ta) => tb & {a: int} & tc) => (arg2: {b: int} & ta) => (arg3: unknown) => tc | tb
+//│ // end ts
 //│ g: nothing -> nothing -> nothing
-//│ ts: export declare const g: (arg0: never) => (arg1: never) => never
+//│ // start ts
+//│ export declare const g: (arg0: never) => (arg1: never) => never
+//│ // end ts
 
 
 :ts
@@ -79,35 +113,46 @@ def cont x = x + 1
 def app y k = k (y - 1)
 app 2 cont
 //│ cont: int -> int
-//│ ts: export declare const cont: (arg0: int) => int
+//│ // start ts
+//│ export declare const cont: (arg0: int) => int
+//│ // end ts
 //│ app: int -> (int -> 'a) -> 'a
-//│ ts: export declare const app<'a>: (arg0: int) => (arg1: (arg2: int) => 'a) => 'a
+//│ // start ts
+//│ export declare const app<ta>: (arg0: int) => (arg1: (arg2: int) => ta) => ta
+//│ // end ts
 //│ res: int
-//│ ts: type res = int
+//│ // start ts
+//│ export declare const res: int
+//│ // end ts
 
 :ts
 :ne
+:e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 // type casting and wildcards
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.90: 	1: ?
-//│ ║        	^
+//│ ║  l.131: 	1: ?
+//│ ║         	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.90: 	1: ?
-//│ ╙──      	   ^
+//│ ║  l.131: 	1: ?
+//│ ╙──       	   ^
 //│ res: anything
-//│ ts: type res = unknown
+//│ // start ts
+//│ export declare const res: unknown
+//│ // end ts
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.91: 	{ a = "hello" }: { a: string } & { b: int }
-//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.132: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.91: 	{ a = "hello" }: { a: string } & { b: int }
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.132: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
-//│ ts: type res = {a: string, b: int}
+//│ // start ts
+//│ export declare const res: {a: string, b: int}
+//│ // end ts
 
 :ts
 :ne
@@ -117,12 +162,22 @@ def bar: ~T
 def gee: T -> { a: int; b: { a: T }}
 // negative types
 //│ Defined type alias T
+//│ // start ts
+//│ type talias1<T0> = T0 extends string ? never : T0
+//│ export declare const T<T0>: int | talias1<T0>
+//│ // end ts
 //│ foo: int | ~string
-//│ ts: type talias1<T0> = T0 extends string ? never : T0
-//│ ts: export declare const foo<T0>: int | talias1<T0>
+//│ // start ts
+//│ type talias1<T0> = T0 extends string ? never : T0
+//│ export declare const foo<T0>: int | talias1<T0>
+//│ // end ts
 //│ bar: string
-//│ ts: export declare const bar: string
+//│ // start ts
+//│ export declare const bar: string
+//│ // end ts
 //│ gee: (int | ~string) -> {a: int, b: {a: int | ~string}}
-//│ ts: type talias4<T3> = T3 extends string ? never : T3
-//│ ts: type talias2<T1> = T1 extends string ? never : T1
-//│ ts: export declare const gee<T3, T1>: (arg0: int | talias2<T1>) => {a: int, b: {a: int | talias4<T3>}}
+//│ // start ts
+//│ type talias4<T3> = T3 extends string ? never : T3
+//│ type talias2<T1> = T1 extends string ? never : T1
+//│ export declare const gee<T3, T1>: (arg0: int | talias2<T1>) => {a: int, b: {a: int | talias4<T3>}}
+//│ // end ts
