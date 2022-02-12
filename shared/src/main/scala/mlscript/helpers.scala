@@ -134,7 +134,7 @@ abstract class TypeImpl extends Located { self: Type =>
     *                 from evaluating the term
     * @return
     */
-  def toTsTypeSourceCode(termName: Option[String] = None): SourceCode = {
+  def toTsTypeSourceCode(termName: Option[String] = None, typeDecl: String = "", existingTypePararms: List[TypeName] = List.empty): SourceCode = {
     val ctx = ToTsTypegenContext.empty;
     
     // Create a mapping from type var to their friendly name for lookup
@@ -143,11 +143,13 @@ abstract class TypeImpl extends Located { self: Type =>
     ctx.existingTypeVars = ShowCtx.mk(this :: Nil, "").vs;
     val tsType = toTsType(ctx);
     
-    ctx.newTypeParams = ctx.newTypeParams ++ ctx.existingTypeVars.map(tup => SourceCode(tup._2));
+    ctx.newTypeParams = ctx.newTypeParams ++
+      ctx.existingTypeVars.map(tup => SourceCode(tup._2)) ++
+      existingTypePararms.map(typeName => SourceCode(typeName.name))
     termName match {
       // term definitions bound to names are exported
       // as declared variables with their derived types
-      case S(name) =>
+      case Some(name) =>
         SourceCode("// start ts") +
         SourceCode.concat(ctx.newTypeAlias) +
         (SourceCode(s"export declare const $name") ++
@@ -159,10 +161,10 @@ abstract class TypeImpl extends Located { self: Type =>
       // terms definitions not bound to names are not exported by default
       // they are bound to an implicit res variable and the type of res
       // is shown here
-      case N =>
+      case None =>
         SourceCode("// start ts") +
         SourceCode.concat(ctx.newTypeAlias) +
-        (SourceCode(s"type res") ++
+        (SourceCode(s"export type $typeDecl") ++
           SourceCode.paramList(ctx.newTypeParams) ++
           SourceCode.equalSign ++
           tsType
@@ -270,6 +272,15 @@ abstract class TypeImpl extends Located { self: Type =>
       case t@TypeVar(_, _) =>
         ctx.existingTypeVars.get(t).map(s => SourceCode(s)).getOrElse(SourceCode("NOT FOUND"))
     }
+  }
+}
+
+trait TypeDefImpl { self: TypeDef =>
+  def toTsTypeSourceCode: SourceCode = this.kind match {
+    // directly use type alias body type to generate ts type
+    case Als => this.body.toTsTypeSourceCode(None, this.nme.name, this.tparams)
+    case Cls => SourceCode("TODO")
+    case Trt => SourceCode("TODO")
   }
 }
 

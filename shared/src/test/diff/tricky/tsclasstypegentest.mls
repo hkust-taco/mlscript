@@ -1,0 +1,13 @@
+:ne
+:ts
+type G[T] = { a : T }
+type H = int | ~string
+//│ Defined type alias G
+//│ // start ts
+//│ export type G<T> = {a: T}
+//│ // end ts
+//│ Defined type alias H
+//│ // start ts
+//│ type talias1<T0> = T0 extends string ? never : T0
+//│ export type H<T0> = int | talias1<T0>
+//│ // end ts

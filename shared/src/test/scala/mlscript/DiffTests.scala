@@ -286,6 +286,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                       _ => "Declared"  // the method type has just been declared
                     )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
+                
+                if (mode.showDeclarationTS) outputSourceCode(td.toTsTypeSourceCode)
               }
             )
             
