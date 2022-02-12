@@ -386,7 +386,7 @@ class JSBackend {
       methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
     val members = methods map { translateClassMember(_) }
-    getBaseClassAndFields(actualType) match {
+    ClassInfo(typeAliasMap, traitNames, classNames).getBaseClassAndFields(actualType) match {
       // Case 1: no base class, just fields.
       case fields -> N => JSClassDecl(name, fields.distinct, N, members)
       // Case 2: has a base class and fields.
