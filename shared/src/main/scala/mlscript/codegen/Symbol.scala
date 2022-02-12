@@ -4,16 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.Type
 import mlscript.JSClassDecl
 
-sealed trait RuntimeSymbol {
-  def runtimeName: Str
-}
-
-// trait TypeSymbol {
-//   def baseType: Ls[Str] -> Type
-//   def isParametric: Bool
-// }
-
-sealed abstract class LexicalSymbol extends RuntimeSymbol {
+sealed trait LexicalSymbol {
 
   /**
     * The lexical name of the symbol. This is different from the runtime name,
@@ -23,21 +14,23 @@ sealed abstract class LexicalSymbol extends RuntimeSymbol {
   def lexicalName: Str
 
   /**
-    * A short name for the declaration used in debugging and error messages.
-    */
-  def shortName: Str
-
-  /**
     * Currently, this is the number of the test block in which it is defined.
     * TODO: use a generic block number when we need to support source maps.
     */
   var location: Int = 0
-
-  override def toString(): String = shortName
 }
 
-sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends LexicalSymbol {
-  def shortName: Str = s"value $lexicalName"
+sealed trait RuntimeSymbol extends LexicalSymbol {
+  def runtimeName: Str
+}
+
+sealed trait TypeSymbol extends LexicalSymbol {
+  val params: Ls[Str]
+  val actualType: Type
+}
+
+sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends RuntimeSymbol {
+  override def toString: Str = s"value $lexicalName"
 }
 
 object ValueSymbol {
@@ -45,25 +38,19 @@ object ValueSymbol {
     new ValueSymbol(lexicalName, runtimeName)
 }
 
-sealed class TypeSymbol(
+sealed case class TypeAliasSymbol(
     val lexicalName: Str,
-    val runtimeName: Str,
     val params: Ls[Str],
     val actualType: Type
-) extends LexicalSymbol {
-  def shortName: Str = s"type $lexicalName"
+) extends TypeSymbol
+    with LexicalSymbol {
+  override def toString: Str = s"type $lexicalName"
 }
 
-object TypeSymbol {
-  def apply(lexicalName: Str, runtimeName: Str, params: Ls[Str], body: Type): TypeSymbol =
-    new TypeSymbol(lexicalName, runtimeName, params, body)
-}
+final case class BuiltinSymbol(val lexicalName: Str, feature: Str) extends RuntimeSymbol {
+  val runtimeName = lexicalName
 
-final case class TemporarySymbol(val runtimeName: Str) extends RuntimeSymbol
-
-final case class BuiltinSymbol(override val lexicalName: Str, feature: Str)
-    extends ValueSymbol(lexicalName, lexicalName) {
-  override def shortName: Str = s"function $lexicalName"
+  override def toString: Str = s"function $lexicalName"
 
   /**
     * `true` if the built-in value had been accessed before.
@@ -77,17 +64,18 @@ final case class StubValueSymbol(
     override val runtimeName: Str,
     previous: Opt[StubValueSymbol]
 )(implicit val accessible: Bool)
-    extends ValueSymbol(lexicalName, runtimeName) {
-  override def shortName: Str = s"value $lexicalName"
+    extends RuntimeSymbol {
+  override def toString: Str = s"value $lexicalName"
 }
 
 final case class ClassSymbol(
-    override val lexicalName: Str,
-    override val runtimeName: Str,
-    override val params: Ls[Str],
-    val base: Type,
+    val lexicalName: Str,
+    val runtimeName: Str,
+    val params: Ls[Str],
+    val actualType: Type,
     enclosingScope: Scope
-) extends TypeSymbol(lexicalName, runtimeName, params, base) {
+) extends TypeSymbol
+    with RuntimeSymbol {
   private val scope = enclosingScope.derive(s"class $lexicalName")
 
   def declareMember(name: Str): ValueSymbol = scope.declareValue(name)
@@ -120,21 +108,17 @@ final case class ClassSymbol(
     */
   var order: Int = 0
 
-  override def shortName: Str = s"class $lexicalName ($runtimeName)"
+  override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 
 final case class TraitSymbol(
-    override val lexicalName: Str,
-    override val runtimeName: Str,
-    override val params: Ls[Str],
-    base: Type
-) extends TypeSymbol(lexicalName, runtimeName, params, base) {
-  override def shortName: Str = s"trait $lexicalName"
-}
-
-final case class ParamSymbol(override val lexicalName: Str, override val runtimeName: Str)
-    extends ValueSymbol(lexicalName, runtimeName) {
-  override def shortName: Str = s"parameter $lexicalName"
+    val lexicalName: Str,
+    val runtimeName: Str,
+    val params: Ls[Str],
+    val actualType: Type
+) extends TypeSymbol
+    with RuntimeSymbol {
+  override def toString: Str = s"trait $lexicalName"
 }
 
 object Symbol {

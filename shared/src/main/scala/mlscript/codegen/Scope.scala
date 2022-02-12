@@ -8,8 +8,8 @@ import mlscript.{TypeName, Top, Bot}
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
-  private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, ValueSymbol]()
-  private val runtimeSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
+  private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
+  private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
 
   val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
 
@@ -39,11 +39,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       register(BuiltinSymbol(name, name))
     }
     // TODO: add `true`, `false`, and `error` to this list
-    register(TypeSymbol("anything", "anything", Nil, Top))
-    register(TypeSymbol("nothing", "nothing", Nil, Bot))
+    register(TypeAliasSymbol("anything", Nil, Top))
+    register(TypeAliasSymbol("nothing", Nil, Bot))
     // TODO: register them in the same way as `Typer` does.
     Ls("int", "number", "bool", "string", "unit") foreach { name =>
-      register(TypeSymbol(name, name, Nil, TypeName(name)))
+      register(TypeAliasSymbol(name, Nil, TypeName(name)))
     }
   }
 
@@ -54,7 +54,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     this(name, Opt(enclosing))
     params foreach { param =>
       // TODO: avoid reserved keywords.
-      val symbol = ParamSymbol(param, param)
+      val symbol = ValueSymbol(param, param)
       register(symbol)
     }
   }
@@ -101,21 +101,27 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     )
   }
 
-  /**
-    * Register a lexical symbol in both runtime name set and lexical name set.
-    */
-  private def register(symbol: TypeSymbol): Unit = {
+  private def register(symbol: TypeAliasSymbol): Unit = {
     lexicalTypeSymbols.put(symbol.lexicalName, symbol)
-    runtimeSymbols.put(symbol.runtimeName, symbol)
     ()
   }
 
   /**
     * Register a lexical symbol in both runtime name set and lexical name set.
     */
-  private def register(symbol: ValueSymbol): Unit = {
+  private def register(symbol: TypeSymbol with RuntimeSymbol): Unit = {
+    lexicalTypeSymbols.put(symbol.lexicalName, symbol)
     lexicalValueSymbols.put(symbol.lexicalName, symbol)
-    runtimeSymbols.put(symbol.runtimeName, symbol)
+    runtimeSymbols += symbol.runtimeName
+    ()
+  }
+
+  /**
+    * Register a lexical symbol in both runtime name set and lexical name set.
+    */
+  private def register(symbol: RuntimeSymbol): Unit = {
+    lexicalValueSymbols.put(symbol.lexicalName, symbol)
+    runtimeSymbols += symbol.runtimeName
     ()
   }
 
@@ -130,22 +136,15 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   /**
    * Look up for a class symbol locally.
    */
-  def expect[T <: TypeSymbol](name: Str)(implicit tag: ClassTag[T]): Opt[T] =
+  def getClassSymbol(name: Str): Opt[ClassSymbol] =
     lexicalTypeSymbols.get(name) flatMap {
       _ match {
-        case c: T => S(c)
-        case _    => N
+        case c: ClassSymbol => S(c)
+        case _              => N
       }
     }
 
-  /**
-   * Check whether a lexical name is used.
-   */
-  def declared(lexicalName: Str): Boolean =
-    lexicalValueSymbols.contains(lexicalName) ||
-      lexicalTypeSymbols.contains(lexicalName)
-
-  def resolveValue(name: Str): Opt[ValueSymbol] =
+  def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
 
   def resolveType(name: Str): Opt[TypeSymbol] =
@@ -165,18 +164,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareType(lexicalName: Str, params: Ls[Str], ty: Type): TypeSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = TypeSymbol(lexicalName, runtimeName, params, ty)
+  def declareTypeAlias(lexicalName: Str, params: Ls[Str], ty: Type): TypeAliasSymbol = {
+    val symbol = TypeAliasSymbol(lexicalName, params, ty)
     register(symbol)
     symbol
   }
 
   def declareValue(lexicalName: Str): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
-      case S(sym: StubValueSymbol) => sym.runtimeName
+      case S(sym: StubValueSymbol)                => sym.runtimeName
       case S(sym: BuiltinSymbol) if !sym.accessed => sym.runtimeName
-      case _                       => allocateRuntimeName(lexicalName)
+      case _                                      => allocateRuntimeName(lexicalName)
     }
     val symbol = ValueSymbol(lexicalName, runtimeName)
     register(symbol)
@@ -186,30 +184,36 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   def declareStubValue(lexicalName: Str)(implicit accessible: Bool): StubValueSymbol =
     declareStubValue(lexicalName, N)
 
-  def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit accessible: Bool): StubValueSymbol =
+  def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit
+      accessible: Bool
+  ): StubValueSymbol =
     declareStubValue(lexicalName, S(previous))
 
-  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit accessible: Bool): StubValueSymbol = {
+  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit
+      accessible: Bool
+  ): StubValueSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
     val symbol = StubValueSymbol(lexicalName, runtimeName, previous)
     register(symbol)
     symbol
   }
 
-  def stubize(sym: ValueSymbol, previous: StubValueSymbol)(implicit accessible: Bool): StubValueSymbol = {
+  def stubize(sym: ValueSymbol, previous: StubValueSymbol)(implicit
+      accessible: Bool
+  ): StubValueSymbol = {
     unregister(sym)
     declareStubValue(sym.lexicalName, S(previous))
   }
 
   def declareRuntimeSymbol(): Str = {
     val name = allocateRuntimeName()
-    runtimeSymbols.put(name, TemporarySymbol(name))
+    runtimeSymbols += name
     name
   }
 
   def declareRuntimeSymbol(prefix: Str): Str = {
     val name = allocateRuntimeName(prefix)
-    runtimeSymbols.put(name, TemporarySymbol(name))
+    runtimeSymbols += name
     name
   }
 

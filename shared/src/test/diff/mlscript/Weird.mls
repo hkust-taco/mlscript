@@ -5,12 +5,12 @@
 anything
 //│ res: anything
 //│ Code generation met an error:
-//│   type anything is not a valid expression
+//│   unresolved symbol anything
 
 nothing
 //│ res: nothing
 //│ Code generation met an error:
-//│   type nothing is not a valid expression
+//│   unresolved symbol nothing
 
 Nothing
 //│ res: nothing
@@ -20,10 +20,10 @@ Nothing
 int
 //│ res: int
 //│ Code generation met an error:
-//│   type int is not a valid expression
+//│   unresolved symbol int
 
 int + 1
 //│ res: int
 //│ Code generation met an error:
-//│   type int is not a valid expression
+//│   unresolved symbol int
 

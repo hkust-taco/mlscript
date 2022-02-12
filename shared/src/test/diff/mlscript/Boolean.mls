@@ -11,7 +11,10 @@ def False: False
 //│ False: false
 //│      = <missing implementation>
 
+:js
 True: Boolean
+//│ // Query 1 aborted: True is not implemented
+//│ // End of generated code
 //│ res: bool
 //│    = <no result>
 //│      True is not implemented
@@ -19,9 +22,9 @@ True: Boolean
 :e
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.20: 	Boolean
+//│ ║  l.23: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation met an error:
-//│   type Boolean is not a valid expression
+//│   unresolved symbol Boolean
 

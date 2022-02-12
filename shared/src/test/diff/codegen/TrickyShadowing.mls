@@ -35,7 +35,7 @@ class add
 // FIXME
 add
 //│ res: int -> int -> int
-//│    = [Function: add]
+//│    = [Function: res]
 
 add = 2
 //│ add: 2
@@ -56,17 +56,18 @@ class Test
 :js
 x = Test
 //│ // Query 1
-//│ globalThis.x = Test;
+//│ globalThis.x = function x(x) {
+//│   return new Test1(x);
+//│ };
 //│ res = x;
 //│ // End of generated code
 //│ x: anything -> Test
-//│  = 1
+//│  = [Function: x]
 
 // FIXME
 x 1
 //│ res: Test
-//│ Runtime error:
-//│   TypeError: x is not a function
+//│    = Test1 {}
 
 
 
@@ -93,7 +94,7 @@ type B = Test2
 :js
 class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.94: 	class C: B
+//│ ║  l.95: 	class C: B
 //│ ╙──      	      ^^^^
 //│ // Prelude
 //│ class C extends Test2 {
@@ -106,8 +107,8 @@ class C: B
 :js
 B = 1
 //│ // Query 1
-//│ globalThis.B1 = 1;
-//│ res = B1;
+//│ globalThis.B = 1;
+//│ res = B;
 //│ // End of generated code
 //│ B: 1
 //│  = 1
@@ -235,10 +236,10 @@ type Lol = 1
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.236: 	Lol
+//│ ║  l.237: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation met an error:
-//│   type Lol is not a valid expression
+//│   unresolved symbol Lol
 
 

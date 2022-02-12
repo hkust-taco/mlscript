@@ -10,9 +10,7 @@ import mlscript.codegen.ClassSymbol
 import mlscript.codegen.BuiltinSymbol
 import mlscript.codegen.StubValueSymbol
 import mlscript.codegen.TraitSymbol
-import mlscript.codegen.LexicalSymbol
-import mlscript.codegen.ParamSymbol
-import mlscript.codegen.TypeSymbol
+import mlscript.codegen.TypeAliasSymbol
 import scala.collection.mutable.ArrayBuffer
 import mlscript.codegen.Helpers._
 
@@ -85,21 +83,16 @@ class JSBackend {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) => JSIdent(sym.runtimeName)
-      case N =>
-        scope.resolveType(name) match {
-          case S(sym: ClassSymbol) =>
-            if (isCallee)
-              JSNew(JSIdent(sym.runtimeName))
-            else
-              // For now traits constructors do nothing (are identities):
-              JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(sym.runtimeName))(JSIdent("x"))))
-          case S(_: TraitSymbol) =>
-            import JSCodeHelpers._
-            JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
-          case S(sym: TypeSymbol) =>
-            throw new CodeGenError(s"${sym.shortName} is not a valid expression")
-          case N => throw new CodeGenError(s"unresolved symbol ${name}")
-        }
+      case S(sym: ClassSymbol) =>
+        if (isCallee)
+          JSNew(JSIdent(sym.runtimeName))
+        else
+          JSArrowFn(JSNamePattern("x") :: Nil, L(JSNew(JSIdent(sym.runtimeName))(JSIdent("x"))))
+      case S(sym: TraitSymbol) =>
+        import JSCodeHelpers._
+        // For now traits constructors do nothing (are identities):
+        JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
+      case N => throw new CodeGenError(s"unresolved symbol ${name}")
     }
 
   // Returns: temp identifiers and the expression
@@ -239,7 +232,7 @@ class JSBackend {
       topLevelScope.getType(name) match {
         case S(sym: ClassSymbol) => TypeName(name) // Note that here we erase the arguments.
         case S(sym: TraitSymbol) => ??? 
-        case S(sym: TypeSymbol) =>
+        case S(sym: TypeAliasSymbol) =>
           assert(targs.length === sym.params.length, targs -> sym.params)
           substitute(
             sym.actualType,
@@ -265,8 +258,8 @@ class JSBackend {
           topLevelScope.getType(name) match {
             case S(sym: ClassSymbol) => TypeName(name)
             case S(sym: TraitSymbol) => TypeName(name)
-            case S(sym: TypeSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
-            case S(sym: TypeSymbol) => throw CodeGenError(
+            case S(sym: TypeAliasSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
+            case S(sym: TypeAliasSymbol) => throw CodeGenError(
                 s"type $name expects ${sym.params.length} type parameters but nothing provided"
             )
             case N => throw new CodeGenError(s"undeclared type name $name")
@@ -288,7 +281,7 @@ class JSBackend {
       methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
     val members = methods map { translateClassMember(_) }
-    topLevelScope.expect[ClassSymbol](classSymbol.lexicalName) match {
+    topLevelScope.getClassSymbol(classSymbol.lexicalName) match {
       case S(sym) => sym.baseClass match {
         case N => JSClassDecl(classSymbol.runtimeName, sym.fields.distinct, N, members)
         case S(baseClassSym) => baseClassSym.body match {
@@ -325,7 +318,7 @@ class JSBackend {
     val classes = new ArrayBuffer[ClassSymbol]()
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        topLevelScope.declareType(name, tparams map { _.name }, body)
+        topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTrait(name, tparams map { _.name }, body)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
@@ -371,11 +364,11 @@ class JSBackend {
         case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
         case S(sym: TraitSymbol) => N
-        case S(sym: TypeSymbol) if sym.params.isEmpty =>
+        case S(sym: TypeAliasSymbol) if sym.params.isEmpty =>
           // The base class is a type alias with no parameters.
           // Good, just make sure all term is normalized.
           resolveClassBase(substitute(sym.actualType))
-        case S(sym: TypeSymbol) => 
+        case S(sym: TypeAliasSymbol) => 
           throw CodeGenError(
             s"type $name expects ${sym.params.length} type parameters but none provided"
           )
@@ -405,11 +398,11 @@ class JSBackend {
         case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
         case S(sym: TraitSymbol) => N
-        case S(sym: TypeSymbol) if sym.params.isEmpty =>
+        case S(sym: TypeAliasSymbol) if sym.params.isEmpty =>
           // The base class is a type alias with no parameters.
           // Good, just make sure all term is normalized.
           resolveClassBase(substitute(sym.actualType))
-        case S(sym: TypeSymbol) => 
+        case S(sym: TypeAliasSymbol) => 
           assert(targs.length === sym.params.length, targs -> sym.params)
           val normalized = substitute(
             sym.actualType,
@@ -431,7 +424,7 @@ class JSBackend {
     * Make sure call `declareTypeDefs` before calling this.
     */
   protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): Unit =
-    classSymbols foreach { sym => sym.baseClass = resolveClassBase(sym.base) }
+    classSymbols foreach { sym => sym.baseClass = resolveClassBase(sym.actualType) }
 
   /**
     * Sort class symbols topologically.
@@ -461,7 +454,7 @@ class JSBackend {
     // Ahhhhhhhh! This is the most ugly part of the code generator. I am sorry.
     typeDefs.toSeq flatMap {
       case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
-        topLevelScope.expect[ClassSymbol](name) match {
+        topLevelScope.getClassSymbol(name) match {
           case S(sym) => S((sym, mthDefs, sym.order))
           // Should crash if the class is not defined.
           case N => throw new Exception(s"class $name should be declared")
@@ -598,9 +591,11 @@ class JSTestBackend extends JSBackend {
         // is not in the same block as the implementation, we consider it as a
         // re-declaration.
         scope.resolveValue(name) match {
-          case N =>
+          case N | S(_: ClassSymbol) =>
+            // Example: stub constructors in Boolean.mls
             scope.declareStubValue(name).location = numRun
           case S(t) if t.location =/= numRun =>
+            // Example: declare type after the implementation.
             scope.declareStubValue(name).location = numRun
           case S(_) => ()
         }
