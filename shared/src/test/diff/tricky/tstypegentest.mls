@@ -162,10 +162,6 @@ def bar: ~T
 def gee: T -> { a: int; b: { a: T }}
 // negative types
 //│ Defined type alias T
-//│ // start ts
-//│ type talias1<T0> = T0 extends string ? never : T0
-//│ export declare const T<T0>: int | talias1<T0>
-//│ // end ts
 //│ foo: int | ~string
 //│ // start ts
 //│ type talias1<T0> = T0 extends string ? never : T0
