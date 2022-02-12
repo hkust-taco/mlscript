@@ -1,0 +1,94 @@
+
+def test f = f (fun b -> if b then 1 else 2)
+//│ test: ((bool -> (1 | 2)) -> 'a) -> 'a
+//│     = [Function: test]
+
+test (fun k -> (k true, k false))
+//│ res: (1 | 2, 1 | 2,)
+//│    = [ 1, 2 ]
+
+
+class Class: {x : int}
+  method Test = 12
+//│ Defined class Class
+//│ Defined Class.Test: Class -> 12
+
+c = Class{x = 1}
+//│ c: Class & {x: 1}
+//│  = Class { x: 1 }
+
+:js
+def useCls c = case c of { Class -> c.x | int -> "oops" }
+//│ // Query 1
+//│ globalThis.useCls = function useCls(c) {
+//│   let temp;
+//│   return (temp = c, temp instanceof Class ? c.x : Number.isInteger(temp) ? "oops" : (function () {
+//│     throw new Error("non-exhaustive case expression");
+//│   })());
+//│ };
+//│ res = useCls;
+//│ // End of generated code
+//│ useCls: ((Class with {x: 'a}) | int) -> ("oops" | 'a)
+//│       = [Function: useCls]
+
+useCls c
+//│ res: "oops" | 1
+//│    = 1
+
+useCls (c with { x = 2 })
+//│ res: "oops" | 2
+//│    = 2
+
+:js
+trait T
+  method Test2 = 1
+//│ Defined trait T
+//│ Defined T.Test2: t -> 1
+//│ // End of generated code
+
+:js
+class D: T & {z: int}
+//│ Defined class D
+//│ // Prelude
+//│ class D {
+//│   constructor(fields) {
+//│     this.z = fields.z;
+//│   }
+//│ }
+//│ // End of generated code
+
+def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ useTrt: ((Class with {x: 'a}) & ~t | {y: 'a} & t) -> 'a
+//│       = [Function: useTrt]
+
+:e
+useTrt c
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.65: 	useTrt c
+//│ ║        	^^^^^^^^
+//│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║        	                                ^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ╙──      	                    ^
+//│ res: 1 | error
+//│ Runtime error:
+//│   ReferenceError: T is not defined
+
+:re
+useTrt (c with { y = 1 })
+//│ res: 1
+//│ Runtime error:
+//│   ReferenceError: T is not defined
+
+d = D{z = 1213}
+//│ d: D & {z: 1213}
+//│  = D { z: 1213 }
+
+d: {z: 'a}
+//│ res: {z: 1213}
+//│    = D { z: 1213 }
+
+

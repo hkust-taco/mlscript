@@ -33,7 +33,7 @@ add res 1
 (1: int): ~int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.33: 	(1: int): ~int
-//│ ║        	 ^
+//│ ║        	^^^^^^^^
 //│ ╟── type `int` does not match type `~int`
 //│ ║  l.33: 	(1: int): ~int
 //│ ║        	    ^^^
