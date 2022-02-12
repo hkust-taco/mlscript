@@ -58,7 +58,6 @@ Hey t
 //│ res: (1, 2, 3,) & hey | error
 //│    = [ 1, 2, 3 ]
 
-// TODO: fix `withConstruct` on arrays
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
 //│    = [ 1, 2, 3, x: 1 ]
