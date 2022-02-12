@@ -150,10 +150,8 @@ object SourceCode {
     codes.foldLeft(SourceCode.empty) { _ + _ }
 
   /**
-    * Source entries with curly braces
+    * Comma separate elements of List[SourceCode] and wrap with curly braces
     * 
-    * e.g. [1, 1] = {1, 1}
-    *
     * @param entries
     * @return
     */
