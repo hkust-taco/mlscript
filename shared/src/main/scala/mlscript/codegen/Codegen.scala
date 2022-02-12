@@ -280,7 +280,7 @@ final case class JSNamePattern(name: Str) extends JSPattern {
 
 abstract class JSExpr extends JSCode {
   // See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
-  def precedence: Int
+  implicit def precedence: Int
 
   def isSimple: Bool = false
 
@@ -326,7 +326,7 @@ abstract class JSExpr extends JSCode {
 
   def log(): JSStmt = JSIdent("console").member("log")(this).stmt
 
-  def embed(parentPrecedence: Int): SourceCode =
+  def embed(implicit parentPrecedence: Int): SourceCode =
     if (precedence < parentPrecedence) {
       this.toSourceCode.parenthesized
     } else {
@@ -357,24 +357,28 @@ object JSExpr {
 }
 
 final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
-  def precedence: Int = 1
+  implicit def precedence: Int = 1
   def toSourceCode: SourceCode = SourceCode.sepBy(exprs map { _.toSourceCode })
 }
 
+object JSCommaExpr {
+  val outerPrecedence: Int = 2
+}
+
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
-  def precedence: Int = 3
+  implicit def precedence: Int = 3
   def toSourceCode: SourceCode =
     lhs.embed(precedence) ++ SourceCode(" = ") ++ rhs.embed(precedence)
 }
 
 final case class JSPlaceholderExpr() extends JSExpr {
-  def precedence: Int = ???
+  implicit def precedence: Int = ???
   def toSourceCode: SourceCode = SourceCode.empty
 }
 
 final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) extends JSExpr {
   // If the precedence is 2. We will have x => (x, 0) and (x => x)(1).
-  def precedence: Int = 2
+  implicit def precedence: Int = 2
   def toSourceCode: SourceCode =
     params.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
@@ -384,7 +388,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized ++ SourceCode(" => ") ++ (body match {
-      case L(expr)  => expr.toSourceCode.parenthesized(expr.precedence < precedence)
+      case L(expr)  => expr.embed
       case R(stmts) => SourceCode.concat(stmts map { _.toSourceCode }).block
     })
   def toFuncExpr(name: Opt[Str]): JSFuncExpr = JSFuncExpr(name, params, body match {
@@ -394,7 +398,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
 }
 
 final case class JSFuncExpr(name: Opt[Str], params: Ls[JSPattern], body: Ls[JSStmt]) extends JSExpr {
-  def precedence: Int = 22
+  implicit def precedence: Int = 22
   def toSourceCode: SourceCode =
     SourceCode(s"function ${name getOrElse ""}") ++
       JSExpr.params(params) ++
@@ -408,7 +412,7 @@ final case class JSImmEvalFn(
     body: Either[JSExpr, Ls[JSStmt]],
     arguments: Ls[JSExpr]
 ) extends JSExpr {
-  def precedence: Int = 22
+  implicit def precedence: Int = 22
   def toSourceCode: SourceCode = {
     (SourceCode(s"function (${params mkString ", "}) ") ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
@@ -419,22 +423,18 @@ final case class JSImmEvalFn(
 }
 
 final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr {
-  def precedence: Int = 4
+  implicit def precedence: Int = 4
   def toSourceCode =
-    tst.toSourceCode.parenthesized(tst.precedence < precedence) ++
-      SourceCode(" ? ") ++
-      csq.toSourceCode.parenthesized(csq.precedence < precedence) ++
-      SourceCode(" : ") ++
-      alt.toSourceCode.parenthesized(alt.precedence < precedence)
+    tst.embed ++ SourceCode(" ? ") ++ csq.embed ++ SourceCode(" : ") ++ alt.embed
 }
 
 final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
-  def precedence: Int = 20
+  implicit def precedence: Int = 20
   def toSourceCode = {
     val body = callee.embed(precedence) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
-        x ++ y.toSourceCode ++ (if (i === arguments.length - 1) SourceCode.empty
-                                else SourceCode(", "))
+        x ++ y.embed(JSCommaExpr.outerPrecedence) ++
+        (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized
     callee match {
@@ -445,27 +445,25 @@ final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr 
 }
 
 final case class JSUnary(op: Str, arg: JSExpr) extends JSExpr {
-  def precedence: Int = 15
+  implicit def precedence: Int = 15
 
   override def toSourceCode: SourceCode = (op match {
     case "typeof" => SourceCode("typeof ")
     case _        => SourceCode(op)
-  }) ++ arg.toSourceCode.parenthesized(arg.precedence < precedence)
+  }) ++ arg.embed
 }
 
 final case class JSBinary(op: Str, left: JSExpr, right: JSExpr) extends JSExpr {
   def apply(op: Str, left: JSExpr, right: JSExpr): JSBinary =
     new JSBinary(op, left, right)
 
-  def precedence: Int = JSBinary.opPrecMap get op match {
+  implicit def precedence: Int = JSBinary.opPrecMap get op match {
     case Some(prec) => prec
     case None       => throw new Error(s"Unknown binary operator: $op")
   }
 
   override def toSourceCode: SourceCode =
-    left.toSourceCode.parenthesized(left.precedence < precedence) ++
-      SourceCode(s" $op ") ++
-      right.toSourceCode.parenthesized(right.precedence < precedence)
+    left.embed ++ SourceCode(s" $op ") ++ right.embed
 }
 
 object JSBinary {
@@ -514,7 +512,7 @@ object JSBinary {
 
 final case class JSLit(literal: Str) extends JSExpr {
   // Literals has the highest precedence.
-  def precedence: Int = 22
+  implicit def precedence: Int = 22
   def toSourceCode = SourceCode(literal)
 }
 
@@ -541,13 +539,13 @@ object JSLit {
 }
 
 final case class JSInstanceOf(left: JSExpr, right: JSExpr) extends JSExpr {
-  def precedence: Int = 12
+  implicit def precedence: Int = 12
   def toSourceCode: SourceCode =
     left.toSourceCode ++ SourceCode(" instanceof ") ++ right.toSourceCode
 }
 
 final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExpr {
-  def precedence: Int = 22
+  implicit def precedence: Int = 22
   def toSourceCode: SourceCode = SourceCode(name)
 }
 
@@ -571,18 +569,18 @@ final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
   // Precedence of literals is zero.
   override def precedence: Int = 22
   // Make
-  override def toSourceCode: SourceCode = SourceCode.array(items map { _.toSourceCode })
+  override def toSourceCode: SourceCode =
+    SourceCode.array(items map { _.embed(JSCommaExpr.outerPrecedence) })
 }
 
 final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
-  // Precedence of literals is zero.
   override def precedence: Int = 22
   // Make
   override def toSourceCode: SourceCode = SourceCode
     .record(entries map { case (key, value) =>
       val body = if (JSMember.isValidIdentifier(key)) { key }
       else { JSLit.makeStringLiteral(key) }
-      SourceCode(body + ": ") ++ value.toSourceCode
+      SourceCode(body + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
     })
 }
 

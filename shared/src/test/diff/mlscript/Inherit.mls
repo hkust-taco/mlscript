@@ -17,7 +17,7 @@ p: Parent
 def c = Child(Parent { name = "Bob" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Parent & {name: ?name}` is not a record (expected a record with fields: name, age)
 //│ ║  l.17: 	def c = Child(Parent { name = "Bob" })
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +74,7 @@ f c
 f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.74: 	f (c: Parent)
-//│ ║        	^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Parent` is not an instance of type Child
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^

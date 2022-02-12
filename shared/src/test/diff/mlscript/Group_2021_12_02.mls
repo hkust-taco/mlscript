@@ -20,7 +20,7 @@ type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~A
 // def eval: ('b -> 'c & int) -> Expr['b] -> (int | 'c)
 
 def eval: ('b -> int) -> Expr['b] -> int
-//│ eval: ('b -> int) -> (Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
+//│ eval: ('b -> int) -> ('b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} as 'a) -> int
 
 // TODO better simplify type!
 rec def eval f e = case e of {
@@ -30,7 +30,7 @@ rec def eval f e = case e of {
   }
 //│ ('a -> int) -> (Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval:
-//│ ('b -> int) -> (Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} | 'b & ~add & ~lit as 'a) -> int
+//│ ('b -> int) -> ('b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} as 'a) -> int
 //│     = [Function: eval]
 
 :e
@@ -43,7 +43,7 @@ eval {} (Lit{} with { val = 1 })
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
-//│ ╙──      	           ^^^^^^^^^
+//│ ╙──      	          ^^^^^^^^^^^
 //│ res: error | int
 //│    = 1
 

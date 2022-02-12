@@ -6,7 +6,7 @@ import scala.collection.mutable
 package object utils {
 
   import scala.collection.mutable
-  import scala.collection.immutable.SortedMap
+  import scala.collection.immutable.{SortedSet, SortedMap}
   
   @SuppressWarnings(Array(
     "org.wartremover.warts.Equals",
@@ -47,6 +47,8 @@ package object utils {
     ): String =
       if (self.iterator.nonEmpty) self.iterator.mkString(start, sep, end) else els
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
+    def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
+      SortedSet.from(self)
   }
   implicit class OptIterableOps[A](private val self: IterableOnce[Opt[A]]) extends AnyVal {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
@@ -149,6 +151,9 @@ package object utils {
   
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
+  }
+  implicit class SortedSetObjectHelpers(self: SortedSet.type) {
+    def single[A: Ordering](a: A): SortedSet[A] = (SortedSet.newBuilder[A] += a).result()
   }
   
   def die: Nothing = lastWords("Program reached and unexpected state.")

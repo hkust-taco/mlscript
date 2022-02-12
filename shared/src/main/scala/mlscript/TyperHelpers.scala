@@ -68,6 +68,7 @@ abstract class TyperHelpers { self: Typer =>
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
     case TupleType(fields) => TupleType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
+    case ArrayType(inner) => ArrayType(subst(inner, map))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
@@ -287,7 +288,7 @@ abstract class TyperHelpers { self: Typer =>
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)
-          | (_: TupleType, _) | (_, _: TupleType)
+          | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
           => false // don't even try
         case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
@@ -302,20 +303,35 @@ abstract class TyperHelpers { self: Typer =>
     // sometimes behind a single negation,
     // just for the time of massaging the constraint through a type variable.
     // So it's important we only push and simplify Without types only in _positive_ position!
-    def without(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
+    def without(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
     }
     def without(name: Var): SimpleType = 
-      without(Set.single(name))
+      without(SortedSet.single(name))
     
-    def withoutPos(names: Set[Var]): SimpleType = if (names.isEmpty) this else this match {
+    def withoutPos(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case t @ FunctionType(l, r) => t
       case t @ ComposedType(true, l, r) => l.without(names) | r.without(names)
       case t @ ComposedType(false, l, r) => l.without(names) & r.without(names)
       case t @ RecordType(fs) => RecordType(fs.filter(nt => !names(nt._1)))(t.prov)
-      case t @ TupleType(fs) => t
+      case t @ TupleType(fs) =>
+        val relevantNames = names.filter(n =>
+          n.name.startsWith("_")
+            && {
+              val t = n.name.tail
+              t.forall(_.isDigit) && {
+                val n = t.toInt
+                1 <= n && n <= fs.length
+              }
+            })
+        if (relevantNames.isEmpty) t
+        else {
+          val rcd = t.toRecord
+          rcd.copy(fields = rcd.fields.filterNot(_._1 |> relevantNames))(rcd.prov)
+        }
+      case t @ ArrayType(ar) => t
       case n @ NegType(_ : ClassTag | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
@@ -384,6 +400,7 @@ abstract class TyperHelpers { self: Typer =>
       case ComposedType(_, l, r) => l :: r :: Nil
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)
+      case ArrayType(inner) => inner :: Nil
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil

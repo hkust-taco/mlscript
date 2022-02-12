@@ -30,7 +30,7 @@ trait TypeSimplifier { self: Typer =>
       // TODO should we also coalesce nvars? is it bad if we don't?
       def rec(dnf: DNF, done: Set[TV]): DNF = dnf.cs.iterator.map { c =>
         val vs = c.vars.filterNot(done)
-        vs.map { tv =>
+        vs.iterator.map { tv =>
           println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
           val b =
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
@@ -66,6 +66,8 @@ trait TypeSimplifier { self: Typer =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
                       TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                    case ar @ ArrayType(inner) =>
+                      ArrayType(goDeep(inner, pol))(noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
@@ -119,6 +121,7 @@ trait TypeSimplifier { self: Typer =>
     def analyze(st: SimpleType, pol: Bool): Unit = st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
+      case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
@@ -253,6 +256,7 @@ trait TypeSimplifier { self: Typer =>
     def transform(st: SimpleType, pol: Bool): SimpleType = st match {
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
+      case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
@@ -312,6 +316,7 @@ trait TypeSimplifier { self: Typer =>
       case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
       case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
+      case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
@@ -348,7 +353,7 @@ trait TypeSimplifier { self: Typer =>
                     }.mapValues(go(_, pol))
                   )(rcd.prov)
                   val removedFields = clsFields.keysIterator
-                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSet
+                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSortedSet
                   val needsWith = !rcd.fields.forall {
                     case (field, fty) =>
                       // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
@@ -361,14 +366,24 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  lazy val newRcd = rcd.copy(
-                    rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol)))(rcd.prov).sorted
-                  LhsRefined(bo.map {
-                    case ct: ClassTag => ct
-                    case ft @ FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(ft.prov)
-                    case tt @ TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(tt.prov)
-                    case wt @ Without(b, ns) => Without(go(b, pol), ns)(wt.prov)
-                  }, tts, newRcd).toType(sort = true)
+                  val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  val (res, nfs) = bo match {
+                    case S(tt @ TupleType(fs)) => 
+                      val tupres = TupleType(fs.mapValues(go(_, pol)))(tt.prov)
+                      val rcdtup = tupres.toRecord.fields.map(f => f._1.name -> f._2).toSet
+                      S(tupres) -> (
+                        if (rcdtup.subsetOf(nFields.map(f => f._1.name -> f._2).toSet))
+                          nFields.filterNot(e => rcdtup.contains(e._1.name -> e._2))
+                        else
+                          nFields
+                      )
+                    case S(ct: ClassTag) => S(ct) -> nFields
+                    case S(ft @ FunctionType(l, r)) => S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
+                    case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
+                    case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
+                    case N => N -> nFields
+                  }
+                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)
               }
             case LhsTop => TopType
           }, {
