@@ -103,7 +103,7 @@ test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.102: 	test2 (C2 { default = "oops" })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `(C2 with {default: ?default}) & myTrait | (C2 with {default: ?default}) & ~?a` does not have field 'value'
+//│ ╟── expression of type `C2 & {default: ?default} & myTrait | C2 & {default: ?default} & ~?a` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.51: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ║        	                                     ^^^^^^^

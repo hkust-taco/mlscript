@@ -131,7 +131,7 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'b, 'a, 'c, 'd, 'e. 'b | (C['a & 'f .. 'a] as 'f) -> 'd
+//│ foo: forall 'b, 'a, 'c, 'd. 'b | (C['a & 'e .. 'a] as 'e) -> 'd
 //│    = [Function: foo]
 
 // TODO figure ou why some type variables are not simplified here

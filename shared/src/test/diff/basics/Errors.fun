@@ -528,8 +528,8 @@ x => h / succ x
 //│ ║  l.+1: 	h arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ║         	   ^^^^^
 //│ ╟── from reference:
 //│ ║  l.511: 	  succ / f y
 //│ ╙──       	           ^
@@ -541,11 +541,11 @@ x => h / succ x
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
+//│ ║  l.511: 	  succ / f y
+//│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ╙──       	   ^^^^^
 //│ res: error | int
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	h / 42
@@ -554,8 +554,8 @@ x => h / succ x
 //│ ║  l.+3: 	h / 42
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ║         	   ^^^^^
 //│ ╟── from reference:
 //│ ║  l.511: 	  succ / f y
 //│ ╙──       	           ^
@@ -567,8 +567,8 @@ x => h / succ x
 //│ ║  l.+4: 	x => h / succ x
 //│ ║        	         ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ║         	   ^^^^^
 //│ ╟── from reference:
 //│ ║  l.511: 	  succ / f y
 //│ ╙──       	           ^
@@ -603,11 +603,11 @@ i arg
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
+//│ ║  l.593: 	  succ / f y.fld
+//│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ╙──       	   ^^^^^
 //│ res: error | int
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	i arg
@@ -638,11 +638,11 @@ test arg2
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
+//│ ║  l.593: 	  succ / f y.fld
+//│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ╙──       	   ^^^^^
 //│ res: 'a -> (int | 'a) | error
 
 let mkArg = a => {prop: a}
@@ -680,11 +680,11 @@ i / mkArg 1
 //│ ║  l.+2: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
+//│ ║  l.511: 	  succ / f y
+//│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ╙──       	   ^^^^^
 //│ res: error | int
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	i { fld: mkArg false }
@@ -693,11 +693,11 @@ i / mkArg 1
 //│ ║  l.+3: 	i { fld: mkArg false }
 //│ ║        	               ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ║         	             ^^^^^^
+//│ ║  l.593: 	  succ / f y.fld
+//│ ║         	         ^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.327: 	  log / succ x.prop
-//│ ╙──       	              ^^^^^
+//│ ║  l.328: 	  x.prop
+//│ ╙──       	   ^^^^^
 //│ res: error | int
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+4: 	i / mkArg 1

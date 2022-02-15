@@ -177,7 +177,9 @@ c.head
 def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
+//│ Runtime error:
+//│   TypeError: c1 is not a function
 
 :re
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })

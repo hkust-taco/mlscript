@@ -851,22 +851,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   
   // FIXME should generalize at lambdas passed in arg or returned from blocks
   def typePolymorphicTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType = 
-    if (ctx.inPattern) typeTerm(term) else ctx.nextLevel |> { implicit ctx =>
-      val ty = typeTerm(term)
-      println(s"POLY? ${ty.level} >= ${ctx.lvl}")
-      assert(ty.level <= ctx.lvl)
-      // if (term.isInstanceOf[Lam] && ty.level >= ctx.lvl) {
-      if ((term match {
-        case _: Lam => true
-        case Tup((_, _: Lam) :: Nil) => true
-        case _ => false
-      }) && ty.level >= ctx.lvl) {
-        val poly = PolymorphicType(ctx.lvl - 1, ty)
-        println(s"POLY: $poly")
-        poly
-      } else ty
-    }
-    // typeTerm(term)
+    // if (ctx.inPattern) typeTerm(term) else ctx.nextLevel |> { implicit ctx =>
+    //   val ty = typeTerm(term)
+    //   println(s"POLY? ${ty.level} >= ${ctx.lvl}")
+    //   assert(ty.level <= ctx.lvl)
+    //   // if (term.isInstanceOf[Lam] && ty.level >= ctx.lvl) {
+    //   if ((term match {
+    //     case _: Lam => true
+    //     case Tup((_, _: Lam) :: Nil) => true
+    //     case _ => false
+    //   }) && ty.level >= ctx.lvl) {
+    //     val poly = PolymorphicType(ctx.lvl - 1, ty)
+    //     println(s"POLY: $poly")
+    //     poly
+    //   } else ty
+    // }
+    typeTerm(term)
   
   /** Infer the type of a term. */
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType
@@ -970,12 +970,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) =>
-        val newBindings = mutable.Map.empty[Str, TypeVariable]
+        // val newBindings = mutable.Map.empty[Str, TypeVariable]
         val newCtx = ctx.nest
+        // val newCtx = ctx.nest.nextLevel
         val param_ty = typePattern(pat)(newCtx, raise, vars)
-        newCtx ++= newBindings
+        // newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, vars)
+        // PolymorphicType.mk(ctx.lvl,
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+        // )
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
         val newCtx = ctx.nest // TODO use

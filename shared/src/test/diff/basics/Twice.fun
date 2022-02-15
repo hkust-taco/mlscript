@@ -22,7 +22,7 @@ twice f
 //│ res: 'a -> (1, (1, 'a,),)
 
 twice / x => x, x
-//│ res: 'a -> (('a, 'a,), ('a, 'a,),)
+//│ res: 'a -> (('c | 'b | 'a, 'c | 'b | 'a,) as 'b)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }

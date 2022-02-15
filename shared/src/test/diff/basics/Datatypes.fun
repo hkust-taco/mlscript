@@ -154,7 +154,7 @@ Cons 1 (Cons 2 Nil)
 //│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
 //│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'd | 'c | Nil['b .. 1 | 'b]}) as 'c)
 //│ res: (Cons['b .. 2 | 'b] with {tail: 'c | 'a | Nil['b .. 2 | 'b]}) as 'a
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
