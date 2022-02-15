@@ -1,7 +1,7 @@
 package mlscript
 
 import mlscript.utils._, shorthands._
-import scala.collection.immutable.{HashMap, HashSet}
+import scala.collection.immutable.{Map, Set, HashSet}
 
 final case class TypingUnitError(message: String) extends Exception(message)
 
@@ -12,9 +12,9 @@ final case class TypingUnitError(message: String) extends Exception(message)
   * It is initialized with mappings for the type definitions in a typing unit.
   */
 final class TypingUnit(
-    typeAliasMap: HashMap[String, List[String] -> Type],
-    traitNames: HashSet[String],
-    classNames: HashSet[String]
+    typeAliasMap: Map[String, List[String] -> Type],
+    traitNames: Set[String],
+    classNames: Set[String]
 ) {
   // This function collects two things:
   // 1. fields from a series of intersection of records,
