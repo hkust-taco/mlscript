@@ -11,7 +11,7 @@ import mlscript.Lexer._
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   val keywords = Set(
-    "def", "class", "trait", "type", "method",
+    "def", "class", "trait", "type", "method", "mutable",
     "let", "rec", "in", "fun", "with",
     "if", "then", "else", "match", "case", "of")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
@@ -51,6 +51,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
   })
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
+
+  // TODO: define correct parser for modifying mutable 
+  def assign[_ : P]: P[Assign] = P (
+    (subterm ~ "<-" ~ subterm).map { case (lhs, rhs) => Assign(lhs, rhs) }
+  )
 
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
     // fields
@@ -210,11 +215,17 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
   def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
-    locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
-      .map(_.toList.mapValues(Field(Bot, _)) pipe Record))
-  def parTy[_: P]: P[Type] = locate(P( "(" ~/ ty.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
-    case (N -> ty :: Nil, N) => ty
-    case (fs, _) => Tuple(fs.mapValues(Field(Bot, _)))
+    locate(P( "{" ~/ ( "mutable".!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
+      .map(_.toList.map {
+        case (None, v, t) => v -> Field(Bot, t)
+        case (Some(_), v, t) => v -> Field(t, t)
+      } pipe Record))
+  def parTy[_: P]: P[Type] = locate(P( "(" ~/ ("mutable".!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+    case (N -> (N -> ty) :: Nil, N) => ty
+    case (fs, _) => Tuple(fs.map {
+        case (l, N -> t) => l -> Field(Bot, t)
+        case (l, S(_) -> t) => l -> Field(t, t)
+      })
   })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   

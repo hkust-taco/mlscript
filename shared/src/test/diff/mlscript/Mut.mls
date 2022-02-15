@@ -1,0 +1,23 @@
+:NoJS
+
+class A: { x: int }
+class B: { mutable x: int; y: bool }
+//│ Defined class A
+//│ Defined class B
+
+def muta1: MutArray[int]
+//│ muta1: MutArray[int .. int]
+
+b1 = B { x = 2; y = true }
+//│ b1: B with {x: 2, y: true}
+
+1 : 1
+//│ res: 1
+
+def mt1 : (mutable int, mutable bool)
+def mt2 : (int, int)
+//│ mt1: (int .. int, bool .. bool,)
+//│ mt2: (int, int,)
+
+def emt: (mutable int)
+//│ emt: (int .. int,)
