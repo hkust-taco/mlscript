@@ -6,7 +6,7 @@ class None: {}
 
 
 def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
+//│ flatMap3: ('a -> 'b) -> (forall 'c. (Some[?] & 'a | 'c & ~some) -> ('b | 'c))
 //│         = [Function: flatMap3]
 
 
@@ -17,11 +17,11 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 // > TODO don't distribute neg inters + handle better at constraint top level
 :stats
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: int | None
+//│ res: None
 //│    = 65
-//│ constrain calls  : 96
-//│ annoying  calls  : 23
-//│ subtyping calls  : 44
+//│ constrain calls  : 81
+//│ annoying  calls  : 13
+//│ subtyping calls  : 22
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -29,16 +29,16 @@ def arg = if true then Some{value = 42} else None {}
 //│    = Some { value: 42 }
 
 flatMap3 (fun x -> x.value) arg
-//│ res: 42 | None
+//│ res: None
 //│    = 42
 
 
 def foo = flatMap3 (fun x -> x.value)
-//│ foo: ((Some[?] with {value: 'a}) | 'a & ~some) -> 'a
+//│ foo: (Some[?] | 'a & ~some) -> 'a
 //│    = [Function (anonymous)]
 
 foo arg
-//│ res: 42 | None
+//│ res: None
 //│    = 42
 
 foo 1
@@ -61,14 +61,14 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: ((Some['A .. 42 | 'A] with {value: 42}) -> 'a) -> (None | 'a)
+//│ res: (((Some['A .. 42 | 'A] with {value: 42}) | (Some['A0 .. 42 | 'A0] with {value: 42}) | (Some['A1 .. 42 | 'A1] with {payload: 23, value: 42})) -> anything) -> None
 //│    = [Function: res]
 
 
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: (Some[?] & 'a | 'a & ~some) -> 'a
+//│ foo: (Some[?] | 'a & ~some) -> 'a
 //│    = [Function (anonymous)]
 
 foo 1
@@ -83,11 +83,11 @@ def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
 //│        = [Function: simpler]
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> (None & 'b | Some[?] & 'a) -> 'b
+//│ simpler: ('a -> 'b) -> (forall 'c. (None & 'c | Some[?] & 'a) -> ('b | 'c))
 //│        = [Function: simpler1]
 
 simpler (fun x -> x.value)
-//│ res: (None & 'a | (Some[?] with {value: 'a})) -> 'a
+//│ res: (None & 'a | Some[?]) -> 'a
 //│    = [Function (anonymous)]
 
 :e

@@ -2,7 +2,7 @@
 class Person: { name: string; age: int }
 def Person = fun n -> fun a -> Person { name = n; age = a }
 //│ Defined class Person
-//│ Person: (string & 'name) -> (int & 'age) -> (Person with {age: 'age, name: 'name})
+//│ Person: (string & 'a) -> (forall 'age. (int & 'age) -> (Person with {age: 'age, name: 'a}))
 //│       = [Function: Person1]
 
 class Animal: {}
@@ -34,7 +34,7 @@ a: {}
 //│    = Animal {}
 
 def p = Person "Bob" 42
-//│ p: Person & {age: 42, name: "Bob"}
+//│ p: Person & {age: 42, name: nothing}
 //│  = Person { name: 'Bob', age: 42 }
 
 p: { age: int }

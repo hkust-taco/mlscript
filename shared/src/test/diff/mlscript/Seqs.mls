@@ -53,12 +53,12 @@ Cons
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: ('A & 'head) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons_old: 'a -> (forall 'A, 'tail, 'b. (((Cons['A | 'a .. 'A] with {tail: 'b & ('c | Nil)}) as 'c) & 'tail | Nil & 'tail) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'tail}))
 //│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: ('A & 'head) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons: 'a -> (forall 'A, 'tail, 'b. (((Cons['A | 'a .. 'A] with {tail: 'b & ('c | Nil)}) as 'c) & 'tail | Nil & 'tail) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'tail}))
 //│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
@@ -77,53 +77,77 @@ Nil: ListBase[anything]
 //│    = Nil { size: 0 }
 
 def c = Cons 1 Nil
-//│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
-//│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 c: ListBase[int]
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.83: 	c: ListBase[int]
+//│ ╙──      	^
 //│ res: ListBase[int]
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c.head
-//│ res: 1
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.87: 	c.head
+//│ ╙──      	^
+//│ res: error
 //│    = 1
 
 c.tail
-//│ res: Nil & {size: 0}
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.91: 	c.tail
+//│ ╙──      	^
+//│ res: error
 //│    = Nil { size: 0 }
 
 c.size
-//│ res: int
+//│ ╔══[ERROR] identifier not found: c
+//│ ║  l.95: 	c.size
+//│ ╙──      	^
+//│ res: error
 //│    = 1
 
 def d = Cons 2 c
-//│ d: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Cons['A0 .. 1 | 'A0] with {head: 1, tail: Nil & {size: 0}}}
-//│  = Cons {
-//│      size: 2,
-//│      head: 2,
-//│      tail: Cons { size: 1, head: 1, tail: Nil { size: 0 } }
-//│    }
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 d.head
-//│ res: 2
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.107: 	d.head
+//│ ╙──       	^
+//│ res: error
 //│    = 2
 
 d.size
-//│ res: int
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.111: 	d.size
+//│ ╙──       	^
+//│ res: error
 //│    = 2
 
 d.tail
-//│ res: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.115: 	d.tail
+//│ ╙──       	^
+//│ res: error
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size
-//│ res: int
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.119: 	d.tail.size
+//│ ╙──       	^
+//│ res: error
 //│    = 1
 
 d.tail.head
 d.tail.tail
-//│ res: 1
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.123: 	d.tail.head
+//│ ╙──       	^
+//│ res: error
 //│    = 1
-//│ res: Nil & {size: 0}
+//│ ╔══[ERROR] identifier not found: d
+//│ ║  l.124: 	d.tail.tail
+//│ ╙──       	^
+//│ res: error
 //│    = Nil { size: 0 }
 

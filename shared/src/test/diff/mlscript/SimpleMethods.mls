@@ -21,11 +21,11 @@ class C0
 //│    = [Function: Foo0]
 
 f1 = (C0{}).Foo1
-//│ f1: 'A -> {a: 'A}
+//│ f1: anything -> {a: nothing}
 //│   = [Function: Foo1]
 
 f1 1
-//│ res: {a: 1}
+//│ res: {a: nothing}
 //│    = { a: 1 }
 
 

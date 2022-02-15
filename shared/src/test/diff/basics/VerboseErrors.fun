@@ -57,7 +57,7 @@ let test = x => y => if x.prop then i x else y
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
+//│ test: {fld: {prop: int}, prop: bool} -> (forall 'a. 'a -> (int | 'a))
 
 :e
 :verbose

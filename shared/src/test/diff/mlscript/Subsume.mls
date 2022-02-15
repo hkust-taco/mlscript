@@ -218,7 +218,7 @@ f 1
 def f: (int & 'a) -> (int & 'a) -> 'a 
 def f a b = if gt a b then a else b
 //│ f: (int & 'a) -> (int & 'a) -> 'a
-//│ (int & 'a) -> (int & 'a) -> 'a
+//│ (int & 'a) -> (forall 'b. (int & 'b) -> ('a | 'b))
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│  = [Function: f3]
@@ -311,9 +311,21 @@ ty2 = twice
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
-//│ ('a -> ('a & 'b)) -> 'a -> 'b
+//│ (('b | 'a) -> ('c & 'a & 'b)) -> 'a -> 'b
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.309: 	ty2 = twice
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `'b & 'd` is not an instance of type 'c
+//│ ║  l.288: 	def ty2: ('b -> ('b & 'd)) -> 'b -> 'd
+//│ ║         	                ^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.287: 	def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
+//│ ║         	                                    ^^
+//│ ╟── from application:
+//│ ║  l.283: 	def twice f x = f (f x)
+//│ ╙──       	                ^^^^^^^
 //│    = [Function: twice]
 
 

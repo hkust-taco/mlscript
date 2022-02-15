@@ -46,10 +46,10 @@ x => not x
 //│ res: bool
 
 x => y => z => if x then y else z
-//│ res: bool -> 'a -> 'a -> 'a
+//│ res: bool -> (forall 'a. 'a -> (forall 'b. 'b -> ('a | 'b)))
 
 x => y => if x then y else x
-//│ res: (bool & 'a) -> 'a -> 'a
+//│ res: (bool & 'a) -> (forall 'b. 'b -> ('a | 'b))
 
 :e
 succ true
@@ -174,7 +174,7 @@ x => y => x x y
 //│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
 (x => x x) (x => x x)
-//│ res: nothing
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 x => {l: x x, r: x }
@@ -184,19 +184,19 @@ x => {l: x x, r: x }
 // From https://github.com/stedolan/mlsub
 // Y combinator:
 (f => (x => f (x x)) (x => f (x x)))
-//│ res: ('a -> 'a) -> 'a
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // Z combinator:
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ res: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // Function that takes arbitrarily many arguments:
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> (anything -> 'a as 'a)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 let rec trutru = g => trutru (g true)
-//│ trutru: (true -> 'a as 'a) -> nothing
+//│ trutru: (true -> (true -> 'a as 'a)) -> nothing
 
 i => if ((i i) true) then true else true
 //│ res: ('a -> true -> bool & 'a) -> true
@@ -231,12 +231,12 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: ({u: 'a} as 'a) -> nothing
+//│ f: {u: {u: 'a} as 'a} -> nothing
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
+//│ recursive_monster: ('a & 'b) -> {self: {self: 'c, thing: 'b} as 'c, thing: 'a}
 
 
 
@@ -247,62 +247,49 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 //│ res: {a: 'a, b: 'a} as 'a
 
 (let rec x = v => {a: x v, b: x v}; x)
-//│ res: anything -> ({a: 'a, b: 'a} as 'a)
+//│ res: anything -> {a: ({a: 'b, b: {a: 'a, b: 'c} as 'c} as 'b) as 'a, b: {a: {a: ({a: 'd, b: {a: 'b, b: 'c} as 'c} as 'b) as 'd, b: 'e | ({a: ({a: 'b, b: 'c} as 'b) as 'a, b: 'c} as 'c)}, b: ({a: ({a: 'b, b: 'c} as 'b) as 'a, b: 'f} as 'c) as 'f}}
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╔══[ERROR] Type mismatch in binding of block of statements:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not a function
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                                           ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                                    ^^^
-//│ ╟── from reference:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                    ^
-//│ x: 0
-//│ res: 0
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('c & 'a & 'b) as 'a) -> 'b
+//│ res: (nothing -> 'a) -> 'a
 
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: 'b -> 'a | 'b as 'a
+//│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: ('b -> 'a & 'b as 'a) -> nothing
+//│ res: ('a -> ('c -> 'b & 'c as 'b) & 'a) -> nothing
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
+//│ res: ('a -> 'b) -> (forall 'c. ('c -> 'a & 'c) -> 'b)
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> ('c | 'a | 'b) as 'a
+//│ res: 'a -> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> ('c | 'a | 'b) as 'a
+//│ res: 'a -> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ('c | ({u: 'a | 'b, v: 'd} as 'd)) as 'a
+//│ res: 'a -> {u: 'a, v: ({u: forall 'd, 'e. 'd -> {u: 'd, v: 'b}, v: 'c} as 'c) as 'b}
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ('c | ({u: 'd, v: 'a | 'b} as 'd)) as 'a
+//│ res: 'a -> {u: ({u: 'c, v: forall 'd, 'e, 'f. 'd -> {u: 'b, v: 'd}} as 'c) as 'b, v: 'a}
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: ('a -> anything & 'b) -> 'b as 'a
+//│ res: (forall 'b. ('a -> anything & 'c) -> 'c) as 'a
 
 (x => (let y = (x x.v); 0))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: 'b -> ('c | 'a | 'b) as 'a
-//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
+//│ x: 'a -> 'a
+//│ res: {u: 'a} -> 'a
 

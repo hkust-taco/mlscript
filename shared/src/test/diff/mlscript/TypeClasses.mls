@@ -30,8 +30,8 @@ class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
 def Complex real imaginary = Complex { real; imaginary }
 //│ Defined class Complex
-//│ Defined Complex.Map: Complex['A] -> ('A -> ('A0 & 'a)) -> (Complex['A0] with {imaginary: 'a, real: 'a})
-//│ Complex: ('real & 'A) -> ('A & 'imaginary) -> (Complex['A] with {imaginary: 'imaginary, real: 'real})
+//│ Defined Complex.Map: Complex['A] -> (forall 'A0, 'a. ('A -> ('A0 & 'a)) -> (Complex['A0] with {imaginary: 'a, real: 'a}))
+//│ Complex: 'a -> (forall 'A, 'imaginary. ('A & 'imaginary) -> (Complex['A .. 'A | 'a] with {imaginary: 'imaginary, real: 'a}))
 //│        = [Function: Complex1]
 
 class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
@@ -39,8 +39,8 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
   method Add self that =
     Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ Defined class ComplexMonoid
-//│ Defined ComplexMonoid.Empty: (ComplexMonoid['A] with {base: Monoid['A]}) -> (Complex['a .. 'A | 'a] with {imaginary: 'A, real: 'A})
-//│ Defined ComplexMonoid.Add: (ComplexMonoid['A] with {base: Monoid['A]}) -> {imaginary: 'A & 'a & 'b, real: 'A & 'a & 'c} -> {imaginary: 'A & 'a & 'b, real: 'A & 'a & 'c} -> (Complex['a .. 'A | 'a] with {imaginary: 'A | 'b, real: 'A | 'c})
+//│ Defined ComplexMonoid.Empty: (ComplexMonoid['A] with {base: Monoid['A]}) -> (Complex['a .. 'A | A | 'a] with {imaginary: 'A, real: A})
+//│ Defined ComplexMonoid.Add: (ComplexMonoid['A] with {base: Monoid['A]}) -> (forall 'a. {imaginary: 'A & 'a, real: 'A} -> (forall 'b, 'c. {imaginary: 'A & 'b & 'c, real: 'A} -> (Complex['c .. 'A | 'a | 'c] with {imaginary: 'A | 'a | 'b, real: nothing})))
 
 cmi = ComplexMonoid { base = IntMonoid }
 //│ cmi: ComplexMonoid[int] with {base: IntMonoid}
@@ -97,6 +97,18 @@ cmi = ComplexMonoid { base = IntMonoid }
 class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
   method Empty = Complex { real = this.base }
   method Add this that = error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{real: ?a}` does not match type `int`
+//│ ║  l.+2: 	  method Empty = Complex { real = this.base }
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class IntMonoid: Monoid[int]
+//│ ║       	                        ^^^
+//│ ╟── from reference:
+//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ╙──      	                                       ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -143,7 +155,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0
-//│ Defined ComplexMonoid_bad_0.Empty: (ComplexMonoid_bad_0['A] with {base: Monoid['A]}) -> ('a & 'b) -> (Complex['b .. {real: Monoid['A]} | 'b] with {imaginary: 'a, real: {real: Monoid['A]}})
+//│ Defined ComplexMonoid_bad_0.Empty: (ComplexMonoid_bad_0['A] with {base: Monoid['A]}) -> (forall 'a, 'b. ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: nothing}) | error)
 //│ Defined ComplexMonoid_bad_0.Add: (ComplexMonoid_bad_0['A] with {base: Monoid['A]}) -> anything -> anything -> nothing
 
 
@@ -159,6 +171,18 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── but it flows into reference with expected type `{imaginary: ?a}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ╙──      	                                                               ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{real: ?a, imaginary: ?b}` does not match type `int`
+//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class IntMonoid: Monoid[int]
+//│ ║       	                        ^^^
+//│ ╟── from reference:
+//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ╙──      	                                       ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -205,6 +229,6 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1
-//│ Defined ComplexMonoid_bad_1.Empty: (ComplexMonoid_bad_1['A] with {base: Monoid['A]}) -> ('a & 'b) -> (Complex['b .. {imaginary: error, real: 'A} | 'b] with {imaginary: 'a, real: {imaginary: error, real: 'A}})
+//│ Defined ComplexMonoid_bad_1.Empty: (ComplexMonoid_bad_1['A] with {base: Monoid['A]}) -> (forall 'a, 'b. ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: nothing}) | error)
 //│ Defined ComplexMonoid_bad_1.Add: (ComplexMonoid_bad_1['A] with {base: Monoid['A]}) -> anything -> anything -> nothing
 
