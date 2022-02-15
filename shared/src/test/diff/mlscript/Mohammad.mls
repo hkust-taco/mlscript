@@ -38,15 +38,15 @@ useCls c
 useCls (c with { x = 2 })
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
-//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:345)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
+//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
+//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
 
 :js
 trait T
@@ -90,15 +90,15 @@ useTrt c
 useTrt (c with { y = 1 })
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:331)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$5(ConstraintSolver.scala:40)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.ConstraintSolver.constrainDNF$1(ConstraintSolver.scala:37)
-//│ 	at: mlscript.ConstraintSolver.goToWork$1(ConstraintSolver.scala:34)
-//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:345)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
+//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
+//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}

@@ -22,7 +22,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => TopType
     }
     lazy val underlying: SimpleType = mkType(false)
-    def levelBelow(ub: Level): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): LhsNf = this match {
+      case LhsRefined(bo, ts, r) =>
+        LhsRefined(bo.map(_.freshenAbove(lim, rigidify)), ts, r.freshenAbove(lim, rigidify))
+      case LhsTop => this
+    }
     def hasTag(ttg: TraitTag): Bool = this match {
       case LhsRefined(bo, ts, r) => ts(ttg)
       case LhsTop => false
@@ -115,7 +120,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsBot => BotType
     }
     lazy val underlying: SimpleType = mkType(false)
-    def levelBelow(ub: Level): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = underlying.levelBelow(ub) // TODO avoid forcing `underlying`!
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): RhsNf
+    // def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): RhsNf = this match {
+    //   case RhsBases(prims, bf) => RhsBases(prims, bf.map(_ match {
+    //     case L(v) => L(v.freshenAbove(lim, rigidify))
+    //     case R(v) => R(v.freshenAbove(lim, rigidify))
+    //   }))
+    //   case RhsField(name, ty) => RhsField(name, ty.freshenAbove(lim, rigidify))
+    //   case RhsBot => this
+    // }
     def hasTag(ttg: TraitTag): Bool = this match {
       case RhsBases(ts, _) => ts.contains(ttg)
       case RhsBot | _: RhsField => false
@@ -182,12 +196,21 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
     def isBot: Bool = isInstanceOf[RhsBot.type]
   }
-  case class RhsField(name: Var, ty: SimpleType) extends RhsNf
-    { def name_ty: Var -> ST = name -> ty }
+  case class RhsField(name: Var, ty: SimpleType) extends RhsNf {
+    def name_ty: Var -> ST = name -> ty
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): RhsField =
+      RhsField(name, self.freshenAbove(lim, ty, rigidify = rigidify))
+  }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField]) extends RhsNf {
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): RhsBases =
+      RhsBases(tags, rest.map(_ match {
+        case L(v) => L(v.freshenAbove(lim, rigidify))
+        case R(v) => R(v.freshenAbove(lim, rigidify))
+      }))
     override def toString: Str = s"${tags.mkString("|")}|$rest"
   }
   case object RhsBot extends RhsNf {
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): this.type = this
     override def toString: Str = "⊥"
   }
   
@@ -199,9 +222,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def toTypeWith(f: LhsNf => SimpleType, g: RhsNf => SimpleType, sort: Bool = false): SimpleType =
       ((if (sort) vars.toArray.sorted.iterator else vars.iterator) ++ Iterator(g(rnf).neg())
         ++ (if (sort) nvars.toArray.sorted.iterator else nvars).map(_.neg())).foldLeft(f(lnf))(_ & _)
-    lazy val level: Int = levelBelow(MaxLevel)
-    def levelBelow(ub: Level): Level =
+    lazy val level: Int = levelBelow(MaxLevel)(MutSet.empty)
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       (vars.iterator ++ nvars).map(_.levelBelow(ub)).++(Iterator(lnf.levelBelow(ub), rnf.levelBelow(ub))).max
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level): Conjunct =
+      Conjunct(lnf.freshenAbove(lim, rigidify), vars.map(_.freshenAbove(lim, rigidify)),
+        rnf.freshenAbove(lim, rigidify), nvars.map(_.freshenAbove(lim, rigidify)))
     def - (fact: Factorizable): Conjunct = fact match {
       case tv: TV => Conjunct(lnf, vars - tv, rnf, nvars)
       case NegVar(tv) => Conjunct(lnf, vars, rnf, nvars - tv)
@@ -317,7 +343,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   /** `polymLevel` denotes the level at which this type is quantified (MaxLevel if it is not) */
   case class DNF(polymLevel: Int, cs: Ls[Conjunct]) {
     assert(polymLevel <= MaxLevel, polymLevel)
-    def levelBelow(ub: Level): Level = cs.iterator.map(_.levelBelow(polymLevel)).maxOption.getOrElse(MinLevel)
+    def levelBelow(ub: Level): Level =
+      cs.iterator.map(_.levelBelow(polymLevel)(MutSet.empty)).maxOption.getOrElse(MinLevel)
     lazy val levelBelowPolym = levelBelow(polymLevel)
     def isBot: Bool = cs.isEmpty
     def toType(sort: Bool = false): SimpleType = if (cs.isEmpty) BotType else {
@@ -328,10 +355,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
     def instantiate(implicit lvl: Level): Ls[Conjunct] =
-      if (isPolymorphic) ??? // TODO
+      if (isPolymorphic) cs.map(_.freshenAbove(polymLevel, rigidify = false))
       else cs
     def rigidify(implicit lvl: Level): Ls[Conjunct] =
-      if (isPolymorphic) ??? // TODO
+      if (isPolymorphic) cs.map(_.freshenAbove(polymLevel, rigidify = true))
       else cs
     def & (that: DNF): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)

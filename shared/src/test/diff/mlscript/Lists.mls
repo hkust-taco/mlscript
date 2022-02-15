@@ -178,16 +178,6 @@ def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TyperHelpers.subst(TyperHelpers.scala:66)
-//│ 	at: mlscript.TyperHelpers.$anonfun$subst$3(TyperHelpers.scala:77)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.TyperHelpers.subst(TyperHelpers.scala:77)
-//│ 	at: mlscript.TyperHelpers.$anonfun$subst$1(TyperHelpers.scala:69)
-//│ 	at: scala.collection.immutable.List.map(List.scala:250)
-//│ 	at: mlscript.TyperHelpers.subst(TyperHelpers.scala:69)
-//│ 	at: mlscript.TyperHelpers.subst(TyperHelpers.scala:72)
-//│ 	at: mlscript.TyperHelpers.subst(TyperHelpers.scala:72)
-//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:236)
 
 :re
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })

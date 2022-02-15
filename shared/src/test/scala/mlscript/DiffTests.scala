@@ -426,8 +426,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               failures += allLines.size - lines.size
             // err.printStackTrace(out)
             output("/!!!\\ Uncaught error: " + err +
-              err.getStackTrace().take(if (mode.fullExceptionStack) Int.MaxValue else 10)
-                .map("\n" + outputMarker + "\tat: " + _).mkString)
+              err.getStackTrace().take(
+                if (mode.fullExceptionStack) Int.MaxValue
+                else if (err.isInstanceOf[StackOverflowError]) 0
+                else 10
+              ).map("\n" + outputMarker + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false
           typer.verbose = false
