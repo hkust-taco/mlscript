@@ -7,6 +7,7 @@ import sourcecode.Line
 import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
+import mlscript.codegen.typescript.TsTypegen
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
@@ -370,7 +371,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
-                if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(Some(nme.name)))
+                if (mode.showDeclarationTS) outputSourceCode(TsTypegen.toTsTypeSourceCode(exp, Some(nme.name)))
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
@@ -384,7 +385,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
-                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(Some(nme.name)))
+                    if (mode.showDeclarationTS) outputSourceCode(TsTypegen.toTsTypeSourceCode(exp, Some(nme.name)))
                     
                   // statement has a body and a declared type
                   // both are used to compute a subsumption (What is this??)
@@ -396,7 +397,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
-                    if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(Some(nme.name)))
+                    if (mode.showDeclarationTS) outputSourceCode(TsTypegen.toTsTypeSourceCode(exp, Some(nme.name)))
                 }
                 showResult(nme.name.length())
               
@@ -412,7 +413,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         ctx += nme -> pty
                         output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
-                        if (mode.showDeclarationTS) outputSourceCode(ptType.toTsTypeSourceCode(Some("res")))
+                        if (mode.showDeclarationTS) outputSourceCode(TsTypegen.toTsTypeSourceCode(ptType, Some("res")))
                     }
 
                   // statements for terms that compute to a value
@@ -422,7 +423,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) outputSourceCode(exp.toTsTypeSourceCode(Some("res")))
+                      if (mode.showDeclarationTS) outputSourceCode(TsTypegen.toTsTypeSourceCode(exp, Some("res")))
                       prefixLength = 3
                     }
                 }

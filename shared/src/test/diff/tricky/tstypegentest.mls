@@ -153,27 +153,3 @@ app 2 cont
 //│ // start ts
 //│ export declare const res: {a: string, b: int}
 //│ // end ts
-
-:ts
-:ne
-type T = int | ~string
-def foo: T
-def bar: ~T
-def gee: T -> { a: int; b: { a: T }}
-// negative types
-//│ Defined type alias T
-//│ foo: int | ~string
-//│ // start ts
-//│ type talias1<T0> = T0 extends string ? never : T0
-//│ export declare const foo<T0>: int | talias1<T0>
-//│ // end ts
-//│ bar: string
-//│ // start ts
-//│ export declare const bar: string
-//│ // end ts
-//│ gee: (int | ~string) -> {a: int, b: {a: int | ~string}}
-//│ // start ts
-//│ type talias4<T3> = T3 extends string ? never : T3
-//│ type talias2<T1> = T1 extends string ? never : T1
-//│ export declare const gee<T3, T1>: (arg0: int | talias2<T1>) => {a: int, b: {a: int | talias4<T3>}}
-//│ // end ts
