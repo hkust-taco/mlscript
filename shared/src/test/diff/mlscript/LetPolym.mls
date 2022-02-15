@@ -32,37 +32,37 @@ def test f =
 def test f =
   let local g x = g (f x)
   in local succ
-//│ test: ('a -> int) -> 'a -> nothing
+//│ test: ('a -> int) -> 'a -> int
 //│     = [Function: test2]
 
 def test f =
   let local g x = g (f x)
   in local add
-//│ test: ('a -> int) -> 'a -> nothing
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function: test3]
 
 def test f =
   let local g x = g (f x)
   in local add 1
-//│ test: (1 -> int) -> nothing
+//│ test: (1 -> int) -> int -> int
 //│     = [Function: test4]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ test: ((1 | 2) -> int) -> (int -> int, nothing,)
+//│ test: ((1 | 2) -> int) -> (int -> int, int -> int,)
 //│     = [Function: test5]
 
 :re // TODO
 f_g = test succ
 f_g._1 42
 f_g._2 42
-//│ f_g: (int -> int, nothing,)
+//│ f_g: (int -> int, int -> int,)
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 //│ res: int
 //│ Runtime error:
 //│   TypeError: f_g._1 is not a function
-//│ res: nothing
+//│ res: int
 //│ Runtime error:
 //│   TypeError: f_g._2 is not a function
 
@@ -70,7 +70,7 @@ f_g._2 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ test: (("ok" | 1) -> nothing) -> (string -> string, nothing,)
+//│ test: (("ok" | 1) -> nothing) -> (int -> int, string -> string,)
 //│     = [Function: test6]
 
 :e
@@ -81,7 +81,7 @@ test succ
 //│ ╟── string literal of type `"ok"` does not match type `int`
 //│ ║  l.72: 	  in (local add 1, local concat "ok")
 //│ ╙──      	                                ^^^^
-//│ res: (string -> string, nothing,) | error
+//│ res: (int -> int, string -> string,) | error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 
 
@@ -90,7 +90,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ test: (nothing -> anything) -> anything -> nothing
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -98,7 +98,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ test: (nothing -> anything) -> nothing
+//│ test: ("1" -> int) -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -117,7 +117,19 @@ fun f -> fun x ->
 
 :e
 res add "1"
-//│ res: ()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	res add "1"
+//│ ║         	^^^^^^^^^^^
+//│ ╟── string literal of type `"1"` does not match type `int`
+//│ ║  l.119: 	res add "1"
+//│ ║         	        ^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.113: 	  let local = (fun y -> f y) x
+//│ ║         	                          ^
+//│ ╟── from reference:
+//│ ║  l.113: 	  let local = (fun y -> f y) x
+//│ ╙──       	                             ^
+//│ res: () | error
 //│    = []
 
 
@@ -129,7 +141,19 @@ fun f -> fun x ->
 
 :e
 res add "1"
-//│ res: ()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.143: 	res add "1"
+//│ ║         	^^^^^^^^^^^
+//│ ╟── string literal of type `"1"` does not match type `int`
+//│ ║  l.143: 	res add "1"
+//│ ║         	        ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.137: 	  let local = f ((fun y -> y) x)
+//│ ║         	                 ^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.137: 	  let local = f ((fun y -> y) x)
+//│ ╙──       	                              ^
+//│ res: () | error
 //│    = []
 
 def id: 'a -> 'a

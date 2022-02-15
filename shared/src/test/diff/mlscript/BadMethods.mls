@@ -24,7 +24,7 @@ class Bar[A]: Foo[A]
 //│ Declared Foo.Map: Foo['A] -> ('A -> anything) -> 'A
 //│ Defined class Bar
 //│ Declared Bar.Map: Bar['A] -> anything -> 'A
-//│ Defined Bar.Map: Bar['A] -> ((forall 'b, 'c. ('a -> (anything -> 'a) -> 'b) -> 'b) as 'a)
+//│ Defined Bar.Map: Bar['A] -> (('a -> (anything -> 'a) -> 'b) -> 'b as 'a)
 
 Foo.Map
 Bar.Map
@@ -201,51 +201,66 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╟──       class type parameter B is defined at: 
 //│ ║  l.186: 	class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	                 ^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.188: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `C` is not an instance of type D
+//│ ║  l.188: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                                                    ^^^^^^^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	                  ^
+//│ ╟── Note: method type parameter C is defined at: 
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	               ^
+//│ ╟──       method type parameter D is defined at: 
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	                  ^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.188: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `C` is not an instance of type D
+//│ ║  l.188: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
+//│ ║         	                                                    ^^^^^^^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	                  ^
+//│ ╟── Note: method type parameter C is defined at: 
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ║         	               ^
+//│ ╟──       method type parameter D is defined at: 
+//│ ║  l.181: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
+//│ ╙──       	                  ^
 //│ Defined class BadPair
-//│ Defined BadPair.Test: BadPair['A, 'B] -> (forall 'a. ('A -> 'A -> 'a) -> 'a)
-//│ Defined BadPair.Map: BadPair['A, 'B] -> (forall 'a. ('A -> (C & D & 'a)) -> (forall 'b, 'c. anything -> (BadPair['b .. 'a | 'b, 'c .. 'a | 'c] with {x: 'a, y: 'a})))
+//│ Defined BadPair.Test: BadPair['A, 'B] -> ('A -> 'A -> 'a) -> 'a
+//│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('B0 & 'A0 & 'a)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ bp: BadPair['A .. 42 | 'A, 'B .. 'B | true] with {x: 42, y: true}
-//│ res: nothing
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.239: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `42` does not match type `bool`
+//│ ║  l.238: 	bp = BadPair { x = 42; y = true }
+//│ ║         	                   ^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.239: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ ║         	                                        ^^^
+//│ ╟── from reference:
+//│ ║  l.239: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
+//│ ╙──       	                                         ^
+//│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.255: 	BadPair = BadPair { x = 42; y = 0 }
-//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.255: 	BadPair = BadPair { x = 42; y = 0 }
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.239: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
-//│ ║         	                                        ^^^
-//│ ╟── from field selection:
-//│ ║  l.187: 	    method Test f = f this.x this.x
-//│ ╙──       	                             ^^^^^^
-//│ BadPair: (BadPair[bool & 'A .. 42 | 'A, 'B .. 0 | 'B] with {x: 42, y: 0}) | error
-//│ res: BadPair['A .. bool & 'A, 'B] -> (forall 'a. (nothing -> (C & D & 'a)) -> (forall 'b, 'c. anything -> (BadPair['b .. 'a | 'b, 'c .. 'a | 'c] with {x: 'a, y: 'a})))
+//│ BadPair: BadPair['A .. 42 | 'A, 'B .. 0 | 'B] with {x: 42, y: 0}
+//│ res: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.257: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.257: 	BadPair.(BadPair.Map)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.255: 	BadPair = BadPair { x = 42; y = 0 }
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.239: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
-//│ ║         	                                        ^^^
-//│ ╟── from field selection:
-//│ ║  l.187: 	    method Test f = f this.x this.x
-//│ ║         	                             ^^^^^^
-//│ ╟── Note: class type parameter A is defined at: 
-//│ ║  l.186: 	class BadPair[A, B]: AbstractPair[A, B]
-//│ ╙──       	              ^
-//│ res: (nothing -> (C & D & 'a)) -> (forall 'b, 'c. anything -> (BadPair['b .. 'a | 'b, 'c .. 'a | 'c] with {x: 'a, y: 'a})) | error
+//│ res: (42 -> ('a & 'B & 'A)) -> anything -> (BadPair['A, 'B] with {x: 'a, y: 'a})
 
 
 class ClassA
@@ -573,7 +588,7 @@ class Dup[A, A]: { x: A }
 //│ ╙──       	        ^
 //│ Defined class Dup
 //│ Declared Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'B) -> 'B
-//│ Defined Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> (forall 'a. ('A0 -> 'a) -> 'a)
+//│ Defined Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'a) -> 'a
 
 t = Dup { x = 42 }
 //│ t: Dup['A | 'A0 .. 42 & 'A | 'A & 'A0, 'A | 'A0 .. 42 & 'A | 'A & 'A0] with {x: 42}

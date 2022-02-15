@@ -337,8 +337,8 @@ gt ta
 def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
-//│ gett1: (t1 & 'a | ~t1) -> (forall 'b. 'b -> ('a | 'b))
-//│ res: 123 & t1
+//│ gett1: (t1 & 'a | ~t1) -> 'a -> 'a
+//│ res: 123 & t1 | Array[int] & t1
 //│ gt: (Array[bool | int] & t1) -> Array[int]
 //│ res: Array[int]
 //│ tg: (Array[bool] & t2 | Array[int] & t1) -> (t1 | t2)

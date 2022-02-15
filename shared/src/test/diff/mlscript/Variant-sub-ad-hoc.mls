@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | _ -> opt }
-//│ flatMap: ('a -> 'b) -> (forall 'c. (Some & {v: 'a} | 'c & ~some) -> ('b | 'c))
+//│ flatMap: ('a -> 'b) -> (Some & {v: 'a} | 'b & ~some) -> 'b
 //│        = [Function: flatMap]
 
 f = fun x -> Some x
@@ -20,9 +20,9 @@ res = flatMap f (Some 1)
 res = flatMap f None
 //│ f: 'a -> (Some & {v: 'a})
 //│  = [Function: f]
-//│ res: nothing
+//│ res: Some & {v: 1}
 //│    = Some { v: 1 }
-//│ res: None
+//│ res: None | Some & {v: nothing}
 //│    = None {}
 
 class Lit
@@ -46,9 +46,10 @@ rec def evalOpt = fun x -> case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ evalOpt: (Lit & {v: int & 'b} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string} as 'a) -> (None & {err: string} | Some & {v: int} | Some & {v: 'b})
+//│        = [Function: evalOpt]
 
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})
-//│ res: None & {err: string} | Some & {v: nothing}
+//│ res: None & {err: string} | Some & {v: int}
 //│    = Some { v: 4 }
 

@@ -866,10 +866,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     //     poly
     //   } else ty
     // }
-    typeTerm(term)
+    // typeTerm(term)
+    {
+      implicit val genLambdas: Bool = true
+      typeTerm(term)
+    }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
         = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
     implicit val prov: TypeProvenance = ttp(term)
     
@@ -969,7 +973,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) =>
+      case Lam(pat, body) if genLambdas =>
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
         val newCtx = ctx.nest.nextLevel
@@ -979,6 +983,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         PolymorphicType.mk(ctx.lvl,
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         )
+      case Lam(pat, body) =>
+        val newCtx = ctx.nest
+        val param_ty = typePattern(pat)(newCtx, raise, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, vars)
+        FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
         val newCtx = ctx.nest // TODO use

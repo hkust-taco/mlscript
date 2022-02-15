@@ -25,11 +25,11 @@ n.Add n
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable['A .. 'A & 'A0] -> (forall 'a. ('A & 'a) -> ('A0 | 'a))
+//│ addTwo: Addable['A] -> 'A -> 'A
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ res: number & {val: 1}
+//│ res: 'a | number & {val: int}
 //│    = Number { val: 2 }
 
 s = Str { val = "hey" }
@@ -42,16 +42,7 @@ s.Add s
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.44: 	addTwo s s
-//│ ║        	^^^^^^^^
-//│ ╟── application of type `number & {val: ?val}` is not an instance of type Str
-//│ ║  l.17: 	n = Number { val = 1 }
-//│ ║        	    ^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
-//│ ╙──      	                   ^^^
-//│ res: error
+//│ res: 'a | Str
 //│    = Str { val: 'heyhey' }
 
 
@@ -67,7 +58,7 @@ addSame n
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A | 'A0 | 'A1 .. 'A & 'A0 & 'A1] & 'A0 & 'a) -> int -> ('A | 'A0 | 'a)
+//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
 //│          = [Function: addNTimes]
 
 addNTimes n 12
@@ -75,22 +66,7 @@ addNTimes n 12
 //│    = Number { val: 12 }
 
 addNTimes s 5
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	addNTimes s 5
-//│ ║        	^^^^^^^^^^^
-//│ ╟── application of type `Str & {val: ?val}` does not match type `number`
-//│ ║  l.35: 	s = Str { val = "hey" }
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `number`
-//│ ║  l.68: 	addNTimes s 5
-//│ ║        	          ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Number: Addable[Number] & { val: int }
-//│ ║       	                      ^^^^^^
-//│ ╟── from reference:
-//│ ║  l.60: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ ╙──      	                 ^
-//│ res: error
+//│ res: 'a | Str
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -106,7 +82,7 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[0 | 'A | 'A0 | 'A1 .. 'A & 'A0 & 'A1] -> int -> (0 | 'A | 'A0)
+//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> (0 | 'A)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -124,11 +100,11 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: ('a & (Addable[forall 'b, 'A, 'c, 'a. 'a -> int -> (0 | 'b | 'd) | 'A | 'A0 .. ('c | 'e) -> int -> ('b & 'd) & 'A & 'A0] & 'c & 'e,)) -> int -> (0 | 'b | 'd)
+//│ addNTimes: ('a & (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c,)) -> int -> (0 | 'b)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b, ?c. ?b -> ?c)` does not match type `number`
+//│ ╟── function of type `?a -> ?b -> ?c` does not match type `number`
 //│ ║  l.+1: 	rec def addNTimes a n =
 //│ ║        	                  ^^^^^
 //│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
@@ -153,13 +129,19 @@ addSame n n
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addTwo s n
-//│ ║        	^^^^^^^^
+//│ ║        	^^^^^^^^^^
 //│ ╟── application of type `number & {val: ?val}` is not an instance of type Str
 //│ ║  l.17: 	n = Number { val = 1 }
 //│ ║        	    ^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Str`
+//│ ║  l.+1: 	addTwo s n
+//│ ║        	         ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
-//│ ╙──      	                   ^^^
+//│ ║        	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.27: 	def addTwo a0 a1 = a0.Add a1
+//│ ╙──      	                          ^^
 //│ res: error
 
 class Str_bad_0: Addable[Str_bad_0] & { val: string }

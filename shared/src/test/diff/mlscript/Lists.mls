@@ -15,24 +15,24 @@ def Nil = Nil {}
 //│    = Nil {}
 
 def Cons head tail = Cons { head; tail }
-//│ Cons: 'a -> (forall 'A, 'tail, 'b. (((Cons['A | 'a .. 'A] with {tail: 'b & ('c | Nil)}) as 'c) & 'tail | Nil & 'tail) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'tail}))
+//│ Cons: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 
 Cons 2
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'tail})
+//│    = [Function (anonymous)]
 
 def c = Cons 2 Nil
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ c: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│  = Cons { head: 2, tail: Nil {} }
 
 def d = Cons 1 c
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ d: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A0 .. 2 | 'A0] with {head: 2, tail: Nil}}
+//│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.34: 	d.head
-//│ ╙──      	^
-//│ res: error
+//│ res: 1
 //│    = 1
 
 res: 1
@@ -40,33 +40,44 @@ res: 1
 //│    = 1
 
 d.tail
-//│ ╔══[ERROR] identifier not found: d
-//│ ║  l.42: 	d.tail
-//│ ╙──      	^
-//│ res: error
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A0 .. 2 | 'A0] with {head: 2, tail: Nil}}
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
-//│ res: error
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
-//│ res: error
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
 res.tail
-//│ res: error
+//│ res: Nil
 //│    = Nil {}
 
 :e
 res.tail.head
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.68: 	res.tail.head
+//│ ║        	^^^^^^^^
+//│ ╟── application of type `Nil` does not have field 'tail'
+//│ ║  l.13: 	def Nil = Nil {}
+//│ ║        	          ^^^^^^
+//│ ╟── but it flows into reference with expected type `{tail: ?a}`
+//│ ║  l.68: 	res.tail.head
+//│ ║        	^^^
+//│ ╟── Note: class Nil is defined at: 
+//│ ║  l.2: 	class Nil: {}
+//│ ╙──     	      ^^^
 //│ res: error
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'head')
@@ -75,23 +86,41 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: 'a -> (forall 'A, 'tail, 'b. (((Cons['A | 'a .. 'A] with {tail: 'b & ('c | Nil)}) as 'c) & 'tail | Nil & 'tail) -> (Cons['A .. 'A | 'a] with {head: 'a, tail: 'tail}))
+//│ Cons: ('head & 'A) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons2]
 
 
 Cons 2
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: (((Cons[2 | 'A .. 'A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A .. 2 | 'A] with {head: 2, tail: 'tail})
+//│    = [Function (anonymous)]
 
 Cons 2 Nil
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│    = Cons { head: 2, tail: Nil {} }
 
 res.head
-//│ res: error
+//│ res: 2
 //│    = 2
 
 :e
 Cons 1 res
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.106: 	Cons 1 res
+//│ ║         	^^^^^^^^^^
+//│ ╟── integer literal of type `2` does not match type `Nil | Cons[?A]`
+//│ ║  l.97: 	Cons 2 Nil
+//│ ║        	     ^
+//│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`
+//│ ║  l.106: 	Cons 1 res
+//│ ║         	       ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.4: 	type List[A] = Nil | Cons[A]
+//│ ║       	               ^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ╙──      	                                          ^^^^
+//│ res: (Cons['A .. 1 | 'A] with {head: 1, tail: 2}) | error
+//│    = Cons { head: 1, tail: 2 }
 
 // Here there used to be a loss of precision in the older with-field approach.
 //    The problem occured when constraining `α8 w/ {head: α5, tail: [α6]}  <!  nil | {head: α2}`
@@ -103,47 +132,23 @@ Cons 1 res
 // But then I reverted to the use of simple field-hiding types, as they are simpler!
 // 
 Cons 1 (Cons 2 Nil)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ res: {a: error, b: error, c: error}
+//│ res: {a: 1, b: 2, c: Nil}
 //│    = { a: 1, b: 2, c: Nil {} }
 
 Cons 2 Nil
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 2 | 'A] with {head: 2, tail: Nil}
+//│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (id res)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Nil}}
+//│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	      ^^^^^^^^
-//│ ╟── record literal of type `{a: ?a, b: ?b, c: ?c}` does not have field 'head'
-//│ ║  l.138: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{head: ?d}`
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	      ^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                    ^^^^^^^^
-//│ ╟── record literal of type `{a: ?a, b: ?b, c: ?c}` does not have field 'tail'
-//│ ║  l.138: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{tail: ?d}`
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                    ^^^
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	                                       ^^^^^^^^
-//│ ╟── record literal of type `{a: ?a, b: ?b, c: ?c}` does not have field 'tail'
-//│ ║  l.138: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{tail: ?d}`
-//│ ║  l.150: 	{ a = res.head; b = res.tail.head; c = res.tail.tail }
-//│ ╙──       	                                       ^^^
-//│ res: {a: error, b: error, c: error}
+//│ res: {a: 1, b: 2, c: Nil}
 //│    = { a: 1, b: 2, c: Nil {} }
 
 

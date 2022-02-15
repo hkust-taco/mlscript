@@ -15,11 +15,11 @@ def flatMap f opt = case opt of {
 //│        = [Function: flatMap]
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ('a -> 'b) -> (forall 'c. ((Some[?] with {value: 'a}) | 'c & ~some) -> ('b | 'c))
+//│ flatMap2: ('a -> 'b) -> ((Some[?] with {value: 'a}) | 'b & ~some) -> 'b
 //│         = [Function: flatMap2]
 
 def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
-//│ flatMap3: ('a -> 'b) -> (forall 'c. (Some[?] & 'a | 'c & ~some) -> ('b | 'c))
+//│ flatMap3: ('a -> 'b) -> (Some[?] & 'a | 'b & ~some) -> 'b
 //│         = [Function: flatMap3]
 
 
@@ -36,7 +36,8 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ map2: ('a -> ('A & 'value)) -> ((Cons[?] with {tail: 'b, value: 'a}) | None as 'b) -> ((Cons['A] with {tail: 'c, value: 'value}) | None as 'c)
+//│     = [Function: map2]
 
 
 
@@ -121,7 +122,7 @@ def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> (None | Some[int])
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> (forall 'A. (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int})))
+//│ int -> (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int}))
 //│   <:  tryDiv:
 //│ int -> int -> (None | Some[int])
 //│       = [Function: tryDiv]

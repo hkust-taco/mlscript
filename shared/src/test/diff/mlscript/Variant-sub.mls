@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('a -> 'b) -> (forall 'c. (None & 'c | (Some[?] with {v: 'a})) -> ('b | 'c))
+//│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
 //│        = [Function: flatMap]
 
 f x = Some x
@@ -20,9 +20,9 @@ flatMap f (Some 1)
 flatMap f None
 //│ f: ('v & 'A) -> (Some['A] with {v: 'v})
 //│  = [Function: f]
-//│ res: nothing
+//│ res: Some['A .. 1 | 'A] with {v: 1}
 //│    = Some { v: 1 }
-//│ res: None
+//│ res: None | (Some['A] with {v: nothing})
 //│    = None {}
 
 :e
@@ -36,14 +36,14 @@ flatMap f "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
-//│ res: error
+//│ res: error | (Some['A] with {v: nothing})
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
-//│ res: NoneBecause & {reason: "uh uh"}
+//│ res: NoneBecause & {reason: "uh uh"} | (Some['A] with {v: nothing})
 //│    = NoneBecause { reason: 'uh uh' }
 
 type Expr = Lit | Neg | Var | Plus
@@ -73,8 +73,9 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
+//│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | (Some['A] with {v: nothing})
+//│ res: NoneBecause | (Some['A .. 2 | 3 | 'A] with {v: 2 | 3}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int})
 //│    = Some { v: 5 }

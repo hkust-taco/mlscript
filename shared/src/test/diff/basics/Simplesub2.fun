@@ -23,7 +23,7 @@ let pick_an_object = b =>
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: ('a & 'b) -> {self: {self: 'c, thing: 'b} as 'c, thing: 'a}
+//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
 
 
 
@@ -43,12 +43,12 @@ let ab = {u: id 0, v: id true}
 
 let rec produce = arg => { head: arg, tail: produce (succ arg) }
 let rec consume = strm => add strm.head (consume strm.tail)
-//│ produce: (int & 'a) -> {head: 'a, tail: {head: int, tail: 'b} as 'b}
-//│ consume: {head: int, tail: {head: int, tail: 'a} as 'a} -> int
+//│ produce: int -> ({head: int, tail: 'a} as 'a)
+//│ consume: ({head: int, tail: 'a} as 'a) -> int
 
 let codata = produce 42
 let res = consume codata
-//│ codata: {head: 42, tail: {head: int, tail: 'a} as 'a}
+//│ codata: {head: int, tail: 'a} as 'a
 //│ res: int
 
 let rec codata2 = { head: 0, tail: { head: 1, tail: codata2 } }
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: {head: 0 | 42, tail: {head: int, tail: {head: int, tail: 'a}} as 'a}}
+//│ produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a}} as 'a}
 //│ res: bool -> int
 
 let consume2 =
@@ -72,6 +72,6 @@ let consume2 =
   // go
 // let rec consume2 = strm => add strm.head (add strm.tail.head (consume2 strm.tail.tail))
 let res = consume2 codata2
-//│ consume2: {head: int, tail: {head: int, tail: {head: int, tail: 'a} as 'a}} -> int
+//│ consume2: {head: int, tail: {head: int, tail: 'a} as 'a} -> int
 //│ res: int
 

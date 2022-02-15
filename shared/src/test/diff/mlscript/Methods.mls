@@ -3,45 +3,18 @@ class Foo[A, B]: { x: A; y: B }
     method Fun[C, D] (f: C -> D) = f
 //│ Defined class Foo
 //│ Declared Foo.Fun: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
-//│ Defined Foo.Fun: Foo['A, 'B] -> (('C | A) -> (B -> C & 'D)) -> 'C -> 'D
+//│ Defined Foo.Fun: Foo['A, 'B] -> ('C -> 'D) -> 'C -> 'D
 
 class Bar: Foo[int, bool]
     method Fun f = f
-//│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.3: 	    method Fun[C, D] (f: C -> D) = f
-//│ ║       	           ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── class type parameter of type `A` does not match type `int`
-//│ ║  l.1: 	class Foo[A, B]: { x: A; y: B }
-//│ ║       	          ^
-//│ ╟── but it flows into method type parameter with expected type `int`
-//│ ║  l.3: 	    method Fun[C, D] (f: C -> D) = f
-//│ ║       	               ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.8: 	class Bar: Foo[int, bool]
-//│ ║       	               ^^^
-//│ ╟── Note: class type parameter A is defined at: 
-//│ ║  l.1: 	class Foo[A, B]: { x: A; y: B }
-//│ ╙──     	          ^
-//│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.3: 	    method Fun[C, D] (f: C -> D) = f
-//│ ║       	           ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── class type parameter of type `B` does not match type `bool`
-//│ ║  l.1: 	class Foo[A, B]: { x: A; y: B }
-//│ ║       	             ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.8: 	class Bar: Foo[int, bool]
-//│ ║       	                    ^^^^
-//│ ╟── Note: class type parameter B is defined at: 
-//│ ║  l.1: 	class Foo[A, B]: { x: A; y: B }
-//│ ╙──     	             ^
 //│ Defined class Bar
-//│ Defined Bar.Fun: Bar -> (forall 'a. 'a -> 'a)
+//│ Defined Bar.Fun: Bar -> 'a -> 'a
 
 Foo.Fun
 Bar.Fun
 //│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
-//│ res: Bar -> (forall 'a. 'a -> 'a)
+//│ res: Bar -> 'a -> 'a
 //│    = undefined
 
 f = Foo { x = 1; y = 2 }
@@ -108,26 +81,26 @@ class Wrapper[A]: { x: A }
     // method Apply f = Wrapper { x = f this.x }
 //│ Defined class Wrapper
 //│ Declared Wrapper.Apply: Wrapper['A] -> ('A -> 'B) -> Wrapper['B]
-//│ Defined Wrapper.Apply: Wrapper['A] -> (forall 'A0, 'a. ('A -> ('A0 & 'a)) -> (Wrapper['A0] with {x: 'a}))
+//│ Defined Wrapper.Apply: Wrapper['A] -> ('A -> ('A0 & 'a)) -> (Wrapper['A0] with {x: 'a})
 
 class IntWrapper: Wrapper[int]
     method Apply f = Wrapper { x = f this.x }
 //│ Defined class IntWrapper
-//│ Defined IntWrapper.Apply: IntWrapper -> (forall 'A, 'a. (int -> ('A & 'a)) -> (Wrapper['A] with {x: 'a}))
+//│ Defined IntWrapper.Apply: IntWrapper -> (int -> ('A & 'a)) -> (Wrapper['A] with {x: 'a})
 
 class Psyduck[B]: Wrapper[B]
     method Apply[A]: (B -> A) -> Psyduck[A]
     method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck
 //│ Declared Psyduck.Apply: Psyduck['B] -> ('B -> 'A) -> Psyduck['A]
-//│ Defined Psyduck.Apply: Psyduck['B] -> (forall 'B0, 'a. ('B -> ('B0 & 'a)) -> (Psyduck['B0] with {x: 'a}))
+//│ Defined Psyduck.Apply: Psyduck['B] -> ('B -> ('B0 & 'a)) -> (Psyduck['B0] with {x: 'a})
 
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper
 //│ Declared WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A]}) -> ('A -> 'B) -> (WrapperWrapper['B] with {x: Wrapper['B]})
-//│ Defined WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A]}) -> (forall 'a. ('A -> 'a) -> (WrapperWrapper['a] with {x: Wrapper['a]}))
+//│ Defined WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A]}) -> ('A -> 'a) -> (WrapperWrapper['a] with {x: Wrapper['a]})
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: WrapperWrapper['A .. 0 | 'A] with {x: Psyduck['A .. 0 | 'A] with {x: 0}}
@@ -179,7 +152,7 @@ class Pair[A, B]: AbstractPair[A, B]
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
 //│ Defined class Pair
 //│ Defined Pair.Test: Pair['A, 'B] -> ('A -> 'B -> bool) -> bool
-//│ Defined Pair.Map: Pair['A, 'B] -> (forall 'a. ('A -> (C & 'a)) -> (forall 'B0, 'b, 'c. ('B -> ('B0 & 'b)) -> (Pair['c .. 'a | 'c, 'B0] with {x: 'a, y: 'b})))
+//│ Defined Pair.Map: Pair['A, 'B] -> ('A -> ('A0 & 'a)) -> ('B -> ('B0 & 'b)) -> (Pair['A0, 'B0] with {x: 'a, y: 'b})
 
 class True[A, B]: Pair[A, B]
     method Test f = true
@@ -334,7 +307,7 @@ class Test[A]: { x: A }
     method Mth[B] (f: A -> B) = f this.x
 //│ Defined class Test
 //│ Declared Test.Mth: Test['A] -> ('A -> 'B) -> 'B
-//│ Defined Test.Mth: Test['A] -> ('A -> (B & 'B)) -> 'B
+//│ Defined Test.Mth: Test['A] -> ('A -> 'B) -> 'B
 
 
 
@@ -404,13 +377,13 @@ trait Test5B: { tag: int }
 class Test5C[A]: Test5A[A] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
 //│ Defined class Test5C
-//│ Defined Test5C.Mth5A: (Test5C['A] & test5B) -> (forall 'a. ('A -> 'a) -> 'a)
+//│ Defined Test5C.Mth5A: (Test5C['A] & test5B) -> ('A -> 'a) -> 'a
 
 
 class Test5D: Test5A[int] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
 //│ Defined class Test5D
-//│ Defined Test5D.Mth5A: (Test5D & test5B) -> (forall 'a. (int -> 'a) -> 'a)
+//│ Defined Test5D.Mth5A: (Test5D & test5B) -> (int -> 'a) -> 'a
 
 
 
