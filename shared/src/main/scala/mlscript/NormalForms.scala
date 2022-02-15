@@ -356,12 +356,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def isPolymorphic: Bool = level > polymLevel
     def instantiate(implicit lvl: Level): Ls[Conjunct] =
       if (isPolymorphic) {
-        implicit val state = MutMap.empty[TV, ST]
+        implicit val state: MutMap[TV, ST] = MutMap.empty
         cs.map(_.freshenAbove(polymLevel, rigidify = false))
       } else cs
     def rigidify(implicit lvl: Level): Ls[Conjunct] =
       if (isPolymorphic) {
-        implicit val state = MutMap.empty[TV, ST]
+        implicit val state: MutMap[TV, ST] = MutMap.empty
         cs.map(_.freshenAbove(polymLevel, rigidify = true))
       } else cs
     def & (that: DNF): DNF = {

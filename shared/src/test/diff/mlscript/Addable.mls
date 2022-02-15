@@ -58,15 +58,15 @@ addSame n
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'A & 'a) -> int -> 'a
+//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: number & {val: 1}
+//│ res: 'a | number & {val: int}
 //│    = Number { val: 12 }
 
 addNTimes s 5
-//│ res: Str & {val: "hey"}
+//│ res: 'a | Str
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -82,7 +82,7 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> 0
+//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> (0 | 'A)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -95,12 +95,12 @@ addNTimes n 12
 //│ ╟── from type reference:
 //│ ║  l.7: 	class Number: Addable[Number] & { val: int }
 //│ ╙──     	                      ^^^^^^
-//│ res: 0 | error
+//│ res: 0 | error | number & {val: int}
 
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: ('a & (Addable['a -> int -> 0 | 'A .. 'A],)) -> int -> 0
+//│ addNTimes: ('a & (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c,)) -> int -> (0 | 'b)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^

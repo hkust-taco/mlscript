@@ -206,7 +206,7 @@ e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}
 eval1 done e1
 pretty1 done e1
 prettier1 done (eval1 done) e1
-//│ e1: Add['E .. 'E | (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│ e1: Add['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -217,15 +217,15 @@ prettier1 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 743
+//│ constrain calls  : 747
 //│ annoying  calls  : 240
-//│ subtyping calls  : 485
+//│ subtyping calls  : 646
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
 pretty1 done e1
 prettier1 done (eval1 done) e1
-//│ e1: Add['E .. 'E | (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│ e1: Add['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E0 .. 'E0 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -278,7 +278,7 @@ eval2 done e1
 //│ subtyping calls  : 117
 
 e2 = add (lit 1) (nega e1)
-//│ e2: Add['E .. 'E | Lit & {val: 1} | (Nega['E0] with {arg: Add['E1 .. 'E1 | (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})] with {lhs: Lit & {val: 1}, rhs: Nega['E0] with {arg: Add['E1 .. 'E1 | (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
+//│ e2: Add['E .. 'E | Lit & {val: 1} | (Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})] with {lhs: Lit & {val: 1}, rhs: Nega['E0 .. 'E0 | (Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}})] with {arg: Add['E1 .. 'E1 | (Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add['E2 .. 'E2 | Lit & {val: 2} | Lit & {val: 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
@@ -293,7 +293,7 @@ eval2 done e2
 //│ subtyping calls  : 152
 
 d2 = nega (add (lit 1) (nega (lit 1)))
-//│ d2: Nega['E .. 'E | (Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}})] with {arg: Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}}
+//│ d2: Nega['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}})] with {arg: Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}}}
 //│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
 :stats
@@ -313,7 +313,7 @@ prettier2 done
 prettier2 done (eval1 done)
 //│ res: ((Add[?] with {lhs: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit as 'b, rhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit as 'c}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
-//│ constrain calls  : 84
+//│ constrain calls  : 85
 //│ annoying  calls  : 0
 //│ subtyping calls  : 8791
 
@@ -327,9 +327,9 @@ prettier2 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 1236
+//│ constrain calls  : 1243
 //│ annoying  calls  : 390
-//│ subtyping calls  : 130108
+//│ subtyping calls  : 130110
 
 
 
@@ -345,7 +345,7 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E .. ?E0] with {arg: ?arg}` does not match type `nothing`
 //│ ║  l.243: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -403,7 +403,7 @@ prettier2 done (eval1 done) e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E .. ?E0] with {arg: ?arg}` does not match type `nothing`
 //│ ║  l.243: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -415,9 +415,9 @@ prettier2 done (eval1 done) e2
 //│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 575
+//│ constrain calls  : 579
 //│ annoying  calls  : 198
-//│ subtyping calls  : 422
+//│ subtyping calls  : 456
 
 :e
 :stats
@@ -484,7 +484,7 @@ prettier2 done eval2 e1
 //│    = '123'
 //│ constrain calls  : 240
 //│ annoying  calls  : 62
-//│ subtyping calls  : 188
+//│ subtyping calls  : 216
 
 :e
 :stats
@@ -525,7 +525,7 @@ prettier2 done eval2 e2
 //│    = '1-123'
 //│ constrain calls  : 342
 //│ annoying  calls  : 107
-//│ subtyping calls  : 307
+//│ subtyping calls  : 371
 
 :e
 :stats
@@ -550,7 +550,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E .. ?E0] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.18: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -563,7 +563,7 @@ prettier2 done eval2 d2
 //│    = '-1-1'
 //│ constrain calls  : 241
 //│ annoying  calls  : 73
-//│ subtyping calls  : 164
+//│ subtyping calls  : 198
 
 :e
 :stats
@@ -604,5 +604,5 @@ prettier2 done eval1 e2
 //│    = '1-123'
 //│ constrain calls  : 337
 //│ annoying  calls  : 107
-//│ subtyping calls  : 305
+//│ subtyping calls  : 369
 
