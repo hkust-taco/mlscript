@@ -50,6 +50,10 @@ trait TypeSimplifier { self: Typer =>
     // Merge the bounds of all type variables of the given DNF, and traverse the result
     def go1(ty: DNF, pol: Bool)
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
+        println(s"inProcess $inProcess")
+        // println(s"inProcess ${inProcess.map(_ === (ty,pol))}")
+        // println(s"inProcess ${ty.hashCode} ${inProcess.toArray.map(_._1).sorted.map(_.hashCode)}")
+        println(s"inProcess ${ty.hashCode} ${inProcess.toList.map(_._1.hashCode)}")
       if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
         if (inProcess.contains(pty))
@@ -65,18 +69,18 @@ trait TypeSimplifier { self: Typer =>
                     case wo @ Without(b, ns) =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
-                      TupleType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                      TupleType(fs.mapValues(_.update(goDeep(_, !pol), goDeep(_, pol))))(noProv)
                     case ar @ ArrayType(inner) =>
-                      ArrayType(goDeep(inner, pol))(noProv)
+                      ArrayType(inner.update(goDeep(_, !pol), goDeep(_, pol)))(noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
-                  RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                  RecordType(fs.mapValues(_.update(goDeep(_, !pol), goDeep(_, pol))))(noProv)
                 )
                 case LhsTop => LhsTop
               }
               def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
-                case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
+                case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, !pol), goDeep(_, pol)))
                 case RhsBases(prims, bf) =>
                   // TODO refactor to handle goDeep returning something else...
                   RhsBases(prims, bf match {
@@ -86,7 +90,7 @@ trait TypeSimplifier { self: Typer =>
                       case ExtrType(true) => N
                       case _ => ???
                     }
-                    case S(R(r)) => S(R(RhsField(r.name, goDeep(r.ty, pol))))
+                    case S(R(r)) => S(R(RhsField(r.name, r.ty.update(goDeep(_, !pol), goDeep(_, pol)))))
                   })
                 case RhsBot => RhsBot
               }
@@ -119,9 +123,11 @@ trait TypeSimplifier { self: Typer =>
     val analyzed = MutSet.empty[PolarVariable]
     
     def analyze(st: SimpleType, pol: Bool): Unit = st match {
-      case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
-      case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
-      case ArrayType(inner) => analyze(inner, pol)
+      case RecordType(fs) => fs.foreach { f => analyze(f._2.lb, !pol); analyze(f._2.ub, pol) }
+      case TupleType(fs) => fs.foreach { f => analyze(f._2.lb, !pol); analyze(f._2.ub, pol) }
+      case ArrayType(inner) =>
+        analyze(inner.lb, !pol)
+        analyze(inner.ub, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
@@ -254,9 +260,9 @@ trait TypeSimplifier { self: Typer =>
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
     def transform(st: SimpleType, pol: Bool): SimpleType = st match {
-      case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
-      case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
-      case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
+      case RecordType(fs) => RecordType(fs.mapValues(_.update(transform(_, !pol), transform(_, pol))))(st.prov)
+      case TupleType(fs) => TupleType(fs.mapValues(_.update(transform(_, !pol), transform(_, pol))))(st.prov)
+      case ArrayType(inner) => ArrayType(inner.update(transform(_, !pol), transform(_, pol)))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
@@ -314,9 +320,9 @@ trait TypeSimplifier { self: Typer =>
       case tv: TypeVariable => renew(tv)
       case NegType(und) => go(und, !pol).neg()
       case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
-      case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
-      case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
-      case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
+      case RecordType(fs) => RecordType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
+      case TupleType(fs) => TupleType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
+      case ArrayType(inner) => ArrayType(inner.update(go(_, !pol), go(_, pol)))(st.prov)
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
@@ -337,8 +343,8 @@ trait TypeSimplifier { self: Typer =>
                   val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
                     rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
-                      case (_, FunctionType(ub, lb)) if lb >:< ub => lb
-                      case (_, FunctionType(lb, ub)) =>
+                      case (_, FieldType(ub, lb)) if lb >:< ub => lb
+                      case (_, FieldType(lb, ub)) =>
                         TypeBounds.mk(go(lb, false), go(ub, true))
                     }.getOrElse(TypeBounds(BotType, TopType)(noProv))
                   })(noProv)
@@ -350,7 +356,7 @@ trait TypeSimplifier { self: Typer =>
                       // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
                       cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
                         clsFields.get(field).exists(_ <:< fty)
-                    }.mapValues(go(_, pol))
+                    }.mapValues(_.update(go(_, !pol), go(_, pol)))
                   )(rcd.prov)
                   val removedFields = clsFields.keysIterator
                     .filterNot(field => rcd.fields.exists(_._1 === field)).toSortedSet
@@ -366,10 +372,10 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(_.update(go(_, !pol), go(_, pol)))
                   val (res, nfs) = bo match {
                     case S(tt @ TupleType(fs)) => 
-                      val tupres = TupleType(fs.mapValues(go(_, pol)))(tt.prov)
+                      val tupres = TupleType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(tt.prov)
                       val rcdtup = tupres.toRecord.fields.map(f => f._1.name -> f._2).toSet
                       S(tupres) -> (
                         if (rcdtup.subsetOf(nFields.map(f => f._1.name -> f._2).toSet))
@@ -379,7 +385,7 @@ trait TypeSimplifier { self: Typer =>
                       )
                     case S(ct: ClassTag) => S(ct) -> nFields
                     case S(ft @ FunctionType(l, r)) => S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
-                    case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
+                    case S(at @ ArrayType(inner)) => S(ArrayType(inner.update(go(_, !pol), go(_, pol)))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields
                   }
@@ -388,13 +394,13 @@ trait TypeSimplifier { self: Typer =>
             case LhsTop => TopType
           }, {
             case RhsBot => BotType
-            case RhsField(n, t) => RecordType(n -> go(t, pol) :: Nil)(noProv)
+            case RhsField(n, t) => RecordType(n -> t.update(go(_, !pol), go(_, pol)) :: Nil)(noProv)
             case RhsBases(ots, rest) =>
               // Note: could recosntruct class tags for these, but it would be pretty verbose,
               //    as in showing `T & ~C[?] & ~D[?, ?]` instead of just `T & ~c & ~d`
               // ots.map { case t @ (_: ClassTag | _: TraitTag) => ... }
               val r = rest match {
-                case v @ S(R(RhsField(n, t))) => RhsField(n, go(t, pol)).toType(sort = true)
+                case v @ S(R(RhsField(n, t))) => RhsField(n, t.update(go(_, !pol), go(_, pol))).toType(sort = true)
                 case v @ S(L(bty)) => go(bty, pol)
                 case N => BotType
               }

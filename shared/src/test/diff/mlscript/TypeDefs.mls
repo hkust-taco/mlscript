@@ -177,7 +177,7 @@ id: Runaway2
 //│ ╟── from type reference:
 //│ ║  l.163: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
-//│ res: (({x: 'a -> 'a},) & {_1: {x: (('a,) | ('a | 'a0,)) -> ('a & 'a0)}}) -> 'b as 'b
+//│ res: (({x: 'a -> 'a},) & {_1: {x: (('a,) | ('a0 | 'a,)) -> ('a & 'a0)}}) -> 'b as 'b
 //│    = [Function: id]
 
 :re

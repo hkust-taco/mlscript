@@ -27,7 +27,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
-    case _ => Tuple((N, t) :: Nil)
+    case _ => Tuple((N, Field(Bot, t)) :: Nil)
   }
   
   def letter[_: P]     = P( lowercase | uppercase )
@@ -210,10 +210,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
   def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
-    locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" ).map(_.toList pipe Record))
+    locate(P( "{" ~/ (variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
+      .map(_.toList.mapValues(Field(Bot, _)) pipe Record))
   def parTy[_: P]: P[Type] = locate(P( "(" ~/ ty.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
     case (N -> ty :: Nil, N) => ty
-    case (fs, _) => Tuple(fs)
+    case (fs, _) => Tuple(fs.mapValues(Field(Bot, _)))
   })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   

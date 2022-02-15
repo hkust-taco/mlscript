@@ -17,11 +17,36 @@ abstract class TypeImpl extends Located { self: Type =>
     case _ => children.flatMap(_.typeVarsList)
   }
   
-  def show: String =
+  def show: Str =
     showIn(ShowCtx.mk(this :: Nil), 0)
   
-  private def parensIf(str: String, cnd: Boolean): String = if (cnd) "(" + str + ")" else str
-  def showIn(ctx: ShowCtx, outerPrec: Int): String = this match {
+  private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
+  // private def showField(f: Var -> Field, ctx: ShowCtx): Str = {
+  //   val nme = f._1.name
+  //   f._2 match { // TODO maybe rm this
+  //     case Field(Bot, Top) => s"$nme"
+  //     case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+  //     case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+  //     case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+  //     case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+  //     // case Bot | Top => s"$nme"
+  //     // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
+  //   }
+  // }
+  private def showField(f: Field, ctx: ShowCtx): Str = {
+    f match {
+      // case Field(Bot, Top) => s"$nme"
+      // case Field(lb, ub) if lb === ub =>
+      //   val ubs = ub.showIn(ctx, 0)
+      //   s"$ubs .. $ubs"
+      case Field(Bot, ub) => ub.showIn(ctx, 0)
+      case Field(lb, Top) => s"${lb.showIn(ctx, 0)} .."
+      case Field(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+      // case Bot | Top => s"$nme"
+      // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
+    }
+  }
+  def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
     case Bot => "nothing"
@@ -31,24 +56,27 @@ abstract class TypeImpl extends Located { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
-    case Function(Tuple((N,l) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
+    case Function(Tuple((N,Field(Bot,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
       val nme = nt._1.name
-      if (nme.isCapitalized) nt._2 match { // TODO maybe rm this
-        case Function(Bot, Top) => s"$nme"
-        case Function(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-        case Function(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
-        case Function(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
-        case Function(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
-        case Bot | Top => s"$nme"
-        case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
+      if (nme.isCapitalized) 
+      nt._2 match {
+        case Field(Bot, Top) => s"$nme"
+        case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+        case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+        case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+        case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+        // case Bot | Top => s"$nme"
+        // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
       }
-      else s"${nme}: ${nt._2.showIn(ctx, 0)}"
+      else s"${nme}: ${showField(nt._2, ctx)}"
+      // showField(nt._2)
+      // showField(nt, ctx)
     }.mkString("{", ", ", "}")
-    case Tuple(fs) => fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${nt._2.showIn(ctx, 0)},").mkString("(", " ", ")")
-    case Arr(inner) => s"Array[${inner.showIn(ctx, 0)}]"
+    case Tuple(fs) =>
+      fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -69,9 +97,8 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(l, r) => l :: r :: Nil
     case Bounds(l, r) => l :: r :: Nil
     case Neg(b) => b :: Nil
-    case Record(fs) => fs.map(_._2)
-    case Tuple(fs) => fs.map(_._2)
-    case Arr(inner) => inner :: Nil
+    case Record(fs) => fs.flatMap(f => f._2.in :: f._2.out :: Nil)
+    case Tuple(fs) => fs.flatMap(f => f._2.in :: f._2.out :: Nil)
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
@@ -201,7 +228,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Subs(arr, idx) => "array subscript"
   }
   
-  override def toString: String = this match {
+  override def toString: Str = this match {
     case Bra(true, trm) => s"{$trm}"
     case Bra(false, trm) => s"($trm)"
     case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
@@ -412,7 +439,7 @@ trait StatementImpl extends Located { self: Statement =>
                     case R(t) => t
                   }
                   fields += n -> ty
-                  n -> ty
+                  n -> Field(Bot, ty)
                 case _ => ???
               }) :: Nil
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
@@ -424,7 +451,7 @@ trait StatementImpl extends Located { self: Statement =>
                     case R(t) => t
                   }
                   fields += n -> ty
-                  S(n) -> ty
+                  S(n) -> Field(Bot, ty)
                 case _ => ???
               }) :: Nil
             case _ => ??? // TODO proper error
@@ -434,7 +461,7 @@ trait StatementImpl extends Located { self: Statement =>
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps,
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
-          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList)).withLocOf(stmt)
+          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(Bot, _)))).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
       }
@@ -468,7 +495,7 @@ trait StatementImpl extends Located { self: Statement =>
   }
   
   
-  override def toString: String = this match {
+  override def toString: Str = this match {
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
     case DatatypeDefn(head, body) => s"data type $head of $body"
     case DataDefn(head) => s"data $head"

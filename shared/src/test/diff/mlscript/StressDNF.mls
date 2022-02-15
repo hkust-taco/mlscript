@@ -19,7 +19,7 @@ ty0 = ty0
 //│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty0:
 //│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 99
+//│ constrain calls  : 106
 //│ annoying  calls  : 45
 //│ subtyping calls  : 392
 
@@ -31,7 +31,7 @@ ty0 = ty1
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│   <:  ty0:
 //│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
-//│ constrain calls  : 65
+//│ constrain calls  : 72
 //│ annoying  calls  : 30
 //│ subtyping calls  : 290
 
@@ -86,7 +86,7 @@ ty1 = ty0
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.26: 	def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ╙──      	                                                                              ^^
-//│ constrain calls  : 99
+//│ constrain calls  : 106
 //│ annoying  calls  : 60
 //│ subtyping calls  : 295
 

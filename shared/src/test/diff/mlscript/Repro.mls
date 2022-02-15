@@ -1,0 +1,49 @@
+
+id
+//│ res: 'a -> 'a
+//│    = [Function: id]
+
+id 1
+//│ res: 1
+//│    = 1
+
+class C: { x: int }
+//│ Defined class C
+
+:d
+:ns
+C
+//│ 0. Typing term C
+//│ 0. : [((⊥..{x: ⊥..x0}) -> (c<> & {x: ⊥..x0}))]
+//│ Typed as: [((⊥..{x: ⊥..x0}) -> (c<> & {x: ⊥..x0}))]
+//│  where: x0 <: Int
+//│ res: {x: 'x & int} -> (c & {x: 'x})
+//│    = [Function: res]
+
+C
+//│ res: {x: int & 'x} -> (C with {x: 'x})
+//│    = [Function: res]
+
+C { x = 1 }
+//│ res: C & {x: 1}
+//│    = C { x: 1 }
+
+
+def r: { x: int }
+//│ r: {x: int}
+
+:re
+r
+//│ res: {x: int}
+//│ Runtime error:
+//│   ReferenceError: r is not defined
+
+:re
+r: { x: 'a }
+//│ res: {x: int}
+//│ Runtime error:
+//│   ReferenceError: r is not defined
+
+
+
+

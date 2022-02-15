@@ -39,7 +39,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType = {
       val thisTy = TypeRef(nme, targs)(prov)
-      MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)(prov)
+      MethodType(pt.level, S(FunctionType(singleTupNeg(thisTy), pt.body)(prov)), nme)(prov)
     }
     def wrapMethod(mt: MethodType): MethodType =
       if (mt.body.nonEmpty) wrapMethod(mt.toPT, mt.prov) else mt.copy(parents = nme :: Nil)
@@ -164,46 +164,56 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
       val tv = freshVar(noProv)(1)
-      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil, ArrayType(tv)(noProv), Nil, Nil, Set.empty, N)
+      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(BotType, tv))(noProv), Nil, Nil, Set.empty, N)
+    } ::
+    {
+      val tv = freshVar(noProv)(1)
+      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(tv, tv))(noProv), Nil, Nil, Set.empty, N)
     } ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
-  def singleTup(ty: ST): ST =
-    if (funkyTuples) ty else TupleType((N, ty) :: Nil)(noProv)
+  // def singleTup(ty: ST): ST =
+  //   if (funkyTuples) ty else TupleType((N, ty.toBounds) :: Nil)(noProv)
+  def singleTupNeg(ty: ST): ST =
+    if (funkyTuples) ty else TupleType((N, ty.toUpper ) :: Nil)(noProv)
+  // def singleTupNeg(ty: ST): ST =
+  //   if (funkyTuples) ty else TupleType((N, ty.toLower) :: Nil)(noProv)
+  // def singleTupPos(ty: ST): ST =
+  //   if (funkyTuples) ty else TupleType((N, ty.toUpper) :: Nil)(noProv)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
-    val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
-    val intBinPred = fun(singleTup(IntType), fun(singleTup(IntType), BoolType)(noProv))(noProv)
+    val intBinOpTy = fun(singleTupNeg(IntType), fun(singleTupNeg(IntType), IntType)(noProv))(noProv)
+    val intBinPred = fun(singleTupNeg(IntType), fun(singleTupNeg(IntType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
-      "toString" -> fun(singleTup(TopType), StrType)(noProv),
-      "not" -> fun(singleTup(BoolType), BoolType)(noProv),
-      "succ" -> fun(singleTup(IntType), IntType)(noProv),
-      "log" -> PolymorphicType(0, fun(singleTup(tv), UnitType)(noProv)),
-      "discard" -> PolymorphicType(0, fun(singleTup(tv), UnitType)(noProv)),
-      "negate" -> fun(singleTup(IntType), IntType)(noProv),
+      "toString" -> fun(singleTupNeg(TopType), StrType)(noProv),
+      "not" -> fun(singleTupNeg(BoolType), BoolType)(noProv),
+      "succ" -> fun(singleTupNeg(IntType), IntType)(noProv),
+      "log" -> PolymorphicType(0, fun(singleTupNeg(tv), UnitType)(noProv)),
+      "discard" -> PolymorphicType(0, fun(singleTupNeg(tv), UnitType)(noProv)),
+      "negate" -> fun(singleTupNeg(IntType), IntType)(noProv),
       "add" -> intBinOpTy,
       "sub" -> intBinOpTy,
       "mul" -> intBinOpTy,
       "div" -> intBinOpTy,
-      "sqrt" -> fun(singleTup(IntType), IntType)(noProv),
+      "sqrt" -> fun(singleTupNeg(IntType), IntType)(noProv),
       "lt" -> intBinPred,
       "le" -> intBinPred,
       "gt" -> intBinPred,
       "ge" -> intBinPred,
-      "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
+      "concat" -> fun(singleTupNeg(StrType), fun(singleTupNeg(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
+        PolymorphicType(0, fun(singleTupNeg(v), fun(singleTupNeg(v), BoolType)(noProv))(noProv))
       },
       "ne" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
+        PolymorphicType(0, fun(singleTupNeg(v), fun(singleTupNeg(v), BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
       "+" -> intBinOpTy,
@@ -215,11 +225,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "<=" -> intBinPred,
       ">=" -> intBinPred,
       "==" -> intBinPred,
-      "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
-      "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
+      "&&" -> fun(singleTupNeg(BoolType), fun(singleTupNeg(BoolType), BoolType)(noProv))(noProv),
+      "||" -> fun(singleTupNeg(BoolType), fun(singleTupNeg(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTup(v), v)(noProv))
+        PolymorphicType(0, fun(singleTupNeg(v), v)(noProv))
       },
       "if" -> {
         val v = freshVar(noProv)(1)
@@ -257,13 +267,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, FieldType] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
       case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
-        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
@@ -400,7 +410,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                    tparamField(td.nme, tp) -> FieldType(tv, tv) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -409,10 +419,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                         else f._1 ->
                           freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2)
+                          )(1).tap(_.upperBounds ::= f._2.ub).toUpper // TODO also allow mutable class fields (require explicit syntax?)
                         ).toList
                       PolymorphicType(0, FunctionType(
-                        singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
+                        singleTupNeg(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
                         )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
@@ -421,7 +431,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                       val tv = freshVar(noProv)(1)
                       tv.upperBounds ::= td.bodyTy
                       PolymorphicType(0, FunctionType(
-                        singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
+                        singleTupNeg(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
                   ctx += n.name -> ctor
@@ -670,11 +680,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
         if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
       // case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
-      case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(fields match {
+      case Tuple(fields) => TupleType(fields.mapValues(f => FieldType(rec(f.in), rec(f.out))))(fields match {
         case Nil | ((N, _) :: Nil) => noProv
         case _ => tyTp(ty.toLoc, "tuple type")
       })
-      case Arr(inner) => ArrayType(rec(inner))(tp(ty.toLoc, "array type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -690,13 +699,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           case _ =>
         }
         RecordType.mk(fs.map { nt =>
-          if (nt._1.name.isCapitalized)
-            err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
-          nt._1 -> rec(nt._2)
-        })(prov)
+            if (nt._1.name.isCapitalized)
+              err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
+            nt._1 -> FieldType(rec(nt._2.in), rec(nt._2.out))
+          })(prov)
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
-        RecordType(r.fields.mapValues(rec))(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
+        RecordType(r.fields.mapValues(f => FieldType(rec(f.in), rec(f.out))))(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
@@ -913,12 +922,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         RecordType.mk(fs.map { case (n, t) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
-          (n, typeTerm(t))
+          (n, typeTerm(t).toUpper // TODO mut field syntax
+          )
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.map(f => f._1 -> typeTerm(f._2)))(fs match {
+        TupleType(fs.map(f => f._1 -> typeTerm(f._2).toUpper // TODO mut field syntax
+        ))(fs match {
           case Nil | ((N, _) :: Nil) => noProv
           case _ => tp(term.toLoc, "tuple literal")
         })
@@ -926,7 +937,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
         val res = freshVar(prov)
-        con(t_a, ArrayType(res)(prov), t_a)
+        con(t_a, ArrayType(res.toUpper)(prov), t_a)
         con(t_i, IntType, t_i)
         res
       case Bra(false, trm: Blk) => typeTerm(trm)
@@ -974,7 +985,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           val o_ty = typeTerm(obj)
           val res = freshVar(prov)
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
-          con(obj_ty, RecordType.mk((fieldName, res) :: Nil)(prov), res)
+          con(obj_ty, RecordType.mk((fieldName, res.toUpper) :: Nil)(prov), res)
         }
         def mthCallOrSel(obj: Term, fieldName: Var) = 
           (fieldName.name match {
@@ -991,7 +1002,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                   })
               val o_ty = typeTerm(obj)
               val res = freshVar(prov)
-              con(mth_ty.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
+              con(mth_ty.instantiate, FunctionType(singleTupNeg(o_ty), res)(prov), res)
             case N =>
               if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
@@ -1156,14 +1167,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       if (rcd) {
         val fs = fields.reverseIterator.zipWithIndex.map {
           case ((S(n), t), i) =>
-            n -> t
+            n -> t.toUpper
           case ((N, t), i) =>
             // err("Missing name for record field", t.prov.loco)
             warn("Missing name for record field", t.prov.loco)
-            (Var("_" + (i + 1)), t)
+            (Var("_" + (i + 1)), t.toUpper)
         }.toList
         RecordType.mk(fs)(prov)
-      } else TupleType(fields.reverse)(prov)
+      } else TupleType(fields.reverseIterator.mapValues(_.toUpper).toList)(prov)
   }
   
   
@@ -1205,14 +1216,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case FunctionType(l, r) => Function(go(l, !polarity), go(r, polarity))
             case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
-            case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
-            case TupleType(fs) => Tuple(fs.map(nt => nt._1 -> go(nt._2, polarity)))
-            case ArrayType(inner) => Arr(go(inner, polarity))
+            case RecordType(fs) =>
+              // Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
+              Record(fs.mapValues(v => Field(go(v.lb, !polarity), go(v.ub, polarity))))
+            case TupleType(fs) =>
+              Tuple(fs.mapValues(v => Field(go(v.lb, !polarity), go(v.ub, polarity))))
+            // case ArrayType(inner) => Arr(go(inner, polarity))
+            // case ArrayType(FieldType(lb, ub)) => Arr(Bounds(go(lb, !polarity), go(ub, polarity)))
+            case ArrayType(FieldType(BotType, ub)) =>
+              AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
+            case ArrayType(FieldType(lb, ub)) =>
+              AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case WithType(base, rcd) => WithExtension(go(base, polarity),
-              Record(rcd.fields.mapValues(go(_, polarity))))
+              Record(rcd.fields.mapValues(f => Field(go(f.lb, polarity), go(f.ub, polarity)))))
             case ProxyType(und) => go(und, polarity)
             case tag: ObjectTag => tag.id match {
               case Var(n) => TypeName(n)

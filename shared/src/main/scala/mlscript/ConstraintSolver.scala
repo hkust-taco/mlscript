@@ -194,7 +194,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf))))
             case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
               r.fields.find(_._1 === n) match {
-                case S(nt1) => rec(nt1._2, t2, false)
+                case S(nt1) =>
+                  rec(t2.lb, nt1._2.lb, false)
+                  rec(nt1._2.ub, t2.ub, false)
                 case N =>
                   bo match {
                     case S(Without(b, ns)) =>
@@ -207,9 +209,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               reportError
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size =>
-                (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
+                // (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
+                (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
+                  rec(l.ub, r.ub, false)
+                  rec(r.lb, l.lb, false)
+                }
             case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
-              rec(b.inner, ar.inner, false)
+              rec(ar.inner.lb, b.inner.lb, false)
+              rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
@@ -297,9 +304,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
-              rec(l, r, false)
+              rec(r.lb, l.lb, false)
+              rec(l.ub, r.ub, false)
             }
-          case (t: ArrayBase, a: ArrayType) => rec(t.inner, a.inner, false)
+          case (t: ArrayBase, a: ArrayType) =>
+            rec(a.inner.lb, t.inner.lb, false)
+            rec(t.inner.ub, a.inner.ub, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
             rec(r, rhs, true)
@@ -309,7 +319,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (p @ ProxyType(und), _) => rec(und, rhs, true)
           case (_, p @ ProxyType(und)) => rec(lhs, und, true)
           case (_, TupleType(f :: Nil)) if funkyTuples =>
-            rec(lhs, f._2, true) // FIXME actually needs reified coercion! not a true subtyping relationship
+            rec(lhs, f._2.ub, true) // FIXME actually needs reified coercion! not a true subtyping relationship
           case (err @ ClassTag(ErrTypeId, _), FunctionType(l1, r1)) =>
             rec(l1, err, false)
             rec(err, r1, false)
@@ -320,14 +330,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
                 reportError
-              } { case (n0, t0) => rec(t0, t1, false) }
+              } { case (n0, t0) =>
+                rec(t1.lb, t0.lb, false)
+                rec(t0.ub, t1.ub, false)
+              }
             }
           case (tup: TupleType, _: RecordType) =>
             rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
-            fs1.foreach(f => rec(err, f._2, false))
+            fs1.foreach(f => rec(err, f._2.ub, false))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
-            fs1.foreach(f => rec(f._2, err, false))
+            fs1.foreach(f => rec(f._2.ub, err, false))
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
           case (ClassTag(ErrTypeId, _), _) => ()
@@ -487,9 +500,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
-      case t @ RecordType(fs) => RecordType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
-      case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
-      case t @ ArrayType(ar) => ArrayType(extrude(ar, lvl, pol))(t.prov)
+      // case t @ RecordType(fs) => RecordType(fs.map(nt =>
+      //   // nt._1 -> TypeBounds(extrude(nt._2.lb, lvl, !pol), extrude(nt._2.ub, lvl, pol))(nt._2.prov)))(t.prov)
+      //   nt._1 -> nt._2.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
+      case t @ RecordType(fs) =>
+        RecordType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
+      // case t @ TupleType(fs) => TupleType(fs.map(nt =>
+      //   // nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
+      //   nt._1 -> nt._2.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
+      case t @ TupleType(fs) =>
+        TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
+      case t @ ArrayType(ar) =>
+        // ArrayType(extrude(ar, lvl, pol))(t.prov)
+        ArrayType(ar.update(extrude(_, lvl, !pol), extrude(_, lvl, pol)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -580,9 +603,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else TypeBounds(freshen(lb), freshen(ub))(t.prov)
       case t @ FunctionType(l, r) => FunctionType(freshen(l), freshen(r))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, freshen(l), freshen(r))(t.prov)
-      case t @ RecordType(fs) => RecordType(fs.map(ft => ft._1 -> freshen(ft._2)))(t.prov)
-      case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> freshen(nt._2)))(t.prov)
-      case t @ ArrayType(ar) => ArrayType(freshen(ar))(t.prov)
+      case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
+      case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
+      case t @ ArrayType(ar) => ArrayType(ar.update(freshen, freshen))(t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)

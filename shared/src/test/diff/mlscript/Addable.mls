@@ -18,9 +18,8 @@ n = Number { val = 1 }
 //│ n: number & {val: 1}
 //│  = Number { val: 1 }
 
-// TODO why not simplified?
 n.Add n
-//│ res: 'a | number & {val: int}
+//│ res: number & {val: int}
 //│    = Number { val: 2 }
 
 
@@ -29,20 +28,19 @@ def addTwo a0 a1 = a0.Add a1
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ res: 'a | number & {val: int}
+//│ res: number & {val: int}
 //│    = Number { val: 2 }
 
 s = Str { val = "hey" }
 //│ s: Str & {val: "hey"}
 //│  = Str { val: 'hey' }
 
-// TODO why not simplified?
 s.Add s
-//│ res: 'a | Str
+//│ res: Str
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ res: 'a | Str
+//│ res: Str
 //│    = Str { val: 'heyhey' }
 
 
@@ -52,7 +50,7 @@ def addSame a = a.Add a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: 'a | number & {val: int}
+//│ res: number & {val: int}
 //│    = Number { val: 2 }
 
 
@@ -62,11 +60,11 @@ rec def addNTimes a n =
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: 'a | number & {val: int}
+//│ res: number & {val: int}
 //│    = Number { val: 12 }
 
 addNTimes s 5
-//│ res: 'a | Str
+//│ res: Str
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -140,7 +138,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.27: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 

@@ -82,15 +82,16 @@ sealed abstract class Type extends TypeImpl
 final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
-final case class Record(fields: Ls[Var -> Type])         extends Type
-final case class Tuple(fields: Ls[Opt[Var] -> Type])     extends Type
-final case class Arr(inner: Type)                        extends Type
+final case class Record(fields: Ls[Var -> Field])         extends Type
+final case class Tuple(fields: Ls[Opt[Var] -> Field])     extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+
+final case class Field(in: Type, out: Type)
 
 sealed abstract class NullaryType                        extends Type
 

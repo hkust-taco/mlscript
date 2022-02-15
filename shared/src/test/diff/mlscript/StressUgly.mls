@@ -124,7 +124,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	              ^^^^^^^^
 //│ Runtime error:
 //│   ReferenceError: eval1_ty_ugly is not defined
-//│ constrain calls  : 62
+//│ constrain calls  : 63
 //│ annoying  calls  : 53
-//│ subtyping calls  : 459
+//│ subtyping calls  : 473
 
