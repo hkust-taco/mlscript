@@ -39,7 +39,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType = {
       val thisTy = TypeRef(nme, targs)(prov)
-      MethodType(pt.level, S(FunctionType(singleTupNeg(thisTy), pt.body)(prov)), nme)(prov)
+      MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)(prov)
     }
     def wrapMethod(mt: MethodType): MethodType =
       if (mt.body.nonEmpty) wrapMethod(mt.toPT, mt.prov) else mt.copy(parents = nme :: Nil)
@@ -173,47 +173,41 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
-  // def singleTup(ty: ST): ST =
-  //   if (funkyTuples) ty else TupleType((N, ty.toBounds) :: Nil)(noProv)
-  def singleTupNeg(ty: ST): ST =
+  def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper ) :: Nil)(noProv)
-  // def singleTupNeg(ty: ST): ST =
-  //   if (funkyTuples) ty else TupleType((N, ty.toLower) :: Nil)(noProv)
-  // def singleTupPos(ty: ST): ST =
-  //   if (funkyTuples) ty else TupleType((N, ty.toUpper) :: Nil)(noProv)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
-    val intBinOpTy = fun(singleTupNeg(IntType), fun(singleTupNeg(IntType), IntType)(noProv))(noProv)
-    val intBinPred = fun(singleTupNeg(IntType), fun(singleTupNeg(IntType), BoolType)(noProv))(noProv)
+    val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
+    val intBinPred = fun(singleTup(IntType), fun(singleTup(IntType), BoolType)(noProv))(noProv)
     Map(
       "true" -> TrueType,
       "false" -> FalseType,
       "document" -> BotType,
       "window" -> BotType,
-      "toString" -> fun(singleTupNeg(TopType), StrType)(noProv),
-      "not" -> fun(singleTupNeg(BoolType), BoolType)(noProv),
-      "succ" -> fun(singleTupNeg(IntType), IntType)(noProv),
-      "log" -> PolymorphicType(0, fun(singleTupNeg(tv), UnitType)(noProv)),
-      "discard" -> PolymorphicType(0, fun(singleTupNeg(tv), UnitType)(noProv)),
-      "negate" -> fun(singleTupNeg(IntType), IntType)(noProv),
+      "toString" -> fun(singleTup(TopType), StrType)(noProv),
+      "not" -> fun(singleTup(BoolType), BoolType)(noProv),
+      "succ" -> fun(singleTup(IntType), IntType)(noProv),
+      "log" -> PolymorphicType(0, fun(singleTup(tv), UnitType)(noProv)),
+      "discard" -> PolymorphicType(0, fun(singleTup(tv), UnitType)(noProv)),
+      "negate" -> fun(singleTup(IntType), IntType)(noProv),
       "add" -> intBinOpTy,
       "sub" -> intBinOpTy,
       "mul" -> intBinOpTy,
       "div" -> intBinOpTy,
-      "sqrt" -> fun(singleTupNeg(IntType), IntType)(noProv),
+      "sqrt" -> fun(singleTup(IntType), IntType)(noProv),
       "lt" -> intBinPred,
       "le" -> intBinPred,
       "gt" -> intBinPred,
       "ge" -> intBinPred,
-      "concat" -> fun(singleTupNeg(StrType), fun(singleTupNeg(StrType), StrType)(noProv))(noProv),
+      "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTupNeg(v), fun(singleTupNeg(v), BoolType)(noProv))(noProv))
+        PolymorphicType(0, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "ne" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTupNeg(v), fun(singleTupNeg(v), BoolType)(noProv))(noProv))
+        PolymorphicType(0, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
       "+" -> intBinOpTy,
@@ -225,11 +219,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       "<=" -> intBinPred,
       ">=" -> intBinPred,
       "==" -> intBinPred,
-      "&&" -> fun(singleTupNeg(BoolType), fun(singleTupNeg(BoolType), BoolType)(noProv))(noProv),
-      "||" -> fun(singleTupNeg(BoolType), fun(singleTupNeg(BoolType), BoolType)(noProv))(noProv),
+      "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
+      "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
         val v = freshVar(noProv)(1)
-        PolymorphicType(0, fun(singleTupNeg(v), v)(noProv))
+        PolymorphicType(0, fun(singleTup(v), v)(noProv))
       },
       "if" -> {
         val v = freshVar(noProv)(1)
@@ -422,7 +416,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                           )(1).tap(_.upperBounds ::= f._2.ub).toUpper // TODO also allow mutable class fields (require explicit syntax?)
                         ).toList
                       PolymorphicType(0, FunctionType(
-                        singleTupNeg(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
+                        singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
                         )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
@@ -431,7 +425,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                       val tv = freshVar(noProv)(1)
                       tv.upperBounds ::= td.bodyTy
                       PolymorphicType(0, FunctionType(
-                        singleTupNeg(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
+                        singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
                       )(originProv(td.nme.toLoc, "trait constructor", td.nme.name)))
                   }
                   ctx += n.name -> ctor
@@ -679,11 +673,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
       case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
         if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
-      // case Tuple(fields) => TupleType(fields.map(f => f._1 -> rec(f._2)))(tp(ty.toLoc, "tuple type"))
-      case Tuple(fields) => TupleType(fields.mapValues(f => FieldType(rec(f.in), rec(f.out))))(fields match {
-        case Nil | ((N, _) :: Nil) => noProv
-        case _ => tyTp(ty.toLoc, "tuple type")
-      })
+      case Tuple(fields) =>
+        TupleType(fields.mapValues(f => FieldType(rec(f.in), rec(f.out))))(tyTp(ty.toLoc, "tuple type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -705,7 +696,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           })(prov)
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
-        RecordType(r.fields.mapValues(f => FieldType(rec(f.in), rec(f.out))))(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
+        RecordType(
+            r.fields.mapValues(f => FieldType(rec(f.in), rec(f.out)))
+          )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
@@ -1002,7 +995,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                   })
               val o_ty = typeTerm(obj)
               val res = freshVar(prov)
-              con(mth_ty.instantiate, FunctionType(singleTupNeg(o_ty), res)(prov), res)
+              con(mth_ty.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
               if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
@@ -1217,12 +1210,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) =>
-              // Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))
               Record(fs.mapValues(v => Field(go(v.lb, !polarity), go(v.ub, polarity))))
             case TupleType(fs) =>
               Tuple(fs.mapValues(v => Field(go(v.lb, !polarity), go(v.ub, polarity))))
-            // case ArrayType(inner) => Arr(go(inner, polarity))
-            // case ArrayType(FieldType(lb, ub)) => Arr(Bounds(go(lb, !polarity), go(ub, polarity)))
             case ArrayType(FieldType(BotType, ub)) =>
               AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
             case ArrayType(FieldType(lb, ub)) =>

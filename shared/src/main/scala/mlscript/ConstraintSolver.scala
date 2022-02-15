@@ -209,7 +209,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               reportError
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size =>
-                // (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
                   rec(r.lb, l.lb, false)
@@ -303,7 +302,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
               ln.foreach { ln => rn.foreach { rn =>
                 if (ln =/= rn) err(
-                  msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'", lhs.prov.loco) } } // TODO better loco
+                  msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'",
+                  lhs.prov.loco // TODO better loco
+              )}}
               rec(r.lb, l.lb, false)
               rec(l.ub, r.ub, false)
             }
@@ -500,18 +501,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
       case t @ ComposedType(p, l, r) => ComposedType(p, extrude(l, lvl, pol), extrude(r, lvl, pol))(t.prov)
-      // case t @ RecordType(fs) => RecordType(fs.map(nt =>
-      //   // nt._1 -> TypeBounds(extrude(nt._2.lb, lvl, !pol), extrude(nt._2.ub, lvl, pol))(nt._2.prov)))(t.prov)
-      //   nt._1 -> nt._2.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ RecordType(fs) =>
         RecordType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
-      // case t @ TupleType(fs) => TupleType(fs.map(nt =>
-      //   // nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
-      //   nt._1 -> nt._2.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ TupleType(fs) =>
         TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ ArrayType(ar) =>
-        // ArrayType(extrude(ar, lvl, pol))(t.prov)
         ArrayType(ar.update(extrude(_, lvl, !pol), extrude(_, lvl, pol)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv, {

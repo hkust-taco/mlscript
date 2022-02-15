@@ -255,45 +255,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
   }
   
-  // case class FieldType(lb: SimpleType, ub: SimpleType) extends SimpleType {
-  //   val prov = noProv
   case class FieldType(lb: SimpleType, ub: SimpleType) {
     def level: Int = lb.level max ub.level
     def <:< (that: FieldType)(implicit ctx: Ctx): Bool =
       (that.lb <:< this.lb) && (this.ub <:< that.ub)
-    def toBounds: TypeBounds = TypeBounds(lb, ub)(noProv)
-    override def toString = s"$lb..$ub"
     def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
       FieldType(lb | that.lb, ub & that.ub)
     def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
       FieldType(lb & that.lb, ub | that.ub)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(lb(this.lb), ub(this.ub))
-    // override lazy val hashCode: Int = this match {
-    //   case p: Product => scala.runtime.ScalaRunTime._hashCode(p)
-    // }
+    
+    // Note: the case-class-generated equals does not seem to work,
+    //    and I don't actually understand why!
     override def equals(that: Any): Bool = that match {
-      // case FieldType(lb, ub) => this.lb === lb
       case that: FieldType => this.lb === that.lb && this.ub === that.ub
       case _ => false
     }
-    // override def equals(that: Any): Bool = this match {
-    //   case p1: Product => that match {
-    //     case that: ST => that match {
-    //       case tv: TV => false
-    //       case p2: Product =>
-    //         p1.canEqual(p2) && {
-    //           val it1 = p1.productIterator
-    //           val it2 = p2.productIterator
-    //           while(it1.hasNext && it2.hasNext) {
-    //             if (it1.next() =/= it2.next()) return false
-    //           }
-    //           return !it1.hasNext && !it2.hasNext
-    //         }
-    //     }
-    //     case _ => false
-    //   }
-    // }
+    override def toString = s"$lb..$ub"
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.

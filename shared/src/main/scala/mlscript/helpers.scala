@@ -21,30 +21,10 @@ abstract class TypeImpl extends Located { self: Type =>
     showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
-  // private def showField(f: Var -> Field, ctx: ShowCtx): Str = {
-  //   val nme = f._1.name
-  //   f._2 match { // TODO maybe rm this
-  //     case Field(Bot, Top) => s"$nme"
-  //     case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-  //     case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
-  //     case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
-  //     case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
-  //     // case Bot | Top => s"$nme"
-  //     // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
-  //   }
-  // }
-  private def showField(f: Field, ctx: ShowCtx): Str = {
-    f match {
-      // case Field(Bot, Top) => s"$nme"
-      // case Field(lb, ub) if lb === ub =>
-      //   val ubs = ub.showIn(ctx, 0)
-      //   s"$ubs .. $ubs"
-      case Field(Bot, ub) => ub.showIn(ctx, 0)
-      case Field(lb, Top) => s"${lb.showIn(ctx, 0)} .."
-      case Field(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
-      // case Bot | Top => s"$nme"
-      // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
-    }
+  private def showField(f: Field, ctx: ShowCtx): Str = f match {
+    case Field(Bot, ub) => ub.showIn(ctx, 0)
+    case Field(lb, Top) => s"${lb.showIn(ctx, 0)} .."
+    case Field(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -60,21 +40,17 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
-      val nme = nt._1.name
-      if (nme.isCapitalized) 
-      nt._2 match {
-        case Field(Bot, Top) => s"$nme"
-        case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-        case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
-        case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
-        case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
-        // case Bot | Top => s"$nme"
-        // case unexpected => s"${nme}: ${unexpected.showIn(ctx, 0)}" // not supposed to happen...
-      }
-      else s"${nme}: ${showField(nt._2, ctx)}"
-      // showField(nt._2)
-      // showField(nt, ctx)
-    }.mkString("{", ", ", "}")
+        val nme = nt._1.name
+        if (nme.isCapitalized) 
+        nt._2 match {
+          case Field(Bot, Top) => s"$nme"
+          case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+          case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+          case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+          case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+        }
+        else s"${nme}: ${showField(nt._2, ctx)}"
+      }.mkString("{", ", ", "}")
     case Tuple(fs) =>
       fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>

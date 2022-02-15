@@ -199,7 +199,6 @@ abstract class TyperHelpers { self: Typer =>
     
     def toUpper: FieldType = FieldType(BotType, this)
     def toLower: FieldType = FieldType(this, TopType)
-    // def toBounds: FieldType = FieldType(this, this)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType

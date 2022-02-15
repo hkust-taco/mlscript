@@ -146,7 +146,7 @@ f_1 = f_2
 //│ ║         	^^^^^^^^^
 //│ ╟── type `(1,)` is not an instance of type T
 //│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                                ^^^^
 //│ ╟── Note: constraint arises from trait tag:
 //│ ║  l.124: 	def f_1: 'a -> (Array['a] & t)
 //│ ║         	                            ^
