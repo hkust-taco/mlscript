@@ -244,33 +244,13 @@ idx = id with { x = 1 }
 //│ idx: 'a -> 'a & {x: 1}
 
 idx idx.x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ res: 1
 
 def indirect i = i i.x
 //│ indirect: ('a -> 'b & {x: 'a}) -> 'b
 
 indirect idx
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ res: 1
 
 if true then id else idx
 //│ res: 'a -> 'a
@@ -279,49 +259,29 @@ r =  if true then id with { x = "a"; y = "b" } else idx
 //│ r: 'a -> 'a & {x: "a" | 1}
 
 r r.x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ res: "a" | 1
 
 indirect r
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ res: "a" | 1
 
 def takeFunOrRecord: (int -> int | { x: int }) -> int
 //│ takeFunOrRecord: anything -> int
 
 :pe
 takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "{ x = v } " at l.311:33: takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x = v } " at l.271:33: takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "{ x } -> 0" at l.315:33: takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x } -> 0" at l.275:33: takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "(int -> in" at l.319:33: takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(int -> in" at l.279:33: takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.323:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.283:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
 
 
 class AA
@@ -340,16 +300,16 @@ ty = ty2
 //│   <:  ty:
 //│ AA
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.338: 	ty = ty2
+//│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^
 //│ ╟── type `{x: int} & tT` does not match type `AA | 'a\x`
-//│ ║  l.330: 	def ty2: TT & { x: int }
+//│ ║  l.290: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `AA | 'a\x`
-//│ ║  l.338: 	ty = ty2
+//│ ║  l.298: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.329: 	def ty: AA | ('a \ x)
+//│ ║  l.289: 	def ty: AA | ('a \ x)
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 

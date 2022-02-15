@@ -553,8 +553,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   // Note: maybe this and `extrude` should be merged?
-  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false, upperLim: Int = MaxLevel)(implicit lvl: Int): SimpleType = {
-    val freshened = MutMap.empty[TV, SimpleType]
+  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false, upperLim: Int = MaxLevel)(implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
+    // val freshened = MutMap.empty[TV, SimpleType]
     def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType =
     // trace(s"FRESHEN $ty | $lim .. $upperLim")
     {

@@ -466,7 +466,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
        * by applying the targs in `TypeRef` and rigidifying class type parameters. */
       def typeMethodsSingle(td: TypeDef): Unit = {
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
         def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodDefs = {
           implicit val thisCtx: Ctx = ctx.nest
@@ -551,7 +554,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val tn = td.nme
         val MethodDefs(_, _, decls, defns) = mds
         val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate()
-        val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
           constrain(subst(mt.toPT, targsMap).instantiate, subst(bmt.toPT, targsMap).rigidify)

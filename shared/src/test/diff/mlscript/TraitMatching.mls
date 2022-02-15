@@ -136,24 +136,16 @@ test2 c2
 //│   ReferenceError: MyTrait is not defined
 
 test2 (c2 with { value = 1 })
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ res: "oops" | 1
+//│ Runtime error:
+//│   ReferenceError: MyTrait is not defined
 
 
 // Note: if we allowed this, we'd have to be careful in the semantics of trait ctors!
 :e
 class C3: { default: string } & ~myTrait
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.154: 	class C3: { default: string } & ~myTrait
+//│ ║  l.146: 	class C3: { default: string } & ~myTrait
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
 //│   unable to derive from type Neg(TypeName(myTrait))
@@ -161,7 +153,7 @@ class C3: { default: string } & ~myTrait
 :e
 class C3: { default: string } & ~MyTrait[anything]
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.162: 	class C3: { default: string } & ~MyTrait[anything]
+//│ ║  l.154: 	class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
 //│   unable to derive from type Neg(AppliedType(TypeName(MyTrait),List(TypeName(anything))))
@@ -182,16 +174,16 @@ strawman: C2
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.183: 	strawman: ~{ value: anything }
+//│ ║  l.175: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── type `C2 & ~myTrait` does not match type `~{value: anything}`
-//│ ║  l.169: 	def strawman: C2 & ~MyTrait[anything]
+//│ ║  l.161: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.183: 	strawman: ~{ value: anything }
+//│ ║  l.175: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.183: 	strawman: ~{ value: anything }
+//│ ║  l.175: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
 //│ Runtime error:

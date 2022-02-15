@@ -393,17 +393,18 @@ f ainf
 //│ ainf: {a: 'a} as 'a
 //│ Runtime error:
 //│   ReferenceError: ainf is not defined
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.392: 	f ainf
+//│ ║         	^^^^^^
+//│ ╟── operator application of type `int` does not have field 'a'
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║         	                                             ^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   ReferenceError: ainf is not defined
 
 :e
 rec def infina = 0 with { a = infina }
@@ -411,17 +412,18 @@ f infina
 //│ infina: 0 & {a: 'a} as 'a
 //│ Runtime error:
 //│   ReferenceError: infina is not defined
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:109)
-//│ 	at: mlscript.TyperDatatypes$MiscBaseType.freshenAbove(TyperDatatypes.scala:108)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$freshenAbove$1(NormalForms.scala:28)
-//│ 	at: scala.Option.map(Option.scala:242)
-//│ 	at: mlscript.NormalForms$LhsNf.freshenAbove(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$Conjunct.freshenAbove(NormalForms.scala:229)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$instantiate$1(NormalForms.scala:358)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.instantiate(NormalForms.scala:358)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.411: 	f infina
+//│ ║         	^^^^^^^^
+//│ ╟── operator application of type `int` does not have field 'a'
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║         	                                             ^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.341: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: error | int | (('b | (forall 'b, 'c. (0 & {a: 'd} as 'd) | 'a))\a & {a: int} as 'a)
+//│ Runtime error:
+//│   ReferenceError: infina is not defined
 
 
 def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
@@ -430,16 +432,16 @@ def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as
 :e
 f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.431: 	f_manual 1
+//│ ║  l.433: 	f_manual 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.431: 	f_manual 1
+//│ ║  l.433: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.427: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.429: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.427: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.429: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 1 | error | (('b | 1 | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
@@ -448,16 +450,16 @@ f_manual 1
 :e
 f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.449: 	f_manual { a = 1 }
+//│ ║  l.451: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.449: 	f_manual { a = 1 }
+//│ ║  l.451: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.427: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.429: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.427: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.429: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
 //│ res: 1 | error | {a: 1} | (('b | {a: 1} | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
@@ -513,13 +515,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.514: 	r.a
+//│ ║  l.516: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.503: 	r = f 1
+//│ ║  l.505: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.514: 	r.a
+//│ ║  l.516: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:
