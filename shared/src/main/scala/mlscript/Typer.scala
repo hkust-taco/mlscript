@@ -971,14 +971,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) =>
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
-        val newCtx = ctx.nest
-        // val newCtx = ctx.nest.nextLevel
+        // val newCtx = ctx.nest
+        val newCtx = ctx.nest.nextLevel
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         // newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, vars)
-        // PolymorphicType.mk(ctx.lvl,
+        PolymorphicType.mk(ctx.lvl,
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-        // )
+        )
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
         val newCtx = ctx.nest // TODO use
