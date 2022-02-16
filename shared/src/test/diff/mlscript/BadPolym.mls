@@ -1,0 +1,43 @@
+// TL;DR we need a special form of function types that does NOT merge
+//    (as merging approximates unsoundly in the presence of first-class polymorphism)
+
+
+def foo1: (int -> int & string -> string)
+//│ foo1: (int | string) -> nothing
+
+def foo: (int -> int & string -> string) -> ()
+//│ foo: ((int | string) -> nothing) -> ()
+
+fooImpl f = f 1
+//│ fooImpl: (1 -> 'a) -> 'a
+//│        = [Function: fooImpl]
+
+foo = fooImpl
+//│ (1 -> 'a) -> 'a
+//│   <:  foo:
+//│ ((int | string) -> nothing) -> ()
+//│    = [Function: fooImpl]
+
+foo id
+//│ res: ()
+//│    = 1
+
+fooImpl id
+//│ res: 1
+//│    = 1
+
+
+fooImpl2 (f: int -> int & string -> string) = f 1
+//│ fooImpl2: ((int | string) -> nothing) -> nothing
+//│         = [Function: fooImpl2]
+
+fooImpl2 id
+//│ res: nothing
+//│    = 1
+
+:re
+res "oops"
+//│ res: nothing
+//│ Runtime error:
+//│   TypeError: res is not a function
+
