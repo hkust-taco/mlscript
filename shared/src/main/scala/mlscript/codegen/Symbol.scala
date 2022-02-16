@@ -75,25 +75,12 @@ final case class ClassSymbol(
     val actualType: Type,
     val fields: Ls[Str],
     val methods: Ls[MethodDef[Left[Term, Type]]],
-    enclosingScope: Scope
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ClassSymbol] {
 
   import scala.math.Ordered.orderingToOrdered
 
   override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
-
-  private val scope = enclosingScope.derive(s"class $lexicalName")
-
-  def declareMember(name: Str): ValueSymbol = scope.declareValue(name)
-
-  def declareStubMember(name: Str)(implicit accessible: Bool): StubValueSymbol =
-    scope.declareStubValue(name)
-
-  def declareStubMember(name: Str, previous: StubValueSymbol)(implicit
-      accessible: Bool
-  ): StubValueSymbol =
-    scope.declareStubValue(name, previous)
 
   /**
     * Fill up this field after the class translation.

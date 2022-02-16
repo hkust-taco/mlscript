@@ -309,9 +309,7 @@ class JSBackend {
       case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTrait(name, tparams map { _.name }, body)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-        val sym = topLevelScope.declareClass(name, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
-        members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
-        classes += sym
+        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
     }
     classes.toList
   }
