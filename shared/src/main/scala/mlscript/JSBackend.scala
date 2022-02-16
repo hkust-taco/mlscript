@@ -1,18 +1,16 @@
 package mlscript
 
-import mlscript.utils._, shorthands._
+import mlscript.codegen.Helpers._
+import mlscript.codegen._
+import mlscript.utils._
+import mlscript.utils.shorthands._
+
+import scala.collection.immutable
+import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
+
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
-import scala.collection.immutable
-import mlscript.codegen.{CodeGenError, UnimplementedError, Scope, ValueSymbol}
-import mlscript.codegen.ClassSymbol
-import mlscript.codegen.BuiltinSymbol
-import mlscript.codegen.StubValueSymbol
-import mlscript.codegen.TraitSymbol
-import mlscript.codegen.TypeAliasSymbol
-import scala.collection.mutable.ArrayBuffer
-import mlscript.codegen.Helpers._
 
 class JSBackend {
   /**
