@@ -335,58 +335,33 @@ class JSBackend {
   /**
     * Find the base class for a specific class.
     */
-  private def resolveClassBase(ty: Type): Opt[ClassSymbol] = ty match {
-    // `class A` ==> `class A {}`
-    case Top => N
-    // `class A { <items> }` ==>
-    // `class A { constructor(fields) { <items> } }`
-    case Record(_) => N
-    // `class B: A` ==> `class B extends A {}`
-    // If `A` is a type alias, it is replaced by its real type.
-    // Otherwise just use the name.
-    case TypeName(name) =>
-      topLevelScope.getType(name) match {
-        // The name refers to a class.
-        case S(sym: ClassSymbol) => S(sym)
-        // TODO: traits can inherit from classes!
-        case S(sym: TraitSymbol) => N
-        case S(sym: TypeAliasSymbol) =>
-          throw new CodeGenError(s"cannot inherit from type alias $name")
-        case N => throw new CodeGenError(s"undeclared type name $name when resolving base classes")
-      }
-    // `class C: <X> & <Y>`: resolve X and Y respectively.
-    case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
-      case (N, N) =>
-        N
-      case (N, S(cls)) =>
-        S(cls)
-      case (S(cls), N) =>
-        S(cls)
-      case (S(cls1), S(cls2)) =>
-        if (cls1 === cls2) {
-          S(cls1)
-        } else {
-          throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
-        }
+  private def resolveClassBase(ty: Type): Opt[ClassSymbol] = {
+    def resolveClassSymbol(name: Str): Opt[ClassSymbol] = topLevelScope.getType(name) match {
+      case S(sym: ClassSymbol) => S(sym)
+      case S(sym: TraitSymbol) => N // TODO: inherit from traits
+      case S(sym: TypeAliasSymbol) =>
+        throw new CodeGenError(s"cannot inherit from type alias $name")
+      case N =>
+        throw new CodeGenError(s"undeclared type name $name when resolving base classes")
     }
-    // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
-    // The type system disallow inheritances from type aliases.
-    case AppliedType(TypeName(name), targs) =>
-      topLevelScope.getType(name) match {
-        // The name refers to a class.
-        case S(sym: ClassSymbol) => S(sym)
-        // TODO: traits can inherit from classes!
-        case S(sym: TraitSymbol) => N
-        case S(sym: TypeAliasSymbol) =>
-          throw new CodeGenError(s"cannot inherit from type alias $name")
-        case N =>
-          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
+    def impl(ty: Type): Opt[ClassSymbol] = ty match {
+      case Top | _: Record => N
+      case TypeName(name) => resolveClassSymbol(name)
+      case AppliedType(TypeName(name), _) => resolveClassSymbol(name)
+      case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
+        case (N, N) => N
+        case (N, S(cls)) => S(cls)
+        case (S(cls), N) => S(cls)
+        case (S(cls1), S(cls2)) => if (cls1 === cls2)
+          S(cls1)
+        else
+          throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
       }
-    // There is some other possibilities such as `class Fun[A]: A -> A`.
-    // But it is not achievable in JavaScript.
-    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-      throw CodeGenError(s"unable to derive from type $ty")
+      case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+          Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
+        throw CodeGenError(s"cannot inherit from type $ty")
+    }
+    impl(ty)
   }
 
   /**
