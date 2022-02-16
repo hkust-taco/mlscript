@@ -350,14 +350,8 @@ class JSBackend {
         case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
         case S(sym: TraitSymbol) => N
-        case S(sym: TypeAliasSymbol) if sym.params.isEmpty =>
-          // The base class is a type alias with no parameters.
-          // Good, just make sure all term is normalized.
-          resolveClassBase(substitute(sym.actualType))
-        case S(sym: TypeAliasSymbol) => 
-          throw CodeGenError(
-            s"type $name expects ${sym.params.length} type parameters but none provided"
-          )
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name")
         case N => throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     // `class C: <X> & <Y>`: resolve X and Y respectively.

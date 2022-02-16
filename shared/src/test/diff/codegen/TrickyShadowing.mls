@@ -96,13 +96,8 @@ class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.95: 	class C: B
 //│ ╙──      	      ^^^^
-//│ // Prelude
-//│ class C extends Test2 {
-//│   constructor(fields) {
-//│     super(fields);
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation met an error:
+//│   cannot inherit from type alias B
 
 :js
 B = 1
@@ -236,7 +231,7 @@ type Lol = 1
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.237: 	Lol
+//│ ║  l.232: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation met an error:

@@ -57,7 +57,7 @@ class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
 //│ Code generation met an error:
-//│   cannot have two base classes: Parent1, Parent2
+//│   cannot inherit from type alias Sly1
 
 :e
 type Sly2[A] = A
@@ -247,7 +247,7 @@ F{}
 //│ ╙──       	^
 //│ res: error
 //│ Code generation met an error:
-//│   unable to derive from type Bot
+//│   cannot inherit from type alias nothing
 
 
 // TODO forbid
