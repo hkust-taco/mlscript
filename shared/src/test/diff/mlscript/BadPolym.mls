@@ -1,0 +1,61 @@
+
+
+def foo1: (int -> int & string -> string)
+//│ foo1: (int | string) -> nothing
+
+def foo: (int -> int & string -> string) -> ()
+//│ foo: ((int | string) -> nothing) -> ()
+
+fooImpl f = f 1
+//│ fooImpl: (1 -> 'a) -> 'a
+//│        = [Function: fooImpl]
+
+foo = fooImpl
+//│ (1 -> 'a) -> 'a
+//│   <:  foo:
+//│ ((int | string) -> nothing) -> ()
+//│    = [Function: fooImpl]
+
+:e
+foo id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.20: 	foo id
+//│ ║        	^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.6: 	def foo: (int -> int & string -> string) -> ()
+//│ ║       	                       ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.6: 	def foo: (int -> int & string -> string) -> ()
+//│ ╙──     	                 ^^^
+//│ res: () | error
+//│    = 1
+
+fooImpl id
+//│ res: 1
+//│    = 1
+
+
+fooImpl2 (f: int -> int & string -> string) = f 1
+//│ fooImpl2: ((int | string) -> nothing) -> nothing
+//│         = [Function: fooImpl2]
+
+:e
+fooImpl2 id
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.43: 	fooImpl2 id
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.38: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║        	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.38: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ╙──      	                    ^^^
+//│ res: error
+//│    = 1
+
+:re
+res "oops"
+//│ res: error
+//│ Runtime error:
+//│   TypeError: res is not a function
+

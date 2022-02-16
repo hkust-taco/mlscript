@@ -176,6 +176,7 @@ class JSBackend {
       JSMember(translateTerm(arr), translateTerm(idx))
     case App(_, _) | _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
+    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
@@ -278,6 +279,7 @@ class JSBackend {
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
         Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
       throw CodeGenError(s"unable to derive from type $ty")
+    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
   /**
