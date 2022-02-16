@@ -1,9 +1,8 @@
 package mlscript
 
+import mlscript.utils._, shorthands._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
-import mlscript.utils._
-import mlscript.utils.shorthands._
 
 import scala.collection.immutable
 import scala.util.matching.Regex
