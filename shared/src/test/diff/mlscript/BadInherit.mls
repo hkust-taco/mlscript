@@ -67,7 +67,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
 //│ Code generation met an error:
-//│   cannot have two base classes: Parent1, Parent2
+//│   cannot inherit from type alias Sly2
 
 :e
 class Crazy[A]: A & { name: A }
@@ -158,7 +158,7 @@ type Stutter = Cycle1
 //│ ║  l.150: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   base class translated after the derived class
+//│   cyclic inheritance involving
 
 :e
 def c = Cycle1 error
@@ -186,7 +186,7 @@ class Cycle: N[Cycle]
 //│ ║  l.184: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   unable to derive from type Neg(TypeName(Cycle))
+//│   cannot inherit from type alias N
 
 
 
@@ -282,13 +282,15 @@ class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
+//│ Code generation met an error:
+//│   cannot inherit from type alias Id
 
 
 :e // TODO improve prov of the TV
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.289: 	class Class3B: Class3A & 'a
+//│ ║  l.291: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 //│ Code generation met an error:

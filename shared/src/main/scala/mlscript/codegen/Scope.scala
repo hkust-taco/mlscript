@@ -5,6 +5,8 @@ import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
 import mlscript.{TypeName, Top, Bot}
+import mlscript.MethodDef
+import mlscript.Term
 
 class Scope(name: Str, enclosing: Opt[Scope]) {
   private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
@@ -150,9 +152,15 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   def resolveType(name: Str): Opt[TypeSymbol] =
     lexicalTypeSymbols.get(name).orElse(enclosing.flatMap(_.resolveType(name)))
 
-  def declareClass(lexicalName: Str, params: Ls[Str], base: Type): ClassSymbol = {
+  def declareClass(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      fields: Ls[Str],
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, this)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, fields, methods, this)
     register(symbol)
     symbol
   }

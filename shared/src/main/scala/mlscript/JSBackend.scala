@@ -6,11 +6,11 @@ import mlscript.utils._
 import mlscript.utils.shorthands._
 
 import scala.collection.immutable
-import scala.collection.mutable.ArrayBuffer
 import scala.util.matching.Regex
 
 import collection.mutable.{HashMap, HashSet, Stack}
 import collection.immutable.LazyList
+import scala.collection.mutable.ListBuffer
 
 class JSBackend {
   /**
@@ -270,18 +270,14 @@ class JSBackend {
     */
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
-      methods: Ls[MethodDef[Left[Term, Type]]]
   )(implicit scope: Scope): JSClassDecl = {
-    val members = methods map { translateClassMember(_) }
-    topLevelScope.getClassSymbol(classSymbol.lexicalName) match {
-      case S(sym) => sym.baseClass match {
-        case N => JSClassDecl(classSymbol.runtimeName, sym.fields.distinct, N, members)
-        case S(baseClassSym) => baseClassSym.body match {
-          case S(cls) => JSClassDecl(classSymbol.runtimeName, sym.fields.distinct, S(cls), members)
-          case N => throw new CodeGenError("base class translated after the derived class")
-        }
+    val members = classSymbol.methods.map { translateClassMember(_) }
+    classSymbol.baseClass match {
+      case N => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, N, members)
+      case S(baseClassSym) => baseClassSym.body match {
+        case S(cls) => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, S(cls), members)
+        case N => throw new CodeGenError("base class translated after the derived class")
       }
-      case N => throw new Exception(s"undeclared class ${classSymbol.lexicalName}, did you call `declareTypeDefs`?")
     }
   }
 
@@ -307,15 +303,14 @@ class JSBackend {
     * Call this before the code generation.
     */
   protected def declareTypeDefs(typeDefs: Ls[TypeDef]): Ls[ClassSymbol] = {
-    val classes = new ArrayBuffer[ClassSymbol]()
+    val classes = new ListBuffer[ClassSymbol]()
     typeDefs foreach {
       case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTrait(name, tparams map { _.name }, body)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-        val sym = topLevelScope.declareClass(name, tparams map { _.name }, baseType)
-        sym.fields = resolveClassFields(baseType) // TODO: make it a constructor field
+        val sym = topLevelScope.declareClass(name, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
         members foreach { case MethodDef(_, _, Var(name), _, _) => sym.declareMember(name) }
         classes += sym
     }
@@ -382,27 +377,17 @@ class JSBackend {
         }
     }
     // `class C: F[X]` and (`F[X]` => `A`) ==> `class C extends A {}`
-    // For applied types such as `Id[T]`, normalize them before translation.
-    // Do not forget to normalize type arguments first.
+    // The type system disallow inheritances from type aliases.
     case AppliedType(TypeName(name), targs) =>
       topLevelScope.getType(name) match {
         // The name refers to a class.
         case S(sym: ClassSymbol) => S(sym)
         // TODO: traits can inherit from classes!
         case S(sym: TraitSymbol) => N
-        case S(sym: TypeAliasSymbol) if sym.params.isEmpty =>
-          // The base class is a type alias with no parameters.
-          // Good, just make sure all term is normalized.
-          resolveClassBase(substitute(sym.actualType))
-        case S(sym: TypeAliasSymbol) => 
-          assert(targs.length === sym.params.length, targs -> sym.params)
-          val normalized = substitute(
-            sym.actualType,
-            collection.immutable.HashMap(sym.params zip targs map { case (k, v) => k -> v }: _*)
-          )
-          resolveClassBase(normalized)
-        case _ =>
-          throw new CodeGenError(s"undeclared applied type name $name when resolving base classes")
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name")
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
     // There is some other possibilities such as `class Fun[A]: A -> A`.
     // But it is not achievable in JavaScript.
@@ -413,50 +398,27 @@ class JSBackend {
 
   /**
     * Resolve inheritance of all declared classes.
-    * Make sure call `declareTypeDefs` before calling this.
     */
-  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): Unit =
-    classSymbols foreach { sym => sym.baseClass = resolveClassBase(sym.actualType) }
-
-  /**
-    * Sort class symbols topologically.
-    * Therefore, all classes are declared before their derived classes.
-    */
-  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Unit = {
-    import collection.mutable.{HashMap, HashSet, Queue}
-    val derivedClasses = HashMap[ClassSymbol, HashSet[ClassSymbol]]()
-    classSymbols foreach { sym =>
-      sym.baseClass foreach { base =>
-        derivedClasses.getOrElseUpdate(base, HashSet()) += sym
-      }
+  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[ClassSymbol], Ls[ClassSymbol -> ClassSymbol]) = {
+    val (noBase, relations) = classSymbols.partitionMap { derivedClass =>
+      val baseClass = resolveClassBase(derivedClass.actualType)
+      derivedClass.baseClass = baseClass
+      baseClass.map(_ -> derivedClass).toRight(derivedClass)
     }
-    val queue = Queue.from(classSymbols filter { _.baseClass.isEmpty })
-    var order = 0
-    while (!queue.isEmpty) {
-      val sym = queue.dequeue()
-      sym.order = order
-      order += 1
-      derivedClasses.get(sym) foreach { derived =>
-        derived foreach { queue += _ }
-      }
-    }
+    val inRelations = Set.from(relations.iterator.flatMap { case (a, b) => a :: b :: Nil })
+    (noBase.filterNot { inRelations.contains(_) }, relations)
   }
 
-  protected def generateClassDeclarations(typeDefs: Ls[TypeDef]): Ls[JSClassDecl] = {
-    // Ahhhhhhhh! This is the most ugly part of the code generator. I am sorry.
-    typeDefs.toSeq flatMap {
-      case TypeDef(Cls, TypeName(name), typeParams, actualType, _, mthDefs) =>
-        topLevelScope.getClassSymbol(name) match {
-          case S(sym) => S((sym, mthDefs, sym.order))
-          // Should crash if the class is not defined.
-          case N => throw new Exception(s"class $name should be declared")
-        }
-      case _ => N
-    } sortWith { _._3 < _._3 } map { case (sym, mthDefs, _) =>
-      val body = translateClassDeclaration(sym, mthDefs)(topLevelScope)
-      sym.body = S(body)
-      body
-    }
+  protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol]): Ls[JSClassDecl] = {
+    sortedClasses.flatMap { sym =>
+      sym.body match {
+        case S(_) => N // Don't translate if done
+        case N =>
+          val body = translateClassDeclaration(sym)(topLevelScope)
+          sym.body = S(body)
+          S(body)
+      }
+    }.toList
   }
 }
 
@@ -471,14 +433,17 @@ class JSWebBackend extends JSBackend {
   def apply(pgrm: Pgrm): Ls[Str] = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    var classSymbols = declareTypeDefs(typeDefs)
-    resolveInheritance(classSymbols)
-    sortClassSymbols(classSymbols)
+    val classSymbols = declareTypeDefs(typeDefs)
+    val (isolatedClasses, relations) = resolveInheritance(classSymbols)
+    val sortedClasses = try topologicallySort(relations) catch {
+      case e: RuntimeException => throw CodeGenError("cyclic inheritance involving")
+    }
+    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
       JSConstDecl(resultsName, JSArray(Nil)) ::
-        generateClassDeclarations(typeDefs)
+        defStmts
         // Generate something like:
         // ```js
         // const <name> = <expr>;
@@ -511,6 +476,7 @@ class JSWebBackend extends JSBackend {
 
 class JSTestBackend extends JSBackend {
   private val lastResultSymbol = topLevelScope declareValue "res"
+  private val resultIdent = JSIdent(lastResultSymbol.runtimeName)
 
   private var numRun = 0
 
@@ -530,13 +496,12 @@ class JSTestBackend extends JSBackend {
   private def generate(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
-    var classSymbols = declareTypeDefs(typeDefs)
-    resolveInheritance(classSymbols)
-    sortClassSymbols(classSymbols)
-
-    val resultIdent = JSIdent(lastResultSymbol.runtimeName)
-
-    val defStmts = generateClassDeclarations(typeDefs)
+    val classSymbols = declareTypeDefs(typeDefs)
+    val (isolatedClasses, relations) = resolveInheritance(classSymbols)
+    val sortedClasses = try topologicallySort(relations) catch {
+      case e: RuntimeException => throw CodeGenError("cyclic inheritance involving")
+    }
+    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(

@@ -3,6 +3,8 @@ package mlscript.codegen
 import mlscript.utils.shorthands._
 import mlscript.Type
 import mlscript.JSClassDecl
+import mlscript.MethodDef
+import mlscript.Term
 
 sealed trait LexicalSymbol {
 
@@ -73,6 +75,8 @@ final case class ClassSymbol(
     val runtimeName: Str,
     val params: Ls[Str],
     val actualType: Type,
+    val fields: Ls[Str],
+    val methods: Ls[MethodDef[Left[Term, Type]]],
     enclosingScope: Scope
 ) extends TypeSymbol
     with RuntimeSymbol {
@@ -97,16 +101,6 @@ final case class ClassSymbol(
     * Fill up this field after resolving classes.
     */
   var baseClass: Opt[ClassSymbol] = N
-
-  /**
-    * Fill up this field after resolving classes.
-    */
-  var fields: Ls[Str] = Nil
-
-  /**
-    * Fill up this field after sorting.
-    */
-  var order: Int = 0
 
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
