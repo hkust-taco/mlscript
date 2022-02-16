@@ -42,7 +42,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (expr, N) => expr
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
-  def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
+
+  def term0[_: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
+  def term[_: P]: P[Term] = P( term0 ~ ("<-" ~ term0).? map {
+      case (t, None)    => t
+      case (t, Some(v)) => Assign(t, v)
+    })
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
@@ -51,11 +56,6 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
   })
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-
-  // TODO: define correct parser for modifying mutable 
-  def assign[_ : P]: P[Assign] = P (
-    (subterm ~ "<-" ~ subterm).map { case (lhs, rhs) => Assign(lhs, rhs) }
-  )
 
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
     // fields

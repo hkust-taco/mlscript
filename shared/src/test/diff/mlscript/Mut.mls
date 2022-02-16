@@ -11,13 +11,17 @@ def muta1: MutArray[int]
 b1 = B { x = 2; y = true }
 //│ b1: B with {x: 2, y: true}
 
-1 : 1
-//│ res: 1
-
-def mt1 : (mutable int, mutable bool)
-def mt2 : (int, int)
+def mt1: (mutable int, mutable bool)
+def mt2: (int, int)
+def emt: (mutable int)
 //│ mt1: (int .. int, bool .. bool,)
 //│ mt2: (int, int,)
-
-def emt: (mutable int)
 //│ emt: (int .. int,)
+
+mt1._1 <- mt1._2
+mt1._1 <- (b1.t <- 4)
+(mt1._1 <- b1.t) <- 4   // ! not correct ? or just make it a type issue
+
+:pe
+b1.x <- 1 + 2 <- 4
+//│ /!\ Parse error: Expected end-of-input:1:15, found "<- 4;" at l.25:15: b1.x <- 1 + 2 <- 4

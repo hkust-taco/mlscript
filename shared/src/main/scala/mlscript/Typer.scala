@@ -933,6 +933,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         con(t_a, ArrayType(res.toUpper)(prov), t_a)
         con(t_i, IntType, t_i)
         res
+      // TODO : implemnt type checking
+      case Assign(lhs, rhs) => 
+        UnitType
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
