@@ -100,12 +100,6 @@ class JSBackend {
       val patterns = translateParams(params)
       val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
-    // TODO: when scope symbols are ready, rewrite this
-    // Binary expressions called by function names.
-    // case App(App(Var(name), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
-    //     if JSBackend.builtinFnOpMap contains name =>
-    //   JSBinary(JSBackend.builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
-    // Binary expressions called by operators.
     case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
