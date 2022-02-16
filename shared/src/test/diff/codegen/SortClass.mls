@@ -50,12 +50,12 @@ class J
 //│ Defined class J
 //│ // Prelude
 //│ class K {}
-//│ class J {}
 //│ class H {
 //│   constructor(fields) {
 //│     this.b = fields.b;
 //│   }
 //│ }
+//│ class J {}
 //│ class G extends H {
 //│   constructor(fields) {
 //│     super(fields);

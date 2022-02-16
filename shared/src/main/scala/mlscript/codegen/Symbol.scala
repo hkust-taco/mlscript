@@ -77,7 +77,12 @@ final case class ClassSymbol(
     val methods: Ls[MethodDef[Left[Term, Type]]],
     enclosingScope: Scope
 ) extends TypeSymbol
-    with RuntimeSymbol {
+    with RuntimeSymbol with Ordered[ClassSymbol] {
+
+  import scala.math.Ordered.orderingToOrdered
+
+  override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
+
   private val scope = enclosingScope.derive(s"class $lexicalName")
 
   def declareMember(name: Str): ValueSymbol = scope.declareValue(name)
