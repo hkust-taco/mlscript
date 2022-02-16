@@ -89,7 +89,12 @@ class JSBackend {
         import JSCodeHelpers._
         // For now traits constructors do nothing (are identities):
         JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
-      case N => throw new CodeGenError(s"unresolved symbol ${name}")
+      case N => scope.getType(name) match {
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"type alias ${name} is not a valid expression")
+        case S(_) => throw new Exception("register mismatch in scope")
+        case N => throw new CodeGenError(s"unresolved symbol ${name}")
+      }
     }
 
   // Returns: temp identifiers and the expression

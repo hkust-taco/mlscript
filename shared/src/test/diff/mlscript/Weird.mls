@@ -5,12 +5,12 @@
 anything
 //│ res: anything
 //│ Code generation met an error:
-//│   unresolved symbol anything
+//│   type alias anything is not a valid expression
 
 nothing
 //│ res: nothing
 //│ Code generation met an error:
-//│   unresolved symbol nothing
+//│   type alias nothing is not a valid expression
 
 Nothing
 //│ res: nothing
@@ -20,10 +20,10 @@ Nothing
 int
 //│ res: int
 //│ Code generation met an error:
-//│   unresolved symbol int
+//│   type alias int is not a valid expression
 
 int + 1
 //│ res: int
 //│ Code generation met an error:
-//│   unresolved symbol int
+//│   type alias int is not a valid expression
 

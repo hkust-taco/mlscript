@@ -26,5 +26,5 @@ Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation met an error:
-//│   unresolved symbol Boolean
+//│   type alias Boolean is not a valid expression
 

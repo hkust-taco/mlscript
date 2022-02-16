@@ -235,6 +235,6 @@ Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation met an error:
-//│   unresolved symbol Lol
+//│   type alias Lol is not a valid expression
 
 
