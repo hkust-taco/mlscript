@@ -149,9 +149,6 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
 
-  def resolveType(name: Str): Opt[TypeSymbol] =
-    lexicalTypeSymbols.get(name).orElse(enclosing.flatMap(_.resolveType(name)))
-
   def declareClass(
       lexicalName: Str,
       params: Ls[Str],

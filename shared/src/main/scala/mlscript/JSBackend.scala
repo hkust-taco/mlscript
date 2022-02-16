@@ -210,56 +210,6 @@ class JSBackend {
       _,
       _
     )
-  } 
-
-  // This function normalizes a type, removing all `AppliedType`s.
-  private def substitute(
-      body: Type,
-      subs: collection.immutable.HashMap[Str, Type] = collection.immutable.HashMap.empty
-  ): Type = body match {
-    case Neg(ty) =>
-      Neg(substitute(ty, subs))
-    case AppliedType(TypeName(name), targs) =>
-      topLevelScope.getType(name) match {
-        case S(sym: ClassSymbol) => TypeName(name) // Note that here we erase the arguments.
-        case S(sym: TraitSymbol) => ??? 
-        case S(sym: TypeAliasSymbol) =>
-          assert(targs.length === sym.params.length, targs -> sym.params)
-          substitute(
-            sym.actualType,
-            collection.immutable.HashMap(
-              sym.params zip targs map { case (k, v) => k -> v }: _*
-            )
-          )
-        case N => throw new CodeGenError(s"$name is none of class, trait or type")
-      }
-    case Function(lhs, rhs) =>
-      Function(substitute(lhs, subs), substitute(rhs, subs))
-    case Inter(lhs, rhs) =>
-      Inter(substitute(lhs, subs), substitute(rhs, subs))
-    case Record(fields) =>
-      Record(fields map { case (k, v) => k -> substitute(v, subs) })
-    case Union(lhs, rhs) =>
-      Union(substitute(lhs, subs), substitute(rhs, subs))
-    case Tuple(fields) =>
-      Tuple(fields map { case (k, v) => k -> substitute(v, subs) })
-    case TypeName(name) =>
-      subs get name match {
-        case N =>
-          topLevelScope.getType(name) match {
-            case S(sym: ClassSymbol) => TypeName(name)
-            case S(sym: TraitSymbol) => TypeName(name)
-            case S(sym: TypeAliasSymbol) if sym.params.isEmpty => substitute(sym.actualType, subs)
-            case S(sym: TypeAliasSymbol) => throw CodeGenError(
-                s"type $name expects ${sym.params.length} type parameters but nothing provided"
-            )
-            case N => throw new CodeGenError(s"undeclared type name $name")
-          }
-        case S(ty) => ty
-      }
-    case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
-    case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
-    case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension | _: Arr => body
   }
 
   /**
