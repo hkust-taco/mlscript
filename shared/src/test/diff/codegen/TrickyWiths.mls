@@ -22,7 +22,6 @@ n + n.x
 
 :js
 a = (1,2,3) with {}
-def a: nothing // unsound escape hatch
 //│ // Query 1
 //│ globalThis.a = withConstruct([
 //│   1,
@@ -30,18 +29,23 @@ def a: nothing // unsound escape hatch
 //│   3
 //│ ], {});
 //│ res = a;
-//│ // Query 2 is empty
 //│ // End of generated code
 //│ a: (1, 2, 3,)
 //│  = [ 1, 2, 3 ]
+
+:escape
+def a: nothing // unsound escape hatch
 //│ a: nothing
 //│  = <missing implementation>
 
+:re
 a.length
 a.map(fun x -> x + 1)
 //│ res: nothing
-//│    = 3
+//│ Runtime error:
+//│   ReferenceError: a1 is not defined
 //│ res: nothing
-//│    = [ 2, 3, 4 ]
+//│ Runtime error:
+//│   ReferenceError: a1 is not defined
 
 

@@ -14,12 +14,6 @@ sealed trait LexicalSymbol {
     * names in the same scope.
     */
   def lexicalName: Str
-
-  /**
-    * Currently, this is the number of the test block in which it is defined.
-    * TODO: use a generic block number when we need to support source maps.
-    */
-  var location: Int = 0
 }
 
 sealed trait RuntimeSymbol extends LexicalSymbol {

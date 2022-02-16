@@ -530,7 +530,6 @@ class JSTestBackend extends JSBackend {
           }) map { expr => (expr, scope.declareValue(name)) }
         }) match { 
           case R((expr, sym)) =>
-            sym.location = numRun
             JSTestBackend.CodeQuery(
               scope.tempVars.emit(),
               ((JSIdent("globalThis").member(sym.runtimeName) := (expr match {
@@ -543,19 +542,7 @@ class JSTestBackend extends JSBackend {
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
       case Def(_, Var(name), _) =>
-        // Check if the symbol has been implemented. If the type definition
-        // is not in the same block as the implementation, we consider it as a
-        // re-declaration.
-        scope.resolveValue(name) match {
-          case N | S(_: ClassSymbol) =>
-            // Example: stub constructors in Boolean.mls
-            scope.declareStubValue(name).location = numRun
-          case S(t) if t.location =/= numRun =>
-            // Example: declare type after the implementation.
-            scope.declareStubValue(name).location = numRun
-          case S(_) => ()
-        }
-        // Emit nothing for type declarations.
+        scope.declareStubValue(name)
         JSTestBackend.EmptyQuery
       case term: Term =>
         try {
