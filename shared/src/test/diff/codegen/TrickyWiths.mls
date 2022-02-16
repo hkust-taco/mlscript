@@ -38,14 +38,11 @@ def a: nothing // unsound escape hatch
 //│ a: nothing
 //│  = <missing implementation>
 
-:re
 a.length
 a.map(fun x -> x + 1)
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: a1 is not defined
+//│    = 3
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: a1 is not defined
+//│    = [ 2, 3, 4 ]
 
 

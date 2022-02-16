@@ -180,9 +180,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   def declareValue(lexicalName: Str): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
-      case S(sym: StubValueSymbol)                => sym.runtimeName
-      case S(sym: BuiltinSymbol) if !sym.accessed => sym.runtimeName
-      case _                                      => allocateRuntimeName(lexicalName)
+      // If we are implementing a stub symbol and the stub symbol did not shadow any other
+      // symbols, it is safe to reuse its `runtimeName`.
+      case S(sym: StubValueSymbol) if !sym.shadowing => sym.runtimeName
+      case S(sym: BuiltinSymbol) if !sym.accessed    => sym.runtimeName
+      case _                                         => allocateRuntimeName(lexicalName)
     }
     val symbol = ValueSymbol(lexicalName, runtimeName)
     register(symbol)
@@ -200,8 +202,13 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
   private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit
       accessible: Bool
   ): StubValueSymbol = {
-    val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = StubValueSymbol(lexicalName, runtimeName, previous)
+
+    val symbol = lexicalValueSymbols.get(lexicalName) match {
+      // If a stub with the same name has been defined, use the name.
+      case S(value) => StubValueSymbol(lexicalName, value.runtimeName, true, previous)
+      // Otherwise, we will allocate a new name.
+      case N => StubValueSymbol(lexicalName, allocateRuntimeName(lexicalName), false, previous)
+    }
     register(symbol)
     symbol
   }

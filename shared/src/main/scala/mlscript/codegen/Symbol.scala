@@ -58,6 +58,10 @@ final case class BuiltinSymbol(val lexicalName: Str, feature: Str) extends Runti
 final case class StubValueSymbol(
     override val lexicalName: Str,
     override val runtimeName: Str,
+    /**
+      * Whether this stub is shadowing another symbol.
+      */
+    val shadowing: Bool,
     previous: Opt[StubValueSymbol]
 )(implicit val accessible: Bool)
     extends RuntimeSymbol {
