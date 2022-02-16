@@ -134,7 +134,7 @@ f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Code generation crashed:
-//│   (arr[0])[1][2] (of class mlscript.Subs)
+//│   Internal Error: Program reached and unexpected state.
 
 
 class A: { x: int }

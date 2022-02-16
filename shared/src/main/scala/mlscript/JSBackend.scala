@@ -69,7 +69,7 @@ class JSBackend {
     case Bra(_, trm) => translatePattern(trm)
     case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf =>
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs =>
       throw CodeGenError(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
@@ -206,6 +206,7 @@ class JSBackend {
       JSArray(terms map { case (_, term) => translateTerm(term) })
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
+    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
@@ -300,6 +301,7 @@ class JSBackend {
         }
       case Recursive(uv, ty) => Recursive(uv, substitute(ty, subs))
       case Rem(ty, fields)   => Rem(substitute(ty, subs), fields)
+      case Arr(_) => die // TODO remove Arr
       case Bot | Top | _: Literal | _: TypeVar | _: Bounds | _: WithExtension => body
     }
   }
@@ -375,6 +377,7 @@ class JSBackend {
     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
         Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) =>
       throw CodeGenError(s"unable to derive from type $ty")
+    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
   // Translate MLscript class declaration to JavaScript class declaration.
@@ -614,6 +617,7 @@ object JSBackend {
     case IntLit(value) => s"IntLit($value)"
     case DecLit(value) => s"DecLit($value)"
     case StrLit(value) => s"StrLit($value)"
+    case Subs(arr, idx) => s"Subs($arr, $idx)"
   }
 
   // For integers larger than this value, use BigInt notation.
