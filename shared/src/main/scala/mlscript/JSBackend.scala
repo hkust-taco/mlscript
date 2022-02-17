@@ -227,10 +227,11 @@ class JSBackend {
       classSymbol: ClassSymbol,
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
+    val fields = resolveClassFields(classSymbol.actualType).distinct
     classSymbol.baseClass match {
-      case N => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, N, members)
+      case N => JSClassDecl(classSymbol.runtimeName, fields, N, members)
       case S(baseClassSym) => baseClassSym.body match {
-        case S(cls) => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, S(cls), members)
+        case S(cls) => JSClassDecl(classSymbol.runtimeName, fields, S(cls), members)
         case N => throw new CodeGenError("base class translated after the derived class")
       }
     }
@@ -265,7 +266,7 @@ class JSBackend {
       case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTrait(name, tparams map { _.name }, body)
       case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
+        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
     }
     classes.toList
   }
@@ -314,7 +315,7 @@ class JSBackend {
       }
       case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
           Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-        throw CodeGenError(s"cannot inherit from type $ty")
+        throw CodeGenError(s"unable to derive from type $ty")
     }
     impl(ty)
   }

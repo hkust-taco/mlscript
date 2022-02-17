@@ -153,11 +153,10 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       lexicalName: Str,
       params: Ls[Str],
       base: Type,
-      fields: Ls[Str],
       methods: Ls[MethodDef[Left[Term, Type]]]
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, fields, methods)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, methods)
     register(symbol)
     symbol
   }

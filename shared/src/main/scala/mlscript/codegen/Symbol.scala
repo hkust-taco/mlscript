@@ -73,7 +73,6 @@ final case class ClassSymbol(
     val runtimeName: Str,
     val params: Ls[Str],
     val actualType: Type,
-    val fields: Ls[Str],
     val methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ClassSymbol] {
