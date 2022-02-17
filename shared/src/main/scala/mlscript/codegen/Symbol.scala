@@ -81,11 +81,6 @@ final case class ClassSymbol(
 
   override def compare(that: ClassSymbol): Int = lexicalName.compare(that.lexicalName)
 
-  /**
-    * Fill up this field after the class translation.
-    */
-  var body: Opt[JSClassDecl] = N
-
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 

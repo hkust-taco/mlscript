@@ -319,27 +319,19 @@ class JSBackend {
   /**
     * Resolve inheritance of all declared classes.
     */
-  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Ls[ClassSymbol] = {
+  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[ClassSymbol] = {
     // The relations may include previously defined class symbols.
     val relations = classSymbols.flatMap { derivedClass =>
       resolveClassBase(derivedClass.actualType).map(_ -> derivedClass)
     }
     (try topologicalSort(relations, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
-    }).filter { classSymbols.contains(_) }.toList
+    }).filter { classSymbols.contains(_) }
     // ^^^^^^ -> We only need class symbols declared in current translation unit.
   }
 
   protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol]): Ls[JSClassDecl] = {
-    sortedClasses.flatMap { sym =>
-      sym.body match {
-        case S(_) => N // Don't translate if done
-        case N =>
-          val body = translateClassDeclaration(sym)(topLevelScope)
-          sym.body = S(body)
-          S(body)
-      }
-    }.toList
+    sortedClasses.map { translateClassDeclaration(_)(topLevelScope) }.toList
   }
 }
 
