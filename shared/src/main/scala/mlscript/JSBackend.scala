@@ -228,13 +228,9 @@ class JSBackend {
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
     val fields = resolveClassFields(classSymbol.actualType).distinct
-    classSymbol.baseClass match {
-      case N => JSClassDecl(classSymbol.runtimeName, fields, N, members)
-      case S(baseClassSym) => baseClassSym.body match {
-        case S(cls) => JSClassDecl(classSymbol.runtimeName, fields, S(cls), members)
-        case N => throw new CodeGenError("base class translated after the derived class")
-      }
-    }
+    // TODO: remove redundant computation (another is `sortClassSymbols`)
+    val base = resolveClassBase(classSymbol.actualType).map { sym => JSIdent(sym.runtimeName) }
+    JSClassDecl(classSymbol.runtimeName, fields, base, members)
   }
 
   private def translateClassMember(
@@ -323,14 +319,15 @@ class JSBackend {
   /**
     * Resolve inheritance of all declared classes.
     */
-  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[ClassSymbol], Ls[ClassSymbol -> ClassSymbol]) = {
-    val (noBase, relations) = classSymbols.partitionMap { derivedClass =>
-      val baseClass = resolveClassBase(derivedClass.actualType)
-      derivedClass.baseClass = baseClass
-      baseClass.map(_ -> derivedClass).toRight(derivedClass)
+  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Ls[ClassSymbol] = {
+    // The relations may include previously defined class symbols.
+    val relations = classSymbols.flatMap { derivedClass =>
+      resolveClassBase(derivedClass.actualType).map(_ -> derivedClass)
     }
-    val inRelations = Set.from(relations.iterator.flatMap { case (a, b) => a :: b :: Nil })
-    (noBase.filterNot { inRelations.contains(_) }, relations)
+    (try topologicalSort(relations, classSymbols) catch {
+      case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
+    }).filter { classSymbols.contains(_) }.toList
+    // ^^^^^^ -> We only need class symbols declared in current translation unit.
   }
 
   protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol]): Ls[JSClassDecl] = {
@@ -358,11 +355,8 @@ class JSWebBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val (isolatedClasses, relations) = resolveInheritance(classSymbols)
-    val sortedClasses = try topologicalSort(relations) catch {
-      case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
-    }
-    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
+    val sortedClasses = sortClassSymbols(classSymbols)
+    val defStmts = translateClassDeclarations(sortedClasses)
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
@@ -426,11 +420,8 @@ class JSTestBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val (isolatedClasses, relations) = resolveInheritance(classSymbols)
-    val sortedClasses = try topologicalSort(relations) catch {
-      case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
-    }
-    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
+    val sortedClasses = sortClassSymbols(classSymbols)
+    val defStmts = translateClassDeclarations(sortedClasses)
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(

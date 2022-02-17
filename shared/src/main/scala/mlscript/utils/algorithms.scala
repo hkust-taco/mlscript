@@ -6,7 +6,14 @@ import scala.collection.immutable.SortedMap
 object algorithms {
   final class CyclicGraphError(message: String) extends Exception(message)
 
-  def topologicalSort[A: Ordering](relations: List[(A, A)]): Iterable[A] = {
+  /**
+    * Sort a graph topologically.
+    *
+    * @param edges edges in the directed acyclic graph
+    * @param nodes provide if you want to include some isolated nodes in the result
+    * @return
+    */
+  def topologicalSort[A: Ordering](edges: List[(A, A)], nodes: Iterable[A] = Nil): Iterable[A] = {
     @tailrec
     def sort(toPreds: SortedMap[A, Set[A]], done: Iterable[A]): Iterable[A] = {
       val (noPreds, hasPreds) = toPreds.partition { _._2.isEmpty }
@@ -17,7 +24,7 @@ object algorithms {
         sort(SortedMap.from(hasPreds.view.mapValues(_ -- found)), done ++ found)
       }
     }
-    val toPred = relations.foldLeft(SortedMap[A, Set[A]]()) { (acc, e) => 
+    val toPred = edges.foldLeft(SortedMap.from(nodes.map { _ -> Set[A]() })) { (acc, e) => 
       acc + (e._1 -> acc.getOrElse(e._1, Set())) + (e._2 -> (acc.getOrElse(e._2, Set()) + e._1))
     }
     sort(toPred, Seq())

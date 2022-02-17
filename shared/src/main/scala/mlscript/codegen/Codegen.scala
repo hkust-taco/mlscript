@@ -683,12 +683,12 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 final case class JSClassDecl(
     val name: Str,
     fields: Ls[Str],
-    base: Opt[JSClassDecl] = N,
+    `extends`: Opt[JSExpr] = N,
     methods: Ls[JSClassMemberDecl] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val ctor = SourceCode(
-      "  constructor(fields) {" :: (if (base.isEmpty) {
+      "  constructor(fields) {" :: (if (`extends`.isEmpty) {
                                       Nil
                                     } else {
                                       "    super(fields);" :: Nil
@@ -700,11 +700,10 @@ final case class JSClassDecl(
       x + y.toSourceCode.indented
     }
     val epilogue = SourceCode("}" :: Nil)
-    base match {
-      case Some(baseCls) =>
-        SourceCode(
-          s"class $name extends ${baseCls.name} {" :: Nil
-        ) + ctor + methodsSourceCode + epilogue
+    `extends` match {
+      case Some(base) =>
+        SourceCode(s"class $name extends ") ++ base.toSourceCode ++
+          SourceCode(" {") + ctor + methodsSourceCode + epilogue
       case None =>
         if (fields.isEmpty && methods.isEmpty) {
           SourceCode(s"class $name {}")

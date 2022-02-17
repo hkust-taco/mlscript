@@ -49,13 +49,13 @@ class J
 //│ Defined class I
 //│ Defined class J
 //│ // Prelude
-//│ class K {}
 //│ class H {
 //│   constructor(fields) {
 //│     this.b = fields.b;
 //│   }
 //│ }
 //│ class J {}
+//│ class K {}
 //│ class G extends H {
 //│   constructor(fields) {
 //│     super(fields);

@@ -86,11 +86,6 @@ final case class ClassSymbol(
     */
   var body: Opt[JSClassDecl] = N
 
-  /**
-    * Fill up this field after resolving classes.
-    */
-  var baseClass: Opt[ClassSymbol] = N
-
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }
 
