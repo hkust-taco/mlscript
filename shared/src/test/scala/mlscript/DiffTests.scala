@@ -62,7 +62,6 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var allowRuntimeErrors = false
 
     val backend = new JSTestBackend()
-    val tsTypegenCodeBuilder = TsTypegenCodeBuilder()
     val host = ReplHost()
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
@@ -266,6 +265,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 exp
               }
             }
+            // initialize ts typegen code builder
+            val tsTypegenCodeBuilder = TsTypegenCodeBuilder()
             
             // process type definitions first
             typeDefs.foreach(td =>
@@ -441,6 +442,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 output(s"  $message")
               case _ => ()
             }
+            // generate typescript typegen block
+            if (mode.showDeclarationTS) outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
             
             if (mode.stats) {
               val (co, an, su, ty) = typer.stats
@@ -472,10 +475,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       case Nil =>
     }
 
-    try {
-      rec(allLines, defaultMode)
-      outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
-    } finally {
+    try rec(allLines, defaultMode) finally {
       out.close()
       host.terminate()
     }

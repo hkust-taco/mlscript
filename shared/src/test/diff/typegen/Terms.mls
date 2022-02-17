@@ -1,0 +1,138 @@
+:ts
+:ne
+{ a = "hello"; b = "world" }
+1 + 2 - 5
+let t = { a = 5; b = "world"} in if t.a == 1 then 1 else (fun f -> f.b )
+def x = 1
+def y = 2
+def z = x + y
+(1, 3, { a = { b = { c = "d"}}}, "hello hello")
+// common values
+//│ res: {a: "hello", b: "world"}
+//│ res: int
+//│ res: {b: 'a} -> 'a | 1
+//│ x: 1
+//│ y: 2
+//│ z: int
+//│ res: (1, 3, {a: {b: {c: "d"}}}, "hello hello",)
+//│ // start ts
+//│ export declare const res: {a: "hello", b: "world"}
+//│ export declare const res: int
+//│ export declare const res<ta>: (arg: [{b: ta}]) => ta | 1
+//│ export declare const x: 1
+//│ export declare const y: 2
+//│ export declare const z: int
+//│ export declare const res: [1, 3, {a: {b: {c: "d"}}}, "hello hello"]
+//│ // end ts
+
+:ts
+:ne
+def rcd = { x = 1 }
+rcd.x
+def funky f r = let t = r with { y = "nah" } in f t
+def g = rcd with { y = "yeah" }
+// records
+//│ rcd: {x: 1}
+//│ res: 1
+//│ funky: (('a\y & {y: "nah"}) -> 'b) -> 'a -> 'b
+//│ g: {x: 1, y: "yeah"}
+//│ // start ts
+//│ export declare const rcd: {x: 1}
+//│ export declare const res: 1
+//│ export declare const funky<tb, ta>: (arg: [(arg1: [Omit<ta, { y }> & {y: "nah"}]) => tb]) => (arg2: [ta]) => tb
+//│ export declare const g: {x: 1, y: "yeah"}
+//│ // end ts
+
+:ts
+:ne
+def f (a: int) (b: string) (c: bool) = if bool then a else b
+rec def fact x = if x == 1 then 1 else x * fact (x - 1)
+def g x = if x.a == 1 then x else x.b
+// miscellaneous functions
+//│ f: int -> string -> bool -> (int | string)
+//│ fact: int -> int
+//│ g: ({a: int, b: 'a} & 'a) -> 'a
+//│ // start ts
+//│ export declare const f: (arg: [int]) => (arg1: [string]) => (arg2: [bool]) => int | string
+//│ export declare const fact: (arg: [int]) => int
+//│ export declare const g<ta>: (arg: [{a: int, b: ta} & ta]) => ta
+//│ // end ts
+
+:ts
+:ne
+rec def l (a: int) = l
+rec def m (a: int) (b: int) = m
+// recursion type functions
+//│ l: int -> 'a as 'a
+//│ m: int -> int -> 'a as 'a
+//│ // start ts
+//│ export type ta = (arg: [int]) => ta
+//│ export declare const l: ta
+//│ export type ta1 = (arg: [int]) => (arg1: [int]) => ta1
+//│ export declare const m: ta1
+//│ // end ts
+
+:ts
+:ne
+:e
+1: ?
+{ a = "hello" }: { a: string } & { b: int }
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.78: 	1: ?
+//│ ║        	^
+//│ ╟── integer literal of type `1` does not match type `nothing`
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.78: 	1: ?
+//│ ╙──      	   ^
+//│ res: anything
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
+//│ ╟── Note: constraint arises from intersection type:
+//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ res: {a: string, b: int}
+//│ // start ts
+//│ export declare const res: unknown
+//│ export declare const res: {a: string, b: int}
+//│ // end ts
+
+:ts
+:ne
+def f x y = if x.a == y.b then x y else fun y -> x
+def g = fun x -> fun y -> if x == y then x y else y x
+// complex types
+//│ f: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│ g: nothing -> nothing -> nothing
+//│ // start ts
+//│ export declare const f<tb, ta, tc>: (arg: [(arg1: [ta]) => tb & {a: int} & tc]) => (arg2: [{b: int} & ta]) => (arg3: [unknown]) => tc | tb
+//│ export declare const g: (arg: [never]) => (arg1: [never]) => never
+//│ // end ts
+
+:ts
+:ne
+def x: int | ~string
+def y: "a" | "b" | ~string
+// negative types
+//│ x: int | ~string
+//│ y: "a" | "b" | ~string
+//│ // start ts
+//│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
+//│ export declare const x<t>: int | Neg<string, t>
+//│ export declare const y<t>: "a" | "b" | Neg<string, t>
+//│ // end ts
+
+:ts
+:ne
+def cont x = x + 1
+def app y k = k (y - 1)
+app 2 cont
+//│ cont: int -> int
+//│ app: int -> (int -> 'a) -> 'a
+//│ res: int
+//│ // start ts
+//│ export declare const cont: (arg: [int]) => int
+//│ export declare const app<ta>: (arg: [int]) => (arg1: [(arg2: [int]) => ta]) => ta
+//│ export declare const res: int
+//│ // end ts
