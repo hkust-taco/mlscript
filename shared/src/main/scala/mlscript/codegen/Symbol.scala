@@ -73,7 +73,7 @@ final case class ClassSymbol(
     lexicalName: Str,
     runtimeName: Str,
     // baseClass: Opt[ClassSymbol],
-    baseClass: Opt[TypeName],
+    // baseClass: Opt[TypeName],
     params: Ls[Str],
     actualType: Type,
     fields: Ls[Str],

@@ -225,6 +225,7 @@ class JSBackend {
     */
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
+      parentClassSymbol: Opt[ClassSymbol],
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
     // classSymbol.baseClass match {
@@ -331,22 +332,31 @@ class JSBackend {
   /**
     * Resolve inheritance of all declared classes.
     */
-  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[Str], Ls[Str -> Str]) = {
+  // protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[Str], Ls[Str -> Str]) = {
+  //   val (noBase, relations) = classSymbols.partitionMap { derivedClass =>
+  //     // val baseClass = resolveClassBase(derivedClass.actualType)
+  //     // derivedClass.baseClass = baseClass
+  //     derivedClass.baseClass.map(_.name -> derivedClass.lexicalName).toRight(derivedClass.lexicalName)
+  //   }
+  //   val inRelations = Set.from(relations.iterator.flatMap { case (a, b) => a :: b :: Nil })
+  //   (noBase.filterNot { inRelations.contains(_) }, relations)
+  // }
+  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[ClassSymbol], Ls[ClassSymbol -> ClassSymbol]) = {
     val (noBase, relations) = classSymbols.partitionMap { derivedClass =>
       // val baseClass = resolveClassBase(derivedClass.actualType)
       // derivedClass.baseClass = baseClass
-      derivedClass.baseClass.map(_.name -> derivedClass.lexicalName).toRight(derivedClass.lexicalName)
+      // derivedClass.baseClass.map(_.name -> derivedClass.lexicalName).toRight(derivedClass.lexicalName)
     }
     val inRelations = Set.from(relations.iterator.flatMap { case (a, b) => a :: b :: Nil })
     (noBase.filterNot { inRelations.contains(_) }, relations)
   }
 
-  protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol]): Ls[JSClassDecl] = {
-    sortedClasses.flatMap { sym =>
+  protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol -> Opt[ClassSymbol]]): Ls[JSClassDecl] = {
+    sortedClasses.flatMap { case (sym, symo) =>
       sym.body match {
         case S(_) => N // Don't translate if done
         case N =>
-          val body = translateClassDeclaration(sym)(topLevelScope)
+          val body = translateClassDeclaration(sym, symo)(topLevelScope)
           sym.body = S(body)
           S(body)
       }
@@ -371,7 +381,8 @@ class JSWebBackend extends JSBackend {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
     val defStmts = translateClassDeclarations(
-      (isolatedClasses ++ sortedClasses).map(topLevelScope.getClassSymbol).map(_.get))
+      // (isolatedClasses ++ sortedClasses).map(topLevelScope.getClassSymbol).map(_.get))
+      (isolatedClasses ++ sortedClasses).map(_ => ???))
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
@@ -440,8 +451,10 @@ class JSTestBackend extends JSBackend {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
     val defStmts = translateClassDeclarations(
-      (isolatedClasses ++ sortedClasses).map(n => topLevelScope.getClassSymbol(n).getOrElse(
-        throw CodeGenError(s"class not found: $n"))))
+      (isolatedClasses ++ sortedClasses)
+      // .map(n => topLevelScope.getClassSymbol(n).getOrElse(
+      //   throw CodeGenError(s"class not found: $n")))
+        )
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
