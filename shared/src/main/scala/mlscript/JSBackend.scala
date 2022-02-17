@@ -4,13 +4,6 @@ import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 
-import scala.collection.immutable
-import scala.util.matching.Regex
-
-import collection.mutable.{HashMap, HashSet, Stack}
-import collection.immutable.LazyList
-import scala.collection.mutable.ListBuffer
-
 class JSBackend {
   /**
     * The root scope of the program.
@@ -253,18 +246,18 @@ class JSBackend {
   /**
     * Declare symbols for types, traits and classes.
     * Call this before the code generation.
+    * 
+    * @return defined class symbols
     */
-  protected def declareTypeDefs(typeDefs: Ls[TypeDef]): Ls[ClassSymbol] = {
-    val classes = new ListBuffer[ClassSymbol]()
-    typeDefs foreach {
-      case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-        topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
-      case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
-        topLevelScope.declareTrait(name, tparams map { _.name }, body)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, members)
-    }
-    classes.toList
+  protected def declareTypeDefs(typeDefs: Ls[TypeDef]): Ls[ClassSymbol] = typeDefs flatMap {
+    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
+      N
+    case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
+      topLevelScope.declareTrait(name, tparams map { _.name }, body)
+      N
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      S(topLevelScope.declareClass(name, tparams map { _.name }, baseType, members))
   }
 
   private def resolveClassFields(ty: Type): Ls[Str] = ty match {
@@ -329,10 +322,6 @@ class JSBackend {
     }).filter { classSymbols.contains(_) }
     // ^^^^^^ -> We only need class symbols declared in current translation unit.
   }
-
-  protected def translateClassDeclarations(sortedClasses: Iterable[ClassSymbol]): Ls[JSClassDecl] = {
-    sortedClasses.map { translateClassDeclaration(_)(topLevelScope) }.toList
-  }
 }
 
 class JSWebBackend extends JSBackend {
@@ -347,8 +336,9 @@ class JSWebBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val sortedClasses = sortClassSymbols(classSymbols)
-    val defStmts = translateClassDeclarations(sortedClasses)
+    val defStmts = sortClassSymbols(classSymbols).map {
+      translateClassDeclaration(_)(topLevelScope)
+    }.toList
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
@@ -412,8 +402,9 @@ class JSTestBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val sortedClasses = sortClassSymbols(classSymbols)
-    val defStmts = translateClassDeclarations(sortedClasses)
+    val defStmts = sortClassSymbols(classSymbols).map {
+      translateClassDeclaration(_)(topLevelScope)
+    }.toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(
