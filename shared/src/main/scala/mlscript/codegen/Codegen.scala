@@ -149,6 +149,10 @@ object SourceCode {
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
 
+  // concatenate source codes without intermediate allocations
+  def bulkConcat(codes: Iterable[SourceCode]): SourceCode =
+    new SourceCode(codes.map(_.lines).foldRight(List.empty[SourceLine])((lines, accum) => lines ::: accum))
+
   /**
     * Comma separate elements of List[SourceCode] and wrap with curly braces
     * 
