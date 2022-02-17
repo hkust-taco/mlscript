@@ -95,7 +95,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       }
     }
     // Give up.
-    throw new CodeGenError(
+    throw CodeGenError(
       if (prefix.isEmpty())
         "Cannot allocate a runtime name"
       else
@@ -151,13 +151,14 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   def declareClass(
       lexicalName: Str,
+      baseClass: Opt[TypeName],
       params: Ls[Str],
       base: Type,
       fields: Ls[Str],
       methods: Ls[MethodDef[Left[Term, Type]]]
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, fields, methods)
+    val symbol = ClassSymbol(lexicalName, runtimeName, baseClass, params, base, fields, methods)
     register(symbol)
     symbol
   }

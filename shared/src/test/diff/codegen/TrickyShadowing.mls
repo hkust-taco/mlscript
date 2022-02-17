@@ -97,7 +97,7 @@ class C: B
 //│ ║  l.95: 	class C: B
 //│ ╙──      	      ^^^^
 //│ Code generation met an error:
-//│   cannot inherit from type alias B
+//│   class not found: B
 
 :js
 B = 1

@@ -220,6 +220,8 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Declared Trait1A.MtdA: trait1A -> 'B
 //│ Defined class Class1B
 //│ Defined Class1B.MtdA: (Class1B & trait1A) -> "b"
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Class1A), TypeName(Trait1A))
 
 
 trait Trait2A[A]
@@ -238,6 +240,8 @@ class Class2C: Class2B[int, bool]
 //│ Defined class Class2C
 //│ Defined Class2C.MtdA: (Class2C & trait2A) -> 42
 //│ Defined Class2C.MtdB: (Class2C & trait2A) -> true
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Class1A), TypeName(Trait2A))
 
 
 :e
@@ -245,23 +249,25 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.250: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.230: 	class Class2C: Class2B[int, bool]
+//│ ║  l.232: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.229: 	    method MtdB: B
+//│ ║  l.231: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
 //│ Defined Class3C.MtdB: (Class3C & trait2A) -> 42
+//│ Code generation met an error:
+//│   class not found: Class2C
 
 type Id[T] = T
 class Test1[A]: { x: A }
@@ -293,10 +299,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.293: 	class Test4A[A]: { x: A }
+//│ ║  l.299: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.294: 	    method Mth4A[A]: A
+//│ ║  l.300: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing
@@ -321,10 +327,13 @@ class H: D & E
 //│ Defined trait E
 //│ Declared E.G: e -> int
 //│ Defined class H
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(D), TypeName(E))
 
 ((H{}): D).(D.G)
 //│ res: 1
-//│    = undefined
+//│ Code generation met an error:
+//│   unresolved symbol H
 
 
 
@@ -340,24 +349,28 @@ trait Fee2
 
 class Ber: Fee & Fee2
 //│ Defined class Ber
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Fee), TypeName(Fee2))
 
 Ber.F
 //│ res: (Ber & fee2) -> 2
-//│    = undefined
+//│ Code generation met an error:
+//│   unresolved symbol Ber
 
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.349: 	Ber
+//│ ║  l.361: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ║  l.350: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ║  l.350: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
-//│    = [Function: res]
+//│ Code generation met an error:
+//│   unresolved symbol Ber
 
 
 
@@ -378,12 +391,16 @@ class Test5C[A]: Test5A[A] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
 //│ Defined class Test5C
 //│ Defined Test5C.Mth5A: (Test5C['A] & test5B) -> ('A -> 'a) -> 'a
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Test5A), TypeName(Test5B))
 
 
 class Test5D: Test5A[int] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
 //│ Defined class Test5D
 //│ Defined Test5D.Mth5A: (Test5D & test5B) -> (int -> 'a) -> 'a
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Test5A), TypeName(Test5B))
 
 
 
@@ -420,3 +437,5 @@ class Test7C: Test7A & Test7B
     method Mth7A = 42
 //│ Defined class Test7C
 //│ Defined Test7C.Mth7A: (Test7C & test7A & test7B) -> 42
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Test7A), TypeName(Test7B))

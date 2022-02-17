@@ -683,7 +683,7 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 final case class JSClassDecl(
     val name: Str,
     fields: Ls[Str],
-    base: Opt[JSClassDecl] = N,
+    base: Opt[Str] = N,
     methods: Ls[JSClassMemberDecl] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
@@ -703,7 +703,7 @@ final case class JSClassDecl(
     base match {
       case Some(baseCls) =>
         SourceCode(
-          s"class $name extends ${baseCls.name} {" :: Nil
+          s"class $name extends ${baseCls} {" :: Nil
         ) + ctor + methodsSourceCode + epilogue
       case None =>
         if (fields.isEmpty && methods.isEmpty) {

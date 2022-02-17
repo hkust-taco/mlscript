@@ -21,20 +21,14 @@ trait T1
 :js
 class A: T0
 //│ Defined class A
-//│ // Prelude
-//│ class A {}
-//│ // End of generated code
+//│ Code generation met an error:
+//│   class not found: T0
 
 :js
 class B: A & T1
 //│ Defined class B
-//│ // Prelude
-//│ class B extends A {
-//│   constructor(fields) {
-//│     super(fields);
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(A), TypeName(T1))
 
 :e
 :js
@@ -43,7 +37,7 @@ A{}
 //│ res = new A({});
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.41: 	A{}
+//│ ║  l.35: 	A{}
 //│ ║        	^
 //│ ╟── Note that class A is abstract:
 //│ ║  l.22: 	class A: T0
@@ -52,20 +46,15 @@ A{}
 //│ ║  l.9: 	  method Foo: int
 //│ ╙──     	         ^^^^^^^^
 //│ res: error
-//│    = A {}
+//│ Runtime error:
+//│   ReferenceError: A is not defined
 
 // FIXME
 :js
 b = B{}
 B.Foo
-//│ // Query 1
-//│ globalThis.b = new B({});
-//│ res = b;
-//│ // Query 2
-//│ res = ((x) => new B(x)).Foo;
-//│ // End of generated code
 //│ b: B
-//│  = B {}
 //│ res: (B & t0 & t1) -> 1
-//│    = undefined
+//│ Code generation met an error:
+//│   unresolved symbol B
 

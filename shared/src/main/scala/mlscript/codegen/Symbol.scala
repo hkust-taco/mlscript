@@ -5,6 +5,7 @@ import mlscript.Type
 import mlscript.JSClassDecl
 import mlscript.MethodDef
 import mlscript.Term
+import mlscript.TypeName
 
 sealed trait LexicalSymbol {
 
@@ -69,12 +70,14 @@ final case class StubValueSymbol(
 }
 
 final case class ClassSymbol(
-    val lexicalName: Str,
-    val runtimeName: Str,
-    val params: Ls[Str],
-    val actualType: Type,
-    val fields: Ls[Str],
-    val methods: Ls[MethodDef[Left[Term, Type]]],
+    lexicalName: Str,
+    runtimeName: Str,
+    // baseClass: Opt[ClassSymbol],
+    baseClass: Opt[TypeName],
+    params: Ls[Str],
+    actualType: Type,
+    fields: Ls[Str],
+    methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ClassSymbol] {
 
@@ -86,11 +89,6 @@ final case class ClassSymbol(
     * Fill up this field after the class translation.
     */
   var body: Opt[JSClassDecl] = N
-
-  /**
-    * Fill up this field after resolving classes.
-    */
-  var baseClass: Opt[ClassSymbol] = N
 
   override def toString: Str = s"class $lexicalName ($runtimeName)"
 }

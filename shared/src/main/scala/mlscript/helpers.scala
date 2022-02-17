@@ -149,6 +149,23 @@ object OpApp {
   }
 }
 
+trait TypeDefImpl extends Located { self: TypeDef =>
+  
+  def bases: Ls[TypeName] = {
+    def rec(body: Type): Ls[TypeName] = body match {
+      case tn: TypeName => tn :: Nil
+      case AppliedType(tn: TypeName, _) => tn :: Nil
+      case Inter(ty1, ty2) => rec(ty1) ++ rec(ty2)
+      case Top| Bot | _: Record | _: Rem | _: TypeVar | _: Literal | _: Recursive | _: Tuple | _: Neg
+            | _: Bounds | _: WithExtension | _: Function | _: Union | _: Arr =>
+        Nil // Note that the type checker will reject these cases
+    }
+    rec(body)
+  }
+  def fields: Ls[Str -> Type] = ???
+  
+}
+
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {

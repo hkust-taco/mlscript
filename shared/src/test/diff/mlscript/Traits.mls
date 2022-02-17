@@ -27,10 +27,13 @@ A {}
 
 class D: C & A & B
 //│ Defined class D
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(C), TypeName(A), TypeName(B))
 
 D
 //│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (D with {x: 'x, y: 'y})
-//│    = [Function: res]
+//│ Code generation met an error:
+//│   unresolved symbol D
 
 :re
 error: A & B
@@ -41,52 +44,57 @@ error: A & B
 :e
 def dv = D{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.42: 	def dv = D{}
+//│ ║  l.45: 	def dv = D{}
 //│ ║        	         ^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.42: 	def dv = D{}
+//│ ║  l.45: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
-//│   = D { x: undefined }
+//│ Code generation met an error:
+//│   unresolved symbol D
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: D & {x: 0, y: "hello"}
-//│   = D { x: 0 }
+//│ Code generation met an error:
+//│   unresolved symbol D
 
 :e
 dv: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.62: 	dv: nothing
 //│ ║        	^^
 //│ ╟── application of type `D with {x: ?x, y: ?y}` does not match type `nothing`
-//│ ║  l.52: 	def dv = D { x = 0; y = "hello" }
+//│ ║  l.56: 	def dv = D { x = 0; y = "hello" }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.62: 	dv: nothing
 //│ ║        	^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.57: 	dv: nothing
+//│ ║  l.62: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│ Code generation met an error:
+//│   unresolved symbol dv
 
 dv: A & B
 //│ res: {x: int, y: string} & a & b
-//│    = D { x: 0 }
+//│ Code generation met an error:
+//│   unresolved symbol dv
 
 :e
 dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.78: 	dv: A & B: nothing
+//│ ║  l.85: 	dv: A & B: nothing
 //│ ║        	^^
 //│ ╟── type `{x: int, y: string} & a & b` does not match type `nothing`
-//│ ║  l.78: 	dv: A & B: nothing
+//│ ║  l.85: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.78: 	dv: A & B: nothing
+//│ ║  l.85: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│ Code generation met an error:
+//│   unresolved symbol dv
 
 
 trait Indirect: C
@@ -94,24 +102,29 @@ trait Indirect: C
 
 class E: Indirect
 //│ Defined class E
+//│ Code generation met an error:
+//│   class not found: Indirect
 
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	E{}
-//│ ║        	^^^
+//│ ║  l.109: 	E{}
+//│ ║         	^^^
 //│ ╟── record literal of type `anything` does not have field 'x'
-//│ ║  l.99: 	E{}
-//│ ╙──      	 ^^
+//│ ║  l.109: 	E{}
+//│ ╙──       	 ^^
 //│ res: E & {x: nothing} | error
-//│    = E {}
+//│ Runtime error:
+//│   ReferenceError: E is not defined
 
 def ev = E { x = 1 }
 ev: C
 //│ ev: E & {x: 1}
-//│   = E {}
+//│ Runtime error:
+//│   ReferenceError: E is not defined
 //│ res: C
-//│    = E {}
+//│ Runtime error:
+//│   ReferenceError: ev is not defined
 
 
 trait T1: C & A
@@ -120,19 +133,19 @@ trait T1: C & A
 :e
 def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.134: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `C | ~a`
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.134: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `C | ~a`
-//│ ║  l.121: 	def t = T1 (A { x = 1 })
+//│ ║  l.134: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.117: 	trait T1: C & A
+//│ ║  l.130: 	trait T1: C & A
 //│ ║         	          ^
 //│ ╟── from intersection type:
-//│ ║  l.117: 	trait T1: C & A
+//│ ║  l.130: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & a & t1
 //│  = { x: 1 }
@@ -143,42 +156,51 @@ def t = T1 (A (C { x = 1 }))
 
 class CA: C & A
 //│ Defined class CA
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(C), TypeName(A))
 
 def t = T1 (CA { x = 1 })
 //│ t: CA & {x: 1} & t1
-//│  = CA { x: 1 }
+//│ Code generation met an error:
+//│   unresolved symbol CA
 
 
 class C1: B & T1 & { y: "hi" | "hello" }
 //│ Defined class C1
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(B), TypeName(T1))
 
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	def c1 = C1 { }
+//│ ║  l.174: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.156: 	def c1 = C1 { }
+//│ ║  l.174: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
-//│   = C1 { y: undefined }
+//│ Code generation met an error:
+//│   unresolved symbol C1
 
 def c1 = C1 { x = 1; y = "hi" }
 //│ c1: C1 & {x: 1, y: "hi"}
-//│   = C1 { y: 'hi' }
+//│ Code generation met an error:
+//│   unresolved symbol C1
 
 c1: T1
 //│ res: C & a & t1
-//│    = C1 { y: 'hi' }
+//│ Code generation met an error:
+//│   unresolved symbol c1
 
 c1: A
 //│ res: {x: int} & a
-//│    = C1 { y: 'hi' }
+//│ Code generation met an error:
+//│   unresolved symbol c1
 
 c1.x
 c1.y
 //│ res: 1
-//│    = undefined
 //│ res: "hi"
-//│    = 'hi'
+//│ Code generation met an error:
+//│   unresolved symbol c1
 

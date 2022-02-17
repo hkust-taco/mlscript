@@ -91,9 +91,9 @@ class JSBackend {
         JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
       case N => scope.getType(name) match {
         case S(sym: TypeAliasSymbol) =>
-          throw new CodeGenError(s"type alias ${name} is not a valid expression")
+          throw CodeGenError(s"type alias ${name} is not a valid expression")
         case S(_) => throw new Exception("register mismatch in scope")
-        case N => throw new CodeGenError(s"unresolved symbol ${name}")
+        case N => throw CodeGenError(s"unresolved symbol ${name}")
       }
     }
 
@@ -137,7 +137,7 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef => throw new CodeGenError("unexpected definitions in blocks")
+          case _: Def | _: TypeDef => throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
       )
@@ -227,13 +227,18 @@ class JSBackend {
       classSymbol: ClassSymbol,
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
-    classSymbol.baseClass match {
-      case N => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, N, members)
-      case S(baseClassSym) => baseClassSym.body match {
-        case S(cls) => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, S(cls), members)
-        case N => throw new CodeGenError("base class translated after the derived class")
-      }
-    }
+    // classSymbol.baseClass match {
+    //   case N => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, N, members)
+    //   // case S(baseClassSym) => topLevelScope.getClassSymbol(baseClassSym.name) match {
+    //   //   case S(cls) => JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct, S(cls), members)
+    //   //   case N => throw CodeGenError("base class translated after the derived class")
+    //   // }
+    // }
+    JSClassDecl(classSymbol.runtimeName, classSymbol.fields.distinct,
+      classSymbol.baseClass.map(tn =>
+        topLevelScope.getClassSymbol(tn.name).fold(
+          throw CodeGenError(s"base class not found: ${tn.name}")
+        )(_.runtimeName)), members)
   }
 
   private def translateClassMember(
@@ -264,8 +269,12 @@ class JSBackend {
         topLevelScope.declareTypeAlias(name, tparams map { _.name }, body)
       case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
         topLevelScope.declareTrait(name, tparams map { _.name }, body)
-      case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-        classes += topLevelScope.declareClass(name, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
+      case td @ TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+        classes += topLevelScope.declareClass(name, td.bases match {
+          case Nil => N
+          case b :: Nil => S(b)
+          case bs => throw CodeGenError(s"multiple base classes found: ${bs}")
+        }, tparams map { _.name }, baseType, resolveClassFields(baseType), members)
     }
     classes.toList
   }
@@ -287,46 +296,46 @@ class JSBackend {
     case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
-  /**
-    * Find the base class for a specific class.
-    */
-  private def resolveClassBase(ty: Type): Opt[ClassSymbol] = {
-    def resolveClassSymbol(name: Str): Opt[ClassSymbol] = topLevelScope.getType(name) match {
-      case S(sym: ClassSymbol) => S(sym)
-      case S(sym: TraitSymbol) => N // TODO: inherit from traits
-      case S(sym: TypeAliasSymbol) =>
-        throw new CodeGenError(s"cannot inherit from type alias $name")
-      case N =>
-        throw new CodeGenError(s"undeclared type name $name when resolving base classes")
-    }
-    def impl(ty: Type): Opt[ClassSymbol] = ty match {
-      case Top | _: Record => N
-      case TypeName(name) => resolveClassSymbol(name)
-      case AppliedType(TypeName(name), _) => resolveClassSymbol(name)
-      case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
-        case (N, N) => N
-        case (N, S(cls)) => S(cls)
-        case (S(cls), N) => S(cls)
-        case (S(cls1), S(cls2)) => if (cls1 === cls2)
-          S(cls1)
-        else
-          throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
-      }
-      case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-          Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-        throw CodeGenError(s"cannot inherit from type $ty")
-    }
-    impl(ty)
-  }
+  // /**
+  //   * Find the base class for a specific class.
+  //   */
+  // private def resolveClassBase(ty: Type): Opt[ClassSymbol] = {
+  //   def resolveClassSymbol(name: Str): Opt[ClassSymbol] = topLevelScope.getType(name) match {
+  //     case S(sym: ClassSymbol) => S(sym)
+  //     case S(sym: TraitSymbol) => N // TODO: inherit from traits
+  //     case S(sym: TypeAliasSymbol) =>
+  //       throw CodeGenError(s"cannot inherit from type alias $name")
+  //     case N =>
+  //       throw CodeGenError(s"undeclared type name $name when resolving base classes")
+  //   }
+  //   def impl(ty: Type): Opt[ClassSymbol] = ty match {
+  //     case Top | _: Record => N
+  //     case TypeName(name) => resolveClassSymbol(name)
+  //     case AppliedType(TypeName(name), _) => resolveClassSymbol(name)
+  //     case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
+  //       case (N, N) => N
+  //       case (N, S(cls)) => S(cls)
+  //       case (S(cls), N) => S(cls)
+  //       case (S(cls1), S(cls2)) => if (cls1 === cls2)
+  //         S(cls1)
+  //       else
+  //         throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
+  //     }
+  //     case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+  //         Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
+  //       throw CodeGenError(s"cannot inherit from type $ty")
+  //   }
+  //   impl(ty)
+  // }
 
   /**
     * Resolve inheritance of all declared classes.
     */
-  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[ClassSymbol], Ls[ClassSymbol -> ClassSymbol]) = {
+  protected def resolveInheritance(classSymbols: Ls[ClassSymbol]): (Ls[Str], Ls[Str -> Str]) = {
     val (noBase, relations) = classSymbols.partitionMap { derivedClass =>
-      val baseClass = resolveClassBase(derivedClass.actualType)
-      derivedClass.baseClass = baseClass
-      baseClass.map(_ -> derivedClass).toRight(derivedClass)
+      // val baseClass = resolveClassBase(derivedClass.actualType)
+      // derivedClass.baseClass = baseClass
+      derivedClass.baseClass.map(_.name -> derivedClass.lexicalName).toRight(derivedClass.lexicalName)
     }
     val inRelations = Set.from(relations.iterator.flatMap { case (a, b) => a :: b :: Nil })
     (noBase.filterNot { inRelations.contains(_) }, relations)
@@ -361,7 +370,8 @@ class JSWebBackend extends JSBackend {
     val sortedClasses = try topologicalSort(relations) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
-    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
+    val defStmts = translateClassDeclarations(
+      (isolatedClasses ++ sortedClasses).map(topLevelScope.getClassSymbol).map(_.get))
 
     val resultsIdent = JSIdent(resultsName)
     val stmts: Ls[JSStmt] =
@@ -429,7 +439,9 @@ class JSTestBackend extends JSBackend {
     val sortedClasses = try topologicalSort(relations) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
-    val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
+    val defStmts = translateClassDeclarations(
+      (isolatedClasses ++ sortedClasses).map(n => topLevelScope.getClassSymbol(n).getOrElse(
+        throw CodeGenError(s"class not found: $n"))))
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
     val catchClause = JSCatchClause(

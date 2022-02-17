@@ -122,12 +122,16 @@ class D0: T
 //│ ╔══[ERROR] class D0 cannot inherit from class B as it already inherits from class A
 //│ ║  l.121: 	class D0: T
 //│ ╙──       	      ^^^^^
+//│ Code generation met an error:
+//│   class not found: T
 
 :e
 class D1: B & T
 //│ ╔══[ERROR] class D1 cannot inherit from class A as it already inherits from class B
-//│ ║  l.127: 	class D1: B & T
+//│ ║  l.129: 	class D1: B & T
 //│ ╙──       	      ^^^^^^^^^
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(B), TypeName(T))
 
 
 trait S: { x: int }
@@ -144,13 +148,13 @@ t = s: s
 :e
 t.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.145: 	t.x
+//│ ║  l.149: 	t.x
 //│ ║         	^^^
 //│ ╟── type `s` does not have field 'x'
-//│ ║  l.140: 	t = s: s
+//│ ║  l.144: 	t = s: s
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `{x: ?a}`
-//│ ║  l.145: 	t.x
+//│ ║  l.149: 	t.x
 //│ ╙──       	^
 //│ res: error
 //│    = 1
@@ -176,16 +180,18 @@ class Hey
 :e
 class H: Lol & Hey
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.177: 	class H: Lol & Hey
+//│ ║  l.181: 	class H: Lol & Hey
 //│ ║         	      ^
 //│ ╟── Definitions of method Foo inherited from:
 //│ ╟── • Lol
-//│ ║  l.168: 	  method Foo = 1
+//│ ║  l.172: 	  method Foo = 1
 //│ ║         	         ^^^^^^^
 //│ ╟── • Hey
-//│ ║  l.170: 	  method Foo = "oops"
+//│ ║  l.174: 	  method Foo = "oops"
 //│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class H
+//│ Code generation met an error:
+//│   multiple base classes found: List(TypeName(Lol), TypeName(Hey))
 
 // FIXME: should probably forbid trait constructors when the trait contains method defs as well:
 

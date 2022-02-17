@@ -11,7 +11,7 @@ class Child: Parent1 & Parent2
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   cannot have two base classes: Parent1, Parent2
+//│   multiple base classes found: List(TypeName(Parent1), TypeName(Parent2))
 
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
@@ -57,7 +57,7 @@ class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
 //│ Code generation met an error:
-//│   cannot inherit from type alias Sly1
+//│   multiple base classes found: List(TypeName(Parent1), TypeName(Sly1))
 
 :e
 type Sly2[A] = A
@@ -67,7 +67,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
 //│ Code generation met an error:
-//│   cannot inherit from type alias Sly2
+//│   multiple base classes found: List(TypeName(Sly2), TypeName(Parent2))
 
 :e
 class Crazy[A]: A & { name: A }
@@ -75,7 +75,7 @@ class Crazy[A]: A & { name: A }
 //│ ║  l.73: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   undeclared type name A when resolving base classes
+//│   class not found: A
 
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
@@ -186,7 +186,7 @@ class Cycle: N[Cycle]
 //│ ║  l.184: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   cannot inherit from type alias N
+//│   class not found: N
 
 
 
@@ -247,7 +247,7 @@ F{}
 //│ ╙──       	^
 //│ res: error
 //│ Code generation met an error:
-//│   cannot inherit from type alias nothing
+//│   class not found: nothing
 
 
 // TODO forbid
@@ -283,7 +283,7 @@ class B: Id[A]
 //│ Defined class A
 //│ Defined type alias Id
 //│ Code generation met an error:
-//│   cannot inherit from type alias Id
+//│   class not found: Id
 
 
 :e // TODO improve prov of the TV

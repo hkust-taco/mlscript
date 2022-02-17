@@ -49,13 +49,8 @@ trait T
 :js
 class D: T & {z: int}
 //│ Defined class D
-//│ // Prelude
-//│ class D {
-//│   constructor(fields) {
-//│     this.z = fields.z;
-//│   }
-//│ }
-//│ // End of generated code
+//│ Code generation met an error:
+//│   class not found: T
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ useTrt: ((Class with {x: 'a}) & ~t | {y: 'a} & t) -> 'a
@@ -64,14 +59,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	useTrt c
+//│ ║  l.60: 	useTrt c
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.55: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.55: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│ Runtime error:
@@ -85,10 +80,12 @@ useTrt (c with { y = 1 })
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
-//│  = D { z: 1213 }
+//│ Runtime error:
+//│   ReferenceError: D is not defined
 
 d: {z: 'a}
 //│ res: {z: 1213}
-//│    = D { z: 1213 }
+//│ Runtime error:
+//│   ReferenceError: d is not defined
 
 
