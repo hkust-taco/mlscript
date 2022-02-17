@@ -158,7 +158,7 @@ type Stutter = Cycle1
 //│ ║  l.150: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   cyclic inheritance involving
+//│   cyclic inheritance detected
 
 :e
 def c = Cycle1 error

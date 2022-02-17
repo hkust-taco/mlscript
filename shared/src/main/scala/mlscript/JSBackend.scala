@@ -1,6 +1,6 @@
 package mlscript
 
-import mlscript.utils._, shorthands._
+import mlscript.utils._, shorthands._, algorithms._
 import mlscript.codegen.Helpers._
 import mlscript.codegen._
 
@@ -358,8 +358,8 @@ class JSWebBackend extends JSBackend {
 
     val classSymbols = declareTypeDefs(typeDefs)
     val (isolatedClasses, relations) = resolveInheritance(classSymbols)
-    val sortedClasses = try topologicallySort(relations) catch {
-      case e: RuntimeException => throw CodeGenError("cyclic inheritance involving")
+    val sortedClasses = try topologicalSort(relations) catch {
+      case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
     val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
 
@@ -415,14 +415,19 @@ class JSTestBackend extends JSBackend {
 
   /**
     * Generate JavaScript code which targets MLscript test from the given block.
+    *
+    * @param pgrm the program to translate
+    * @param scope the top-level scope
+    * @param allowEscape whether allow unimplemented values can be accessible
+    * @return
     */
   private def generate(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
     val (isolatedClasses, relations) = resolveInheritance(classSymbols)
-    val sortedClasses = try topologicallySort(relations) catch {
-      case e: RuntimeException => throw CodeGenError("cyclic inheritance involving")
+    val sortedClasses = try topologicalSort(relations) catch {
+      case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
     val defStmts = translateClassDeclarations(isolatedClasses ++ sortedClasses)
 

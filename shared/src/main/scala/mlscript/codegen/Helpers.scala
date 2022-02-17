@@ -1,10 +1,7 @@
 package mlscript.codegen
 
-import mlscript._
-import mlscript.utils.shorthands._
-import scala.annotation.tailrec
+import mlscript._, mlscript.utils.shorthands._
 import scala.collection.immutable.{Map, Set}
-import scala.collection.immutable.SortedMap
 
 object Helpers {
   /**
@@ -46,22 +43,5 @@ object Helpers {
     case DecLit(value)  => s"DecLit($value)"
     case StrLit(value)  => s"StrLit($value)"
     case Subs(arr, idx) => s"Subs(${inspect(arr)}, ${inspect(idx)})"
-  }
-
-  def topologicallySort[A: Ordering](relations: Ls[A -> A]): Iterable[A] = {
-    @tailrec
-    def sort(toPreds: SortedMap[A, Set[A]], done: Iterable[A]): Iterable[A] = {
-      val (noPreds, hasPreds) = toPreds.partition { _._2.isEmpty }
-      if (noPreds.isEmpty) {
-        if (hasPreds.isEmpty) done else sys.error(hasPreds.toString)
-      } else {
-        val found = noPreds.map { _._1 }
-        sort(SortedMap.from(hasPreds.view.mapValues(_ -- found)), done ++ found)
-      }
-    }
-    val toPred = relations.foldLeft(SortedMap[A, Set[A]]()) { (acc, e) => 
-      acc + (e._1 -> acc.getOrElse(e._1, Set())) + (e._2 -> (acc.getOrElse(e._2, Set()) + e._1))
-    }
-    sort(toPred, Seq())
   }
 }
