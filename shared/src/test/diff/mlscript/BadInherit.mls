@@ -11,7 +11,7 @@ class Child: Parent1 & Parent2
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   cannot have two base classes: Parent1, Parent2
+//│   cannot have 2 base classes: Parent1, Parent2
 
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child

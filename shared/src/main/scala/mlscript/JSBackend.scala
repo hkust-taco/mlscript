@@ -220,9 +220,9 @@ class JSBackend {
       classSymbol: ClassSymbol,
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
-    val fields = resolveClassFields(classSymbol.actualType).distinct
+    val fields = JSBackend.resolveClassFields(classSymbol.actualType).distinct
     // TODO: remove redundant computation (another is `sortClassSymbols`)
-    val base = resolveClassBase(classSymbol.actualType).map { sym => JSIdent(sym.runtimeName) }
+    val base = resolveBaseClass(classSymbol.actualType).map { sym => JSIdent(sym.runtimeName) }
     JSClassDecl(classSymbol.runtimeName, fields, base, members)
   }
 
@@ -260,53 +260,27 @@ class JSBackend {
       S(topLevelScope.declareClass(name, tparams map { _.name }, baseType, members))
   }
 
-  private def resolveClassFields(ty: Type): Ls[Str] = ty match {
-    case Top => Nil
-    case Record(fields) => fields.map(_._1.name)
-    case TypeName(_) => Nil
-    case Inter(Record(entries), ty) =>
-      entries.map(_._1.name) ++ resolveClassFields(ty)
-    case Inter(ty, Record(entries)) =>
-      resolveClassFields(ty) ++ entries.map(_._1.name)
-    case Inter(ty1, ty2) => resolveClassFields(ty1) ++ resolveClassFields(ty2)
-    case AppliedType(TypeName(_), _) => Nil
-    // Others are considered as ill-formed.
-    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-      throw CodeGenError(s"unable to derive from type $ty")
-    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
-  }
-
   /**
     * Find the base class for a specific class.
     */
-  private def resolveClassBase(ty: Type): Opt[ClassSymbol] = {
-    def resolveClassSymbol(name: Str): Opt[ClassSymbol] = topLevelScope.getType(name) match {
-      case S(sym: ClassSymbol) => S(sym)
-      case S(sym: TraitSymbol) => N // TODO: inherit from traits
-      case S(sym: TypeAliasSymbol) =>
-        throw new CodeGenError(s"cannot inherit from type alias $name")
-      case N =>
-        throw new CodeGenError(s"undeclared type name $name when resolving base classes")
-    }
-    def impl(ty: Type): Opt[ClassSymbol] = ty match {
-      case Top | _: Record => N
-      case TypeName(name) => resolveClassSymbol(name)
-      case AppliedType(TypeName(name), _) => resolveClassSymbol(name)
-      case Inter(ty1, ty2) => (resolveClassBase(ty1), resolveClassBase(ty2)) match {
-        case (N, N) => N
-        case (N, S(cls)) => S(cls)
-        case (S(cls), N) => S(cls)
-        case (S(cls1), S(cls2)) => if (cls1 === cls2)
-          S(cls1)
-        else
-          throw CodeGenError(s"cannot have two base classes: ${cls1.lexicalName}, ${cls2.lexicalName}")
+  private def resolveBaseClass(ty: Type): Opt[ClassSymbol] = {
+    val baseClasses = JSBackend.resolveClassBases(ty).flatMap { name =>
+      topLevelScope.getType(name) match {
+        case S(sym: ClassSymbol) => S(sym)
+        case S(sym: TraitSymbol) => N // TODO: inherit from traits
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name" )
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
       }
-      case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-          Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-        throw CodeGenError(s"unable to derive from type $ty")
     }
-    impl(ty)
+    if (baseClasses.length > 1)
+      throw CodeGenError(
+        s"cannot have ${baseClasses.length} base classes: " +
+        baseClasses.map { _.lexicalName }.mkString(", ")
+      )
+    else
+      baseClasses.headOption
   }
 
   /**
@@ -315,7 +289,7 @@ class JSBackend {
   protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[ClassSymbol] = {
     // The relations may include previously defined class symbols.
     val relations = classSymbols.flatMap { derivedClass =>
-      resolveClassBase(derivedClass.actualType).map(_ -> derivedClass)
+      resolveBaseClass(derivedClass.actualType).map(_ -> derivedClass)
     }
     (try topologicalSort(relations, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
@@ -545,4 +519,31 @@ object JSBackend {
 
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
+
+  private def resolveClassFields(ty: Type): Ls[Str] = ty match {
+    case Top => Nil
+    case Record(fields) => fields.map(_._1.name)
+    case TypeName(_) => Nil
+    case Inter(Record(entries), ty) =>
+      entries.map(_._1.name) ++ resolveClassFields(ty)
+    case Inter(ty, Record(entries)) =>
+      resolveClassFields(ty) ++ entries.map(_._1.name)
+    case Inter(ty1, ty2) => resolveClassFields(ty1) ++ resolveClassFields(ty2)
+    case AppliedType(TypeName(_), _) => Nil
+    // Others are considered as ill-formed.
+    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
+      throw CodeGenError(s"unable to derive from type $ty")
+    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
+  }
+
+  private def resolveClassBases(ty: Type): Ls[Str] = ty match {
+    case Top | _: Record => Nil
+    case TypeName(name) => name :: Nil
+    case AppliedType(TypeName(name), _) => name :: Nil
+    case Inter(ty1, ty2) => resolveClassBases(ty1) ++ resolveClassBases(ty2)
+    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
+        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
+      throw CodeGenError(s"unable to derive from type $ty")
+  }
 }
