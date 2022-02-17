@@ -218,11 +218,11 @@ class JSBackend {
     */
   protected def translateClassDeclaration(
       classSymbol: ClassSymbol,
+      baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
     val fields = JSBackend.resolveClassFields(classSymbol.actualType).distinct
-    // TODO: remove redundant computation (another is `sortClassSymbols`)
-    val base = resolveBaseClass(classSymbol.actualType).map { sym => JSIdent(sym.runtimeName) }
+    val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
     JSClassDecl(classSymbol.runtimeName, fields, base, members)
   }
 
@@ -285,16 +285,20 @@ class JSBackend {
 
   /**
     * Resolve inheritance of all declared classes.
+    * 
+    * @return sorted class symbols with their base classes
     */
-  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[ClassSymbol] = {
-    // The relations may include previously defined class symbols.
-    val relations = classSymbols.flatMap { derivedClass =>
-      resolveBaseClass(derivedClass.actualType).map(_ -> derivedClass)
-    }
-    (try topologicalSort(relations, classSymbols) catch {
+  protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[(ClassSymbol, Opt[ClassSymbol])] = {
+    // Cache base classes for class symbols.
+    // Note: it may include previously defined class symbols.
+    val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
+      resolveBaseClass(derivedClass.actualType).map(derivedClass -> _)
+    })
+    val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
-    }).filter { classSymbols.contains(_) }
-    // ^^^^^^ -> We only need class symbols declared in current translation unit.
+    }
+    // We only need class symbols declared in current translation unit.
+    sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
 }
 
@@ -310,8 +314,8 @@ class JSWebBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val defStmts = sortClassSymbols(classSymbols).map {
-      translateClassDeclaration(_)(topLevelScope)
+    val defStmts = sortClassSymbols(classSymbols).map { case (derived, base) =>
+      translateClassDeclaration(derived, base)(topLevelScope)
     }.toList
 
     val resultsIdent = JSIdent(resultsName)
@@ -376,8 +380,8 @@ class JSTestBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val defStmts = sortClassSymbols(classSymbols).map {
-      translateClassDeclaration(_)(topLevelScope)
+    val defStmts = sortClassSymbols(classSymbols).map { case (derived, base) =>
+      translateClassDeclaration(derived, base)(topLevelScope)
     }.toList
 
     val zeroWidthSpace = JSLit("\"\\u200B\"")
