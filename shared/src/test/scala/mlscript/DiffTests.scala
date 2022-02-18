@@ -441,7 +441,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             results match {
               case IllFormedCode(message) =>
                 totalRuntimeErrors += 1
-                output("Code generation met an error:")
+                output("Code generation encountered an error:")
                 output(s"  ${message}")
               case Unimplemented(message) =>
                 output("Unable to execute the code:")
