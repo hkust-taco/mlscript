@@ -4,9 +4,11 @@
 
 def foo1: (int -> int & string -> string)
 //│ foo1: int -> int & string -> string
+//│     = <missing implementation>
 
 def foo: (int -> int & string -> string) -> ()
 //│ foo: (int -> int & string -> string) -> ()
+//│    = <missing implementation>
 
 fooImpl f = f 1
 //│ fooImpl: (1 -> 'a) -> 'a
@@ -18,25 +20,25 @@ foo = fooImpl
 //│   <:  foo:
 //│ (int -> int & string -> string) -> ()
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.16: 	foo = fooImpl
+//│ ║  l.18: 	foo = fooImpl
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `string`
-//│ ║  l.11: 	fooImpl f = f 1
+//│ ║  l.13: 	fooImpl f = f 1
 //│ ║        	              ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
 //│ ╙──     	                       ^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.16: 	foo = fooImpl
+//│ ║  l.18: 	foo = fooImpl
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `int` is not a 0-element tuple
-//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
 //│ ╙──     	                 ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.16: 	foo = fooImpl
+//│ ║  l.18: 	foo = fooImpl
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `string` is not a 0-element tuple
-//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ║  l.9: 	def foo: (int -> int & string -> string) -> ()
 //│ ╙──     	                                 ^^^^^^
 //│    = [Function: fooImpl]
 
@@ -52,13 +54,13 @@ fooImpl id
 :e
 fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.55: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                                              ^^^
 //│ ╟── integer literal of type `1` does not match type `string`
-//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.55: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                                                ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.55: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╙──      	                          ^^^^^^
 //│ fooImpl2: (int -> int & string -> string) -> (error | int | string)
 //│         = [Function: fooImpl2]
@@ -71,13 +73,13 @@ fooImpl2 id
 :re
 res "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	res "oops"
+//│ ║  l.74: 	res "oops"
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `int` is not a function
-//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║  l.55: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	                    ^^^
 //│ ╟── but it flows into reference with expected type `"oops" -> ?a`
-//│ ║  l.72: 	res "oops"
+//│ ║  l.74: 	res "oops"
 //│ ╙──      	^^^
 //│ res: error
 //│ Runtime error:
@@ -91,6 +93,7 @@ res "oops"
 
 def bar1: int -> int & string -> string
 //│ bar1: int -> int & string -> string
+//│     = <missing implementation>
 
 :e
 bar1 = bar1
@@ -98,25 +101,25 @@ bar1 = bar1
 //│   <:  bar1:
 //│ int -> int & string -> string
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.96: 	bar1 = bar1
+//│ ║  l.99: 	bar1 = bar1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║  l.94: 	def bar1: int -> int & string -> string
 //│ ║        	          ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║  l.94: 	def bar1: int -> int & string -> string
 //│ ╙──      	                       ^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.96: 	bar1 = bar1
+//│ ║  l.99: 	bar1 = bar1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║  l.94: 	def bar1: int -> int & string -> string
 //│ ║        	                                 ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║  l.94: 	def bar1: int -> int & string -> string
 //│ ╙──      	                 ^^^
-//│ Runtime error:
-//│   ReferenceError: bar1 is not defined
+//│     = <no result>
+//│       bar1 is not implemented
 
 
 error: int -> int & string -> string : (int & string) -> (int | string)
@@ -127,13 +130,13 @@ error: int -> int & string -> string : (int & string) -> (int | string)
 :e
 error: int -> int & string -> string : int -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ║  l.131: 	error: int -> int & string -> string : int -> int
 //│ ║         	^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ║  l.131: 	error: int -> int & string -> string : int -> int
 //│ ║         	                                       ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ║  l.131: 	error: int -> int & string -> string : int -> int
 //│ ╙──       	                    ^^^^^^
 //│ res: int -> int
 //│ Runtime error:

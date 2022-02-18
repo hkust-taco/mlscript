@@ -13,6 +13,16 @@ tx = t with { x = 1 }
 //│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
 //│     return Object.assign(target.valueOf(), target, fields);
 //│   }
+//│   if (Array.isArray(target)) {
+//│     const clone = Array.from(target);
+//│     for (const key in target){
+//│       clone[key] = target[key];
+//│     }
+//│     for (const key in fields){
+//│       clone[key] = fields[key];
+//│     }
+//│     return clone;
+//│   }
 //│   const copy = Object.assign({}, target, fields);
 //│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
 //│   return copy;
@@ -22,7 +32,7 @@ tx = t with { x = 1 }
 //│ res = tx;
 //│ // End of generated code
 //│ tx: (1, 2, 3,) & {x: 1}
-//│   = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+//│   = [ 1, 2, 3, x: 1 ]
 
 tx.x
 //│ res: 1
@@ -34,24 +44,23 @@ trait Hey: { x: int }
 :e
 Hey t
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.35: 	Hey t
+//│ ║  l.45: 	Hey t
 //│ ║        	^^^^^
 //│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
-//│ ║  l.35: 	Hey t
+//│ ║  l.45: 	Hey t
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.31: 	trait Hey: { x: int }
+//│ ║  l.41: 	trait Hey: { x: int }
 //│ ╙──      	           ^^^^^^^^^^
 //│ res: (1, 2, 3,) & hey | error
 //│    = [ 1, 2, 3 ]
 
-// TODO: fix `withConstruct` on arrays
 htx = Hey tx
 //│ htx: (1, 2, 3,) & {x: 1} & hey
-//│    = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+//│    = [ 1, 2, 3, x: 1 ]
 
 htx.x
 //│ res: 1
@@ -67,11 +76,11 @@ f t
 
 f tx
 //│ res: {a: 1, b: 2, c: 3}
-//│    = { a: undefined, b: undefined, c: undefined }
+//│    = { a: 1, b: 2, c: 3 }
 
 f htx
 //│ res: {a: 1, b: 2, c: 3}
-//│    = { a: undefined, b: undefined, c: undefined }
+//│    = { a: 1, b: 2, c: 3 }
 
 f ((a, b)) = add a b
 //│ f: (int, int,) -> int
@@ -82,47 +91,47 @@ f t
 f tx
 f htx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	f t
+//│ ║  l.90: 	f t
 //│ ║        	^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a, ?b,)`
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,)`
-//│ ║  l.81: 	f t
+//│ ║  l.90: 	f t
 //│ ║        	  ^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.85: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	f tx
+//│ ║  l.91: 	f tx
 //│ ║        	^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` is not a 2-element tuple
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a, ?b,)`
-//│ ║  l.82: 	f tx
+//│ ║  l.91: 	f tx
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.85: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
-//│    = NaN
+//│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	f htx
+//│ ║  l.92: 	f htx
 //│ ║        	^^^^^
 //│ ╟── `with` extension of type `(1, 2, 3,) & {x: 1}` does not match type `(?a, ?b,) | ~hey`
 //│ ║  l.7: 	tx = t with { x = 1 }
 //│ ║       	     ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?c, ?d,) | ~hey`
-//│ ║  l.83: 	f htx
+//│ ║  l.92: 	f htx
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.76: 	f ((a, b)) = add a b
+//│ ║  l.85: 	f ((a, b)) = add a b
 //│ ╙──      	   ^^^^^^
 //│ res: error | int
-//│    = NaN
+//│    = 3
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
@@ -157,39 +166,35 @@ g (tx with { y = 2 })
 :e
 g tx
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	g tx
+//│ ║  l.167: 	g tx
 //│ ║         	^^^^
 //│ ╟── expression of type `(1, 2, 3,) & {x: 1} & ~hey` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.143: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
+//│ ║  l.152: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
 //│ res: 1 | error
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
-:re
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
-//│ Runtime error:
-//│   ReferenceError: bool is not defined
+//│ Code generation encountered an error:
+//│   type alias bool is not a valid expression
 
-:re
 if bool then (1,) else (2, 3)
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
-//│ Runtime error:
-//│   ReferenceError: bool is not defined
+//│ Code generation encountered an error:
+//│   type alias bool is not a valid expression
 
-:re
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
-//│ Runtime error:
-//│   ReferenceError: bool is not defined
+//│ Code generation encountered an error:
+//│   type alias bool is not a valid expression
 
-:re
 if bool then (1,) else fun x -> x
 //│ res: anything
-//│ Runtime error:
-//│   ReferenceError: bool is not defined
+//│ Code generation encountered an error:
+//│   type alias bool is not a valid expression
 
 
 
@@ -204,7 +209,7 @@ t._2
 t = (1, 2, 3) with {x = 1}
 // t = (1, 2, 3)
 //│ t: (1, 2, 3,) & {x: 1}
-//│  = Array { '0': 1, '1': 2, '2': 3, x: 1 }
+//│  = [ 1, 2, 3, x: 1 ]
 
 t.x
 //│ res: 1
@@ -220,22 +225,22 @@ t._2
 
 t = (1, 2, 3) with {_1 = "oops"}
 //│ t: {_1: "oops", _2: 2, _3: 3}
-//│  = Array { '0': 1, '1': 2, '2': 3, _1: 'oops' }
+//│  = [ 1, 2, 3, _1: 'oops' ]
 
 // TODO (https://github.com/hkust-taco/mlscript/issues/69)
 :e
 (t: ("oops",int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ║  l.232: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.221: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║  l.226: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ║  l.232: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.227: 	(t: ("oops",int,int,))._1
+//│ ║  l.232: 	(t: ("oops",int,int,))._1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'

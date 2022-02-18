@@ -24,6 +24,10 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       "-language:higherKinds",
       "-Ywarn-value-discard",
     ),
+    scalacOptions ++= {
+      if (insideCI.value) Seq("-Wconf:any:error")
+      else                Seq("-Wconf:any:warning")
+    },
     wartremoverWarnings ++= Warts.allBut(
       Recursion, Throw, Nothing, Return, While, IsInstanceOf,
       Var, MutableDataStructures, NonUnitStatements,

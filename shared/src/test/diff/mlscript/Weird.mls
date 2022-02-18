@@ -4,26 +4,26 @@
 
 anything
 //│ res: anything
-//│ Runtime error:
-//│   ReferenceError: anything is not defined
+//│ Code generation encountered an error:
+//│   type alias anything is not a valid expression
 
 nothing
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: nothing is not defined
+//│ Code generation encountered an error:
+//│   type alias nothing is not a valid expression
 
 Nothing
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: Nothing is not defined
+//│ Code generation encountered an error:
+//│   unresolved symbol Nothing
 
 int
 //│ res: int
-//│ Runtime error:
-//│   ReferenceError: int is not defined
+//│ Code generation encountered an error:
+//│   type alias int is not a valid expression
 
 int + 1
 //│ res: int
-//│ Runtime error:
-//│   ReferenceError: int is not defined
+//│ Code generation encountered an error:
+//│   type alias int is not a valid expression
 

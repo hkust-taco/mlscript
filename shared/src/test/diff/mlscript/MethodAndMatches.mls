@@ -35,17 +35,17 @@ foo d1 0
 //│ res: Base1['A .. 0 | 'A] | Derived1
 //│    = Derived1 { x: 2 }
 
-:re
 def bar0: Base1[int] -> int -> Base1[int]
 bar0 d1
 bar0 d1 0
 //│ bar0: Base1[int] -> int -> Base1[int]
+//│     = <missing implementation>
 //│ res: int -> Base1[int]
-//│ Runtime error:
-//│   ReferenceError: bar0 is not defined
+//│    = <no result>
+//│      bar0 is not implemented
 //│ res: Base1[int]
-//│ Runtime error:
-//│   ReferenceError: bar0 is not defined
+//│    = <no result>
+//│      bar0 is not implemented
 
 // This is ill-typed because type `Base1[int]` includes things like `Derived1\x` (a `Derived` instance without an `x` field)
 :e
@@ -65,11 +65,11 @@ def bar0 = foo
 //│ ╙──      	                   ^
 //│     = [Function: foo]
 
-:re
 def bar1: Type1[int] -> int -> Type1[int]
 bar1 d1
 bar1 d1 0
 //│ bar1: ((Derived1 | Derived2['a, 'b],) & {_1: Derived1 | Derived2[?, ?]}) -> int -> (Derived1 | Derived2['a0, 'b0])
+//│     = <missing implementation>
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 :e
@@ -79,17 +79,17 @@ def bar1 = foo
 //│ ((Derived1 | Derived2['a, 'b],) & {_1: Derived1 | Derived2[?, ?]}) -> int -> (Derived1 | Derived2['a0, 'b0])
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
-:re
 def bar2: Base1['a] -> 'a -> Base1['a]
 bar2 d1
 bar2 d1 0
 //│ bar2: Base1['a] -> 'a -> Base1['a]
+//│     = <missing implementation>
 //│ res: int -> Base1[int]
-//│ Runtime error:
-//│   ReferenceError: bar2 is not defined
+//│    = <no result>
+//│      bar2 is not implemented
 //│ res: Base1[int]
-//│ Runtime error:
-//│   ReferenceError: bar2 is not defined
+//│    = <no result>
+//│      bar2 is not implemented
 
 // Note that typing this would require GADT reasoning! Though it also suffers from the previous "Derived1 with missing x field" problem.
 :e
@@ -104,13 +104,13 @@ def bar2 = foo
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                      ^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.83: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ║  l.82: 	def bar2: Base1['a] -> 'a -> Base1['a]
 //│ ╙──      	                ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.96: 	def bar2 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `'a` does not match type `int`
-//│ ║  l.83: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ║  l.82: 	def bar2: Base1['a] -> 'a -> Base1['a]
 //│ ║        	                ^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }

@@ -158,11 +158,13 @@ res add "1"
 
 def id: 'a -> 'a
 //│ id: 'a -> 'a
+//│   = <missing implementation>
 
 fun f -> fun x ->
   let local = f (id x)
   in ()
 //│ res: ('a -> anything) -> 'a -> ()
-//│    = [Function: res]
+//│    = <no result>
+//│      id is not implemented
 
 

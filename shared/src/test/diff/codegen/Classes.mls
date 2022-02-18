@@ -2,7 +2,7 @@
 // To generate the prelude without printing it in the next test case
 () with { x = add 1 }
 //│ res: () & {x: int -> int}
-//│    = Array { x: [Function (anonymous)] }
+//│    = [ x: [Function (anonymous)] ]
 
 :js
 class Box[T]: { inner: T }

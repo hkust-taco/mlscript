@@ -107,12 +107,13 @@ fun (x: int) -> safeDiv 1 x
 
 def x: int & ~0
 //│ x: int & ~0
+//│  = <missing implementation>
 
 :re
 safeDiv 1 x
 //│ res: int
-//│ Runtime error:
-//│   ReferenceError: x is not defined
+//│    = <no result>
+//│      x is not implemented
 
 fun (x: int & ~0) -> safeDiv 1 x
 //│ res: (int & ~0) -> int
@@ -120,6 +121,7 @@ fun (x: int & ~0) -> safeDiv 1 x
 
 def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> (None | Some[int])
+//│       = <missing implementation>
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
 //│ int -> (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int}))

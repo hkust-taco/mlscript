@@ -147,45 +147,42 @@ class C3: { default: string } & ~myTrait
 //│ ╔══[ERROR] cannot inherit from a type negation
 //│ ║  l.146: 	class C3: { default: string } & ~myTrait
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation met an error:
-//│   unable to derive from type Neg(TypeName(myTrait))
 
 :e
 class C3: { default: string } & ~MyTrait[anything]
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.154: 	class C3: { default: string } & ~MyTrait[anything]
+//│ ║  l.152: 	class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation met an error:
-//│   unable to derive from type Neg(AppliedType(TypeName(MyTrait),List(TypeName(anything))))
 
 def strawman: C2 & ~MyTrait[anything]
 //│ strawman: C2 & ~myTrait
+//│         = <missing implementation>
 
 test2 strawman
 //│ res: string
-//│ Runtime error:
-//│   ReferenceError: strawman is not defined
+//│    = <no result>
+//│      strawman is not implemented
 
 strawman: C2
 //│ res: C2
-//│ Runtime error:
-//│   ReferenceError: strawman is not defined
+//│    = <no result>
+//│      strawman is not implemented
 
 :e
 strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.172: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── type `C2 & ~myTrait` does not match type `~{value: anything}`
-//│ ║  l.161: 	def strawman: C2 & ~MyTrait[anything]
+//│ ║  l.157: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.172: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.175: 	strawman: ~{ value: anything }
+//│ ║  l.172: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
 //│ res: nothing
-//│ Runtime error:
-//│   ReferenceError: strawman is not defined
+//│    = <no result>
+//│      strawman is not implemented
 
