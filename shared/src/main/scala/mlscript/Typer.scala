@@ -1247,6 +1247,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         case _ =>
           val res = st match {
             case FunctionType(l, r) => Function(go(l, !polarity), go(r, polarity))
+            case Overload(as) => as.map(go(_, polarity)).reduce(Inter)
             case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
             case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
             case RecordType(fs) => Record(fs.map(nt => nt._1 -> go(nt._2, polarity)))

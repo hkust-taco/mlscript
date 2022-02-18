@@ -9,7 +9,7 @@ let id = x => x
 //│ id: 'a -> 'a
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 
 let object1 = { x: 42, y: id }
 //│ object1: {x: 42, y: forall 'a. 'a -> 'a}

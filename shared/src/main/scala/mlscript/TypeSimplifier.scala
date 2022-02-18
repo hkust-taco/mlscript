@@ -63,6 +63,8 @@ trait TypeSimplifier { self: Typer =>
                   b.map {
                     case ft @ FunctionType(l, r) =>
                       FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
+                    case ot @ Overload(alts) =>
+                      Overload(alts.map(goDeep(_, pol).asInstanceOf[FunctionType]))(noProv)
                     case wo @ Without(b, ns) =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
@@ -124,6 +126,7 @@ trait TypeSimplifier { self: Typer =>
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
+      case Overload(as) => as.foreach(analyze(_, pol))
       case tv: TypeVariable =>
         println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
@@ -262,6 +265,7 @@ trait TypeSimplifier { self: Typer =>
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
+      case Overload(as) => Overload(as.map(transform(_, pol).asInstanceOf[FunctionType]))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
         varSubst.get(tv) match {
@@ -323,6 +327,7 @@ trait TypeSimplifier { self: Typer =>
       case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
       case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
+      case Overload(as) => Overload(as.map(go(_, pol).asInstanceOf[FunctionType]))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
       case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
@@ -384,7 +389,10 @@ trait TypeSimplifier { self: Typer =>
                           nFields
                       )
                     case S(ct: ClassTag) => S(ct) -> nFields
-                    case S(ft @ FunctionType(l, r)) => S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
+                    case S(ft @ FunctionType(l, r)) =>
+                      S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
+                    case S(ot @ Overload(as)) =>
+                      S(Overload(as.map(go(_, pol).asInstanceOf[FunctionType]))(ot.prov)) -> nFields
                     case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields

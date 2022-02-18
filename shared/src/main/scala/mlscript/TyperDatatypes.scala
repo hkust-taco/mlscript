@@ -135,6 +135,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify))(prov)
     override def toString = s"($lhs -> $rhs)"
   }
+  case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
+    require(alts.length > 1)
+    def approximatePos = {
+      val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
+      FunctionType(lhss.reduce(_ & _), rhss.reduce(_ | _))(prov)
+    }
+    lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+      alts.iterator.map(_.levelBelow(ub)).max
+    def freshenAboveImplImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): Overload =
+      Overload(alts.map(_.freshenAboveImplImpl(lim, rigidify)))(prov)
+  }
   
   case class RecordType(fields: List[(Var, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields

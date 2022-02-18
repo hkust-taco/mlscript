@@ -281,7 +281,7 @@ def g a = add a 1
 
 
 def twice f x = f (f x)
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│      = [Function: twice]
 
 def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
@@ -307,11 +307,11 @@ ty2 = ty1
 
 ty1 = twice
 ty2 = twice
-//│ ('a -> ('a & 'b)) -> 'a -> 'b
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
-//│ ('a -> ('a & 'b)) -> 'a -> 'b
+//│ ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│    = [Function: twice]

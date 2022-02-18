@@ -23,10 +23,10 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ res: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> ('a & 'b)) -> 'a -> 'b
+//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
 
 
 

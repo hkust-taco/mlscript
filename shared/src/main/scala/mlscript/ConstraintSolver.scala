@@ -171,6 +171,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
           
         case (Nil, Nil) =>
+          // println(done_ls, done_rs)
           // TODO improve:
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
@@ -213,6 +214,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
               rec(b.inner, ar.inner, false)
             case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
+            case (LhsRefined(S(ov: Overload), ts, r), _) =>
+              // rec(ov.approximatePos, rhs, true) // FIXME approx
+              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r), Nil, done_rs) // FIXME approx
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -345,6 +349,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
             goToWork(lhs, rhs)
+          case (ov: Overload, _) =>
+            rec(ov.approximatePos, rhs, true) // FIXME approx
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
           case _ => reportError

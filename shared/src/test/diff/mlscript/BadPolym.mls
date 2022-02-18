@@ -3,19 +3,41 @@
 
 
 def foo1: (int -> int & string -> string)
-//│ foo1: (int | string) -> nothing
+//│ foo1: int -> int & string -> string
 
 def foo: (int -> int & string -> string) -> ()
-//│ foo: ((int | string) -> nothing) -> ()
+//│ foo: (int -> int & string -> string) -> ()
 
 fooImpl f = f 1
 //│ fooImpl: (1 -> 'a) -> 'a
 //│        = [Function: fooImpl]
 
+:e
 foo = fooImpl
 //│ (1 -> 'a) -> 'a
 //│   <:  foo:
-//│ ((int | string) -> nothing) -> ()
+//│ (int -> int & string -> string) -> ()
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.16: 	foo = fooImpl
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `string`
+//│ ║  l.11: 	fooImpl f = f 1
+//│ ║        	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ╙──     	                       ^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.16: 	foo = fooImpl
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── type `int` is not a 0-element tuple
+//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ╙──     	                 ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.16: 	foo = fooImpl
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── type `string` is not a 0-element tuple
+//│ ║  l.8: 	def foo: (int -> int & string -> string) -> ()
+//│ ╙──     	                                 ^^^^^^
 //│    = [Function: fooImpl]
 
 foo id
@@ -27,17 +49,94 @@ fooImpl id
 //│    = 1
 
 
+:e
 fooImpl2 (f: int -> int & string -> string) = f 1
-//│ fooImpl2: ((int | string) -> nothing) -> nothing
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║        	                                              ^^^
+//│ ╟── integer literal of type `1` does not match type `string`
+//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║        	                                                ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ╙──      	                          ^^^^^^
+//│ fooImpl2: (int -> int & string -> string) -> (error | int | string)
 //│         = [Function: fooImpl2]
 
 fooImpl2 id
-//│ res: nothing
+//│ res: error | int | string
 //│    = 1
 
+:e
 :re
 res "oops"
-//│ res: nothing
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	res "oops"
+//│ ║        	^^^^^^^^^^
+//│ ╟── type `int` is not a function
+//│ ║  l.53: 	fooImpl2 (f: int -> int & string -> string) = f 1
+//│ ║        	                    ^^^
+//│ ╟── but it flows into reference with expected type `"oops" -> ?a`
+//│ ║  l.72: 	res "oops"
+//│ ╙──      	^^^
+//│ res: error
 //│ Runtime error:
 //│   TypeError: res is not a function
+
+
+
+// Currently we remove the unsoundness by approximating positive function type intersections.
+// But this leads to things not type checking when they clearly should:
+//    (Basically we lose the property that A & B <: A for all A, B.)
+
+def bar1: int -> int & string -> string
+//│ bar1: int -> int & string -> string
+
+:e
+bar1 = bar1
+//│ int -> int & string -> string
+//│   <:  bar1:
+//│ int -> int & string -> string
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.96: 	bar1 = bar1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║        	          ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.96: 	bar1 = bar1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ║        	                                 ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.92: 	def bar1: int -> int & string -> string
+//│ ╙──      	                 ^^^
+//│ Runtime error:
+//│   ReferenceError: bar1 is not defined
+
+
+error: int -> int & string -> string : (int & string) -> (int | string)
+//│ res: nothing -> (int | string)
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:e
+error: int -> int & string -> string : int -> int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ║         	^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ║         	                                       ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.125: 	error: int -> int & string -> string : int -> int
+//│ ╙──       	                    ^^^^^^
+//│ res: int -> int
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
 

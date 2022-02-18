@@ -195,11 +195,11 @@ rec def prettier1 k ev e = case e of {
       in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
   | _ -> k e
   }
-//│ prettier1: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit as 'c, rhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit as 'd}) & 'b | Lit | 'a & ~add & ~lit) -> string
+//│ prettier1: ('a -> string & 'b -> 'c & 'd -> (string & 'c)) -> ('e -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | 'd & ~add & ~lit as 'f, rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | Lit | 'a & ~add & ~lit as 'g}) & 'e | Lit | 'b & ~add & ~lit) -> (string | 'c)
 //│          = [Function: prettier1]
 //│ constrain calls  : 166
 //│ annoying  calls  : 0
-//│ subtyping calls  : 2848
+//│ subtyping calls  : 2878
 
 :stats
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}

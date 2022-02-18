@@ -222,8 +222,8 @@ abstract class TyperHelpers { self: Typer =>
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
-      case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
+      case _ if !swapped => that & (this, prov, swapped = true)
       case (NegType(`that`), _) => BotType
       case _ => ComposedType(false, that, this)(prov)
     }
@@ -399,6 +399,7 @@ abstract class TyperHelpers { self: Typer =>
     def children: List[SimpleType] = this match {
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case FunctionType(l, r) => l :: r :: Nil
+      case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil
       case RecordType(fs) => fs.map(_._2)
       case TupleType(fs) => fs.map(_._2)

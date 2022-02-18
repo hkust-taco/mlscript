@@ -8,7 +8,7 @@ def foo f =
 
 def bar h =
   (h 0, h true)
-//│ bar: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ bar: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│    = [Function: bar]
 
 bar id
