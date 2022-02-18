@@ -1,0 +1,53 @@
+
+// :js
+// def B = B{}
+// def mk = B{}
+// class A: B
+//   method Test = B
+//   method Test2 = mk
+// class B
+
+class A
+  method T = 1
+//│ Defined class A
+//│ Defined A.T: A -> 1
+
+:js
+(A{}).(A.T)
+//│ // Query 1
+//│ res = new A({})["A.T"];
+//│ // End of generated code
+//│ res: 1
+//│    = undefined
+
+:js
+(A{}).T
+//│ // Query 1
+//│ res = new A({}).T;
+//│ // End of generated code
+//│ res: 1
+//│    = 1
+
+// x.Return
+// //│ ╔══[ERROR] Method Return not found
+// //│ ║  l.31: 	x.Return
+// //│ ╙──      	^^^^^^^^
+// //│ res: error
+// //│ Code generation met an error:
+// //│   unresolved symbol x
+
+// x["Return"]
+// //│ ╔══[ERROR] identifier not found: x
+// //│ ║  l.39: 	x["Return"]
+// //│ ╙──      	^
+// //│ ╔══[ERROR] Type mismatch in array subscript:
+// //│ ║  l.39: 	x["Return"]
+// //│ ║        	^^^^^^^^^^
+// //│ ╟── string literal of type `"Return"` does not match type `int`
+// //│ ║  l.39: 	x["Return"]
+// //│ ╙──      	  ^^^^^^^^
+// //│ res: nothing
+// //│ Code generation met an error:
+// //│   unresolved symbol x
+
+

@@ -223,7 +223,7 @@ class JSBackend {
     val members = classSymbol.methods.map { translateClassMember(_) }
     val fields = classSymbol.actualType.collectFields
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
-    JSClassDecl(classSymbol.runtimeName, fields.toList.sorted, base, members)
+    JSClassDecl(classSymbol.runtimeName, fields.toList, base, members)
   }
 
   private def translateClassMember(

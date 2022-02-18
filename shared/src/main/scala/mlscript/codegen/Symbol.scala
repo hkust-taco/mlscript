@@ -70,11 +70,11 @@ final case class StubValueSymbol(
 }
 
 final case class ClassSymbol(
-    val lexicalName: Str,
-    val runtimeName: Str,
-    val params: Ls[Str],
-    val actualType: Type,
-    val methods: Ls[MethodDef[Left[Term, Type]]],
+    lexicalName: Str,
+    runtimeName: Str,
+    params: Ls[Str],
+    actualType: Type,
+    methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ClassSymbol] {
 

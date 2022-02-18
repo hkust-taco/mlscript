@@ -178,7 +178,7 @@ object OpApp {
 
 trait TypeDefImpl extends Located { self: TypeDef =>
   
-  def bases: Ls[TypeName] = {
+  lazy val bases: Ls[TypeName] = {
     def rec(body: Type): Ls[TypeName] = body match {
       case tn: TypeName => tn :: Nil
       case AppliedType(tn: TypeName, _) => tn :: Nil
