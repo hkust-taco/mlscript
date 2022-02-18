@@ -32,7 +32,6 @@ class add
 //│ class add1 {}
 //│ // End of generated code
 
-// FIXME
 add
 //│ res: int -> int -> int
 //│    = [Function: res]
