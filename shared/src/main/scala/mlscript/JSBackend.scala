@@ -302,14 +302,14 @@ class JSBackend {
     */
   protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[(ClassSymbol, Opt[ClassSymbol])] = {
     // Cache base classes for class symbols.
-    // Note: it may include previously defined class symbols.
     val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
       resolveBaseClass(derivedClass.body).map(derivedClass -> _)
     })
     val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
-    // We only need class symbols declared in current translation unit.
+    // Their base classes might be class symbols defined in previous translation
+    // units. So we filter them here.
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
 }
