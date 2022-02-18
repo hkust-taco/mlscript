@@ -69,10 +69,9 @@ final case class TsTypegenCodeBuilder() {
       this.typeVarMapping.get(t).map(Left(_)).getOrElse({
         this.existingTypeVars
           .get(t)
-          .map(Right(_))
-          .getOrElse(
-            throw IllFormedTsTypeError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
-          )
+          .toRight(
+            throw IllFormedTsTypeError(
+              s"Did not find mapping for type variable $t. Unable to generated ts type."))
       })
     }
   }
