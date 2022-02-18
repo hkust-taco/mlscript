@@ -25,6 +25,6 @@ Boolean
 //│ ║  l.23: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   type alias Boolean is not a valid expression
 

@@ -35,7 +35,7 @@
 //│ ║  l.25: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   unresolved symbol |>
 
 :p

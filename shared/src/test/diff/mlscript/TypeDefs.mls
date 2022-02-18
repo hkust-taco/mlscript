@@ -96,7 +96,7 @@ foo 42
 //│ ║  l.82: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   unresolved symbol foo
 
 42: TypeA

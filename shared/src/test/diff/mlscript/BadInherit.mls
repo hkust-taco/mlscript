@@ -10,7 +10,7 @@ class Child: Parent1 & Parent2
 //│ ╔══[ERROR] class Child cannot inherit from class Parent2 as it already inherits from class Parent1
 //│ ║  l.9: 	class Child: Parent1 & Parent2
 //│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot have 2 base classes: Parent1, Parent2
 
 type Child = Parent1 & Parent2
@@ -56,7 +56,7 @@ class Child2: Parent1 & Sly1
 //│ ║  l.54: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly1
 
 :e
@@ -66,7 +66,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ║  l.64: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly2
 
 :e
@@ -74,7 +74,7 @@ class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
 //│ ║  l.73: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   undeclared type name A when resolving base classes
 
 class Crazy[A]: { name: A }
@@ -151,7 +151,7 @@ type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
 //│ ║  l.144: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cyclic inheritance detected
 
 :e
@@ -179,7 +179,7 @@ class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.178: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot inherit from type alias N
 
 
@@ -192,7 +192,7 @@ class D: int
 :re
 add (D{}) 2
 //│ res: int
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   unresolved symbol D
 
 
@@ -226,7 +226,7 @@ E{}: int
 //│ ║  l.201: 	class E: 1
 //│ ╙──       	      ^
 //│ res: int
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   unresolved symbol E
 
 
@@ -240,7 +240,7 @@ F{}
 //│ ║  l.235: 	F{}
 //│ ╙──       	^
 //│ res: error
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot inherit from type alias nothing
 
 
@@ -274,7 +274,7 @@ class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   cannot inherit from type alias Id
 
 

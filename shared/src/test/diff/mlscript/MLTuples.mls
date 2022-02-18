@@ -178,22 +178,22 @@ g tx
 
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 if bool then (1,) else (2, 3)
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 if bool then (1,) else fun x -> x
 //│ res: anything
-//│ Code generation met an error:
+//│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 
