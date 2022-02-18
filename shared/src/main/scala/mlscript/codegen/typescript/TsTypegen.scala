@@ -97,7 +97,7 @@ final case class TsTypegenCodeBuilder() {
     *   from evaluating the term
     * @return
     */
-  def addTypeGenDefinition(mlType: Type, termName: Option[String]): Unit = {
+  def addTypeGenTermDefinition(mlType: Type, termName: Option[String]): Unit = {
     // `res` definitions are allowed to be shadowed
     val defName = termName match {
       case Some(name) => {
