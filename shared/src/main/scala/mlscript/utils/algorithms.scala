@@ -24,7 +24,7 @@ object algorithms {
         sort(SortedMap.from(hasPreds.view.mapValues(_ -- found)), done ++ found)
       }
     }
-    val toPred = edges.foldLeft(SortedMap.from(nodes.map { _ -> Set[A]() })) { (acc, e) => 
+    val toPred = edges.foldLeft(SortedMap.from(nodes.map { _ -> Set.empty[A] })) { (acc, e) => 
       acc + (e._1 -> (acc.getOrElse(e._1, Set()) + e._2)) + (e._2 -> acc.getOrElse(e._2, Set()))
     }
     sort(toPred, Seq())
