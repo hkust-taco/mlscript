@@ -377,7 +377,7 @@ class JSTestBackend extends JSBackend {
     try generate(pgrm)(topLevelScope, allowEscape) catch {
       case e: CodeGenError => JSTestBackend.IllFormedCode(e.getMessage())
       case e: UnimplementedError => JSTestBackend.Unimplemented(e.getMessage())
-      case e: Throwable => JSTestBackend.UnexpectedCrash(e.getMessage())
+      case e: Throwable => JSTestBackend.UnexpectedCrash(e.getClass().getName, e.getMessage())
     }
 
   /**
@@ -516,7 +516,7 @@ object JSTestBackend {
   /**
     * Code generation crashed.
     */
-  final case class UnexpectedCrash(override val content: Str) extends ErrorMessage(content)
+  final case class UnexpectedCrash(val name: Str, override val content: Str) extends ErrorMessage(content)
 
   /**
     * The result is not executed for some reasons. E.g. `:NoJS` flag.

@@ -446,10 +446,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               case Unimplemented(message) =>
                 output("Unable to execute the code:")
                 output(s"  ${message}")
-              case UnexpectedCrash(message) =>
+              case UnexpectedCrash(name, message) =>
                 failures += blockLineNum
                 output("Code generation crashed:")
-                output(s"  ${message}")
+                output(s"  $name: $message")
               case _ => ()
             }
             
