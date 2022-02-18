@@ -90,25 +90,38 @@ class JSBackend {
       }
     }
 
-  // Returns: temp identifiers and the expression
-  protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
-    case Var(name) => translateVar(name, false)
-    case Lam(params, body) =>
-      val patterns = translateParams(params)
-      val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
-      JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
+  /**
+    * Handle all possible cases of MLscript function applications. We extract
+    * this method to prevent exhaustivity check from reaching recursion limit.
+    */
+  protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
+    // Binary expressions
     case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
-    // Tenary expressions.
+    // If-expressions
     case App(App(App(Var("if"), tst), con), alt) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+    // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
       callee(args map { case (_, arg) => translateTerm(arg) }: _*)
+    case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
+  }
+
+  /**
+    * Translate MLscript terms into JavaScript expressions.
+    */
+  protected def translateTerm(term: Term)(implicit scope: Scope): JSExpr = term match {
+    case Var(name) => translateVar(name, false)
+    case Lam(params, body) =>
+      val patterns = translateParams(params)
+      val lamScope = Scope("Lam", patterns flatMap { _.bindings }, scope)
+      JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
+    case t: App => translateApp(t)
     case Rcd(fields) =>
       JSRecord(fields map { case (key, value) =>
         key.name -> translateTerm(value)
@@ -172,9 +185,8 @@ class JSBackend {
       JSArray(terms map { case (_, term) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
-    case App(_, _) | _: Bind | _: Test =>
+    case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
-    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit
