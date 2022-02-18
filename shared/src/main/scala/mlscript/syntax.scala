@@ -18,7 +18,7 @@ final case class TypeDef(
   body: Type,
   mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
   mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
-) extends Decl
+) extends Decl with TypeDefImpl
 final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
   parent: TypeName,

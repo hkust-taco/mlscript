@@ -5,6 +5,7 @@ import mlscript.Type
 import mlscript.JSClassDecl
 import mlscript.MethodDef
 import mlscript.Term
+import mlscript.TypeName
 
 sealed trait LexicalSymbol {
 

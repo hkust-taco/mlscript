@@ -209,8 +209,6 @@ class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
 //│ ║  l.208: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
-//│ Code generation met an error:
-//│   unable to derive from type Tuple(List((None,Literal(1)), (None,Literal(2))))
 
 
 :re

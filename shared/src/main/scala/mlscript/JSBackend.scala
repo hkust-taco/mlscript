@@ -84,9 +84,9 @@ class JSBackend {
         JSArrowFn(JSNamePattern("x") :: Nil, L(JSIdent("x")))
       case N => scope.getType(name) match {
         case S(sym: TypeAliasSymbol) =>
-          throw new CodeGenError(s"type alias ${name} is not a valid expression")
+          throw CodeGenError(s"type alias ${name} is not a valid expression")
         case S(_) => throw new Exception("register mismatch in scope")
-        case N => throw new CodeGenError(s"unresolved symbol ${name}")
+        case N => throw CodeGenError(s"unresolved symbol ${name}")
       }
     }
 
@@ -130,7 +130,7 @@ class JSBackend {
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
           // TODO: find out if we need to support this.
-          case _: Def | _: TypeDef => throw new CodeGenError("unexpected definitions in blocks")
+          case _: Def | _: TypeDef => throw CodeGenError("unexpected definitions in blocks")
         })),
         Nil
       )
@@ -221,9 +221,9 @@ class JSBackend {
       baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
-    val fields = JSBackend.resolveClassFields(classSymbol.actualType).distinct
+    val fields = classSymbol.actualType.collectFields
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
-    JSClassDecl(classSymbol.runtimeName, fields, base, members)
+    JSClassDecl(classSymbol.runtimeName, fields.toList.sorted, base, members)
   }
 
   private def translateClassMember(
@@ -264,7 +264,7 @@ class JSBackend {
     * Find the base class for a specific class.
     */
   private def resolveBaseClass(ty: Type): Opt[ClassSymbol] = {
-    val baseClasses = JSBackend.resolveClassBases(ty).flatMap { name =>
+    val baseClasses = ty.collectTypeNames.flatMap { name =>
       topLevelScope.getType(name) match {
         case S(sym: ClassSymbol) => S(sym)
         case S(sym: TraitSymbol) => N // TODO: inherit from traits
@@ -523,31 +523,4 @@ object JSBackend {
 
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
-
-  private def resolveClassFields(ty: Type): Ls[Str] = ty match {
-    case Top => Nil
-    case Record(fields) => fields.map(_._1.name)
-    case TypeName(_) => Nil
-    case Inter(Record(entries), ty) =>
-      entries.map(_._1.name) ++ resolveClassFields(ty)
-    case Inter(ty, Record(entries)) =>
-      resolveClassFields(ty) ++ entries.map(_._1.name)
-    case Inter(ty1, ty2) => resolveClassFields(ty1) ++ resolveClassFields(ty2)
-    case AppliedType(TypeName(_), _) => Nil
-    // Others are considered as ill-formed.
-    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-      throw CodeGenError(s"unable to derive from type $ty")
-    case _ => die // FIXME "Exhaustivity analysis reached max recursion depth, not all missing cases are reported."
-  }
-
-  private def resolveClassBases(ty: Type): Ls[Str] = ty match {
-    case Top | _: Record => Nil
-    case TypeName(name) => name :: Nil
-    case AppliedType(TypeName(name), _) => name :: Nil
-    case Inter(ty1, ty2) => resolveClassBases(ty1) ++ resolveClassBases(ty2)
-    case Rem(_, _) | TypeVar(_, _) | Literal(_) | Recursive(_, _) | Bot | Top | Tuple(_) | Neg(_) |
-        Bounds(_, _) | WithExtension(_, _) | Function(_, _) | Union(_, _) | _: Arr =>
-      throw CodeGenError(s"unable to derive from type $ty")
-  }
 }

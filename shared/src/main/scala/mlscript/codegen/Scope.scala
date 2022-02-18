@@ -95,7 +95,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       }
     }
     // Give up.
-    throw new CodeGenError(
+    throw CodeGenError(
       if (prefix.isEmpty())
         "Cannot allocate a runtime name"
       else

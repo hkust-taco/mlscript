@@ -79,7 +79,34 @@ abstract class TypeImpl extends Located { self: Type =>
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
   }
-  
+
+  /**
+    * Collect fields recursively during code generation.
+    * Note that the type checker will reject illegal cases.
+    */
+  def collectFields: Ls[Str] = this match {
+    case Record(fields) => fields.map(_._1.name)
+    case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
+    case _: Union | _: Function | _: Tuple | _: Arr | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+      Nil
+  }
+
+  /**
+    * Collect `TypeName`s recursively during code generation.
+    * Note that the type checker will reject illegal cases.
+    */
+  def collectTypeNames: Ls[Str] = this match {
+    case TypeName(name) => name :: Nil
+    case AppliedType(TypeName(name), _) => name :: Nil
+    case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
+    case _: Union | _: Function | _: Record | _: Tuple | _: Arr | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar =>
+      Nil
+  }
+
 }
 
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
@@ -147,6 +174,22 @@ object OpApp {
       if op.toLoc.exists(l => lhs.toLoc.exists(l.spanStart > _.spanStart))
       => (op, lhs)
   }
+}
+
+trait TypeDefImpl extends Located { self: TypeDef =>
+  
+  def bases: Ls[TypeName] = {
+    def rec(body: Type): Ls[TypeName] = body match {
+      case tn: TypeName => tn :: Nil
+      case AppliedType(tn: TypeName, _) => tn :: Nil
+      case Inter(ty1, ty2) => rec(ty1) ++ rec(ty2)
+      case Top| Bot | _: Record | _: Rem | _: TypeVar | _: Literal | _: Recursive | _: Tuple | _: Neg
+            | _: Bounds | _: WithExtension | _: Function | _: Union | _: Arr =>
+        Nil // Note that the type checker will reject these cases
+    }
+    rec(body)
+  }
+  
 }
 
 trait DeclImpl extends Located { self: Decl =>
