@@ -309,7 +309,7 @@ class JSBackend {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
     }
     // Their base classes might be class symbols defined in previous translation
-    // units. So we filter them here.
+    // units. So we filter them out here.
     sorted.flatMap(sym => if (classSymbols.contains(sym)) S(sym -> baseClasses.get(sym)) else N)
   }
 }
