@@ -64,7 +64,6 @@ x = Test
 //│ x: anything -> Test
 //│  = [Function: x]
 
-// FIXME
 x 1
 //│ res: Test
 //│    = Test1 {}
