@@ -373,7 +373,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
-                if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
+                if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
@@ -387,7 +387,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
-                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
+                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                     
                   // statement has a body and a declared type
                   // both are used to compute a subsumption (What is this??)
@@ -399,7 +399,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
-                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
+                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showResult(nme.name.length())
               
@@ -415,7 +415,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         ctx += nme -> pty
                         output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
-                        if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(ptType, Some(nme))
+                        if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
                     }
 
                   // statements for terms that compute to a value
@@ -425,7 +425,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, None)
+                      if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
                       prefixLength = 3
                     }
                 }
