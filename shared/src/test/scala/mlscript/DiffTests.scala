@@ -7,6 +7,7 @@ import sourcecode.Line
 import ammonite.ops._
 import scala.collection.mutable
 import mlscript.utils._, shorthands._
+import mlscript.codegen.typescript.TsTypegenCodeBuilder
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
   
@@ -32,6 +33,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
+    def outputSourceCode(code: SourceCode) = code.lines.foreach(line => {
+      out.println(outputMarker + line.toString())
+    })
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
@@ -48,9 +52,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      expectRuntimeErrors: Bool)
+      showDeclarationTS: Bool, expectRuntimeErrors: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false)
+      false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -83,6 +87,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
+          case "ts" => mode.copy(showDeclarationTS = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case _ =>
             failures += allLines.size - lines.size
@@ -115,6 +120,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           out.println(diffEndMarker)
         }
         rec(rest.tail, if (hasBlankLines) defaultMode else mode)
+      // process block of text and show output - type, expressions, errors
       case l :: ls =>
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
@@ -126,6 +132,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
+
+        // try to parse block of text into mlscript ast
         val ans = try parse(processedBlockStr,
           p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
             else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
@@ -139,6 +147,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               failures += globalLineNum
             output("/!\\ Parse error: " + extra.trace().msg +
               s" at l.$globalLineNum:$col: $lineStr")
+
+          // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
             val blockLineNum = (allLines.size - lines.size) + 1
             if (mode.expectParseErrors)
@@ -155,6 +165,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             var totalWarnings = 0
             var totalRuntimeErrors = 0
             
+            // report errors and warnings
             def report(diags: Ls[Diagnostic]): Unit = {
               diags.foreach { diag =>
                 val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
@@ -254,27 +265,34 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 exp
               }
             }
+            // initialize ts typegen code builder
+            val tsTypegenCodeBuilder = TsTypegenCodeBuilder()
             
+            // process type definitions first
             typeDefs.foreach(td =>
+              // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
                 val tn = td.nme.name
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
+                
+                // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
                       _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
                       _ => ctx.getMth(S(tn), mn)
                     ).foreach(res => output(s"${rhs.fold(
-                      _ => "Defined",
-                      _ => "Declared"
+                      _ => "Defined",  // the method has been defined
+                      _ => "Declared"  // the method type has just been declared
                     )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
               }
             )
             
+            // generate js code if the correct mode has been selected
             var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               backend(p) map { testCode =>
@@ -315,6 +333,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               R(N)
             }
 
+            // print the generated js code
             def showResult(prefixLength: Int) = {
               results match {
                 case R(S(head :: next)) =>
@@ -339,7 +358,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             }
             
+            // process statements and output mlscript types
+            // all `Def`s and `Term`s are processed here
+            // generate typescript types if showDeclarationTS flag is
+            // set in the mode
             stmts.foreach {
+              // statement only declares a new term with it's type
+              // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
@@ -348,13 +373,25 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
+                if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
+
+              // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
+                // statement does not have a declared type for the body
+                // the inferred type must be used and stored for lookup
                 declared.get(nme.name) match {
+                  // statement has a body but it's type was not declared
+                  // infer it's type and store it for lookup and type gen
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
+                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
+                    
+                  // statement has a body and a declared type
+                  // both are used to compute a subsumption (What is this??)
+                  // the inferred type is used to for ts type gen
                   case S(sign) =>
                     ctx += nme.name -> sign
                     val sign_exp = getType(sign)
@@ -362,23 +399,33 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, Some(nme.name))
                 }
                 showResult(nme.name.length())
+              
+              // `Term` is processed here
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
+                  // when does this happen??
                   case R(binds) =>
                     binds.foreach {
                       case (nme, pty) =>
+                        val ptType = getType(pty)
                         ctx += nme -> pty
-                        output(s"$nme: ${getType(pty).show}")
+                        output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
+                        if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(ptType, Some(nme))
                     }
+
+                  // statements for terms that compute to a value
+                  // and are not bound to a variable name
                   case L(pty) =>
                     val exp = getType(pty)
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
+                      if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenDefinition(exp, None)
                       prefixLength = 3
                     }
                 }
@@ -395,6 +442,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 output(s"  $message")
               case _ => ()
             }
+            // generate typescript typegen block
+            if (mode.showDeclarationTS) outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
             
             if (mode.stats) {
               val (co, an, su, ty) = typer.stats
@@ -425,6 +474,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         rec(lines.drop(block.size), mode)
       case Nil =>
     }
+
     try rec(allLines, defaultMode) finally {
       out.close()
       host.terminate()
