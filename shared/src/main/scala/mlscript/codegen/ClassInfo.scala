@@ -1,7 +1,15 @@
-package mlscript
+package mlscript.codegen
 
 import mlscript.utils._, shorthands._
 import scala.collection.immutable.{Map, Set, HashSet}
+import mlscript.{ TypeVar, SourceCode, Type, Union, TypeName, Inter, Record, Tuple,
+  Top, Bot, Literal, Function, Recursive, AppliedType, Neg, Rem, Bounds, WithExtension,
+  IntLit, DecLit, StrLit, Arr, Cls, Trt, Als }
+import mlscript.{JSBackend, JSLit}
+import mlscript.ShowCtx
+import mlscript.Typer
+import mlscript.TypeDef
+import mlscript.Terms
 
 final case class TypingUnitError(message: String) extends Exception(message)
 
@@ -11,7 +19,7 @@ final case class TypingUnitError(message: String) extends Exception(message)
   *
   * It is initialized with mappings for the type definitions in a typing unit.
   */
-final class TypingUnit(
+final case class ClassInfo(
     typeAliasMap: Map[String, List[String] -> Type],
     traitNames: Set[String],
     classNames: Set[String]

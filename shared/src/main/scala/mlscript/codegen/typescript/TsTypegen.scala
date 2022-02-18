@@ -3,13 +3,13 @@ package mlscript.codegen.typescript
 import mlscript.utils._
 import mlscript.{ TypeVar, SourceCode, Type, Union, TypeName, Inter, Record, Tuple,
   Top, Bot, Literal, Function, Recursive, AppliedType, Neg, Rem, Bounds, WithExtension,
-  IntLit, DecLit, StrLit, Arr }
+  IntLit, DecLit, StrLit, Arr, Cls, Trt, Als }
 import mlscript.{JSBackend, JSLit}
 import mlscript.ShowCtx
 import mlscript.Typer
 import mlscript.TypeDef
 import mlscript.Terms
-import mlscript.codegen.Scope
+import mlscript.codegen.{Scope, ClassInfo}
 import mlscript.SourceLine
 import scala.collection.mutable.{ListBuffer, Map => MutMap}
 
@@ -77,14 +77,21 @@ final case class TsTypegenCodeBuilder() {
   }
 
   object TypegenContext {
+    // initialize local term scope with global term scope as parent
+    // this will reduce cases where global names are similar to function
+    // argument names. For e.g. the below case will be avoided
+    // export const arg0: int
+    // export const f: (arg0: int) => int
     def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs;
-      // initialize local term scope with global term scope as parent
-      // this will reduce cases where global names are similar to function
-      // argument names. For e.g. the below case will be avoided
-      // export const arg0: int
-      // export const f: (arg0: int) => int
       TypegenContext(existingTypeVars, MutMap.empty, Scope(Seq.empty, termScope), Scope(Seq.empty, typeScope))
+    }
+
+    // add existing type parameters to type scope
+    // this is relevant for type definition conversion
+    def apply(mlType: Type, typeParams: Iterable[String]): TypegenContext = {
+      val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs;
+      TypegenContext(existingTypeVars, MutMap.empty, Scope(Seq.empty, termScope), Scope(typeParams.toSeq, typeScope))
     }
   }
 
@@ -254,6 +261,65 @@ final case class TsTypegenCodeBuilder() {
           }
         )
       case Arr(_) => throw IllFormedTsTypeError(s"Array type currently not supported for $mlType")
+    }
+  }
+
+  /** Convert mlscript type definition into typescript type declaration. This should
+    * ideally be called before converting term definitions.
+    * 
+    * @param typeDef
+    *   type definition to convert can be a class, trait or type alias
+    * @param typeDefs
+    *   all type definitions in current typing unit used for finding extra type info
+    * @param typingUnitCtx
+    *   context of current typing unit used to resolve deeper type info if needed
+    */
+  def addTypeGenTypeDefinition(typeDef: TypeDef, typeDefs: List[TypeDef], typingUnitCtx: Typer#Ctx): Unit = {
+    typeDef.kind match {
+      case Trt => throw new IllFormedTsTypeError("Cannot convert mlscript trait definition right now. ")
+      case Cls => {
+        val className = typeDef.nme.name;
+        if (typeScope.has(className)) {
+          throw new IllFormedTsTypeError(s"A type with name $className already exists")
+        } else {
+          typeScope.allocateJavaScriptName(className)
+        }
+
+        val existingTypeParams = typeDef.tparams.map(_.name)
+        // create a local context for generating types and term names
+        val typegenCtx = TypegenContext(typeDef.body, existingTypeParams)
+        val typeParams = typegenCtx.typeVarMapping.iterator.map(tup => SourceCode(tup._2)).toList ++
+          existingTypeParams.map(SourceCode(_))
+
+        typegenCode += (
+          SourceCode(s"export declare class $className") ++
+          SourceCode.paramList(typeParams) ++ SourceCode.openCurlyBrace +
+          // add class inheritance
+          // add class body
+          // add class constructor declaration
+          // add method declarations
+          SourceCode.closeCurlyBrace
+        )
+      }
+      case Als => {
+        val typeName = typeDef.nme.name;
+        if (typeScope.has(typeName)) {
+          throw new IllFormedTsTypeError(s"A type with name $typeName already exists")
+        } else {
+          typeScope.allocateJavaScriptName(typeName)
+        }
+
+        val mlType = typeDef.body;
+        val existingTypeParams = typeDef.tparams.map(_.name)
+        // create a local context for generating types and term names
+        val typegenCtx = TypegenContext(mlType, existingTypeParams)
+
+        val tsType = toTsType(mlType)(typegenCtx, Some(true));
+        val typeParams = typegenCtx.typeVarMapping.iterator.map(tup => SourceCode(tup._2)).toList ++
+          existingTypeParams.map(SourceCode(_))
+        typegenCode += (SourceCode(s"export type $typeName") ++
+          SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
+      }
     }
   }
 }
