@@ -373,7 +373,7 @@ class JSTestBackend extends JSBackend {
     *
     * @param pgrm the program to translate
     * @param scope the top-level scope
-    * @param allowEscape whether allow unimplemented values can be accessible
+    * @param allowEscape whether to try executing code even if it refers to unimplemented definitions
     * @return
     */
   private def generate(pgrm: Pgrm)(implicit scope: Scope, allowEscape: Bool): JSTestBackend.TestCode = {
