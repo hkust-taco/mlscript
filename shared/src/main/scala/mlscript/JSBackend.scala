@@ -233,7 +233,7 @@ class JSBackend {
       baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
-    val fields = classSymbol.actualType.collectFields
+    val fields = classSymbol.body.collectFields
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
     JSClassDecl(classSymbol.runtimeName, fields.toList, base, members)
   }
@@ -304,7 +304,7 @@ class JSBackend {
     // Cache base classes for class symbols.
     // Note: it may include previously defined class symbols.
     val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
-      resolveBaseClass(derivedClass.actualType).map(derivedClass -> _)
+      resolveBaseClass(derivedClass.body).map(derivedClass -> _)
     })
     val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")

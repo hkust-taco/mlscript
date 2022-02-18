@@ -23,7 +23,7 @@ sealed trait RuntimeSymbol extends LexicalSymbol {
 
 sealed trait TypeSymbol extends LexicalSymbol {
   val params: Ls[Str]
-  val actualType: Type
+  val body: Type
 }
 
 sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str) extends RuntimeSymbol {
@@ -38,7 +38,7 @@ object ValueSymbol {
 sealed case class TypeAliasSymbol(
     val lexicalName: Str,
     val params: Ls[Str],
-    val actualType: Type
+    val body: Type
 ) extends TypeSymbol
     with LexicalSymbol {
   override def toString: Str = s"type $lexicalName"
@@ -73,7 +73,7 @@ final case class ClassSymbol(
     lexicalName: Str,
     runtimeName: Str,
     params: Ls[Str],
-    actualType: Type,
+    body: Type,
     methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
     with RuntimeSymbol with Ordered[ClassSymbol] {
@@ -89,7 +89,7 @@ final case class TraitSymbol(
     val lexicalName: Str,
     val runtimeName: Str,
     val params: Ls[Str],
-    val actualType: Type
+    val body: Type
 ) extends TypeSymbol
     with RuntimeSymbol {
   override def toString: Str = s"trait $lexicalName"
