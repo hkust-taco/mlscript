@@ -92,7 +92,7 @@ type B = Test2
 :js
 class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.95: 	class C: B
+//│ ║  l.93: 	class C: B
 //│ ╙──      	      ^^^^
 //│ Code generation met an error:
 //│   cannot inherit from type alias B
@@ -229,7 +229,7 @@ type Lol = 1
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.232: 	Lol
+//│ ║  l.230: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation met an error:
