@@ -18,7 +18,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {a: "hello", b: "world"}
 //│ export declare const res: int
-//│ export declare const res<ta>: (arg: [{b: ta}]) => ta | 1
+//│ export declare const res<a>: (arg: [{b: a}]) => a | 1
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int
@@ -39,7 +39,7 @@ def g = rcd with { y = "yeah" }
 //│ // start ts
 //│ export declare const rcd: {x: 1}
 //│ export declare const res: 1
-//│ export declare const funky<tb, ta>: (arg: [(arg1: [Omit<ta, { y }> & {y: "nah"}]) => tb]) => (arg2: [ta]) => tb
+//│ export declare const funky<b, a>: (arg: [(arg1: [Omit<a, { y }> & {y: "nah"}]) => b]) => (arg2: [a]) => b
 //│ export declare const g: {x: 1, y: "yeah"}
 //│ // end ts
 
@@ -47,15 +47,15 @@ def g = rcd with { y = "yeah" }
 :ne
 def f (a: int) (b: string) (c: bool) = if bool then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
-def g x = if x.a == 1 then x else x.b
+def g x y = if x.b == 1 then x else x.a
 // miscellaneous functions
 //│ f: int -> string -> bool -> (int | string)
 //│ fact: int -> int
-//│ g: ({a: int, b: 'a} & 'a) -> 'a
+//│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
 //│ // start ts
 //│ export declare const f: (arg: [int]) => (arg1: [string]) => (arg2: [bool]) => int | string
 //│ export declare const fact: (arg: [int]) => int
-//│ export declare const g<ta>: (arg: [{a: int, b: ta} & ta]) => ta
+//│ export declare const g<a>: (arg: [{a: a, b: int} & a]) => (arg1: [unknown]) => a
 //│ // end ts
 
 :ts
@@ -66,10 +66,10 @@ rec def m (a: int) (b: int) = m
 //│ l: int -> 'a as 'a
 //│ m: int -> int -> 'a as 'a
 //│ // start ts
-//│ export type ta = (arg: [int]) => ta
-//│ export declare const l: ta
-//│ export type ta1 = (arg: [int]) => (arg1: [int]) => ta1
-//│ export declare const m: ta1
+//│ export type a = (arg: [int]) => a
+//│ export declare const l: a
+//│ export type a1 = (arg: [int]) => (arg1: [int]) => a1
+//│ export declare const m: a1
 //│ // end ts
 
 :ts
@@ -106,7 +106,7 @@ def g = fun x -> fun y -> if x == y then x y else y x
 //│ f: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const f<tb, ta, tc>: (arg: [(arg1: [ta]) => tb & {a: int} & tc]) => (arg2: [{b: int} & ta]) => (arg3: [unknown]) => tc | tb
+//│ export declare const f<c, b, a>: (arg: [(arg1: [a]) => b & {a: int} & c]) => (arg2: [{b: int} & a]) => (arg3: [unknown]) => c | b
 //│ export declare const g: (arg: [never]) => (arg1: [never]) => never
 //│ // end ts
 
@@ -133,6 +133,6 @@ app 2 cont
 //│ res: int
 //│ // start ts
 //│ export declare const cont: (arg: [int]) => int
-//│ export declare const app<ta>: (arg: [int]) => (arg1: [(arg2: [int]) => ta]) => ta
+//│ export declare const app<a>: (arg: [int]) => (arg1: [(arg2: [int]) => a]) => a
 //│ export declare const res: int
 //│ // end ts

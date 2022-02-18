@@ -84,7 +84,7 @@ final case class TsTypegenCodeBuilder() {
       // argument names. For e.g. the below case will be avoided
       // export const arg0: int
       // export const f: (arg0: int) => int
-      TypegenContext(existingTypeVars, MutMap.empty, Scope(Seq.empty, termScope), Scope())
+      TypegenContext(existingTypeVars, MutMap.empty, Scope(Seq.empty, termScope), Scope(Seq.empty, typeScope))
     }
   }
 
@@ -248,7 +248,7 @@ final case class TsTypegenCodeBuilder() {
           // type variable has been accessed for the first time
           // allocate a clash free name in type variable mapping
           friendlyName => {
-            val newName = typegenCtx.typeScope.allocateJavaScriptName(s"t$friendlyName")
+            val newName = typegenCtx.typeScope.allocateJavaScriptName(friendlyName)
             typegenCtx.typeVarMapping += ((t, newName))
             SourceCode(newName)
           }
