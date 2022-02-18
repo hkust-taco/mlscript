@@ -111,6 +111,7 @@ fun (x: int & ~0) -> safeDiv 1 x
 
 def tryDiv: int -> int -> Option[int]
 //│ tryDiv: int -> int -> (None | Some[int])
+//│       = <missing implementation>
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
 //│ int -> (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int}))

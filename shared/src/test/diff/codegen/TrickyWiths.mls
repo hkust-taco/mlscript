@@ -1,7 +1,7 @@
 
 () with {}
 //│ res: ()
-//│    = Array {}
+//│    = []
 
 :js
 n = 42 with { x = 1 }
@@ -22,7 +22,6 @@ n + n.x
 
 :js
 a = (1,2,3) with {}
-def a: nothing // unsound escape hatch
 //│ // Query 1
 //│ globalThis.a = withConstruct([
 //│   1,
@@ -32,14 +31,18 @@ def a: nothing // unsound escape hatch
 //│ res = a;
 //│ // End of generated code
 //│ a: (1, 2, 3,)
-//│  = Array { '0': 1, '1': 2, '2': 3 }
+//│  = [ 1, 2, 3 ]
+
+:escape
+def a: nothing // unsound escape hatch
 //│ a: nothing
+//│  = <missing implementation>
 
 a.length
 a.map(fun x -> x + 1)
 //│ res: nothing
-//│    = 0
+//│    = 3
 //│ res: nothing
-//│    = []
+//│    = [ 2, 3, 4 ]
 
 

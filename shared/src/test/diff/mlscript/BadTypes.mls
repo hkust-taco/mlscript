@@ -109,6 +109,7 @@ type BadRec = { x: 'a; y: BadRec }
 
 def someRec: { y: 'a } as 'a
 //│ someRec: {y: 'a} as 'a
+//│        = <missing implementation>
 
 // FIXME: causes SOF
 // someRec: BadRec

@@ -35,7 +35,7 @@
 //│ ║  l.29: 	(1,2) with { x = 1 } : (2,1,0)
 //│ ╙──      	                       ^^^^^^^
 //│ res: (2, 1, 0,)
-//│    = Array { '0': 1, '1': 2, x: 1 }
+//│    = [ 1, 2, x: 1 ]
 
 trait T
 //│ Defined trait T
@@ -50,7 +50,7 @@ trait T
 //│ ║  l.44: 	(1,2) with { x = 1 } : (2,1,0) | t
 //│ ╙──      	                       ^^^^^^^^^^^
 //│ res: (2, 1, 0,) | t
-//│    = Array { '0': 1, '1': 2, x: 1 }
+//│    = [ 1, 2, x: 1 ]
 
 :e
 (1,2) with { x = 1 } : (2,1)
@@ -64,11 +64,11 @@ trait T
 //│ ║  l.56: 	(1,2) with { x = 1 } : (2,1)
 //│ ╙──      	                        ^
 //│ res: (2, 1,)
-//│    = Array { '0': 1, '1': 2, x: 1 }
+//│    = [ 1, 2, x: 1 ]
 
 (1,2) with { x = 1 } : (1,2)
 //│ res: (1, 2,)
-//│    = Array { '0': 1, '1': 2, x: 1 }
+//│    = [ 1, 2, x: 1 ]
 
 
 :re
@@ -80,52 +80,53 @@ error: (1,2) & t | Array[3]
 
 def arr: Array[1]
 //│ arr: Array[1]
+//│    = <missing implementation>
 
-:re
 arr: Array[2] | (1, 1)
 //│ res: Array[1 | 2]
-//│ Runtime error:
-//│   ReferenceError: arr is not defined
+//│    = <no result>
+//│      arr is not implemented
 
-:re
 arr: Array[2] | (1, 2)
 //│ res: Array[1 | 2]
-//│ Runtime error:
-//│   ReferenceError: arr is not defined
+//│    = <no result>
+//│      arr is not implemented
 
 :e
 arr: Array[2] & t | (1, 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.97: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ║        	^^^
 //│ ╟── type `Array[1]` does not match type `Array[2] & t | (1, 1,)`
 //│ ║  l.81: 	def arr: Array[1]
 //│ ║        	         ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[2] & t | (1, 1,)`
-//│ ║  l.97: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.97: 	arr: Array[2] & t | (1, 1)
+//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^
 //│ res: (1, 1,) | Array[2] & t
-//│ Runtime error:
-//│   ReferenceError: arr is not defined
+//│    = <no result>
+//│      arr is not implemented
 
 def arrt: Array[1] & t
 //│ arrt: Array[1] & t
+//│     = <missing implementation>
 
-:re
 arrt: Array[2] & t | (1, 1)
 //│ res: (1, 1,) | Array[2] & t
-//│ Runtime error:
-//│   ReferenceError: arrt is not defined
+//│    = <no result>
+//│      arrt is not implemented
 
 
 def f_1: 'a -> (Array['a] & t)
 //│ f_1: 'a -> (Array['a] & t)
+//│    = <missing implementation>
 
 def f_2: 'a -> (Array['a] & t | (1,))
 //│ f_2: 'a -> ((1,) | Array['a] & t)
+//│    = <missing implementation>
 
 :e
 f_1 = f_2
@@ -133,41 +134,41 @@ f_1 = f_2
 //│   <:  f_1:
 //│ 'a -> (Array['a] & t)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.131: 	f_1 = f_2
+//│ ║  l.132: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
 //│ ╟── type `1` is not an instance of type 'a
 //│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
 //│ ║         	                                 ^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.124: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
 //│ ╙──       	                      ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.131: 	f_1 = f_2
+//│ ║  l.132: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
 //│ ╟── type `(1,)` is not an instance of type T
 //│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from trait tag:
-//│ ║  l.124: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
 //│ ║         	                            ^
 //│ ╟── from intersection type:
-//│ ║  l.124: 	def f_1: 'a -> (Array['a] & t)
+//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
 //│ ╙──       	               ^^^^^^^^^^^^^^^
-//│ Runtime error:
-//│   ReferenceError: f_2 is not defined
+//│    = <no result>
+//│      f_2 is not implemented
 
-:re
 f_2 = f_1
 //│ 'a -> (Array['a] & t)
 //│   <:  f_2:
 //│ 'a -> ((1,) | Array['a] & t)
-//│ Runtime error:
-//│   ReferenceError: f_1 is not defined
+//│    = <no result>
+//│      f_1 and f_2 are not implemented
 
 
 
 def test: (string, 1) & { _1: "hello" }
 //│ test: (string, 1,) & {_1: "hello", _2: 1}
+//│     = <missing implementation>
 
 :e
 test = ("hi", 1)
@@ -175,10 +176,10 @@ test = ("hi", 1)
 //│   <:  test:
 //│ (string, 1,) & {_1: "hello", _2: 1}
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.173: 	test = ("hi", 1)
+//│ ║  l.174: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hi"` does not match type `"hello"`
-//│ ║  l.173: 	test = ("hi", 1)
+//│ ║  l.174: 	test = ("hi", 1)
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from literal type:
 //│ ║  l.169: 	def test: (string, 1) & { _1: "hello" }
@@ -206,10 +207,8 @@ test: ('a, 1)
 :e
 class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.207: 	class A: (1,2)
+//│ ║  l.208: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
-//│ Code generation met an error:
-//│   unable to derive from type Tuple(List((None,Literal(1)), (None,Literal(2))))
 
 
 :re

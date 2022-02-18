@@ -55,7 +55,7 @@ T a
 :js
 T A
 //│ // Query 1
-//│ res = ((x) => new A(x));
+//│ res = ((x) => x)((x) => new A(x));
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.56: 	T A
@@ -73,7 +73,7 @@ T A
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: anything -> A & t | error
-//│    = [Function: res]
+//│    = [Function (anonymous)]
 
 :e
 T (B {})
@@ -195,6 +195,13 @@ l = Lol h
 //│  = Hey {}
 //│ l: Hey & lol
 //│  = Hey {}
+
+e = Lol
+e
+//│ e: 'a -> (lol & 'a)
+//│  = [Function: e]
+//│ res: 'a -> (lol & 'a)
+//│    = [Function: e]
 
 l.(Lol.Foo)
 //│ res: 1

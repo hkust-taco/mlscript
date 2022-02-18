@@ -172,21 +172,18 @@ c.head
 //│ res: 1
 //│    = 1
 
-
-:re
 def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
+//│  = <missing implementation>
 //│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
-//│ Runtime error:
-//│   TypeError: c1 is not a function
+//│    = <no result>
+//│      c is not implemented
 
-:re
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
 //│ c: 'a -> (((Cons['b] with {tail: 'd & ('c | Nil)}) as 'c) & 'l | Nil & 'l) -> (Cons[anything] with {head: 'a, tail: ((Cons[anything] with {tail: 'f | 'e | Nil}) as 'e) & 'l | Nil & 'l})
+//│  = <missing implementation>
 //│ res: Cons[anything] with {head: 1, tail: Cons[anything] with {head: 2, tail: Nil}}
-//│ Runtime error:
-//│   TypeError: c1 is not a function
-
-
+//│    = <no result>
+//│      c is not implemented
