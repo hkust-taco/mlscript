@@ -183,18 +183,36 @@ final case class TsTypegenCodeBuilder() {
       // NOTE: It is assumed that inside the body type there cannot be another recursive
       // type with the same typevar as uv as in ((f as f) as f) is not possible
       case Recursive(uv, body) =>
-        val friendlyName = toTsType(uv)
         // allocate the clash-free name for uv in typegen scope
         // update mapping from type variables to
+        val friendlyName = toTsType(uv)
         val uvNewName = typeScope.allocateJavaScriptName(friendlyName.toString())
         typegenCtx.typeVarMapping += ((uv, uvNewName))
-        val bodyType = toTsType(body)
-        // remove type variable mapping so that it doesn't add a type parameter
-        typegenCtx.typeVarMapping -= (uv)
 
+        // create a self referencing type alias for the body
+        val tempTypeVarMapping = typegenCtx.typeVarMapping.clone();
+        val tempTypegenCtx = TypegenContext(typegenCtx.existingTypeVars, tempTypeVarMapping, Scope(Seq.empty, termScope), Scope(Seq.empty, typeScope))
+        val bodyType = toTsType(body)(tempTypegenCtx, pol);
+
+        // type alias might have added new type var mappings
+        // collect those by finding the difference between original
+        // and temporary type var mapping
+        val newKeys = (tempTypeVarMapping.keySet.filterNot(typegenCtx.typeVarMapping.keySet))
+        val newKeyValuePairs = newKeys.iterator.flatMap(tvar => {
+          tempTypeVarMapping.get(tvar).map((tvar, _))
+        }).toList
+        val aliasTypeParams = newKeyValuePairs.iterator.map(tup => SourceCode(tup._2)).toList
+
+        // remove type variable mapping so that it doesn't get considered as a type parameter
+        // add newly added type var mappings from type alias for body
+        typegenCtx.typeVarMapping -= (uv)
+        typegenCtx.typeVarMapping ++= newKeyValuePairs
+
+        val uvAppliedName = SourceCode(s"$uvNewName") ++ SourceCode.paramList(aliasTypeParams)
         // self referencing alias for the recursive type
-        typegenCode += (SourceCode("export type ") ++ SourceCode(uvNewName) ++ SourceCode.equalSign ++ bodyType)
-        SourceCode(uvNewName)
+        typegenCode += (SourceCode(s"export type $uvAppliedName") ++
+          SourceCode.equalSign ++ bodyType)
+        uvAppliedName
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
           SourceCode(base.name) ++ SourceCode.openAngleBracket ++

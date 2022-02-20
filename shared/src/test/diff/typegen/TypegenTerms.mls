@@ -136,3 +136,23 @@ app 2 cont
 //│ export declare const app<a>: (arg: [int]) => (arg1: [(arg2: [int]) => a]) => a
 //│ export declare const res: int
 //│ // end ts
+
+:ts
+def f: ('c -> 'a as 'a) -> 'c -> int
+def g (x, y) = x + y
+def h (x, (y, z)) = y z + x
+def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
+//│ f: ('c -> 'a as 'a) -> 'c -> int
+//│ g: (int, int,) -> int
+//│  = [Function: g3]
+//│ h: (int, ('a -> int, 'a,),) -> int
+//│  = [Function: h]
+//│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
+//│  = [Function: k]
+//│ // start ts
+//│ export type a<c> = (arg: [c]) => a
+//│ export declare const f<c>: (arg: [a<c>]) => (arg1: [c]) => int
+//│ export declare const g: (arg: [int, int]) => int
+//│ export declare const h<a1>: (arg: [int, [(arg1: [a1]) => int, a1]]) => int
+//│ export declare const k<a1, b>: (arg: [int, [(arg1: [int]) => a1, int]]) => (arg2: [int, (arg3: [int]) => (arg4: [a1]) => b, int]) => b
+//│ // end ts
