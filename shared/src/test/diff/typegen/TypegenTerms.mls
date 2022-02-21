@@ -18,7 +18,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {a: "hello", b: "world"}
 //│ export declare const res: int
-//│ export declare const res<a>: (arg: [{b: a}]) => a | 1
+//│ export declare const res<a>: (arg1: {b: a}) => a | 1
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int
@@ -39,7 +39,7 @@ def g = rcd with { y = "yeah" }
 //│ // start ts
 //│ export declare const rcd: {x: 1}
 //│ export declare const res: 1
-//│ export declare const funky<b, a>: (arg: [(arg1: [Omit<a, { y }> & {y: "nah"}]) => b]) => (arg2: [a]) => b
+//│ export declare const funky<b, a>: (arg1: (arg3: Omit<a, { y }> & {y: "nah"}) => b) => (arg5: a) => b
 //│ export declare const g: {x: 1, y: "yeah"}
 //│ // end ts
 
@@ -53,23 +53,27 @@ def g x y = if x.b == 1 then x else x.a
 //│ fact: int -> int
 //│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
 //│ // start ts
-//│ export declare const f: (arg: [int]) => (arg1: [string]) => (arg2: [bool]) => int | string
-//│ export declare const fact: (arg: [int]) => int
-//│ export declare const g<a>: (arg: [{a: a, b: int} & a]) => (arg1: [unknown]) => a
+//│ export declare const f: (arg1: int) => (arg3: string) => (arg5: bool) => int | string
+//│ export declare const fact: (arg1: int) => int
+//│ export declare const g<a>: (arg1: {a: a, b: int} & a) => (arg3: unknown) => a
 //│ // end ts
 
 :ts
 :ne
 rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
+def f: ('c -> 'a as 'a) -> 'c -> int
 // recursion type functions
 //│ l: int -> 'a as 'a
 //│ m: int -> int -> 'a as 'a
+//│ f: ('c -> 'a as 'a) -> 'c -> int
 //│ // start ts
-//│ export type a = (arg: [int]) => a
+//│ export type a = (arg1: int) => a
 //│ export declare const l: a
-//│ export type a1 = (arg: [int]) => (arg1: [int]) => a1
-//│ export declare const m: a1
+//│ export type a = (arg1: int) => (arg3: int) => a
+//│ export declare const m: a
+//│ export type a<c> = (arg1: c) => a<c>
+//│ export declare const f<c>: (arg1: a<c>) => (arg3: c) => int
 //│ // end ts
 
 :ts
@@ -78,19 +82,19 @@ rec def m (a: int) (b: int) = m
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.78: 	1: ?
+//│ ║  l.82: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.78: 	1: ?
+//│ ║  l.82: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.83: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.83: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -100,14 +104,65 @@ rec def m (a: int) (b: int) = m
 
 :ts
 :ne
+:e
 def f x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ f: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│ ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│   <:  f:
+//│ ('c -> 'a as 'a) -> 'c -> int
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'c -> ?a & 'a` does not have field 'a'
+//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
+//│ ║        	       ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	               ^^^
+//│ ╟── from reference:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ╙──       	               ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'c` does not have field 'b'
+//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
+//│ ║        	                           ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	                      ^^^
+//│ ╟── from reference:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'c -> ?a & 'a` does not match type `int`
+//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
+//│ ║        	       ^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	                               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
+//│ ╙──      	                                 ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` does not match type `int`
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	                                        ^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
+//│ ╙──      	                                 ^^^
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const f<c, b, a>: (arg: [(arg1: [a]) => b & {a: int} & c]) => (arg2: [{b: int} & a]) => (arg3: [unknown]) => c | b
-//│ export declare const g: (arg: [never]) => (arg1: [never]) => never
+//│ export declare const f<b, c, a>: (arg1: (arg3: a) => b & {a: int} & c) => (arg5: {b: int} & a) => (arg7: unknown) => c | b
+//│ export declare const g: (arg1: never) => (arg3: never) => never
 //│ // end ts
 
 :ts
@@ -119,8 +174,8 @@ def y: "a" | "b" | ~string
 //│ y: "a" | "b" | ~string
 //│ // start ts
 //│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
-//│ export declare const x<t>: int | Neg<string, t>
-//│ export declare const y<t>: "a" | "b" | Neg<string, t>
+//│ export declare const x: int | Neg<string, a>
+//│ export declare const y: "a" | "b" | Neg<string, a>
 //│ // end ts
 
 :ts
@@ -132,27 +187,21 @@ app 2 cont
 //│ app: int -> (int -> 'a) -> 'a
 //│ res: int
 //│ // start ts
-//│ export declare const cont: (arg: [int]) => int
-//│ export declare const app<a>: (arg: [int]) => (arg1: [(arg2: [int]) => a]) => a
+//│ export declare const cont: (arg1: int) => int
+//│ export declare const app<a>: (arg1: int) => (arg3: (arg5: int) => a) => a
 //│ export declare const res: int
 //│ // end ts
 
 :ts
-def f: ('c -> 'a as 'a) -> 'c -> int
+:ne
 def g (x, y) = x + y
 def h (x, (y, z)) = y z + x
 def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
-//│ f: ('c -> 'a as 'a) -> 'c -> int
 //│ g: (int, int,) -> int
-//│  = [Function: g3]
 //│ h: (int, ('a -> int, 'a,),) -> int
-//│  = [Function: h]
 //│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
-//│  = [Function: k]
 //│ // start ts
-//│ export type a<c> = (arg: [c]) => a
-//│ export declare const f<c>: (arg: [a<c>]) => (arg1: [c]) => int
-//│ export declare const g: (arg: [int, int]) => int
-//│ export declare const h<a1>: (arg: [int, [(arg1: [a1]) => int, a1]]) => int
-//│ export declare const k<a1, b>: (arg: [int, [(arg1: [int]) => a1, int]]) => (arg2: [int, (arg3: [int]) => (arg4: [a1]) => b, int]) => b
+//│ export declare const g: (arg1: int, arg2: int) => int
+//│ export declare const h<a>: (arg1: int, arg2: (arg3: (arg5: a) => int, arg6: a)) => int
+//│ export declare const k<b, a>: (arg1: int, arg2: (arg3: (arg5: int) => a, arg6: int)) => (arg8: int, arg9: (arg11: int) => (arg13: a) => b, arg14: int) => b
 //│ // end ts

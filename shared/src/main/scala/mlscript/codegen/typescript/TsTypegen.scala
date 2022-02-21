@@ -36,55 +36,52 @@ final case class TsTypegenCodeBuilder() {
   }
 
   /** Context for converting a statement or type definition
-    * 
     *
-    * @param existingTypeVars
-    *   type variables defined for the current type
     * @param typeVarMapping
     *   mapping from type variables to their clash-free parameter names
+    * @param recTypeVarSet
+    *   Set of recursive type variables for the type where context was intialized
+    * @param recTypeVarSet
+    *   Set of non-recursive type variables for the type where context was intialized
     * @param termScope
     *   scope for argument names
     * @param typeScope
     *   scope for type parameter names
     */
   protected case class TypegenContext(
-      val existingTypeVars: Map[TypeVar, String],
-      // Mapping type variables existing and new ones
-      // to clash-free type names generated for current typing unit
-      val typeVarMapping: MutMap[TypeVar, String],
-      // a scope for generating unique argument names
+      val typeVarMapping: MutMap[TypeVar, SourceCode],
+      val recTypeVarSet: Set[TypeVar],
+      val nonRecTypeVarSet: Set[TypeVar],
       val termScope: Scope,
-      // a scope for generating unique type parameter names
       val typeScope: Scope
-  ) {
-    /** Try to find name for type variable in mapping. If it
-      * doesn't exist check existing type variable names mapping
-      * 
-      * @param t TypeVar
-      * @return
-      *   Left[String, None] is from type var mapping
-      *   Right[None, String] is from existing type variable names
-      */
-    def findTypeVarName(t: TypeVar): Either[String, String] = {
-      this.typeVarMapping.get(t).map(Left(_)).getOrElse({
-        this.existingTypeVars
-          .get(t)
-          .toRight(
-            throw IllFormedTsTypeError(
-              s"Did not find mapping for type variable $t. Unable to generated ts type."))
-      })
-    }
-  }
+  )
 
   object TypegenContext {
     def apply(mlType: Type): TypegenContext = {
-      val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs;
+      val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
+      val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
+      val typegenTypeScope = Scope(Seq.empty, typeScope)
+      val typegenTermScope = Scope(Seq.empty, termScope)
+      val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
+      existingTypeVars.iterator.foreach(kv => {
+        val name = typegenTypeScope.allocateJavaScriptName(kv._2)
+        typeVarMapping += ((kv._1, SourceCode(kv._2)))
+      })
+
       // initialize local term scope with global term scope as parent
       // this will reduce cases where global names are similar to function
       // argument names. For e.g. the below case will be avoided
       // export const arg0: int
       // export const f: (arg0: int) => int
-      TypegenContext(existingTypeVars, MutMap.empty, Scope(Seq.empty, termScope), Scope(Seq.empty, typeScope))
+      TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
+    }
+
+    // create a context with pre-created type var to name mapping
+    def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode]): TypegenContext = {
+      val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
+      val typegenTypeScope = Scope(Seq.empty, typeScope)
+      val typegenTermScope = Scope(Seq.empty, termScope)
+      TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
     }
   }
 
@@ -113,8 +110,12 @@ final case class TsTypegenCodeBuilder() {
 
     // Create a mapping from type var to their friendly name for lookup
     val typegenCtx = TypegenContext(mlType)
-    val tsType = toTsType(mlType)(typegenCtx, Some(true));
-    val typeParams = typegenCtx.typeVarMapping.iterator.map(tup => SourceCode(tup._2)).toList
+    val tsType = toTsType(mlType)(typegenCtx, Some(true), false);
+    // only use non recursive type variables for type parameters
+    val typeParams = typegenCtx.typeVarMapping.iterator
+      .filter(tup => typegenCtx.nonRecTypeVarSet.contains(tup._1))
+      .map(_._2)
+      .toList
 
     typegenCode += (SourceCode(s"export declare const $defName") ++
       SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
@@ -123,10 +124,8 @@ final case class TsTypegenCodeBuilder() {
   /** Converts an mlscript type to source code representation of the ts type. It also keep tracks of extra type
     * variables and type parameters defined through the context.
     *
-    * polarity tracks polarity of the current type.
-    * * Some(true) - positive polarity
-    * * Some(false) - negative polarity
-    * * None - no polarity (invariant)
+    * polarity tracks polarity of the current type. * Some(true) - positive polarity * Some(false) - negative polarity *
+    * None - no polarity (invariant)
     *
     * @param mlType
     *   mlscript type to convert
@@ -134,11 +133,14 @@ final case class TsTypegenCodeBuilder() {
     *   type generation context for allocating new names
     * @param pol
     *   polarity of type
+    * @param funcArg
+    *   true if Tuple type is the lhs of a function. Used to translate tuples as multi-parameter functions
     * @return
     */
   private def toTsType(mlType: Type)(implicit
       typegenCtx: TypegenContext,
-      pol: Option[Boolean]
+      pol: Option[Boolean],
+      funcArg: Boolean
   ): SourceCode = {
     mlType match {
       // these types do not mutate typegen context
@@ -158,8 +160,23 @@ final case class TsTypegenCodeBuilder() {
         SourceCode.recordWithEntries(
           fields.map(entry => (SourceCode(entry._1.name), toTsType(entry._2)))
         )
-      // unwrap extra parenthesis when tuple has single element
-      case Tuple(fields)  => SourceCode.horizontalArray(fields.map(field => toTsType(field._2)))
+      case Tuple(fields) =>
+        // tuple that is a function argument becomes
+        // multi-parameter argument list
+        if (funcArg) {
+          val argList = fields
+            .map(field => {
+              val arg = typegenCtx.termScope.allocateJavaScriptName("arg");
+              val argType = toTsType(field._2)
+              SourceCode(s"$arg: ") ++ argType
+            })
+            .toList
+          SourceCode.sepBy(argList).parenthesized
+        }
+        // regular tuple becomes fixed length array
+        else {
+          SourceCode.horizontalArray(fields.map(field => toTsType(field._2)))
+        }
       case Top            => SourceCode("unknown")
       case Bot            => SourceCode("never")
       case TypeName(name) => SourceCode(name)
@@ -174,45 +191,44 @@ final case class TsTypegenCodeBuilder() {
         val arg = typegenCtx.termScope.allocateJavaScriptName("arg");
 
         // flip polarity for input type of function
-        val lhsTypeSource = toTsType(lhs)(typegenCtx, pol.map(!_));
+        // lhs translates to the complete argument list
+        val lhsTypeSource = toTsType(lhs)(typegenCtx, pol.map(!_), true);
         val rhsTypeSource = toTsType(rhs);
 
-        (SourceCode(s"$arg") ++ SourceCode.colon ++ lhsTypeSource).parenthesized ++
-          SourceCode.fatArrow ++ rhsTypeSource
+        lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
       // a recursive type is aliased as a self referencing type
-      // NOTE: It is assumed that inside the body type there cannot be another recursive
-      // type with the same typevar as uv as in ((f as f) as f) is not possible
       case Recursive(uv, body) =>
         // allocate the clash-free name for uv in typegen scope
         // update mapping from type variables to
-        val friendlyName = toTsType(uv)
-        val uvNewName = typeScope.allocateJavaScriptName(friendlyName.toString())
-        typegenCtx.typeVarMapping += ((uv, uvNewName))
+        val uvName = toTsType(uv)
+        val typeVarMapping = typegenCtx.typeVarMapping
+        // create new type gen context and recalculate rec var and
+        // non-rec var for current type
+        val nestedTypegenCtx = TypegenContext(mlType, typeVarMapping)
 
-        // create a self referencing type alias for the body
-        val tempTypeVarMapping = typegenCtx.typeVarMapping.clone();
-        val tempTypegenCtx = TypegenContext(typegenCtx.existingTypeVars, tempTypeVarMapping, Scope(Seq.empty, termScope), Scope(Seq.empty, typeScope))
-        val bodyType = toTsType(body)(tempTypegenCtx, pol);
+        // recursive type does not have any other type variables
+        // (except itself)
+        if (nestedTypegenCtx.nonRecTypeVarSet.size === 0) {
+          val bodyType = toTsType(body)(typegenCtx, pol, funcArg);
+          typegenCode += (SourceCode(s"export type $uvName") ++
+            SourceCode.equalSign ++ bodyType)
+          uvName
+        }
+        // recursive type has other type variables
+        // so now it is an applied type
+        else {
+          val uvTypeParams = typeVarMapping.iterator
+            .filter(tup => nestedTypegenCtx.nonRecTypeVarSet.contains(tup._1))
+            .map(_._2)
+            .toList
+          val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)
+          typeVarMapping += ((uv, uvAppliedName))
+          val bodyType = toTsType(body)(nestedTypegenCtx, pol, funcArg);
+          typegenCode += (SourceCode(s"export type $uvAppliedName") ++
+            SourceCode.equalSign ++ bodyType)
+          uvAppliedName
+        }
 
-        // type alias might have added new type var mappings
-        // collect those by finding the difference between original
-        // and temporary type var mapping
-        val newKeys = (tempTypeVarMapping.keySet.filterNot(typegenCtx.typeVarMapping.keySet))
-        val newKeyValuePairs = newKeys.iterator.flatMap(tvar => {
-          tempTypeVarMapping.get(tvar).map((tvar, _))
-        }).toList
-        val aliasTypeParams = newKeyValuePairs.iterator.map(tup => SourceCode(tup._2)).toList
-
-        // remove type variable mapping so that it doesn't get considered as a type parameter
-        // add newly added type var mappings from type alias for body
-        typegenCtx.typeVarMapping -= (uv)
-        typegenCtx.typeVarMapping ++= newKeyValuePairs
-
-        val uvAppliedName = SourceCode(s"$uvNewName") ++ SourceCode.paramList(aliasTypeParams)
-        // self referencing alias for the recursive type
-        typegenCode += (SourceCode(s"export type $uvAppliedName") ++
-          SourceCode.equalSign ++ bodyType)
-        uvAppliedName
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
           SourceCode(base.name) ++ SourceCode.openAngleBracket ++
@@ -237,8 +253,8 @@ final case class TsTypegenCodeBuilder() {
         }
 
         // introduce a new type parameter for the `FromType`
-        val typeParam = typegenCtx.typeScope.allocateJavaScriptName("t")
-        typegenCtx.typeVarMapping += ((TypeVar(Right(typeParam), None), typeParam))
+        val typeParam = typegenCtx.typeScope.allocateJavaScriptName()
+        typegenCtx.typeVarMapping += ((TypeVar(Right(typeParam), None), SourceCode(typeParam)))
 
         val baseType = toTsType(base)
         SourceCode(s"Neg<$baseType, $typeParam>")
@@ -261,16 +277,11 @@ final case class TsTypegenCodeBuilder() {
         toTsType(Inter(Rem(base, rcd.fields.map(tup => tup._1)), rcd))
       // get clash free name for type variable
       case t @ TypeVar(_, _) =>
-        typegenCtx.findTypeVarName(t).fold(
-          name => SourceCode(name),
-          // type variable has been accessed for the first time
-          // allocate a clash free name in type variable mapping
-          friendlyName => {
-            val newName = typegenCtx.typeScope.allocateJavaScriptName(friendlyName)
-            typegenCtx.typeVarMapping += ((t, newName))
-            SourceCode(newName)
-          }
-        )
+        typegenCtx.typeVarMapping
+          .get(t)
+          .getOrElse({
+            throw IllFormedTsTypeError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
+          })
       case Arr(_) => throw IllFormedTsTypeError(s"Array type currently not supported for $mlType")
     }
   }

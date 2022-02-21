@@ -16,6 +16,30 @@ abstract class TypeImpl extends Located { self: Type =>
     case Recursive(n, b) => n :: b.typeVarsList
     case _ => children.flatMap(_.typeVarsList)
   }
+
+  /** Return two sets of type variables - recursive and non-recursive
+    *
+    * @return
+    */
+  lazy val partitionRecTypeVarSet: (Set[TypeVar], Set[TypeVar]) = {
+    var recVarSet = Set.empty[TypeVar]
+    var nonRecVarSet = Set.empty[TypeVar]
+    def getRecVarSet(mlType: Type): Unit = mlType match {
+      case t@TypeVar(identifier, nameHint) => {
+        if (!recVarSet.contains(t)) {
+          nonRecVarSet = nonRecVarSet + t
+        }
+      }
+      case Recursive(uv, body) => { 
+        recVarSet = recVarSet + uv
+        getRecVarSet(body)
+      }
+      case _ => mlType.children.foreach(getRecVarSet(_))
+    }
+
+    getRecVarSet(this)
+    (recVarSet, nonRecVarSet)
+  }
   
   def show: String =
     showIn(ShowCtx.mk(this :: Nil), 0)
