@@ -161,24 +161,24 @@ def c1 = C1 { }
 //│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
-//│   = C1 { y: undefined }
+//│   = C1 { y: undefined, x: undefined }
 
 def c1 = C1 { x = 1; y = "hi" }
 //│ c1: C1 & {x: 1, y: "hi"}
-//│   = C1 { y: 'hi' }
+//│   = C1 { y: 'hi', x: 1 }
 
 c1: T1
 //│ res: C & a & t1
-//│    = C1 { y: 'hi' }
+//│    = C1 { y: 'hi', x: 1 }
 
 c1: A
 //│ res: {x: int} & a
-//│    = C1 { y: 'hi' }
+//│    = C1 { y: 'hi', x: 1 }
 
 c1.x
 c1.y
 //│ res: 1
-//│    = undefined
+//│    = 1
 //│ res: "hi"
 //│    = 'hi'
 

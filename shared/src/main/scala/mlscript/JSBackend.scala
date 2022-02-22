@@ -234,12 +234,7 @@ class JSBackend {
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
     val fields = classSymbol.body.collectFields ++
-      classSymbol.body.collectTypeNames.flatMap {
-        topLevelScope.getType(_).flatMap {
-          case TraitSymbol(_, _, _, body)     => S(body.collectFields)
-          case _: ClassSymbol | _: TypeSymbol => N
-        }.getOrElse(Nil)
-      }
+      classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
     JSClassDecl(classSymbol.runtimeName, fields, base, members)
   }
@@ -277,6 +272,23 @@ class JSBackend {
     case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
       S(topLevelScope.declareClass(name, tparams map { _.name }, baseType, members))
   }
+
+  /**
+    * Recursively collect fields from trait definitions.
+    * Caveat: this might cause stack overflow if cyclic inheritance exists.
+    */
+  private def resolveTraitFields(name: Str): Ls[Str] =
+    topLevelScope.getType(name) match {
+      case S(sym: TraitSymbol) => sym.body.collectFields ++ resolveTraitFields(sym)
+      case S(_: TypeSymbol) | S(_: ClassSymbol) | N => Nil
+    }
+
+  /**
+    * Recursively collect fields from trait definitions.
+    * Caveat: this might cause stack overflow if cyclic inheritance exists.
+    */
+  private def resolveTraitFields(sym: TraitSymbol): Ls[Str] =
+    sym.body.collectTypeNames.flatMap(resolveTraitFields)
 
   /**
     * Find the base class for a specific class.
@@ -398,7 +410,7 @@ class JSTestBackend extends JSBackend {
     val (diags, (typeDefs, otherStmts)) = pgrm.desugared
 
     val classSymbols = declareTypeDefs(typeDefs)
-    val defStmts = sortClassSymbols(classSymbols).map { case (derived, base) =>
+    val defStmts = sortClassSymbols(classSymbols.toList).map { case (derived, base) =>
       translateClassDeclaration(derived, base)(topLevelScope)
     }.toList
 

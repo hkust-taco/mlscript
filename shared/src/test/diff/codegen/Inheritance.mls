@@ -37,6 +37,27 @@ class C: B & { c: int }
 //│   constructor(fields) {
 //│     this.c = fields.c;
 //│     this.b = fields.b;
+//│     this.a = fields.a;
+//│   }
+//│ }
+//│ // End of generated code
+
+:js
+class P: Q & { p: int }
+trait Q: R & { q: int }
+trait R: S & { r: int }
+trait S: { s: int }
+//│ Defined class P
+//│ Defined trait Q
+//│ Defined trait R
+//│ Defined trait S
+//│ // Prelude
+//│ class P {
+//│   constructor(fields) {
+//│     this.p = fields.p;
+//│     this.q = fields.q;
+//│     this.r = fields.r;
+//│     this.s = fields.s;
 //│   }
 //│ }
 //│ // End of generated code
