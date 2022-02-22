@@ -30,23 +30,22 @@ foo b
 
 def arg: A | B | C
 //│ arg: A | B | C
+//│    = <missing implementation>
 
-:re
 :stats
 foo arg
 //│ res: bool | int | string
-//│ Runtime error:
-//│   ReferenceError: arg is not defined
+//│    = <no result>
+//│      arg is not implemented
 //│ constrain calls  : 39
 //│ annoying  calls  : 30
 //│ subtyping calls  : 75
 
-:re
 :stats
 foo (arg with { fC = true })
 //│ res: int | string | true
-//│ Runtime error:
-//│   ReferenceError: arg is not defined
+//│    = <no result>
+//│      arg is not implemented
 //│ constrain calls  : 32
 //│ annoying  calls  : 28
 //│ subtyping calls  : 82
@@ -63,33 +62,32 @@ def foo x = case x of {
 :stats
 foo arg
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	foo arg
+//│ ║  l.63: 	foo arg
 //│ ║        	^^^^^^^
 //│ ╟── type `A` does not have field 'payload'
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `{payload: ?a}`
-//│ ║  l.64: 	foo arg
+//│ ║  l.63: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.55: 	  | A -> add x.fA x.payload
+//│ ║  l.54: 	  | A -> add x.fA x.payload
 //│ ║        	                  ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.54: 	def foo x = case x of {
+//│ ║  l.53: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int | string | {l: bool, r: nothing}
-//│ Runtime error:
-//│   ReferenceError: arg is not defined
+//│    = <no result>
+//│      arg is not implemented
 //│ constrain calls  : 53
 //│ annoying  calls  : 40
 //│ subtyping calls  : 124
 
-:re
 :stats
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
-//│ Runtime error:
-//│   ReferenceError: arg is not defined
+//│    = <no result>
+//│      arg is not implemented
 //│ constrain calls  : 48
 //│ annoying  calls  : 38
 //│ subtyping calls  : 91

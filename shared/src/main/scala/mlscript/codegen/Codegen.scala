@@ -149,6 +149,10 @@ object SourceCode {
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
 
+  // concatenate source codes without intermediate allocations
+  def bulkConcat(codes: Iterable[SourceCode]): SourceCode =
+    new SourceCode(codes.iterator.map(_.lines).foldRight(List.empty[SourceLine])((lines, accum) => lines ::: accum))
+
   /**
     * Comma separate elements of List[SourceCode] and wrap with curly braces
     * 
@@ -246,6 +250,10 @@ abstract class JSPattern extends JSCode {
   def bindings: Ls[Str]
 }
 
+object JSPattern {
+  def bindings(patterns: Ls[JSPattern]): Ls[Str] = patterns.flatMap(_.bindings)
+}
+
 final case class JSArrayPattern(elements: Ls[JSPattern]) extends JSPattern {
   def bindings: Ls[Str] = elements flatMap { _.bindings }
   def toSourceCode: SourceCode = SourceCode.array(elements map { _.toSourceCode })
@@ -284,15 +292,17 @@ abstract class JSExpr extends JSCode {
 
   def isSimple: Bool = false
 
+  def prop(property: JSExpr): JSMember = JSMember(this, property)
+
   def stmt: JSExprStmt = JSExprStmt(this)
   
   def `return`: JSReturnStmt = JSReturnStmt(this)
 
   def `throw`: JSThrowStmt = JSThrowStmt(this)
 
-  def member(name: Str): JSMember = JSMember(this, name)
+  def member(name: Str): JSField = JSField(this, name)
 
-  def apply(name: Str): JSMember = JSMember(this, name)
+  def apply(name: Str): JSField = JSField(this, name)
 
   def apply(args: JSExpr*): JSInvoke = JSInvoke(this, args.toList)
 
@@ -430,18 +440,13 @@ final case class JSTenary(tst: JSExpr, csq: JSExpr, alt: JSExpr) extends JSExpr 
 
 final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr {
   implicit def precedence: Int = 20
-  def toSourceCode = {
-    val body = callee.embed(precedence) ++ arguments.zipWithIndex
+  def toSourceCode =
+    callee.embed(precedence) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.embed(JSCommaExpr.outerPrecedence) ++
         (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized
-    callee match {
-      case JSIdent(_, true) => SourceCode("new ") ++ body
-      case _                => body
-    }
-  }
 }
 
 final case class JSUnary(op: Str, arg: JSExpr) extends JSExpr {
@@ -544,25 +549,49 @@ final case class JSInstanceOf(left: JSExpr, right: JSExpr) extends JSExpr {
     left.toSourceCode ++ SourceCode(" instanceof ") ++ right.toSourceCode
 }
 
-final case class JSIdent(name: Str, val isClassName: Bool = false) extends JSExpr {
+final case class JSIdent(name: Str) extends JSExpr {
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = SourceCode(name)
 }
 
-final case class JSMember(target: JSExpr, field: Str) extends JSExpr {
+final case class JSNew(ctor: JSExpr) extends JSExpr {
+  implicit def precedence: Int = 21
+  def toSourceCode: SourceCode = SourceCode("new ") ++ ctor.toSourceCode
+}
+
+class JSMember(`object`: JSExpr, property: JSExpr) extends JSExpr {
   override def precedence: Int = 20
   override def toSourceCode: SourceCode =
-    target.toSourceCode.parenthesized(
-      target.precedence < precedence || target.isInstanceOf[JSRecord]
+    `object`.toSourceCode.parenthesized(
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+    ) ++ SourceCode("[") ++ property.toSourceCode ++ SourceCode("]")
+
+  override def isSimple: Bool = `object`.isSimple
+}
+
+object JSMember {
+  def apply(`object`: JSExpr, property: JSExpr): JSMember = new JSMember(`object`, property)
+}
+
+class JSField(`object`: JSExpr, property: JSIdent) extends JSMember(`object`, property) {
+  override def toSourceCode: SourceCode =
+    `object`.toSourceCode.parenthesized(
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
     ) ++ SourceCode(
-      if (JSMember.isValidIdentifier(field)) {
-        s".$field"
+      if (JSField.isValidIdentifier(property.name)) {
+        s".${property.name}"
       } else {
-        s"[${JSLit.makeStringLiteral(field)}]"
+        s"[${JSLit.makeStringLiteral(property.name)}]"
       }
     )
+}
 
-  override def isSimple: Bool = target.isSimple
+object JSField {
+  def apply(`object`: JSExpr, property: String): JSField = new JSField(`object`, JSIdent(property))
+
+  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
+
+  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
 }
 
 final case class JSArray(items: Ls[JSExpr]) extends JSExpr {
@@ -578,16 +607,10 @@ final case class JSRecord(entries: Ls[Str -> JSExpr]) extends JSExpr {
   // Make
   override def toSourceCode: SourceCode = SourceCode
     .record(entries map { case (key, value) =>
-      val body = if (JSMember.isValidIdentifier(key)) { key }
+      val body = if (JSField.isValidIdentifier(key)) { key }
       else { JSLit.makeStringLiteral(key) }
       SourceCode(body + ": ") ++ value.embed(JSCommaExpr.outerPrecedence)
     })
-}
-
-object JSMember {
-  private val identifierPattern: Regex = "^[A-Za-z$][A-Za-z0-9$]*$".r
-
-  def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s)
 }
 
 abstract class JSStmt extends JSCode
@@ -606,6 +629,15 @@ final case class JSIfStmt(test: JSExpr, body: Ls[JSStmt], `else`: Ls[JSStmt] = N
       case Nil => SourceCode.empty
       case _   => SourceCode("else ") ++ `else`.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
     })
+}
+
+final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSStmt]) extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode("for (const ") ++
+    pattern.toSourceCode ++
+    SourceCode(" in ") ++
+    iteratee.toSourceCode ++
+    SourceCode(")") ++
+    body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
 }
 
 // A single return statement.
@@ -721,12 +753,12 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 final case class JSClassDecl(
     val name: Str,
     fields: Ls[Str],
-    base: Opt[JSClassDecl] = N,
+    `extends`: Opt[JSExpr] = N,
     methods: Ls[JSClassMemberDecl] = Nil
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
     val ctor = SourceCode(
-      "  constructor(fields) {" :: (if (base.isEmpty) {
+      "  constructor(fields) {" :: (if (`extends`.isEmpty) {
                                       Nil
                                     } else {
                                       "    super(fields);" :: Nil
@@ -738,11 +770,10 @@ final case class JSClassDecl(
       x + y.toSourceCode.indented
     }
     val epilogue = SourceCode("}" :: Nil)
-    base match {
-      case Some(baseCls) =>
-        SourceCode(
-          s"class $name extends ${baseCls.name} {" :: Nil
-        ) + ctor + methodsSourceCode + epilogue
+    `extends` match {
+      case Some(base) =>
+        SourceCode(s"class $name extends ") ++ base.toSourceCode ++
+          SourceCode(" {") + ctor + methodsSourceCode + epilogue
       case None =>
         if (fields.isEmpty && methods.isEmpty) {
           SourceCode(s"class $name {}")
@@ -758,4 +789,17 @@ final case class JSClassDecl(
 
 final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
+}
+
+object JSCodeHelpers {
+  def id(name: Str): JSIdent = JSIdent(name)
+  def lit(value: Int): JSLit = JSLit(value.toString())
+  def const(name: Str, init: JSExpr): JSConstDecl = JSConstDecl(name, init)
+  def `return`(expr: JSExpr): JSReturnStmt = expr.`return`
+  def `throw`(expr: JSExpr): JSThrowStmt = expr.`throw`
+  def forIn(pattern: JSNamePattern, iteratee: JSExpr)(stmts: JSStmt*): JSForInStmt
+    = JSForInStmt(pattern, iteratee, stmts.toList)
+  def fn(name: Str, params: JSPattern*)(stmts: JSStmt*): JSFuncDecl
+    = JSFuncDecl(name, params.toList, stmts.toList)
+  def param(name: Str): JSNamePattern = JSNamePattern(name)
 }

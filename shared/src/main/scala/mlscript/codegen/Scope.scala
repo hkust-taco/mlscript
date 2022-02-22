@@ -2,157 +2,309 @@ package mlscript.codegen
 
 import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
+import mlscript.Type
+import scala.reflect.ClassTag
+import mlscript.{TypeName, Top, Bot}
+import mlscript.MethodDef
+import mlscript.Term
 
-class Scope(name: Str, initialSymbols: Seq[Str], enclosing: Opt[Scope]) {
-  // Declared JavaScript names in current scope.
-  private val symbols = scala.collection.mutable.HashSet[Str](initialSymbols: _*)
+class Scope(name: Str, enclosing: Opt[Scope]) {
+  private val lexicalTypeSymbols = scala.collection.mutable.HashMap[Str, TypeSymbol]()
+  private val lexicalValueSymbols = scala.collection.mutable.HashMap[Str, RuntimeSymbol]()
+  private val runtimeSymbols = scala.collection.mutable.HashSet[Str]()
 
-  // If a symbol is re-declared, this map contains the actual JavaScript name.
-  private val overrides =
-    scala.collection.mutable.HashMap[Str, Str](symbols.toSeq.map(s => (s, s)): _*)
-
-  // Temporary variables allocated in this scope.
-  private val tempVars = scala.collection.mutable.HashSet[Str]()
-
-  private def declareJavaScriptName(name: Str): Unit = {
-    if (symbols contains name) {
-      throw new Exception(s"name \"$name\" already defined in this scope")
-    }
-    symbols += name
-  }
-
-  def has(name: Str): Boolean = (symbols contains name) || (enclosing match {
-    case Some(scope) => scope.has(name)
-    case None        => false
-  })
+  val tempVars: TemporaryVariableEmitter = TemporaryVariableEmitter()
 
   /**
-    * Allocate a alphabetic name for new symbol.
-    * The name is guaranteed to be unique in this scope.
+    * Shorthands for creating top-level scopes.
     */
-  def allocateJavaScriptName(): Str = {
-    for (i <- 1 to Int.MaxValue; c <- Scope.nameAlphabet.combinations(i)) {
-      val name = c.mkString
-      if (!has(name)) {
-        declareJavaScriptName(name)
-        return name
-      }
+  def this(name: Str) = {
+    this(name, N)
+    // TODO: allow types and values to have the same name
+    // TODO: read built-in symbols from `Typer`.
+    Ls(
+      "true",
+      "false",
+      "id",
+      "succ",
+      "error",
+      "concat",
+      "add",
+      "sub",
+      "mul",
+      "div",
+      "gt",
+      "not",
+      "toString",
+      "negate"
+    ) foreach { name =>
+      register(BuiltinSymbol(name, name))
     }
-    throw new Exception("Could not allocate a new symbol")
+    // TODO: add `true`, `false`, and `error` to this list
+    register(TypeAliasSymbol("anything", Nil, Top))
+    register(TypeAliasSymbol("nothing", Nil, Bot))
+    // TODO: register them in the same way as `Typer` does.
+    Ls("int", "number", "bool", "string", "unit") foreach { name =>
+      register(TypeAliasSymbol(name, Nil, TypeName(name)))
+    }
   }
 
   /**
-    * Allocate a name with given prefix.
+    * Shorthands for creating function scopes.
     */
-  def allocateJavaScriptName(prefix: Str): Str = {
+  def this(name: Str, params: Ls[Str], enclosing: Scope) = {
+    this(name, Opt(enclosing))
+    params foreach { param =>
+      // TODO: avoid reserved keywords.
+      val symbol = ValueSymbol(param, param)
+      register(symbol)
+    }
+  }
+
+  private val allocateRuntimeNameIter = for {
+    i <- (1 to Int.MaxValue).iterator
+    c <- Scope.nameAlphabet.combinations(i)
+    name = c.mkString
+    if !runtimeSymbols.contains(name)
+  } yield {
+    name
+  }
+
+  /**
+    * Allocate a non-sense runtime name.
+    */
+  private def allocateRuntimeName(): Str = allocateRuntimeNameIter.next()
+
+  /**
+    * Allocate a runtime name starting with the given prefix.
+    */
+  private def allocateRuntimeName(prefix: Str): Str = {
+    // Fallback case.
+    if (prefix.isEmpty()) {
+      return allocateRuntimeName()
+    }
     // Try just prefix.
-    if (!has(prefix)) {
-      declareJavaScriptName(prefix)
+    if (!runtimeSymbols.contains(prefix) && !Symbol.isKeyword(prefix)) {
       return prefix
     }
     // Try prefix with an integer.
     for (i <- 1 to Int.MaxValue) {
       val name = s"$prefix$i"
-      if (!has(name)) {
-        declareJavaScriptName(name)
+      if (!runtimeSymbols.contains(name)) {
         return name
       }
     }
-    throw new Exception("Could not allocate a new symbol")
+    // Give up.
+    throw CodeGenError(
+      if (prefix.isEmpty())
+        "Cannot allocate a runtime name"
+      else
+        s"Cannot allocate a runtime name starting with '$prefix'"
+    )
+  }
+
+  private def register(symbol: TypeAliasSymbol): Unit = {
+    lexicalTypeSymbols.put(symbol.lexicalName, symbol)
+    ()
   }
 
   /**
-    * Allocate a temporary variable. When exit this scope, remember to emit
-    * declarations for them.
+    * Register a lexical symbol in both runtime name set and lexical name set.
     */
-  def allocateTempVar(): Str = {
-    val name = allocateJavaScriptName("temp")
-    tempVars += name
+  private def register(symbol: TypeSymbol with RuntimeSymbol): Unit = {
+    lexicalTypeSymbols.put(symbol.lexicalName, symbol)
+    lexicalValueSymbols.put(symbol.lexicalName, symbol)
+    runtimeSymbols += symbol.runtimeName
+    ()
+  }
+
+  /**
+    * Register a lexical symbol in both runtime name set and lexical name set.
+    */
+  private def register(symbol: RuntimeSymbol): Unit = {
+    lexicalValueSymbols.put(symbol.lexicalName, symbol)
+    runtimeSymbols += symbol.runtimeName
+    ()
+  }
+
+  private def unregister(symbol: ValueSymbol): Unit = {
+    lexicalTypeSymbols.remove(symbol.lexicalName)
+    runtimeSymbols.remove(symbol.runtimeName)
+    ()
+  }
+
+  def getType(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
+
+  /**
+   * Look up for a class symbol locally.
+   */
+  def getClassSymbol(name: Str): Opt[ClassSymbol] =
+    lexicalTypeSymbols.get(name) flatMap {
+      _ match {
+        case c: ClassSymbol => S(c)
+        case _              => N
+      }
+    }
+
+  def resolveValue(name: Str): Opt[RuntimeSymbol] =
+    lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
+
+  def declareClass(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): ClassSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, methods)
+    register(symbol)
+    symbol
+  }
+
+  def declareTrait(lexicalName: Str, params: Ls[Str], base: Type): TraitSymbol = {
+    val runtimeName = allocateRuntimeName(lexicalName)
+    val symbol = TraitSymbol(lexicalName, runtimeName, params, base)
+    register(symbol)
+    symbol
+  }
+
+  def declareTypeAlias(lexicalName: Str, params: Ls[Str], ty: Type): TypeAliasSymbol = {
+    val symbol = TypeAliasSymbol(lexicalName, params, ty)
+    register(symbol)
+    symbol
+  }
+
+  def declareValue(lexicalName: Str): ValueSymbol = {
+    val runtimeName = lexicalValueSymbols.get(lexicalName) match {
+      // If we are implementing a stub symbol and the stub symbol did not shadow any other
+      // symbols, it is safe to reuse its `runtimeName`.
+      case S(sym: StubValueSymbol) if !sym.shadowing => sym.runtimeName
+      case S(sym: BuiltinSymbol) if !sym.accessed    => sym.runtimeName
+      case _                                         => allocateRuntimeName(lexicalName)
+    }
+    val symbol = ValueSymbol(lexicalName, runtimeName)
+    register(symbol)
+    symbol
+  }
+
+  def declareStubValue(lexicalName: Str)(implicit accessible: Bool): StubValueSymbol =
+    declareStubValue(lexicalName, N)
+
+  def declareStubValue(lexicalName: Str, previous: StubValueSymbol)(implicit
+      accessible: Bool
+  ): StubValueSymbol =
+    declareStubValue(lexicalName, S(previous))
+
+  private def declareStubValue(lexicalName: Str, previous: Opt[StubValueSymbol])(implicit
+      accessible: Bool
+  ): StubValueSymbol = {
+
+    val symbol = lexicalValueSymbols.get(lexicalName) match {
+      // If a stub with the same name has been defined, use the name.
+      case S(value) => StubValueSymbol(lexicalName, value.runtimeName, true, previous)
+      // Otherwise, we will allocate a new name.
+      case N => StubValueSymbol(lexicalName, allocateRuntimeName(lexicalName), false, previous)
+    }
+    register(symbol)
+    symbol
+  }
+
+  def stubize(sym: ValueSymbol, previous: StubValueSymbol)(implicit
+      accessible: Bool
+  ): StubValueSymbol = {
+    unregister(sym)
+    declareStubValue(sym.lexicalName, S(previous))
+  }
+
+  def declareRuntimeSymbol(): Str = {
+    val name = allocateRuntimeName()
+    runtimeSymbols += name
     name
   }
 
-  def emitTempVarDecls(): Opt[JSLetDecl] = if (tempVars.isEmpty) {
+  def declareRuntimeSymbol(prefix: Str): Str = {
+    val name = allocateRuntimeName(prefix)
+    runtimeSymbols += name
+    name
+  }
+
+  /**
+    * Shorthands for deriving normal scopes.
+    */
+  def derive(name: Str): Scope = new Scope(name, S(this))
+
+  /**
+    * Shorthands for deriving function scopes.
+    */
+  def derive(name: Str, params: Ls[Str]): Scope = Scope(name, params, this)
+}
+
+object Scope {
+
+  /**
+  * Shorthands for creating top-level scopes.
+  */
+  def apply(name: Str): Scope = new Scope(name)
+
+  /**
+    * Shorthands for creating function scopes.
+    */
+  def apply(name: Str, params: Ls[Str], enclosing: Scope): Scope =
+    new Scope(name, params, enclosing)
+
+  private val nameAlphabet: Ls[Char] = Ls.from("abcdefghijklmnopqrstuvwxyz")
+}
+
+/**
+  * This class collects temporary variables declared during translation and
+  * generates JavaScript declarations for them after the translation.
+  */
+final case class TemporaryVariableEmitter() {
+  private val names = scala.collection.mutable.HashSet[Str]()
+
+  /**
+    * Add a new variable name. The name must be a runtime name.
+    */
+  def +=(name: Str): Unit = names += name
+
+  /**
+    * Emit a `let`-declaration for collected names and clear the collection.
+    */
+  def emit(): Opt[JSLetDecl] = if (names.isEmpty) {
     N
   } else {
-    val decl = JSLetDecl.from(tempVars.toList)
-    tempVars.clear()
+    val decl = JSLetDecl.from(names.toList)
+    names.clear()
     S(decl)
   }
 
-  def getTempVars(): Ls[Str] = {
-    val vars = tempVars.toList
-    tempVars.clear()
+  /**
+    * Get all names and clear the collection.
+    */
+  def get(): Ls[Str] = {
+    val vars = names.toList
+    names.clear()
     vars
   }
 
   /**
-    * Prepend temp variable declarations to given statements.
+    * A helper method to prepend the declaration to given statements. This calls
+    * `emit` so the name collection will be cleared.
     */
-  def withTempVarDecls(stmts: Ls[JSStmt]): Ls[JSStmt] =
-    emitTempVarDecls() match {
+  def `with`(stmts: Ls[JSStmt]): Ls[JSStmt] =
+    emit() match {
       case S(decl) => decl :: stmts
       case N       => stmts
     }
 
   /**
-    * Prepend temp variable declarations to given expression. If no temp variables,
-    * return the expression as `Left`.
+    * A helper method to prepend temp variable declarations to given expression.
+    * If no temp variables, return the expression as `Left`. This calls `emit`
+    * so the name collection will be cleared.
     */
-  def withTempVarDecls(expr: JSExpr): JSExpr \/ Ls[JSStmt] =
-    emitTempVarDecls() match {
+  def `with`(expr: JSExpr): JSExpr \/ Ls[JSStmt] =
+    emit() match {
       case S(decl) => R(decl :: expr.`return` :: Nil)
       case N       => L(expr)
     }
-
-  /**
-    * Declare a name in current MLscript scope. The method returns corresponding
-    * JavaScript name. 
-    *
-    * @param name the name to be declared in MLscript code
-    * @return the actual name in JavaScript code
-    */
-  def declare(name: Str): Str = {
-    if (symbols contains name) {
-      val newName = allocateJavaScriptName(name)
-      overrides += name -> newName
-      newName
-    } else {
-      declareJavaScriptName(name)
-      overrides += name -> name
-      name
-    }
-  }
-
-  /**
-    * Resolve the JavaScript name for a given MLscript name.
-    *
-    * @param name the name to be declared in MLscript code
-    * @return the actual name in JavaScript code
-    */
-  def resolve(name: Str): Str = (overrides get name) orElse {
-    enclosing map { _ resolve name }
-  } getOrElse name
-
-  /**
-    * Same as `resolve`, but returns the `Scope` where the name is defined.
-    *
-    * @param name
-    * @return
-    */
-  def resolveWithScope(name: Str): (Str, Opt[Scope]) =
-    overrides.get(name).map((_, S(this))) orElse {
-      enclosing map { _.resolveWithScope(name) }
-    } getOrElse (name, N)
-
-  val isTopLevel: Bool = enclosing.isEmpty
-}
-
-object Scope {
-  def apply(): Scope = new Scope("", Nil, N)
-  def apply(name: Str): Scope = new Scope(name, Nil, N)
-  def apply(symbols: Seq[Str]): Scope = new Scope("", symbols, N)
-  def apply(symbols: Seq[Str], enclosing: Scope): Scope = new Scope("", symbols, Some(enclosing))
-  def apply(name: Str, symbols: Seq[Str], enclosing: Scope): Scope = new Scope(name, symbols, Some(enclosing))
-
-  private val nameAlphabet = Ls.from("abcdefghijklmnopqrstuvwxyz")
 }

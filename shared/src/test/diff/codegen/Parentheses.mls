@@ -46,8 +46,8 @@ x > 0 && x < 0
 :js
 1 + (if (case x + 1 of { int -> 8 | string -> 9 }) == 3 then 2 else 3)
 //│ // Query 1
-//│ let temp;
-//│ res = 1 + ((temp = x + 1, Number.isInteger(temp) ? 8 : temp.constructor == String ? 9 : (function () {
+//│ let a;
+//│ res = 1 + ((a = x + 1, Number.isInteger(a) ? 8 : a.constructor == String ? 9 : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })()) == 3 ? 2 : 3);
 //│ // End of generated code
@@ -57,8 +57,8 @@ x > 0 && x < 0
 :js
 case x of { int -> 1 | string -> 0 }
 //│ // Query 1
-//│ let temp1;
-//│ res = (temp1 = x, Number.isInteger(temp1) ? 1 : temp1.constructor == String ? 0 : (function () {
+//│ let b;
+//│ res = (b = x, Number.isInteger(b) ? 1 : b.constructor == String ? 0 : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
@@ -70,12 +70,12 @@ case x of { int -> 1 | string -> 0 }
 :js
 (case x of { int -> 1 | string -> 0 }, case x of { int -> 1 | string -> 0 })
 //│ // Query 1
-//│ let temp2, temp3;
+//│ let c, d;
 //│ res = [
-//│   (temp2 = x, Number.isInteger(temp2) ? 1 : temp2.constructor == String ? 0 : (function () {
+//│   (c = x, Number.isInteger(c) ? 1 : c.constructor == String ? 0 : (function () {
 //│     throw new Error("non-exhaustive case expression");
 //│   })()),
-//│   (temp3 = x, Number.isInteger(temp3) ? 1 : temp3.constructor == String ? 0 : (function () {
+//│   (d = x, Number.isInteger(d) ? 1 : d.constructor == String ? 0 : (function () {
 //│     throw new Error("non-exhaustive case expression");
 //│   })())
 //│ ];
