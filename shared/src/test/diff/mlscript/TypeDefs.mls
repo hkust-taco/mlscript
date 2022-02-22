@@ -76,32 +76,28 @@ type T = int
 //│ ╙──      	     ^
 
 :e
-:re
 type TypeA = int
 foo 42
 def foo = 1
 foo 42
 //│ Defined type alias TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.81: 	foo 42
+//│ ║  l.80: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
-//│ Runtime error:
-//│   ReferenceError: foo is not defined
 //│ foo: 1
-//│    = 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	foo 42
+//│ ║  l.82: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.82: 	def foo = 1
+//│ ║  l.81: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.83: 	foo 42
+//│ ║  l.82: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
-//│ Runtime error:
-//│   TypeError: foo is not a function
+//│ Code generation encountered an error:
+//│   unresolved symbol foo
 
 42: TypeA
 //│ res: int
@@ -114,7 +110,7 @@ def test = fun x -> (x: TypeB)
 test 42
 type TypeC = TypeA
 //│ ╔══[ERROR] illegal cycle involving type TypeOops
-//│ ║  l.111: 	type TypeOops = TypeOops
+//│ ║  l.107: 	type TypeOops = TypeOops
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias TypeB
 //│ Defined type alias TypeC
@@ -150,13 +146,13 @@ error: Lol -> Lol
 :e
 type Runaway[A] = Runaway['a]
 //│ ╔══[ERROR] illegal cycle involving type Runaway
-//│ ║  l.151: 	type Runaway[A] = Runaway['a]
+//│ ║  l.147: 	type Runaway[A] = Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
-//│ ║  l.157: 	type Runaway[A] = 'a -> Runaway['a]
+//│ ║  l.153: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -166,16 +162,16 @@ type Runaway2 = Lol -> Runaway2
 :e
 id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.167: 	id: Runaway2
+//│ ║  l.163: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── type `{x: ?a -> ?a}` is not a function
-//│ ║  l.136: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.132: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.163: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.159: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.163: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.159: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
 //│ res: (({x: 'a -> 'a},) & {_1: {x: (('a,) | ('a | 'a0,)) -> ('a & 'a0)}}) -> 'b as 'b
 //│    = [Function: id]
@@ -190,13 +186,13 @@ error: Runaway2
 :re
 error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.191: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.187: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
 //│ ╟── type `?a -> ?a` does not match type `int`
-//│ ║  l.136: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.132: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.191: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.187: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: (({x: 'a -> 'a},) & {_1: {x: (('a,) | ('a | 'a0,)) -> ('a & 'a0)}}) -> 'b as 'b
 //│ Runtime error:
@@ -219,22 +215,22 @@ type A2[A] = A -> A2[A]
 def ty1: A1[anything]
 def ty2: A2[anything]
 //│ ty1: anything -> anything -> 'a as 'a
+//│    = <missing implementation>
 //│ ty2: anything -> 'a as 'a
+//│    = <missing implementation>
 
-:re
 ty1 = ty2
 //│ anything -> 'a as 'a
 //│   <:  ty1:
 //│ anything -> anything -> 'a as 'a
-//│ Runtime error:
-//│   ReferenceError: ty2 is not defined
+//│    = <no result>
+//│      ty2 is not implemented
 
-:re
 ty2 = ty1
 //│ anything -> anything -> 'a as 'a
 //│   <:  ty2:
 //│ anything -> 'a as 'a
-//│ Runtime error:
-//│   ReferenceError: ty1 is not defined
+//│    = <no result>
+//│      ty1 and ty2 are not implemented
 
 

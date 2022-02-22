@@ -21,8 +21,8 @@ c = Class{x = 1}
 def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│ // Query 1
 //│ globalThis.useCls = function useCls(c) {
-//│   let temp;
-//│   return (temp = c, temp instanceof Class ? c.x : Number.isInteger(temp) ? "oops" : (function () {
+//│   let a;
+//│   return (a = c, a instanceof Class ? c.x : Number.isInteger(a) ? "oops" : (function () {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };

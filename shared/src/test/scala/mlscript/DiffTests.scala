@@ -6,7 +6,12 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 import ammonite.ops._
 import scala.collection.mutable
+import scala.collection.immutable
 import mlscript.utils._, shorthands._
+import mlscript.JSTestBackend.IllFormedCode
+import mlscript.JSTestBackend.Unimplemented
+import mlscript.JSTestBackend.UnexpectedCrash
+import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
@@ -52,7 +57,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      showDeclarationTS: Bool, expectRuntimeErrors: Bool)
+      showDeclarationTS: Bool, expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false)
     
@@ -89,6 +94,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(showDeclarationTS = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
+          case "ShowRepl" => mode.copy(showRepl = true)
+          case "escape" => mode.copy(allowEscape = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -292,70 +299,112 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             )
             
-            // generate js code if the correct mode has been selected
-            var results: (Str, Bool) \/ Opt[Ls[(Bool, Str)]] = if (!allowTypeErrors &&
+            final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
+              def showFirst(prefixLength: Int): Unit = replies match {
+                case ReplHost.Error(err) :: rest =>
+                  if (!(mode.expectTypeErrors
+                      || mode.expectRuntimeErrors
+                      || allowRuntimeErrors
+                      || mode.fixme
+                  )) failures += blockLineNum
+                  totalRuntimeErrors += 1
+                  output("Runtime error:")
+                  err.split('\n') foreach { s => output("  " + s) }
+                  replies = rest
+                case ReplHost.Unexecuted(reason) :: rest =>
+                  output(" " * prefixLength + "= <no result>")
+                  output(" " * (prefixLength + 2) + reason)
+                  replies = rest
+                case ReplHost.Result(result) :: rest =>
+                  result.split('\n').zipWithIndex foreach { case (s, i) =>
+                    if (i =:= 0) output(" " * prefixLength + "= " + s)
+                    else output(" " * (prefixLength + 2) + s)
+                  }
+                  replies = rest
+                case ReplHost.Empty :: rest =>
+                  output(" " * prefixLength + "= <missing implementation>")
+                  replies = rest
+                case Nil => ()
+              }
+            }
+            
+            var results: JSTestBackend.Result = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
-              backend(p) map { testCode =>
-                // Display the generated code.
-                if (mode.showGeneratedJS) {
-                  if (!testCode.prelude.isEmpty) {
-                    output("// Prelude")
-                    testCode.prelude foreach { line =>
-                      output(line)
+              backend(p, mode.allowEscape) match {
+                case TestCode(prelude, queries) => {
+                  // Display the generated code.
+                  if (mode.showGeneratedJS) {
+                    if (!prelude.isEmpty) {
+                      output("// Prelude")
+                      prelude foreach { line =>
+                        output(line)
+                      }
                     }
+                    queries.zipWithIndex foreach {
+                      case (JSTestBackend.CodeQuery(prelude, code), i) =>
+                        output(s"// Query ${i + 1}")
+                        prelude foreach { output(_) }
+                        code foreach { output(_) }
+                      case (JSTestBackend.AbortedQuery(reason), i) =>
+                        output(s"// Query ${i + 1} aborted: $reason")
+                      case (JSTestBackend.EmptyQuery, i) =>
+                        output(s"// Query ${i + 1} is empty")
+                    }
+                    output("// End of generated code")
                   }
-                  testCode.queries.zipWithIndex foreach { case (query, i) =>
-                    output(s"// Query ${i + 1}")
-                    query.prelude foreach { output(_) }
-                    query.code foreach { output(_) }
+                  // Execute code.
+                  if (!mode.noExecution) {
+                    prelude match {
+                      case Nil => ()
+                      case lines => host.execute(lines mkString " ")
+                    }
+                    if (mode.showRepl) {
+                      println(s"Block [line: ${blockLineNum}] [file: ${file.baseName}]")
+                      if (queries.isEmpty)
+                        println(s"The block is empty")
+                    }
+                    // Send queries to the host.
+                    ExecutedResult(queries.zipWithIndex.map {
+                      case (JSTestBackend.CodeQuery(preludeLines, codeLines), i) =>
+                        val prelude = preludeLines.mkString
+                        val code = codeLines.mkString
+                        if (mode.showRepl) {
+                          println(s"├── Query ${i + 1}/${queries.length}")
+                          println(s"│ ├── Prelude: ${if (preludeLines.isEmpty) "<empty>" else prelude}")
+                          println(s"│ └── Code: ${code}")
+                        }
+                        val reply = host.query(prelude, code)
+                        if (mode.showRepl) {
+                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
+                          println(s"$prefix Reply ${i + 1}/${queries.length}: $reply")
+                        }
+                        reply
+                      case (JSTestBackend.AbortedQuery(reason), i) =>
+                        if (mode.showRepl) {
+                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
+                          println(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
+                        }
+                        ReplHost.Unexecuted(reason)
+                      case (JSTestBackend.EmptyQuery, i) =>
+                        if (mode.showRepl) {
+                          val prefix = if (i + 1 == queries.length) "└──" else "├──"
+                          println(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
+                        }
+                        ReplHost.Empty
+                    })
+                  } else {
+                    JSTestBackend.ResultNotExecuted
                   }
-                  output("// End of generated code")
                 }
-                // Execute code.
-                if (!mode.noExecution) {
-                  testCode.prelude match {
-                    case Nil => ()
-                    case lines => host.execute(lines mkString " ")
-                  }
-                  S(testCode.queries map { query =>
-                    // Useful for find out what is really happening.
-                    // println(s"In test $file:")
-                    // println(s"Querying: ${JSLit.makeStringLiteral(q)}")
-                    val res = host.query(query.prelude.mkString(""), query.code.mkString(""))
-                    // println(s"Response: ${JSLit.makeStringLiteral(res)}")
-                    res
-                  })
-                } else {
-                  N
-                }
+                case t => t
               }
             } else {
-              R(N)
+              JSTestBackend.ResultNotExecuted
             }
 
-            // print the generated js code
-            def showResult(prefixLength: Int) = {
-              results match {
-                case R(S(head :: next)) =>
-                  val text = head match {
-                    case (false, err) =>
-                      if (!(mode.expectTypeErrors
-                          || mode.expectRuntimeErrors
-                          || allowRuntimeErrors
-                          || mode.fixme
-                      )) failures += blockLineNum
-                      totalRuntimeErrors += 1
-                      output("Runtime error:")
-                      err.split('\n') foreach { s => output("  " + s) }
-                    case (true, result) =>
-                      result.split('\n').zipWithIndex foreach { case (s, i) =>
-                        if (i =:= 0) output(" " * prefixLength + "= " + s)
-                        else output(" " * (prefixLength + 2) + s)
-                      }
-                  }
-                  results = R(S(next))
-                case _ => ()
-              }
+            def showFirstResult(prefixLength: Int) = results match {
+              case t: ExecutedResult => t.showFirst(prefixLength)
+              case _ => ()
             }
             
             // process statements and output mlscript types
@@ -373,6 +422,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 declared += nme.name -> ty_sch
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
+                showFirstResult(nme.name.length())
                 if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
 
               // statement is defined and has a body/definition
@@ -401,9 +451,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
-                showResult(nme.name.length())
-              
-              // `Term` is processed here
+                showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
@@ -429,17 +477,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                       prefixLength = 3
                     }
                 }
-                showResult(prefixLength)
+                showFirstResult(prefixLength)
             }
 
             // If code generation fails, show the error message.
             results match {
-              case L((message, crashed)) =>
-                if (crashed)
-                  output("Code generation crashed:")
-                else
-                  output("Code generation met an error:")
-                output(s"  $message")
+              case IllFormedCode(message) =>
+                totalRuntimeErrors += 1
+                output("Code generation encountered an error:")
+                output(s"  ${message}")
+              case Unimplemented(message) =>
+                output("Unable to execute the code:")
+                output(s"  ${message}")
+              case UnexpectedCrash(name, message) =>
+                failures += blockLineNum
+                output("Code generation crashed:")
+                output(s"  $name: $message")
               case _ => ()
             }
             // generate typescript typegen block
@@ -572,7 +625,7 @@ object DiffTests {
       ()
     }
 
-    private def consumeUntilPrompt(): (Bool, Str) = {
+    private def consumeUntilPrompt(): ReplHost.Reply = {
       val buffer = new StringBuilder()
       while (!buffer.endsWith("\n> ")) {
         buffer.append(stdout.read().toChar)
@@ -584,9 +637,9 @@ object DiffTests {
       if (begin >= 0 && end >= 0)
         // `console.log` inserts a space between every two arguments,
         // so + 1 and - 1 is necessary to get correct length.
-        (false, reply.substring(begin + 1, end))
+        ReplHost.Error(reply.substring(begin + 1, end))
       else
-        (true, reply)
+        ReplHost.Result(reply)
     }
 
     private def send(code: Str, useEval: Bool = false): Unit = {
@@ -598,11 +651,11 @@ object DiffTests {
       stdin.flush()
     }
 
-    def query(prelude: Str, code: Str): (Bool, Str) = {
+    def query(prelude: Str, code: Str): ReplHost.Reply = {
       val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
       send(wrapped)
       consumeUntilPrompt() match {
-        case (true, _) =>
+        case _: ReplHost.Result =>
           send("res")
           consumeUntilPrompt()
         case t => t
@@ -615,5 +668,37 @@ object DiffTests {
     }
 
     def terminate(): Unit = proc.destroy()
+  }
+
+  object ReplHost {
+    /**
+      * The base class of all kinds of REPL replies.
+      */
+    sealed abstract class Reply
+
+    final case class Result(content: Str) extends Reply {
+      override def toString(): Str = s"[success] $content"
+    }
+
+    /**
+      * If the query is `Empty`, we will receive this.
+      */
+    final object Empty extends Reply {
+      override def toString(): Str = "[empty]"
+    }
+
+    /**
+      * If the query is `Unexecuted`, we will receive this.
+      */
+    final case class Unexecuted(message: Str) extends Reply {
+      override def toString(): Str = s"[unexecuted] $message"
+    }
+
+    /**
+      * If the `ReplHost` captured errors, it will response with `Error`.
+      */
+    final case class Error(message: Str) extends Reply {
+      override def toString(): Str = s"[error] $message"
+    }
   }
 }

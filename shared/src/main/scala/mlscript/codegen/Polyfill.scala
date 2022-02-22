@@ -2,6 +2,7 @@ package mlscript
 
 import mlscript.utils._, shorthands._
 import scala.collection.immutable.HashMap
+import scala.collection.mutable.ArrayBuffer
 
 class Polyfill {
   private val featFnNameMap = collection.mutable.HashMap[Str, Str]()
@@ -27,7 +28,7 @@ class Polyfill {
         case S(feature) =>
           emittedFeatSet += featName
           S(feature(fnName))
-        case N          => N
+        case N => N
       }
   }).toList
 }
@@ -48,86 +49,113 @@ object Polyfill {
     def apply(name: Str): JSStmt = maker(name)
   }
 
-  val features: Ls[Feature] =
-    RuntimeHelper("prettyPrint", (name: Str) => {
-      val arg = JSIdent("value")
-      val default = arg.member("constructor").member("name") + JSExpr(" ") +
-        JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
-      JSFuncDecl(
-        name,
-        JSNamePattern("value") :: Nil,
-        arg
-          .typeof()
-          .switch(
-            default.`return` :: Nil,
-            JSExpr("number") -> Nil,
-            JSExpr("boolean") -> {
-              arg.member("toString")().`return` :: Nil
-            },
-            // Returns `"[Function: <name>]"`
-            JSExpr("function") -> {
-              val name = arg.member("name") ?? JSExpr("<anonymous>")
-              val repr = JSExpr("[Function: ") + name + JSExpr("]")
-              (repr.`return` :: Nil)
-            },
-            JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
-          ) :: Nil,
-      )
-    }) :: RuntimeHelper("withConstruct", (name: Str) => {
-      val obj = JSIdent("Object")
-      val tgt = JSIdent("target")
-      val body: Ls[JSStmt] = JSIfStmt(
-        (tgt.typeof() :=== JSExpr("string")) :|| (tgt.typeof() :=== JSExpr("number")) :||
-          (tgt.typeof() :=== JSExpr("boolean")) :|| (tgt.typeof() :=== JSExpr("bigint")) :||
-          (tgt.typeof() :=== JSExpr("symbol")),
-        obj("assign")(tgt, JSIdent("fields")).`return` :: Nil,
-      ) :: JSIfStmt(
-        tgt.instanceOf(JSIdent("String")) :|| tgt.instanceOf(JSIdent("Number")) :||
-          tgt.instanceOf(JSIdent("Boolean")) :|| tgt.instanceOf(JSIdent("BigInt")),
-        obj("assign")(tgt("valueOf")(), tgt, JSIdent("fields")).`return` :: Nil,
-      ) :: JSConstDecl("copy", obj("assign")(JSRecord(Nil), tgt, JSIdent("fields"))) ::
-        obj("setPrototypeOf")(JSIdent("copy"), obj("getPrototypeOf")(tgt)).stmt ::
-        JSIdent("copy").`return` ::
-        Nil
-      JSFuncDecl(
-        name,
-        JSNamePattern("target") :: JSNamePattern("fields") :: Nil,
-        body
-      )
-    }) :: BuiltinFunc("toString", {
-      JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("String")(JSIdent("x")).`return` :: Nil)
-    }) :: BuiltinFunc("id", {
-      JSFuncDecl(_, JSNamePattern("x") :: Nil, JSIdent("x").`return` :: Nil)
-    }) :: BuiltinFunc("succ", {
-      JSFuncDecl(_, JSNamePattern("x") :: Nil, (JSIdent("x") + JSLit("1")).`return` :: Nil)
-    }) :: BuiltinFunc("error", {
-      JSFuncDecl(
-        _,
-        Nil,
-        JSInvoke(
-          JSIdent("Error", true),
-          JSExpr("unexpected runtime error") :: Nil
-        ).`throw` :: Nil
-      )
-    }) :: BuiltinFunc("concat", { makeBinaryFunc(_, "+") }) ::
-      BuiltinFunc("add", { makeBinaryFunc(_, "+") }) ::
-      BuiltinFunc("sub", { makeBinaryFunc(_, "-") }) ::
-      BuiltinFunc("mul", { makeBinaryFunc(_, "*") }) ::
-      BuiltinFunc("div", { makeBinaryFunc(_, "/") }) ::
-      BuiltinFunc("gt", { makeBinaryFunc(_, ">") }) ::
-      BuiltinFunc("not", { makeUnaryFunc(_, "!") }) ::
-      Nil
-  
+  import JSCodeHelpers._
+
+  val features: Ls[Feature] = {
+    val buffer = new ArrayBuffer[Feature]()
+    buffer += RuntimeHelper(
+      "prettyPrint",
+      (name: Str) => {
+        val arg = JSIdent("value")
+        val default = arg.member("constructor").member("name") + JSExpr(" ") +
+          JSIdent("JSON").member("stringify")(arg, JSIdent("undefined"), JSIdent("2"))
+        JSFuncDecl(
+          name,
+          JSNamePattern("value") :: Nil,
+          arg
+            .typeof()
+            .switch(
+              default.`return` :: Nil,
+              JSExpr("number") -> Nil,
+              JSExpr("boolean") -> {
+                arg.member("toString")().`return` :: Nil
+              },
+              // Returns `"[Function: <name>]"`
+              JSExpr("function") -> {
+                val name = arg.member("name") ?? JSExpr("<anonymous>")
+                val repr = JSExpr("[Function: ") + name + JSExpr("]")
+                (repr.`return` :: Nil)
+              },
+              JSExpr("string") -> ((JSExpr("\"") + arg + JSExpr("\"")).`return` :: Nil)
+            ) :: Nil,
+        )
+      }
+    )
+    buffer += RuntimeHelper(
+      "withConstruct",
+      (name: Str) => {
+        val obj = id("Object")
+        val t = id("target")
+        val f = id("fields")
+        fn(name, param("target"), param("fields")) (
+          JSIfStmt(
+            (t.typeof() :=== JSExpr("string")) :|| (t.typeof() :=== JSExpr("number")) :||
+              (t.typeof() :=== JSExpr("boolean")) :|| (t.typeof() :=== JSExpr("bigint")) :||
+              (t.typeof() :=== JSExpr("symbol")),
+            obj("assign")(t, f).`return` :: Nil,
+          ),
+          JSIfStmt(
+            t.instanceOf(id("String")) :|| t.instanceOf(id("Number")) :||
+              t.instanceOf(id("Boolean")) :|| t.instanceOf(id("BigInt")),
+            obj("assign")(t("valueOf")(), t, f).`return` :: Nil,
+          ),
+          JSIfStmt(
+            id("Array")("isArray")(t),
+            Ls(
+              const("clone", id("Array")("from")(t)),
+              forIn(param("key"), t) {
+                id("clone").prop(id("key")) := t.prop(id("key"))
+              },
+              forIn(param("key"), f) {
+                id("clone").prop(id("key")) := f.prop(id("key"))
+              },
+              `return`(id("clone"))
+            )
+          ),
+          JSConstDecl("copy", obj("assign")(JSRecord(Nil), t, f)),
+          obj("setPrototypeOf")(id("copy"), obj("getPrototypeOf")(t)).stmt,
+          id("copy").`return`
+        )
+      }
+    )
+    buffer += BuiltinFunc(
+      "toString", fn(_, param("x")) { `return` { id("String")(id("x")) } }
+    )
+    buffer += BuiltinFunc(
+      "id", fn(_, param("x")) { `return`(id("x")) }
+    )
+    buffer += BuiltinFunc(
+      "succ", fn(_, param("x")) { `return` { id("x") + lit(1) } }
+    )
+    buffer += BuiltinFunc(
+      "error", fn(_) {
+        `throw`(JSNew(JSIdent("Error"))(JSExpr("unexpected runtime error")))
+      }
+    )
+    buffer += BuiltinFunc("concat", makeBinaryFunc("+"))
+    buffer += BuiltinFunc("add", makeBinaryFunc("+"))
+    buffer += BuiltinFunc("sub", makeBinaryFunc("-"))
+    buffer += BuiltinFunc("mul", makeBinaryFunc("*"))
+    buffer += BuiltinFunc("div", makeBinaryFunc("/"))
+    buffer += BuiltinFunc("gt", makeBinaryFunc(">"))
+    buffer += BuiltinFunc("not", makeUnaryFunc("!"))
+    buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
+    buffer.toList
+  }
+
   private val nameFeatureMap = HashMap.from(features map { feature => (feature.name, feature) })
 
   def getFeature(name: Str): Opt[Feature] = nameFeatureMap get name
 
-  def isPreludeFunction(name: Str): Bool = nameFeatureMap.get(name).map({
-    case BuiltinFunc(_, _) => true
-    case _                 => false
-  }).getOrElse(false)
+  def isPreludeFunction(name: Str): Bool = nameFeatureMap
+    .get(name)
+    .map({
+      case BuiltinFunc(_, _) => true
+      case _                 => false
+    })
+    .getOrElse(false)
 
-  private def makeBinaryFunc(name: Str, op: Str): JSFuncDecl =
+  private def makeBinaryFunc(op: Str)(name: Str): JSFuncDecl =
     JSFuncDecl(
       name,
       JSNamePattern("x") :: JSNamePattern("y") :: Nil,
@@ -141,10 +169,6 @@ object Polyfill {
       ) :: Nil
     )
 
-  private def makeUnaryFunc(name: Str, op: Str): JSFuncDecl =
-    JSFuncDecl(
-      name,
-      JSNamePattern("x") :: Nil,
-      (JSIdent("x").unary(op)).`return` :: Nil
-    )
+  private def makeUnaryFunc(op: Str)(name: Str): JSFuncDecl =
+    fn(name, param("x")) { `return`(id("x").unary(op)) }
 }
