@@ -7,6 +7,21 @@ class Y: X
 //│ Defined Y.MX: (Y & x) -> int
 //│ // Prelude
 //│ let res;
+//│ const X = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
 //│ class Y {
 //│   constructor(fields) {
 //│     this.x = fields.x;
@@ -33,6 +48,36 @@ class C: B & { c: int }
 //│ Defined trait B
 //│ Defined class C
 //│ // Prelude
+//│ const A = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
+//│ const B = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
 //│ class C {
 //│   constructor(fields) {
 //│     this.c = fields.c;
@@ -52,6 +97,51 @@ trait S: { s: int }
 //│ Defined trait R
 //│ Defined trait S
 //│ // Prelude
+//│ const Q = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
+//│ const R = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
+//│ const S = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
 //│ class P {
 //│   constructor(fields) {
 //│     this.p = fields.p;

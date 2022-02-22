@@ -55,7 +55,7 @@ T a
 :js
 T A
 //│ // Query 1
-//│ res = ((x) => x)((x) => new A(x));
+//│ res = T.build((x) => new A(x));
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.56: 	T A
@@ -194,14 +194,14 @@ l = Lol h
 //│ h: Hey
 //│  = Hey {}
 //│ l: Hey & lol
-//│  = Hey {}
+//│  = Hey { Foo: [Getter] }
 
 e = Lol
 e
 //│ e: 'a -> (lol & 'a)
-//│  = [Function: e]
+//│  = [Function: build]
 //│ res: 'a -> (lol & 'a)
-//│    = [Function: e]
+//│    = [Function: build]
 
 l.(Lol.Foo)
 //│ res: 1

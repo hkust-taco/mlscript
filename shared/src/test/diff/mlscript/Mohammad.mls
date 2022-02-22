@@ -44,6 +44,28 @@ trait T
   method Test2 = 1
 //│ Defined trait T
 //│ Defined T.Test2: t -> 1
+//│ // Prelude
+//│ const T = function () {
+//│   const tag = Object();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       Object.defineProperty(instance, "Test2", {
+//│         enumerable: true,
+//│         get: function () {
+//│           return 1;
+//│         }
+//│       });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(instance) {
+//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     }
+//│   });
+//│ }();
 //│ // End of generated code
 
 :js
@@ -64,24 +86,21 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	useTrt c
+//│ ║  l.87: 	useTrt c
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.82: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.82: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│    = 1
 
-:re
 useTrt (c with { y = 1 })
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│    = 1
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
