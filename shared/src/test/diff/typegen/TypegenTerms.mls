@@ -45,7 +45,7 @@ def g = rcd with { y = "yeah" }
 
 :ts
 :ne
-def f (a: int) (b: string) (c: bool) = if bool then a else b
+def f (a: int) (b: string) (c: bool) = if c then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
 def g x y = if x.b == 1 then x else x.a
 // miscellaneous functions

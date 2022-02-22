@@ -9,7 +9,6 @@ import mlscript.ShowCtx
 import mlscript.Typer
 import mlscript.TypeDef
 import mlscript.Terms
-import mlscript.codegen.Scope
 import mlscript.SourceLine
 import scala.collection.mutable.{ListBuffer, Map => MutMap}
 
