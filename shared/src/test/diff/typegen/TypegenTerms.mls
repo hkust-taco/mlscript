@@ -104,64 +104,13 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 
 :ts
 :ne
-:e
-def f x y = if x.a == y.b then x y else fun y -> x
+def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
-//│   <:  f:
-//│ ('c -> 'a as 'a) -> 'c -> int
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'c -> ?a & 'a` does not have field 'a'
-//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
-//│ ║        	       ^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	               ^^^
-//│ ╟── from reference:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'c` does not have field 'b'
-//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
-//│ ║        	                           ^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	                      ^^^
-//│ ╟── from reference:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ╙──       	                      ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'c -> ?a & 'a` does not match type `int`
-//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
-//│ ║        	       ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	                               ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
-//│ ╙──      	                                 ^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	                                        ^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.108: 	def f x y = if x.a == y.b then x y else fun y -> x
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.65: 	def f: ('c -> 'a as 'a) -> 'c -> int
-//│ ╙──      	                                 ^^^
+//│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const f<b, c, a>: (arg1: (arg3: a) => b & {a: int} & c) => (arg5: {b: int} & a) => (arg7: unknown) => c | b
+//│ export declare const nonsense<b, c, a>: (arg1: (arg3: a) => b & {a: int} & c) => (arg5: {b: int} & a) => (arg7: unknown) => c | b
 //│ export declare const g: (arg1: never) => (arg3: never) => never
 //│ // end ts
 
@@ -203,5 +152,5 @@ def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
 //│ // start ts
 //│ export declare const g: (arg1: int, arg2: int) => int
 //│ export declare const h<a>: (arg1: int, arg2: (arg3: (arg5: a) => int, arg6: a)) => int
-//│ export declare const k<b, a>: (arg1: int, arg2: (arg3: (arg5: int) => a, arg6: int)) => (arg8: int, arg9: (arg11: int) => (arg13: a) => b, arg14: int) => b
+//│ export declare const k<a, b>: (arg1: int, arg2: (arg3: (arg5: int) => a, arg6: int)) => (arg8: int, arg9: (arg11: int) => (arg13: a) => b, arg14: int) => b
 //│ // end ts
