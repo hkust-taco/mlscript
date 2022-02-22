@@ -233,9 +233,15 @@ class JSBackend {
       baseClassSymbol: Opt[ClassSymbol]
   )(implicit scope: Scope): JSClassDecl = {
     val members = classSymbol.methods.map { translateClassMember(_) }
-    val fields = classSymbol.body.collectFields
+    val fields = classSymbol.body.collectFields ++
+      classSymbol.body.collectTypeNames.flatMap {
+        topLevelScope.getType(_).flatMap {
+          case TraitSymbol(_, _, _, body)     => S(body.collectFields)
+          case _: ClassSymbol | _: TypeSymbol => N
+        }.getOrElse(Nil)
+      }
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
-    JSClassDecl(classSymbol.runtimeName, fields.toList, base, members)
+    JSClassDecl(classSymbol.runtimeName, fields, base, members)
   }
 
   private def translateClassMember(

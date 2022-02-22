@@ -1,0 +1,42 @@
+:js
+trait X: { x: int }
+class Y: X
+  method MX = this.x
+//│ Defined trait X
+//│ Defined class Y
+//│ Defined Y.MX: (Y & x) -> int
+//│ // Prelude
+//│ let res;
+//│ class Y {
+//│   constructor(fields) {
+//│     this.x = fields.x;
+//│   }
+//│   get MX() {
+//│     return this.x;
+//│   }
+//│ }
+//│ // End of generated code
+
+:js
+(Y {x = 1}).x
+//│ // Query 1
+//│ res = new Y({ x: 1 }).x;
+//│ // End of generated code
+//│ res: 1
+//│    = 1
+
+:js
+trait A: { a: int }
+trait B: { b: int } & A
+class C: B & { c: int }
+//│ Defined trait A
+//│ Defined trait B
+//│ Defined class C
+//│ // Prelude
+//│ class C {
+//│   constructor(fields) {
+//│     this.c = fields.c;
+//│     this.b = fields.b;
+//│   }
+//│ }
+//│ // End of generated code

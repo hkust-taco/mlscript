@@ -47,11 +47,11 @@ def dv = D{}
 //│ ║  l.42: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
-//│   = D { x: undefined }
+//│   = D { x: undefined, y: undefined }
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: D & {x: 0, y: "hello"}
-//│   = D { x: 0 }
+//│   = D { x: 0, y: 'hello' }
 
 :e
 dv: nothing
@@ -68,11 +68,11 @@ dv: nothing
 //│ ║  l.57: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 dv: A & B
 //│ res: {x: int, y: string} & a & b
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 :e
 dv: A & B: nothing
@@ -86,7 +86,7 @@ dv: A & B: nothing
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 
 trait Indirect: C
