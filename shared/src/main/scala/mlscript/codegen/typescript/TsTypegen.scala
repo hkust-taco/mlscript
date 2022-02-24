@@ -1,16 +1,9 @@
-package mlscript.codegen.typescript
+package mlscript
+package codegen.typescript
+
+import scala.collection.mutable.{ListBuffer, Map => MutMap}
 
 import mlscript.utils._
-import mlscript.{ TypeVar, SourceCode, Type, Union, TypeName, Inter, Record, Tuple,
-  Top, Bot, Literal, Function, Recursive, AppliedType, Neg, Rem, Bounds, WithExtension,
-  IntLit, DecLit, StrLit, Arr }
-import mlscript.{JSBackend, JSLit}
-import mlscript.ShowCtx
-import mlscript.Typer
-import mlscript.TypeDef
-import mlscript.Terms
-import mlscript.SourceLine
-import scala.collection.mutable.{ListBuffer, Map => MutMap}
 import mlscript.codegen.Scope
 
 final case class IllFormedTsTypeError(message: String) extends Exception(message);
