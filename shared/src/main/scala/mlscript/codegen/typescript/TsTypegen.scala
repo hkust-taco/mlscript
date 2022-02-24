@@ -65,7 +65,7 @@ final case class TsTypegenCodeBuilder() {
       val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
       existingTypeVars.iterator.foreach(kv => {
         val name = typegenTypeScope.declareRuntimeSymbol(kv._2)
-        typeVarMapping += ((kv._1, SourceCode(kv._2)))
+        typeVarMapping += kv._1 -> SourceCode(kv._2)
       })
 
       // initialize local term scope with global term scope as parent
