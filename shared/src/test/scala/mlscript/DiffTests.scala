@@ -92,7 +92,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
-          case "ts" => mode.copy(showDeclarationTS = true)
+          case "ts" => mode.copy(generateTsDeclarations = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
@@ -409,7 +409,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             // process statements and output mlscript types
             // all `Def`s and `Term`s are processed here
-            // generate typescript types if showDeclarationTS flag is
+            // generate typescript types if generateTsDeclarations flag is
             // set in the mode
             stmts.foreach {
               // statement only declares a new term with it's type
@@ -423,7 +423,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
                 showFirstResult(nme.name.length())
-                if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
@@ -437,7 +437,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   case N =>
                     ctx += nme.name -> ty_sch
                     output(s"$nme: ${exp.show}")
-                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                    if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                     
                   // statement has a body and a declared type
                   // both are used to compute a subsumption (What is this??)
@@ -449,7 +449,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
-                    if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                    if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
@@ -463,7 +463,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         ctx += nme -> pty
                         output(s"$nme: ${ptType.show}")
                         prefixLength = nme.length()
-                        if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
+                        if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(ptType, Some(nme))
                     }
 
                   // statements for terms that compute to a value
@@ -473,7 +473,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     if (exp =/= TypeName("unit")) {
                       ctx += "res" -> pty
                       output(s"res: ${exp.show}")
-                      if (mode.showDeclarationTS) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
+                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, None)
                       prefixLength = 3
                     }
                 }
@@ -496,7 +496,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               case _ => ()
             }
             // generate typescript typegen block
-            if (mode.showDeclarationTS) outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
+            if (mode.generateTsDeclarations) outputSourceCode(tsTypegenCodeBuilder.toSourceCode())
             
             if (mode.stats) {
               val (co, an, su, ty) = typer.stats

@@ -4,15 +4,11 @@ package codegen.typescript
 import scala.collection.mutable.{ListBuffer, Map => MutMap}
 
 import mlscript.utils._
-import mlscript.codegen.Scope
-
-final case class IllFormedTsTypeError(message: String) extends Exception(message);
+import mlscript.codegen.{Scope, CodeGenError}
 
 /** Typescript typegen code builder for an mlscript typing unit
   */
 final case class TsTypegenCodeBuilder() {
-  // store converted mlscript type definitions and terms created in mlscript
-  // use typeScope and termScope to generate non-conflicting names for both
   private val typeScope: Scope = Scope("globalTypeScope")
   private val termScope: Scope = Scope("globalTermScope")
   private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty;
@@ -43,8 +39,6 @@ final case class TsTypegenCodeBuilder() {
     */
   protected case class TypegenContext(
       val typeVarMapping: MutMap[TypeVar, SourceCode],
-      val recTypeVarSet: Set[TypeVar],
-      val nonRecTypeVarSet: Set[TypeVar],
       val termScope: Scope,
       val typeScope: Scope
   )
@@ -52,7 +46,6 @@ final case class TsTypegenCodeBuilder() {
   object TypegenContext {
     def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
-      val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
@@ -66,15 +59,14 @@ final case class TsTypegenCodeBuilder() {
       // argument names. For e.g. the below case will be avoided
       // export const arg0: int
       // export const f: (arg0: int) => int
-      TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
     }
 
     // create a context with pre-created type var to name mapping
     def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode]): TypegenContext = {
-      val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
-      TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
     }
   }
 
@@ -92,7 +84,7 @@ final case class TsTypegenCodeBuilder() {
     val defName = termName match {
       case Some(name) => {
         if (termScope.existsRuntimeSymbol(name)) {
-          throw new IllFormedTsTypeError(s"A declaration with name $termName already exists.")
+          throw new CodeGenError(s"A declaration with name $termName already exists.")
         } else {
           termScope.declareRuntimeSymbol(name)
           name
@@ -103,10 +95,10 @@ final case class TsTypegenCodeBuilder() {
 
     // Create a mapping from type var to their friendly name for lookup
     val typegenCtx = TypegenContext(mlType)
-    val tsType = toTsType(mlType)(typegenCtx, Some(true), false);
+    val tsType = toTsType(mlType)(typegenCtx, Some(true));
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
-      .filter(tup => typegenCtx.nonRecTypeVarSet.contains(tup._1))
+      .filter(tup => mlType.nonRecTypeVarSet.contains(tup._1))
       .map(_._2)
       .toList
 
@@ -122,18 +114,17 @@ final case class TsTypegenCodeBuilder() {
     *
     * @param mlType
     *   mlscript type to convert
+    * @param funcArg
+    *   true if Tuple type is the lhs of a function. Used to translate tuples as multi-parameter functions
     * @param typegenCtx
     *   type generation context for allocating new names
     * @param pol
     *   polarity of type
-    * @param funcArg
-    *   true if Tuple type is the lhs of a function. Used to translate tuples as multi-parameter functions
     * @return
     */
-  private def toTsType(mlType: Type)(implicit
+  private def toTsType(mlType: Type, funcArg: Boolean = false)(implicit
       typegenCtx: TypegenContext,
       pol: Option[Boolean],
-      funcArg: Boolean
   ): SourceCode = {
     mlType match {
       // these types do not mutate typegen context
@@ -185,7 +176,7 @@ final case class TsTypegenCodeBuilder() {
 
         // flip polarity for input type of function
         // lhs translates to the complete argument list
-        val lhsTypeSource = toTsType(lhs)(typegenCtx, pol.map(!_), true);
+        val lhsTypeSource = toTsType(lhs, true)(typegenCtx, pol.map(!_));
         val rhsTypeSource = toTsType(rhs);
 
         lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
@@ -201,8 +192,8 @@ final case class TsTypegenCodeBuilder() {
 
         // recursive type does not have any other type variables
         // (except itself)
-        if (nestedTypegenCtx.nonRecTypeVarSet.size === 0) {
-          val bodyType = toTsType(body)(typegenCtx, pol, funcArg);
+        if (mlType.nonRecTypeVarSet.size === 0) {
+          val bodyType = toTsType(body)(typegenCtx, pol);
           typegenCode += (SourceCode(s"export type $uvName") ++
             SourceCode.equalSign ++ bodyType)
           uvName
@@ -211,12 +202,12 @@ final case class TsTypegenCodeBuilder() {
         // so now it is an applied type
         else {
           val uvTypeParams = typeVarMapping.iterator
-            .filter(tup => nestedTypegenCtx.nonRecTypeVarSet.contains(tup._1))
+            .filter(tup => mlType.nonRecTypeVarSet.contains(tup._1))
             .map(_._2)
             .toList
           val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)
-          typeVarMapping += ((uv, uvAppliedName))
-          val bodyType = toTsType(body)(nestedTypegenCtx, pol, funcArg);
+          typeVarMapping += uv -> uvAppliedName
+          val bodyType = toTsType(body)(nestedTypegenCtx, pol);
           typegenCode += (SourceCode(s"export type $uvAppliedName") ++
             SourceCode.equalSign ++ bodyType)
           uvAppliedName
@@ -234,7 +225,7 @@ final case class TsTypegenCodeBuilder() {
       case Neg(base) =>
         // Negative type only works in positions of positive polarity
         if (pol === Some(false)) {
-          throw IllFormedTsTypeError(
+          throw CodeGenError(
             s"Cannot generate type for negated type at negative polarity for $mlType"
           )
         }
@@ -264,7 +255,7 @@ final case class TsTypegenCodeBuilder() {
           case Some(false) => toTsType(lb)
           // TODO: Yet to handle invariant types
           case None =>
-            throw IllFormedTsTypeError(s"Cannot generate type for invariant type $mlType")
+            throw CodeGenError(s"Cannot generate type for invariant type $mlType")
         }
       case WithExtension(base, rcd) =>
         toTsType(Inter(Rem(base, rcd.fields.map(tup => tup._1)), rcd))
@@ -273,9 +264,9 @@ final case class TsTypegenCodeBuilder() {
         typegenCtx.typeVarMapping
           .get(t)
           .getOrElse({
-            throw IllFormedTsTypeError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
+            throw CodeGenError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
           })
-      case Arr(_) => throw IllFormedTsTypeError(s"Array type currently not supported for $mlType")
+      case Arr(_) => throw CodeGenError(s"Array type currently not supported for $mlType")
     }
   }
 }
