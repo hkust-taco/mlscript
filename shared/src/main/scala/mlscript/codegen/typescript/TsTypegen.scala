@@ -50,9 +50,9 @@ final case class TsTypegenCodeBuilder() {
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
       existingTypeVars.iterator.foreach { case (key, value) =>
-        val name = typegenTypeScope.declareRuntimeSymbol(kv._2)
-        typeVarMapping += kv._1 -> SourceCode(kv._2)
-      })
+        val name = typegenTypeScope.declareRuntimeSymbol(value)
+        typeVarMapping += key -> SourceCode(value)
+      }
 
       // initialize local term scope with global term scope as parent
       // this will reduce cases where global names are similar to function
