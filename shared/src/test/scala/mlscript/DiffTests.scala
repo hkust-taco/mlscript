@@ -57,7 +57,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      showDeclarationTS: Bool, expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
+      generateTsDeclarations: Bool, expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
     val defaultMode = Mode(false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false, false)
     
