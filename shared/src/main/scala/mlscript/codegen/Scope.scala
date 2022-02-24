@@ -146,8 +146,47 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       }
     }
 
+  /**
+   * Look up for a type alias symbol locally.
+   */
+  def getTypeAliasSymbol(name: Str): Opt[TypeAliasSymbol] =
+    lexicalTypeSymbols.get(name) flatMap {
+      _ match {
+        case c: TypeAliasSymbol => S(c)
+        case _              => N
+      }
+    }
+
+  /**
+   * Look up for a type symbol locally.
+   */
+  def getTypeSymbol(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
+
   def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
+
+  /**
+    * Find the base class for a specific class.
+    */
+  def resolveBaseClass(ty: Type): Opt[ClassSymbol] = {
+    val baseClasses = ty.collectTypeNames.flatMap { name =>
+      this.getType(name) match {
+        case S(sym: ClassSymbol) => S(sym)
+        case S(sym: TraitSymbol) => N // TODO: inherit from traits
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name" )
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
+      }
+    }
+    if (baseClasses.length > 1)
+      throw CodeGenError(
+        s"cannot have ${baseClasses.length} base classes: " +
+        baseClasses.map { _.lexicalName }.mkString(", ")
+      )
+    else
+      baseClasses.headOption
+  }
 
   def declareClass(
       lexicalName: Str,
@@ -239,6 +278,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     * Shorthands for deriving function scopes.
     */
   def derive(name: Str, params: Ls[Str]): Scope = Scope(name, params, this)
+
+  /**
+    * An iterator over the type symbols declared in the current scope
+    */
+  def iterateTypeSymbols: Iterable[TypeSymbol] = lexicalTypeSymbols.values
 }
 
 object Scope {

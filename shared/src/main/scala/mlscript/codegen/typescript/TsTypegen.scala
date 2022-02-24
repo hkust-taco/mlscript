@@ -3,7 +3,7 @@ package mlscript.codegen.typescript
 import mlscript.utils._
 import mlscript.{ TypeVar, SourceCode, Type, Union, TypeName, Inter, Record, Tuple,
   Top, Bot, Literal, Function, Recursive, AppliedType, Neg, Rem, Bounds, WithExtension,
-  IntLit, DecLit, StrLit, Arr }
+  IntLit, DecLit, StrLit, Arr, Cls, Trt, Als }
 import mlscript.{JSBackend, JSLit}
 import mlscript.ShowCtx
 import mlscript.Typer
@@ -12,6 +12,10 @@ import mlscript.Terms
 import mlscript.SourceLine
 import scala.collection.mutable.{ListBuffer, Map => MutMap}
 import mlscript.codegen.Scope
+import mlscript.codegen.ClassSymbol
+import mlscript.codegen.TypeSymbol
+import mlscript.codegen.TypeAliasSymbol
+import mlscript.codegen.TraitSymbol
 
 final case class IllFormedTsTypeError(message: String) extends Exception(message);
 
@@ -83,6 +87,66 @@ final case class TsTypegenCodeBuilder() {
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
     }
+  }
+
+  def declareTypeDef(typeDef: TypeDef): TypeSymbol = typeDef match {
+    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      typeScope.declareTypeAlias(name, tparams map { _.name }, body)
+    case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
+      typeScope.declareTrait(name, tparams map { _.name }, body)
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      typeScope.declareClass(name, tparams map { _.name }, baseType, members)
+  }
+
+  def addTypeDef(typeDef: TypeDef, typingUnit: Typer#Ctx): Unit = {
+    val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
+      throw IllFormedTsTypeError(s"No type definition for ${typeDef.nme.name} exists")
+    )
+    tySymb match {
+      case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, typingUnit)
+      case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
+      case (traitInfo: TraitSymbol) => throw IllFormedTsTypeError("Typegen for traits is not supported currently")
+    }
+  }
+
+  def addTypeGenClassDef(classInfo: ClassSymbol, typingUnitCtx: Typer#Ctx): Unit = {
+    val className = classInfo.lexicalName
+    val classBody = classInfo.body
+    val baseClass = typeScope.resolveBaseClass(classBody)
+    val typeParams = classInfo.params.iterator.map(SourceCode(_)).toList
+    var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
+
+    baseClass.foreach(baseClass => {
+      val baseClassName = baseClass.lexicalName
+      val baseClassTypeParams = baseClass.params.iterator.map(SourceCode(_)).toList
+      classDeclaration ++= SourceCode(s" extends ${baseClass.lexicalName}") ++ SourceCode.paramList(baseClassTypeParams)
+    })
+    classDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
+
+    // check if base class inherits
+    // find and body fields and their types
+    if (false) {
+    } else {
+    }
+
+    classDeclaration += SourceCode.closeCurlyBrace
+    typegenCode += classDeclaration
+  }
+
+  def addTypeGenTypeAlias(aliasInfo: TypeAliasSymbol): Unit = {
+    val aliasName = aliasInfo.lexicalName
+    val mlType = aliasInfo.body
+    // Create a mapping from type var to their friendly name for lookup
+    val typegenCtx = TypegenContext(mlType)
+    val tsType = toTsType(mlType)(typegenCtx, Some(true), false);
+    // only use non recursive type variables for type parameters
+    val typeParams = typegenCtx.typeVarMapping.iterator
+      .filter(tup => typegenCtx.nonRecTypeVarSet.contains(tup._1))
+      .map(_._2)
+      .toList
+
+    typegenCode += (SourceCode(s"export type $aliasName") ++
+      SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
   }
 
   /** Converts a term definition to its typescript declaration including any adhoc type aliases created for it

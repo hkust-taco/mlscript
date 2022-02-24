@@ -18,7 +18,7 @@ final case class TypeDef(
   body: Type,
   mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
   mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
-) extends Decl with TypeDefImpl
+) extends Decl
 
 /**
   * Method type can be a definition or a declaration based

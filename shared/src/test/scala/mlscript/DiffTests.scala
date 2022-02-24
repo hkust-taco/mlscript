@@ -274,6 +274,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             }
             // initialize ts typegen code builder
             val tsTypegenCodeBuilder = TsTypegenCodeBuilder()
+            typeDefs.iterator.filter(td =>
+              ctx.tyDefs.contains(td.nme.name) &&
+              !oldCtx.tyDefs.contains(td.nme.name)
+            ).foreach(td => {
+              tsTypegenCodeBuilder.declareTypeDef(td)
+            })
             
             // process type definitions first
             typeDefs.foreach(td =>
@@ -296,8 +302,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                       _ => "Declared"  // the method type has just been declared
                     )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
-                
-                if (mode.showDeclarationTS) outputSourceCode(td.toTsTypeSourceCode)
+
+                tsTypegenCodeBuilder.addTypeDef(td, ctx)
               }
             )
             

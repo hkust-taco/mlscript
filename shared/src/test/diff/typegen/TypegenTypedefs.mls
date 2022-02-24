@@ -1,0 +1,19 @@
+:ts
+:ne
+type G[T] = { a : T }
+type H = int | ~string
+class Box[T]
+class RectangleBox[G, T]: Box[T]
+//│ Defined type alias G
+//│ Defined type alias H
+//│ Defined class Box
+//│ Defined class RectangleBox
+//│ // start ts
+//│ export type G: {a: T}
+//│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
+//│ export type H: int | Neg<string, a>
+//│ export declare class Box<T> {
+//│ }
+//│ export declare class RectangleBox<G, T> extends Box<T> {
+//│ }
+//│ // end ts

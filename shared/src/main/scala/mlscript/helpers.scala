@@ -133,14 +133,6 @@ abstract class TypeImpl extends Located { self: Type =>
 
 }
 
-trait TypeDefImpl { self: TypeDef =>
-  def toTsTypeSourceCode: SourceCode = this.kind match {
-    // directly use type alias body type to generate ts type
-    case Als => this.body.toTsTypeSourceCode(None, this.nme.name, this.tparams)
-    case Cls => SourceCode("TODO")
-    case Trt => SourceCode("TODO")
-  }
-}
 
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {

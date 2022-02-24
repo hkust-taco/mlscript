@@ -273,29 +273,6 @@ class JSBackend {
   }
 
   /**
-    * Find the base class for a specific class.
-    */
-  private def resolveBaseClass(ty: Type): Opt[ClassSymbol] = {
-    val baseClasses = ty.collectTypeNames.flatMap { name =>
-      topLevelScope.getType(name) match {
-        case S(sym: ClassSymbol) => S(sym)
-        case S(sym: TraitSymbol) => N // TODO: inherit from traits
-        case S(sym: TypeAliasSymbol) =>
-          throw new CodeGenError(s"cannot inherit from type alias $name" )
-        case N =>
-          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
-      }
-    }
-    if (baseClasses.length > 1)
-      throw CodeGenError(
-        s"cannot have ${baseClasses.length} base classes: " +
-        baseClasses.map { _.lexicalName }.mkString(", ")
-      )
-    else
-      baseClasses.headOption
-  }
-
-  /**
     * Resolve inheritance of all declared classes.
     * 
     * @return sorted class symbols with their base classes
@@ -303,7 +280,7 @@ class JSBackend {
   protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[(ClassSymbol, Opt[ClassSymbol])] = {
     // Cache base classes for class symbols.
     val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
-      resolveBaseClass(derivedClass.body).map(derivedClass -> _)
+      topLevelScope.resolveBaseClass(derivedClass.body).map(derivedClass -> _)
     })
     val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
