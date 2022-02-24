@@ -11,6 +11,7 @@ import mlscript.TypeDef
 import mlscript.Terms
 import mlscript.SourceLine
 import scala.collection.mutable.{ListBuffer, Map => MutMap}
+import mlscript.codegen.Scope
 
 final case class IllFormedTsTypeError(message: String) extends Exception(message);
 
@@ -19,8 +20,8 @@ final case class IllFormedTsTypeError(message: String) extends Exception(message
 final case class TsTypegenCodeBuilder() {
   // store converted mlscript type definitions and terms created in mlscript
   // use typeScope and termScope to generate non-conflicting names for both
-  private val typeScope: Scope = Scope()
-  private val termScope: Scope = Scope()
+  private val typeScope: Scope = Scope("globalTypeScope")
+  private val termScope: Scope = Scope("globalTermScope")
   private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty;
 
   /** Return complete typegen code for current typing unit
@@ -59,11 +60,11 @@ final case class TsTypegenCodeBuilder() {
     def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
-      val typegenTypeScope = Scope(Seq.empty, typeScope)
-      val typegenTermScope = Scope(Seq.empty, termScope)
+      val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
+      val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
       existingTypeVars.iterator.foreach(kv => {
-        val name = typegenTypeScope.allocateJavaScriptName(kv._2)
+        val name = typegenTypeScope.declareRuntimeSymbol(kv._2)
         typeVarMapping += ((kv._1, SourceCode(kv._2)))
       })
 
@@ -78,8 +79,8 @@ final case class TsTypegenCodeBuilder() {
     // create a context with pre-created type var to name mapping
     def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode]): TypegenContext = {
       val (recVarSet, nonRecVarSet) = mlType.partitionRecTypeVarSet
-      val typegenTypeScope = Scope(Seq.empty, typeScope)
-      val typegenTermScope = Scope(Seq.empty, termScope)
+      val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
+      val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       TypegenContext(typeVarMapping, recVarSet, nonRecVarSet, typegenTermScope, typegenTypeScope)
     }
   }
@@ -97,10 +98,10 @@ final case class TsTypegenCodeBuilder() {
     // `res` definitions are allowed to be shadowed
     val defName = termName match {
       case Some(name) => {
-        if (termScope.has(name)) {
+        if (termScope.existsRuntimeSymbol(name)) {
           throw new IllFormedTsTypeError(s"A declaration with name $termName already exists.")
         } else {
-          termScope.allocateJavaScriptName(name)
+          termScope.declareRuntimeSymbol(name)
           name
         }
       }
@@ -165,7 +166,7 @@ final case class TsTypegenCodeBuilder() {
         if (funcArg) {
           val argList = fields
             .map(field => {
-              val arg = typegenCtx.termScope.allocateJavaScriptName("arg");
+              val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
               val argType = toTsType(field._2)
               SourceCode(s"$arg: ") ++ argType
             })
@@ -187,7 +188,7 @@ final case class TsTypegenCodeBuilder() {
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases
       case Function(lhs, rhs) =>
-        val arg = typegenCtx.termScope.allocateJavaScriptName("arg");
+        val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
 
         // flip polarity for input type of function
         // lhs translates to the complete argument list
@@ -246,13 +247,13 @@ final case class TsTypegenCodeBuilder() {
         }
 
         // try to allocate common Negate type alias
-        if (!typeScope.has("Neg")) {
-          typeScope.allocateJavaScriptName("Neg")
+        if (!typeScope.existsRuntimeSymbol("Neg")) {
+          typeScope.declareRuntimeSymbol("Neg")
           typegenCode += SourceCode("type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType")
         }
 
         // introduce a new type parameter for the `FromType`
-        val typeParam = typegenCtx.typeScope.allocateJavaScriptName()
+        val typeParam = typegenCtx.typeScope.declareRuntimeSymbol()
         typegenCtx.typeVarMapping += ((TypeVar(Right(typeParam), None), SourceCode(typeParam)))
 
         val baseType = toTsType(base)
