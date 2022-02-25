@@ -80,9 +80,19 @@ final case class TsTypegenCodeBuilder() {
     * @return
     */
   def addTypeGenTermDefinition(mlType: Type, termName: Option[String]): Unit = {
-    // `res` definitions are allowed to be shadowed
-    val defName = termName.getOrElse("res")
-
+    val defName = termName match {
+      case Some(name) => {
+        if (termScope.existsRuntimeSymbol(name)) {
+          // skip typegen if term has been visited before
+          typegenCode += SourceCode(s"// skip $name")
+          return
+        } else {
+          termScope.declareRuntimeSymbol(name)
+          name
+        }
+      }
+      case None => "res"
+    }
     // Create a mapping from type var to their friendly name for lookup
     val typegenCtx = TypegenContext(mlType)
     val tsType = toTsType(mlType)(typegenCtx, Some(true));
