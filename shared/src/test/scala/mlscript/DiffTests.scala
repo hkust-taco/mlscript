@@ -423,7 +423,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val exp = getType(ty_sch)
                 output(s"$nme: ${exp.show}")
                 showFirstResult(nme.name.length())
-                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
+                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDeclaration(exp, nme.name)
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>

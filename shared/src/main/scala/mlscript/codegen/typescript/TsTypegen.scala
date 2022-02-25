@@ -70,6 +70,29 @@ final case class TsTypegenCodeBuilder() {
     }
   }
 
+  /** Converts a term declaration to its typescript declaration including any adhoc type aliases created for it
+    *
+    * @param mlType
+    *   the type to be converted to source code
+    * @param termName
+    *   name of term that's been declared.
+    * @return
+    */
+  def addTypeGenTermDeclaration(mlType: Type, declName: String): Unit = {
+    termScope.declareTypeSymbol(declName, List.empty, mlType)
+    // Create a mapping from type var to their friendly name for lookup
+    val typegenCtx = TypegenContext(mlType)
+    val tsType = toTsType(mlType)(typegenCtx, Some(true));
+    // only use non recursive type variables for type parameters
+    val typeParams = typegenCtx.typeVarMapping.iterator
+      .filter(tup => mlType.nonRecTypeVarSet.contains(tup._1))
+      .map(_._2)
+      .toList
+
+    typegenCode += (SourceCode(s"export declare const $declName") ++
+      SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
+  }
+
   /** Converts a term definition to its typescript declaration including any adhoc type aliases created for it
     *
     * @param mlType
@@ -79,9 +102,11 @@ final case class TsTypegenCodeBuilder() {
     *   from evaluating the term
     * @return
     */
-  def addTypeGenTermDefinition(mlType: Type, termName: Option[String]): Unit = {
+  def addTypeGenTermDefinition(defType: Type, termName: Option[String]): Unit = {
     // `res` definitions are allowed to be shadowed
     val defName = termName.getOrElse("res")
+    // check if term has been declared before and use it's type
+    val mlType = termScope.getType(defName).map(_.body).getOrElse(defType)
 
     // Create a mapping from type var to their friendly name for lookup
     val typegenCtx = TypegenContext(mlType)

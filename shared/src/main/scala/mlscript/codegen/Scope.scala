@@ -108,6 +108,11 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     ()
   }
 
+  private def register(symbol: TermDeclarationSymbol): Unit = {
+    lexicalTypeSymbols.put(symbol.lexicalName, symbol)
+    ()
+  }
+
   /**
     * Register a lexical symbol in both runtime name set and lexical name set.
     */
@@ -170,6 +175,12 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
 
   def declareTypeAlias(lexicalName: Str, params: Ls[Str], ty: Type): TypeAliasSymbol = {
     val symbol = TypeAliasSymbol(lexicalName, params, ty)
+    register(symbol)
+    symbol
+  }
+
+  def declareTypeSymbol(prefix: Str, params: Ls[Str], ty: Type): TermDeclarationSymbol = {
+    val symbol = TermDeclarationSymbol(prefix, params, ty)
     register(symbol)
     symbol
   }

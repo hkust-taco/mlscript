@@ -169,3 +169,15 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ export declare const weird: (arg1: a) => int
 //│ export declare const weird<a>: (arg1: a | [int, bool]) => a
 //│ // end ts
+
+:ts
+def specific: int -> int
+def specific x = x
+//│ specific: int -> int
+//│ 'a -> 'a
+//│   <:  specific:
+//│ int -> int
+//│ // start ts
+//│ export declare const specific: (arg1: int) => int
+//│ export declare const specific: (arg1: int) => int
+//│ // end ts

@@ -44,6 +44,15 @@ sealed case class TypeAliasSymbol(
   override def toString: Str = s"type $lexicalName"
 }
 
+sealed case class TermDeclarationSymbol(
+    val lexicalName: Str,
+    val params: Ls[Str],
+    val body: Type
+) extends TypeSymbol
+    with LexicalSymbol {
+  override def toString: Str = s"type $lexicalName"
+}
+
 final case class BuiltinSymbol(val lexicalName: Str, feature: Str) extends RuntimeSymbol {
   val runtimeName = lexicalName
 
