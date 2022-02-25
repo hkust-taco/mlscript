@@ -81,17 +81,7 @@ final case class TsTypegenCodeBuilder() {
     */
   def addTypeGenTermDefinition(mlType: Type, termName: Option[String]): Unit = {
     // `res` definitions are allowed to be shadowed
-    val defName = termName match {
-      case Some(name) => {
-        if (termScope.existsRuntimeSymbol(name)) {
-          throw new CodeGenError(s"A declaration with name $termName already exists.")
-        } else {
-          termScope.declareRuntimeSymbol(name)
-          name
-        }
-      }
-      case None => "res"
-    }
+    val defName = termName.getOrElse("res")
 
     // Create a mapping from type var to their friendly name for lookup
     val typegenCtx = TypegenContext(mlType)

@@ -23,6 +23,7 @@ abstract class TypeImpl extends Located { self: Type =>
     */
   lazy val nonRecTypeVarSet: Set[TypeVar] = this match {
     case Recursive(uv, body) => body.nonRecTypeVarSet - uv
+    case t@TypeVar(_, _) => Set(t)
     case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.nonRecTypeVarSet ++ acc)
   }
   
