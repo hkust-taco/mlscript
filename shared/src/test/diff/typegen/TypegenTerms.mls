@@ -149,3 +149,24 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ export declare const k: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
 //│ export declare const l: (arg1: [1, 2], arg2: [3, 4]) => 5
 //│ // end ts
+
+
+:ts
+def weird: ((int, int) -> 'a) as 'a
+def weird: ('a -> (int, int)) as 'a
+def weird: ((int, 'a) as 'a) -> int
+def weird: ((int, bool) | 'a) -> 'a
+//│ weird: (int, int,) -> 'a as 'a
+//│ weird: 'a | ('b -> (int, int,) & 'a) -> (int, int,) as 'b
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: A declaration with name Some(weird) already exists.
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:87)
+//│ 	at: mlscript.DiffTests.$anonfun$new$38(DiffTests.scala:426)
+//│ 	at: mlscript.DiffTests.$anonfun$new$38$adapted(DiffTests.scala:414)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:414)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:531)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
+
