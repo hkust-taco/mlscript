@@ -1,8 +1,9 @@
 
 let twice f x = f / f x
 //│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
-// Note: the pretty-printed type of `twice` is simplified (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
-//    this simplification loses some information in the context of first-class polymorphism
+// Note: the pretty-printed type of `twice` *used to be* simplified to ('a -> ('a & 'b)) -> 'a -> 'b
+//    (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
+//    this simplification lost some information in the context of first-class polymorphism
 //    because function types effectively become non-mergeable without losing precsion...
 // (Also see this HN thread: https://news.ycombinator.com/item?id=13783237)
 
