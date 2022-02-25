@@ -163,8 +163,9 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ // start ts
 //│ export type a = (arg1: int, arg2: int) => a
 //│ export declare const weird: a
-//│ // skip weird
-//│ // skip weird
-//│ // skip weird
+//│ export type b<a> = a | (arg1: (arg3: b<a>) => [int, int] & a) => [int, int]
+//│ export declare const weird<a>: b<a>
+//│ export type a = [int, a]
+//│ export declare const weird: (arg1: a) => int
+//│ export declare const weird<a>: (arg1: a | [int, bool]) => a
 //│ // end ts
-
