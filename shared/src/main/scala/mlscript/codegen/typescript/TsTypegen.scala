@@ -114,23 +114,46 @@ final case class TsTypegenCodeBuilder() {
     val classBody = classInfo.body
     val baseClass = typeScope.resolveBaseClass(classBody)
     val typeParams = classInfo.params.iterator.map(SourceCode(_)).toList
-    var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
 
-    baseClass.foreach(baseClass => {
+    // create mapping for class body fields and types
+    val bodyFieldAndTypes = classBody.collectBodyFieldsAndTypes
+      .map({case (fieldVar, fieldType) => {
+        // Note: an aliases created during type generation
+        // will be added to the typegen collector
+        // this is why this step should be done before
+        // adding the source code for the class
+        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true), false))
+      }})
+
+    // extend with base class if it exists
+    var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
+    baseClass.map(baseClass => {
       val baseClassName = baseClass.lexicalName
       val baseClassTypeParams = baseClass.params.iterator.map(SourceCode(_)).toList
       classDeclaration ++= SourceCode(s" extends ${baseClass.lexicalName}") ++ SourceCode.paramList(baseClassTypeParams)
     })
     classDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
 
-    // check if base class inherits
-    // find and body fields and their types
-    if (false) {
-    } else {
-    }
+    // add body fields
+    bodyFieldAndTypes.iterator.foreach({ case (fieldVar, fieldType) => {
+      classDeclaration += SourceCode("    ") ++ fieldVar ++ SourceCode.colon ++ fieldType }})
+    // constructor needs all fields including super classes
+    val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_)).getOrElse(List.empty)
+    classDeclaration += SourceCode("    constructor(fields: ") ++
+      SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
 
-    classDeclaration += SourceCode.closeCurlyBrace
-    typegenCode += classDeclaration
+    // TODO: Add method declarations
+    typegenCode += classDeclaration + SourceCode.closeCurlyBrace
+  }
+
+  // find all fields and types for class including all super classes
+  private def getClassFieldAndTypes(classSymbol: ClassSymbol): List[(SourceCode, SourceCode)] = {
+    val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes
+      .map({case (fieldVar, fieldType) => {
+        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true), false))
+      }});
+    val baseClassFieldAndTypes = typeScope.resolveBaseClass(classSymbol.body).map(getClassFieldAndTypes(_))
+    bodyFieldsAndTypes ++ baseClassFieldAndTypes.getOrElse(List.empty)
   }
 
   def addTypeGenTypeAlias(aliasInfo: TypeAliasSymbol): Unit = {

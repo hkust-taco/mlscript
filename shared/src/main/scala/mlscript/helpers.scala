@@ -131,6 +131,18 @@ abstract class TypeImpl extends Located { self: Type =>
       Nil
   }
 
+  // Collect fields and types of record types that are intersected
+  // by traversing the first level of intersection. This is used
+  // for finding the fields and types of a class body, since the
+  // body is made of up an intersection of classes and records
+  lazy val collectBodyFieldsAndTypes: List[Var -> Type] = this match {
+    case Record(fields) => fields
+    case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
+    case _: Union | _: Function | _: Tuple | _: Arr | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+      Nil
+  }
 }
 
 
