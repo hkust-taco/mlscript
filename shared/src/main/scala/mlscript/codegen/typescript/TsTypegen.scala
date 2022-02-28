@@ -29,10 +29,6 @@ final class TsTypegenCodeBuilder {
     *
     * @param typeVarMapping
     *   mapping from type variables to their clash-free parameter names
-    * @param recTypeVarSet
-    *   Set of recursive type variables for the type where context was intialized
-    * @param recTypeVarSet
-    *   Set of non-recursive type variables for the type where context was intialized
     * @param termScope
     *   scope for argument names
     * @param typeScope
@@ -45,7 +41,7 @@ final class TsTypegenCodeBuilder {
   )
 
   object TypegenContext {
-    def apply(mlType: Type): TypegenContext = {
+    def apply(mlType: Type, isMethodDefinition: Boolean = false): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
@@ -80,32 +76,25 @@ final class TsTypegenCodeBuilder {
       typeScope.declareClass(name, tparams map { _.name }, baseType, members)
   }
 
-  def addTypeDef(typeDef: TypeDef, typingUnit: Typer#Ctx): Unit = {
+  def addTypeDef(typeDef: TypeDef): Unit = {
     val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
       throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
     )
     tySymb match {
-      case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, typingUnit)
+      case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
       case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
     }
   }
 
-  def addTypeGenClassDef(classInfo: ClassSymbol, typingUnitCtx: Typer#Ctx): Unit = {
+  def addTypeGenClassDef(classInfo: ClassSymbol): Unit = {
     val className = classInfo.lexicalName
     val classBody = classInfo.body
     val baseClass = typeScope.resolveBaseClass(classBody)
     val typeParams = classInfo.params.iterator.map(SourceCode(_)).toList
 
     // create mapping for class body fields and types
-    val bodyFieldAndTypes = classBody.collectBodyFieldsAndTypes
-      .map({case (fieldVar, fieldType) => 
-        // Note: an aliases created during type generation
-        // will be added to the typegen collector
-        // this is why this step should be done before
-        // adding the source code for the class
-        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
-      })
+    val bodyFieldAndTypes = getClassFieldAndTypes(classInfo)
 
     // extend with base class if it exists
     var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
@@ -120,7 +109,7 @@ final class TsTypegenCodeBuilder {
     bodyFieldAndTypes.iterator.foreach({ case (fieldVar, fieldType) => {
       classDeclaration += SourceCode("    ") ++ fieldVar ++ SourceCode.colon ++ fieldType }})
     // constructor needs all fields including super classes
-    val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_)).getOrElse(List.empty)
+    val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
 
@@ -129,13 +118,18 @@ final class TsTypegenCodeBuilder {
   }
 
   // find all fields and types for class including all super classes
-  private def getClassFieldAndTypes(classSymbol: ClassSymbol): List[(SourceCode, SourceCode)] = {
+  // optionally include base class fields as well
+  private def getClassFieldAndTypes(classSymbol: ClassSymbol, includeBaseClass: Boolean = false): List[(SourceCode, SourceCode)] = {
     val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes
-      .map({case (fieldVar, fieldType) =>
+      .map({case (fieldVar, fieldType) => {
         (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
-      });
-    val baseClassFieldAndTypes = typeScope.resolveBaseClass(classSymbol.body).map(getClassFieldAndTypes(_))
-    bodyFieldsAndTypes ++ baseClassFieldAndTypes.getOrElse(List.empty)
+      }});
+
+    if (includeBaseClass) {
+      bodyFieldsAndTypes ++ typeScope.resolveBaseClass(classSymbol.body).map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
+    } else {
+      bodyFieldsAndTypes
+    }
   }
 
   def addTypeGenTypeAlias(aliasInfo: TypeAliasSymbol): Unit = {

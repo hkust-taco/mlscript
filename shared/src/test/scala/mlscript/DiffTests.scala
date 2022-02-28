@@ -270,8 +270,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 exp
               }
             }
-            // initialize ts typegen code builder
+            // initialize ts typegen code builder and
+            // declare all type definitions for current block
             val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()
+            typeDefs.iterator.filter(td =>
+              ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
+            ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
             
             // process type definitions first
             typeDefs.foreach(td =>
@@ -295,7 +299,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     )} ${tn}.${mn}: ${getType(res.toPT).show}"))
                 }
 
-                tsTypegenCodeBuilder.addTypeDef(td, ctx)
+                tsTypegenCodeBuilder.addTypeDef(td)
               }
             )
             
