@@ -41,7 +41,7 @@ final class TsTypegenCodeBuilder {
   )
 
   object TypegenContext {
-    def apply(mlType: Type, isMethodDefinition: Boolean = false): TypegenContext = {
+    def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
