@@ -110,7 +110,7 @@ case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
 
 // Literal type or singleton type i.e.
-// `type t: 0` is a type with only one possible value
+// type `0` is a type with only one possible value
 // which is the literal integer 0 itself
 final case class Literal(lit: Lit)                       extends NullaryType
 

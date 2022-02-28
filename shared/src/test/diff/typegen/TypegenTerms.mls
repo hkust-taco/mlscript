@@ -1,5 +1,5 @@
+:NoJS
 :ts
-:ne
 { a = "hello"; b = "world" }
 1 + 2 - 5
 let t = { a = 5; b = "world"} in if t.a == 1 then 1 else (fun f -> f.b )
@@ -18,7 +18,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {a: "hello", b: "world"}
 //│ export declare const res: int
-//│ export declare const res<a>: (arg1: {b: a}) => a | 1
+//│ export declare const res<a>: ((arg1: {b: a}) => a) | 1
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int
@@ -26,7 +26,6 @@ def z = x + y
 //│ // end ts
 
 :ts
-:ne
 def rcd = { x = 1 }
 rcd.x
 def funky f r = let t = r with { y = "nah" } in f t
@@ -44,7 +43,6 @@ def g = rcd with { y = "yeah" }
 //│ // end ts
 
 :ts
-:ne
 def f (a: int) (b: string) (c: bool) = if c then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
 def g x y = if x.b == 1 then x else x.a
@@ -59,7 +57,6 @@ def g x y = if x.b == 1 then x else x.a
 //│ // end ts
 
 :ts
-:ne
 rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 def f: ('c -> 'a as 'a) -> 'c -> int
@@ -77,24 +74,23 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ // end ts
 
 :ts
-:ne
 :e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.82: 	1: ?
+//│ ║  l.78: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.82: 	1: ?
+//│ ║  l.78: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.83: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.83: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -103,19 +99,17 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ // end ts
 
 :ts
-:ne
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
 //│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<b, c, a>: (arg1: (arg3: a) => b & {a: int} & c) => (arg5: {b: int} & a) => (arg7: unknown) => c | b
+//│ export declare const nonsense<b, c, a>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
 //│ export declare const g: (arg1: never) => (arg3: never) => never
 //│ // end ts
 
 :ts
-:ne
 def x: int | ~string
 def y: "a" | "b" | ~string
 // negative types
@@ -128,7 +122,6 @@ def y: "a" | "b" | ~string
 //│ // end ts
 
 :ts
-:ne
 def cont x = x + 1
 def app y k = k (y - 1)
 app 2 cont
@@ -142,15 +135,37 @@ app 2 cont
 //│ // end ts
 
 :ts
-:ne
 def g (x, y) = x + y
 def h (x, (y, z)) = y z + x
 def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
+def l: ((1, 2), (3, 4)) -> 5
 //│ g: (int, int,) -> int
 //│ h: (int, ('a -> int, 'a,),) -> int
 //│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
+//│ l: ((1, 2,), (3, 4,),) -> 5
 //│ // start ts
 //│ export declare const g: (arg1: int, arg2: int) => int
-//│ export declare const h<a>: (arg1: int, arg2: (arg3: (arg5: a) => int, arg6: a)) => int
-//│ export declare const k<a, b>: (arg1: int, arg2: (arg3: (arg5: int) => a, arg6: int)) => (arg8: int, arg9: (arg11: int) => (arg13: a) => b, arg14: int) => b
+//│ export declare const h<a>: (arg1: int, arg2: [(arg4: a) => int, a]) => int
+//│ export declare const k<a, b>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
+//│ export declare const l: (arg1: [1, 2], arg2: [3, 4]) => 5
+//│ // end ts
+
+
+:ts
+def weird: ((int, int) -> 'a) as 'a
+def weird: ('a -> (int, int)) as 'a
+def weird: ((int, 'a) as 'a) -> int
+def weird: ((int, bool) | 'a) -> 'a
+//│ weird: (int, int,) -> 'a as 'a
+//│ weird: 'a | ('b -> (int, int,) & 'a) -> (int, int,) as 'b
+//│ weird: ((int, 'a,) as 'a) -> int
+//│ weird: ('a | (int, bool,)) -> 'a
+//│ // start ts
+//│ export type a = (arg1: int, arg2: int) => a
+//│ export declare const weird: a
+//│ export type b<a> = a | ((arg1: ((arg3: b<a>) => [int, int]) & a) => [int, int])
+//│ export declare const weird<a>: b<a>
+//│ export type a = [int, a]
+//│ export declare const weird: (arg1: a) => int
+//│ export declare const weird<a>: (arg1: a | [int, bool]) => a
 //│ // end ts
