@@ -21,10 +21,10 @@ abstract class TypeImpl extends Located { self: Type =>
     * @return
     *  set of non-recursive type variables in type
     */
-  lazy val nonRecTypeVarSet: Set[TypeVar] = this match {
-    case Recursive(uv, body) => body.nonRecTypeVarSet - uv
+  lazy val freeTypeVariables: Set[TypeVar] = this match {
+    case Recursive(uv, body) => body.freeTypeVariables - uv
     case t: TypeVar => Set.single(t)
-    case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.nonRecTypeVarSet ++ acc)
+    case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
   }
   
   def show: String =

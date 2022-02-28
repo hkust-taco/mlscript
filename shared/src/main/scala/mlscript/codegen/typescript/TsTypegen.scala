@@ -88,7 +88,7 @@ final class TsTypegenCodeBuilder {
     val tsType = toTsType(mlType)(typegenCtx, Some(true));
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
-      .filter(tup => mlType.nonRecTypeVarSet.contains(tup._1))
+      .filter(tup => mlType.freeTypeVariables.contains(tup._1))
       .map(_._2)
       .toList
 
@@ -106,13 +106,15 @@ final class TsTypegenCodeBuilder {
     *   mlscript type to convert
     * @param funcArg
     *   true if Tuple type is the lhs of a function. Used to translate tuples as multi-parameter functions
+    * @param typePrecedence
+    *   type precedence of an ml type when translating to ts. Decides where extra parenthesis gets placed
     * @param typegenCtx
     *   type generation context for allocating new names
     * @param pol
     *   polarity of type
     * @return
     */
-  private def toTsType(mlType: Type, funcArg: Boolean = false)(implicit
+  private def toTsType(mlType: Type, funcArg: Boolean = false, typePrecedence: Int = 0)(implicit
       typegenCtx: TypegenContext,
       pol: Option[Boolean],
   ): SourceCode = {
@@ -120,14 +122,14 @@ final class TsTypegenCodeBuilder {
       // these types do not mutate typegen context
       case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
         SourceCode("boolean")
-      case Union(lhs, rhs) =>
+      case u@Union(lhs, rhs) =>
         SourceCode.sepBy(
-          List(toTsType(lhs), toTsType(rhs)),
+          List(toTsType(lhs, funcArg, this.typePrecedence(u)), toTsType(rhs, funcArg, this.typePrecedence(u))),
           SourceCode.separator
         )
-      case Inter(lhs, rhs) =>
+      case i@Inter(lhs, rhs) =>
         SourceCode.sepBy(
-          List(toTsType(lhs), toTsType(rhs)),
+          List(toTsType(lhs, funcArg, this.typePrecedence(i)), toTsType(rhs, funcArg, this.typePrecedence(i))),
           SourceCode.ampersand
         )
       case Record(fields) =>
@@ -161,7 +163,7 @@ final class TsTypegenCodeBuilder {
 
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases
-      case Function(lhs, rhs) =>
+      case f@Function(lhs, rhs) =>
         val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
 
         // flip polarity for input type of function
@@ -169,7 +171,15 @@ final class TsTypegenCodeBuilder {
         val lhsTypeSource = toTsType(lhs, true)(typegenCtx, pol.map(!_));
         val rhsTypeSource = toTsType(rhs);
 
-        lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
+        val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
+        // if part of a higher precedence binary operator
+        // in this case only Inter and Union is possible
+        // parenthesize to maintain correct precedence
+        if (this.typePrecedence(f) < typePrecedence) {
+          funcSourceCode.parenthesized
+        } else {
+          funcSourceCode
+        }
       // a recursive type is aliased as a self referencing type
       case Recursive(uv, body) =>
         // allocate the clash-free name for uv in typegen scope
@@ -182,7 +192,7 @@ final class TsTypegenCodeBuilder {
 
         // recursive type does not have any other type variables
         // (except itself)
-        if (mlType.nonRecTypeVarSet.size === 0) {
+        if (mlType.freeTypeVariables.size === 0) {
           val bodyType = toTsType(body)(typegenCtx, pol);
           typegenCode += (SourceCode(s"export type $uvName") ++
             SourceCode.equalSign ++ bodyType)
@@ -192,7 +202,7 @@ final class TsTypegenCodeBuilder {
         // so now it is an applied type
         else {
           val uvTypeParams = typeVarMapping.iterator
-            .filter(tup => mlType.nonRecTypeVarSet.contains(tup._1))
+            .filter(tup => mlType.freeTypeVariables.contains(tup._1))
             .map(_._2)
             .toList
           val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)
@@ -258,5 +268,16 @@ final class TsTypegenCodeBuilder {
           })
       case Arr(_) => throw CodeGenError(s"Array type currently not supported for $mlType")
     }
+  }
+
+  /**
+    * Decides the precendence of the mltype when translating to typescript
+    *
+    * @param mlType
+    * @return
+    */
+  private def typePrecedence(mlType: Type): Int = mlType match {
+    case _: Inter | _: Union => 1
+    case _ => 0
   }
 }

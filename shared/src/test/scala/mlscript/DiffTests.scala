@@ -38,9 +38,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
     def output(str: String) = out.println(outputMarker + str)
-    def outputSourceCode(code: SourceCode) = code.lines.foreach(line => {
-      out.println(outputMarker + line.toString())
-    })
+    def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
@@ -273,7 +271,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             }
             // initialize ts typegen code builder
-            val tsTypegenCodeBuilder = TsTypegenCodeBuilder()
+            val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()
             
             // process type definitions first
             typeDefs.foreach(td =>
