@@ -29,6 +29,15 @@ object SourceLine {
   def apply(line: Str): SourceLine = new SourceLine(line)
 }
 
+/**
+  * SourceCode is a list of SourceLines that can be exported to a code file
+  * 
+  * SourceCode provides a number of helper methods to create SourceCode
+  * from strings and manipulate them. It also abstracts common code patterns
+  * like block, condition, clause
+  *
+  * @param lines
+  */
 class SourceCode(val lines: Ls[SourceLine]) {
 
   /** Concat two parts of source code vertically. "1 \\ 2" + "3 \\ 4" == "1 \\ 2 \\ 3 \\ 4"
@@ -122,15 +131,34 @@ object SourceCode {
   })
   def fromStmts(stmts: Ls[JSStmt]): SourceCode = SourceCode.concat(stmts map { _.toSourceCode })
 
+  val ampersand: SourceCode = SourceCode(" & ")
   val space: SourceCode = SourceCode(" ")
   val semicolon: SourceCode = SourceCode(";")
+  val colon: SourceCode = SourceCode(": ")
+  val separator: SourceCode = SourceCode(" | ")
   val comma: SourceCode = SourceCode(",")
   val commaSpace: SourceCode = SourceCode(", ")
   val empty: SourceCode = SourceCode(Nil)
+  val openCurlyBrace: SourceCode = SourceCode("{")
+  val closeCurlyBrace: SourceCode = SourceCode("}")
+  val openAngleBracket: SourceCode = SourceCode("<")
+  val closeAngleBracket: SourceCode = SourceCode(">")
+  val fatArrow: SourceCode = SourceCode(" => ")
+  val equalSign: SourceCode = SourceCode(" = ")
 
   def concat(codes: Ls[SourceCode]): SourceCode =
     codes.foldLeft(SourceCode.empty) { _ + _ }
 
+  // concatenate source codes without intermediate allocations
+  def bulkConcat(codes: Iterable[SourceCode]): SourceCode =
+    new SourceCode(codes.iterator.map(_.lines).foldRight(List.empty[SourceLine])((lines, accum) => lines ::: accum))
+
+  /**
+    * Comma separate elements of List[SourceCode] and wrap with curly braces
+    * 
+    * @param entries
+    * @return
+    */
   def record(entries: Ls[SourceCode]): SourceCode =
     entries match {
       case Nil         => SourceCode("{}")
@@ -144,6 +172,35 @@ object SourceCode {
           acc + (if (index + 1 === entries.length) { entry }
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("}")
+    }
+
+    def recordWithEntries(entries: List[SourceCode -> SourceCode]): SourceCode = {
+      entries match {
+        case Nil => SourceCode("{}")
+        case _ =>
+          (entries
+            .map(entry => entry._1 ++ colon ++ entry._2)
+            .zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
+            acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeCurlyBrace else SourceCode.commaSpace)
+          })
+      }
+    }
+    
+    /** ',' separate and wrap in angled brackets the given source code instances
+      * and return empty string if list is empty 
+      *
+      * @param entries
+      * @return
+      */
+    def paramList(entries: List[SourceCode]): SourceCode = {
+      entries match {
+        case Nil => SourceCode("")
+        case _ =>
+          (entries
+            .zipWithIndex.foldLeft(SourceCode.openAngleBracket) { case (acc, (entry, index)) =>
+            acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeAngleBracket else SourceCode.commaSpace)
+          })
+      }
     }
 
   /**
@@ -163,6 +220,19 @@ object SourceCode {
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("]")
     }
+
+  /**
+    * Surround source code with square brackets concatenating elements
+    * horizontally only. Single element is still wrapped in brackets
+    *
+    * @param entries
+    * @return
+    */
+  def horizontalArray(entries: Ls[SourceCode]): SourceCode =
+    (entries.zipWithIndex.foldLeft(SourceCode("[")) { case (acc, (entry, index)) =>
+      acc ++ entry ++ (if (index + 1 === entries.length) SourceCode("]") else SourceCode.commaSpace)
+    })
+
 
   def sepBy(codes: Ls[SourceCode], sep: SourceCode = this.commaSpace): SourceCode =
     codes.zipWithIndex
