@@ -8,7 +8,7 @@ import mlscript.codegen.{Scope, CodeGenError}
 
 /** Typescript typegen code builder for an mlscript typing unit
   */
-final case class TsTypegenCodeBuilder() {
+final class TsTypegenCodeBuilder {
   private val typeScope: Scope = Scope("globalTypeScope")
   private val termScope: Scope = Scope("globalTermScope")
   private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty;
