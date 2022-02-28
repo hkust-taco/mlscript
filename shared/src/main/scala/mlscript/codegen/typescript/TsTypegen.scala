@@ -38,9 +38,9 @@ final class TsTypegenCodeBuilder {
     *   scope for type parameter names
     */
   protected case class TypegenContext(
-      val typeVarMapping: MutMap[TypeVar, SourceCode],
-      val termScope: Scope,
-      val typeScope: Scope
+      typeVarMapping: MutMap[TypeVar, SourceCode],
+      termScope: Scope,
+      typeScope: Scope
   )
 
   object TypegenContext {
