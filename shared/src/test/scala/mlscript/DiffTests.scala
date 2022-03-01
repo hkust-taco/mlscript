@@ -273,9 +273,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // initialize ts typegen code builder and
             // declare all type definitions for current block
             val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()
-            typeDefs.iterator.filter(td =>
-              ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
-            ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
+            if (mode.generateTsDeclarations) {
+              typeDefs.iterator.filter(td =>
+                ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
+              ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
+            }
             
             // process type definitions first
             typeDefs.foreach(td =>
@@ -287,7 +289,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
 
-                tsTypegenCodeBuilder.addTypeDefStart(td)
+                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefStart(td)
 
                 // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
@@ -301,11 +303,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                         _ => "Defined",  // the method has been defined
                         _ => "Declared"  // the method type has just been declared
                       )} {${tn}.${mn}: ${methodType.show}")
-                      tsTypegenCodeBuilder.addClassMethods(mn, methodType)
+                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addClassMethods(mn, methodType)
                     })
                 }
 
-                tsTypegenCodeBuilder.addTypeDefComplete(td)
+                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefComplete(td)
               }
             )
             
