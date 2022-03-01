@@ -145,7 +145,7 @@ final class TsTypegenCodeBuilder {
       .toList
 
     typegenCode += (SourceCode(s"export type $aliasName") ++
-      SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
+      SourceCode.paramList(typeParams) ++ SourceCode.equalSign ++ tsType)
   }
 
   /** Converts a term definition to its typescript declaration including any adhoc type aliases created for it
