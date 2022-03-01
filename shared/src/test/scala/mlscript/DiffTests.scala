@@ -286,20 +286,26 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val tn = td.nme.name
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
-                
+
+                tsTypegenCodeBuilder.addTypeDefStart(td)
+
                 // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
                       _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
                       _ => ctx.getMth(S(tn), mn)
-                    ).foreach(res => output(s"${rhs.fold(
-                      _ => "Defined",  // the method has been defined
-                      _ => "Declared"  // the method type has just been declared
-                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
+                    ).foreach(res => {
+                      val methodType = getType(res.toPT)
+                      output(s"${rhs.fold(
+                        _ => "Defined",  // the method has been defined
+                        _ => "Declared"  // the method type has just been declared
+                      )} {${tn}.${mn}: ${methodType.show}")
+                      tsTypegenCodeBuilder.addClassMethods(mn, methodType)
+                    })
                 }
 
-                tsTypegenCodeBuilder.addTypeDef(td)
+                tsTypegenCodeBuilder.addTypeDefComplete(td)
               }
             )
             

@@ -1,6 +1,5 @@
 :NoJS
 :ts
-:ne
 type G[T] = { a : T }
 type H = int | ~string
 class Box[T]: { length: T }
@@ -12,9 +11,9 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 //│ Defined class RectangleBox
 //│ Defined class StackedRectangleBoxes
 //│ // start ts
-//│ export type G: {a: T}
+//│ export type G = {a: T}
 //│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
-//│ export type H: int | Neg<string, a>
+//│ export type H = int | Neg<string, a>
 //│ export declare class Box<T> {
 //│     length: T
 //│     constructor(fields: {length: T})
@@ -26,5 +25,22 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 //│ export declare class StackedRectangleBoxes<T, N> extends RectangleBox<T> {
 //│     size: N
 //│     constructor(fields: {size: N, breadth: T, length: T})
+//│ }
+//│ // end ts
+
+
+:ts
+class Lock[T]: { length: T }
+  method Map: (T -> 'a) -> Box['a]
+// type information from debug
+// 1. Typing type Function(Tuple(List((None,Function(Tuple(List((None,TypeName(T)))),'a)))),AppliedType(TypeName(Box),List('a)))
+// | vars=Map(T -> T) newDefsInfo=Map()
+//│ Defined class Lock
+//│ Declared {Lock.Map: Lock['T] -> ('T -> 'a) -> Box['a]
+//│ // start ts
+//│ export declare class Lock<T> {
+//│     length: T
+//│     constructor(fields: {length: T})
+//│     Map<T, a>(arg1: Lock<T>): (arg3: (arg5: T) => a) => Box<a>
 //│ }
 //│ // end ts

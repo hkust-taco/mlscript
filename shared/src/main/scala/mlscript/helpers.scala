@@ -19,7 +19,7 @@ abstract class TypeImpl extends Located { self: Type =>
 
   /**
     * @return
-    *  set of non-recursive type variables in type
+    *  set of free type variables in type
     */
   lazy val freeTypeVariables: Set[TypeVar] = this match {
     case Recursive(uv, body) => body.freeTypeVariables - uv

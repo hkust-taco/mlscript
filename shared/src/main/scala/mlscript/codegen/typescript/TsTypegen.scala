@@ -14,6 +14,10 @@ final class TsTypegenCodeBuilder {
   private val termScope: Scope = Scope("globalTermScope")
   private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty;
 
+  // local state of partially translated typedef
+  // because they are spread across multiple statements
+  private var currentTypedefCode: Option[SourceCode] = None;
+
   /** Return complete typegen code for current typing unit
     *
     * @return
@@ -37,11 +41,12 @@ final class TsTypegenCodeBuilder {
   protected case class TypegenContext(
       typeVarMapping: MutMap[TypeVar, SourceCode],
       termScope: Scope,
-      typeScope: Scope
+      typeScope: Scope,
+      isMethodDefintion: Boolean
   )
 
   object TypegenContext {
-    def apply(mlType: Type): TypegenContext = {
+    def apply(mlType: Type, isMethodDefintion: Boolean = false): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
@@ -56,14 +61,14 @@ final class TsTypegenCodeBuilder {
       // argument names. For e.g. the below case will be avoided
       // export const arg0: int
       // export const f: (arg0: int) => int
-      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, isMethodDefintion)
     }
 
     // create a context with pre-created type var to name mapping
     def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode]): TypegenContext = {
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
-      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, false)
     }
   }
 
@@ -76,13 +81,55 @@ final class TsTypegenCodeBuilder {
       typeScope.declareClass(name, tparams map { _.name }, baseType, members)
   }
 
-  def addTypeDef(typeDef: TypeDef): Unit = {
+  /**
+    * Start adding type definition and store partially translated
+    * type definition as state
+    *
+    * @param typeDef
+    */
+  def addTypeDefStart(typeDef: TypeDef): Unit = {
+    if (currentTypedefCode.isDefined) {
+      throw CodeGenError(s"Cannot start adding new type definition for ${typeDef.nme.name} without complete previous")
+    }
     val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
       throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
     )
     tySymb match {
       case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
+      case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
+    }
+  }
+
+  /** Add class method type gen translation to the partially translated
+    * class typegen code
+    */
+  def addClassMethods(methodName: String, methodType: Type): Unit = {
+    val currentDef = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot add method without starting a type definition"))
+    // Create a mapping from type var to their friendly name for lookup
+    val typegenCtx = TypegenContext(methodType, true)
+    val tsType = toTsType(methodType)(typegenCtx, Some(true));
+    // only use free variables for type parameters
+    val typeParams = typegenCtx.typeVarMapping.iterator
+      .filter(tup => methodType.freeTypeVariables.contains(tup._1))
+      .map(_._2)
+      .toList
+
+    currentTypedefCode = Some(currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType))
+  }
+
+  /** Complete translating type definition and append translated definition
+    * to translated source code for current typing unit
+    */
+  def addTypeDefComplete(typeDef: TypeDef): Unit = {
+    val currentDef = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot complete an empty type definition"))
+    currentTypedefCode = None
+    val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
+      throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
+    )
+    tySymb match {
+      case (classInfo: ClassSymbol) => typegenCode += currentDef + SourceCode.closeCurlyBrace
+      case (aliasInfo: TypeAliasSymbol) => typegenCode += currentDef
       case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
     }
   }
@@ -113,8 +160,7 @@ final class TsTypegenCodeBuilder {
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
 
-    // TODO: Add method declarations
-    typegenCode += classDeclaration + SourceCode.closeCurlyBrace
+    currentTypedefCode = Some(classDeclaration)
   }
 
   // find all fields and types for class including all super classes
@@ -144,7 +190,7 @@ final class TsTypegenCodeBuilder {
       .map(_._2)
       .toList
 
-    typegenCode += (SourceCode(s"export type $aliasName") ++
+    currentTypedefCode = Some(SourceCode(s"export type $aliasName") ++
       SourceCode.paramList(typeParams) ++ SourceCode.equalSign ++ tsType)
   }
 
@@ -246,10 +292,16 @@ final class TsTypegenCodeBuilder {
 
         // flip polarity for input type of function
         // lhs translates to the complete argument list
-        val lhsTypeSource = toTsType(lhs, true)(typegenCtx, pol.map(!_));
-        val rhsTypeSource = toTsType(rhs);
+        // method definition only affects source code representation of top level function
+        val lhsTypeSource = toTsType(lhs, true)(typegenCtx.copy(isMethodDefintion = false), pol.map(!_));
+        val rhsTypeSource = toTsType(rhs)(typegenCtx.copy(isMethodDefintion = false), pol);
 
-        val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
+        val separator = if (typegenCtx.isMethodDefintion) {
+          SourceCode.colon
+        } else{
+          SourceCode.fatArrow
+        }
+        val funcSourceCode = lhsTypeSource ++ separator ++ rhsTypeSource
         // if part of a higher precedence binary operator
         // in this case only Inter and Union is possible
         // parenthesize to maintain correct precedence
