@@ -43,14 +43,14 @@ class Bank: { lock: Lock[int]; cash: int }
 def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock
-//│ Declared {Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined {Lock.Map: Lock['T] -> ('T -> ('a & 'T0)) -> (Lock['T0] with {pins: 'a})
-//│ Defined {Lock.Open: Lock['T] -> (Lock['a .. 0 | 'a] with {pins: 0})
+//│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
+//│ Defined Lock.Map: Lock['T] -> ('T -> ('a & 'T0)) -> (Lock['T0] with {pins: 'a})
+//│ Defined Lock.Open: Lock['T] -> (Lock['a .. 0 | 'a] with {pins: 0})
 //│ Defined class Bank
-//│ Declared {Bank.Potential: (Bank with {lock: Lock[int]}) -> int
-//│ Declared {Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
-//│ Defined {Bank.Potential: (Bank with {lock: Lock[int]}) -> int
-//│ Defined {Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
+//│ Declared Bank.Potential: (Bank with {lock: Lock[int]}) -> int
+//│ Declared Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
+//│ Defined Bank.Potential: (Bank with {lock: Lock[int]}) -> int
+//│ Defined Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
 //│ Lock: ('pins & 'T) -> (Lock['T] with {pins: 'pins})
 //│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
 //│ res: bool
