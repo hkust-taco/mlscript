@@ -30,17 +30,45 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 
 
 :ts
-class Lock[T]: { length: T }
-  method Map: (T -> 'a) -> Box['a]
-// type information from debug
-// 1. Typing type Function(Tuple(List((None,Function(Tuple(List((None,TypeName(T)))),'a)))),AppliedType(TypeName(Box),List('a)))
-// | vars=Map(T -> T) newDefsInfo=Map()
+class Lock[T]: { pins: T }
+  method Map: (T -> 'a) -> Lock['a]
+  method Map f = Lock { pins = f this.pins }
+  method Open = Lock { pins = 0 }
+def Lock pins = Lock { pins = pins }
+class Bank: { lock: Lock[int]; cash: int }
+  method Potential: int
+  method Potential = this.cash / this.lock.pins
+  method Better: Bank -> bool
+  method Better other = this.Potential > other.Potential
+def Bank lock cash = Bank { lock = lock; cash = cash }
+let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock
-//│ Declared {Lock.Map: Lock['T] -> ('T -> 'a) -> Box['a]
+//│ Declared {Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
+//│ Defined {Lock.Map: Lock['T] -> ('T -> ('a & 'T0)) -> (Lock['T0] with {pins: 'a})
+//│ Defined {Lock.Open: Lock['T] -> (Lock['a .. 0 | 'a] with {pins: 0})
+//│ Defined class Bank
+//│ Declared {Bank.Potential: (Bank with {lock: Lock[int]}) -> int
+//│ Declared {Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
+//│ Defined {Bank.Potential: (Bank with {lock: Lock[int]}) -> int
+//│ Defined {Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
+//│ Lock: ('pins & 'T) -> (Lock['T] with {pins: 'pins})
+//│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
+//│ res: bool
 //│ // start ts
 //│ export declare class Lock<T> {
-//│     length: T
-//│     constructor(fields: {length: T})
-//│     Map<T, a>(arg1: Lock<T>): (arg3: (arg5: T) => a) => Box<a>
+//│     pins: T
+//│     constructor(fields: {pins: T})
+//│     Map<a>(arg1: (arg3: T) => a): Lock<a>
+//│     Open: Omit<Lock<0 | a>, {pins}> & {pins: 0}
 //│ }
+//│ export declare class Bank {
+//│     lock: Lock<int>
+//│     cash: int
+//│     constructor(fields: {lock: Lock<int>, cash: int})
+//│     Potential: int
+//│     Better(arg1: Omit<Bank, {lock}> & {lock: Lock<int>}): bool
+//│ }
+//│ export declare const Lock<T, pins>: (arg1: pins & T) => Omit<Lock<T>, {pins}> & {pins: pins}
+//│ export declare const Bank<lock, cash>: (arg1: Lock<int> & lock) => (arg3: int & cash) => Omit<Bank, {cash, lock}> & {cash: cash, lock: lock}
+//│ export declare const res: bool
 //│ // end ts

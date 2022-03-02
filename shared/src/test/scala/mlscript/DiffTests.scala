@@ -291,6 +291,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
                 if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefStart(td)
 
+                val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
+
                 // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
@@ -298,13 +300,24 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                       _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
                       _ => ctx.getMth(S(tn), mn)
                     ).foreach(res => {
-                      val methodType = getType(res.toPT)
                       output(s"${rhs.fold(
                         _ => "Defined",  // the method has been defined
                         _ => "Declared"  // the method type has just been declared
-                      )} {${tn}.${mn}: ${methodType.show}")
-                      if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addClassMethods(mn, methodType)
+                      )} ${tn}.${mn}: ${getType(res.toPT).show}")
                     })
+                }
+
+                // for type gen use method declaration if present
+                // otherwise use type inferred for method definition
+                if (mode.generateTsDeclarations) {
+                  val onlyMethodDef = ttd.mthDefs.filter(mthd => !mthDeclSet.contains(mthd.nme.name))
+                  (ttd.mthDecls ++ onlyMethodDef).foreach({
+                    case MethodDef(_, _, Var(mn), _, rhs) =>
+                      rhs.fold(
+                        _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
+                        _ => ctx.getMth(S(tn), mn)
+                      ).foreach(res => { tsTypegenCodeBuilder.addClassMethods(mn, getType(res.toPT)) })
+                  })
                 }
 
                 if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefComplete(td)

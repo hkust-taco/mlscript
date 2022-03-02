@@ -16,7 +16,7 @@ final class TsTypegenCodeBuilder {
 
   // local state of partially translated typedef
   // because they are spread across multiple statements
-  private var currentTypedefCode: Option[SourceCode] = None;
+  private var currentTypedefCode: Option[(String, SourceCode)] = None;
 
   /** Return complete typegen code for current typing unit
     *
@@ -105,31 +105,47 @@ final class TsTypegenCodeBuilder {
     * class typegen code
     */
   def addClassMethods(methodName: String, methodType: Type): Unit = {
-    val currentDef = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot add method without starting a type definition"))
+    val (className, currentDef) = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot add method without starting a type definition"))
+    val classInfo = typeScope.getClassSymbol(className).getOrElse(throw CodeGenError(s"Cannot find class $className for which method $methodName is being declared"))
+    val classTypeParams = classInfo.params.toSet
+    // unwrap method function type to remove implicit this
+    val methodBodyType = methodType match {
+      case Function(lhs, rhs) => rhs
+      case _ => throw CodeGenError(s"Cannot translate malformed method: $methodName because it does not have top level function")
+    }
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(methodType, true)
-    val tsType = toTsType(methodType)(typegenCtx, Some(true));
+    val typegenCtx = TypegenContext(methodBodyType, true)
+    val tsType = toTsType(methodBodyType)(typegenCtx, Some(true));
     // only use free variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
-      .filter(tup => methodType.freeTypeVariables.contains(tup._1))
+      .filter(tup => methodBodyType.freeTypeVariables.contains(tup._1) &&
+        // ignore class type parameters since they are implicitly part of class scope
+        tup._1.nameHint.fold(false)(!classTypeParams.contains(_))
+      )
       .map(_._2)
       .toList
 
-    currentTypedefCode = Some(currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType))
+    val methodSourceCode = methodBodyType match {
+      // function creates signature with `:` separating arguments and body
+      case f: Function => currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType)
+      // explicitly add `:` for any other method type
+      case _ => currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
+    }
+    currentTypedefCode = Some((className, methodSourceCode))
   }
 
   /** Complete translating type definition and append translated definition
     * to translated source code for current typing unit
     */
   def addTypeDefComplete(typeDef: TypeDef): Unit = {
-    val currentDef = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot complete an empty type definition"))
+    val (name, typedefCode) = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot complete an empty type definition"))
     currentTypedefCode = None
     val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
       throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
     )
     tySymb match {
-      case (classInfo: ClassSymbol) => typegenCode += currentDef + SourceCode.closeCurlyBrace
-      case (aliasInfo: TypeAliasSymbol) => typegenCode += currentDef
+      case (classInfo: ClassSymbol) => typegenCode += typedefCode + SourceCode.closeCurlyBrace
+      case (aliasInfo: TypeAliasSymbol) => typegenCode += typedefCode
       case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
     }
   }
@@ -160,7 +176,7 @@ final class TsTypegenCodeBuilder {
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
 
-    currentTypedefCode = Some(classDeclaration)
+    currentTypedefCode = Some((className, classDeclaration))
   }
 
   // find all fields and types for class including all super classes
@@ -190,8 +206,9 @@ final class TsTypegenCodeBuilder {
       .map(_._2)
       .toList
 
-    currentTypedefCode = Some(SourceCode(s"export type $aliasName") ++
-      SourceCode.paramList(typeParams) ++ SourceCode.equalSign ++ tsType)
+    val aliasTypedefCode = SourceCode(s"export type $aliasName") ++
+      SourceCode.paramList(typeParams) ++ SourceCode.equalSign ++ tsType
+    currentTypedefCode = Some((aliasName, aliasTypedefCode))
   }
 
   /** Converts a term definition to its typescript declaration including any adhoc type aliases created for it
@@ -375,7 +392,7 @@ final class TsTypegenCodeBuilder {
       case Rem(base, names) =>
         SourceCode("Omit") ++
           SourceCode.openAngleBracket ++ toTsType(base) ++ SourceCode.commaSpace ++
-          SourceCode.record(names.map(name => SourceCode(name.name))) ++
+          SourceCode.horizontalRecord(names.map(name => SourceCode(name.name))) ++
           SourceCode.closeAngleBracket
       case Bounds(lb, ub) =>
         pol match {

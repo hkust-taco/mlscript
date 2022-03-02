@@ -38,7 +38,7 @@ def g = rcd with { y = "yeah" }
 //│ // start ts
 //│ export declare const rcd: {x: 1}
 //│ export declare const res: 1
-//│ export declare const funky<b, a>: (arg1: (arg3: Omit<a, { y }> & {y: "nah"}) => b) => (arg5: a) => b
+//│ export declare const funky<b, a>: (arg1: (arg3: Omit<a, {y}> & {y: "nah"}) => b) => (arg5: a) => b
 //│ export declare const g: {x: 1, y: "yeah"}
 //│ // end ts
 
