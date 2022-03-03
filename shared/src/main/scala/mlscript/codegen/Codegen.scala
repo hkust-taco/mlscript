@@ -11,6 +11,7 @@ package mlscript
 import mlscript.utils._, shorthands._
 import scala.collection.immutable
 import scala.util.matching.Regex
+import scala.collection.mutable.ListBuffer
 
 class SourceLine(val content: Str, indent: Int = 0) {
   def indented: SourceLine = new SourceLine(content, indent + 1)
@@ -681,21 +682,27 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 }
 
 final case class JSClassDecl(
-    val name: Str,
+    name: Str,
     fields: Ls[Str],
     `extends`: Opt[JSExpr] = N,
-    methods: Ls[JSClassMemberDecl] = Nil
+    methods: Ls[JSClassMemberDecl] = Nil,
+    implements: Ls[Str] = Nil,
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
-    val ctor = SourceCode(
-      "  constructor(fields) {" :: (if (`extends`.isEmpty) {
-                                      Nil
-                                    } else {
-                                      "    super(fields);" :: Nil
-                                    }) ::: (fields map { case name =>
-        s"    this.$name = fields.$name;"
-      }) concat "  }" :: Nil
-    )
+    val constructor: SourceCode = {
+      val buffer = new ListBuffer[Str]()
+      buffer += "  constructor(fields) {"
+      if (`extends`.isDefined)
+        buffer += "    super(fields);"
+      implements.foreach { name =>
+        buffer += s"    $name.implement(this);"
+      }
+      fields.foreach { name =>
+        buffer += s"    this.$name = fields.$name;"
+      }
+      buffer += "  }"
+      SourceCode(buffer.toList)
+    }
     val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
       x + y.toSourceCode.indented
     }
@@ -703,17 +710,18 @@ final case class JSClassDecl(
     `extends` match {
       case Some(base) =>
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
-          SourceCode(" {") + ctor + methodsSourceCode + epilogue
+          SourceCode(" {") + constructor + methodsSourceCode + epilogue
       case None =>
         if (fields.isEmpty && methods.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(
             s"class $name {" :: Nil
-          ) + ctor + methodsSourceCode + epilogue
+          ) + constructor + methodsSourceCode + epilogue
         }
     }
   }
+
   private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 

@@ -41,7 +41,7 @@ class C1: MyTrait[int]
 
 test1 (C1 { value = 1 })
 //│ res: 0 | 1
-//│    = 0
+//│    = 1
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
@@ -82,7 +82,7 @@ test2 mt
 
 test2 (C1 { value = 1 })
 //│ res: 1
-//│    = undefined
+//│    = 1
 
 
 // TODO: ability to declare classes as `final` so they can be assumed _not_ to inherit from a trait?

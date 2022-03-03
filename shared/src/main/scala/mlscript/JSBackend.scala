@@ -262,11 +262,16 @@ class JSBackend {
     val implement = JSFuncExpr(
       S("implement"),
       param("instance") :: Nil,
-      id("Object")("defineProperty")(
-        id("instance"),
-        id("tag"),
-        JSRecord("value" -> JSRecord(Nil) :: Nil)
-      ).stmt :: stmts
+      JSIfStmt(
+        id("instance").typeof().binary("!==", JSExpr("object")),
+        (id("instance") := id("Object")("assign")(id("instance"), JSRecord(Nil))) :: Nil
+      ) 
+        :: id("Object")("defineProperty")(
+          id("instance"),
+          id("tag"),
+          JSRecord("value" -> JSRecord(Nil) :: Nil)
+        ).stmt
+        :: stmts
     )
     // function build(instance) { this.implement(instance); return instance; }
     val build = JSFuncExpr(
@@ -278,14 +283,12 @@ class JSBackend {
     )
     val is = JSFuncExpr(
       S("is"),
-      param("instance") :: Nil,
+      param("x") :: Nil,
       `return`(
-        id("instance").typeof()
+        id("x").typeof()
           .binary("===", JSExpr("object"))
-          .binary("&&", id("tag")
-            .binary("in", id("instance"))
-            .binary("&&", id("instance").prop(id("tag")).typeof().binary("===", JSExpr("object")))
-          )
+          .binary("&&", id("x").binary("!==", JSLit("null")))
+          .binary("&&", id("tag").binary("in", id("x")))
       ) :: Nil
     )
     const(
@@ -294,7 +297,7 @@ class JSBackend {
         N,
         Nil,
         Ls(
-          const("tag", id("Object")()),
+          const("tag", id("Symbol")()),
           `return` {
             JSRecord("implement" -> implement :: "build" -> build :: "is" -> is :: Nil)
           }
@@ -315,7 +318,15 @@ class JSBackend {
     val fields = classSymbol.body.collectFields ++
       classSymbol.body.collectTypeNames.flatMap(resolveTraitFields)
     val base = baseClassSymbol.map { sym => JSIdent(sym.runtimeName) }
-    JSClassDecl(classSymbol.runtimeName, fields, base, members)
+    val traits = classSymbol.body.collectTypeNames.flatMap {
+      name => scope.getType(name) match {
+        case S(TraitSymbol(_, runtimeName, _, _, _)) => S(runtimeName)
+        case S(_: ClassSymbol) => N
+        case S(_: TypeSymbol) => N
+        case N => N
+      }
+    }
+    JSClassDecl(classSymbol.runtimeName, fields, base, members, traits)
   }
 
   private def translateClassMember(

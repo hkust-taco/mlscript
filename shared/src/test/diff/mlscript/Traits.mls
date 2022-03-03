@@ -135,14 +135,11 @@ def t = T1 (A { x = 1 })
 //│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & a & t1
-//│ Runtime error:
-//│   TypeError: Cannot redefine property: [object Object]
+//│  = { x: 1 }
 
-:re
 def t = T1 (A (C { x = 1 }))
 //│ t: C & {x: 1} & a & t1
-//│ Runtime error:
-//│   TypeError: Cannot redefine property: [object Object]
+//│  = C { x: 1 }
 
 class CA: C & A
 //│ Defined class CA
@@ -158,10 +155,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.159: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined, x: undefined }

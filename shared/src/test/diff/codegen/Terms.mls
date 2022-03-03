@@ -88,17 +88,20 @@ T { x = 0 }
 //│ Defined trait T
 //│ // Prelude
 //│ const T = function () {
-//│   const tag = Object();
+//│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
 //│       this.implement(instance);
 //│       return instance;
 //│     },
-//│     is: function is(instance) {
-//│       return typeof instance === "object" && tag in instance && typeof instance[tag] === "object";
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
 //│     }
 //│   });
 //│ }();
