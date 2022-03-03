@@ -287,7 +287,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
-                      _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
+                      _ => ctx.getMthDefn(tn, mn),
                       _ => ctx.getMth(S(tn), mn)
                     ).foreach(res => output(s"${rhs.fold(
                       _ => "Defined",  // the method has been defined
