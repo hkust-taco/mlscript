@@ -41,8 +41,10 @@ useCls (c with { x = 2 })
 
 :js
 trait T
+  method Test2: int
   method Test2 = 1
 //│ Defined trait T
+//│ Declared T.Test2: t -> int
 //│ Defined T.Test2: t -> 1
 //│ // Prelude
 //│ const T = function () {
@@ -73,12 +75,17 @@ trait T
 
 :js
 class D: T & {z: int}
+  method Test2 = 2
 //│ Defined class D
+//│ Defined D.Test2: (D & t) -> 2
 //│ // Prelude
 //│ class D {
 //│   constructor(fields) {
 //│     T.implement(this);
 //│     this.z = fields.z;
+//│   }
+//│   get Test2() {
+//│     return 2;
 //│   }
 //│ }
 //│ // End of generated code
@@ -90,14 +97,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	useTrt c
+//│ ║  l.98: 	useTrt c
 //│ ║        	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.86: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.93: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.86: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.93: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
@@ -113,5 +120,116 @@ d = D{z = 1213}
 d: {z: 'a}
 //│ res: {z: 1213}
 //│    = D { Test2: [Getter], z: 1213 }
+
+// FIXME: should return 2!
+d.Test2
+//│ res: int
+//│    = 1
+
+trait T1
+  method Test3: int
+  method Test3 = 1
+  method Test4 = 4
+//│ Defined trait T1
+//│ Declared T1.Test3: t1 -> int
+//│ Defined T1.Test3: t1 -> 1
+//│ Defined T1.Test4: t1 -> 4
+
+:js
+trait T2: T1
+  method Test3: int
+  method Test3 = 2
+//│ Defined trait T2
+//│ Declared T2.Test3: (t1 & t2) -> int
+//│ Defined T2.Test3: (t1 & t2) -> 2
+//│ // Prelude
+//│ const T2 = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       Object.defineProperty(instance, "Test3", {
+//│         enumerable: true,
+//│         get: function () {
+//│           return 2;
+//│         }
+//│       });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
+
+:js
+class C3: T2
+//│ Defined class C3
+//│ // Prelude
+//│ class C3 {}
+//│ // End of generated code
+
+// FIXME: should return 2!
+(C3{}).Test3
+//│ res: int
+//│    = undefined
+
+// FIXME
+(C3{}).Test4
+//│ res: 4
+//│    = undefined
+
+
+:js
+trait Oops
+//│ Defined trait Oops
+//│ // Prelude
+//│ const Oops = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
+
+:js
+oo = Oops 2
+//│ // Query 1
+//│ globalThis.oo = Oops.build(2);
+//│ res = oo;
+//│ // End of generated code
+//│ oo: 2 & oops
+//│   = 2
+
+:js
+case oo of { Oops -> 1 }
+//│ // Query 1
+//│ let a;
+//│ res = (a = oo, Oops.is(a) ? 1 : (function () {
+//│   throw new Error("non-exhaustive case expression");
+//│ })());
+//│ // End of generated code
+//│ res: 1
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 
