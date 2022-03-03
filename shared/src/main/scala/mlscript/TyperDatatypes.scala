@@ -21,6 +21,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
 
   sealed abstract class TypeInfo
 
+  /** A type for abstract classes that is used to check and throw
+   * errors if the abstract class is being instantiated */
   case class AbstractConstructor(absMths: Set[Var]) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
@@ -37,32 +39,39 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
   
-  // single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
-  class MethodType(val level: Int, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
+  /** body._1: implicit `this` parameter
+   *  body._2: actual body of the method
+   *  single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
+   */
+  class MethodType(val level: Int, val body: Opt[(SimpleType, SimpleType)], val parents: List[TypeName], val single: Bool)
       (val prov: TypeProvenance) {
     def &(that: MethodType): MethodType = {
       require(this.level === that.level)
-      MethodType(level, mergeOptions(this.body, that.body)(_ & _), (this.parents ::: that.parents).distinct, false)(prov)
+      MethodType(level, mergeOptions(this.body, that.body)((b1, b2) => (b1._1 & b2._1, b1._2 & b2._2)),
+        (this.parents ::: that.parents).distinct, false)(prov)
     }
     def +(that: MethodType): MethodType =
       if (this.parents === that.parents) that
       else MethodType(0, N, (this.parents ::: that.parents).distinct)(prov)
-    val toPT: PolymorphicType = body.fold(PolymorphicType(0, errType))(PolymorphicType(level, _))
+    val toPT: PolymorphicType =
+      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2)(prov)))
+    val bodyPT: PolymorphicType =
+      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
     def instantiate(implicit lvl: Int): SimpleType = toPT.instantiate
     def rigidify(implicit lvl: Int): SimpleType = toPT.rigidify
-    def copy(level: Int = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
+    def copy(level: Int = this.level, body: Opt[(SimpleType, SimpleType)] = this.body, parents: List[TypeName] = this.parents): MethodType =
       MethodType(level, body, parents, this.single)(prov)
     override def toString: Str = s"MethodType($level,$body,$parents,$single)"
   }
   object MethodType {
-    def apply(level: Int, body: Opt[SimpleType], parent: TypeName)(prov: TypeProvenance): MethodType =
+    def apply(level: Int, body: Opt[(SimpleType, SimpleType)], parent: TypeName)(prov: TypeProvenance): MethodType =
       MethodType(level, body, parent :: Nil, true)(prov)
-    def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName])(prov: TypeProvenance): MethodType =
+    def apply(level: Int, body: Opt[(SimpleType, SimpleType)], parents: List[TypeName])(prov: TypeProvenance): MethodType =
       MethodType(level, body, parents, true)(prov)
-    private def apply(level: Int, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
+    private def apply(level: Int, body: Opt[(SimpleType, SimpleType)], parents: List[TypeName], single: Bool)
         (implicit prov: TypeProvenance): MethodType =
       new MethodType(level, body, parents, single)(prov)
-    def unapply(mt: MethodType): S[(Int, Opt[SimpleType], List[TypeName])] = S((mt.level, mt.body, mt.parents))
+    def unapply(mt: MethodType): S[(Int, Opt[(SimpleType, SimpleType)], List[TypeName])] = S((mt.level, mt.body, mt.parents))
   }
   
   /** A type without universally quantified type variables. */

@@ -233,6 +233,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     name
   }
 
+  def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
+
   /**
     * Shorthands for deriving normal scopes.
     */
