@@ -173,13 +173,16 @@ trait T2: T1
 class C3: T2
 //│ Defined class C3
 //│ // Prelude
-//│ class C3 {}
+//│ class C3 {
+//│   constructor(fields) {
+//│     T2.implement(this);
+//│   }
+//│ }
 //│ // End of generated code
 
-// FIXME: should return 2!
 (C3{}).Test3
 //│ res: int
-//│    = undefined
+//│    = 2
 
 // FIXME
 (C3{}).Test4

@@ -773,16 +773,17 @@ final case class JSClassDecl(
       buffer += "  }"
       SourceCode(buffer.toList)
     }
-    val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
-      x + y.toSourceCode.indented
-    }
-    val epilogue = SourceCode("}" :: Nil)
+    val methodsSourceCode =
+      methods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + y.toSourceCode.indented
+      }
+    val epilogue = SourceCode("}")
     `extends` match {
       case Some(base) =>
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
           SourceCode(" {") + constructor + methodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(

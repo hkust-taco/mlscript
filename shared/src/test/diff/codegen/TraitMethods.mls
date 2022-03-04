@@ -66,7 +66,11 @@ trait T1
 class A: T0
 //│ Defined class A
 //│ // Prelude
-//│ class A {}
+//│ class A {
+//│   constructor(fields) {
+//│     T0.implement(this);
+//│   }
+//│ }
 //│ // End of generated code
 
 :js
@@ -88,7 +92,7 @@ A{}
 //│ res = new A({});
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.86: 	A{}
+//│ ║  l.90: 	A{}
 //│ ║        	^
 //│ ╟── Note that class A is abstract:
 //│ ║  l.66: 	class A: T0
