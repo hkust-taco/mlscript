@@ -25,18 +25,18 @@ x = 1
 
 t2 = T2 x
 //│ t2: 1 & t2
-//│   = 1
+//│   = [Number: 1]
 
 t1 = T1 t2
 //│ t1: 1 & t1 & t2
-//│   = 1
+//│   = [Number: 1]
 
 t1: T1
 t1: T2
 //│ res: t1
-//│    = 1
+//│    = [Number: 1]
 //│ res: t2
-//│    = 1
+//│    = [Number: 1]
 
 
 class C1[A]: { a: A }

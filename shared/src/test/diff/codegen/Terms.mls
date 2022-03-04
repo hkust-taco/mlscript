@@ -91,12 +91,12 @@ T { x = 0 }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },

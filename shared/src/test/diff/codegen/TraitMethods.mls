@@ -14,12 +14,12 @@ trait T0
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -40,9 +40,6 @@ trait T1
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       Object.defineProperty(instance, "Foo", {
 //│         enumerable: true,
@@ -52,6 +49,9 @@ trait T1
 //│       });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },

@@ -11,12 +11,12 @@ class Y: X
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -56,12 +56,12 @@ class C: B & { c: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -74,12 +74,12 @@ class C: B & { c: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -112,12 +112,12 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -130,12 +130,12 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -148,12 +148,12 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },

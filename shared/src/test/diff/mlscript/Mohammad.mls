@@ -51,9 +51,6 @@ trait T
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       Object.defineProperty(instance, "Test2", {
 //│         enumerable: true,
@@ -63,6 +60,9 @@ trait T
 //│       });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -147,9 +147,6 @@ trait T2: T1
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       Object.defineProperty(instance, "Test3", {
 //│         enumerable: true,
@@ -159,6 +156,9 @@ trait T2: T1
 //│       });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -195,12 +195,12 @@ trait Oops
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
-//│       if (typeof instance !== "object") {
-//│         instance = Object.assign(instance, {});
-//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
 //│       this.implement(instance);
 //│       return instance;
 //│     },
@@ -218,7 +218,7 @@ oo = Oops 2
 //│ res = oo;
 //│ // End of generated code
 //│ oo: 2 & oops
-//│   = 2
+//│   = [Number: 2]
 
 :js
 case oo of { Oops -> 1 }
@@ -229,7 +229,6 @@ case oo of { Oops -> 1 }
 //│ })());
 //│ // End of generated code
 //│ res: 1
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│    = 1
 
 

@@ -262,22 +262,28 @@ class JSBackend {
     val implement = JSFuncExpr(
       S("implement"),
       param("instance") :: Nil,
+      id("Object")("defineProperty")(
+        id("instance"),
+        id("tag"),
+        JSRecord("value" -> JSRecord(Nil) :: Nil)
+      ).stmt
+        :: stmts
+    )
+    // function build(instance) {
+    //   if (typeof instance !== "object") {
+    //     instance = Object.assign(instance, {});
+    //   }
+    //   this.implement(instance);
+    //   return instance;
+    // }
+    val build = JSFuncExpr(
+      S("build"),
+      param("instance") :: Nil,
       JSIfStmt(
         id("instance").typeof().binary("!==", JSExpr("object")),
         (id("instance") := id("Object")("assign")(id("instance"), JSRecord(Nil))) :: Nil
       ) 
-        :: id("Object")("defineProperty")(
-          id("instance"),
-          id("tag"),
-          JSRecord("value" -> JSRecord(Nil) :: Nil)
-        ).stmt
-        :: stmts
-    )
-    // function build(instance) { this.implement(instance); return instance; }
-    val build = JSFuncExpr(
-      S("build"),
-      param("instance") :: Nil,
-      id("this")("implement")(id("instance")).stmt
+        :: id("this")("implement")(id("instance")).stmt
         :: `return`(id("instance"))
         :: Nil
     )
