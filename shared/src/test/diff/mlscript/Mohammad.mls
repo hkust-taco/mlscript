@@ -52,12 +52,14 @@ trait T
 //│   return ({
 //│     implement: function implement(instance) {
 //│       Object.defineProperty(instance, tag, { value: {} });
-//│       Object.defineProperty(instance, "Test2", {
-//│         enumerable: true,
-//│         get: function () {
-//│           return 1;
-//│         }
-//│       });
+//│       if (!("Test2" in instance)) {
+//│         Object.defineProperty(instance, "Test2", {
+//│           enumerable: true,
+//│           get: function () {
+//│             return 1;
+//│           }
+//│         });
+//│       }
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {
@@ -97,14 +99,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.98: 	useTrt c
-//│ ║        	^^^^^^^^
+//│ ║  l.100: 	useTrt c
+//│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.93: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.95: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.93: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.95: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
@@ -115,16 +117,15 @@ useTrt (c with { y = 1 })
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
-//│  = D { Test2: [Getter], z: 1213 }
+//│  = D { z: 1213 }
 
 d: {z: 'a}
 //│ res: {z: 1213}
-//│    = D { Test2: [Getter], z: 1213 }
+//│    = D { z: 1213 }
 
-// FIXME: should return 2!
 d.Test2
 //│ res: int
-//│    = 1
+//│    = 2
 
 trait T1
   method Test3: int
@@ -148,12 +149,14 @@ trait T2: T1
 //│   return ({
 //│     implement: function implement(instance) {
 //│       Object.defineProperty(instance, tag, { value: {} });
-//│       Object.defineProperty(instance, "Test3", {
-//│         enumerable: true,
-//│         get: function () {
-//│           return 2;
-//│         }
-//│       });
+//│       if (!("Test3" in instance)) {
+//│         Object.defineProperty(instance, "Test3", {
+//│           enumerable: true,
+//│           get: function () {
+//│             return 2;
+//│           }
+//│         });
+//│       }
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {

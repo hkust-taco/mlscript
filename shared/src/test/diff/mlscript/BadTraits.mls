@@ -194,7 +194,7 @@ l = Lol h
 //│ h: Hey
 //│  = Hey {}
 //│ l: Hey & lol
-//│  = Hey { Foo: [Getter] }
+//│  = Hey {}
 
 e = Lol
 e

@@ -232,7 +232,8 @@ class JSBackend {
     import JSCodeHelpers._
     val stmts = traitSymbol.methods.map { method =>
       val name = method.nme.name
-      method.rhs.value match {
+      val define = method.rhs.value match {
+        // Define methods for functions.
         case Lam(params, body) =>
           val methodParams = translateParams(params)
           val methodScope = scope.derive(s"Method $name", JSPattern.bindings(methodParams))
@@ -242,6 +243,7 @@ class JSBackend {
             Nil,
             `return`(translateTerm(body)(methodScope)) :: Nil
           )
+        // Define getters for pure expressions.
         case term =>
           val getterScope = scope.derive(s"Getter $name")
           getterScope.declareValue("this")
@@ -258,6 +260,10 @@ class JSBackend {
             )
           ).stmt
       }
+      JSIfStmt(
+        JSExpr(name).binary("in", id("instance")).unary("!"),
+        define :: Nil,
+      )
     }
     val implement = JSFuncExpr(
       S("implement"),
