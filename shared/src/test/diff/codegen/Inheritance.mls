@@ -193,3 +193,48 @@ trait S: { s: int }
 //│   }
 //│ }
 //│ // End of generated code
+
+def checkS x = case x of
+  { S -> true
+  | _ -> false
+  }
+def checkR x = case x of
+  { R -> true
+  | _ -> false
+  }
+def checkQ x = case x of
+  { Q -> true
+  | _ -> false
+  }
+def checkP x = case x of
+  { P -> true
+  | _ -> false
+  }
+//│ checkS: anything -> bool
+//│       = [Function: checkS]
+//│ checkR: anything -> bool
+//│       = [Function: checkR]
+//│ checkQ: anything -> bool
+//│       = [Function: checkQ]
+//│ checkP: anything -> bool
+//│       = [Function: checkP]
+
+// Should pass all checks.
+:js
+p = P { s = 0; q = 0; r = 0; p = 0 }
+checkS p && checkR p && checkQ p && checkP p
+//│ // Query 1
+//│ globalThis.p = new P({
+//│   s: 0,
+//│   q: 0,
+//│   r: 0,
+//│   p: 0
+//│ });
+//│ res = p;
+//│ // Query 2
+//│ res = checkS(p) && checkR(p) && checkQ(p) && checkP(p);
+//│ // End of generated code
+//│ p: P & {p: 0, q: 0, r: 0, s: 0}
+//│  = P { p: 0, q: 0, r: 0, s: 0 }
+//│ res: bool
+//│    = true
