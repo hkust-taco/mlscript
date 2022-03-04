@@ -230,7 +230,14 @@ class JSBackend {
       traitSymbol: TraitSymbol
   )(implicit scope: Scope): JSConstDecl = {
     import JSCodeHelpers._
-    val stmts = traitSymbol.methods.map { method =>
+    val instance = id("instance")
+    val bases = traitSymbol.body.collectTypeNames.flatMap { name =>
+      topLevelScope.getType(name) match {
+        case S(t: TraitSymbol) => S(id(t.runtimeName)("implement")(instance).stmt)
+        case S(_: ClassSymbol) | S(_: TypeSymbol) | N => N
+      }
+    }
+    val members = traitSymbol.methods.map { method =>
       val name = method.nme.name
       val define = method.rhs.value match {
         // Define methods for functions.
@@ -238,7 +245,7 @@ class JSBackend {
           val methodParams = translateParams(params)
           val methodScope = scope.derive(s"Method $name", JSPattern.bindings(methodParams))
           methodScope.declareValue("this")
-          id("instance")(name) := JSFuncExpr(
+          instance(name) := JSFuncExpr(
             N,
             Nil,
             `return`(translateTerm(body)(methodScope)) :: Nil
@@ -248,7 +255,7 @@ class JSBackend {
           val getterScope = scope.derive(s"Getter $name")
           getterScope.declareValue("this")
           id("Object")("defineProperty")(
-            id("instance"),
+            instance,
             JSExpr(name),
             JSRecord(
               "enumerable" -> JSLit("true") ::
@@ -261,19 +268,24 @@ class JSBackend {
           ).stmt
       }
       JSIfStmt(
-        JSExpr(name).binary("in", id("instance")).unary("!"),
+        JSExpr(name).binary("in", instance).unary("!"),
         define :: Nil,
       )
     }
     val implement = JSFuncExpr(
       S("implement"),
       param("instance") :: Nil,
-      id("Object")("defineProperty")(
-        id("instance"),
-        id("tag"),
-        JSRecord("value" -> JSRecord(Nil) :: Nil)
-      ).stmt
-        :: stmts
+      JSIfStmt(
+        id("tag").binary("in", instance),
+        `return`() :: Nil,
+      )
+        :: id("Object")("defineProperty")(
+          instance,
+          id("tag"),
+          JSRecord("value" -> JSRecord(Nil) :: Nil)
+        ).stmt
+        :: members
+        ::: bases
     )
     // function build(instance) {
     //   if (typeof instance !== "object") {
@@ -286,11 +298,11 @@ class JSBackend {
       S("build"),
       param("instance") :: Nil,
       JSIfStmt(
-        id("instance").typeof().binary("!==", JSExpr("object")),
-        (id("instance") := id("Object")("assign")(id("instance"), JSRecord(Nil))) :: Nil
+        instance.typeof().binary("!==", JSExpr("object")),
+        (instance := id("Object")("assign")(instance, JSRecord(Nil))) :: Nil
       ) 
-        :: id("this")("implement")(id("instance")).stmt
-        :: `return`(id("instance"))
+        :: id("this")("implement")(instance).stmt
+        :: `return`(instance)
         :: Nil
     )
     val is = JSFuncExpr(

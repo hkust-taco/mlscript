@@ -14,6 +14,9 @@ trait T0
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
@@ -40,6 +43,9 @@ trait T1
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Foo" in instance)) {
 //│         Object.defineProperty(instance, "Foo", {
@@ -94,10 +100,10 @@ A{}
 //│ res = new A({});
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.92: 	A{}
+//│ ║  l.98: 	A{}
 //│ ║        	^
 //│ ╟── Note that class A is abstract:
-//│ ║  l.68: 	class A: T0
+//│ ║  l.74: 	class A: T0
 //│ ║        	      ^^^^^
 //│ ╟── Hint: method Foo is abstract
 //│ ║  l.9: 	  method Foo: int

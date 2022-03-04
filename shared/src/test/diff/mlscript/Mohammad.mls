@@ -51,6 +51,9 @@ trait T
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Test2" in instance)) {
 //│         Object.defineProperty(instance, "Test2", {
@@ -99,14 +102,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.100: 	useTrt c
+//│ ║  l.103: 	useTrt c
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.95: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.98: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.95: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.98: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
@@ -148,6 +151,9 @@ trait T2: T1
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Test3" in instance)) {
 //│         Object.defineProperty(instance, "Test3", {
@@ -157,6 +163,7 @@ trait T2: T1
 //│           }
 //│         });
 //│       }
+//│       T1.implement(instance);
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {
@@ -187,10 +194,9 @@ class C3: T2
 //│ res: int
 //│    = 2
 
-// FIXME
 (C3{}).Test4
 //│ res: 4
-//│    = undefined
+//│    = 4
 
 
 :js
@@ -201,6 +207,9 @@ trait Oops
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {

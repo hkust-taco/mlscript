@@ -91,6 +91,9 @@ T { x = 0 }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {

@@ -11,6 +11,9 @@ class Y: X
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
@@ -56,6 +59,9 @@ class C: B & { c: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {
@@ -74,7 +80,11 @@ class C: B & { c: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
+//│       A.implement(instance);
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {
@@ -112,7 +122,11 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
+//│       R.implement(instance);
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {
@@ -130,7 +144,11 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
+//│       S.implement(instance);
 //│     },
 //│     build: function build(instance) {
 //│       if (typeof instance !== "object") {
@@ -148,6 +166,9 @@ trait S: { s: int }
 //│   const tag = Symbol();
 //│   return ({
 //│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│     },
 //│     build: function build(instance) {

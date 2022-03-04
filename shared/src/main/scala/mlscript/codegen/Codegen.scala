@@ -297,7 +297,7 @@ abstract class JSExpr extends JSCode {
 
   def stmt: JSExprStmt = JSExprStmt(this)
   
-  def `return`: JSReturnStmt = JSReturnStmt(this)
+  def `return`: JSReturnStmt = JSReturnStmt(S(this))
 
   def `throw`: JSThrowStmt = JSThrowStmt(this)
 
@@ -426,7 +426,7 @@ final case class JSImmEvalFn(
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = {
     (SourceCode(s"function (${params mkString ", "}) ") ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
     }).block).parenthesized ++ JSExpr.arguments(arguments)
@@ -642,11 +642,11 @@ final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSSt
 }
 
 // A single return statement.
-final case class JSReturnStmt(value: JSExpr) extends JSStmt {
-  def toSourceCode =
-    SourceCode(
-      "return "
-    ) ++ value.toSourceCode.clause ++ SourceCode.semicolon
+final case class JSReturnStmt(value: Opt[JSExpr]) extends JSStmt {
+  def toSourceCode = (value match {
+    case Some(value) => SourceCode("return ") ++ value.toSourceCode.clause
+    case None => SourceCode("return")
+  }) ++ SourceCode.semicolon
 }
 
 final case class JSTryStmt(block: Ls[JSStmt], handler: JSCatchClause) extends JSStmt {
@@ -727,7 +727,7 @@ abstract class JSClassMemberDecl extends JSStmt;
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode(s"get $name() ") ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
@@ -740,7 +740,7 @@ final case class JSClassMethod(
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
@@ -804,6 +804,7 @@ object JSCodeHelpers {
   def id(name: Str): JSIdent = JSIdent(name)
   def lit(value: Int): JSLit = JSLit(value.toString())
   def const(name: Str, init: JSExpr): JSConstDecl = JSConstDecl(name, init)
+  def `return`(): JSReturnStmt = JSReturnStmt(N)
   def `return`(expr: JSExpr): JSReturnStmt = expr.`return`
   def `throw`(expr: JSExpr): JSThrowStmt = expr.`throw`
   def forIn(pattern: JSNamePattern, iteratee: JSExpr)(stmts: JSStmt*): JSForInStmt
