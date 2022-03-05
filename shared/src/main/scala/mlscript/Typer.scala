@@ -58,7 +58,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         (this.defns.iterator ++ that.defns.iterator).toSeq.groupMap(_._1)(_._2).flatMap {
           case _ -> Nil => die
           case mn -> (defn :: Nil) => S(mn -> defn)
-          case mn -> defns if overridden(mn) => N  // ignore a previously-defined method if it's overridden
+          case mn -> defns if overridden(mn) => N  // ignore an inherited method definition if it's overridden
           case mn -> defns =>
             err(msg"An overriding method definition must be given when inheriting from multiple method definitions" -> tn.toLoc
               :: msg"Definitions of method $mn inherited from:" -> N
@@ -68,19 +68,26 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         }
       )
     /** Returns a `MethodSet` of the _inherited_ methods only,
-      *   disregarding the current MethodSet's methods... */
-    def processInheritedMethods(top: Bool)(implicit ctx: Ctx, raise: Raise): MethodSet = {
-      def addParent(mt: MethodSet, prt: TypeName): MethodSet = {
-        val td = ctx.tyDefs(prt.name)
+      *   disregarding the current MethodSet's methods... 
+      * Useful for subsumption checking
+      *   as inherited and current methods should be considered separately 
+      * An overriding definition is required when multiple method definitions are inherited.
+      *   An error is raised if no overriding definition is given. */
+    def processInheritedMethods(implicit ctx: Ctx, raise: Raise): MethodSet =
+      processInheritedMethodsHelper(includeCurrentMethods = false)
+    private def processInheritedMethodsHelper(includeCurrentMethods: Bool)
+        (implicit ctx: Ctx, raise: Raise): MethodSet = {
+      def addParent(mt: MethodSet): MethodSet = {
+        val td = ctx.tyDefs(ownerType.name)
         def addThis(mt: MethodType): MethodType =
           mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTy(mt.prov))))(mt.prov)
         def add(mt: MethodType): MethodType =
-          mt.copy(parents = prt :: mt.parents)(mt.prov)
+          mt.copy(parents = ownerType :: mt.parents)(mt.prov)
         mt.copy(decls = mt.decls.view.mapValues(addThis).mapValues(add).toMap, defns = mt.defns.view.mapValues(addThis).toMap)
       }
-      parents.map(_.processInheritedMethods(false))
-        .reduceOption(_.&(_)(ownerType, defns.keySet)).map(addParent(_, ownerType))
-        .foldRight(if (top) MethodSet(ownerType, Nil, Map.empty, Map.empty) else copy(parents = Nil)) {
+      parents.map(_.processInheritedMethodsHelper(true))
+        .reduceOption(_.&(_)(ownerType, defns.keySet)).map(addParent)
+        .foldRight(if (includeCurrentMethods) this else copy(decls = Map.empty, defns = Map.empty)) {
           (mds1, mds2) =>
             mds2.copy(decls = mds1.decls ++ mds2.decls, defns = mds1.defns ++ mds2.defns)
         }
@@ -90,8 +97,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   /** Keys of `mthEnv`:
     * `L` represents the inferred types of method definitions. The first value is the parent name,
     *   and the second value is the method name.
-    *   The method definitions are *not* wrapped with the implicit `this` parameter,
-    *   but are instead wrapped at `getMthDefn`.
     * `R` represents the actual method types.
     *   The first optional value is the parent name, with `N` representing implicit calls,
     *   and the second value is the method name.
@@ -476,7 +481,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       def checkSubsume(td: TypeDef, mds: MethodSet): Unit = {
         val tn = td.nme
         val MethodSet(_, _, decls, defns) = mds
-        val MethodSet(_, _, declsInherited, defnsInherited) = mds.processInheritedMethods(true)
+        val MethodSet(_, _, declsInherited, defnsInherited) = mds.processInheritedMethods
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
