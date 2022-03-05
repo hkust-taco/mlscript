@@ -43,11 +43,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
 
-  def term0[_: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
-  def term[_: P]: P[Term] = P( term0 ~ ("<-" ~ term0).? map {
-      case (t, None)    => t
-      case (t, Some(v)) => Assign(t, v)
-    })
+  def term[_: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
+  // def term[_: P]: P[Term] = P( term0 ~ ("<-" ~ term0).? map {
+  //     case (t, None)    => t
+  //     case (t, Some(v)) => Assign(t, v)
+  //   })
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
@@ -64,10 +64,13 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       .map {(t: Var) => Left(t)} |
     // array subscript
     ("[" ~ term ~/ "]").map {Right(_)}
-    ).rep ).map {
-      case (st, sels) => sels.foldLeft(st)((acc, t) => t match {
+    ).rep ~ ("<-" ~ term).?).map {
+      case (st, sels, a) => sels.foldLeft(st)((acc, t) => t match {
         case Left(se) => Sel(acc, se)
         case Right(su) => Subs(acc, su)
+      }) pipe (a match {
+        case None => identity
+        case Some(v) => Assign(_, v)
       })
     }
 

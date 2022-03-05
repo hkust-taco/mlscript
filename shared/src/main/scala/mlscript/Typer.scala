@@ -933,9 +933,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         con(t_a, ArrayType(res.toUpper)(prov), t_a)
         con(t_i, IntType, t_i)
         res
-      // TODO : implemnt type checking
-      case Assign(lhs, rhs) => 
+      case Assign(s @ Sel(r, f), rhs) => 
+        val o_ty = typeTerm(r)
+        val res = freshVar(prov)
+        val vl = typeTerm(rhs)
+        val obj_ty = mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
+        val rf = con(obj_ty, RecordType.mk((f, FieldType(res, res)) :: Nil)(prov), res)
+        con(vl, rf, vl)
         UnitType
+      case Assign(s @ Subs(a, i), rhs) => 
+        val a_ty = typeTerm(a)
+        val res = freshVar(prov)
+        val vl = typeTerm(rhs)
+        val arr_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
+        con(arr_ty, ArrayType(FieldType(res, res))(prov), res)
+        con(vl, IntType, vl)
+        UnitType
+      case Assign(_, rhs) => 
+        err(msg"Cannot not assign to non-field", term.toLoc)(raise)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
