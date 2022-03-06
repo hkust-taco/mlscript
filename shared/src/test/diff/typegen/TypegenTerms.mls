@@ -29,16 +29,19 @@ def z = x + y
 def rcd = { x = 1 }
 rcd.x
 def funky f r = let t = r with { y = "nah" } in f t
+def cool g r = let t = r with { a = "apple"; b = "ball" } in g t
 def g = rcd with { y = "yeah" }
 // records
 //│ rcd: {x: 1}
 //│ res: 1
 //│ funky: (('a\y & {y: "nah"}) -> 'b) -> 'a -> 'b
+//│ cool: (('a\a\b & {a: "apple", b: "ball"}) -> 'b) -> 'a -> 'b
 //│ g: {x: 1, y: "yeah"}
 //│ // start ts
 //│ export declare const rcd: {x: 1}
 //│ export declare const res: 1
-//│ export declare const funky<b, a>: (arg1: (arg3: Omit<a, {y}> & {y: "nah"}) => b) => (arg5: a) => b
+//│ export declare const funky<b, a>: (arg1: (arg3: Omit<a, "y"> & {y: "nah"}) => b) => (arg5: a) => b
+//│ export declare const cool<b, a>: (arg1: (arg3: Omit<a, "a" | "b"> & {a: "apple", b: "ball"}) => b) => (arg5: a) => b
 //│ export declare const g: {x: 1, y: "yeah"}
 //│ // end ts
 
@@ -78,19 +81,19 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.78: 	1: ?
+//│ ║  l.81: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.78: 	1: ?
+//│ ║  l.81: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.79: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -105,7 +108,7 @@ def g = fun x -> fun y -> if x == y then x y else y x
 //│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<b, c, a>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
+//│ export declare const nonsense<c, b, a>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
 //│ export declare const g: (arg1: never) => (arg3: never) => never
 //│ // end ts
 

@@ -289,10 +289,6 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
 
-                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefStart(td)
-
-                val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
-
                 // pretty print method definitions
                 (ttd.mthDecls ++ ttd.mthDefs).foreach {
                   case MethodDef(_, _, Var(mn), _, rhs) =>
@@ -307,20 +303,22 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     })
                 }
 
-                // for type gen use method declaration if present
-                // otherwise use type inferred for method definition
+                // start typegen, declare methods if any and complete typegen block
                 if (mode.generateTsDeclarations) {
+                  tsTypegenCodeBuilder.addTypeDefStart(td)
+
+                  val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
                   val onlyMethodDef = ttd.mthDefs.filter(mthd => !mthDeclSet.contains(mthd.nme.name))
                   (ttd.mthDecls ++ onlyMethodDef).foreach({
                     case MethodDef(_, _, Var(mn), _, rhs) =>
                       rhs.fold(
                         _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
                         _ => ctx.getMth(S(tn), mn)
-                      ).foreach(res => { tsTypegenCodeBuilder.addClassMethods(mn, getType(res.toPT)) })
+                      ).foreach(res => { tsTypegenCodeBuilder.addClassMethod(mn, getType(res.toPT)) })
                   })
-                }
 
-                if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeDefComplete(td)
+                  tsTypegenCodeBuilder.addTypeDefComplete(td)
+                }
               }
             )
             

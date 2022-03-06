@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
-import mlscript.{TypeName, Top, Bot}
+import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
 import mlscript.MethodDef
 import mlscript.Term
 
@@ -153,7 +153,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     lexicalTypeSymbols.get(name) flatMap {
       _ match {
         case c: TypeAliasSymbol => S(c)
-        case _              => N
+        case _                  => N
       }
     }
 
@@ -188,6 +188,15 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       baseClasses.headOption
   }
 
+  def declareTypeSymbol(typeDef: TypeDef): TypeSymbol = typeDef match {
+    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      declareTypeAlias(name, tparams map { _.name }, body)
+    case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
+      declareTrait(name, tparams map { _.name }, body)
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      declareClass(name, tparams map { _.name }, baseType, members)
+  }
+
   def declareClass(
       lexicalName: Str,
       params: Ls[Str],
@@ -195,7 +204,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       methods: Ls[MethodDef[Left[Term, Type]]]
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, methods)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
     register(symbol)
     symbol
   }

@@ -12,11 +12,11 @@ import mlscript.codegen._
 final class TsTypegenCodeBuilder {
   private val typeScope: Scope = Scope("globalTypeScope")
   private val termScope: Scope = Scope("globalTermScope")
-  private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty;
+  private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty
 
   // local state of partially translated typedef
   // because they are spread across multiple statements
-  private var currentTypedefCode: Option[(String, SourceCode)] = None;
+  private var currentTypedefCode: Option[(String, SourceCode)] = None
 
   /** Return complete typegen code for current typing unit
     *
@@ -46,7 +46,7 @@ final class TsTypegenCodeBuilder {
   )
 
   object TypegenContext {
-    def apply(mlType: Type, isMethodDefintion: Boolean = false): TypegenContext = {
+    def apply(mlType: Type, isMethodDefintion: Boolean): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
@@ -65,21 +65,14 @@ final class TsTypegenCodeBuilder {
     }
 
     // create a context with pre-created type var to name mapping
-    def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode]): TypegenContext = {
+    def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode], isMethodDefintion: Boolean): TypegenContext = {
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
-      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, false)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, isMethodDefintion)
     }
   }
 
-  def declareTypeDef(typeDef: TypeDef): TypeSymbol = typeDef match {
-    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
-      typeScope.declareTypeAlias(name, tparams map { _.name }, body)
-    case TypeDef(Trt, TypeName(name), tparams, body, _, _) =>
-      typeScope.declareTrait(name, tparams map { _.name }, body)
-    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
-      typeScope.declareClass(name, tparams map { _.name }, baseType, members)
-  }
+  def declareTypeDef(typeDef: TypeDef): TypeSymbol = typeScope.declareTypeSymbol(typeDef)
 
   /**
     * Start adding type definition and store partially translated
@@ -104,7 +97,7 @@ final class TsTypegenCodeBuilder {
   /** Add class method type gen translation to the partially translated
     * class typegen code
     */
-  def addClassMethods(methodName: String, methodType: Type): Unit = {
+  def addClassMethod(methodName: String, methodType: Type): Unit = {
     val (className, currentDef) = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot add method without starting a type definition"))
     val classInfo = typeScope.getClassSymbol(className).getOrElse(throw CodeGenError(s"Cannot find class $className for which method $methodName is being declared"))
     val classTypeParams = classInfo.params.toSet
@@ -114,8 +107,8 @@ final class TsTypegenCodeBuilder {
       case _ => throw CodeGenError(s"Cannot translate malformed method: $methodName because it does not have top level function")
     }
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(methodBodyType, true)
-    val tsType = toTsType(methodBodyType)(typegenCtx, Some(true));
+    val typegenCtx = TypegenContext(methodBodyType, isMethodDefintion = true)
+    val tsType = toTsType(methodBodyType)(typegenCtx, Some(true))
     // only use free variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
       .filter(tup => methodBodyType.freeTypeVariables.contains(tup._1) &&
@@ -183,9 +176,9 @@ final class TsTypegenCodeBuilder {
   // optionally include base class fields as well
   private def getClassFieldAndTypes(classSymbol: ClassSymbol, includeBaseClass: Boolean = false): List[(SourceCode, SourceCode)] = {
     val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes
-      .map({case (fieldVar, fieldType) => {
-        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
-      }});
+      .map{case (fieldVar, fieldType) => 
+        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType, isMethodDefintion = false), Some(true)))
+      }
 
     if (includeBaseClass) {
       bodyFieldsAndTypes ++ typeScope.resolveBaseClass(classSymbol.body).map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
@@ -198,8 +191,8 @@ final class TsTypegenCodeBuilder {
     val aliasName = aliasInfo.lexicalName
     val mlType = aliasInfo.body
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(mlType)
-    val tsType = toTsType(mlType)(typegenCtx, Some(true));
+    val typegenCtx = TypegenContext(mlType, isMethodDefintion = false)
+    val tsType = toTsType(mlType)(typegenCtx, Some(true))
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
       .filter(tup => mlType.freeTypeVariables.contains(tup._1))
@@ -225,8 +218,8 @@ final class TsTypegenCodeBuilder {
     val defName = termName.getOrElse("res")
 
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(mlType)
-    val tsType = toTsType(mlType)(typegenCtx, Some(true));
+    val typegenCtx = TypegenContext(mlType, isMethodDefintion = false)
+    val tsType = toTsType(mlType)(typegenCtx, Some(true))
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
       .filter(tup => mlType.freeTypeVariables.contains(tup._1))
@@ -283,7 +276,7 @@ final class TsTypegenCodeBuilder {
         if (funcArg) {
           val argList = fields
             .map(field => {
-              val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
+              val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
               val argType = toTsType(field._2)
               SourceCode(s"$arg: ") ++ argType
             })
@@ -305,13 +298,13 @@ final class TsTypegenCodeBuilder {
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases
       case f@Function(lhs, rhs) =>
-        val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
+        val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
 
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function
-        val lhsTypeSource = toTsType(lhs, true)(typegenCtx.copy(isMethodDefintion = false), pol.map(!_));
-        val rhsTypeSource = toTsType(rhs)(typegenCtx.copy(isMethodDefintion = false), pol);
+        val lhsTypeSource = toTsType(lhs, true)(typegenCtx.copy(isMethodDefintion = false), pol.map(!_))
+        val rhsTypeSource = toTsType(rhs)(typegenCtx.copy(isMethodDefintion = false), pol)
 
         val separator = if (typegenCtx.isMethodDefintion) {
           SourceCode.colon
@@ -335,12 +328,12 @@ final class TsTypegenCodeBuilder {
         val typeVarMapping = typegenCtx.typeVarMapping
         // create new type gen context and recalculate rec var and
         // non-rec var for current type
-        val nestedTypegenCtx = TypegenContext(mlType, typeVarMapping)
+        val nestedTypegenCtx = TypegenContext(mlType, typeVarMapping, isMethodDefintion = false)
 
         // recursive type does not have any other type variables
         // (except itself)
         if (mlType.freeTypeVariables.size === 0) {
-          val bodyType = toTsType(body)(typegenCtx, pol);
+          val bodyType = toTsType(body)(typegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvName") ++
             SourceCode.equalSign ++ bodyType)
           uvName
@@ -354,7 +347,7 @@ final class TsTypegenCodeBuilder {
             .toList
           val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)
           typeVarMapping += uv -> uvAppliedName
-          val bodyType = toTsType(body)(nestedTypegenCtx, pol);
+          val bodyType = toTsType(body)(nestedTypegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvAppliedName") ++
             SourceCode.equalSign ++ bodyType)
           uvAppliedName
@@ -392,7 +385,7 @@ final class TsTypegenCodeBuilder {
       case Rem(base, names) =>
         SourceCode("Omit") ++
           SourceCode.openAngleBracket ++ toTsType(base) ++ SourceCode.commaSpace ++
-          SourceCode.horizontalRecord(names.map(name => SourceCode(name.name))) ++
+          SourceCode.sepBy(names.map(name => SourceCode(s"\"${name.name}\"")), SourceCode.separator) ++
           SourceCode.closeAngleBracket
       case Bounds(lb, ub) =>
         pol match {
