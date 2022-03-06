@@ -59,7 +59,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     pins: T
 //│     constructor(fields: {pins: T})
 //│     Map<a>(arg1: (arg3: T) => a): Lock<a>
-//│     Open: Omit<Lock<0 | a>, "pins"> & {pins: 0}
+//│     Open<a>: Omit<Lock<0 | a>, "pins"> & {pins: 0}
 //│ }
 //│ export declare class Bank {
 //│     lock: Lock<int>
@@ -69,7 +69,7 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     Better(arg1: Omit<Bank, "lock"> & {lock: Lock<int>}): bool
 //│ }
 //│ export declare const Lock<T, pins>: (arg1: pins & T) => Omit<Lock<T>, "pins"> & {pins: pins}
-//│ export declare const Bank<lock, cash>: (arg1: Lock<int> & lock) => (arg3: int & cash) => Omit<Bank, "cash" | "lock"> & {cash: cash, lock: lock}
+//│ export declare const Bank<cash, lock>: (arg1: Lock<int> & lock) => (arg3: int & cash) => Omit<Bank, "cash" | "lock"> & {cash: cash, lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 

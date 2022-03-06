@@ -1,7 +1,7 @@
 package mlscript
 package codegen.typescript
 
-import scala.collection.mutable.{ListBuffer, Map => MutMap}
+import scala.collection.mutable.{ListBuffer, Map => MutMap, SortedMap => MutSortedMap}
 
 import mlscript.codegen.CodeGenError
 import mlscript.utils._
@@ -39,18 +39,26 @@ final class TsTypegenCodeBuilder {
     *   scope for type parameter names
     */
   protected case class TypegenContext(
-      typeVarMapping: MutMap[TypeVar, SourceCode],
+      typeVarMapping: MutSortedMap[TypeVar, SourceCode],
       termScope: Scope,
       typeScope: Scope,
       isMethodDefintion: Boolean
   )
 
   object TypegenContext {
+
+    // define an ordering for type variables to store them as sorted
+    // use name hint if given otherwise use string representation of
+    // internal identifier to order
+    implicit val orderingTypeVar: Ordering[TypeVar] =
+      Ordering.by(tvar =>
+        tvar.nameHint.getOrElse(tvar.identifier.fold(_.toString, identity(_))))
+
     def apply(mlType: Type, isMethodDefintion: Boolean): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
-      val typeVarMapping = MutMap.empty[TypeVar, SourceCode]
+      val typeVarMapping = MutSortedMap.empty[TypeVar, SourceCode]
       existingTypeVars.iterator.foreach { case (key, value) =>
         val name = typegenTypeScope.declareRuntimeSymbol(value)
         typeVarMapping += key -> SourceCode(value)
@@ -65,7 +73,7 @@ final class TsTypegenCodeBuilder {
     }
 
     // create a context with pre-created type var to name mapping
-    def apply(mlType: Type, typeVarMapping: MutMap[TypeVar, SourceCode], isMethodDefintion: Boolean): TypegenContext = {
+    def apply(mlType: Type, typeVarMapping: MutSortedMap[TypeVar, SourceCode], isMethodDefintion: Boolean): TypegenContext = {
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
       TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, isMethodDefintion)
@@ -113,7 +121,9 @@ final class TsTypegenCodeBuilder {
     val typeParams = typegenCtx.typeVarMapping.iterator
       .filter(tup => methodBodyType.freeTypeVariables.contains(tup._1) &&
         // ignore class type parameters since they are implicitly part of class scope
-        tup._1.nameHint.fold(false)(!classTypeParams.contains(_))
+        // if no name hint then the type variable is certainly not a class type parameter
+        // it's friendly name has been generated
+        tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
       )
       .map(_._2)
       .toList
