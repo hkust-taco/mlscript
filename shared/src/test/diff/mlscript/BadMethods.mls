@@ -753,6 +753,9 @@ class Test7C: Test7A & Test7B
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7C
 
+Test7C.Mth7A
+//│ res: error
+
 class Test7D: Test7A & Test7B
   method Mth7A = this.(Test7A.Mth7A) * this.(Test7B.Mth7A)
 //│ Defined class Test7D
@@ -792,14 +795,14 @@ class Test7G: Test7C & Test7F
 //│ ║  l.734: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.783: 	class Test7G: Test7C & Test7F
+//│ ║  l.786: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7C
 //│ ║  l.743: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── • Test7F
-//│ ║  l.778: 	  method Mth7A = 0
+//│ ║  l.781: 	  method Mth7A = 0
 //│ ╙──       	         ^^^^^^^^^
 //│ Defined class Test7G
 
@@ -817,10 +820,10 @@ class Test8A
 class Test8B: Test8A
     method F: 1
 //│ ╔══[ERROR] Overriding method Test8A.F without an overriding definition is not allowed.
-//│ ║  l.818: 	    method F: 1
+//│ ║  l.821: 	    method F: 1
 //│ ║         	           ^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.811: 	    method F = 1
+//│ ║  l.814: 	    method F = 1
 //│ ╙──       	           ^^^^^
 //│ Defined class Test8B
 //│ Declared Test8B.F: Test8B -> 1
@@ -832,9 +835,17 @@ class Test8C[A]
 //│ Declared Test8C.F: Test8C['A] -> 'A
 //│ Defined Test8C.F: Test8C['A] -> nothing
 
-// Allow syntactically identitcal declarations for documentation
+// We used to allow syntactically identitcal declarations for documentation,
+//  but that's actually a bad idea (and the implementation was broken)
+:e
 class Test8D: Test8C[int]
     method F: int
+//│ ╔══[ERROR] Overriding method Test8C.F without an overriding definition is not allowed.
+//│ ║  l.842: 	    method F: int
+//│ ║         	           ^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.833: 	    method F = error
+//│ ╙──       	           ^^^^^^^^^
 //│ Defined class Test8D
 //│ Declared Test8D.F: Test8D -> int
 
@@ -853,15 +864,15 @@ class Test9B: Test9A[int]
 :NoJS
 error.(Test9B.Mth9A): nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.854: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.865: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `nothing`
-//│ ║  l.849: 	class Test9B: Test9A[int]
+//│ ║  l.860: 	class Test9B: Test9A[int]
 //│ ║         	                     ^^^
 //│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.854: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.865: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.854: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.865: 	error.(Test9B.Mth9A): nothing
 //│ ╙──       	                      ^^^^^^^
 //│ res: nothing
