@@ -305,19 +305,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
                 // start typegen, declare methods if any and complete typegen block
                 if (mode.generateTsDeclarations) {
-                  tsTypegenCodeBuilder.addTypeDefStart(td)
-
                   val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
                   val onlyMethodDef = ttd.mthDefs.filter(mthd => !mthDeclSet.contains(mthd.nme.name))
-                  (ttd.mthDecls ++ onlyMethodDef).foreach({
+                  val methods = (ttd.mthDecls ++ onlyMethodDef).flatMap({
                     case MethodDef(_, _, Var(mn), _, rhs) =>
                       rhs.fold(
-                        _ => ctx.getMthDefn(tn, mn).map(md => ttd.wrapMethod(md)),
-                        _ => ctx.getMth(S(tn), mn)
-                      ).foreach(res => { tsTypegenCodeBuilder.addClassMethod(mn, getType(res.toPT)) })
+                        _ => ctx.getMthDefn(tn, mn),
+                        _ => ctx.getMth(S(tn), mn),
+                      ).map(res => (mn, getType(res.toPT)))
                   })
 
-                  tsTypegenCodeBuilder.addTypeDefComplete(td)
+                  tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
               }
             )

@@ -14,10 +14,6 @@ final class TsTypegenCodeBuilder {
   private val termScope: Scope = Scope("globalTermScope")
   private val typegenCode: ListBuffer[SourceCode] = ListBuffer.empty
 
-  // local state of partially translated typedef
-  // because they are spread across multiple statements
-  private var currentTypedefCode: Option[(String, SourceCode)] = None
-
   /** Return complete typegen code for current typing unit
     *
     * @return
@@ -88,15 +84,12 @@ final class TsTypegenCodeBuilder {
     *
     * @param typeDef
     */
-  def addTypeDefStart(typeDef: TypeDef): Unit = {
-    if (currentTypedefCode.isDefined) {
-      throw CodeGenError(s"Cannot start adding new type definition for ${typeDef.nme.name} without complete previous")
-    }
+  def addTypeDef(typeDef: TypeDef, methods: List[(String, Type)]): Unit = {
     val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
       throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
     )
     tySymb match {
-      case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo)
+      case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, methods)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
       case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
     }
@@ -105,9 +98,7 @@ final class TsTypegenCodeBuilder {
   /** Add class method type gen translation to the partially translated
     * class typegen code
     */
-  def addClassMethod(methodName: String, methodType: Type): Unit = {
-    val (className, currentDef) = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot add method without starting a type definition"))
-    val classInfo = typeScope.getClassSymbol(className).getOrElse(throw CodeGenError(s"Cannot find class $className for which method $methodName is being declared"))
+  def addClassMethod(classInfo: ClassSymbol, methodName: String, methodType: Type): Unit = {
     val classTypeParams = classInfo.params.toSet
     // unwrap method function type to remove implicit this
     val methodBodyType = methodType match {
@@ -130,30 +121,14 @@ final class TsTypegenCodeBuilder {
 
     val methodSourceCode = methodBodyType match {
       // function creates signature with `:` separating arguments and body
-      case f: Function => currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType)
+      case f: Function => SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType
       // explicitly add `:` for any other method type
-      case _ => currentDef + (SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType)
+      case _ => SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType
     }
-    currentTypedefCode = Some((className, methodSourceCode))
+    typegenCode += methodSourceCode
   }
 
-  /** Complete translating type definition and append translated definition
-    * to translated source code for current typing unit
-    */
-  def addTypeDefComplete(typeDef: TypeDef): Unit = {
-    val (name, typedefCode) = currentTypedefCode.getOrElse(throw CodeGenError(s"Cannot complete an empty type definition"))
-    currentTypedefCode = None
-    val tySymb = typeScope.getTypeSymbol(typeDef.nme.name).getOrElse(
-      throw CodeGenError(s"No type definition for ${typeDef.nme.name} exists")
-    )
-    tySymb match {
-      case (classInfo: ClassSymbol) => typegenCode += typedefCode + SourceCode.closeCurlyBrace
-      case (aliasInfo: TypeAliasSymbol) => typegenCode += typedefCode
-      case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
-    }
-  }
-
-  def addTypeGenClassDef(classInfo: ClassSymbol): Unit = {
+  def addTypeGenClassDef(classInfo: ClassSymbol, methods: List[(String, Type)]): Unit = {
     val className = classInfo.lexicalName
     val classBody = classInfo.body
     val baseClass = typeScope.resolveBaseClass(classBody)
@@ -178,8 +153,12 @@ final class TsTypegenCodeBuilder {
     val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
+    typegenCode += classDeclaration;
 
-    currentTypedefCode = Some((className, classDeclaration))
+    // add methods
+    methods.foreach{case (name, methodType)=> addClassMethod(classInfo, name, methodType)};
+
+    typegenCode += SourceCode.closeCurlyBrace
   }
 
   // find all fields and types for class including all super classes
@@ -209,9 +188,8 @@ final class TsTypegenCodeBuilder {
       .map(_._2)
       .toList
 
-    val aliasTypedefCode = SourceCode(s"export type $aliasName") ++
+    typegenCode += SourceCode(s"export type $aliasName") ++
       SourceCode.paramList(typeParams) ++ SourceCode.equalSign ++ tsType
-    currentTypedefCode = Some((aliasName, aliasTypedefCode))
   }
 
   /** Converts a term definition to its typescript declaration including any adhoc type aliases created for it

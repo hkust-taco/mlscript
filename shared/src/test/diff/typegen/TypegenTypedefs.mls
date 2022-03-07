@@ -73,3 +73,4 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ export declare const res: bool
 //│ // end ts
 
+
