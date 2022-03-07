@@ -113,7 +113,7 @@ final class TsTypegenCodeBuilder {
       .filter(tup => methodBodyType.freeTypeVariables.contains(tup._1) &&
         // ignore class type parameters since they are implicitly part of class scope
         // if no name hint then the type variable is certainly not a class type parameter
-        // it's friendly name has been generated
+        // its friendly name has been generated
         tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
       )
       .map(_._2)
