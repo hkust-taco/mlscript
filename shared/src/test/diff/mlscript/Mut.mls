@@ -77,21 +77,69 @@ t2.x <- 3
 class B: { mutable x: int; y: bool }
 //│ Defined class B
 
-// FIXME
 def b1 : B
 b1 = B { mutable x = 2; y = true }
 //│ b1: B
-//│ B with {x: 2, y: true}
+//│ B with {x: int & 'x .. 2 | 'x, y: true}
 //│   <:  b1:
 //│ B
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.82: 	b1 = B { mutable x = 2; y = true }
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `nothing`
-//│ ║  l.77: 	class B: { mutable x: int; y: bool }
-//│ ╙──      	                      ^^^
 
+b2 = B {mutable x = 1; y = false}
+//│ b2: B with {x: int & 'x .. 1 | 'x, y: false}
+
+:e
+b3 = B {x = 6; y = false}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.91: 	b3 = B {x = 6; y = false}
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `6` does not match type `nothing`
+//│ ║  l.91: 	b3 = B {x = 6; y = false}
+//│ ╙──      	            ^
+//│ b3: (B with {x: 6, y: false}) | error
+
+:e
+b2.y <- b1.y
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.101: 	b2.y <- b1.y
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── reference of type `false` does not match type `nothing`
+//│ ║  l.87: 	b2 = B {mutable x = 1; y = false}
+//│ ╙──      	                           ^^^^^
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.101: 	b2.y <- b1.y
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `bool` does not match type `nothing`
+//│ ║  l.77: 	class B: { mutable x: int; y: bool }
+//│ ║        	                              ^^^^
+//│ ╟── but it flows into field selection with expected type `nothing`
+//│ ║  l.101: 	b2.y <- b1.y
+//│ ╙──       	        ^^^^
+
+b2.x <- b1.x
 b1.x <- a2.x
+
+def h : B -> int -> int
+def h b i = (fun _ -> b.x) (b.x <- i) 
+//│ h: B -> int -> int
+//│ {x: 'a .. 'a & 'b} -> 'a -> 'b
+//│   <:  h:
+//│ B -> int -> int
+
+h b1 2
+//│ res: int
+
+:e
+h {mutable x = 4} 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.132: 	h {mutable x = 4} 2
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{x: ?a .. ?a}` is not an instance of type B
+//│ ║  l.132: 	h {mutable x = 4} 2
+//│ ║         	  ^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.121: 	def h : B -> int -> int
+//│ ╙──       	        ^
+//│ res: error | int
 
 def mt1: (mutable int, mutable bool)
 def mt2: (int, int)
@@ -102,19 +150,23 @@ def emt: (mutable int)
 
 muta1[0] <- 1
 
+:pe // TODO
+mt1 = (mutable 3, mutable false)
+//│ /!\ Parse error: Expected ")":1:8, found "mutable 3," at l.154:8: mt1 = (mutable 3, mutable false)
+
 :e
 muta1[1] <- false
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.106: 	muta1[1] <- false
+//│ ║  l.158: 	muta1[1] <- false
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
-//│ ║  l.106: 	muta1[1] <- false
+//│ ║  l.158: 	muta1[1] <- false
 //│ ╙──       	            ^^^^^
 
 :e
 a1[0] <- 1
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.115: 	a1[0] <- 1
+//│ ║  l.167: 	a1[0] <- 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `int` does not match type `nothing`
 //│ ║  l.9: 	def a1: Array[int]
@@ -125,13 +177,13 @@ mt1._1 <- mt2._1
 :e
 mt1._1 <- mt1._2
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.126: 	mt1._1 <- mt1._2
+//│ ║  l.178: 	mt1._1 <- mt1._2
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `bool` does not match type `int`
-//│ ║  l.96: 	def mt1: (mutable int, mutable bool)
-//│ ║        	                               ^^^^
+//│ ║  l.144: 	def mt1: (mutable int, mutable bool)
+//│ ║         	                               ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.126: 	mt1._1 <- mt1._2
+//│ ║  l.178: 	mt1._1 <- mt1._2
 //│ ╙──       	          ^^^^^^
 
 mt1._2 <- false
@@ -139,10 +191,10 @@ mt1._2 <- false
 :e
 mt1._2 <- 1
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.140: 	mt1._2 <- 1
+//│ ║  l.192: 	mt1._2 <- 1
 //│ ║         	^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `bool`
-//│ ║  l.140: 	mt1._2 <- 1
+//│ ║  l.192: 	mt1._2 <- 1
 //│ ╙──       	          ^
 
 :e
@@ -150,24 +202,24 @@ mt1._1 <- (b1.t <- 4)
 (mt1._1 <- b1.t) <- 4
 b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.149: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.201: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^^^^^^^^
 //│ ╟── type `B` does not have field 't'
-//│ ║  l.81: 	def b1 : B
+//│ ║  l.80: 	def b1 : B
 //│ ║        	         ^
 //│ ╟── but it flows into reference with expected type `{t: ?a .. ?a}`
-//│ ║  l.149: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.201: 	mt1._1 <- (b1.t <- 4)
 //│ ╙──       	           ^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.149: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.201: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `unit` does not match type `int`
 //│ ╔══[ERROR] Cannot not assign to non-field
-//│ ║  l.150: 	(mt1._1 <- b1.t) <- 4
+//│ ║  l.202: 	(mt1._1 <- b1.t) <- 4
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] Cannot not assign to non-field
-//│ ║  l.151: 	b1.x <- 1 + 2 <- 4
+//│ ║  l.203: 	b1.x <- 1 + 2 <- 4
 //│ ╙──       	            ^^^^^^
 
 def f : {mutable _1 : int} -> int -> unit
@@ -180,26 +232,25 @@ def f a n = a._1 <- n
 //│   <:  f:
 //│ {_1: int .. int} -> int -> unit
 
-f mt1
-//│ res: int -> unit
+f mt1 1
 
 :e
 f mt2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.187: 	f mt2
+//│ ║  l.238: 	f mt2
 //│ ║         	^^^^^
 //│ ╟── type `int` does not match type `nothing`
-//│ ║  l.173: 	def f : {mutable _1 : int} -> int -> unit
+//│ ║  l.225: 	def f : {mutable _1 : int} -> int -> unit
 //│ ╙──       	                      ^^^
 //│ res: int -> unit | error
 
 :e
 g (1, true) 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	g (1, true) 2
+//│ ║  l.248: 	g (1, true) 2
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `nothing`
-//│ ║  l.174: 	def g : (mutable int, bool) -> int -> unit
+//│ ║  l.226: 	def g : (mutable int, bool) -> int -> unit
 //│ ╙──       	                 ^^^
 //│ res: error | unit
 

@@ -410,11 +410,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
-                        else f._1 ->
-                          freshVar(noProv,
+                        else {
+                          val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2.ub).toUpper // TODO also allow mutable class fields (require explicit syntax?)
-                        ).toList
+                          )(1).tap(_.upperBounds ::= f._2.ub)
+                          f._1 -> (if (f._2.ub == f._2.lb) FieldType(fv, fv) else fv.toUpper)
+                        }).toList
                       PolymorphicType(0, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
