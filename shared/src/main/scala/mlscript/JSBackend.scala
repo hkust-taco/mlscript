@@ -59,8 +59,8 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), Var(als)) if nme === als => nme -> N
-        case (Var(nme), subTrm)                  => nme -> S(translatePattern(subTrm))
+        case (Var(nme), (Var(als), _)) if nme === als => nme -> N
+        case (Var(nme), (subTrm, _))                  => nme -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)
@@ -148,7 +148,7 @@ class JSBackend {
     case App(callee, arg) =>
       JSInvoke(translateTerm(callee), translateTerm(arg) :: Nil)
     case Rcd(fields) =>
-      JSRecord(fields map { case (key, value) =>
+      JSRecord(fields map { case (key, (value, _)) =>
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
@@ -197,7 +197,7 @@ class JSBackend {
           case S(fnName) => fnName
           case N         => polyfill.use("withConstruct", topLevelScope allocateJavaScriptName "withConstruct")
         }),
-        translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), (value, _)) =>
           name -> translateTerm(value)
         }) :: Nil
       )

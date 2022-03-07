@@ -912,11 +912,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               :: fieldNames.map(tp => msg"Declared at" -> tp.toLoc))(raise)
           case _ =>
         }
-        RecordType.mk(fs.map { case (n, t) => 
+        RecordType.mk(fs.map { case (n, (t, mut)) => 
           if (n.name.isCapitalized)
             err(msg"Field identifiers must start with a small letter", term.toLoc)(raise)
-          (n, typeTerm(t).toUpper // TODO mut field syntax
-          )
+          val tym = typeTerm(t)
+          if (mut) {
+            val res = freshVar(prov)
+            val rs = con(tym, res, res)
+            (n, FieldType(rs, rs))
+          } else (n, tym.toUpper)
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)

@@ -44,10 +44,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
 
   def term[_: P]: P[Term] = P(let | fun | ite | withsAsc | _match)
-  // def term[_: P]: P[Term] = P( term0 ~ ("<-" ~ term0).? map {
-  //     case (t, None)    => t
-  //     case (t, Some(v)) => Assign(t, v)
-  //   })
+
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
@@ -75,10 +72,10 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
 
   def record[_: P]: P[Rcd] = locate(P(
-      "{" ~/ (variable ~ "=" ~ term map L.apply).|(variable map R.apply).rep(sep = ";") ~ "}"
-    ).map { fs =>
-      Rcd(fs.map{ case L(nt) => nt; case R(id) => id -> id }.toList)
-    })
+      "{" ~/ ("mutable".!.? ~ variable ~ "=" ~ term map L.apply).|("mutable".!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
+    ).map { fs => Rcd(fs.map{ 
+        case L((mut, v, t)) => v -> (t -> mut.isDefined)
+        case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
   def fun[_: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   def let[_: P]: P[Term] = locate(P(
       kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ variable ~ subterm.rep ~ "=" ~ term ~ kw("in") ~ term
