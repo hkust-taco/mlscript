@@ -187,20 +187,36 @@ class H: Lol & Hey
 //│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class H
 
-// FIXME: should probably forbid trait constructors when the trait contains method defs as well:
+
+// Forbid trait constructors when the trait contains method defs as well:
 
 h = Hey{}
-l = Lol h
 //│ h: Hey
 //│  = Hey {}
-//│ l: Hey & lol
+
+:e
+l = Lol h
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.198: 	l = Lol h
+//│ ║         	    ^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.167: 	trait Lol
+//│ ╙──       	      ^^^
+//│ l: error
 //│  = Hey {}
 
+:e
 e = Lol
 e
-//│ e: 'a -> (lol & 'a)
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.209: 	e = Lol
+//│ ║         	    ^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.167: 	trait Lol
+//│ ╙──       	      ^^^
+//│ e: error
 //│  = [Function: build]
-//│ res: 'a -> (lol & 'a)
+//│ res: error
 //│    = [Function: build]
 
 l.(Lol.Foo)
@@ -210,4 +226,19 @@ l.(Lol.Foo)
 l.(Hey.Foo)
 //│ res: "oops"
 //│    = undefined
+
+
+trait Lol2: Lol
+//│ Defined trait Lol2
+
+:e
+Lol2
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.235: 	Lol2
+//│ ║         	^^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.231: 	trait Lol2: Lol
+//│ ╙──       	      ^^^^^^^^^
+//│ res: error
+//│    = [Function: build]
 

@@ -33,6 +33,10 @@ trait T0
 //│ }();
 //│ // End of generated code
 
+def foo x = x.Foo
+//│ foo: t0 -> int
+//│    = [Function: foo]
+
 :js
 trait T1
   method Foo = 1
@@ -95,34 +99,47 @@ class B: A & T1
 
 :e
 :js
-A{}
+a = A{}
 //│ // Query 1
-//│ res = new A({});
+//│ globalThis.a = new A({});
+//│ res = a;
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.98: 	A{}
-//│ ║        	^
+//│ ║  l.102: 	a = A{}
+//│ ║         	    ^
 //│ ╟── Note that class A is abstract:
-//│ ║  l.74: 	class A: T0
+//│ ║  l.78: 	class A: T0
 //│ ║        	      ^^^^^
 //│ ╟── Hint: method Foo is abstract
 //│ ║  l.9: 	  method Foo: int
 //│ ╙──     	         ^^^^^^^^
-//│ res: error
-//│    = A {}
+//│ a: error
+//│  = A {}
 
-// FIXME
+foo a
+//│ res: int
+//│    = undefined
+
+// Note: calling convention not yet supported in JS
+a.(A.Foo)
+//│ res: int
+//│    = undefined
+
 :js
 b = B{}
-B.Foo
+foo b
 //│ // Query 1
 //│ globalThis.b = new B({});
 //│ res = b;
 //│ // Query 2
-//│ res = ((x) => new B(x)).Foo;
+//│ res = foo(b);
 //│ // End of generated code
 //│ b: B
 //│  = B { Foo: [Getter] }
-//│ res: (B & t0 & t1) -> 1
+//│ res: int
+//│    = 1
+
+b.(A.Foo)
+//│ res: int
 //│    = undefined
 
