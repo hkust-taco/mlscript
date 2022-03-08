@@ -318,7 +318,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.nextLevel, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
       val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n -> td1

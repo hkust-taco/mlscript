@@ -205,7 +205,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case Als => td.bodyTy
         case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
-      }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
+      }, td.targs.lazyZip(targs).toMap)
     }
     override def toString = showProvOver(false) {
       val displayName =
