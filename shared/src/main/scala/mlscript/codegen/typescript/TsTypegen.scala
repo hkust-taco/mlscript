@@ -156,7 +156,7 @@ final class TsTypegenCodeBuilder {
     typegenCode += classDeclaration;
 
     // add methods
-    methods.foreach{case (name, methodType)=> addClassMethod(classInfo, name, methodType)};
+    methods.foreach { case (name, methodType) => addClassMethod(classInfo, name, methodType) }
 
     typegenCode += SourceCode.closeCurlyBrace
   }
