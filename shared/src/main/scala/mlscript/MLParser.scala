@@ -11,7 +11,7 @@ import mlscript.Lexer._
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   val keywords = Set(
-    "def", "class", "trait", "type", "method", "mutable",
+    "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with",
     "if", "then", "else", "match", "case", "of")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, t) :: Nil)
+    case _ => Tup((N, (t, false)) :: Nil)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -48,12 +48,13 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
-  def parens[_: P]: P[Term] = locate(P( "(" ~/ term.rep(0, ",") ~ ",".!.? ~ ")" ).map {
-    case (Seq(t), N) => Bra(false, t)
-    case (ts, _) => Tup(ts.iterator.map(N -> _).toList)
-  })
-  def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
 
+  def parens[_: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
+    case (Seq(t), N) => Bra(false, t._2)
+    case (ts, _) => Tup(ts.iterator.map(f => N -> (f._2, f._1.isDefined)).toList)
+  })
+
+  def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
   def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
     // fields
     ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
@@ -61,6 +62,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
       .map {(t: Var) => Left(t)} |
     // array subscript
     ("[" ~ term ~/ "]").map {Right(_)}
+    // assign
     ).rep ~ ("<-" ~ term).?).map {
       case (st, sels, a) => sels.foldLeft(st)((acc, t) => t match {
         case Left(se) => Sel(acc, se)
@@ -72,7 +74,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
 
   def record[_: P]: P[Rcd] = locate(P(
-      "{" ~/ ("mutable".!.? ~ variable ~ "=" ~ term map L.apply).|("mutable".!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
+      "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~ variable map R.apply).rep(sep = ";") ~ "}"
     ).map { fs => Rcd(fs.map{ 
         case L((mut, v, t)) => v -> (t -> mut.isDefined)
         case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
@@ -215,12 +217,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def tyVar[_: P]: P[TypeVar] = locate(P("'" ~ ident map (id => TypeVar(R("'" + id), N))))
   def tyWild[_: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[_: P]: P[Record] =
-    locate(P( "{" ~/ ( "mutable".!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
+    locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
       .map(_.toList.map {
         case (None, v, t) => v -> Field(Bot, t)
         case (Some(_), v, t) => v -> Field(t, t)
       } pipe Record))
-  def parTy[_: P]: P[Type] = locate(P( "(" ~/ ("mutable".!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+  def parTy[_: P]: P[Type] = locate(P( "(" ~/ (kw("mut").!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
     case (N -> (N -> ty) :: Nil, N) => ty
     case (fs, _) => Tuple(fs.map {
         case (l, N -> t) => l -> Field(Bot, t)

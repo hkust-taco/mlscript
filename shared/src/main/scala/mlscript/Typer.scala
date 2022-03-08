@@ -414,6 +414,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                           val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
                           )(1).tap(_.upperBounds ::= f._2.ub)
+                          // ? not sure if we can do this
                           f._1 -> (if (f._2.ub == f._2.lb) FieldType(fv, fv) else fv.toUpper)
                         }).toList
                       PolymorphicType(0, FunctionType(
@@ -926,8 +927,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
-        TupleType(fs.map(f => f._1 -> typeTerm(f._2).toUpper // TODO mut field syntax
-        ))(fs match {
+        TupleType(fs.map{ case (n, (t, mut)) =>
+          val tym = typeTerm(t)
+          if (mut) {
+            val res = freshVar(prov)
+            val rs = con(tym, res, res)
+            (n, FieldType(rs, rs))
+          } else (n, tym.toUpper)
+        })(fs match {
           case Nil | ((N, _) :: Nil) => noProv
           case _ => tp(term.toLoc, "tuple literal")
         })
@@ -1123,10 +1130,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
-      typeTerms(Tup(S(trm) -> trm :: Nil) :: sts, rcd, fields)
+      typeTerms(Tup(S(trm) -> (trm -> false) :: Nil) :: sts, rcd, fields)
     case Blk(sts0) :: sts1 => typeTerms(sts0 ::: sts1, rcd, fields)
     case Tup(Nil) :: sts => typeTerms(sts, rcd, fields)
-    case Tup((no, trm) :: ofs) :: sts =>
+    case Tup((no, (trm, tmut)) :: ofs) :: sts =>
       val ty = {
         trm match  {
           case Bra(false, t) if ctx.inPattern => // we use syntax `(x: (p))` to type `p` as a pattern and not a type...

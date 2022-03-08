@@ -194,7 +194,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Rcd(fields) => "record"
     case Sel(receiver, fieldName) => "field selection"
     case Let(isRec, name, rhs, body) => "let binding"
-    case Tup((N, x) :: Nil) => x.describe
+    case Tup((N, (x, _)) :: Nil) => x.describe
     case Tup((S(_), x) :: Nil) => "binding"
     case Tup(xs) => "tuple"
     case Bind(l, r) => "'as' binding"
@@ -380,8 +380,8 @@ trait StatementImpl extends Located { self: Statement =>
     case Blk(stmts) => desugarCases(stmts, baseTargs)
     case Tup(comps) =>
       val stmts = comps.map {
-        case N -> d => d
-        case S(n) -> d => ???
+        case N -> (d -> _) => d
+        case S(n) -> (d -> _) => ???
       }
       desugarCases(stmts, baseTargs)
     case _ => (TypeError(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
@@ -411,7 +411,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(false, t) => getFields(t)
             case Bra(true, Tup(fs)) =>
               Record(fs.map {
-                case (S(n) -> t) =>
+                case (S(n) -> (t -> tmut)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
@@ -423,7 +423,7 @@ trait StatementImpl extends Located { self: Statement =>
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
             case Tup(fs) => // TODO factor with case Bra(true, Tup(fs)) above
               Tuple(fs.map {
-                case (S(n) -> t) =>
+                case (S(n) -> (t -> tmut)) =>
                   val ty = t.toType match {
                     case L(d) => allDiags += d; Top
                     case R(t) => t
@@ -454,7 +454,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Asc(trm, ty) => trm :: Nil
     case Lam(lhs, rhs) => lhs :: rhs :: Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
-    case Tup(fields) => fields.map(_._2)
+    case Tup(fields) => fields.map(_._2._1)
     case Rcd(fields) => fields.map(_._2._1)
     case Sel(receiver, fieldName) => receiver :: fieldName :: Nil
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil

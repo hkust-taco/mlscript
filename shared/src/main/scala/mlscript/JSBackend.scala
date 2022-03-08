@@ -67,14 +67,14 @@ class JSBackend {
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
-    case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
+    case Tup(fields) => JSArrayPattern(fields map { case (_, (t, _)) => translatePattern(t) })
     // Others are not supported yet.
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf =>
       throw CodeGenError(s"term ${JSBackend.inspectTerm(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term): Ls[JSPattern] = t match {
-    case Tup(params) => params map { case _ -> p => translatePattern(p) }
+    case Tup(params) => params map { case _ -> (p -> _) => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
@@ -115,7 +115,7 @@ class JSBackend {
     //     if JSBackend.builtinFnOpMap contains name =>
     //   JSBinary(JSBackend.builtinFnOpMap(name), translateTerm(lhs), translateTerm(rhs))
     // Binary expressions called by operators.
-    case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+    case App(App(Var(op), Tup((N -> (lhs -> _)) :: Nil)), Tup((N -> (rhs -> _)) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Tenary expressions.
@@ -123,10 +123,10 @@ class JSBackend {
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
     // Trait construction.
     // TODO: when scope symbol is ready, udpate here
-    case App(Var(callee), Tup(N -> (trm: Term) :: Nil)) if (traitNames contains callee) =>
+    case App(Var(callee), Tup(N -> ((trm: Term) -> _) :: Nil)) if (traitNames contains callee) =>
       translateTerm(trm)
     // TODO: when scope symbol is ready, remove the branch here
-    case App(Var(mlsName), Tup(N -> (trm: Term) :: Nil)) =>
+    case App(Var(mlsName), Tup(N -> ((trm: Term) -> _) :: Nil)) =>
       val (jsName, srcScope) = scope resolveWithScope mlsName
       // If it is a class name and the name is declared in the top-level scope.
       (if ((classNames contains mlsName) && (srcScope exists { _.isTopLevel })) {
@@ -144,7 +144,7 @@ class JSBackend {
       })((translateTerm(trm)))
     // Function application.
     case App(callee, Tup(args)) =>
-      JSInvoke(translateTerm(callee), args map { case (_, arg) => translateTerm(arg) })
+      JSInvoke(translateTerm(callee), args map { case (_, (arg, _)) => translateTerm(arg) })
     case App(callee, arg) =>
       JSInvoke(translateTerm(callee), translateTerm(arg) :: Nil)
     case Rcd(fields) =>
@@ -203,7 +203,7 @@ class JSBackend {
       )
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
-      JSArray(terms map { case (_, term) => translateTerm(term) })
+      JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${JSBackend.inspectTerm(term)}")
   }
@@ -593,8 +593,8 @@ object JSBackend {
     case App(lhs, rhs) => s"App(${inspectTerm(lhs)}, ${inspectTerm(rhs)})"
     case Tup(fields) =>
       val entries = fields map {
-        case (S(name), value) => s"$name: ${inspectTerm(value)}"
-        case (N, value)       => s"_: ${inspectTerm(value)}"
+        case (S(name), (value, _)) => s"$name: ${inspectTerm(value)}"
+        case (N, (value, _))       => s"_: ${inspectTerm(value)}"
       }
       s"Tup(${entries mkString ", "})"
     case Rcd(fields)                 => s"Rcd(...)"
