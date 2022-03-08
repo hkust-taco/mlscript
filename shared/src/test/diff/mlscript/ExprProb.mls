@@ -46,7 +46,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: 'a | ('b & (lit & 'c | (add & 'd & {lhs: 'e} | 'f & ~add) & ~lit)) -> (1 | 'g | 0 as 'g)
+//│ eval1_stub: 'a | (lit & 'c | (add & 'd & {lhs: 'b} | 'e & ~add) & ~lit as 'b) -> (1 | 'f | 0 as 'f)
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -68,7 +68,7 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: 'a | ('b & 'c -> ('d & int)) -> ('e & (lit & 'f & {val: 'g & int} | (add & 'h & {rhs: 'i} & {lhs: 'j} | 'c & ~add) & ~lit)) -> ('g | 'k | int | 'd)
+//│ res: 'a | ('b & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | (add & 'h & {rhs: 'e} & {lhs: 'e} | 'c & ~add) & ~lit as 'e) -> ('g | 'i | int | 'd)
 //│    = [Function: eval1]
 
 :re

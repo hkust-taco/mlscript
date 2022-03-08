@@ -467,7 +467,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 false
               } else true
           }
-          case _ => ty.children.forall(checkRegular)
+          case _ => ty.children(includeBounds = false).forall(checkRegular)
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
@@ -673,7 +673,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     typeType2(ty, simplify)._1
   /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
    * Useful for instantiating them by substitution when expanding a `TypeRef`. */
-  // TODO better record type provenances!
   def typeType2(ty: Type, simplify: Bool = true)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
