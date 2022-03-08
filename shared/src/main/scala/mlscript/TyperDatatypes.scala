@@ -28,6 +28,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   /** A type that potentially contains universally quantified type variables,
     * and which can be isntantiated to a given level. */
   sealed abstract class TypeScheme extends TypeInfo {
+    def uninstantiatedBody: SimpleType
     def instantiate(implicit lvl: Int): SimpleType
   }
   
@@ -35,6 +36,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     * (by convention, those variables of level greater than `level` are considered quantified). */
   case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
     val prov: TypeProvenance = body.prov
+    def uninstantiatedBody: SimpleType = body
     def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
@@ -74,6 +76,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance
     def level: Int
+    def uninstantiatedBody: SimpleType = this
     def instantiate(implicit lvl: Int) = this
     constructedTypes += 1
   }
