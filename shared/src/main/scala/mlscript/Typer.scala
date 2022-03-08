@@ -140,9 +140,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   def originProv(loco: Opt[Loc], desc: Str, name: Str): TypeProvenance = {
-    // TODO make a new sort of provenance for where types and type varianles are defined
-    tp(loco, desc, S(name))
-    // ^ This yields unnatural errors like:
+    tp(loco, desc, S(name), isType = true)
+    // ^ If we did not treat "origin provenances" differently,
+    //    it would yields unnatural errors like:
       //│ ╟── expression of type `B` is not a function
       //│ ║  l.6: 	    method Map[B]: B -> A
       //│ ║       	               ^

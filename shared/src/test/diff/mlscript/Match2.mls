@@ -44,7 +44,7 @@ bar Test
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.29: 	def bar x = case x of
 //│ ║        	                 ^
-//│ ╟── Note: class constructor Test is defined at: 
+//│ ╟── Note: class constructor Test is defined at:
 //│ ║  l.2: 	class Test: { value: int }
 //│ ╙──     	      ^^^^
 //│ res: error
