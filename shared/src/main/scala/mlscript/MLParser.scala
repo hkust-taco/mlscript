@@ -50,7 +50,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def variable[_: P]: P[Var] = locate(ident.map(Var))
 
   def parens[_: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
-    case (Seq(t), N) => Bra(false, t._2)
+    case (Seq(None -> t), N) => Bra(false, t)
+    case (Seq(Some(_) -> t), N) => Tup(N -> (t, true) :: Nil)   // ? single tuple with mutable
     case (ts, _) => Tup(ts.iterator.map(f => N -> (f._2, f._1.isDefined)).toList)
   })
 

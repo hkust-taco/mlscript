@@ -328,3 +328,43 @@ w1.x <- 3
 
 w1.x
 //│ res: 4
+
+def st1 : (int, )
+def st2 : (mut int, )
+//│ st1: (int,)
+//│ st2: (int .. int,)
+
+st1 = (3,)
+st2 = (mut 4,)
+//│ (3,)
+//│   <:  st1:
+//│ (int,)
+//│ ('a .. 4 | 'a,)
+//│   <:  st2:
+//│ (int .. int,)
+
+st2._1 <- 8
+
+:e
+st1._1 <- 9
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.349: 	st1._1 <- 9
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `int` does not match type `nothing`
+//│ ║  l.332: 	def st1 : (int, )
+//│ ╙──       	           ^^^
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.349: 	st1._1 <- 9
+//│ ║         	^^^^^^^^^^^
+//│ ╟── integer literal of type `9` does not match type `nothing`
+//│ ║  l.349: 	st1._1 <- 9
+//│ ╙──       	          ^
+
+def am1 : Array[(mut int)]
+//│ am1: Array[(int .. int,)]
+
+def map : Array['a] -> ('a -> unit) -> Array['a]
+//│ map: Array['a] -> ('a -> unit) -> Array['a]
+
+map am1 (fun x -> x[0] <- 1)
+//│ res: Array[(int .. int,)]
