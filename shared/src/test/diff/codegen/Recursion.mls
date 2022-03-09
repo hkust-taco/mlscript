@@ -39,7 +39,6 @@ def pow1 x =
 //│ pow1: int -> int -> int
 //│     = [Function: pow1]
 
-// FIXME support recursive let bindings
 pow1 3 4
 //│ res: int
 //│    = 81
