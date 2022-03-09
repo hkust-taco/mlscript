@@ -120,10 +120,10 @@ trait TypeSimplifier { self: Typer =>
     val analyzed = MutSet.empty[PolarVariable]
     
     def analyze(st: SimpleType, pol: Bool): Unit = st match {
-      case RecordType(fs) => fs.foreach { f => analyze(f._2.lb, !pol); analyze(f._2.ub, pol) }
-      case TupleType(fs) => fs.foreach { f => analyze(f._2.lb, !pol); analyze(f._2.ub, pol) }
+      case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
+      case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
       case ArrayType(inner) =>
-        analyze(inner.lb, !pol)
+        inner.lb.foreach(analyze(_, !pol))
         analyze(inner.ub, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
@@ -340,9 +340,9 @@ trait TypeSimplifier { self: Typer =>
                   val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
                     rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
-                      case (_, FieldType(ub, lb)) if lb >:< ub => lb
+                      case (_, FieldType(ub, lb)) if lb >:< ub.getOrElse(BotType) => lb   // ? not sure
                       case (_, FieldType(lb, ub)) =>
-                        TypeBounds.mk(go(lb, false), go(ub, true))
+                        TypeBounds.mk(go(lb.getOrElse(BotType), false), go(ub, true))
                     }.getOrElse(TypeBounds(BotType, TopType)(noProv))
                   })(noProv)
                   val clsFields = fieldsOf(

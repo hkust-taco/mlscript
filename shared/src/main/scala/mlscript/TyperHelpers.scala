@@ -197,8 +197,8 @@ abstract class TyperHelpers { self: Typer =>
       }
     }
     
-    def toUpper: FieldType = FieldType(BotType, this)
-    def toLower: FieldType = FieldType(this, TopType)
+    def toUpper: FieldType = FieldType(None, this)
+    def toLower: FieldType = FieldType(Some(this), TopType)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
@@ -401,9 +401,9 @@ abstract class TyperHelpers { self: Typer =>
       case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
       case FunctionType(l, r) => l :: r :: Nil
       case ComposedType(_, l, r) => l :: r :: Nil
-      case RecordType(fs) => fs.flatMap(f => f._2.lb :: f._2.ub :: Nil)
-      case TupleType(fs) => fs.flatMap(f => f._2.lb :: f._2.ub :: Nil)
-      case ArrayType(inner) => inner.lb :: inner.ub :: Nil
+      case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ++ (f._2.ub :: Nil))
+      case TupleType(fs) => fs.flatMap(f => f._2.lb.toList ++ (f._2.ub :: Nil))
+      case ArrayType(inner) => inner.lb.toList ++ (inner.ub :: Nil)
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil

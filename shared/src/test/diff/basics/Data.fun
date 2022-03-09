@@ -9,7 +9,7 @@ data Test a b
 
 :p
 data Person(name: string, age: int)
-//│ Parsed: data (Person ((name: string, age: int,);));
+//│ Parsed: data (Person ((name: (string,false), age: (int,false),);));
 //│ Desugared: class Person: {age: int, name: string}
 //│ Desugared: def Person: [] -> (name: string, age: int,) -> Person[]
 //│ Defined class Person

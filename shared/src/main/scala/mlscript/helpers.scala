@@ -22,9 +22,9 @@ abstract class TypeImpl extends Located { self: Type =>
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
-    case Field(Bot, ub) => ub.showIn(ctx, 0)
-    case Field(lb, Top) => s"${lb.showIn(ctx, 0)} .."
-    case Field(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Field(None, ub) => ub.showIn(ctx, 0)
+    case Field(Some(lb), Top) => s"${lb.showIn(ctx, 0)} .."
+    case Field(Some(lb), ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -36,18 +36,18 @@ abstract class TypeImpl extends Located { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
-    case Function(Tuple((N,Field(Bot,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
+    case Function(Tuple((N,Field(None,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
         val nme = nt._1.name
         if (nme.isCapitalized) 
         nt._2 match {
-          case Field(Bot, Top) => s"$nme"
-          case Field(lb, ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-          case Field(Bot, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
-          case Field(lb, Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
-          case Field(lb, ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+          case Field(None, Top) => s"$nme"
+          case Field(Some(lb), ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+          case Field(None, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+          case Field(Some(lb), Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+          case Field(Some(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
         else s"${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
@@ -73,9 +73,9 @@ abstract class TypeImpl extends Located { self: Type =>
     case Function(l, r) => l :: r :: Nil
     case Bounds(l, r) => l :: r :: Nil
     case Neg(b) => b :: Nil
-    case Record(fs) => fs.flatMap(f => f._2.in :: f._2.out :: Nil)
-    case Tuple(fs) => fs.flatMap(f => f._2.in :: f._2.out :: Nil)
-    case Union(l, r) => l :: r :: Nil
+    case Record(fs) => fs.flatMap(f => f._2.in.toList ++ (f._2.out :: Nil))
+    case Tuple(fs) => fs.flatMap(f => f._2.in ++ (f._2.out :: Nil))
+    case Union(l, r) => l :: r :: Nil.toList
     case Inter(l, r) => l :: r :: Nil
     case Recursive(n, b) => b :: Nil
     case AppliedType(n, ts) => ts
@@ -417,7 +417,7 @@ trait StatementImpl extends Located { self: Statement =>
                     case R(t) => t
                   }
                   fields += n -> ty
-                  n -> Field(Bot, ty)
+                  n -> Field(None, ty)
                 case _ => ???
               }) :: Nil
             case Bra(true, t) => lastWords(s"$t ${t.getClass}")
@@ -429,7 +429,7 @@ trait StatementImpl extends Located { self: Statement =>
                     case R(t) => t
                   }
                   fields += n -> ty
-                  S(n) -> Field(Bot, ty)
+                  S(n) -> Field(None, ty)
                 case _ => ???
               }) :: Nil
             case _ => ??? // TODO proper error
@@ -439,7 +439,7 @@ trait StatementImpl extends Located { self: Statement =>
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps,
             params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _))))).withLocOf(stmt)
-          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(Bot, _)))).withLocOf(stmt)
+          val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _)))).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?
       }

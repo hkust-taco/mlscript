@@ -137,7 +137,7 @@ class Stupid: Parent1 -> Parent2
 //│ ║  l.135: 	class Stupid: Parent1 -> Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation met an error:
-//│   unable to derive from type Function(Tuple(List((None,Field(Bot,TypeName(Parent1))))),TypeName(Parent2))
+//│   unable to derive from type Function(Tuple(List((None,Field(None,TypeName(Parent1))))),TypeName(Parent2))
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation

@@ -209,7 +209,7 @@ class A: (1,2)
 //│ ║  l.207: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
 //│ Code generation met an error:
-//│   unable to derive from type Tuple(List((None,Field(Bot,Literal(1))), (None,Field(Bot,Literal(2)))))
+//│   unable to derive from type Tuple(List((None,Field(None,Literal(1))), (None,Field(None,Literal(2)))))
 
 
 :re

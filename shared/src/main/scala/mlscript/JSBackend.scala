@@ -281,13 +281,13 @@ class JSBackend {
         Inter(substitute(lhs, subs), substitute(rhs, subs))
       case Record(fields) =>
         Record(fields map {
-          case (k, Field(v1, v2)) => k -> Field(substitute(v1, subs), substitute(v2, subs))
+          case (k, Field(v1, v2)) => k -> Field(v1.map(substitute(_, subs)), substitute(v2, subs))
         })
       case Union(lhs, rhs) =>
         Union(substitute(lhs, subs), substitute(rhs, subs))
       case Tuple(fields) =>
         Tuple(fields map {
-          case (k, Field(v1, v2)) => k -> Field(substitute(v1, subs), substitute(v2, subs))
+          case (k, Field(v1, v2)) => k -> Field(v1.map(substitute(_, subs)), substitute(v2, subs))
         })
       case TypeName(name) =>
         subs get name match {

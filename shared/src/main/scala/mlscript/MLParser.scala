@@ -27,7 +27,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
-    case _ => Tuple((N, Field(Bot, t)) :: Nil)
+    case _ => Tuple((N, Field(None, t)) :: Nil)
   }
   
   def letter[_: P]     = P( lowercase | uppercase )
@@ -220,14 +220,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def rcd[_: P]: P[Record] =
     locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
       .map(_.toList.map {
-        case (None, v, t) => v -> Field(Bot, t)
-        case (Some(_), v, t) => v -> Field(t, t)
+        case (None, v, t) => v -> Field(None, t)
+        case (Some(_), v, t) => v -> Field(Some(t), t)
       } pipe Record))
   def parTy[_: P]: P[Type] = locate(P( "(" ~/ (kw("mut").!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
     case (N -> (N -> ty) :: Nil, N) => ty
     case (fs, _) => Tuple(fs.map {
-        case (l, N -> t) => l -> Field(Bot, t)
-        case (l, S(_) -> t) => l -> Field(t, t)
+        case (l, N -> t) => l -> Field(None, t)
+        case (l, S(_) -> t) => l -> Field(Some(t), t)
       })
   })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )

@@ -122,7 +122,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
 
   case class TupleType(fields: List[Opt[Var] -> FieldType])(val prov: TypeProvenance) extends ArrayBase {
-    lazy val inner: FieldType = fields.map(_._2).fold(FieldType(TopType, BotType))(_ || _)
+    lazy val inner: FieldType = fields.map(_._2).reduceLeft(_ || _)
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
@@ -194,7 +194,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-            tparamField(defn, tp) -> FieldType(tv, tv)
+            tparamField(defn, tp) -> FieldType(Some(tv), tv)
           }.toList)(noProv)
         else TopType
       subst(td.kind match {
@@ -255,16 +255,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
   }
   
-  case class FieldType(lb: SimpleType, ub: SimpleType) {
-    def level: Int = lb.level max ub.level
+  case class FieldType(lb: Option[SimpleType], ub: SimpleType) {
+    def level: Int = lb.map(_.level).getOrElse(ub.level) max ub.level
     def <:< (that: FieldType)(implicit ctx: Ctx): Bool =
-      (that.lb <:< this.lb) && (this.ub <:< that.ub)
+      (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
     def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(lb | that.lb, ub & that.ub)
+      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub)
     def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
-      FieldType(lb & that.lb, ub | that.ub)
+      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
-      FieldType(lb(this.lb), ub(this.ub))
+      FieldType(this.lb.map(lb), ub(this.ub))
     
     // Note: the case-class-generated equals does not seem to work,
     //    and I don't actually understand why!
