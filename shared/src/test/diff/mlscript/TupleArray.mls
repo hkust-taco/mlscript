@@ -252,12 +252,16 @@ k1._3
 //│ res: false
 //│    = undefined
 
-(1,2,3) with {_4 = true}
-//│ res: (1, 2, 3,) & {_4: true}
-//│    = [ 1, 2, 3, _4: true ]
+(1,2,3) with {_2 = "hello"; _a = true; _4 = 4}
+//│ res: {_1: 1, _2: "hello", _3: 3, _4: 4, _a: true}
+//│    = [ 1, 2, 3, _2: 'hello', _a: true, _4: 4 ]
+
+(1,2,3) with {_1 = true; _0 = 233}
+//│ res: {_0: 233, _1: true, _2: 2, _3: 3}
+//│    = [ 1, 2, 3, _1: true, _0: 233 ]
 
 (1, 2, true) with {_0 = "hello"}
-//│ res: (1, 2, true,)
+//│ res: (1, 2, true,) & {_0: "hello"}
 //│    = [ 1, 2, true, _0: 'hello' ]
 
 ta1 = (5, 6, true, false, "hahaha")
@@ -301,13 +305,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.302: 	a2._1
+//│ ║  l.306: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.279: 	def rep5: 'a -> Array['a]
+//│ ║  l.283: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.302: 	a2._1
+//│ ║  l.306: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

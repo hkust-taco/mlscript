@@ -377,7 +377,7 @@ trait TypeSimplifier { self: Typer =>
                             val namePostfix = f._1.name.tail
                             if (namePostfix.forall(_.isDigit)) {
                               val index = namePostfix.toInt
-                              if (index <= arity) L(index -> f._2)
+                              if (index <= arity && index > 0) L(index -> f._2)
                               else R(f)
                             }
                             else R(f)
