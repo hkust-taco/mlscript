@@ -18,16 +18,21 @@ pow0 3 4
 //│    = 64
 
 :js
+:p
 def pow1 x =
   let rec go n =
     if n > 0 then go (n - 1) * x
     else 1
   in go
+//│ Parsed: def pow1: ((x,) => (let rec go = ((n,) => (((if ((> (n,)) (0,))) ((* ((go ((((- (n,)) (1,))),)),)) (x,))) 1)); go));
+//│ Desugared: def pow1: ((x,) => (let rec go = ((n,) => (((if ((> (n,)) (0,))) ((* ((go ((((- (n,)) (1,))),)),)) (x,))) 1)); go))
 //│ // Query 1
 //│ globalThis.pow1 = function pow1(x) {
 //│   return ((function (go) {
 //│     return go;
-//│   })((n) => n > 0 ? go(n - 1) * x : 1));
+//│   })(function go(n) {
+//│     return n > 0 ? go(n - 1) * x : 1;
+//│   }));
 //│ };
 //│ res = pow1;
 //│ // End of generated code
@@ -37,8 +42,7 @@ def pow1 x =
 // FIXME support recursive let bindings
 pow1 3 4
 //│ res: int
-//│ Runtime error:
-//│   ReferenceError: go is not defined
+//│    = 81
 
 :js
 rec def pow2 n = { call = fun x -> if n > 0 then (pow2 (n - 1)).call x * x else 1 }
