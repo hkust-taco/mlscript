@@ -45,7 +45,7 @@ T a
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class A is defined at: 
+//│ ╟── Note: class A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: A & t | error
@@ -55,7 +55,7 @@ T a
 :js
 T A
 //│ // Query 1
-//│ res = ((x) => x)((x) => new A(x));
+//│ res = T.build((x) => new A(x));
 //│ // End of generated code
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.56: 	T A
@@ -69,7 +69,7 @@ T A
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class constructor A is defined at: 
+//│ ╟── Note: class constructor A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: anything -> A & t | error
@@ -89,7 +89,7 @@ T (B {})
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class B is defined at: 
+//│ ╟── Note: class B is defined at:
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
 //│ res: B & t | error
@@ -187,21 +187,37 @@ class H: Lol & Hey
 //│ ╙──       	         ^^^^^^^^^^^^
 //│ Defined class H
 
-// FIXME: should probably forbid trait constructors when the trait contains method defs as well:
+
+// Forbid trait constructors when the trait contains method defs as well:
 
 h = Hey{}
-l = Lol h
 //│ h: Hey
 //│  = Hey {}
-//│ l: Hey & lol
+
+:e
+l = Lol h
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.198: 	l = Lol h
+//│ ║         	    ^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.167: 	trait Lol
+//│ ╙──       	      ^^^
+//│ l: error
 //│  = Hey {}
 
+:e
 e = Lol
 e
-//│ e: 'a -> (lol & 'a)
-//│  = [Function: e]
-//│ res: 'a -> (lol & 'a)
-//│    = [Function: e]
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.209: 	e = Lol
+//│ ║         	    ^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.167: 	trait Lol
+//│ ╙──       	      ^^^
+//│ e: error
+//│  = [Function: build]
+//│ res: error
+//│    = [Function: build]
 
 l.(Lol.Foo)
 //│ res: 1
@@ -210,4 +226,19 @@ l.(Lol.Foo)
 l.(Hey.Foo)
 //│ res: "oops"
 //│    = undefined
+
+
+trait Lol2: Lol
+//│ Defined trait Lol2
+
+:e
+Lol2
+//│ ╔══[ERROR] Instantiation of an abstract type is forbidden
+//│ ║  l.235: 	Lol2
+//│ ║         	^^^^
+//│ ╟── Note that traits with methods are always considered abstract
+//│ ║  l.231: 	trait Lol2: Lol
+//│ ╙──       	      ^^^^^^^^^
+//│ res: error
+//│    = [Function: build]
 

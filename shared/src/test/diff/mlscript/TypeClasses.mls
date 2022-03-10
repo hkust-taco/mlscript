@@ -30,7 +30,7 @@ class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
 def Complex real imaginary = Complex { real; imaginary }
 //│ Defined class Complex
-//│ Defined Complex.Map: Complex['A] -> ('A -> ('a & 'A0)) -> (Complex['A0] with {imaginary: 'a, real: 'a})
+//│ Defined Complex.Map: Complex['A] -> ('A -> ('A0 & 'a)) -> (Complex['A0] with {imaginary: 'a, real: 'a})
 //│ Complex: ('real & 'A) -> ('A & 'imaginary) -> (Complex['A] with {imaginary: 'imaginary, real: 'real})
 //│        = [Function: Complex1]
 

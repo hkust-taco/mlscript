@@ -86,8 +86,30 @@ if true then 1 else 2
 trait T: { x: int }
 T { x = 0 }
 //│ Defined trait T
+//│ // Prelude
+//│ const T = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
 //│ // Query 1
-//│ res = ((x) => x)({ x: 0 });
+//│ res = T.build({ x: 0 });
 //│ // End of generated code
 //│ res: {x: 0} & t
 //│    = { x: 0 }

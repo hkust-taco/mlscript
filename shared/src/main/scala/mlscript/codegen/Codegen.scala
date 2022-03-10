@@ -11,6 +11,7 @@ package mlscript
 import mlscript.utils._, shorthands._
 import scala.collection.immutable
 import scala.util.matching.Regex
+import scala.collection.mutable.ListBuffer
 
 class SourceLine(val content: Str, indent: Int = 0) {
   def indented: SourceLine = new SourceLine(content, indent + 1)
@@ -317,7 +318,7 @@ abstract class JSExpr extends JSCode {
 
   def stmt: JSExprStmt = JSExprStmt(this)
   
-  def `return`: JSReturnStmt = JSReturnStmt(this)
+  def `return`: JSReturnStmt = JSReturnStmt(S(this))
 
   def `throw`: JSThrowStmt = JSThrowStmt(this)
 
@@ -439,14 +440,16 @@ final case class JSFuncExpr(name: Opt[Str], params: Ls[JSPattern], body: Ls[JSSt
 
 // IIFE: immediately invoked function expression
 final case class JSImmEvalFn(
-    params: Ls[Str],
+    name: Opt[Str],
+    params: Ls[JSPattern],
     body: Either[JSExpr, Ls[JSStmt]],
     arguments: Ls[JSExpr]
 ) extends JSExpr {
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = {
-    (SourceCode(s"function (${params mkString ", "}) ") ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+    val fnName = name.getOrElse("")
+    (SourceCode(s"function $fnName${JSExpr.params(params)} ") ++ (body match {
+      case Left(expr) => expr.`return`.toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
     }).block).parenthesized ++ JSExpr.arguments(arguments)
@@ -662,11 +665,11 @@ final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSSt
 }
 
 // A single return statement.
-final case class JSReturnStmt(value: JSExpr) extends JSStmt {
-  def toSourceCode =
-    SourceCode(
-      "return "
-    ) ++ value.toSourceCode.clause ++ SourceCode.semicolon
+final case class JSReturnStmt(value: Opt[JSExpr]) extends JSStmt {
+  def toSourceCode = (value match {
+    case Some(value) => SourceCode("return ") ++ value.toSourceCode.clause
+    case None => SourceCode("return")
+  }) ++ SourceCode.semicolon
 }
 
 final case class JSTryStmt(block: Ls[JSStmt], handler: JSCatchClause) extends JSStmt {
@@ -747,7 +750,7 @@ abstract class JSClassMemberDecl extends JSStmt;
 final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode(s"get $name() ") ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
@@ -760,7 +763,7 @@ final case class JSClassMethod(
 ) extends JSClassMemberDecl {
   def toSourceCode: SourceCode =
     SourceCode(name) ++ JSExpr.params(params) ++ SourceCode.space ++ (body match {
-      case Left(expr) => new JSReturnStmt(expr).toSourceCode
+      case Left(expr) => new JSReturnStmt(S(expr)).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { case (x, y) => x + y.toSourceCode }
     }).block
@@ -772,39 +775,47 @@ final case class JSClassMember(name: Str, body: JSExpr) extends JSClassMemberDec
 }
 
 final case class JSClassDecl(
-    val name: Str,
+    name: Str,
     fields: Ls[Str],
     `extends`: Opt[JSExpr] = N,
-    methods: Ls[JSClassMemberDecl] = Nil
+    methods: Ls[JSClassMemberDecl] = Nil,
+    implements: Ls[Str] = Nil,
 ) extends JSStmt {
   def toSourceCode: SourceCode = {
-    val ctor = SourceCode(
-      "  constructor(fields) {" :: (if (`extends`.isEmpty) {
-                                      Nil
-                                    } else {
-                                      "    super(fields);" :: Nil
-                                    }) ::: (fields map { case name =>
-        s"    this.$name = fields.$name;"
-      }) concat "  }" :: Nil
-    )
-    val methodsSourceCode = methods.foldLeft(SourceCode.empty) { case (x, y) =>
-      x + y.toSourceCode.indented
+    val constructor: SourceCode = {
+      val buffer = new ListBuffer[Str]()
+      buffer += "  constructor(fields) {"
+      if (`extends`.isDefined)
+        buffer += "    super(fields);"
+      implements.foreach { name =>
+        buffer += s"    $name.implement(this);"
+      }
+      fields.foreach { name =>
+        buffer += s"    this.$name = fields.$name;"
+      }
+      buffer += "  }"
+      SourceCode(buffer.toList)
     }
-    val epilogue = SourceCode("}" :: Nil)
+    val methodsSourceCode =
+      methods.foldLeft(SourceCode.empty) { case (x, y) =>
+        x + y.toSourceCode.indented
+      }
+    val epilogue = SourceCode("}")
     `extends` match {
       case Some(base) =>
         SourceCode(s"class $name extends ") ++ base.toSourceCode ++
-          SourceCode(" {") + ctor + methodsSourceCode + epilogue
+          SourceCode(" {") + constructor + methodsSourceCode + epilogue
       case None =>
-        if (fields.isEmpty && methods.isEmpty) {
+        if (fields.isEmpty && methods.isEmpty && implements.isEmpty) {
           SourceCode(s"class $name {}")
         } else {
           SourceCode(
             s"class $name {" :: Nil
-          ) + ctor + methodsSourceCode + epilogue
+          ) + constructor + methodsSourceCode + epilogue
         }
     }
   }
+
   private val fieldsSet = collection.immutable.HashSet.from(fields)
 }
 
@@ -816,6 +827,7 @@ object JSCodeHelpers {
   def id(name: Str): JSIdent = JSIdent(name)
   def lit(value: Int): JSLit = JSLit(value.toString())
   def const(name: Str, init: JSExpr): JSConstDecl = JSConstDecl(name, init)
+  def `return`(): JSReturnStmt = JSReturnStmt(N)
   def `return`(expr: JSExpr): JSReturnStmt = expr.`return`
   def `throw`(expr: JSExpr): JSThrowStmt = expr.`throw`
   def forIn(pattern: JSNamePattern, iteratee: JSExpr)(stmts: JSStmt*): JSForInStmt

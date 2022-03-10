@@ -9,20 +9,79 @@ trait T0
   method Foo: int
 //│ Defined trait T0
 //│ Declared T0.Foo: t0 -> int
+//│ // Prelude
+//│ const T0 = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
 //│ // End of generated code
+
+def foo x = x.Foo
+//│ foo: t0 -> int
+//│    = [Function: foo]
 
 :js
 trait T1
   method Foo = 1
 //│ Defined trait T1
 //│ Defined T1.Foo: t1 -> 1
+//│ // Prelude
+//│ const T1 = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       if (!("Foo" in instance)) {
+//│         Object.defineProperty(instance, "Foo", {
+//│           get: function () {
+//│             return 1;
+//│           }
+//│         });
+//│       }
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
 //│ // End of generated code
 
 :js
 class A: T0
 //│ Defined class A
 //│ // Prelude
-//│ class A {}
+//│ class A {
+//│   constructor(fields) {
+//│     T0.implement(this);
+//│   }
+//│ }
 //│ // End of generated code
 
 :js
@@ -32,41 +91,55 @@ class B: A & T1
 //│ class B extends A {
 //│   constructor(fields) {
 //│     super(fields);
+//│     T1.implement(this);
 //│   }
 //│ }
 //│ // End of generated code
 
 :e
 :js
-A{}
+a = A{}
 //│ // Query 1
-//│ res = new A({});
+//│ globalThis.a = new A({});
+//│ res = a;
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.41: 	A{}
-//│ ║        	^
+//│ ║  l.101: 	a = A{}
+//│ ║         	    ^
 //│ ╟── Note that class A is abstract:
-//│ ║  l.22: 	class A: T0
+//│ ║  l.77: 	class A: T0
 //│ ║        	      ^^^^^
 //│ ╟── Hint: method Foo is abstract
 //│ ║  l.9: 	  method Foo: int
 //│ ╙──     	         ^^^^^^^^
-//│ res: error
-//│    = A {}
+//│ a: error
+//│  = A {}
 
-// FIXME
+foo a
+//│ res: int
+//│    = undefined
+
+// Note: calling convention not yet supported in JS
+a.(A.Foo)
+//│ res: int
+//│    = undefined
+
 :js
 b = B{}
-B.Foo
+foo b
 //│ // Query 1
 //│ globalThis.b = new B({});
 //│ res = b;
 //│ // Query 2
-//│ res = ((x) => new B(x)).Foo;
+//│ res = foo(b);
 //│ // End of generated code
 //│ b: B
 //│  = B {}
-//│ res: (B & t0 & t1) -> 1
+//│ res: int
+//│    = 1
+
+b.(A.Foo)
+//│ res: int
 //│    = undefined
 
 :e
@@ -80,17 +153,17 @@ class BBB: AAA
   method F: int
   method G: 'a -> 'a
 //│ ╔══[ERROR] Overriding method AAA.F without an overriding definition is not allowed.
-//│ ║  l.80: 	  method F: int
-//│ ║        	         ^^^^^^
+//│ ║  l.153: 	  method F: int
+//│ ║         	         ^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.76: 	  method F = 1
-//│ ╙──      	         ^^^^^
+//│ ║  l.149: 	  method F = 1
+//│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Overriding method AAA.G without an overriding definition is not allowed.
-//│ ║  l.81: 	  method G: 'a -> 'a
-//│ ║        	         ^^^^^^^^^^^
+//│ ║  l.154: 	  method G: 'a -> 'a
+//│ ║         	         ^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.78: 	  method G x = x
-//│ ╙──      	         ^^^^^^^
+//│ ║  l.151: 	  method G x = x
+//│ ╙──       	         ^^^^^^^
 //│ Defined type alias Id
 //│ Defined class AAA
 //│ Declared AAA.F: AAA -> int
@@ -120,20 +193,20 @@ C.Foo
 :e
 fun x -> x.Foo
 //│ ╔══[ERROR] Implicit call to method Foo is forbidden because it is ambiguous.
-//│ ║  l.121: 	fun x -> x.Foo
+//│ ║  l.194: 	fun x -> x.Foo
 //│ ║         	         ^^^^^
 //│ ╟── Unrelated methods named Foo are defined by:
 //│ ╟── • trait T0
 //│ ║  l.8: 	trait T0
 //│ ║       	      ^^
 //│ ╟── • trait T1
-//│ ║  l.15: 	trait T1
+//│ ║  l.41: 	trait T1
 //│ ║        	      ^^
 //│ ╟── • trait T3
-//│ ║  l.105: 	trait T3
+//│ ║  l.178: 	trait T3
 //│ ║         	      ^^
 //│ ╟── • trait T4
-//│ ║  l.107: 	trait T4
+//│ ║  l.180: 	trait T4
 //│ ╙──       	      ^^
 //│ res: anything -> error
 //│    = [Function: res]

@@ -22,12 +22,13 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed abstract class TypeInfo
 
   /** A type for abstract classes that is used to check and throw
-    * errors if the abstract class is being instantiated */
-  case class AbstractConstructor(absMths: Set[Var]) extends TypeInfo
+   * errors if the abstract class is being instantiated */
+  case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
     * and which can be isntantiated to a given level. */
   sealed abstract class TypeScheme extends TypeInfo {
+    def uninstantiatedBody: SimpleType
     def instantiate(implicit lvl: Int): SimpleType
   }
   
@@ -35,6 +36,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     * (by convention, those variables of level greater than `level` are considered quantified). */
   case class PolymorphicType(level: Int, body: SimpleType) extends TypeScheme {
     val prov: TypeProvenance = body.prov
+    def uninstantiatedBody: SimpleType = body
     def instantiate(implicit lvl: Int): SimpleType = freshenAbove(level, body)
     def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
   }
@@ -74,6 +76,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed abstract class SimpleType extends TypeScheme with SimpleTypeImpl {
     val prov: TypeProvenance
     def level: Int
+    def uninstantiatedBody: SimpleType = this
     def instantiate(implicit lvl: Int) = this
     constructedTypes += 1
   }
@@ -132,8 +135,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
-        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
-        fields.collect { case (S(n), t) => (n, t) }
+        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) }
+        // Note: In line with TypeScript, tuple field names are pure type system fictions,
+        //    with no runtime existence. Therefore, they should not be included in the record type
+        //    corresponding to this tuple type.
+        //    i.e., no `::: fields.collect { case (S(n), t) => (n, t) }`
       )(prov)
     override def toString = s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2}").mkString(", ")})"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
@@ -205,7 +211,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case Als => td.bodyTy
         case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
-      }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
+      }, td.targs.lazyZip(targs).toMap)
     }
     override def toString = showProvOver(false) {
       val displayName =

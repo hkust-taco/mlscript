@@ -96,7 +96,7 @@ abstract class TypeImpl extends Located { self: Type =>
     * Collect fields recursively during code generation.
     * Note that the type checker will reject illegal cases.
     */
-  def collectFields: Ls[Str] = this match {
+  lazy val collectFields: Ls[Str] = this match {
     case Record(fields) => fields.map(_._1.name)
     case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
     case _: Union | _: Function | _: Tuple | _: Arr | _: Recursive
@@ -109,7 +109,7 @@ abstract class TypeImpl extends Located { self: Type =>
     * Collect `TypeName`s recursively during code generation.
     * Note that the type checker will reject illegal cases.
     */
-  def collectTypeNames: Ls[Str] = this match {
+  lazy val collectTypeNames: Ls[Str] = this match {
     case TypeName(name) => name :: Nil
     case AppliedType(TypeName(name), _) => name :: Nil
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
