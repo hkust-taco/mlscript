@@ -412,11 +412,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
             }
-            lazy val checkAbstract = {
+            lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
+              val isTraitWithMethods = (k is Trt) && defns.nonEmpty
               (decls -- defns) match {
-                case absMths if absMths.nonEmpty =>
-                  if (ctx.get(n.name).isEmpty) ctx += n.name -> AbstractConstructor(absMths)
+                case absMths if absMths.nonEmpty || isTraitWithMethods =>
+                  if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
+                    ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
@@ -448,7 +450,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               }
               true
             }
-            checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstract
+            checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
@@ -907,12 +909,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
-          // TODO: delay type expansion to message display and show the expected type here!
-          case AbstractConstructor(absMths) =>
+          case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
-              :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
-              :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList)
+              :: (
+                if (traitWithMths) {
+                  assert(td.kind is Trt)
+                  msg"Note that traits with methods are always considered abstract" -> td.toLoc :: Nil
+                } else
+                  msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc
+                  :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList
+              )
+            )
           case ty: TypeScheme => ty
         }.instantiate
         mkProxy(ty, prov)
