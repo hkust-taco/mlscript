@@ -258,7 +258,6 @@ class JSBackend {
             instance,
             JSExpr(name),
             JSRecord(
-              "enumerable" -> JSLit("true") ::
               "get" -> JSFuncExpr(
                 N,
                 Nil,

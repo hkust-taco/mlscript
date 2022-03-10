@@ -53,7 +53,6 @@ trait T1
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Foo" in instance)) {
 //│         Object.defineProperty(instance, "Foo", {
-//│           enumerable: true,
 //│           get: function () {
 //│             return 1;
 //│           }
@@ -105,10 +104,10 @@ a = A{}
 //│ res = a;
 //│ // End of generated code
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.102: 	a = A{}
+//│ ║  l.101: 	a = A{}
 //│ ║         	    ^
 //│ ╟── Note that class A is abstract:
-//│ ║  l.78: 	class A: T0
+//│ ║  l.77: 	class A: T0
 //│ ║        	      ^^^^^
 //│ ╟── Hint: method Foo is abstract
 //│ ║  l.9: 	  method Foo: int
@@ -135,7 +134,7 @@ foo b
 //│ res = foo(b);
 //│ // End of generated code
 //│ b: B
-//│  = B { Foo: [Getter] }
+//│  = B {}
 //│ res: int
 //│    = 1
 

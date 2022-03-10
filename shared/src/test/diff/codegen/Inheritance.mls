@@ -238,3 +238,21 @@ checkS p && checkR p && checkQ p && checkP p
 //│  = P { p: 0, q: 0, r: 0, s: 0 }
 //│ res: bool
 //│    = true
+
+trait Foo
+  method Foo = 1
+//│ Defined trait Foo
+//│ Defined Foo.Foo: foo -> 1
+
+class Bar: Foo
+//│ Defined class Bar
+
+// `Foo` should not appear.
+bar = Bar{}
+//│ bar: Bar
+//│    = Bar {}
+
+// But it is actually there.
+bar.Foo
+//│ res: 1
+//│    = 1

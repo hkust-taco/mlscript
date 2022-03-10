@@ -57,7 +57,6 @@ trait T
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Test2" in instance)) {
 //│         Object.defineProperty(instance, "Test2", {
-//│           enumerable: true,
 //│           get: function () {
 //│             return 1;
 //│           }
@@ -102,14 +101,14 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.103: 	useTrt c
+//│ ║  l.102: 	useTrt c
 //│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.98: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.98: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
 //│    = 1
@@ -157,7 +156,6 @@ trait T2: T1
 //│       Object.defineProperty(instance, tag, { value: {} });
 //│       if (!("Test3" in instance)) {
 //│         Object.defineProperty(instance, "Test3", {
-//│           enumerable: true,
 //│           get: function () {
 //│             return 2;
 //│           }
