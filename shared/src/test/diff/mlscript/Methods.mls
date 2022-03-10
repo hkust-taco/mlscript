@@ -278,13 +278,13 @@ class Test2[B]: Test1[Id[B]] & { x: B }
 class Test3A: Test1['a -> 'a]
 Test3A.F
 //│ Defined class Test3A
-//│ res: ((Test3A with {x: 'a -> 'a},) & {_1: Test3A with {x: 'a -> 'a & 'a -> 'a & 'a0 -> 'a0}}) -> 'a1 -> 'a1
+//│ res: (Test3A with {x: 'a -> 'a}) -> 'a -> 'a
 //│    = undefined
 
 class Test3B: Test1['a -> 'a] & { x: 'a }
 Test3B.F
 //│ Defined class Test3B
-//│ res: ((Test3B with {x: 'a -> 'a & 'a},) & {_1: Test3B with {x: 'a -> 'a & 'a -> 'a & 'a0 -> 'a0 & 'a & 'a0}}) -> 'a1 -> 'a1
+//│ res: (Test3B with {x: 'a -> 'a & 'a}) -> 'a -> 'a
 //│    = undefined
 
 

@@ -42,7 +42,7 @@ ty2B = ty2A
 //│ MyArray[myArray & {MyArray#A = 'a, get: ((int,) & {_1: int}) -> 'a, set: ((int, 'a,) & {_1: int, _2: 'a}) -> (), size: int}] with {get: int -> (MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}), set: (int, MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()},) -> ()}
 //│ constrain calls  : 31
 //│ annoying  calls  : 24
-//│ subtyping calls  : 272
+//│ subtyping calls  : 250
 
 
 def ty3A: MyArray['a] as 'a
@@ -212,6 +212,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^
 //│ constrain calls  : 41
 //│ annoying  calls  : 32
-//│ subtyping calls  : 300
+//│ subtyping calls  : 278
 
 

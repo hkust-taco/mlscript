@@ -80,7 +80,7 @@ class Bar
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.79: 	    rec method Map f = f 1
 //│ ║        	               ^^^^^^^^^^^
-//│ ╟── method type parameter of type `B` is not a function
+//│ ╟── type `B` is not a function
 //│ ║  l.78: 	    method Map[B]: B -> B
 //│ ║        	               ^
 //│ ╟── Note: constraint arises from application:
@@ -88,10 +88,7 @@ class Bar
 //│ ║        	                       ^^^
 //│ ╟── from reference:
 //│ ║  l.79: 	    rec method Map f = f 1
-//│ ║        	                       ^
-//│ ╟── Note: method type parameter B is defined at: 
-//│ ║  l.78: 	    method Map[B]: B -> B
-//│ ╙──      	               ^
+//│ ╙──      	                       ^
 //│ Defined class Bar
 //│ Declared Bar.Map: Bar -> 'B -> 'B
 //│ Defined Bar.Map: Bar -> (1 -> 'a) -> 'a
@@ -104,13 +101,13 @@ def boom: anything
 :e
 add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.105: 	add boom 1
+//│ ║  l.102: 	add boom 1
 //│ ║         	^^^^^^^^
 //│ ╟── type `anything` does not match type `int`
-//│ ║  l.100: 	def boom: anything
-//│ ║         	          ^^^^^^^^
+//│ ║  l.97: 	def boom: anything
+//│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.105: 	add boom 1
+//│ ║  l.102: 	add boom 1
 //│ ╙──       	    ^^^^
 //│ res: error | int
 

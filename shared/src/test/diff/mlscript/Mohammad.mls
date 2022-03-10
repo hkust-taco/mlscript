@@ -41,18 +41,55 @@ useCls (c with { x = 2 })
 
 :js
 trait T
+  method Test2: int
   method Test2 = 1
 //│ Defined trait T
+//│ Declared T.Test2: t -> int
 //│ Defined T.Test2: t -> 1
+//│ // Prelude
+//│ const T = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       if (!("Test2" in instance)) {
+//│         Object.defineProperty(instance, "Test2", {
+//│           get: function () {
+//│             return 1;
+//│           }
+//│         });
+//│       }
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
 //│ // End of generated code
 
 :js
 class D: T & {z: int}
+  method Test2 = 2
 //│ Defined class D
+//│ Defined D.Test2: (D & t) -> 2
 //│ // Prelude
 //│ class D {
 //│   constructor(fields) {
+//│     T.implement(this);
 //│     this.z = fields.z;
+//│   }
+//│   get Test2() {
+//│     return 2;
 //│   }
 //│ }
 //│ // End of generated code
@@ -64,24 +101,21 @@ def useTrt t = case t of { T -> t.y | Class -> t.x }
 :e
 useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.65: 	useTrt c
-//│ ║        	^^^^^^^^
+//│ ║  l.102: 	useTrt c
+//│ ║         	^^^^^^^^
 //│ ╟── expression of type `Class & {x: ?x} & t | Class & {x: ?x} & ~?a` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
-//│ ║  l.60: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
+//│ ║  l.97: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
 //│ res: 1 | error
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│    = 1
 
-:re
 useTrt (c with { y = 1 })
 //│ res: 1
-//│ Runtime error:
-//│   ReferenceError: T is not defined
+//│    = 1
 
 d = D{z = 1213}
 //│ d: D & {z: 1213}
@@ -90,5 +124,124 @@ d = D{z = 1213}
 d: {z: 'a}
 //│ res: {z: 1213}
 //│    = D { z: 1213 }
+
+d.Test2
+//│ res: int
+//│    = 2
+
+trait T1
+  method Test3: int
+  method Test3 = 1
+  method Test4 = 4
+//│ Defined trait T1
+//│ Declared T1.Test3: t1 -> int
+//│ Defined T1.Test3: t1 -> 1
+//│ Defined T1.Test4: t1 -> 4
+
+:js
+trait T2: T1
+  method Test3: int
+  method Test3 = 2
+//│ Defined trait T2
+//│ Declared T2.Test3: (t1 & t2) -> int
+//│ Defined T2.Test3: (t1 & t2) -> 2
+//│ // Prelude
+//│ const T2 = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│       if (!("Test3" in instance)) {
+//│         Object.defineProperty(instance, "Test3", {
+//│           get: function () {
+//│             return 2;
+//│           }
+//│         });
+//│       }
+//│       T1.implement(instance);
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
+
+:js
+class C3: T2
+//│ Defined class C3
+//│ // Prelude
+//│ class C3 {
+//│   constructor(fields) {
+//│     T2.implement(this);
+//│   }
+//│ }
+//│ // End of generated code
+
+(C3{}).Test3
+//│ res: int
+//│    = 2
+
+(C3{}).Test4
+//│ res: 4
+//│    = 4
+
+
+:js
+trait Oops
+//│ Defined trait Oops
+//│ // Prelude
+//│ const Oops = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
+//│ // End of generated code
+
+:js
+oo = Oops 2
+//│ // Query 1
+//│ globalThis.oo = Oops.build(2);
+//│ res = oo;
+//│ // End of generated code
+//│ oo: 2 & oops
+//│   = [Number: 2]
+
+:js
+case oo of { Oops -> 1 }
+//│ // Query 1
+//│ let a;
+//│ res = (a = oo, Oops.is(a) ? 1 : (function () {
+//│   throw new Error("non-exhaustive case expression");
+//│ })());
+//│ // End of generated code
+//│ res: 1
+//│    = 1
 
 

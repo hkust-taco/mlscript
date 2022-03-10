@@ -196,7 +196,7 @@ object Main {
       }
     
     def getType(ty: typer.TypeScheme): Type = {
-      val wty = ty.instantiate(0)
+      val wty = ty.uninstantiatedBody
       println(s"Typed as: $wty")
       println(s" where: ${wty.showBounds}")
       val cty = typer.canonicalizeType(wty)

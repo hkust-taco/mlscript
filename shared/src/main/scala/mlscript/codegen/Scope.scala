@@ -161,9 +161,14 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareTrait(lexicalName: Str, params: Ls[Str], base: Type): TraitSymbol = {
+  def declareTrait(
+      lexicalName: Str,
+      params: Ls[Str],
+      base: Type,
+      methods: Ls[MethodDef[Left[Term, Type]]]
+  ): TraitSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = TraitSymbol(lexicalName, runtimeName, params, base)
+    val symbol = TraitSymbol(lexicalName, runtimeName, params, base, methods)
     register(symbol)
     symbol
   }
@@ -227,6 +232,8 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     runtimeSymbols += name
     name
   }
+
+  def existsRuntimeSymbol(name: Str): Bool = runtimeSymbols.contains(name)
 
   /**
     * Shorthands for deriving normal scopes.

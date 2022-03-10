@@ -377,17 +377,28 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  lazy val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
                   val (res, nfs) = bo match {
-                    case S(tt @ TupleType(fs)) => 
-                      val tupres = TupleType(fs.mapValues(go(_, pol)))(tt.prov)
-                      val rcdtup = tupres.toRecord.fields.map(f => f._1.name -> f._2).toSet
-                      S(tupres) -> (
-                        if (rcdtup.subsetOf(nFields.map(f => f._1.name -> f._2).toSet))
-                          nFields.filterNot(e => rcdtup.contains(e._1.name -> e._2))
-                        else
-                          nFields
-                      )
+                    case S(tt @ TupleType(fs)) =>
+                      val arity = fs.size
+                      val (componentFields, rcdFields) = rcd.fields
+                        .filterNot(_._1.name.isCapitalized)
+                        .partitionMap(f =>
+                          if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
+                            val namePostfix = f._1.name.tail
+                            if (namePostfix.forall(_.isDigit)) {
+                              val index = namePostfix.toInt
+                              if (index <= arity && index > 0) L(index -> f._2)
+                              else R(f)
+                            }
+                            else R(f)
+                          } else R(f)
+                        )
+                      val componentFieldsMap = componentFields.toMap
+                      val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
+                        nme -> go(ty & componentFieldsMap.getOrElse(i + 1, TopType), pol)
+                      }.toList
+                      S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(go(_, pol))
                     case S(ct: ClassTag) => S(ct) -> nFields
                     case S(ft @ FunctionType(l, r)) =>
                       S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields

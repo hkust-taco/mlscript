@@ -75,7 +75,7 @@ res.tail.head
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^
-//│ ╟── Note: class Nil is defined at: 
+//│ ╟── Note: class Nil is defined at:
 //│ ║  l.2: 	class Nil: {}
 //│ ╙──     	      ^^^
 //│ res: error

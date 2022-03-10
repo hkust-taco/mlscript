@@ -37,44 +37,61 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType = {
-      val thisTy = TypeRef(nme, targs)(prov)
-      // MethodType(pt.level, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)(prov)
-      MethodType(pt.polymLevel, S(FunctionType(singleTup(thisTy), pt.body)(prov)), nme)(prov)
-    }
-    def wrapMethod(mt: MethodType): MethodType =
-      if (mt.body.nonEmpty) wrapMethod(mt.toPT, mt.prov) else mt.copy(parents = nme :: Nil)
+    def thisTy(prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
+    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
+      MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
   }
   
-  private case class MethodDefs(
-    tn: TypeName,
-    parents: List[MethodDefs],
+  /** Represent a set of methods belonging to some owner type.
+    * This includes explicitly declared/defined as well as inherited methods. */
+  private case class MethodSet(
+    ownerType: TypeName,
+    parents: List[MethodSet],
     decls: Map[Str, MethodType],
     defns: Map[Str, MethodType],
   ) {
-    private def &(that: MethodDefs)(tn: TypeName, newdefns: Set[Str])(implicit raise: Raise): MethodDefs =
-      MethodDefs(
+    private def &(that: MethodSet)(tn: TypeName, overridden: Set[Str])(implicit raise: Raise): MethodSet =
+      MethodSet(
         tn,
         this.parents ::: that.parents,
         mergeMap(this.decls, that.decls)(_ & _),
         (this.defns.iterator ++ that.defns.iterator).toSeq.groupMap(_._1)(_._2).flatMap {
           case _ -> Nil => die
           case mn -> (defn :: Nil) => S(mn -> defn)
-          case mn -> defns if newdefns(mn) => N
+          case mn -> defns if overridden(mn) => N  // ignore an inherited method definition if it's overridden
           case mn -> defns =>
             err(msg"An overriding method definition must be given when inheriting from multiple method definitions" -> tn.toLoc
               :: msg"Definitions of method $mn inherited from:" -> N
               :: defns.iterator.map(mt => msg"• ${mt.parents.head}" -> mt.prov.loco).toList)
-            S(mn -> MethodType(defns.head.level, N, tn :: Nil)(
+            S(mn -> MethodType(defns.head.level, N, tn :: Nil, isInherited = false)(
               TypeProvenance(tn.toLoc, "inherited method declaration")))
         }
       )
-    private def addParent(prt: TypeName): MethodDefs =
-      copy(decls = decls.view.mapValues(mt => mt.copy(parents = prt :: mt.parents)).toMap)
-    def propagate(top: Bool = true)(implicit raise: Raise): MethodDefs =
-      parents.map(_.propagate(false)).reduceOption(_.&(_)(tn, defns.keySet)).map(_.addParent(tn))
-        .foldRight(if (top) MethodDefs(tn, Nil, Map.empty, Map.empty) else copy(parents = Nil))((mds1, mds2) =>
-          mds2.copy(decls = mds1.decls ++ mds2.decls, defns = mds1.defns ++ mds2.defns))
+    /** Returns a `MethodSet` of the _inherited_ methods only,
+      *   disregarding the current MethodSet's methods... 
+      * Useful for subsumption checking
+      *   as inherited and current methods should be considered separately 
+      * An overriding definition is required when multiple method definitions are inherited.
+      *   An error is raised if no overriding definition is given. */
+    def processInheritedMethods(implicit ctx: Ctx, raise: Raise): MethodSet =
+      processInheritedMethodsHelper(includeCurrentMethods = false)
+    private def processInheritedMethodsHelper(includeCurrentMethods: Bool)
+        (implicit ctx: Ctx, raise: Raise): MethodSet = {
+      def addParent(mt: MethodSet): MethodSet = {
+        val td = ctx.tyDefs(ownerType.name)
+        def addThis(mt: MethodType): MethodType =
+          mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTy(mt.prov))))(mt.prov)
+        def add(mt: MethodType): MethodType =
+          mt.copy(parents = ownerType :: mt.parents)(mt.prov)
+        mt.copy(decls = mt.decls.view.mapValues(addThis).mapValues(add).toMap, defns = mt.defns.view.mapValues(addThis).toMap)
+      }
+      parents.map(_.processInheritedMethodsHelper(true))
+        .reduceOption(_.&(_)(ownerType, defns.keySet)).map(addParent)
+        .foldRight(if (includeCurrentMethods) this else copy(decls = Map.empty, defns = Map.empty)) {
+          (mds1, mds2) =>
+            mds2.copy(decls = mds1.decls ++ mds2.decls, defns = mds1.defns ++ mds2.defns)
+        }
+    }
   }
   
   type Level = Int
@@ -82,11 +99,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   val MaxLevel: Int = 1024
   
   /** Keys of `mthEnv`:
-   *  `L` represents the inferred types of method definitions. The first value is the parent name, and the second value is the method name.
-   *    The method definitions are *not* wrapped with the implicit `this` parameter, but are instead wrapped at `getMthDefn`.
-   *  `R` represents the actual method types. The first optional value is the parent name, with `N` representing implicit calls,
-   *    and the second value is the method name. (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
-   *  The public helper functions should be preferred for manipulating `mthEnv`
+    * `L` represents the inferred types of method definitions. The first value is the parent name,
+    *   and the second value is the method name.
+    * `R` represents the actual method types.
+    *   The first optional value is the parent name, with `N` representing implicit calls,
+    *   and the second value is the method name.
+    *   (See the case for `Sel` in `typeTerm` for documentation on explicit vs. implicit calls.)
+    * The public helper functions should be preferred for manipulating `mthEnv`
    */
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeInfo], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Level, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
@@ -126,9 +145,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
   def ttp(trm: Term, desc: Str = ""): TypeProvenance =
     TypeProvenance(trm.toLoc, if (desc === "") trm.describe else desc)
   def originProv(loco: Opt[Loc], desc: Str, name: Str): TypeProvenance = {
-    // TODO make a new sort of provenance for where types and type varianles are defined
-    tp(loco, desc, S(name))
-    // ^ This yields unnatural errors like:
+    tp(loco, desc, S(name), isType = true)
+    // ^ If we did not treat "origin provenances" differently,
+    //    it would yields unnatural errors like:
       //│ ╟── expression of type `B` is not a function
       //│ ║  l.6: 	    method Map[B]: B -> A
       //│ ║       	               ^
@@ -304,7 +323,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.nextLevel, raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
       val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n -> td1
@@ -398,11 +417,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               case _: RecordType | _: ExtrType => true
               case p: ProxyType => checkParents(p.underlying)
             }
-            lazy val checkAbstract = {
+            lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
+              val isTraitWithMethods = (k is Trt) && defns.nonEmpty
               (decls -- defns) match {
-                case absMths if absMths.nonEmpty =>
-                  if (ctx.get(n.name).isEmpty) ctx += n.name -> AbstractConstructor(absMths)
+                case absMths if absMths.nonEmpty || isTraitWithMethods =>
+                  if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
+                    ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
@@ -434,7 +455,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               }
               true
             }
-            checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstract
+            checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
@@ -453,7 +474,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 false
               } else true
           }
-          case _ => ty.children.forall(checkRegular)
+          case _ => ty.children(includeBounds = false).forall(checkRegular)
         }
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
@@ -462,110 +483,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         else Nil
       })
     def typeMethods(implicit ctx: Ctx): Ctx = {
-      /* Recursive traverse the type definition and type the bodies of method definitions 
-       * by applying the targs in `TypeRef` and rigidifying class type parameters. */
-      def typeMethodsSingle(td: TypeDef): Unit = {
-        implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
-        val rigidtargs = {
-          implicit val state: MutMap[TV, ST] = MutMap.empty
-          td.targs.map(freshenAbove(ctx.lvl, _, true))
-        }
-        val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
-        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodDefs = {
-          implicit val thisCtx: Ctx = ctx.nest
-          thisCtx += "this" -> tr
-          val td2 = ctx.tyDefs(tr.defn.name)
-          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
-          val declared = MutMap.empty[Str, Opt[Loc]]
-          val defined = MutMap.empty[Str, Opt[Loc]]
-          
-          def filterTR(ty: SimpleType): List[TypeRef] = ty match {
-            case tr: TypeRef => tr :: Nil
-            case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
-            case _ => Nil
-          }
-          def go(md: MethodDef[_]): (Str, MethodType) = md match {
-            case MethodDef(rec, prt, nme, tparams, rhs) =>
-              val prov: TypeProvenance = tp(md.toLoc,
-                (if (!top) "inherited " else "")
-                + "method " + rhs.fold(_ => "definition", _ => "declaration"))
-              val fullName = s"${td.nme.name}.${nme.name}"
-              if (top) {
-                if (!nme.name.isCapitalized)
-                  err(msg"Method names must start with a capital letter", nme.toLoc)
-                rhs.fold(_ => defined, _ => declared).get(nme.name) match {
-                  case S(loco) => err(
-                    msg"Method '$fullName' is already ${rhs.fold(_ => "defined", _ => "declared")}" -> nme.toLoc ::
-                    msg"at" -> loco :: Nil)
-                  case N =>
-                }
-                tparams.groupBy(_.name).foreach {
-                  case s -> tps if tps.size > 1 => err(
-                    msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
-                    tps.map(tp => msg"Declared at" -> tp.toLoc))
-                  case _ =>
-                }
-                val tp1s = td2.tparams.iterator.map(tp => tp.name -> tp).toMap
-                tparams.foreach(tp2 => tp1s.get(tp2.name) match {
-                  case S(tp1) => warn(
-                    msg"Method type parameter ${tp1}" -> tp1.toLoc ::
-                    msg"shadows class type parameter ${tp2}" -> tp2.toLoc :: Nil)
-                  case N =>
-                })
-              }
-              rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
-              val dummyTargs2 = tparams.map(p =>
-                TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
-              val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
-              val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-                t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
-              val bodyTy = subst(rhs.fold(
-                term => ctx.getMthDefn(prt.name, nme.name)
-                  .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
-                    subst(mt.toPT, td2.targs.lazyZip(tr.targs).toMap) match {
-                      // Try to wnwrap one layer of prov, which would have been wrapped by the original call to `go`,
-                      // and will otherwise mask the more precise new prov that contains "inherited"
-                      case PolymorphicType(level, ProvType(underlying)) =>
-                        PolymorphicType(level, underlying)
-                      case pt => pt
-                    }
-                  ),
-                ty => PolymorphicType(thisCtx.lvl,
-                  typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
-                  // ^ Note: we need to go to the next level here,
-                  //    which is also done automatically by `typeLetRhs` in the case above
-              ), reverseRigid2)
-              val mthTy = td2.wrapMethod(bodyTy, prov)
-              if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
-                if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
-                thisCtx.addMth(N, nme.name, mthTy)
-              }
-              nme.name -> MethodType(thisCtx.lvl, S(ProvType(bodyTy.body)(prov)), td2.nme)(prov)
-          }
-          MethodDefs(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
-            td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
-        }
-        val mds = rec(TypeRef(td.nme, rigidtargs)(prov), true)(ctx)
-        checkSubsume(td, mds)
-      }
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
-       * then register the method signitures in the context */
-      def checkSubsume(td: TypeDef, mds: MethodDefs): Unit = {
+       * then register the method signatures in the context */
+      def checkSubsume(td: TypeDef, mds: MethodSet): Unit = {
         val tn = td.nme
-        val MethodDefs(_, _, decls, defns) = mds
-        val MethodDefs(_, _, declsInherit, defnsInherit) = mds.propagate()
+        val MethodSet(_, _, decls, defns) = mds
+        val MethodSet(_, _, declsInherited, defnsInherited) = mds.processInheritedMethods
         val rigidtargs = {
           implicit val state: MutMap[TV, ST] = MutMap.empty
           td.targs.map(freshenAbove(ctx.lvl, _, true))
         }
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
         def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
-          constrain(subst(mt.toPT, targsMap).instantiate, subst(bmt.toPT, targsMap).rigidify)
-        def registerImplicit(mn: Str, mthTy: MethodType) = ctx.getMth(N, mn) match {
+          constrain(subst(mt.bodyPT, targsMap).instantiate, subst(bmt.bodyPT, targsMap).rigidify)
+        def registerImplicitSignatures(mn: Str, mthTy: MethodType) = ctx.getMth(N, mn) match {
           // If the currently registered method belongs to one of the base classes of this class,
           // then we don't need to do anything.
           // This is because implicit method calls always default to the parent methods.
-          case S(MethodType(_, _, parents)) if {
+          case S(MethodType(_, _, parents, _)) if {
             val bcs = ctx.allBaseClassesOf(tn.name)
             parents.forall(prt => bcs(Var(prt.name.decapitalize)))
           } =>
@@ -579,12 +514,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             //   method F: 42
             // class A
             //   method F: int
-          case S(MethodType(_, _, parents)) if {
+          case S(MethodType(_, _, parents, _)) if {
             val v = Var(tn.name.decapitalize)
             parents.forall(prt => ctx.allBaseClassesOf(prt.name).contains(v)) 
           } => ctx.addMth(N, mn, mthTy)
-          // If this class is unrelated to the parent(s) of the currently registered method, then mark it as ambiguous
-          case S(mt2) => ctx.addMth(N, mn, mt2 + mthTy)
+          // If this class is unrelated to the parent(s) of the currently registered method,
+          //  then we mark it as ambiguous:
+          case S(mt2) =>
+            // Create an ambiguous method "placeholder" (i.e., it has no `body`)
+            val ambiguousMth =
+              MethodType(0, N, (mt2.parents ::: mthTy.parents).distinct, isInherited = false)(mt2.prov)
+            ctx.addMth(N, mn, ambiguousMth)
           case N => ctx.addMth(N, mn, mthTy)
         }
         def overrideError(mn: Str, mt: MethodType, mt2: MethodType) = {
@@ -593,23 +533,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               msg"Note: method definition inherited from" -> mt2.prov.loco :: Nil)(raise))
           println(s">> Checking subsumption (against inferred type) for inferred type of $mn : $mt")
         }
-        declsInherit.foreach { case mn -> mt =>
-          val mthTy = td.wrapMethod(mt)
-          ctx.addMth(S(tn.name), mn, mthTy)
+        declsInherited.foreach { case mn -> mt =>
+          ctx.addMth(S(tn.name), mn, mt)
         }
-        defnsInherit.foreach { case mn -> mt => 
+        defnsInherited.foreach { case mn -> mt => 
           println(s">> Checking subsumption for inferred type of $mn : $mt")
-          (if (decls.isDefinedAt(mn) && !defns.isDefinedAt(mn)) decls.get(mn) else N).orElse(declsInherit.get(mn))
+          (if (decls.isDefinedAt(mn) && !defns.isDefinedAt(mn)) decls.get(mn) else N).orElse(declsInherited.get(mn))
             .foreach(ss(mt, _)(mt.prov))
-          val mthTy = td.wrapMethod(mt)
-          if (!declsInherit.get(mn).exists(decl => decl.single && decl.parents.last === mt.parents.last))
-            ctx.addMth(S(tn.name), mn, mthTy)
+          if (!declsInherited.get(mn).exists(decl => !decl.isInherited && decl.parents.last === mt.parents.last))
+            ctx.addMth(S(tn.name), mn, mt)
         }
         decls.foreach { case mn -> mt =>
           println(s">> Checking subsumption for declared type of $mn : $mt")
-          ((declsInherit.get(mn), defnsInherit.get(mn)) match {
+          ((declsInherited.get(mn), defnsInherited.get(mn)) match {
             case (S(decl), S(defn)) =>
-              if (mt.body =/= decl.body && !defns.isDefinedAt(mn)) defn.parents.foreach(parent => 
+              if (!defns.isDefinedAt(mn)) defn.parents.foreach(parent => 
                 err(msg"Overriding method ${parent}.${mn} without an overriding definition is not allowed." -> mt.prov.loco ::
                   msg"Note: method definition inherited from" -> defn.prov.loco :: Nil)(raise))
               S(decl)
@@ -619,14 +557,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
               S(defn)
             case (N, N) => N
           }).foreach(ss(mt, _)(mt.prov))
-          val mthTy = td.wrapMethod(mt)
-          ctx.addMth(S(tn.name), mn, mthTy)
-          registerImplicit(mn, mthTy)
+          ctx.addMth(S(tn.name), mn, mt)
+          registerImplicitSignatures(mn, mt)
         }
         defns.foreach { case mn -> mt => 
           implicit val prov: TypeProvenance = mt.prov
           println(s">> Checking subsumption for inferred type of $mn : $mt")
-          decls.get(mn).orElse((declsInherit.get(mn), defnsInherit.get(mn)) match {
+          decls.get(mn).orElse((declsInherited.get(mn), defnsInherited.get(mn)) match {
             case (S(decl), S(defn)) if defn.parents.toSet.subsetOf(decl.parents.toSet) => S(decl)
             case (_, S(defn)) =>
               overrideError(mn, mt, defn)
@@ -634,20 +571,107 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case (S(decl), N) => S(decl)
             case (N, N) => N
           }).foreach(ss(mt, _))
-          val mthTy = td.wrapMethod(mt)
           if (!decls.isDefinedAt(mn)) {
             // If the class declares that method explicitly,
             //   the declared signature is used so we don't have to do anything
             // If the class does not declare that method explicitly (it could be inherited),
             //   we still want to make the method available using its inferred signature
             //   both for implicit method calls and for explicit ones
-            ctx.addMth(S(tn.name), mn, mthTy)
-            registerImplicit(mn, mthTy)
+            ctx.addMth(S(tn.name), mn, mt)
+            registerImplicitSignatures(mn, mt)
           }
           ctx.addMthDefn(tn.name, mn, mt)
         }
       }
-      newDefs.foreach(td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) typeMethodsSingle(td))
+      newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
+        /* Recursive traverse the type definition and type the bodies of method definitions 
+         * by applying the targs in `TypeRef` and rigidifying class type parameters. */
+        val rigidtargs = {
+          implicit val state: MutMap[TV, ST] = MutMap.empty
+          td.targs.map(freshenAbove(ctx.lvl, _, true))
+        }
+        val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
+        def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
+          implicit val thisCtx: Ctx = ctx.nest
+          thisCtx += "this" -> tr
+          val td2 = ctx.tyDefs(tr.defn.name)
+          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
+          val declared = MutMap.empty[Str, Opt[Loc]]
+          val defined = MutMap.empty[Str, Opt[Loc]]
+          
+          def filterTR(ty: SimpleType): List[TypeRef] = ty match {
+            case tr: TypeRef => tr :: Nil
+            case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
+            case _ => Nil
+          }
+          def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
+            val MethodDef(rec, prt, nme, tparams, rhs) = md
+            val prov: TypeProvenance = tp(md.toLoc,
+              (if (!top) "inherited " else "")
+              + "method " + rhs.fold(_ => "definition", _ => "declaration"))
+            val fullName = s"${td.nme.name}.${nme.name}"
+            if (top) {
+              if (!nme.name.isCapitalized)
+                err(msg"Method names must start with a capital letter", nme.toLoc)
+              rhs.fold(_ => defined, _ => declared).get(nme.name) match {
+                case S(loco) => err(
+                  msg"Method '$fullName' is already ${rhs.fold(_ => "defined", _ => "declared")}" -> nme.toLoc ::
+                  msg"at" -> loco :: Nil)
+                case N =>
+              }
+              tparams.groupBy(_.name).foreach {
+                case s -> tps if tps.size > 1 => err(
+                  msg"Multiple declarations of type parameter ${s} in ${prov.desc}" -> md.toLoc ::
+                  tps.map(tp => msg"Declared at" -> tp.toLoc))
+                case _ =>
+              }
+              val tp1s = td2.tparams.iterator.map(tp => tp.name -> tp).toMap
+              tparams.foreach(tp2 => tp1s.get(tp2.name) match {
+                case S(tp1) => warn(
+                  msg"Method type parameter ${tp1}" -> tp1.toLoc ::
+                  msg"shadows class type parameter ${tp2}" -> tp2.toLoc :: Nil)
+                case N =>
+              })
+            }
+            rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
+            val dummyTargs2 = tparams.map(p =>
+              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+            val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
+            val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
+              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
+            val bodyTy = subst(rhs.fold(term =>
+              ctx.getMthDefn(prt.name, nme.name)
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
+                  // Now buckle-up because this is some seriously twisted stuff:
+                  //    If the method is already in the environment,
+                  //    it means it belongs to a previously-defined class/trait (not the one being typed),
+                  //    in which case we need to perform a substitution on the corresponding method body...
+                  subst(mt.bodyPT, td2.targs.lazyZip(tr.targs).toMap) match {
+                    // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
+                    // and will otherwise mask the more precise new prov that contains "inherited"
+                    case PolymorphicType(level, ProvType(underlying)) =>
+                      PolymorphicType(level, underlying)
+                    case pt => pt
+                  }
+                ),
+              ty => PolymorphicType(thisCtx.lvl,
+                typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
+                // ^ Note: we need to go to the next level here,
+                //    which is also done automatically by `typeLetRhs` in the case above
+              ), reverseRigid2)
+            val mthTy = td2.wrapMethod(bodyTy, prov)
+            if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
+              if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
+              thisCtx.addMth(N, nme.name, mthTy)
+            }
+            nme.name -> mthTy
+          }
+          MethodSet(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
+            td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
+        }
+        val mds = rec(TypeRef(td.nme, rigidtargs)(tp(td.toLoc, "type definition")), true)(ctx)
+        checkSubsume(td, mds)
+      }}
       ctx
     }
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, mthEnv = allMthEnv, tyDefs = allDefs)))
@@ -662,7 +686,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     typeType2(ty, simplify)._1
   /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
    * Useful for instantiating them by substitution when expanding a `TypeRef`. */
-  // TODO better record type provenances!
   def typeType2(ty: Type, simplify: Bool = true)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
@@ -920,12 +943,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
-          // TODO: delay type expansion to message display and show the expected type here!
-          case AbstractConstructor(absMths) =>
+          case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
-              :: (msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc)
-              :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList)
+              :: (
+                if (traitWithMths) {
+                  assert(td.kind is Trt)
+                  msg"Note that traits with methods are always considered abstract" -> td.toLoc :: Nil
+                } else
+                  msg"Note that ${td.kind.str} ${td.nme} is abstract:" -> td.toLoc
+                  :: absMths.map { case mn => msg"Hint: method ${mn.name} is abstract" -> mn.toLoc }.toList
+              )
+            )
           // case ty: TypeScheme => ty
           case ty: SimpleType => ty
         }//.instantiate
@@ -1026,16 +1055,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
             case nme => ctx.getMth(N, nme) // implicit calls
           }) match {
             case S(mth_ty) =>
-              if (mth_ty.body.isEmpty)
+              if (mth_ty.body.isEmpty) {
+                assert(mth_ty.parents.sizeCompare(1) > 0, mth_ty)
                 err(msg"Implicit call to method ${fieldName.name} is forbidden because it is ambiguous." -> term.toLoc
                   :: msg"Unrelated methods named ${fieldName.name} are defined by:" -> N
                   :: mth_ty.parents.map { prt =>
                     val td = ctx.tyDefs(prt.name)
                     msg"• ${td.kind.str} ${td.nme}" -> td.nme.toLoc
                   })
+              }
               val o_ty = typeTerm(obj)
               val res = freshVar(prov)
-              con(mth_ty.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
+              con(mth_ty.toPT.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
               if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
@@ -1043,7 +1074,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         obj match {
           case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
             ctx.getMth(S(name), fieldName.name) match {
-              case S(mth_ty) => mth_ty.instantiate
+              case S(mth_ty) => mth_ty.toPT.instantiate
               case N =>
                 err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
                 mthCallOrSel(obj, fieldName)

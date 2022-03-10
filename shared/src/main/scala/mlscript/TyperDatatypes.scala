@@ -21,11 +21,14 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
 
   sealed abstract class TypeInfo
 
-  case class AbstractConstructor(absMths: Set[Var]) extends TypeInfo
+  /** A type for abstract classes that is used to check and throw
+   * errors if the abstract class is being instantiated */
+  case class AbstractConstructor(absMths: Set[Var], isTraitWithMethods: Bool) extends TypeInfo
   
   /** A type that potentially contains universally quantified type variables,
-   *  and which can be isntantiated to a given level. */
+    * and which can be isntantiated to a given level. */
   // sealed abstract class TypeScheme extends TypeInfo {
+  //   def uninstantiatedBody: SimpleType
   //   def instantiate(implicit lvl: Int): SimpleType
   // }
   type TypeScheme = SimpleType
@@ -37,6 +40,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     val prov: TypeProvenance = body.prov
     lazy val level = levelBelow(polymLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = body.levelBelow(ub min polymLevel)
+    // def uninstantiatedBody: SimpleType
     // override 
     def instantiate(implicit lvl: Int): SimpleType = {
       // val res = freshenAbove(polymLevel, body)
@@ -68,32 +72,35 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
   }
   
-  // single: whether the method declaration comes from a single class, and not the intersection of multiple inherited declarations
-  class MethodType(val level: Level, val body: Opt[SimpleType], val parents: List[TypeName], val single: Bool)
-      (val prov: TypeProvenance) {
+  /** `body.get._1`: implicit `this` parameter
+    * `body.get._2`: actual body of the method
+    * `body` being `None` indicates an error:
+    *   - when this MethodType is computed from `MethodSet#processInheritedMethods`,
+    *     it means two or more parent classes defined or declared the method
+    *     and the current class did not override it;
+    *   - when this MethodType is obtained from the environment, it means the method is ambiguous,
+    *     which happens when two or more unrelated classes define or declare a method with the same name.
+    *     So note that in this case, it will have more than one parent.
+    *   Note: This is some fairly brittle and error-prone logic, which would gain to be refactored.
+    *     Especially aggravating is the fact that `toPT`/`bodyPT` return `errorType` when `body` is `None`,
+    *     whereas this case should probably be checked and carefully considered in each call site.
+    * `isInherited`: whether the method declaration comes from the intersection of multiple inherited declarations
+   */
+  case class MethodType(
+    level: Int,
+    body: Opt[(SimpleType, SimpleType)],
+    parents: List[TypeName],
+    isInherited: Bool,
+  )(val prov: TypeProvenance) {
     def &(that: MethodType): MethodType = {
       require(this.level === that.level)
-      MethodType(level, mergeOptions(this.body, that.body)(_ & _), (this.parents ::: that.parents).distinct, false)(prov)
+      MethodType(level, mergeOptions(this.body, that.body)((b1, b2) => (b1._1 & b2._1, b1._2 & b2._2)),
+        (this.parents ::: that.parents).distinct, isInherited = true)(prov)
     }
-    def +(that: MethodType): MethodType =
-      if (this.parents === that.parents) that
-      else MethodType(level, N, (this.parents ::: that.parents).distinct)(prov)
-    val toPT: PolymorphicType = body.fold(PolymorphicType(level, errType))(PolymorphicType(level, _))
-    def instantiate(implicit lvl: Level): SimpleType = toPT.instantiate
-    def rigidify(implicit lvl: Level): SimpleType = toPT.rigidify
-    def copy(level: Level = this.level, body: Opt[SimpleType] = this.body, parents: List[TypeName] = this.parents): MethodType =
-      MethodType(level, body, parents, this.single)(prov)
-    override def toString: Str = s"MethodType($level,$body,$parents,$single)"
-  }
-  object MethodType {
-    def apply(level: Level, body: Opt[SimpleType], parent: TypeName)(prov: TypeProvenance): MethodType =
-      MethodType(level, body, parent :: Nil, true)(prov)
-    def apply(level: Level, body: Opt[SimpleType], parents: List[TypeName])(prov: TypeProvenance): MethodType =
-      MethodType(level, body, parents, true)(prov)
-    private def apply(level: Level, body: Opt[SimpleType], parents: List[TypeName], single: Bool)
-        (implicit prov: TypeProvenance): MethodType =
-      new MethodType(level, body, parents, single)(prov)
-    def unapply(mt: MethodType): S[(Int, Opt[SimpleType], List[TypeName])] = S((mt.level, mt.body, mt.parents))
+    val toPT: PolymorphicType =
+      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2)(prov)))
+    val bodyPT: PolymorphicType =
+      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
   }
   
   /** A general type form (TODO: rename to AnyType). */
@@ -104,6 +111,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): SimpleType
     def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): SimpleType =
       self.freshenAbove(lim, this, rigidify)
+    // def uninstantiatedBody: SimpleType = this
     // def instantiate(implicit lvl: Int) = this
     constructedTypes += 1
   }
@@ -198,8 +206,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
-        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) } ::: // TODO dedup fields!
-        fields.collect { case (S(n), t) => (n, t) }
+        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) }
+        // Note: In line with TypeScript, tuple field names are pure type system fictions,
+        //    with no runtime existence. Therefore, they should not be included in the record type
+        //    corresponding to this tuple type.
+        //    i.e., no `::: fields.collect { case (S(n), t) => (n, t) }`
       )(prov)
     override def toString = s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2}").mkString(", ")})"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
@@ -281,8 +292,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
       // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
-      }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv =>
-        tv -> tv.freshenAbove(MinLevel, rigidify = false)(tv.level, MutMap.empty))).toMap)
+      // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv =>
+      //   tv -> tv.freshenAbove(MinLevel, rigidify = false)(tv.level, MutMap.empty))).toMap)
+      }, td.targs.lazyZip(targs).toMap)
     }
     override def toString = showProvOver(false) {
       val displayName =
@@ -323,8 +335,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
-   * The only way to give something such a type is to make the type part of a def or method signature,
-   * as it will be replaced by a fresh bounded type variable upon subsumption checking (cf rigidification). */
+    * The only way to give something such a type is to make the type part of a def or method signature,
+    * as it will be replaced by a fresh bounded type variable upon subsumption checking (cf rigidification). */
   case class TypeBounds(lb: SimpleType, ub: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Level = lb.level max ub.level
     def levelBelow(ubLvl: Level)(implicit cache: MutSet[TV]): Int = lb.levelBelow(ubLvl)(MutSet.empty) max ub.levelBelow(ubLvl)(MutSet.empty)
@@ -336,7 +348,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
-   *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
+    * Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
   final class TypeVariable(
       val level: Level,
       var lowerBounds: List[SimpleType],
