@@ -164,17 +164,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
       val tv = freshVar(noProv)(1)
-      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(None, tv))(noProv), Nil, Nil, Set.empty, N)
+      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(None, tv)(noProv))(noProv), Nil, Nil, Set.empty, N)
     } ::
     {
       val tv = freshVar(noProv)(1)
-      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(Some(tv), tv))(noProv), Nil, Nil, Set.empty, N)
+      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil, ArrayType(FieldType(Some(tv), tv)(noProv))(noProv), Nil, Nil, Set.empty, N)
     } ::
     Nil
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).toSet
   def singleTup(ty: ST): ST =
-    if (funkyTuples) ty else TupleType((N, ty.toUpper ) :: Nil)(noProv)
+    if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv)(1)
     import FunctionType.{ apply => fun }
@@ -404,7 +404,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv) }
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -415,7 +415,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
                           )(1).tap(_.upperBounds ::= f._2.ub)
                           // ? not sure if we can do this
-                          f._1 -> (if (f._2.lb.isDefined) FieldType(Some(fv), fv) else fv.toUpper)
+                          f._1 -> (if (f._2.lb.isDefined) FieldType(Some(fv), fv)(prov) else fv.toUpper)
                         }).toList
                       PolymorphicType(0, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
@@ -676,7 +676,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
       case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
         if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
       case Tuple(fields) =>
-        TupleType(fields.mapValues(f => FieldType(f.in.map(rec), rec(f.out))))(tyTp(ty.toLoc, "tuple type"))
+        TupleType(fields.mapValues(f => FieldType(f.in.map(rec), rec(f.out))(tyTp(ty.toLoc, "tuple field"))))(tyTp(ty.toLoc, "tuple type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -694,12 +694,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         RecordType.mk(fs.map { nt =>
             if (nt._1.name.isCapitalized)
               err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
-            nt._1 -> FieldType(nt._2.in.map(rec), rec(nt._2.out))
+            nt._1 -> FieldType(nt._2.in.map(rec), rec(nt._2.out))(prov)
           })(prov)
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(
-            r.fields.mapValues(f => FieldType(f.in.map(rec), rec(f.out)))
+            r.fields.mapValues(f => FieldType(f.in.map(rec), rec(f.out))(tyTp(ty.toLoc, "extension field")))
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
       case tn @ TypeName(name) =>
@@ -921,8 +921,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           if (mut) {
             val res = freshVar(prov)
             val rs = con(tym, res, res)
-            (n, FieldType(Some(rs), rs))
-          } else (n, tym.toUpper)
+            (n, FieldType(Some(rs), rs)(prov))
+          } else (n, tym.toUpper(prov))
         })(prov)
       case tup: Tup if funkyTuples =>
         typeTerms(tup :: Nil, false, Nil)
@@ -932,7 +932,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
           if (mut) {
             val res = freshVar(prov)
             val rs = con(tym, res, res)
-            (n, FieldType(Some(rs), rs))
+            (n, FieldType(Some(rs), rs)(prov))
           } else (n, tym.toUpper)
         })(fs match {
           case Nil | ((N, _) :: Nil) => noProv
@@ -950,7 +950,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val res = freshVar(prov)
         val vl = typeTerm(rhs)
         val obj_ty = mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
-        val rf = con(obj_ty, RecordType.mk((f, FieldType(Some(res), res)) :: Nil)(prov), res)
+        val rf = con(obj_ty, RecordType.mk((f, FieldType(Some(res), res)(prov)) :: Nil)(prov), res)
         con(vl, rf, vl)
         UnitType
       case Assign(s @ Subs(a, i), rhs) => 
@@ -958,7 +958,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val res = freshVar(prov)
         val vl = typeTerm(rhs)
         val arr_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
-        con(arr_ty, ArrayType(FieldType(Some(res), res))(prov), res)
+        con(arr_ty, ArrayType(FieldType(Some(res), res)(prov))(prov), res)
         con(vl, IntType, vl)
         UnitType
       case Assign(_, rhs) => 

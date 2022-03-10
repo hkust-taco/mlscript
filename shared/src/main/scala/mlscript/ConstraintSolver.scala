@@ -195,7 +195,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) =>
-                  recLb(t2, nt1._2)
+                  recLb(t2, nt1._2, reportError)
                   rec(nt1._2.ub, t2.ub, false)
                 case N =>
                   bo match {
@@ -211,10 +211,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
-                  recLb(r, l)
+                  recLb(r, l, reportError)
                 }
             case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
-              recLb(ar.inner, b.inner)
+              recLb(ar.inner, b.inner, reportError)
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
@@ -230,11 +230,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
 
     // helper function for rec for lower bounds
-    def recLb(lhs: FieldType, rhs: FieldType)
+    def recLb(lhs: FieldType, rhs: FieldType, errReporter: => Unit)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
-          case (Some(l), None   ) => reportError              // TODO: better errors
+          case (Some(l), None   ) => errReporter              // TODO: better errors
           case (None   , Some(r)) => rec(BotType, r, false)   // ? can this case be skipped 
           case (None   , None   ) => ()
         }
@@ -316,11 +316,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'",
                   lhs.prov.loco // TODO better loco
               )}}
-              recLb(r, l)
+              recLb(r, l, reportError)
               rec(l.ub, r.ub, false)
             }
           case (t: ArrayBase, a: ArrayType) =>
-            recLb(a.inner, t.inner)
+            recLb(a.inner, t.inner, reportError)
             rec(t.inner.ub, a.inner.ub, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
@@ -343,7 +343,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               fs0.find(_._1 === n1).fold {
                 reportError
               } { case (n0, t0) =>
-                recLb(t1, t0)
+                recLb(t1, t0, reportError)
                 rec(t0.ub, t1.ub, false)
               }
             }
