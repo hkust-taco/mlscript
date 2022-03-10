@@ -117,7 +117,7 @@ final case class Literal(lit: Lit)                       extends NullaryType
 // reference an existing type with the given name
 final case class TypeName(name: Str)                    extends NullaryType
 
-final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType {
+final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)
   // ^ The better data structure to represent this would be an EitherOrBoth
   override def toString: Str = identifier.fold("α" + _, identity)

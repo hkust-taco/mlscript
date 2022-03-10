@@ -4,6 +4,8 @@ import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
 import scala.collection.immutable.SortedSet
 
+import math.Ordered.orderingToOrdered
+
 import mlscript.utils._, shorthands._
 
 
@@ -183,6 +185,19 @@ abstract class PolyTypeImpl extends Located { self: PolyType =>
   def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
 }
 
+trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
+  // define an ordering for type variables
+  // order by
+  // 1. name hint - default ""
+  // 2. identifier number - default 0
+  // 3. identifier string - default ""
+  def toTuple: (String, Int, String) = self.nameHint.map((_, 0, ""))
+    .getOrElse(self.identifier.fold(("", _, ""), ("", 0, _)))
+
+  def compare(that: TypeVar): Int = {
+    this.toTuple compare that.toTuple
+  }
+}
 
 // Auxiliary definitions for terms
 

@@ -43,13 +43,6 @@ final class TsTypegenCodeBuilder {
 
   object TypegenContext {
 
-    // define an ordering for type variables to store them as sorted
-    // use name hint if given otherwise use string representation of
-    // internal identifier to order
-    implicit val orderingTypeVar: Ordering[TypeVar] =
-      Ordering.by(tvar =>
-        tvar.nameHint.getOrElse(tvar.identifier.fold(_.toString, identity(_))))
-
     def apply(mlType: Type, isMethodDefintion: Boolean): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
