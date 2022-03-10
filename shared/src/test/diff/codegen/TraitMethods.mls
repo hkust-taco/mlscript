@@ -142,3 +142,74 @@ b.(A.Foo)
 //│ res: int
 //│    = undefined
 
+:e
+type Id[X] = X
+class AAA
+  method F: int
+  method F = 1
+  method G: 'a -> 'a
+  method G x = x
+class BBB: AAA
+  method F: int
+  method G: 'a -> 'a
+//│ ╔══[ERROR] Overriding method AAA.F without an overriding definition is not allowed.
+//│ ║  l.153: 	  method F: int
+//│ ║         	         ^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.149: 	  method F = 1
+//│ ╙──       	         ^^^^^
+//│ ╔══[ERROR] Overriding method AAA.G without an overriding definition is not allowed.
+//│ ║  l.154: 	  method G: 'a -> 'a
+//│ ║         	         ^^^^^^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.151: 	  method G x = x
+//│ ╙──       	         ^^^^^^^
+//│ Defined type alias Id
+//│ Defined class AAA
+//│ Declared AAA.F: AAA -> int
+//│ Declared AAA.G: AAA -> 'a -> 'a
+//│ Defined AAA.F: AAA -> 1
+//│ Defined AAA.G: AAA -> 'a -> 'a
+//│ Defined class BBB
+//│ Declared BBB.F: BBB -> int
+//│ Declared BBB.G: BBB -> 'a -> 'a
+
+
+trait T3
+  method Foo: 1 | 2
+trait T4
+  method Foo: 0 | 1
+class C: T3 & T4
+//│ Defined trait T3
+//│ Declared T3.Foo: t3 -> (1 | 2)
+//│ Defined trait T4
+//│ Declared T4.Foo: t4 -> (0 | 1)
+//│ Defined class C
+
+C.Foo
+//│ res: (C & t3 & t4) -> 1
+//│    = undefined
+
+:e
+fun x -> x.Foo
+//│ ╔══[ERROR] Implicit call to method Foo is forbidden because it is ambiguous.
+//│ ║  l.194: 	fun x -> x.Foo
+//│ ║         	         ^^^^^
+//│ ╟── Unrelated methods named Foo are defined by:
+//│ ╟── • trait T0
+//│ ║  l.8: 	trait T0
+//│ ║       	      ^^
+//│ ╟── • trait T1
+//│ ║  l.41: 	trait T1
+//│ ║        	      ^^
+//│ ╟── • trait T3
+//│ ║  l.178: 	trait T3
+//│ ║         	      ^^
+//│ ╟── • trait T4
+//│ ║  l.180: 	trait T4
+//│ ╙──       	      ^^
+//│ res: anything -> error
+//│    = [Function: res]
+
+
+

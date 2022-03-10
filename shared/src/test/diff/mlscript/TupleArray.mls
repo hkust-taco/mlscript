@@ -23,6 +23,24 @@ def r: {b: string; c: int}\b
 //│ res: {_1: "oops", _2: 2, _3: 3}
 //│    = [ 1, 2, 3, _1: 'oops' ]
 
+:e
+(res: (int,int,int,))._1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ║        	 ^^^
+//│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
+//│ ║  l.22: 	(1,2,3) with { _1 = "oops" }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(int, int, int,)`
+//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ║        	 ^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.27: 	(res: (int,int,int,))._1
+//│ ╙──      	      ^^^^^^^^^^^^^^
+//│ res: int
+//│    = 'oops'
+
+
 def r: int \ _1
 //│ r: int
 //│  = <missing implementation>
@@ -57,13 +75,13 @@ fr : Array[int] & {b: int}
 :e
 arr._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.58: 	arr._1
+//│ ║  l.76: 	arr._1
 //│ ║        	^^^^^^
 //│ ╟── type `Array[int]` does not have field '_1'
-//│ ║  l.39: 	def arr: Array[int]
+//│ ║  l.57: 	def arr: Array[int]
 //│ ║        	         ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?a}`
-//│ ║  l.58: 	arr._1
+//│ ║  l.76: 	arr._1
 //│ ╙──      	^^^
 //│ res: error
 //│    = undefined
@@ -118,10 +136,10 @@ def test: {x: 1} & (1, 2, 3)
 :e
 f(1,2,3) : 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.119: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
-//│ ║  l.119: 	f(1,2,3) : 1 | 2 | 3
+//│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
 //│    = [Number: 1] { b: 2 }
@@ -129,13 +147,13 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.130: 	(arr[0])[1][2]
+//│ ║  l.148: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
-//│ ║  l.39: 	def arr: Array[int]
+//│ ║  l.57: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array subscript with expected type `Array[?a]`
-//│ ║  l.130: 	(arr[0])[1][2]
+//│ ║  l.148: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^
 //│ res: nothing
 //│ Runtime error:
@@ -154,7 +172,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
-//│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
+//│ tuuu: (2, true,)
 //│     = <missing implementation>
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
@@ -234,9 +252,13 @@ k1._3
 //│ res: false
 //│    = undefined
 
-(1,2,3) with {_4 = true}
-//│ res: (1, 2, 3,) & {_4: true}
-//│    = [ 1, 2, 3, _4: true ]
+(1,2,3) with {_2 = "hello"; _a = true; _4 = 4}
+//│ res: {_1: 1, _2: "hello", _3: 3, _4: 4, _a: true}
+//│    = [ 1, 2, 3, _2: 'hello', _a: true, _4: 4 ]
+
+(1,2,3) with {_1 = true; _0 = 233}
+//│ res: {_0: 233, _1: true, _2: 2, _3: 3}
+//│    = [ 1, 2, 3, _1: true, _0: 233 ]
 
 (1, 2, true) with {_0 = "hello"}
 //│ res: (1, 2, true,) & {_0: "hello"}
@@ -283,13 +305,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.284: 	a2._1
+//│ ║  l.306: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.261: 	def rep5: 'a -> Array['a]
+//│ ║  l.283: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.284: 	a2._1
+//│ ║  l.306: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -320,10 +342,31 @@ hg1 ((5,5,5))
 
 def ta1: Array[int] | (int, bool)
 def test: (string, 1) & { _1: "hello" }
+def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: Array[bool | int]
 //│    = <missing implementation>
-//│ test: (string, 1,) & {_1: "hello", _2: 1}
+//│ test: ("hello", 1,)
 //│     = <missing implementation>
+//│ test2: ("hello", 1,) & {_3: int}
+//│      = <missing implementation>
+
+test: { _1: 'a }
+//│ res: {_1: "hello"}
+//│    = <no result>
+//│      test is not implemented
+
+// TODO: One could expect ("hello", 1,) here,
+//    but we currently don't recover the intersected positional field from the record
+//    when constraining refined tuples.
+test: ('a, 1)
+//│ res: (string, 1,)
+//│    = <no result>
+//│      test is not implemented
+
+// TODO in principe, we could narrow the refinement to ` & { _1: 1 }` here...
+def test3: Array[1] & { _1: int }
+//│ test3: Array[1] & {_1: int}
+//│      = <missing implementation>
 
 def fta1: Array[int | bool] -> int
 def tb1: (int, true)

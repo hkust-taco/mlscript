@@ -211,7 +211,7 @@ E{}: int
 //│ ╟── Note: constraint arises from literal type:
 //│ ║  l.205: 	E{}: 1
 //│ ║         	     ^
-//│ ╟── Note: class E is defined at: 
+//│ ╟── Note: class E is defined at:
 //│ ║  l.201: 	class E: 1
 //│ ╙──       	      ^
 //│ res: 1
@@ -222,7 +222,7 @@ E{}: int
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.206: 	E{}: int
 //│ ║         	     ^^^
-//│ ╟── Note: class E is defined at: 
+//│ ╟── Note: class E is defined at:
 //│ ║  l.201: 	class E: 1
 //│ ╙──       	      ^
 //│ res: int

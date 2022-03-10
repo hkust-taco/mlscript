@@ -105,7 +105,7 @@ def g = fun x -> fun y -> if x == y then x y else y x
 //│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<b, c, a>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
+//│ export declare const nonsense<c, b, a>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
 //│ export declare const g: (arg1: never) => (arg3: never) => never
 //│ // end ts
 
@@ -146,7 +146,7 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ // start ts
 //│ export declare const g: (arg1: int, arg2: int) => int
 //│ export declare const h<a>: (arg1: int, arg2: [(arg4: a) => int, a]) => int
-//│ export declare const k<a, b>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
+//│ export declare const k<b, a>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
 //│ export declare const l: (arg1: [1, 2], arg2: [3, 4]) => 5
 //│ // end ts
 

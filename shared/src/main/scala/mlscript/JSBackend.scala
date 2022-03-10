@@ -128,16 +128,35 @@ class JSBackend {
     case Sel(receiver, fieldName) =>
       JSField(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
-    case Let(isRec, Var(name), value, body) =>
+    case Let(true, Var(name), Lam(args, body), expr) =>
+      val letScope = scope.derive("Let", name :: Nil)
+      val fn = {
+        val params = translateParams(args)
+        val bindings = name :: params.flatMap { _.bindings }
+        val fnScope = scope.derive("Function", bindings)
+        val fnBody = fnScope.tempVars.`with`(translateTerm(body)(fnScope))
+        JSFuncExpr(S(name), params, fnBody.fold(_.`return` :: Nil, identity))
+      }
+      JSImmEvalFn(
+        N,
+        JSNamePattern(name) :: Nil,
+        letScope.tempVars.`with`(translateTerm(expr)(letScope)),
+        fn :: Nil
+      )
+    case Let(true, Var(name), _, _) =>
+      throw new CodeGenError(s"recursive non-function definition $name is not supported")
+    case Let(_, Var(name), value, body) =>
       val letScope = scope.derive("Let", name :: Nil)
       JSImmEvalFn(
-        name :: Nil,
+        N,
+        JSNamePattern(name) :: Nil,
         letScope.tempVars `with` translateTerm(body)(letScope),
-        translateTerm(value)(letScope) :: Nil
+        translateTerm(value) :: Nil
       )
     case Blk(stmts) =>
       val blkScope = scope.derive("Blk")
       JSImmEvalFn(
+        N,
         Nil,
         R(blkScope.tempVars `with` (stmts flatMap (_.desugared._2) map {
           case t: Term             => JSExprStmt(translateTerm(t))
@@ -194,7 +213,7 @@ class JSBackend {
     case Case(pat, body, rest) =>
       translateCase(scrut, pat)(translateTerm(body), translateCaseBranch(scrut, rest))
     case Wildcard(body) => translateTerm(body)
-    case NoCases        => JSImmEvalFn(Nil, R(JSInvoke(
+    case NoCases        => JSImmEvalFn(N, Nil, R(JSInvoke(
       JSNew(JSIdent("Error")),
       JSExpr("non-exhaustive case expression") :: Nil
     ).`throw` :: Nil), Nil)
@@ -496,7 +515,7 @@ class JSWebBackend extends JSBackend {
             ).stmt :: Nil
         })
     val epilogue = resultsIdent.member("map")(JSIdent(prettyPrinterName)).`return` :: Nil
-    JSImmEvalFn(Nil, R(polyfill.emit() ::: stmts ::: epilogue), Nil).toSourceCode.toLines
+    JSImmEvalFn(N, Nil, R(polyfill.emit() ::: stmts ::: epilogue), Nil).toSourceCode.toLines
   }
 }
 

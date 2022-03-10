@@ -45,7 +45,7 @@ T a
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class A is defined at: 
+//│ ╟── Note: class A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: A & t | error
@@ -69,7 +69,7 @@ T A
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class constructor A is defined at: 
+//│ ╟── Note: class constructor A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
 //│ res: anything -> A & t | error
@@ -89,7 +89,7 @@ T (B {})
 //│ ╟── from intersection type:
 //│ ║  l.7: 	trait T: A & B
 //│ ║       	         ^^^^^
-//│ ╟── Note: class B is defined at: 
+//│ ╟── Note: class B is defined at:
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
 //│ res: B & t | error

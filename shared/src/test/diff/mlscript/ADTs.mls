@@ -1,0 +1,112 @@
+
+class Lit: { val: int }
+class Add[E]: { lhs: E; rhs: E }
+class Nega[E]: { arg: E }
+def lit val = Lit { val }
+def add lhs rhs = Add { lhs; rhs }
+def nega arg = Nega { arg }
+//│ Defined class Lit
+//│ Defined class Add
+//│ Defined class Nega
+//│ lit: (int & 'val) -> (Lit with {val: 'val})
+//│    = [Function: lit]
+//│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: add]
+//│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
+//│     = [Function: nega]
+
+rec def eval e = case e of {
+  | Lit -> e.val
+  | Add -> eval e.lhs + eval e.rhs
+  | Nega -> 0 - (eval e.arg)
+  }
+//│ eval: ((Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> int
+//│     = [Function: eval]
+
+def ex = add (lit 2) (lit 2)
+//│ ex: Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+
+eval ex
+//│ res: int
+//│    = 4
+
+def e: Lit | Add['e] | Nega['e] as 'e
+//│ e: 'e | (Add[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {arg: 'a}) as 'a
+//│  = <missing implementation>
+
+def e = ex
+//│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│   <:  e:
+//│ 'e | (Add[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {arg: 'a}) as 'a
+//│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
+
+eval e
+//│ res: int
+//│    = 4
+
+eval (e : Lit | Add['e] | Nega['e] as 'e)
+//│ res: int
+//│    = 4
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+:ShowRelativeLineNums
+:AllowTypeErrors
+
+
+class Automata
+class Binding
+//│ Defined class Automata
+//│ Defined class Binding
+
+def exp: Array[Automata] -> Array[Binding]
+eval exp
+//│ exp: Array[Automata] -> Array[Binding]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+2: 	eval exp
+//│ ║        	^^^^^^^^
+//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Lit & ?a | Add[?] & ?b | Nega[?] & ?c`
+//│ ║  l.+1: 	def exp: Array[Automata] -> Array[Binding]
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Lit & ?d | Add[?] & ?e | Nega[?] & ?f`
+//│ ║  l.+2: 	eval exp
+//│ ║        	     ^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.18: 	rec def eval e = case e of {
+//│ ╙──      	                      ^
+//│ res: error | int
+
+:e
+eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	      ^
+//│ ╟── type `int` does not match type `Lit | Add[?e] | Nega[int]`
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	                               ^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from local type binding:
+//│ ║  l.34: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `Lit & ?a | Add[?] & ?b | Nega[?] & ?c`
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	                               ^^^
+//│ ╟── but it flows into reference with expected type `Lit & ?d | Add[?] & ?e | Nega[?] & ?f`
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.18: 	rec def eval e = case e of {
+//│ ╙──      	                      ^
+//│ res: error | int
+
+
