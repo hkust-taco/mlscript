@@ -55,8 +55,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
       explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
       stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      generateTsDeclarations: Bool, expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false,
+      generateTsDeclarations: Bool, expectRuntimeErrors: Bool, expectCodeGenErrors: Bool,
+      showRepl: Bool, allowEscape: Bool)
+    val defaultMode = Mode(false, false, false, false, false, false, false, false, false,
       false, false, false, false, false, false, false, false, false, false, false)
     
     var allowTypeErrors = false
@@ -91,6 +92,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(generateTsDeclarations = true)
+          case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
@@ -169,6 +171,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             var totalTypeErrors = 0
             var totalWarnings = 0
             var totalRuntimeErrors = 0
+            var totalCodeGenErrors = 0
             
             // report errors and warnings
             def report(diags: Ls[Diagnostic]): Unit = {
@@ -481,14 +484,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // If code generation fails, show the error message.
             results match {
               case IllFormedCode(message) =>
-                totalRuntimeErrors += 1
+                totalCodeGenErrors += 1
+                if (!mode.expectCodeGenErrors && !mode.fixme)
+                  failures += blockLineNum
                 output("Code generation encountered an error:")
                 output(s"  ${message}")
               case Unimplemented(message) =>
                 output("Unable to execute the code:")
                 output(s"  ${message}")
               case UnexpectedCrash(name, message) =>
-                failures += blockLineNum
+                if (!mode.fixme)
+                  failures += blockLineNum
                 output("Code generation crashed:")
                 output(s"  $name: $message")
               case _ => ()
@@ -507,6 +513,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)
+              failures += blockLineNum
+            if (mode.expectCodeGenErrors && totalCodeGenErrors =:= 0)
               failures += blockLineNum
             if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum
