@@ -54,3 +54,15 @@ rec def pow2 n = { call = fun x -> if n > 0 then (pow2 (n - 1)).call x * x else 
 (pow2 3).call 4
 //│ res: int
 //│    = 64
+
+:js
+let rec x = { f = x } in x
+//│ res: {f: 'a} as 'a
+//│ Code generation encountered an error:
+//│   recursive value x is not supported
+
+:js
+let x = { f = x } in x
+//│ res: {f: 'a} as 'a
+//│ Code generation encountered an error:
+//│   unresolved symbol x

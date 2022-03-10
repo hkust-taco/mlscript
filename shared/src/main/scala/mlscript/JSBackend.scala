@@ -144,13 +144,15 @@ class JSBackend {
         letScope.tempVars.`with`(translateTerm(expr)(letScope)),
         fn :: Nil
       )
+    case Let(true, Var(name), _, _) =>
+      throw new CodeGenError(s"recursive value $name is not supported")
     case Let(_, Var(name), value, body) =>
       val letScope = scope.derive("Let", name :: Nil)
       JSImmEvalFn(
         N,
         JSNamePattern(name) :: Nil,
         letScope.tempVars `with` translateTerm(body)(letScope),
-        translateTerm(value)(letScope) :: Nil
+        translateTerm(value) :: Nil
       )
     case Blk(stmts) =>
       val blkScope = scope.derive("Blk")
