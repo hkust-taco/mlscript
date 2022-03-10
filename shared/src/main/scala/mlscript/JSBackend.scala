@@ -145,7 +145,7 @@ class JSBackend {
         fn :: Nil
       )
     case Let(true, Var(name), _, _) =>
-      throw new CodeGenError(s"recursive value $name is not supported")
+      throw new CodeGenError(s"recursive non-function definition $name is not supported")
     case Let(_, Var(name), value, body) =>
       val letScope = scope.derive("Let", name :: Nil)
       JSImmEvalFn(
