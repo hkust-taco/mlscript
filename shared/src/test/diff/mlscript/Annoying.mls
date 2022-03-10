@@ -19,7 +19,7 @@ foo 1
 //│ res: ('a & ~1) -> 'a
 
 def foo: (~ 'a \ x) -> 'a
-//│ foo: anything -> nothing
+//│ foo: ~nothing\x -> nothing
 
 foo 1
 //│ res: nothing
@@ -291,14 +291,14 @@ def ty2: TT & { x: int }
 // def ty: AA | (int -> int)
 //│ Defined class AA
 //│ Defined trait TT
-//│ ty: AA
+//│ ty: nothing\x | AA
 //│ ty2: {x: int} & tT
 
 :e
 ty = ty2
 //│ {x: int} & tT
 //│   <:  ty:
-//│ AA
+//│ nothing\x | AA
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^

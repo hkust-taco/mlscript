@@ -176,7 +176,7 @@ def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> ((Cons['b] with {tail: 'c}) | Nil as 'c) -> ((Cons['a | 'b] with {tail: 'd}) | Nil as 'd)
 //│  = <missing implementation>
-//│ res: (Cons['a .. 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
+//│ res: (Cons['a .. 'a | 'a | 'a | 'a | 1 | 2] with {tail: 'b}) | Nil as 'b
 //│    = <no result>
 //│      c is not implemented
 

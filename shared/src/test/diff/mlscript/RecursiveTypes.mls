@@ -17,7 +17,7 @@ let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in i
 //│   return (a) => (a) => l;
 //│ });
 //│ // End of generated code
-//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
+//│ res: anything -> ('b | anything -> anything -> anything -> anything -> anything -> 'a) as 'a
 //│    = [Function: l]
 
 
@@ -38,11 +38,11 @@ rec def l a a a = l
 
 
 rec def r a a = l
-//│ r: anything -> anything -> anything -> 'a as 'a
+//│ r: anything -> anything -> ('b | anything -> 'a) as 'a
 //│  = [Function: r]
 
 rec def r a a = l
-//│ r: anything -> anything -> anything -> 'a as 'a
+//│ r: anything -> anything -> ('b | anything -> 'a) as 'a
 //│  = [Function: r1]
 
 
@@ -52,11 +52,11 @@ rec def r a a = r
 
 
 if true then l else r
-//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
+//│ res: anything -> ('b | anything -> anything -> anything -> anything -> anything -> 'a) as 'a
 //│    = [Function: l1]
 
 if true then l else r
-//│ res: anything -> anything -> anything -> anything -> anything -> anything -> 'a as 'a
+//│ res: anything -> ('b | anything -> anything -> anything -> anything -> anything -> 'a) as 'a
 //│    = [Function: l1]
 
 
@@ -69,11 +69,11 @@ rec def r (a: bool) (a: bool) (a: bool) = r
 //│  = [Function: r3]
 
 if true then l else r
-//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
+//│ res: nothing -> ('b | nothing -> nothing -> nothing -> nothing -> nothing -> 'a) as 'a
 //│    = [Function: l2]
 
 if true then l else r
-//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
+//│ res: nothing -> ('b | nothing -> nothing -> nothing -> nothing -> nothing -> 'a) as 'a
 //│    = [Function: l2]
 
 if true then (fun x -> add x 1) else (fun y -> not y)
@@ -94,11 +94,11 @@ rec def r (a: int) (a: bool) (a: bool) = r
 //│  = [Function: r4]
 
 if true then l else r
-//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
+//│ res: int -> ('b | bool -> nothing -> nothing -> nothing -> bool -> 'a) as 'a
 //│    = [Function: l3]
 
 if true then l else r
-//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
+//│ res: int -> ('b | bool -> nothing -> nothing -> nothing -> bool -> 'a) as 'a
 //│    = [Function: l3]
 
 
@@ -129,7 +129,7 @@ rec def r (a: int) (b: int) (c: int) = r
 //│  = [Function: r6]
 
 if true then l else r
-//│ res: int -> int -> int -> int -> int -> int -> 'a as 'a
+//│ res: int -> ('b | int -> int -> int -> int -> int -> 'a) as 'a
 //│    = [Function: l5]
 
 
@@ -349,7 +349,7 @@ bar_ty2 = bar2_ty2
 
 
 rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
-//│ f: 'a -> ('a | 'b\a & {a: int} as 'b)
+//│ f: ('a & 'b) -> ('a | 'c\a & {a: int} as 'c)
 //│  = [Function: f]
 
 f 1
@@ -363,7 +363,7 @@ rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│  = [Function: f1]
 
 f
-//│ res: (({a: 'a} & 'b as 'a) & 'c) -> ('b | (('e | 'c | 'd)\a & {a: int} as 'd))
+//│ res: (({a: 'a} & 'b as 'a) & 'c & 'd) -> ('b | (('f | 'c | 'e)\a & {a: int} as 'e))
 //│    = [Function: f1]
 
 // Notice how what is most likely an the error is reported in call sites,
@@ -501,7 +501,7 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: (({a: 'a} as 'a) & 'b) -> ('b | 'c\a & {a: int} as 'c)
+//│ f_manual_ns: (({a: 'a} as 'a) & 'b & 'c) -> ('b | 'd\a & {a: int} as 'd)
 //│            = <missing implementation>
 
 :e
@@ -534,7 +534,7 @@ f_manual_2 ainf
 
 
 rec def f x = if error then f (x with { a = x - 1 }) else x
-//│ f: 'a -> ('a | 'b\a & {a: int} as 'b)
+//│ f: ('a & 'b) -> ('a | 'c\a & {a: int} as 'c)
 //│  = [Function: f2]
 
 r = f 1

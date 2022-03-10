@@ -270,7 +270,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('c & 'a & 'b) as 'a) -> 'b
+//│ res: ('b -> ('c & 'a & 'b & 'd) as 'a) -> 'd
 
 next => 0
 //│ res: anything -> 0
