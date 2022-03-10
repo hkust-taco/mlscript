@@ -418,13 +418,15 @@ final case class JSFuncExpr(name: Opt[Str], params: Ls[JSPattern], body: Ls[JSSt
 
 // IIFE: immediately invoked function expression
 final case class JSImmEvalFn(
-    params: Ls[Str],
+    name: Opt[Str],
+    params: Ls[JSPattern],
     body: Either[JSExpr, Ls[JSStmt]],
     arguments: Ls[JSExpr]
 ) extends JSExpr {
   implicit def precedence: Int = 22
   def toSourceCode: SourceCode = {
-    (SourceCode(s"function (${params mkString ", "}) ") ++ (body match {
+    val fnName = name.getOrElse("")
+    (SourceCode(s"function $fnName${JSExpr.params(params)} ") ++ (body match {
       case Left(expr) => new JSReturnStmt(expr).toSourceCode
       case Right(stmts) =>
         stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }
