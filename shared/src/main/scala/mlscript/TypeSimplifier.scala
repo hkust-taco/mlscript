@@ -309,7 +309,9 @@ trait TypeSimplifier { self: Typer =>
           tv2
       }
     
-    def go(st: SimpleType, pol: Bool): SimpleType = st match {
+    def go(st: SimpleType, pol: Bool): SimpleType =
+        trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
+        st match {
       case ExtrType(_) => st
       case tv: TypeVariable => renew(tv)
       case NegType(und) => go(und, !pol).neg()
@@ -326,8 +328,11 @@ trait TypeSimplifier { self: Typer =>
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
-      case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol) |> factorize
-      case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
+      // case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol) |> factorize
+      // case ty @ ComposedType(true, l, r) =>
+      //   DNF.mk(ty, pol).cs.sorted.map(_.toType(sort = true)).foldLeft(BotType: ST)(_ | _) |> factorize
+      // case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
+      case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
         val dnf @ DNF(cs) = DNF.mk(ty, pol)
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
@@ -416,6 +421,7 @@ trait TypeSimplifier { self: Typer =>
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize
     }
+    }(r => s"=> $r")
     
     go(st, pol)
     

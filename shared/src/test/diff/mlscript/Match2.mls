@@ -6,7 +6,7 @@ def foo x = case x of
   { Test -> x.value
   | _ -> 1
   }
-//│ foo: ((Test with {value: 'a}) | ~Test) -> (1 | 'a)
+//│ foo: ((Test with {value: 'a}) | ~test) -> (1 | 'a)
 //│    = [Function: foo]
 
 // Q: why type of `value` widened?

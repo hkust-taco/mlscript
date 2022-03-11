@@ -155,13 +155,15 @@ abstract class TyperHelpers { self: Typer =>
   }
   
   def factorize(ty: ST): ST = {
-    val cs = ty.components(true).map(_.components(false))
-    factorizeImpl(cs)
-    // ???
+    val cs = ty.components(true)
+    if (cs.sizeCompare(1) <= 0) ty
+    else factorizeImpl(cs.map(_.components(false)))
   }
   // def factorizeImpl(cs: Ls[Ls[ST]]): Ls[Ls[ST]] = {
-  def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
-    if (cs.sizeCompare(1) <= 0) return cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+  def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize? ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
+    def rebuild(cs: Ls[Ls[ST]]): ST =
+      cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+    if (cs.sizeCompare(1) <= 0) return rebuild(cs)
     val factors = MutMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.foreach {
@@ -246,7 +248,7 @@ abstract class TyperHelpers { self: Typer =>
         val restFactored =
           if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
             factorizeImpl(rest)
-          else rest.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+          else rebuild(rest)
         
         restFactored | factoredFactored
         
@@ -258,10 +260,10 @@ abstract class TyperHelpers { self: Typer =>
       case _ =>
         // cs.map(_.toType(sort))
         // cs
-        cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+        rebuild(cs)
     }
   // }()
-  }(r => s"=> $r")
+  }(r => s"yes: $r")
   
   
   
@@ -321,6 +323,15 @@ abstract class TyperHelpers { self: Typer =>
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(recordUnion(fs1, fs2))(prov)
+      // case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
+      //   if (fs0.sizeCompare(fs1) =/= 0) t0.toArray & t0.toRecord | t1.toArray & t1.toRecord
+      //   // else TupleType((fs0 lazyZip fs1).mapValues(_ | _))
+      //   else TupleType(tupleUnion(fs0, fs1))(t0.prov)
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1))
+        // If the sizes are different, to merge these we'd have to return
+        //  the awkward `t0.toArray & t0.toRecord | t1.toArray & t1.toRecord`
+      if fs0.sizeCompare(fs1) === 0 =>
+        TupleType(tupleUnion(fs0, fs1))(t0.prov)
       case _ if !swapped => that | (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => TopType
@@ -335,6 +346,9 @@ abstract class TyperHelpers { self: Typer =>
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
+        if (fs0.sizeCompare(fs1) =/= 0) BotType
+        else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => BotType

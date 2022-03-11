@@ -159,7 +159,7 @@ bar(2, 2)
 //│ ╟── integer literal of type `2` does not match type `0 | 1`
 //│ ║  l.155: 	bar(2, 2)
 //│ ╙──       	    ^
-//│ res: error
+//│ res: 2 | error
 
 bar(0, 0)
 bar(1, 1)
@@ -222,7 +222,7 @@ x => bar(bar(x, 1), 0)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: (0 & 'a, 0 & 'a,) | {_1: int & 'a, _2: 'a},) -> 'a
+//│ baz: (r: {_1: int & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)
