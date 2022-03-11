@@ -713,7 +713,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   
-  /** Convert an inferred SimpleType into the immutable Type representation. */
+  /** Convert an inferred SimpleType into the immutable Type representation.
+    * Important precondition:
+    *   We require that only polar variables
+    *     (those occurring strictly positively or strictly negatively)
+    *   have bounds.
+    *   So typically, only recursive variables whose recursion is expressed through the bound
+    *     (since other polar variables would be simplified away).
+    *   This is because we re-tie the recursive knots by using hash consing
+    *     in order to simplify recursive structures,
+    *     after which we want to be able to discard the old leftover polar variables. */
   def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
     val expandType = ()
     
@@ -722,7 +731,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
     def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type =
-      goImpl(st.unwrapProvs, polarity)
+      trace(s"go($st, $polarity)($inProcess)") {
+        goImpl(st.unwrapProvs, polarity)
+      }(r => s"=> $r")
     def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
       val st_pol = st -> polarity
       if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
@@ -743,7 +754,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             recursive.get(st_pol) match {
               case Some(variable) =>
                 Recursive(variable, boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
-              case None => boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
+              case None =>
+                if (boundTypes.isEmpty)
+                  boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
+                else // see precondition
+                  boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top)
             }
           }
         case _ =>

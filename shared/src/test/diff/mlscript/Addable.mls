@@ -7,12 +7,12 @@ class Addable[A]
 class Number: Addable[Number] & { val: int }
   method Add that = Number { val = this.val + that.val }
 //│ Defined class Number
-//│ Defined Number.Add: ('a & number & {val: int}) -> {val: int} -> (number & {val: int})
+//│ Defined Number.Add: (number & {val: int}) -> {val: int} -> (number & {val: int})
 
 class Str: Addable[Str] & { val: string }
   method Add that = Str { val = concat this.val that.val }
 //│ Defined class Str
-//│ Defined Str.Add: ('a & Str) -> {val: string} -> Str
+//│ Defined Str.Add: Str -> {val: string} -> Str
 
 n = Number { val = 1 }
 //│ n: number & {val: 1}
@@ -99,7 +99,7 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: ('a & (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c,)) -> int -> (0 | 'b)
+//│ addNTimes: (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c) -> int -> (0 | 'b)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -173,5 +173,5 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                                 ^^^^^^^^
 //│ Defined class Str_bad_0
-//│ Defined Str_bad_0.Add: ('a & Str_bad_0) -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
+//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
 

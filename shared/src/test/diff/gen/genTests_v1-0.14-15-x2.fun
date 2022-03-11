@@ -2561,7 +2561,7 @@ add
 //│ res: {u: 'a -> 'a}
 
 (let rec x = {v: (y => x)}; {u: x.v})
-//│ res: {u: anything -> ('b | {v: 'a}) as 'a}
+//│ res: {u: anything -> {v: 'a} as 'a}
 
 (x => 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2918,7 +2918,7 @@ add
 //│ res: {v: int -> int -> int}
 
 (let rec x = {v: {v: x}}; x.v)
-//│ res: {v: 'b | {v: 'a}} as 'a
+//│ res: {v: {v: 'a}} as 'a
 
 0.u
 //│ ╔══[ERROR] Type mismatch in field selection:

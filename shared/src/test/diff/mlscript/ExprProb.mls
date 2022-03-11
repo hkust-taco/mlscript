@@ -46,7 +46,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: 'a | (lit & 'c | (add & 'd & {lhs: 'b} | 'e & ~add) & ~lit as 'b) -> (1 | 'f | 0 as 'f)
+//│ eval1_stub: (lit & 'b | (add & {lhs: 'a} | 'c & ~add) & ~lit as 'a) -> (1 | 'd | 0 as 'd)
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -68,7 +68,7 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: 'a | ('b & 'c -> ('d & int)) -> (lit & 'f & {val: 'g & int} | (add & 'h & {rhs: 'e} & {lhs: 'e} | 'c & ~add) & ~lit as 'e) -> ('g | 'i | int | 'd)
+//│ res: ('a -> int) -> (lit & {val: int} | (add & {rhs: 'b} & {lhs: 'b} | 'a & ~add) & ~lit as 'b) -> ('c | int | 'd)
 //│    = [Function: eval1]
 
 :re
@@ -264,7 +264,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   | Nega -> concat "-" (prettier2 k ev x.arg)
   | _ -> k x
   }) ev
-//│ prettier2: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: 'f & ((Add[?] with {lhs: 'c, rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | 'e as 'g}) & 'b | 'e)}) | 'a & ~add & ~lit & ~nega as 'e) as 'd) as 'c, rhs: 'h & ((Add[?] with {lhs: 'g, rhs: 'g}) | (Lit | (Nega[?] with {arg: 'f & ((Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | 'e as 'd) as 'c, rhs: 'g}) & 'b | 'e)}) | 'a & ~add & ~lit & ~nega as 'e) as 'g)}) & 'b | (Lit | (Nega[?] with {arg: 'f & ((Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | 'e as 'd) as 'c, rhs: (Add[?] with {lhs: 'g, rhs: 'g}) | 'e as 'g}) & 'b | 'e)}) | 'a & ~add & ~lit & ~nega as 'e)) -> string
+//│ prettier2: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: 'c, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | 'e as 'f}) & 'b | 'e}) | 'a & ~add & ~lit & ~nega as 'e) as 'd) as 'c, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | 'e as 'd) as 'c, rhs: 'f}) & 'b | 'e}) | 'a & ~add & ~lit & ~nega as 'e) as 'f}) & 'b | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: ((Add[?] with {lhs: 'd, rhs: 'd}) | 'e as 'd) as 'c, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | 'e as 'f}) & 'b | 'e}) | 'a & ~add & ~lit & ~nega as 'e)) -> string
 //│          = [Function: prettier2]
 //│ constrain calls  : 174
 //│ annoying  calls  : 0
@@ -309,7 +309,7 @@ eval2 done d2
 
 
 prettier2 done
-//│ res: ('a -> int) -> ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | (Lit | (Nega[?] with {arg: 'e & ((Add[?] with {lhs: 'b, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | 'd as 'f}) & 'a | 'd)}) as 'd) as 'c) as 'b, rhs: 'g & ((Add[?] with {lhs: 'f, rhs: 'f}) | (Lit | (Nega[?] with {arg: 'e & ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: 'f}) & 'a | 'd)}) as 'd) as 'f)}) & 'a | (Lit | (Nega[?] with {arg: 'e & ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | 'd as 'f}) & 'a | 'd)}) as 'd)) -> string
+//│ res: ('a -> int) -> ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: 'b, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | 'd as 'e}) & 'a | 'd}) as 'd) as 'c) as 'b, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: 'e}) & 'a | 'd}) as 'd) as 'e}) & 'a | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | 'd as 'e}) & 'a | 'd}) as 'd)) -> string
 //│    = [Function (anonymous)]
 
 :stats
@@ -324,7 +324,7 @@ prettier2 done (eval1 done)
 prettier2 done (eval2 done)
 prettier2 done (eval2 done) e2
 prettier2 done (eval2 done) d2
-//│ res: ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | (Lit | (Nega[?] with {arg: 'e & ((Add[?] with {lhs: 'b, rhs: (Add[?] with {lhs: 'f, rhs: 'f}) | 'd as 'f}) | 'd)}) as 'd) as 'c) as 'b, rhs: 'g & ((Add[?] with {lhs: 'f, rhs: 'f}) | (Lit | (Nega[?] with {arg: 'e & ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: 'f}) | 'd)}) as 'd) as 'f)}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
+//│ res: ((Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: 'b, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | 'd as 'e}) | 'd}) as 'd) as 'c) as 'b, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | (Lit | (Nega[?] with {arg: (Add[?] with {lhs: ((Add[?] with {lhs: 'c, rhs: 'c}) | 'd as 'c) as 'b, rhs: 'e}) | 'd}) as 'd) as 'e}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ res: string
 //│    = '1-123'

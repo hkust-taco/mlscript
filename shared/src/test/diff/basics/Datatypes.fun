@@ -119,7 +119,7 @@ data type List a of
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: Nil['a]
-//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
+//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -151,10 +151,10 @@ Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
-//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
-//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'd | 'c | Nil['b .. 1 | 'b]}) as 'c)
-//│ res: (Cons['b .. 2 | 'b] with {tail: 'c | 'a | Nil['b .. 2 | 'b]}) as 'a
-//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
+//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
+//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'c | Nil['b .. 1 | 'b]}) as 'c)
+//│ res: (Cons['b .. 2 | 'b] with {tail: 'a | Nil['b .. 2 | 'b]}) as 'a
+//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -207,7 +207,7 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: ((Cons['b .. 1 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 'b]}) as 'a) | error
+//│ res: ((Cons['b .. 1 | 'b] with {tail: 'a | Nil['b .. 1 | 'b]}) as 'a) | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

@@ -47,18 +47,18 @@ Cons 1 Nil
 //│   TypeError: (intermediate value) is not a function
 
 Cons
-//│ res: {head: 'A & 'head, size: int & 'size, tail: ((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})
+//│ res: {head: 'A & 'head, size: int & 'size, tail: ((Cons['A] with {tail: 'a | Nil}) as 'a) & 'tail | Nil & 'tail} -> (Cons['A] with {head: 'head, size: 'size, tail: 'tail})
 //│    = [Function: res]
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: ('A & 'head) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons_old: ('A & 'head) -> (((Cons['A] with {tail: 'a | Nil}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: ('A & 'head) -> (((Cons['A] with {tail: 'b & ('a | Nil)}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons: ('A & 'head) -> (((Cons['A] with {tail: 'a | Nil}) as 'a) & 'tail | Nil & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
