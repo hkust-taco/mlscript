@@ -104,7 +104,7 @@ abstract class TyperHelpers { self: Typer =>
     }
   }
   
-  def factorize(cs: Ls[Conjunct]): Ls[ST] = {
+  def factorize(cs: Ls[Conjunct], sort: Bool): Ls[ST] = {
     val factors = MutMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.vars.foreach { v =>
@@ -145,15 +145,56 @@ abstract class TyperHelpers { self: Typer =>
           case NegTrait(ttg) =>
             cs.partitionMap(c => if (c.rnf.hasTag(ttg)) L(c) else R(c))
         }
-        (fact & factorize(factored.map(_ - fact)).reduce(_ | _)) :: (
+        (fact & factorize(factored.map(_ - fact), sort).reduce(_ | _)) :: (
           if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
-            factorize(rest)
-          else rest.map(_.toType())
+            factorize(rest, sort)
+          else rest.map(_.toType(sort))
         )
       case _ =>
-        cs.map(_.toType())
+        cs.map(_.toType(sort))
     }
   }
+  
+  def factorize(ty: ST): ST = {
+    val cs = ty.components(true)
+    if (cs.sizeCompare(1) <= 0) ty
+    else factorizeImpl(cs.map(_.components(false)))
+  }
+  def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize? ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
+    def rebuild(cs: Ls[Ls[ST]]): ST =
+      cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+    if (cs.sizeCompare(1) <= 0) return rebuild(cs)
+    val factors = MutMap.empty[Factorizable, Int]
+    cs.foreach { c =>
+      c.foreach {
+        case tv: TV =>
+          factors(tv) = factors.getOrElse(tv, 0) + 1
+        case tt: TraitTag =>
+          factors(tt) = factors.getOrElse(tt, 0) + 1
+        case nv: NegVar =>
+          factors(nv) = factors.getOrElse(nv, 0) + 1
+        case nt: NegTrait =>
+          factors(nt) = factors.getOrElse(nt, 0) + 1
+        case _ =>
+      }
+    }
+    println(s"Factors ${factors.mkString(", ")}")
+    factors.maxByOption(_._2) match {
+      // case S((fact, n)) =>
+      case S((fact, n)) if n > 1 =>
+        val (factored, rest) =
+          cs.partitionMap(c => if (c.contains(fact)) L(c) else R(c))
+        println(s"Factor $fact -> ${factored.mkString(", ")}")
+        assert(factored.size === n, factored -> n)
+        val factoredFactored = fact & factorizeImpl(factored.map(_.filterNot(_ === fact)))
+        val restFactored =
+          if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
+            factorizeImpl(rest)
+          else rebuild(rest)
+        restFactored | factoredFactored
+      case _ => rebuild(cs)
+    }
+  }(r => s"yes: $r")
   
   
   
@@ -213,12 +254,18 @@ abstract class TyperHelpers { self: Typer =>
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(recordUnion(fs1, fs2))(prov)
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1))
+        // If the sizes are different, to merge these we'd have to return
+        //  the awkward `t0.toArray & t0.toRecord | t1.toArray & t1.toRecord`
+      if fs0.sizeCompare(fs1) === 0 =>
+        TupleType(tupleUnion(fs0, fs1))(t0.prov)
       case _ if !swapped => that | (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => TopType
       case _ => ComposedType(true, that, this)(prov)
     }
-    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType =
+        (this, that) match {
       case (TopType | RecordType(Nil), _) => that
       case (BotType, _) => BotType
       // Unnecessary and can complicate constraint solving quite a lot:
@@ -226,6 +273,10 @@ abstract class TyperHelpers { self: Typer =>
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
+        if (fs0.sizeCompare(fs1) =/= 0) BotType
+        else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
+      case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
       case _ if !swapped => that & (this, prov, swapped = true)
       case (NegType(`that`), _) => BotType
@@ -288,8 +339,8 @@ abstract class TyperHelpers { self: Typer =>
         case (_, ExtrType(false)) => true
         case (ExtrType(true), _) => true
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.name => tr.expand <:< that
-        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.name => this <:< tr.expand
+        case (tr: TypeRef, _) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
+        case (_, tr: TypeRef) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
@@ -398,6 +449,15 @@ abstract class TyperHelpers { self: Typer =>
     def unwrapProvs: SimpleType = this match {
       case ProvType(und) => und.unwrapProvs
       case _ => this
+    }
+    
+    def components(union: Bool): Ls[ST] = this match {
+      case ExtrType(`union`) => Nil
+      case ComposedType(`union`, l, r) => l.components(union) ::: r.components(union)
+      case NegType(tv: TypeVariable) if !union => NegVar(tv) :: Nil
+      case NegType(tt: TraitTag) if !union => NegTrait(tt) :: Nil
+      case ProvType(und) => und.components(union)
+      case _ => this :: Nil
     }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {

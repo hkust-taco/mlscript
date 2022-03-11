@@ -212,7 +212,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         //    corresponding to this tuple type.
         //    i.e., no `::: fields.collect { case (S(n), t) => (n, t) }`
       )(prov)
-    override def toString = s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2}").mkString(", ")})"
+    override def toString =
+      s"(${fields.map(f => s"${f._1.fold("")(_.name+": ")}${f._2},").mkString(" ")})"
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
   }
   

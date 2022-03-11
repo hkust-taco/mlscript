@@ -128,7 +128,7 @@ trait TypeSimplifier { self: Typer =>
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case Overload(as) => as.foreach(analyze(_, pol))
       case tv: TypeVariable =>
-        println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
+        // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
         processBounds(tv, pol)
       case _: ObjectTag | ExtrType(_) => ()
@@ -318,7 +318,9 @@ trait TypeSimplifier { self: Typer =>
           tv2
       }
     
-    def go(st: SimpleType, pol: Bool): SimpleType = st match {
+    def go(st: SimpleType, pol: Bool): SimpleType =
+        // trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
+        st match {
       case ExtrType(_) => st
       case tv: TypeVariable => renew(tv)
       case NegType(und) => go(und, !pol).neg()
@@ -330,17 +332,31 @@ trait TypeSimplifier { self: Typer =>
       case Overload(as) => Overload(as.map(go(_, pol).asInstanceOf[FunctionType]))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
-      case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
+      case wo @ Without(base, names) =>
+        if (pol) go(base, pol).withoutPos(names)
+        else go(base, pol).without(names)
       case PolymorphicType(lvl, bod) => PolymorphicType(lvl, go(bod, pol))
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
-      case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol)
-      case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
+      case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
         val dnf @ DNF(_, cs) = DNF.mk(MinLevel, ty, pol)
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
+            
             case LhsRefined(bo, tts, rcd) =>
+              // The handling of type parameter fields is currently a little wrong here,
+              //  because we remove:
+              //    - type parameter fields of parent classes,
+              //        whereas they could _in principle_ be refined and
+              //        not correspond exactly to these of the currenly-reconstructed class;
+              //        and
+              //    - type parameter fields of the current trait tags
+              //        whereas we don't actually reconstruct applied trait types...
+              //        it would be better to just reconstruct them (TODO)
+              
+              val traitPrefixes =
+                tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
               bo match {
                 case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
                   val clsNme = tagNme.capitalize
@@ -355,7 +371,7 @@ trait TypeSimplifier { self: Typer =>
                   })(noProv)
                   val clsFields = fieldsOf(
                     typeRef.expandWith(paramTags = false), paramTags = false)
-                  val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme
+                  val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme ++ traitPrefixes
                   val cleanedRcd = rcd.copy(
                     rcd.fields.filterNot { case (field, fty) =>
                       // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
@@ -377,12 +393,12 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  lazy val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  lazy val nFields = rcd.fields.filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#')).mapValues(go(_, pol))
                   val (res, nfs) = bo match {
                     case S(tt @ TupleType(fs)) =>
                       val arity = fs.size
                       val (componentFields, rcdFields) = rcd.fields
-                        .filterNot(_._1.name.isCapitalized)
+                        .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
                         .partitionMap(f =>
                           if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
                             val namePostfix = f._1.name.tail
@@ -425,8 +441,9 @@ trait TypeSimplifier { self: Typer =>
               }
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
-        }.foldLeft(BotType: ST)(_ | _)
+        }.foldLeft(BotType: ST)(_ | _) |> factorize
     }
+    // }(r => s"=> $r")
     
     go(st, pol)
     

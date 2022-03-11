@@ -32,13 +32,13 @@ eval ex
 //│    = 4
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: 'e | (Add[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {arg: 'a}) as 'a
+//│ e: 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
 //│  = <missing implementation>
 
 def e = ex
 //│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
 //│   <:  e:
-//│ 'e | (Add[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[(Add['c .. 'd] with {lhs: 'b, rhs: 'b}) & 'e | Lit & 'e | (Nega['c .. 'd] with {arg: 'b}) & 'e as 'b .. 'a] with {arg: 'a}) as 'a
+//│ 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -69,10 +69,10 @@ eval exp
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	eval exp
 //│ ║        	^^^^^^^^
-//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Lit & ?a | Add[?] & ?b | Nega[?] & ?c`
+//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
 //│ ║  l.+1: 	def exp: Array[Automata] -> Array[Binding]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Lit & ?d | Add[?] & ?e | Nega[?] & ?f`
+//│ ╟── but it flows into reference with expected type `Add[?] & ?d | Lit & ?e | Nega[?] & ?f`
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:

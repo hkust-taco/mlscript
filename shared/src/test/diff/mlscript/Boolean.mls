@@ -1,23 +1,23 @@
-type Boolean = True | False
-class True
-class False
-def True: True
-def False: False
+type Boolean = Tru | Fals
+class Tru
+class Fals
+def Tru: Tru
+def Fals: Fals
 //│ Defined type alias Boolean
-//│ Defined class True
-//│ Defined class False
-//│ True: true
+//│ Defined class Tru
+//│ Defined class Fals
+//│ Tru: Tru
+//│    = <missing implementation>
+//│ Fals: Fals
 //│     = <missing implementation>
-//│ False: false
-//│      = <missing implementation>
 
 :js
-True: Boolean
-//│ // Query 1 aborted: True is not implemented
+Tru: Boolean
+//│ // Query 1 aborted: Tru is not implemented
 //│ // End of generated code
-//│ res: bool
+//│ res: Fals | Tru
 //│    = <no result>
-//│      True is not implemented
+//│      Tru is not implemented
 
 :e
 Boolean

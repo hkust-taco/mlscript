@@ -144,6 +144,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         err(msg"Type names must start with a capital letter", td0.nme.toLoc)
         td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
       }
+      if (primitiveTypes.contains(n)) {
+        err(msg"Type name '$n' is reserved.", td.nme.toLoc)
+      }
       allDefs.get(n).foreach { other =>
         err(msg"Type '$n' is already defined.", td.nme.toLoc)
       }

@@ -30,7 +30,7 @@ flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Some[?] & ?a | None & ?b`
+//│ ╟── string literal of type `"oops"` does not match type `None & ?a | Some[?] & ?b`
 //│ ║  l.29: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:

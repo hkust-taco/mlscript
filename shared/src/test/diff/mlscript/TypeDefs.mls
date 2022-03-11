@@ -173,12 +173,12 @@ id: Runaway2
 //│ ╟── from type reference:
 //│ ║  l.159: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
-//│ res: {x: 'a -> 'a & 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
+//│ res: {x: 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
 //│    = [Function: id]
 
 :re
 error: Runaway2
-//│ res: {x: 'a -> 'a & 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
+//│ res: {x: 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -194,13 +194,13 @@ error: {x: int} -> nothing : Runaway2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.187: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
-//│ res: {x: 'a -> 'a & 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
+//│ res: {x: 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 :re
 error: {x: 'x -> 'x} -> nothing : Runaway2
-//│ res: {x: 'a -> 'a & 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
+//│ res: {x: 'a -> 'a & 'a -> 'a & 'b -> 'b} -> ({x: 'd -> 'd & 'd -> 'd & 'e -> 'e} -> 'c as 'c)
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -214,7 +214,7 @@ type A2[A] = A -> A2[A]
 
 def ty1: A1[anything]
 def ty2: A2[anything]
-//│ ty1: anything -> ('b | anything -> 'a) as 'a
+//│ ty1: anything -> anything -> 'a as 'a
 //│    = <missing implementation>
 //│ ty2: anything -> 'a as 'a
 //│    = <missing implementation>
@@ -222,12 +222,12 @@ def ty2: A2[anything]
 ty1 = ty2
 //│ anything -> 'a as 'a
 //│   <:  ty1:
-//│ anything -> ('b | anything -> 'a) as 'a
+//│ anything -> anything -> 'a as 'a
 //│    = <no result>
 //│      ty2 is not implemented
 
 ty2 = ty1
-//│ anything -> ('b | anything -> 'a) as 'a
+//│ anything -> anything -> 'a as 'a
 //│   <:  ty2:
 //│ anything -> 'a as 'a
 //│    = <no result>

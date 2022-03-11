@@ -2918,7 +2918,7 @@ add
 //│ res: {v: int -> int -> int}
 
 (let rec x = {v: {v: x}}; x.v)
-//│ res: {v: 'b | {v: 'a}} as 'a
+//│ res: {v: {v: 'a}} as 'a
 
 0.u
 //│ ╔══[ERROR] Type mismatch in field selection:

@@ -16,15 +16,15 @@ def IntMonoid = IntMonoid {}
 //│ IntMonoid: IntMonoid
 //│          = IntMonoid {}
 
-class Number: { val: int }
-//│ Defined class Number
+class Num: { val: int }
+//│ Defined class Num
 
-class NumberMonoid: Monoid[Number]
-  method Empty = Number { val = 1 }
-  method Add this that = Number { val = this.val * that.val }
-//│ Defined class NumberMonoid
-//│ Defined NumberMonoid.Empty: NumberMonoid -> (number & {val: 1})
-//│ Defined NumberMonoid.Add: NumberMonoid -> {val: int} -> {val: int} -> (number & {val: int})
+class NumMonoid: Monoid[Num]
+  method Empty = Num { val = 1 }
+  method Add this that = Num { val = this.val * that.val }
+//│ Defined class NumMonoid
+//│ Defined NumMonoid.Empty: NumMonoid -> (Num & {val: 1})
+//│ Defined NumMonoid.Add: NumMonoid -> {val: int} -> {val: int} -> Num
 
 class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
