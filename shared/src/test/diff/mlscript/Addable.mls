@@ -18,7 +18,6 @@ n = Number { val = 1 }
 //│ n: number & {val: 1}
 //│  = Number { val: 1 }
 
-// TODO why not simplified?
 n.Add n
 //│ res: number & {val: int}
 //│    = Number { val: 2 }
@@ -140,7 +139,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.27: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 

@@ -124,7 +124,7 @@ trait TypeSimplifier { self: Typer =>
       case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
-        println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
+        // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
         processBounds(tv, pol)
       case _: ObjectTag | ExtrType(_) => ()
@@ -320,7 +320,9 @@ trait TypeSimplifier { self: Typer =>
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
-      case wo @ Without(base, names) => Without(go(base, pol), names)(wo.prov)
+      case wo @ Without(base, names) =>
+        if (pol) go(base, pol).withoutPos(names)
+        else go(base, pol).without(names)
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
