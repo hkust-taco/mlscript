@@ -302,10 +302,10 @@ ty = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `{x: int} & tT` does not match type `AA | 'a\x`
+//│ ╟── type `{x: int} & tT` does not match type `'a\x | AA`
 //│ ║  l.290: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `AA | 'a\x`
+//│ ╟── but it flows into reference with expected type `'a\x | AA`
 //│ ║  l.298: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:
