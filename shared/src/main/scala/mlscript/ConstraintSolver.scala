@@ -230,11 +230,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
 
     // helper function for rec for lower bounds
-    def recLb(lhs: FieldType, rhs: FieldType, errReporter: => Unit)
+    def recLb[U](lhs: FieldType, rhs: FieldType, errReporter: => U)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
-          case (Some(l), None   ) => errReporter              // TODO: better errors
+          case (Some(l), None   ) => errReporter; ()          // TODO: better errors
           case (None   , Some(r)) => rec(BotType, r, false)   // ? can this case be skipped 
           case (None   , None   ) => ()
         }
@@ -320,7 +320,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(l.ub, r.ub, false)
             }
           case (t: ArrayBase, a: ArrayType) =>
-            recLb(a.inner, t.inner, reportError)
+            recLb(a.inner, t.inner, err(
+                  msg"type mismatch in ${prov.desc}" -> t.prov.loco ::
+                  msg"array of `???` is not mutable" -> t.prov.loco ::       // TODO: error message
+                  Nil))
             rec(t.inner.ub, a.inner.ub, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
@@ -343,7 +346,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               fs0.find(_._1 === n1).fold {
                 reportError
               } { case (n0, t0) =>
-                recLb(t1, t0, reportError)
+                recLb(t1, t0, err(
+                  msg"type mismatch in ${prov.desc}" -> t1.prov.loco ::
+                  msg"field `${n0.name}` is not mutable" -> t0.prov.loco ::
+                  Nil))
                 rec(t0.ub, t1.ub, false)
               }
             }
