@@ -217,7 +217,7 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Defined class Class1A
 //│ Declared Class1A.MtdA: Class1A['A] -> 'A
 //│ Defined trait Trait1A
-//│ Declared Trait1A.MtdA: ({Trait1A#B = 'B} & trait1A) -> 'B
+//│ Declared Trait1A.MtdA: trait1A -> 'B
 //│ Defined class Class1B
 //│ Defined Class1B.MtdA: (Class1B & trait1A) -> "b"
 
@@ -231,7 +231,7 @@ class Class2C: Class2B[int, bool]
     method MtdA = 42
     method MtdB = true
 //│ Defined trait Trait2A
-//│ Declared Trait2A.MtdB: ({Trait2A#A = 'A} & trait2A) -> 'A
+//│ Declared Trait2A.MtdB: trait2A -> 'A
 //│ Defined class Class2B
 //│ Declared Class2B.MtdA: (Class2B['A, 'B] & trait2A) -> 'A
 //│ Declared Class2B.MtdB: (Class2B['A, 'B] & trait2A) -> 'B
