@@ -35,7 +35,6 @@ s = Str { val = "hey" }
 //│ s: Str & {val: "hey"}
 //│  = Str { val: 'hey' }
 
-// TODO why not simplified?
 s.Add s
 //│ res: Str
 //│    = Str { val: 'heyhey' }

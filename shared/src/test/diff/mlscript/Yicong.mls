@@ -455,127 +455,6 @@ inn2 v1
 //│ ╙──       	                      ^^^^^^^^^
 //│ res: Array[nothing] | error
 
-// def ra: Array[Array['a]] as 'a
-
-// def ra: ('a, 'a) as 'a
-// ra: Array['a] as 'a
-
-def ra: ('a,) as 'a
-//│ ra: ('a,) as 'a
-
-:ds
-ra: (('a,),) as 'a
-//│ Typed as: 'a1
-//│  where: 'a0 :> ('a0,) <: [('a1,)] & [[['a1]]] & ('a0,), 'a1 :> [[[('a0,)]]] | (('a1,),) <: (('a1,),)
-//│ ty[true] 'a1
-//│ | Consider 'a1 List([[[('a0,)]]], (('a1,),)) List((('a1,),))
-//│ -> DNF('a1 | (('a0 | ('a1,)),){_1: ('a0 | ('a1,))})
-//│ DNF[true] DNF('a1 | (('a0 | ('a1,)),){_1: ('a0 | ('a1,))})
-//│ | Renewed 'a1 ~> 'a2
-//│ | ty[true] ('a0 | ('a1,))
-//│ | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | Renewed 'a0 ~> 'a3
-//│ | | ty[true] ('a0 | 'a1)
-//│ | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | Consider 'a1 List([[[('a0,)]]], (('a1,),)) List((('a1,),))
-//│ | | -> DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | DNF[true] DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | ~> ('a2 | ('a3 | ((α4,) & {_1: α4})))
-//│ | | ty[true] ('a0 | 'a1)
-//│ | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | Consider 'a1 List([[[('a0,)]]], (('a1,),)) List((('a1,),))
-//│ | | -> DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | DNF[true] DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | ~> ('a2 | ('a3 | ((α4,) & {_1: α4})))
-//│ | ~> α4
-//│ | ty[true] ('a0 | ('a1,))
-//│ | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | ty[true] ('a0 | 'a1)
-//│ | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | Consider 'a1 List([[[('a0,)]]], (('a1,),)) List((('a1,),))
-//│ | | -> DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | DNF[true] DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | ~> ('a2 | ('a3 | ((α4,) & {_1: α4})))
-//│ | | ty[true] ('a0 | 'a1)
-//│ | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | Consider 'a1 List([[[('a0,)]]], (('a1,),)) List((('a1,),))
-//│ | | -> DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | DNF[true] DNF('a0 | (('a0 | ('a0 | ('a1,))),){_1: ('a0 | ('a0 | ('a1,)))} | 'a1)
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | | ty[true] ('a0 | ('a0 | ('a1,)))
-//│ | | | | Consider 'a0 List(('a0,)) List([('a1,)], [[['a1]]], ('a0,))
-//│ | | | -> DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | DNF[true] DNF('a0 | (('a0 | 'a1),){_1: ('a0 | 'a1)})
-//│ | | | ~> α4
-//│ | | ~> ('a2 | ('a3 | ((α4,) & {_1: α4})))
-//│ | ~> α4
-//│ ~> ('a2 | ((α4,) & {_1: α4}))
-//│ Canon: ('a2 | ((α4,) & {_1: α4}))
-//│  where: α4 :> ('a3 | ((('a2 | ('a3 | ((α4,) & {_1: α4}))),) & {_1: ('a2 | ('a3 | ((α4,) & {_1: α4})))}))
-//│ [occs] LinkedHashMap((true,α4) -> HashSet(α4), (true,'a2) -> HashSet(), (true,'a3) -> HashSet())
-//│ [vars] TreeSet('a2, 'a3, α4)
-//│ [bounds] α4 :> ('a3 | ((('a2 | ('a3 | ((α4,) & {_1: α4}))),) & {_1: ('a2 | ('a3 | ((α4,) & {_1: α4})))}))
-//│ [rec] HashSet(α4)
-//│ [!] 'a2
-//│ [!] 'a3
-//│ [v] α4 Some(HashSet(α4)) None
-//│ [sub] 'a2 -> None, 'a3 -> None
-//│ Renewed α4 ~> α5
-//│ Type after simplification: ((α5,) & {_1: α5})
-//│  where: α5 :> ((((α5,) & {_1: α5}),) & {_1: ((α5,) & {_1: α5})})
-//│ recons[true] ((α5,) & {_1: α5})  (ComposedType)
-//│ | recons[true] α5  (TypeVariable)
-//│ | | recons[true] ((((α5,) & {_1: α5}),) & {_1: ((α5,) & {_1: α5})})  (ComposedType)
-//│ | | | recons[true] ((α5,) & {_1: α5})  (ComposedType)
-//│ | | | | recons[true] α5  (TypeVariable)
-//│ | | | | => α6
-//│ | | | => (α6,)
-//│ | | => ((α6,),)
-//│ | => α6
-//│ => (α6,)
-//│ Recons: (α6,)
-//│  where: α6 :> ((α6,),)
-//│ res: (('a,),) as 'a
-
-
 def ra: ('a, 'a) as 'a
 ra: Array[Array['a]] as 'a
 ra: Array[('a, 'a)] as 'a
@@ -589,29 +468,29 @@ ra: (Array['a], Array['a]) as 'a
 ra: ('a, 'a, 'a) as 'a
 ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.589: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.468: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── type `(?a, ?a,)` does not match type `(?a0, ?a0, ?a0,)`
-//│ ║  l.579: 	def ra: ('a, 'a) as 'a
+//│ ║  l.458: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(?a1, ?a1, ?a1,)`
-//│ ║  l.589: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.468: 	ra: ('a, 'a, 'a) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.589: 	ra: ('a, 'a, 'a) as 'a
+//│ ║  l.468: 	ra: ('a, 'a, 'a) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ res: Array['a] & {_1: 'a, _2: 'a} | error as 'a
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.590: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.469: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── type `(?a, ?a,)` does not match type `(Array[?a0], Array[?a0], Array[?a0],)`
-//│ ║  l.579: 	def ra: ('a, 'a) as 'a
+//│ ║  l.458: 	def ra: ('a, 'a) as 'a
 //│ ║         	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(Array[?a1], Array[?a1], Array[?a1],)`
-//│ ║  l.590: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.469: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ║         	^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.590: 	ra: (Array['a], Array['a], Array['a]) as 'a
+//│ ║  l.469: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: Array[Array['a]] & {_1: Array['a], _2: Array['a]} | error as 'a
 
@@ -623,19 +502,19 @@ tktup ((1,2,3,true))
 :e
 tktup a123
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.624: 	tktup a123
+//│ ║  l.503: 	tktup a123
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `Array[int]` does not have field '_3'
 //│ ║  l.301: 	def a123: Array[int]
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_3: ?a}`
-//│ ║  l.624: 	tktup a123
+//│ ║  l.503: 	tktup a123
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.618: 	def tktup t = (t._2, t._3)
+//│ ║  l.497: 	def tktup t = (t._2, t._3)
 //│ ║         	                     ^^^^
 //│ ╟── from reference:
-//│ ║  l.618: 	def tktup t = (t._2, t._3)
+//│ ║  l.497: 	def tktup t = (t._2, t._3)
 //│ ╙──       	                     ^
 //│ res: (nothing, nothing,) | error
 
@@ -662,49 +541,49 @@ true[false]
 ge[2]
 //│ ge: int -> int
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.659: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.538: 	ta3[ge 3][ge (1+2)]
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
-//│ ║  l.646: 	ta3 = ((1,2,3), "hello", false)
+//│ ║  l.525: 	ta3 = ((1,2,3), "hello", false)
 //│ ║         	                ^^^^^^^
 //│ ╟── but it flows into array subscript with expected type `Array[?b]`
-//│ ║  l.659: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.538: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^^^^^^
 //│ res: 1 | 2 | 3
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.660: 	true[false]
+//│ ║  l.539: 	true[false]
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.660: 	true[false]
+//│ ║  l.539: 	true[false]
 //│ ╙──       	^^^^
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.660: 	true[false]
+//│ ║  l.539: 	true[false]
 //│ ║         	^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
-//│ ║  l.660: 	true[false]
+//│ ║  l.539: 	true[false]
 //│ ╙──       	     ^^^^^
 //│ res: nothing
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.661: 	4["hello"]
+//│ ║  l.540: 	4["hello"]
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `4` does not match type `Array[?a]`
-//│ ║  l.661: 	4["hello"]
+//│ ║  l.540: 	4["hello"]
 //│ ╙──       	^
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.661: 	4["hello"]
+//│ ║  l.540: 	4["hello"]
 //│ ║         	^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `int`
-//│ ║  l.661: 	4["hello"]
+//│ ║  l.540: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
 //│ res: nothing
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.662: 	ge[2]
+//│ ║  l.541: 	ge[2]
 //│ ║         	^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Array[?c]`
-//│ ║  l.658: 	def ge x = x + 1
+//│ ║  l.537: 	def ge x = x + 1
 //│ ║         	       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[?c]`
-//│ ║  l.662: 	ge[2]
+//│ ║  l.541: 	ge[2]
 //│ ╙──       	^^
 //│ res: nothing
 
@@ -725,20 +604,20 @@ mkarr (1,true,"hi")[0]
 mkarr 3 [  1]
 mk1[2  ]
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.725: 	mkarr 3 [  1]
+//│ ║  l.604: 	mkarr 3 [  1]
 //│ ║         	      ^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
-//│ ║  l.725: 	mkarr 3 [  1]
+//│ ║  l.604: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ res: Array[nothing]
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.726: 	mk1[2  ]
+//│ ║  l.605: 	mk1[2  ]
 //│ ║         	^^^^^
 //│ ╟── integer literal of type `6` does not match type `Array[?a]`
-//│ ║  l.713: 	mk1 = (mkarr 6)[ 0]
+//│ ║  l.592: 	mk1 = (mkarr 6)[ 0]
 //│ ║         	             ^
 //│ ╟── but it flows into reference with expected type `Array[?a]`
-//│ ║  l.726: 	mk1[2  ]
+//│ ║  l.605: 	mk1[2  ]
 //│ ╙──       	^^^
 //│ res: nothing
 
@@ -772,12 +651,12 @@ dup ara[1]._1 arb[10][8]._2 + 1
 :e
 (1,2,3)._1[1]
 //│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.773: 	(1,2,3)._1[1]
+//│ ║  l.652: 	(1,2,3)._1[1]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.773: 	(1,2,3)._1[1]
+//│ ║  l.652: 	(1,2,3)._1[1]
 //│ ║         	 ^
 //│ ╟── but it flows into field selection with expected type `Array[?a]`
-//│ ║  l.773: 	(1,2,3)._1[1]
+//│ ║  l.652: 	(1,2,3)._1[1]
 //│ ╙──       	^^^^^^^^^^
 //│ res: nothing

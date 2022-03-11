@@ -159,7 +159,6 @@ abstract class TyperHelpers { self: Typer =>
     if (cs.sizeCompare(1) <= 0) ty
     else factorizeImpl(cs.map(_.components(false)))
   }
-  // def factorizeImpl(cs: Ls[Ls[ST]]): Ls[Ls[ST]] = {
   def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize? ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
     def rebuild(cs: Ls[Ls[ST]]): ST =
       cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
@@ -171,98 +170,29 @@ abstract class TyperHelpers { self: Typer =>
           factors(tv) = factors.getOrElse(tv, 0) + 1
         case tt: TraitTag =>
           factors(tt) = factors.getOrElse(tt, 0) + 1
-        // case NegType(tv: TV) =>
-        //   val nv = NegVar(tv)
-        //   factors(nv) = factors.getOrElse(nv, 0) + 1
-        // case NegType(tt: TraitTag) =>
-        //   val nt = NegTrait(tt)
-        //   factors(nt) = factors.getOrElse(nt, 0) + 1
         case nv: NegVar =>
           factors(nv) = factors.getOrElse(nv, 0) + 1
         case nt: NegTrait =>
           factors(nt) = factors.getOrElse(nt, 0) + 1
         case _ =>
       }
-      // c.vars.foreach { v =>
-      //   factors(v) = factors.getOrElse(v, 0) + 1
-      // }
-      // c.nvars.foreach { v =>
-      //   val nv = NegVar(v)
-      //   factors(nv) = factors.getOrElse(nv, 0) + 1
-      // }
-      // c.lnf match {
-      //   case LhsTop => ()
-      //   case LhsRefined(_, ttags, _) =>
-      //     ttags.foreach { ttg =>
-      //       factors(ttg) = factors.getOrElse(ttg, 0) + 1
-      //     }
-      // }
-      // c.rnf match {
-      //   case RhsBot | _: RhsField => ()
-      //   case RhsBases(ps, _) =>
-      //     ps.foreach {
-      //       case ttg: TraitTag =>
-      //         val nt = NegTrait(ttg)
-      //         factors(nt) = factors.getOrElse(nt, 0) + 1
-      //       case _ => ()
-      //     }
-      // }
     }
     println(s"Factors ${factors.mkString(", ")}")
     factors.maxByOption(_._2) match {
       // case S((fact, n)) =>
       case S((fact, n)) if n > 1 =>
-        // val (factored, rest) = fact match {
-        //   case v: TV =>
-        //     cs.partitionMap(c => if (c.contains(v)) L(c) else R(c))
-        //   case NegVar(v) =>
-        //     cs.partitionMap(c => if (c.contains(v)) L(c) else R(c))
-        //   case ttg: TraitTag =>
-        //     cs.partitionMap(c => if (c.contains(ttg)) L(c) else R(c))
-        //   case NegTrait(ttg) =>
-        //     cs.partitionMap(c => if (c.contains(ttg)) L(c) else R(c))
-        // }
         val (factored, rest) =
           cs.partitionMap(c => if (c.contains(fact)) L(c) else R(c))
-          // cs.partitionMap(c => if (c.exists(_ is fact)) L(c) else R(c))
-        // (fact :: factorizeImpl(factored.map(_.filterNot(_ is fact)))/* .reduce(_ | _) */) :: (
-        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
-        //     factorizeImpl(rest)
-        //   else rest//.map(_.toType(sort))
-        // )
-        // println(fact, factored, rest)
-        println(cs.map(c => c -> c.exists(_ is fact)))
         println(s"Factor $fact -> ${factored.mkString(", ")}")
-        // assert(factored.nonEmpty)
         assert(factored.size === n, factored -> n)
-        
-        // fact & factorizeImpl(factored.map(_.filterNot(_ is fact))) | (
-        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
-        //     factorizeImpl(rest)
-        //   else rest.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
-        // )
-        
-        // val factoredFactored = fact & factorizeImpl(factored.map(_.filterNot(_ is fact)))
         val factoredFactored = fact & factorizeImpl(factored.map(_.filterNot(_ === fact)))
-        
         val restFactored =
           if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
             factorizeImpl(rest)
           else rebuild(rest)
-        
         restFactored | factoredFactored
-        
-        //  :: (
-        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
-        //     factorizeImpl(rest)
-        //   else rest//.map(_.toType(sort))
-        // )
-      case _ =>
-        // cs.map(_.toType(sort))
-        // cs
-        rebuild(cs)
+      case _ => rebuild(cs)
     }
-  // }()
   }(r => s"yes: $r")
   
   
@@ -323,10 +253,6 @@ abstract class TyperHelpers { self: Typer =>
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(recordUnion(fs1, fs2))(prov)
-      // case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
-      //   if (fs0.sizeCompare(fs1) =/= 0) t0.toArray & t0.toRecord | t1.toArray & t1.toRecord
-      //   // else TupleType((fs0 lazyZip fs1).mapValues(_ | _))
-      //   else TupleType(tupleUnion(fs0, fs1))(t0.prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1))
         // If the sizes are different, to merge these we'd have to return
         //  the awkward `t0.toArray & t0.toRecord | t1.toArray & t1.toRecord`

@@ -272,23 +272,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val sim = typer.simplifyType(cty)(ctx)
                 if (mode.dbgSimplif) output(s"Type after simplification: ${sim}")
                 if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
-                // val exp = typer.expandType(sim)
-                
-                // // TODO: would be better toa void having to do a second pass,
-                // // but would require more work:
-                // val reca = typer.canonicalizeType(sim)(ctx)
-                // if (mode.dbgSimplif) output(s"Recanon: ${reca}")
-                // if (mode.dbgSimplif) output(s" where: ${reca.showBounds}")
-                // val resim = typer.simplifyType(reca)(ctx)
-                // if (mode.dbgSimplif) output(s"Resimplified: ${resim}")
-                // if (mode.dbgSimplif) output(s" where: ${resim.showBounds}")
-                // val recons = typer.reconstructClassTypes(resim, true, ctx)
-                
                 val recons = typer.reconstructClassTypes(sim, true, ctx)
                 if (mode.dbgSimplif) output(s"Recons: ${recons}")
                 if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
                 val exp = typer.expandType(recons, true)
-                
                 exp
               }
             }
