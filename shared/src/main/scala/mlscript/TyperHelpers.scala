@@ -103,7 +103,7 @@ abstract class TyperHelpers { self: Typer =>
     }
   }
   
-  def factorize(cs: Ls[Conjunct]): Ls[ST] = {
+  def factorize(cs: Ls[Conjunct], sort: Bool): Ls[ST] = {
     val factors = MutMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.vars.foreach { v =>
@@ -144,13 +144,101 @@ abstract class TyperHelpers { self: Typer =>
           case NegTrait(ttg) =>
             cs.partitionMap(c => if (c.rnf.hasTag(ttg)) L(c) else R(c))
         }
-        (fact & factorize(factored.map(_ - fact)).reduce(_ | _)) :: (
+        (fact & factorize(factored.map(_ - fact), sort).reduce(_ | _)) :: (
           if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
-            factorize(rest)
-          else rest.map(_.toType())
+            factorize(rest, sort)
+          else rest.map(_.toType(sort))
         )
       case _ =>
-        cs.map(_.toType())
+        cs.map(_.toType(sort))
+    }
+  }
+  
+  def factorize(ty: ST): ST = {
+    val cs = ty.components(true).map(_.components(false))
+    factorizeImpl(cs)
+    // ???
+  }
+  // def factorizeImpl(cs: Ls[Ls[ST]]): Ls[Ls[ST]] = {
+  def factorizeImpl(cs: Ls[Ls[ST]]): ST = {
+    println(cs)
+    val factors = MutMap.empty[Factorizable, Int]
+    cs.foreach { c =>
+      c.foreach {
+        case tv: TV =>
+          factors(tv) = factors.getOrElse(tv, 0) + 1
+        case tt: TraitTag =>
+          factors(tt) = factors.getOrElse(tt, 0) + 1
+        case NegType(tv: TV) =>
+          val nv = NegVar(tv)
+          factors(nv) = factors.getOrElse(nv, 0) + 1
+        case NegType(tt: TraitTag) =>
+          val nt = NegTrait(tt)
+          factors(nt) = factors.getOrElse(nt, 0) + 1
+        case _ =>
+      }
+      // c.vars.foreach { v =>
+      //   factors(v) = factors.getOrElse(v, 0) + 1
+      // }
+      // c.nvars.foreach { v =>
+      //   val nv = NegVar(v)
+      //   factors(nv) = factors.getOrElse(nv, 0) + 1
+      // }
+      // c.lnf match {
+      //   case LhsTop => ()
+      //   case LhsRefined(_, ttags, _) =>
+      //     ttags.foreach { ttg =>
+      //       factors(ttg) = factors.getOrElse(ttg, 0) + 1
+      //     }
+      // }
+      // c.rnf match {
+      //   case RhsBot | _: RhsField => ()
+      //   case RhsBases(ps, _) =>
+      //     ps.foreach {
+      //       case ttg: TraitTag =>
+      //         val nt = NegTrait(ttg)
+      //         factors(nt) = factors.getOrElse(nt, 0) + 1
+      //       case _ => ()
+      //     }
+      // }
+    }
+    factors.maxByOption(_._2) match {
+      // case S((fact, n)) =>
+      case S((fact, n)) if n > 1 =>
+        // val (factored, rest) = fact match {
+        //   case v: TV =>
+        //     cs.partitionMap(c => if (c.contains(v)) L(c) else R(c))
+        //   case NegVar(v) =>
+        //     cs.partitionMap(c => if (c.contains(v)) L(c) else R(c))
+        //   case ttg: TraitTag =>
+        //     cs.partitionMap(c => if (c.contains(ttg)) L(c) else R(c))
+        //   case NegTrait(ttg) =>
+        //     cs.partitionMap(c => if (c.contains(ttg)) L(c) else R(c))
+        // }
+        val (factored, rest) =
+          // cs.partitionMap(c => if (c.contains(fact)) L(c) else R(c))
+          cs.partitionMap(c => if (c.exists(_ is fact)) L(c) else R(c))
+        // (fact :: factorizeImpl(factored.map(_.filterNot(_ is fact)))/* .reduce(_ | _) */) :: (
+        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
+        //     factorizeImpl(rest)
+        //   else rest//.map(_.toType(sort))
+        // )
+        println(fact, factored, rest)
+        assert(factored.nonEmpty)
+        fact & factorizeImpl(factored.map(_.filterNot(_ is fact))) | (
+          if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
+            factorizeImpl(rest)
+          else rest.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+        )
+        //  :: (
+        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
+        //     factorizeImpl(rest)
+        //   else rest//.map(_.toType(sort))
+        // )
+      case _ =>
+        // cs.map(_.toType(sort))
+        // cs
+        cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     }
   }
   
@@ -217,7 +305,8 @@ abstract class TyperHelpers { self: Typer =>
       case (NegType(`that`), _) => TopType
       case _ => ComposedType(true, that, this)(prov)
     }
-    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
+    def & (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType =
+        (this, that) match {
       case (TopType | RecordType(Nil), _) => that
       case (BotType, _) => BotType
       // Unnecessary and can complicate constraint solving quite a lot:
@@ -396,6 +485,14 @@ abstract class TyperHelpers { self: Typer =>
     def unwrapProvs: SimpleType = this match {
       case ProvType(und) => und.unwrapProvs
       case _ => this
+    }
+    
+    def components(union: Bool): Ls[ST] = this match {
+      case ExtrType(`union`) => Nil
+      case ComposedType(`union`, l, r) => l.components(union) ::: r.components(union)
+      case NegType(tv: TypeVariable) if !union => NegVar(tv) :: Nil
+      case NegType(tt: TraitTag) if !union => NegTrait(tt) :: Nil
+      case _ => this :: Nil
     }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {

@@ -310,10 +310,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   case class DNF(cs: Ls[Conjunct]) {
     def isBot: Bool = cs.isEmpty
-    def toType(sort: Bool = false): SimpleType = cs.sorted match {
+    def toType(sort: Bool = false): SimpleType = (if (sort) cs.sorted else cs) match {
       case Nil => BotType
       case t :: ts => t.toType(sort) | DNF(ts).toType(sort)
     }
+    def factorize(sort: Bool = false): SimpleType =
+      self.factorize(if (sort) cs.sorted else cs, sort).foldLeft(BotType: ST)(_ | _)
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def & (that: DNF): DNF =
       that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)

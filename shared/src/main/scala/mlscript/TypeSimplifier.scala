@@ -414,7 +414,7 @@ trait TypeSimplifier { self: Typer =>
               }
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
-        }.foldLeft(BotType: ST)(_ | _)
+        }.foldLeft(BotType: ST)(_ | _) |> factorize
     }
     
     go(st, pol)

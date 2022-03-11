@@ -82,7 +82,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             println(s"Possible: " + possible)
             
             // Then, we try to factorize the RHS to help make subsequent solving take shortcuts:
-            val fact = factorize(possible)
+            val fact = factorize(possible, sort = false)
             
             println(s"Factorized: " + fact)
             

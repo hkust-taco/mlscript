@@ -601,15 +601,15 @@ t : Dup[int, bool]
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 98
-//│ annoying  calls  : 36
-//│ subtyping calls  : 57
+//│ constrain calls  : 88
+//│ annoying  calls  : 33
+//│ subtyping calls  : 45
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 83
-//│ annoying  calls  : 32
+//│ constrain calls  : 78
+//│ annoying  calls  : 31
 //│ subtyping calls  : 68
 
 
