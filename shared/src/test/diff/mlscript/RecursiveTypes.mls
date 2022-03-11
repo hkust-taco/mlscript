@@ -447,7 +447,7 @@ f infina
 
 
 def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
-//│ f_manual: (({a: 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'b\a & {a: int} as 'b))
+//│ f_manual: (({a: 'a & 'c} as 'a) & 'd) -> ('c | 'd | (('d | 'b)\a & {a: int} as 'b))
 //│         = <missing implementation>
 
 :e
@@ -482,7 +482,7 @@ f_manual { a = 1 }
 //│ ╟── from intersection type:
 //│ ║  l.449: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
-//│ res: 1 | error | ({a: 1} | 'a\a & {a: int} as 'a)
+//│ res: 1 | error | {a: 1} | (({a: 1} | 'a)\a & {a: int} as 'a)
 //│    = <no result>
 //│      f_manual is not implemented
 

@@ -326,7 +326,7 @@ trait TypeSimplifier { self: Typer =>
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
-      case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol)
+      case ty @ ComposedType(true, l, r) => go(l, pol) | go(r, pol) |> factorize
       case ty @ (ComposedType(false, _, _) | _: ObjectTag) =>
         val dnf @ DNF(cs) = DNF.mk(ty, pol)
         cs.sorted.map { c =>

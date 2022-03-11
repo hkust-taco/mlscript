@@ -71,7 +71,7 @@ def baz x = case x of
   { Test -> x
   | Toast -> x
   }
-//│ baz: (Test & 'a | Toast & 'a) -> 'a
+//│ baz: ('a & (Test | Toast)) -> 'a
 //│    = [Function: baz]
 
 :e
@@ -105,7 +105,7 @@ def test3 x = case x of
   | true -> true
   | _ -> false
   }
-//│ test3: (1 & 'a | true | ~1 & ~true) -> (false | true | 'a)
+//│ test3: (1 & 'a | true | ~1 & ~true) -> (bool | 'a)
 //│      = [Function: test31]
 
 

@@ -731,9 +731,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
     def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type =
-      trace(s"go($st, $polarity)($inProcess)") {
+      // trace(s"expand $st, $polarity  — $inProcess") {
         goImpl(st.unwrapProvs, polarity)
-      }(r => s"=> $r")
+      // }(r => s"=> $r")
     def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
       val st_pol = st -> polarity
       if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {

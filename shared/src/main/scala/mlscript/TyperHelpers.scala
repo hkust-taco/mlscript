@@ -160,8 +160,8 @@ abstract class TyperHelpers { self: Typer =>
     // ???
   }
   // def factorizeImpl(cs: Ls[Ls[ST]]): Ls[Ls[ST]] = {
-  def factorizeImpl(cs: Ls[Ls[ST]]): ST = {
-    println(cs)
+  def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
+    if (cs.sizeCompare(1) <= 0) return cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     val factors = MutMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.foreach {
@@ -169,11 +169,15 @@ abstract class TyperHelpers { self: Typer =>
           factors(tv) = factors.getOrElse(tv, 0) + 1
         case tt: TraitTag =>
           factors(tt) = factors.getOrElse(tt, 0) + 1
-        case NegType(tv: TV) =>
-          val nv = NegVar(tv)
+        // case NegType(tv: TV) =>
+        //   val nv = NegVar(tv)
+        //   factors(nv) = factors.getOrElse(nv, 0) + 1
+        // case NegType(tt: TraitTag) =>
+        //   val nt = NegTrait(tt)
+        //   factors(nt) = factors.getOrElse(nt, 0) + 1
+        case nv: NegVar =>
           factors(nv) = factors.getOrElse(nv, 0) + 1
-        case NegType(tt: TraitTag) =>
-          val nt = NegTrait(tt)
+        case nt: NegTrait =>
           factors(nt) = factors.getOrElse(nt, 0) + 1
         case _ =>
       }
@@ -202,6 +206,7 @@ abstract class TyperHelpers { self: Typer =>
       //     }
       // }
     }
+    println(s"Factors ${factors.mkString(", ")}")
     factors.maxByOption(_._2) match {
       // case S((fact, n)) =>
       case S((fact, n)) if n > 1 =>
@@ -216,20 +221,35 @@ abstract class TyperHelpers { self: Typer =>
         //     cs.partitionMap(c => if (c.contains(ttg)) L(c) else R(c))
         // }
         val (factored, rest) =
-          // cs.partitionMap(c => if (c.contains(fact)) L(c) else R(c))
-          cs.partitionMap(c => if (c.exists(_ is fact)) L(c) else R(c))
+          cs.partitionMap(c => if (c.contains(fact)) L(c) else R(c))
+          // cs.partitionMap(c => if (c.exists(_ is fact)) L(c) else R(c))
         // (fact :: factorizeImpl(factored.map(_.filterNot(_ is fact)))/* .reduce(_ | _) */) :: (
         //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
         //     factorizeImpl(rest)
         //   else rest//.map(_.toType(sort))
         // )
-        println(fact, factored, rest)
-        assert(factored.nonEmpty)
-        fact & factorizeImpl(factored.map(_.filterNot(_ is fact))) | (
+        // println(fact, factored, rest)
+        println(cs.map(c => c -> c.exists(_ is fact)))
+        println(s"Factor $fact -> ${factored.mkString(", ")}")
+        // assert(factored.nonEmpty)
+        assert(factored.size === n, factored -> n)
+        
+        // fact & factorizeImpl(factored.map(_.filterNot(_ is fact))) | (
+        //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
+        //     factorizeImpl(rest)
+        //   else rest.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
+        // )
+        
+        // val factoredFactored = fact & factorizeImpl(factored.map(_.filterNot(_ is fact)))
+        val factoredFactored = fact & factorizeImpl(factored.map(_.filterNot(_ === fact)))
+        
+        val restFactored =
           if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
             factorizeImpl(rest)
           else rest.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
-        )
+        
+        restFactored | factoredFactored
+        
         //  :: (
         //   if (factors.sizeCompare(1) > 0 && factors.exists(f => (f._1 isnt fact) && f._2 > 1))
         //     factorizeImpl(rest)
@@ -240,7 +260,8 @@ abstract class TyperHelpers { self: Typer =>
         // cs
         cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     }
-  }
+  // }()
+  }(r => s"=> $r")
   
   
   
@@ -492,6 +513,7 @@ abstract class TyperHelpers { self: Typer =>
       case ComposedType(`union`, l, r) => l.components(union) ::: r.components(union)
       case NegType(tv: TypeVariable) if !union => NegVar(tv) :: Nil
       case NegType(tt: TraitTag) if !union => NegTrait(tt) :: Nil
+      case ProvType(und) => und.components(union)
       case _ => this :: Nil
     }
     

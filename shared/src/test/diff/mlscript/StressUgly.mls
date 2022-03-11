@@ -7,7 +7,7 @@ class Add[E]: { lhs: E; rhs: E }
 
 
 def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ eval1_ty_ugly: 'a & ~lit | 'b | (Add['a & 'b & ~{val: int} | 'a & 'b & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd}) & 'b as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ eval1_ty_ugly: 'a & ~lit | 'b | (Add['b & ('a & ~{val: int} | 'a & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd})) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
 //│              = <missing implementation>
 
 // def eval1_ty: Add['b]
@@ -22,7 +22,7 @@ def eval1_ty: Add[int] // ~500
 :stats
 :e
 eval1_ty = eval1_ty_ugly
-//│ 'a & ~lit | 'b | (Add['a & 'b & ~{val: int} | 'a & 'b & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd}) & 'b as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ 'a & ~lit | 'b | (Add['b & ('a & ~{val: int} | 'a & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd})) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
 //│   <:  eval1_ty:
 //│ Add[int]
 //│ ╔══[ERROR] Type mismatch in def definition:

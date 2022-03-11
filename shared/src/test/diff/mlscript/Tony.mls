@@ -68,7 +68,7 @@ fun f -> flatMap3 f arg
 
 
 def foo = flatMap3 (fun x -> x)
-//│ foo: (Some[?] & 'a | 'a & ~some) -> 'a
+//│ foo: ('a & (Some[?] | ~some)) -> 'a
 //│    = [Function (anonymous)]
 
 foo 1

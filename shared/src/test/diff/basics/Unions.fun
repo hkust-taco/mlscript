@@ -1,7 +1,7 @@
 
 
 let f(x: 0 | 1) = x
-//│ f: (x: 0 & 'a | 1 & 'a,) -> 'a
+//│ f: (x: 'a & (0 | 1),) -> 'a
 
 let f(x: 0 | 1) = succ x
 //│ f: (x: 0 | 1,) -> int
@@ -130,7 +130,7 @@ h(0)
 //│ res: int
 
 let foo(r: { v: 0 } | { v: 1 }) = if r.v < 1 then r.v else 2
-//│ foo: (r: {v: 0 & 'a | 1 & 'a},) -> (2 | 'a)
+//│ foo: (r: {v: 'a & (0 | 1)},) -> (2 | 'a)
 
 foo({ v: 0 })
 foo({ v: 1 })
@@ -138,10 +138,10 @@ foo({ v: 1 })
 //│ res: 1 | 2
 
 x => foo(x)
-//│ res: (r: {v: 0 & 'a | 1 & 'a},) -> (2 | 'a)
+//│ res: (r: {v: 'a & (0 | 1)},) -> (2 | 'a)
 
 x => foo { v: x }
-//│ res: (0 & 'a | 1 & 'a) -> (2 | 'a)
+//│ res: ('a & (0 | 1)) -> (2 | 'a)
 
 
 // Notice that in MLscript, `(0, 0) | (1, 1)` is equivalent to `(0 | 1, 0 | 1)`
@@ -171,7 +171,7 @@ bar(_, 1)
 //│ res: 1
 
 let f x = bar(x, x)
-//│ f: (0 & 'a | 1 & 'a) -> 'a
+//│ f: ('a & (0 | 1)) -> 'a
 
 f 0
 f 1
@@ -193,13 +193,13 @@ f 2
 
 x => bar(1, x)
 x => bar(x, 0)
-//│ res: (0 & 'a | 1 & 'a) -> (1 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> (1 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
 
 bar(_, _)
 (x, y) => bar(x, y)
 //│ res: nothing
-//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> 'a
+//│ res: ('a & (0 | 1), 'a & (0 | 1),) -> 'a
 
 // ^ TODO allow explicit request for inferring an overloaded type in case of ambiguities
 
@@ -207,18 +207,18 @@ x => bar(bar(0, x), 0)
 x => bar(bar(x, x), 0)
 x => bar(bar(0, x), x)
 x => bar(bar(x, x), 0)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
 
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 1 | 'a)
-//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> 'a
+//│ res: ('a & (0 | 1)) -> (0 | 1 | 'a)
+//│ res: ('a & (0 | 1), 'a & (0 | 1),) -> 'a
 
 (x, y) => bar(bar(x, y), 0)
-//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,) -> (0 | 'a)
+//│ res: ('a & (0 | 1), 'a & (0 | 1),) -> (0 | 'a)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
@@ -261,7 +261,7 @@ x => baz(x, x)
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: ('a & (0 | 1), 0 & 'a | 'a,),) -> 'a
+//│ baz: (r: ('a & (0 | 1), 'a,),) -> 'a
 
 :e
 baz(0)
@@ -291,14 +291,14 @@ x => baz(1, x)
 x => baz(x, 1)
 //│ res: 0
 //│ res: 1
-//│ res: (0 & 'a | 'a) -> (0 | 'a)
-//│ res: (0 & 'a | 'a) -> (1 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> (1 | 'a)
+//│ res: 'a -> (0 | 'a)
+//│ res: 'a -> (1 | 'a)
+//│ res: ('a & (0 | 1)) -> (1 | 'a)
 
 x => baz(x, 0)
 x => baz(x, x)
 (x, y) => baz(x, y)
-//│ res: (0 & 'a | 1 & 'a) -> (0 | 'a)
-//│ res: (0 & 'a | 1 & 'a) -> 'a
-//│ res: (0 & 'a | 1 & 'a, 0 & 'a | 'a,) -> 'a
+//│ res: ('a & (0 | 1)) -> (0 | 'a)
+//│ res: ('a & (0 | 1)) -> 'a
+//│ res: ('a & (0 | 1), 'a,) -> 'a
 
