@@ -115,10 +115,10 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `anything`
+//│ ╟── type `int` does not match type `Lit | {Add#E = int}`
 //│ ║  l.14: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `anything`
+//│ ╟── but it flows into reference with expected type `Lit | {Add#E = int}`
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:

@@ -154,12 +154,12 @@ class Pair[A, B]: AbstractPair[A, B]
 //│ Defined Pair.Test: Pair['A, 'B] -> ('A -> 'B -> bool) -> bool
 //│ Defined Pair.Map: Pair['A, 'B] -> ('A -> ('A0 & 'a)) -> ('B -> ('B0 & 'b)) -> (Pair['A0, 'B0] with {x: 'a, y: 'b})
 
-class True[A, B]: Pair[A, B]
+class Tru[A, B]: Pair[A, B]
     method Test f = true
     method True = this.Test (fun x -> error)
-//│ Defined class True
-//│ Defined True.Test: (true & {x: 'A, y: 'B}) -> anything -> true
-//│ Defined True.True: (true & {x: 'A, y: 'B}) -> true
+//│ Defined class Tru
+//│ Defined Tru.Test: Tru['A, 'B] -> anything -> true
+//│ Defined Tru.True: Tru['A, 'B] -> true
 
 class True2[A, B]: Pair[A, B]
     method Test: anything -> bool
@@ -193,10 +193,10 @@ p.Test ft
 //│ res: bool
 //│    = false
 
-t = True { x = "foo"; y = false }
-t.(True.True)
-//│ t: true & {x: "foo", y: false}
-//│  = True { x: 'foo', y: false }
+t = Tru { x = "foo"; y = false }
+t.(Tru.True)
+//│ t: Tru['A .. "foo" | 'A, 'B .. 'B | false] with {x: "foo", y: false}
+//│  = Tru { x: 'foo', y: false }
 //│ res: true
 //│    = undefined
 
@@ -217,7 +217,7 @@ class Class1B: Class1A["a" | "b"] & Trait1A["b" | "c"]
 //│ Defined class Class1A
 //│ Declared Class1A.MtdA: Class1A['A] -> 'A
 //│ Defined trait Trait1A
-//│ Declared Trait1A.MtdA: trait1A -> 'B
+//│ Declared Trait1A.MtdA: ({Trait1A#B = 'B} & trait1A) -> 'B
 //│ Defined class Class1B
 //│ Defined Class1B.MtdA: (Class1B & trait1A) -> "b"
 
@@ -231,7 +231,7 @@ class Class2C: Class2B[int, bool]
     method MtdA = 42
     method MtdB = true
 //│ Defined trait Trait2A
-//│ Declared Trait2A.MtdB: trait2A -> 'A
+//│ Declared Trait2A.MtdB: ({Trait2A#A = 'A} & trait2A) -> 'A
 //│ Defined class Class2B
 //│ Declared Class2B.MtdA: (Class2B['A, 'B] & trait2A) -> 'A
 //│ Declared Class2B.MtdB: (Class2B['A, 'B] & trait2A) -> 'B

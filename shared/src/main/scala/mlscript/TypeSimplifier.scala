@@ -373,12 +373,12 @@ trait TypeSimplifier { self: Typer =>
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
-                  lazy val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(go(_, pol))
+                  lazy val nFields = rcd.fields/* .filterNot(_._1.name.isCapitalized) */.mapValues(go(_, pol))
                   val (res, nfs) = bo match {
                     case S(tt @ TupleType(fs)) =>
                       val arity = fs.size
                       val (componentFields, rcdFields) = rcd.fields
-                        .filterNot(_._1.name.isCapitalized)
+                        /* .filterNot(_._1.name.isCapitalized) */
                         .partitionMap(f =>
                           if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
                             val namePostfix = f._1.name.tail

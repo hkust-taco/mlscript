@@ -389,7 +389,7 @@ class Class2B: Class2A[int] & Trait2A[string]
 //│ Defined class Class2A
 //│ Declared Class2A.MtdA: Class2A['A] -> 'A
 //│ Defined trait Trait2A
-//│ Declared Trait2A.MtdA: trait2A -> 'B
+//│ Declared Trait2A.MtdA: ({Trait2A#B = 'B} & trait2A) -> 'B
 //│ Defined class Class2B
 //│ Defined Class2B.MtdA: (Class2B & trait2A) -> "ok"
 

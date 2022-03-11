@@ -411,8 +411,8 @@ abstract class TyperHelpers { self: Typer =>
         case (_, ExtrType(false)) => true
         case (ExtrType(true), _) => true
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-        case (tr: TypeRef, _) if primitiveTypes contains tr.defn.name => tr.expand <:< that
-        case (_, tr: TypeRef) if primitiveTypes contains tr.defn.name => this <:< tr.expand
+        case (tr: TypeRef, _) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
+        case (_, tr: TypeRef) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
         case (_: TypeRef, _) | (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)

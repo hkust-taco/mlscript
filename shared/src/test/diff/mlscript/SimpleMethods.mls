@@ -71,12 +71,12 @@ class C5[A]
 //│ Defined C5.F: C5['A] -> 'A -> (error | int)
 
 
-class True[A]
+class Tru[A]
     method Test f = true
-    method True = this.Test (fun x -> error)
-//│ Defined class True
-//│ Defined True.Test: true -> anything -> true
-//│ Defined True.True: true -> true
+    method Tru = this.Test (fun x -> error)
+//│ Defined class Tru
+//│ Defined Tru.Test: Tru['A] -> anything -> true
+//│ Defined Tru.Tru: Tru['A] -> true
 
 
 :e
