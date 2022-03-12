@@ -33,7 +33,6 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 class Lock[T]: { pins: T }
   method Map: (T -> 'a) -> Lock['a]
   method Map f = Lock { pins = f this.pins }
-  method Open = Lock { pins = 0 }
 def Lock pins = Lock { pins = pins }
 class Bank: { lock: Lock[int]; cash: int }
   method Potential: int
@@ -44,8 +43,7 @@ def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined Lock.Map: Lock['T] -> ('T -> ('a & 'T0)) -> (Lock['T0] with {pins: 'a})
-//│ Defined Lock.Open: Lock['T] -> (Lock['a .. 0 | 'a] with {pins: 0})
+//│ Defined Lock.Map: Lock['T] -> ('T -> ('T0 & 'a)) -> (Lock['T0] with {pins: 'a})
 //│ Defined class Bank
 //│ Declared Bank.Potential: (Bank with {lock: Lock[int]}) -> int
 //│ Declared Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
@@ -58,18 +56,17 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ export declare class Lock<T> {
 //│     pins: T
 //│     constructor(fields: {pins: T})
-//│     Map<a>(arg1: (arg3: T) => a): Lock<a>
-//│     Open<a>: Omit<Lock<0 | a>, "pins"> & {pins: 0}
+//│     Map<a>(arg: (arg1: T) => a): Lock<a>
 //│ }
 //│ export declare class Bank {
 //│     lock: Lock<int>
 //│     cash: int
 //│     constructor(fields: {lock: Lock<int>, cash: int})
-//│     Potential: int
-//│     Better(arg1: Omit<Bank, "lock"> & {lock: Lock<int>}): bool
+//│     readonly Potential: int
+//│     Better(arg: Omit<Bank, "lock"> & {lock: Lock<int>}): bool
 //│ }
-//│ export declare const Lock<T, pins>: (arg1: pins & T) => Omit<Lock<T>, "pins"> & {pins: pins}
-//│ export declare const Bank<cash, lock>: (arg1: Lock<int> & lock) => (arg3: int & cash) => Omit<Bank, "cash" | "lock"> & {cash: cash, lock: lock}
+//│ export declare const Lock<T, pins>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {pins: pins}
+//│ export declare const Bank<cash, lock>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {cash: cash, lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 

@@ -18,7 +18,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {a: "hello", b: "world"}
 //│ export declare const res: int
-//│ export declare const res<a>: ((arg1: {b: a}) => a) | 1
+//│ export declare const res<a>: ((arg: {b: a}) => a) | 1
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int
@@ -40,8 +40,8 @@ def g = rcd with { y = "yeah" }
 //│ // start ts
 //│ export declare const rcd: {x: 1}
 //│ export declare const res: 1
-//│ export declare const funky<a, b>: (arg1: (arg3: Omit<a, "y"> & {y: "nah"}) => b) => (arg5: a) => b
-//│ export declare const cool<a, b>: (arg1: (arg3: Omit<a, "a" | "b"> & {a: "apple", b: "ball"}) => b) => (arg5: a) => b
+//│ export declare const funky<a, b>: (arg: (arg1: Omit<a, "y"> & {y: "nah"}) => b) => (arg2: a) => b
+//│ export declare const cool<a, b>: (arg: (arg1: Omit<a, "a" | "b"> & {a: "apple", b: "ball"}) => b) => (arg2: a) => b
 //│ export declare const g: {x: 1, y: "yeah"}
 //│ // end ts
 
@@ -54,9 +54,9 @@ def g x y = if x.b == 1 then x else x.a
 //│ fact: int -> int
 //│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
 //│ // start ts
-//│ export declare const f: (arg1: int) => (arg3: string) => (arg5: bool) => int | string
-//│ export declare const fact: (arg1: int) => int
-//│ export declare const g<a>: (arg1: {a: a, b: int} & a) => (arg3: unknown) => a
+//│ export declare const f: (arg: int) => (arg1: string) => (arg2: bool) => int | string
+//│ export declare const fact: (arg: int) => int
+//│ export declare const g<a>: (arg: {a: a, b: int} & a) => (arg1: unknown) => a
 //│ // end ts
 
 :ts
@@ -68,12 +68,12 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ m: int -> int -> 'a as 'a
 //│ f: ('c -> 'a as 'a) -> 'c -> int
 //│ // start ts
-//│ export type a = (arg1: int) => a
+//│ export type a = (arg: int) => a
 //│ export declare const l: a
-//│ export type a = (arg1: int) => (arg3: int) => a
+//│ export type a = (arg: int) => (arg1: int) => a
 //│ export declare const m: a
-//│ export type a<c> = (arg1: c) => a<c>
-//│ export declare const f<c>: (arg1: a<c>) => (arg3: c) => int
+//│ export type a<c> = (arg: c) => a<c>
+//│ export declare const f<c>: (arg: a<c>) => (arg1: c) => int
 //│ // end ts
 
 :ts
@@ -108,8 +108,8 @@ def g = fun x -> fun y -> if x == y then x y else y x
 //│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg1: ((arg3: a) => b) & {a: int} & c) => (arg5: {b: int} & a) => ((arg7: unknown) => c) | b
-//│ export declare const g: (arg1: never) => (arg3: never) => never
+//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {a: int} & c) => (arg2: {b: int} & a) => ((arg3: unknown) => c) | b
+//│ export declare const g: (arg: never) => (arg1: never) => never
 //│ // end ts
 
 :ts
@@ -132,8 +132,8 @@ app 2 cont
 //│ app: int -> (int -> 'a) -> 'a
 //│ res: int
 //│ // start ts
-//│ export declare const cont: (arg1: int) => int
-//│ export declare const app<a>: (arg1: int) => (arg3: (arg5: int) => a) => a
+//│ export declare const cont: (arg: int) => int
+//│ export declare const app<a>: (arg: int) => (arg1: (arg2: int) => a) => a
 //│ export declare const res: int
 //│ // end ts
 
@@ -147,10 +147,10 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
 //│ l: ((1, 2,), (3, 4,),) -> 5
 //│ // start ts
-//│ export declare const g: (arg1: int, arg2: int) => int
-//│ export declare const h<a>: (arg1: int, arg2: [(arg4: a) => int, a]) => int
-//│ export declare const k<a, b>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
-//│ export declare const l: (arg1: [1, 2], arg2: [3, 4]) => 5
+//│ export declare const g: (arg: int, arg1: int) => int
+//│ export declare const h<a>: (arg: int, arg1: [(arg2: a) => int, a]) => int
+//│ export declare const k<a, b>: (arg: int, arg1: [(arg2: int) => a, int]) => (arg3: int, arg4: (arg5: int) => (arg6: a) => b, arg7: int) => b
+//│ export declare const l: (arg: [1, 2], arg1: [3, 4]) => 5
 //│ // end ts
 
 
@@ -164,12 +164,12 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: ((int, 'a,) as 'a) -> int
 //│ weird: ('a | (int, bool,)) -> 'a
 //│ // start ts
-//│ export type a = (arg1: int, arg2: int) => a
+//│ export type a = (arg: int, arg1: int) => a
 //│ export declare const weird: a
-//│ export type b<a> = a | ((arg1: ((arg3: b<a>) => [int, int]) & a) => [int, int])
+//│ export type b<a> = a | ((arg: ((arg1: b<a>) => [int, int]) & a) => [int, int])
 //│ export declare const weird<a>: b<a>
 //│ export type a = [int, a]
-//│ export declare const weird: (arg1: a) => int
-//│ export declare const weird<a>: (arg1: a | [int, bool]) => a
+//│ export declare const weird: (arg: a) => int
+//│ export declare const weird<a>: (arg: a | [int, bool]) => a
 //│ // end ts
 

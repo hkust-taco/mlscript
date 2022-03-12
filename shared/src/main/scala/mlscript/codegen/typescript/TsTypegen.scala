@@ -38,12 +38,11 @@ final class TsTypegenCodeBuilder {
       typeVarMapping: MutSortedMap[TypeVar, SourceCode],
       termScope: Scope,
       typeScope: Scope,
-      isMethodDefintion: Boolean
   )
 
   object TypegenContext {
 
-    def apply(mlType: Type, isMethodDefintion: Boolean): TypegenContext = {
+    def apply(mlType: Type): TypegenContext = {
       val existingTypeVars = ShowCtx.mk(mlType :: Nil, "").vs
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
@@ -58,14 +57,14 @@ final class TsTypegenCodeBuilder {
       // argument names. For e.g. the below case will be avoided
       // export const arg0: int
       // export const f: (arg0: int) => int
-      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, isMethodDefintion)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
     }
 
     // create a context with pre-created type var to name mapping
-    def apply(mlType: Type, typeVarMapping: MutSortedMap[TypeVar, SourceCode], isMethodDefintion: Boolean): TypegenContext = {
+    def apply(mlType: Type, typeVarMapping: MutSortedMap[TypeVar, SourceCode]): TypegenContext = {
       val typegenTypeScope = Scope("localTypeScope", List.empty, typeScope)
       val typegenTermScope = Scope("localTermScope", List.empty, termScope)
-      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope, isMethodDefintion)
+      TypegenContext(typeVarMapping, typegenTermScope, typegenTypeScope)
     }
   }
 
@@ -88,36 +87,63 @@ final class TsTypegenCodeBuilder {
     }
   }
 
-  /** Add class method type gen translation to the partially translated
-    * class typegen code
+  /**
+    * Translate class method to typescript declaration
+    *
+    * @param classInfo
+    * @param methodName
+    * @param methodType
     */
   def addClassMethod(classInfo: ClassSymbol, methodName: String, methodType: Type): Unit = {
     val classTypeParams = classInfo.params.toSet
     // unwrap method function type to remove implicit this
-    val methodBodyType = methodType match {
-      case Function(lhs, rhs) => rhs
+    val methodSourceCode = methodType match {
+      case Function(lhs, rhs) => {
+        // Create a mapping from type var to their friendly name for lookup
+        val typegenCtx = TypegenContext(rhs)
+
+        rhs match {
+          case f@Function(lhs, rhs) =>
+            // only use free variables for type parameters
+            // flip polarity for input type of function
+            // lhs translates to the complete argument list
+            // method definition only affects source code representation of top level function
+            val lhsTypeSource = toTsType(lhs, true)(typegenCtx, Some(false))
+            val rhsTypeSource = toTsType(rhs)(typegenCtx, Some(true))
+
+            val typeParams = typegenCtx.typeVarMapping.iterator
+              .filter(tup => rhs.freeTypeVariables.contains(tup._1) &&
+                // ignore class type parameters since they are implicitly part of class scope
+                // if no name hint then the type variable is certainly not a class type parameter
+                // its friendly name has been generated
+                tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
+              )
+              .map(_._2)
+              .toList
+            SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ lhsTypeSource ++ SourceCode.colon ++ rhsTypeSource
+          case _ =>
+            val tsType = toTsType(rhs)(typegenCtx, Some(true))
+            // only use free variables for type parameters
+            val typeParams = typegenCtx.typeVarMapping.iterator
+              .filter(tup => rhs.freeTypeVariables.contains(tup._1) &&
+                // ignore class type parameters since they are implicitly part of class scope
+                // if no name hint then the type variable is certainly not a class type parameter
+                // its friendly name has been generated
+                tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
+              )
+              .map(_._2)
+              .toList
+            // known value methods are translated to readonly attributes of the class
+            if (typeParams.length == 0) SourceCode(s"    readonly $methodName") ++ SourceCode.colon ++ tsType
+            // known value methods are not allowed to have type variables in ts
+            // else throw CodeGenError(s"Cannot translate known value method named $methodName free type variables")
+            else SourceCode(s"    readonly $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType
+        }
+      }
+      // top level method type must be a function
       case _ => throw CodeGenError(s"Cannot translate malformed method: $methodName because it does not have top level function")
     }
-    // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(methodBodyType, isMethodDefintion = true)
-    val tsType = toTsType(methodBodyType)(typegenCtx, Some(true))
-    // only use free variables for type parameters
-    val typeParams = typegenCtx.typeVarMapping.iterator
-      .filter(tup => methodBodyType.freeTypeVariables.contains(tup._1) &&
-        // ignore class type parameters since they are implicitly part of class scope
-        // if no name hint then the type variable is certainly not a class type parameter
-        // its friendly name has been generated
-        tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
-      )
-      .map(_._2)
-      .toList
 
-    val methodSourceCode = methodBodyType match {
-      // function creates signature with `:` separating arguments and body
-      case f: Function => SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ tsType
-      // explicitly add `:` for any other method type
-      case _ => SourceCode(s"    $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType
-    }
     typegenCode += methodSourceCode
   }
 
@@ -159,7 +185,7 @@ final class TsTypegenCodeBuilder {
   private def getClassFieldAndTypes(classSymbol: ClassSymbol, includeBaseClass: Boolean = false): List[(SourceCode, SourceCode)] = {
     val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes
       .map{case (fieldVar, fieldType) => 
-        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType, isMethodDefintion = false), Some(true)))
+        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
       }
 
     if (includeBaseClass) {
@@ -173,7 +199,7 @@ final class TsTypegenCodeBuilder {
     val aliasName = aliasInfo.lexicalName
     val mlType = aliasInfo.body
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(mlType, isMethodDefintion = false)
+    val typegenCtx = TypegenContext(mlType)
     val tsType = toTsType(mlType)(typegenCtx, Some(true))
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
@@ -199,7 +225,7 @@ final class TsTypegenCodeBuilder {
     val defName = termName.getOrElse("res")
 
     // Create a mapping from type var to their friendly name for lookup
-    val typegenCtx = TypegenContext(mlType, isMethodDefintion = false)
+    val typegenCtx = TypegenContext(mlType)
     val tsType = toTsType(mlType)(typegenCtx, Some(true))
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
@@ -279,20 +305,13 @@ final class TsTypegenCodeBuilder {
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases
       case f@Function(lhs, rhs) =>
-        val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
-
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function
-        val lhsTypeSource = toTsType(lhs, true)(typegenCtx.copy(isMethodDefintion = false), pol.map(!_))
-        val rhsTypeSource = toTsType(rhs)(typegenCtx.copy(isMethodDefintion = false), pol)
+        val lhsTypeSource = toTsType(lhs, true)(typegenCtx, pol.map(!_))
+        val rhsTypeSource = toTsType(rhs)
 
-        val separator = if (typegenCtx.isMethodDefintion) {
-          SourceCode.colon
-        } else{
-          SourceCode.fatArrow
-        }
-        val funcSourceCode = lhsTypeSource ++ separator ++ rhsTypeSource
+        val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
         // if part of a higher precedence binary operator
         // in this case only Inter and Union is possible
         // parenthesize to maintain correct precedence
@@ -309,7 +328,7 @@ final class TsTypegenCodeBuilder {
         val typeVarMapping = typegenCtx.typeVarMapping
         // create new type gen context and recalculate rec var and
         // non-rec var for current type
-        val nestedTypegenCtx = TypegenContext(mlType, typeVarMapping, isMethodDefintion = false)
+        val nestedTypegenCtx = TypegenContext(mlType, typeVarMapping)
 
         // recursive type does not have any other type variables
         // (except itself)
