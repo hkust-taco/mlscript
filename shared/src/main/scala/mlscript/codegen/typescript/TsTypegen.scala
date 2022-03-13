@@ -134,7 +134,7 @@ final class TsTypegenCodeBuilder {
               .map(_._2)
               .toList
             // known value methods are translated to readonly attributes of the class
-            if (typeParams.length == 0) SourceCode(s"    readonly $methodName") ++ SourceCode.colon ++ tsType
+            if (typeParams.isEmpty) SourceCode(s"    readonly $methodName") ++ SourceCode.colon ++ tsType
             // known value methods are not allowed to have type variables in ts
             // else throw CodeGenError(s"Cannot translate known value method named $methodName free type variables")
             else SourceCode(s"    readonly $methodName") ++ SourceCode.paramList(typeParams) ++ SourceCode.colon ++ tsType
@@ -165,6 +165,7 @@ final class TsTypegenCodeBuilder {
       classDeclaration ++= SourceCode(s" extends ${baseClass.lexicalName}") ++ SourceCode.paramList(baseClassTypeParams)
     })
     classDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
+
 
     // add body fields
     bodyFieldAndTypes.iterator.foreach({ case (fieldVar, fieldType) => {
