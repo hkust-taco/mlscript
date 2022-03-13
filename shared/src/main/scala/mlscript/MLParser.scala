@@ -56,22 +56,24 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   })
 
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
-  def subterm[_: P]: P[Term] = P( subtermNoSel ~ (
-    // fields
+  def subterm[_: P]: P[Term] = P( Index ~~ subtermNoSel ~ (
+    // Fields:
     ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
       .map {case (prt, id) => Var(s"${prt}.${id}")})))
       .map {(t: Var) => Left(t)} |
-    // array subscript
-    ("[" ~ term ~/ "]").map {Right(_)}
-    // assign
+    // Array subscripts:
+    ("[" ~ term ~/ "]" ~~ Index).map {Right(_)}
+    // Assignment:
     ).rep ~ ("<-" ~ term).?).map {
-      case (st, sels, a) => sels.foldLeft(st)((acc, t) => t match {
-        case Left(se) => Sel(acc, se)
-        case Right(su) => Subs(acc, su)
-      }) pipe (a match {
-        case None => identity
-        case Some(v) => Assign(_, v)
-      })
+      case (i0, st, sels, a) =>
+        val base = sels.foldLeft(st)((acc, t) => t match {
+          case Left(se) => Sel(acc, se)
+          case Right((su, i1)) => Subs(acc, su).withLoc(i0, i1, origin)
+        })
+        a match {
+          case None => base
+          case Some(v) => Assign(base, v)
+        }
     }
 
   def record[_: P]: P[Rcd] = locate(P(

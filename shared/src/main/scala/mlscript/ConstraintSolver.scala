@@ -177,7 +177,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
               | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
-              reportError
+              reportError()
             case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
@@ -187,7 +187,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(S(pt: ClassTag), ts, r), RhsBases(pts, bf)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
-              // else f.fold(reportError)(f => annoying(Nil, done_ls, Nil, f))
+              // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
               else annoying(Nil, LhsRefined(N, ts, r), Nil, RhsBases(Nil, bf))
             case (lr @ LhsRefined(bo, ts, r), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
@@ -195,28 +195,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) =>
-                  recLb(t2, nt1._2, reportError)
+                  recLb(t2, nt1._2)
                   rec(nt1._2.ub, t2.ub, false)
                 case N =>
                   bo match {
                     case S(Without(b, ns)) =>
                       if (ns(n)) rec(b, RhsBases(ots, N).toType(), true)
                       else rec(b, done_rs.toType(), true)
-                    case _ => reportError
+                    case _ => reportError()
                   }
               }
             case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
-              reportError
+              reportError()
             case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
-                  recLb(r, l, reportError)
+                  recLb(r, l)
                 }
             case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
-              recLb(ar.inner, b.inner, reportError)
+              recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
-            case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
+            case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError()
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -229,14 +229,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }()
 
-    // helper function for rec for lower bounds
-    def recLb[U](lhs: FieldType, rhs: FieldType, errReporter: => U)
+    /** Helper function to constrain Field lower bounds */
+    def recLb[U](lhs: FieldType, rhs: FieldType)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
-          case (Some(l), None   ) => errReporter; ()          // TODO: better errors
-          case (None   , Some(r)) => rec(BotType, r, false)   // ? can this case be skipped 
-          case (None   , None   ) => ()
+          case (Some(l), None) =>
+            if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty) reportError()
+            else reportError(S(msg"is not mutable"))(
+              (rhs.ub.withProv(rhs.prov) :: l.withProv(lhs.prov) :: Nil, l.withProv(noProv) :: Nil)
+            )
+          case (None, Some(_)) | (None, None) => ()
         }
       }
     
@@ -316,14 +319,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   msg"Wrong tuple field name: found '${ln.name}' instead of '${rn.name}'",
                   lhs.prov.loco // TODO better loco
               )}}
-              recLb(r, l, reportError)
+              recLb(r, l)
               rec(l.ub, r.ub, false)
             }
           case (t: ArrayBase, a: ArrayType) =>
-            recLb(a.inner, t.inner, err(
-                  msg"type mismatch in ${prov.desc}" -> t.prov.loco ::
-                  msg"array of `???` is not mutable" -> t.prov.loco ::       // TODO: error message
-                  Nil))
+            recLb(a.inner, t.inner)
             rec(t.inner.ub, a.inner.ub, false)
           case (ComposedType(true, l, r), _) =>
             rec(l, rhs, true) // Q: really propagate the outerProv here?
@@ -344,12 +344,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (RecordType(fs0), RecordType(fs1)) =>
             fs1.foreach { case (n1, t1) =>
               fs0.find(_._1 === n1).fold {
-                reportError
+                reportError()
               } { case (n0, t0) =>
-                recLb(t1, t0, err(
-                  msg"type mismatch in ${prov.desc}" -> t1.prov.loco ::
-                  msg"field `${n0.name}` is not mutable" -> t0.prov.loco ::
-                  Nil))
+                recLb(t1, t0)
                 rec(t0.ub, t1.ub, false)
               }
             }
@@ -372,11 +369,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             goToWork(lhs, rhs)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
-          case _ => reportError
+          case _ => reportError()
       }
     }}()
     
-    def reportError(implicit cctx: ConCtx): Unit = {
+    def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
@@ -386,7 +383,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
       
-      val failure = (lhs.unwrapProvs, rhs.unwrapProvs) match {
+      val failure = failureOpt.getOrElse((lhs.unwrapProvs, rhs.unwrapProvs) match {
         // case (lunw, _) if lunw.isInstanceOf[TV] || lunw.isInstanceOf => doesntMatch(rhs)
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
@@ -407,7 +404,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             msg"is not a record (expected a record with field${
               if (fs.sizeCompare(1) > 0) "s" else ""}: ${fs.map(_._1.name).mkString(", ")})"
         case _ => doesntMatch(rhs)
-      }
+      })
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
