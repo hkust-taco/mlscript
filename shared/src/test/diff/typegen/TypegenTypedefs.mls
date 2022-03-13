@@ -71,3 +71,39 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ // end ts
 
 
+:ts
+class None: {}
+class Some[T]: { value: T }
+type Option[T] = Some[T] | None
+class LinkedList[T]: { head: T; tail: Option[LinkedList[T]] }
+  method Append: T -> LinkedList[T]
+  method Append elem = LinkedList { head = elem; tail = Some { value = this } }
+def None = None {}
+def Some v = Some { value = v }
+//│ Defined class None
+//│ Defined class Some
+//│ Defined type alias Option
+//│ Defined class LinkedList
+//│ Declared LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> 'T -> ((LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. 'd] with {value: 'd})}) as 'd)
+//│ Defined LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> ('T & 'd & 'e) -> (LinkedList['T & 'e .. 'T | 'e] with {head: 'd, tail: Some[((LinkedList['T | 'e .. 'T & 'e] with {tail: 'g & (None | (Some['h .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'g}] with {value: 'f}))}) as 'f) & 'i .. ((LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: 'g & (None | (Some['h .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'g}] with {value: 'f}))}) as 'f .. 'j] with {value: 'j})}) as 'j) | (LinkedList['T] with {tail: None | (Some[?] with {value: (LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. 'k] with {value: 'k})}) as 'k})}) | 'i] with {value: LinkedList['T] with {tail: None | (Some[?] with {value: (LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. 'k] with {value: 'k})}) as 'k})}}})
+//│ None: None
+//│ Some: ('value & 'T) -> (Some['T] with {value: 'value})
+//│ // start ts
+//│ export declare class None {
+//│     constructor(fields: {})
+//│ }
+//│ export declare class Some<T> {
+//│     value: T
+//│     constructor(fields: {value: T})
+//│ }
+//│ export type Option = Some<T> | None
+//│ export type a<d, c, T> = Omit<LinkedList<T>, "tail"> & {tail: None | Omit<Some<a<d, c, T>>, "value"> & {value: a<d, c, T>}}
+//│ export declare class LinkedList<T> {
+//│     head: T
+//│     tail: Option<LinkedList<T>>
+//│     constructor(fields: {head: T, tail: Option<LinkedList<T>>})
+//│     Append<d, c>(arg: T): a<d, c, T>
+//│ }
+//│ export declare const None: None
+//│ export declare const Some<T, value>: (arg: value & T) => Omit<Some<T>, "value"> & {value: value}
+//│ // end ts

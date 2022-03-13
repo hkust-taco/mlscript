@@ -94,7 +94,7 @@ final class TsTypegenCodeBuilder {
     * @param methodName
     * @param methodType
     */
-  def addClassMethod(classInfo: ClassSymbol, methodName: String, methodType: Type): Unit = {
+  def addClassMethod(classInfo: ClassSymbol, methodName: String, methodType: Type): SourceCode = {
     val classTypeParams = classInfo.params.toSet
     // unwrap method function type to remove implicit this
     val methodSourceCode = methodType match {
@@ -144,7 +144,7 @@ final class TsTypegenCodeBuilder {
       case _ => throw CodeGenError(s"Cannot translate malformed method: $methodName because it does not have top level function")
     }
 
-    typegenCode += methodSourceCode
+    methodSourceCode
   }
 
   def addTypeGenClassDef(classInfo: ClassSymbol, methods: List[(String, Type)]): Unit = {
@@ -152,6 +152,7 @@ final class TsTypegenCodeBuilder {
     val classBody = classInfo.body
     val baseClass = typeScope.resolveBaseClass(classBody)
     val typeParams = classInfo.params.iterator.map(SourceCode(_)).toList
+    var classSourceCode = SourceCode.empty
 
     // create mapping for class body fields and types
     val bodyFieldAndTypes = getClassFieldAndTypes(classInfo)
@@ -172,12 +173,12 @@ final class TsTypegenCodeBuilder {
     val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
-    typegenCode += classDeclaration;
+    classSourceCode += classDeclaration;
 
     // add methods
-    methods.foreach { case (name, methodType) => addClassMethod(classInfo, name, methodType) }
+    methods.foreach { case (name, methodType) => classSourceCode += addClassMethod(classInfo, name, methodType) }
 
-    typegenCode += SourceCode.closeCurlyBrace
+    typegenCode += classSourceCode + SourceCode.closeCurlyBrace
   }
 
   // find all fields and types for class including all super classes
