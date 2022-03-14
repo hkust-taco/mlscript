@@ -266,9 +266,9 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'd, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'e}) & 'b | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega as 'c) -> string
 //│          = [Function: prettier2]
-//│ constrain calls  : 195
+//│ constrain calls  : 201
 //│ annoying  calls  : 0
-//│ subtyping calls  : 118883
+//│ subtyping calls  : 118906
 
 
 
@@ -293,39 +293,39 @@ eval2 done e2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?E, ?arg, ?b. ?b) -> ?c` exceeded recursion depth limit (100)
 //│ ║  l.292: 	eval2 done e2
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── while constraining:  (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1253})  <!<  {rhs: α1222}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1253})  <!<  α1221
-//│ ╟── while constraining:  (add<> & {lhs: lhs1249, rhs: rhs1253, Add#E: (E1251 -> E1251)})  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {lhs: lhs1249, rhs: rhs1253, Add#E: (E1251 -> E1251)})  <!<  α1218
-//│ ╟── while constraining:  (add<> & {lhs: lhs1249, rhs: rhs1253, Add#E: (E1251 -> E1251)})  <!<  α1222
-//│ ╟── while constraining:  rhs1254  <!<  α1222
-//│ ╟── while constraining:  (add<> & {Add#E: (E1248 -> E1248), lhs: lhs1246, rhs: rhs1254})  <!<  {rhs: α1222}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1248 -> E1248), lhs: lhs1246, rhs: rhs1254})  <!<  α1221
-//│ ╟── while constraining:  (add<> & {lhs: lhs1246, rhs: rhs1254, Add#E: (E1248 -> E1248)})  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α1245  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1218
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1228
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1227
-//│ ╟── while constraining:  arg1242  <!<  α1227
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  {arg: α1227}
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  α1226
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  ((nega<> & α1226) | (α1229 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  α1225
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  α1224
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  α1218
-//│ ╟── while constraining:  (nega<> & {arg: arg1242, Nega#E: (E1243 -> E1243)})  <!<  α1222
-//│ ╟── while constraining:  rhs1244  <!<  α1222
-//│ ╟── while constraining:  (add<> & {Add#E: (E1241 -> E1241), lhs: lhs1239, rhs: rhs1244})  <!<  {rhs: α1222}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1241 -> E1241), lhs: lhs1239, rhs: rhs1244})  <!<  α1221
-//│ ╟── while constraining:  (add<> & {lhs: lhs1239, rhs: rhs1244, Add#E: (E1241 -> E1241)})  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α1238  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1190'  <!<  ((lit<> & α1219) | (((add<> & α1221) | (α1224 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1190'  <!<  α1218
-//│ ╟── while constraining:  (∀ 0. α1190',)  <!<  (α1218,)
-//│ ╟── while constraining:  ((α1218,) -> (α1220 | (α1230 | α1231)))  <!<  ((∀ 0. α1190',) -> α1237)
-//│ ╙── while constraining:  α1212  <!<  ((∀ 0. α1190',) -> α1237)
+//│ ╟── while constraining:  (add<> & {Add#E: (E1261 -> E1261), lhs: lhs1259, rhs: rhs1263})  <!<  {rhs: α1232}
+//│ ╟── while constraining:  (add<> & {Add#E: (E1261 -> E1261), lhs: lhs1259, rhs: rhs1263})  <!<  α1231
+//│ ╟── while constraining:  (add<> & {lhs: lhs1259, rhs: rhs1263, Add#E: (E1261 -> E1261)})  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs1259, rhs: rhs1263, Add#E: (E1261 -> E1261)})  <!<  α1228
+//│ ╟── while constraining:  (add<> & {lhs: lhs1259, rhs: rhs1263, Add#E: (E1261 -> E1261)})  <!<  α1232
+//│ ╟── while constraining:  rhs1264  <!<  α1232
+//│ ╟── while constraining:  (add<> & {Add#E: (E1258 -> E1258), lhs: lhs1256, rhs: rhs1264})  <!<  {rhs: α1232}
+//│ ╟── while constraining:  (add<> & {Add#E: (E1258 -> E1258), lhs: lhs1256, rhs: rhs1264})  <!<  α1231
+//│ ╟── while constraining:  (add<> & {lhs: lhs1256, rhs: rhs1264, Add#E: (E1258 -> E1258)})  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1255  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1228
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1238
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1237
+//│ ╟── while constraining:  arg1252  <!<  α1237
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  {arg: α1237}
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  α1236
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  ((nega<> & α1236) | (α1239 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  α1235
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  α1234
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  α1228
+//│ ╟── while constraining:  (nega<> & {arg: arg1252, Nega#E: (E1253 -> E1253)})  <!<  α1232
+//│ ╟── while constraining:  rhs1254  <!<  α1232
+//│ ╟── while constraining:  (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1254})  <!<  {rhs: α1232}
+//│ ╟── while constraining:  (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1254})  <!<  α1231
+//│ ╟── while constraining:  (add<> & {lhs: lhs1249, rhs: rhs1254, Add#E: (E1251 -> E1251)})  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1248  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1200'  <!<  ((lit<> & α1229) | (((add<> & α1231) | (α1234 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1200'  <!<  α1228
+//│ ╟── while constraining:  (∀ 0. α1200',)  <!<  (α1228,)
+//│ ╟── while constraining:  ((α1228,) -> (α1230 | (α1240 | α1241)))  <!<  ((∀ 0. α1200',) -> α1247)
+//│ ╙── while constraining:  α1222  <!<  ((∀ 0. α1200',) -> α1247)
 //│ res: error
 //│    = -5
 //│ constrain calls  : 128
@@ -342,39 +342,39 @@ eval2 done d2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?val, ?lhs, ?E, ?rhs, ?val0, ?arg, ?E0, ?E1, ?b, ?arg0, ?lhs0, ?val1, ?E2, ?arg1, ?val2, ?E3, ?rhs0, ?E4. ?b) -> ?c` exceeded recursion depth limit (100)
 //│ ║  l.341: 	eval2 done d2
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── while constraining:  (lit<> & {val: val1396})  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (lit<> & {val: val1396})  <!<  α1370
-//│ ╟── while constraining:  (lit<> & {val: val1396})  <!<  α1380
-//│ ╟── while constraining:  (lit<> & {val: val1396})  <!<  α1379
-//│ ╟── while constraining:  arg1395  <!<  α1379
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  {arg: α1379}
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  α1378
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  ((nega<> & α1378) | (α1381 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  α1377
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  α1376
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  α1370
-//│ ╟── while constraining:  (nega<> & {arg: arg1395, Nega#E: (E1397 -> E1397)})  <!<  α1374
-//│ ╟── while constraining:  rhs1398  <!<  α1374
-//│ ╟── while constraining:  (add<> & {Add#E: (E1394 -> E1394), lhs: lhs1392, rhs: rhs1398})  <!<  {rhs: α1374}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1394 -> E1394), lhs: lhs1392, rhs: rhs1398})  <!<  α1373
-//│ ╟── while constraining:  (add<> & {lhs: lhs1392, rhs: rhs1398, Add#E: (E1394 -> E1394)})  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {lhs: lhs1392, rhs: rhs1398, Add#E: (E1394 -> E1394)})  <!<  α1370
-//│ ╟── while constraining:  (add<> & {lhs: lhs1392, rhs: rhs1398, Add#E: (E1394 -> E1394)})  <!<  α1380
-//│ ╟── while constraining:  (add<> & {lhs: lhs1392, rhs: rhs1398, Add#E: (E1394 -> E1394)})  <!<  α1379
-//│ ╟── while constraining:  arg1391  <!<  α1379
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  {arg: α1379}
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  α1378
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  ((nega<> & α1378) | (α1381 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  α1377
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  α1376
-//│ ╟── while constraining:  (nega<> & {arg: arg1391, Nega#E: (E1399 -> E1399)})  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α1390  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1346'  <!<  ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1346'  <!<  α1370
-//│ ╟── while constraining:  (∀ 0. α1346',)  <!<  (α1370,)
-//│ ╟── while constraining:  ((α1370,) -> (α1372 | (α1382 | α1383)))  <!<  ((∀ 0. α1346',) -> α1389)
-//│ ╙── while constraining:  α1364  <!<  ((∀ 0. α1346',) -> α1389)
+//│ ╟── while constraining:  (lit<> & {val: val1406})  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (lit<> & {val: val1406})  <!<  α1380
+//│ ╟── while constraining:  (lit<> & {val: val1406})  <!<  α1390
+//│ ╟── while constraining:  (lit<> & {val: val1406})  <!<  α1389
+//│ ╟── while constraining:  arg1405  <!<  α1389
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  {arg: α1389}
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  α1388
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  ((nega<> & α1388) | (α1391 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  α1387
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  α1386
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  α1380
+//│ ╟── while constraining:  (nega<> & {arg: arg1405, Nega#E: (E1407 -> E1407)})  <!<  α1384
+//│ ╟── while constraining:  rhs1408  <!<  α1384
+//│ ╟── while constraining:  (add<> & {Add#E: (E1404 -> E1404), lhs: lhs1402, rhs: rhs1408})  <!<  {rhs: α1384}
+//│ ╟── while constraining:  (add<> & {Add#E: (E1404 -> E1404), lhs: lhs1402, rhs: rhs1408})  <!<  α1383
+//│ ╟── while constraining:  (add<> & {lhs: lhs1402, rhs: rhs1408, Add#E: (E1404 -> E1404)})  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs1402, rhs: rhs1408, Add#E: (E1404 -> E1404)})  <!<  α1380
+//│ ╟── while constraining:  (add<> & {lhs: lhs1402, rhs: rhs1408, Add#E: (E1404 -> E1404)})  <!<  α1390
+//│ ╟── while constraining:  (add<> & {lhs: lhs1402, rhs: rhs1408, Add#E: (E1404 -> E1404)})  <!<  α1389
+//│ ╟── while constraining:  arg1401  <!<  α1389
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  {arg: α1389}
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  α1388
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  ((nega<> & α1388) | (α1391 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  α1387
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  α1386
+//│ ╟── while constraining:  (nega<> & {arg: arg1401, Nega#E: (E1409 -> E1409)})  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1400  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1356'  <!<  ((lit<> & α1381) | (((add<> & α1383) | (α1386 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1356'  <!<  α1380
+//│ ╟── while constraining:  (∀ 0. α1356',)  <!<  (α1380,)
+//│ ╟── while constraining:  ((α1380,) -> (α1382 | (α1392 | α1393)))  <!<  ((∀ 0. α1356',) -> α1399)
+//│ ╙── while constraining:  α1374  <!<  ((∀ 0. α1356',) -> α1399)
 //│ res: error
 //│    = 0
 //│ constrain calls  : 128
@@ -392,7 +392,7 @@ prettier2 done (eval1 done)
 //│    = [Function (anonymous)]
 //│ constrain calls  : 81
 //│ annoying  calls  : 0
-//│ subtyping calls  : 7165
+//│ subtyping calls  : 7188
 
 :e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
@@ -404,83 +404,83 @@ prettier2 done (eval2 done) d2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?E, ?arg, ?b. ?b) -> ?c` exceeded recursion depth limit (100)
 //│ ║  l.400: 	prettier2 done (eval2 done) e2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (add<> & {lhs: lhs1960, rhs: rhs1964, Add#E: (E1962 -> E1962)})  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {lhs: lhs1960, rhs: rhs1964, Add#E: (E1962 -> E1962)})  <!<  α1928
-//│ ╟── while constraining:  (add<> & {lhs: lhs1960, rhs: rhs1964, Add#E: (E1962 -> E1962)})  <!<  α1932
-//│ ╟── while constraining:  rhs1965  <!<  α1932
-//│ ╟── while constraining:  (add<> & {Add#E: (E1959 -> E1959), lhs: lhs1957, rhs: rhs1965})  <!<  {rhs: α1932}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1959 -> E1959), lhs: lhs1957, rhs: rhs1965})  <!<  α1931
-//│ ╟── while constraining:  (add<> & {lhs: lhs1957, rhs: rhs1965, Add#E: (E1959 -> E1959)})  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α1956  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1928
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1938
-//│ ╟── while constraining:  ∀ 0. α743'  <!<  α1937
-//│ ╟── while constraining:  arg1953  <!<  α1937
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  {arg: α1937}
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  α1936
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  ((nega<> & α1936) | (α1939 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  α1935
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  α1934
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  α1928
-//│ ╟── while constraining:  (nega<> & {arg: arg1953, Nega#E: (E1954 -> E1954)})  <!<  α1932
-//│ ╟── while constraining:  rhs1955  <!<  α1932
-//│ ╟── while constraining:  (add<> & {Add#E: (E1952 -> E1952), lhs: lhs1950, rhs: rhs1955})  <!<  {rhs: α1932}
-//│ ╟── while constraining:  (add<> & {Add#E: (E1952 -> E1952), lhs: lhs1950, rhs: rhs1955})  <!<  α1931
-//│ ╟── while constraining:  (add<> & {Add#E: (E1952 -> E1952), lhs: lhs1950, rhs: rhs1955})  <!<  ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {Add#E: (E1952 -> E1952), lhs: lhs1950, rhs: rhs1955})  <!<  α1928
-//│ ╟── while constraining:  (add<> & {Add#E: (E1952 -> E1952), lhs: lhs1950, rhs: rhs1955})  <!<  α1876
-//│ ╟── while constraining:  (add<> & {lhs: lhs1950, rhs: rhs1955, Add#E: (E1952 -> E1952)})  <!<  ((lit<> & α1890) | (((add<> & α1876) | (α1892 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α1949  <!<  ((lit<> & α1890) | (((add<> & α1876) | (α1892 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1190'  <!<  ((lit<> & α1890) | (((add<> & α1876) | (α1892 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1190'  <!<  α1889
-//│ ╟── while constraining:  (∀ 0. α1190',)  <!<  (α1889,)
-//│ ╟── while constraining:  ((α1889,) -> (α1913 | (α1914 | α1915)))  <!<  ((∀ 0. α1190',) -> α1948)
-//│ ╙── while constraining:  α1947  <!<  ((∀ 0. α1190',) -> α1948)
+//│ ╟── while constraining:  (add<> & {lhs: lhs2004, rhs: rhs2008, Add#E: (E2006 -> E2006)})  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs2004, rhs: rhs2008, Add#E: (E2006 -> E2006)})  <!<  α1972
+//│ ╟── while constraining:  (add<> & {lhs: lhs2004, rhs: rhs2008, Add#E: (E2006 -> E2006)})  <!<  α1976
+//│ ╟── while constraining:  rhs2009  <!<  α1976
+//│ ╟── while constraining:  (add<> & {Add#E: (E2003 -> E2003), lhs: lhs2001, rhs: rhs2009})  <!<  {rhs: α1976}
+//│ ╟── while constraining:  (add<> & {Add#E: (E2003 -> E2003), lhs: lhs2001, rhs: rhs2009})  <!<  α1975
+//│ ╟── while constraining:  (add<> & {lhs: lhs2001, rhs: rhs2009, Add#E: (E2003 -> E2003)})  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α2000  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1972
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1982
+//│ ╟── while constraining:  ∀ 0. α747'  <!<  α1981
+//│ ╟── while constraining:  arg1997  <!<  α1981
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  {arg: α1981}
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  α1980
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  ((nega<> & α1980) | (α1983 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  α1979
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  α1978
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  α1972
+//│ ╟── while constraining:  (nega<> & {arg: arg1997, Nega#E: (E1998 -> E1998)})  <!<  α1976
+//│ ╟── while constraining:  rhs1999  <!<  α1976
+//│ ╟── while constraining:  (add<> & {Add#E: (E1996 -> E1996), lhs: lhs1994, rhs: rhs1999})  <!<  {rhs: α1976}
+//│ ╟── while constraining:  (add<> & {Add#E: (E1996 -> E1996), lhs: lhs1994, rhs: rhs1999})  <!<  α1975
+//│ ╟── while constraining:  (add<> & {Add#E: (E1996 -> E1996), lhs: lhs1994, rhs: rhs1999})  <!<  ((lit<> & α1973) | (((add<> & α1975) | (α1978 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: (E1996 -> E1996), lhs: lhs1994, rhs: rhs1999})  <!<  α1972
+//│ ╟── while constraining:  (add<> & {Add#E: (E1996 -> E1996), lhs: lhs1994, rhs: rhs1999})  <!<  α1913
+//│ ╟── while constraining:  (add<> & {lhs: lhs1994, rhs: rhs1999, Add#E: (E1996 -> E1996)})  <!<  ((lit<> & α1927) | (((add<> & α1913) | (α1929 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1993  <!<  ((lit<> & α1927) | (((add<> & α1913) | (α1929 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1200'  <!<  ((lit<> & α1927) | (((add<> & α1913) | (α1929 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1200'  <!<  α1926
+//│ ╟── while constraining:  (∀ 0. α1200',)  <!<  (α1926,)
+//│ ╟── while constraining:  ((α1926,) -> (α1950 | (α1951 | α1959)))  <!<  ((∀ 0. α1200',) -> α1992)
+//│ ╙── while constraining:  α1991  <!<  ((∀ 0. α1200',) -> α1992)
 //│ res: error
 //│    = '1-123'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?val, ?lhs, ?E, ?rhs, ?val0, ?arg, ?E0, ?E1, ?b, ?arg0, ?lhs0, ?val1, ?E2, ?arg1, ?val2, ?E3, ?rhs0, ?E4. ?b) -> ?c` exceeded recursion depth limit (100)
 //│ ║  l.401: 	prettier2 done (eval2 done) d2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (lit<> & {val: val2165})  <!<  α2147
-//│ ╟── while constraining:  arg2164  <!<  α2147
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  {arg: α2147}
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  α2146
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  ((nega<> & α2146) | (α2149 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  α2145
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  α2144
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  ((lit<> & α2139) | (((add<> & α2141) | (α2144 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  α2138
-//│ ╟── while constraining:  (nega<> & {arg: arg2164, Nega#E: (E2166 -> E2166)})  <!<  α2142
-//│ ╟── while constraining:  rhs2167  <!<  α2142
-//│ ╟── while constraining:  (add<> & {Add#E: (E2163 -> E2163), lhs: lhs2161, rhs: rhs2167})  <!<  {rhs: α2142}
-//│ ╟── while constraining:  (add<> & {Add#E: (E2163 -> E2163), lhs: lhs2161, rhs: rhs2167})  <!<  α2141
-//│ ╟── while constraining:  (add<> & {Add#E: (E2163 -> E2163), lhs: lhs2161, rhs: rhs2167})  <!<  ((lit<> & α2139) | (((add<> & α2141) | (α2144 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {Add#E: (E2163 -> E2163), lhs: lhs2161, rhs: rhs2167})  <!<  α2138
-//│ ╟── while constraining:  (add<> & {Add#E: (E2163 -> E2163), lhs: lhs2161, rhs: rhs2167})  <!<  α2086
-//│ ╟── while constraining:  (add<> & {lhs: lhs2161, rhs: rhs2167, Add#E: (E2163 -> E2163)})  <!<  ((lit<> & α2100) | (((add<> & α2086) | (α2102 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  (add<> & {lhs: lhs2161, rhs: rhs2167, Add#E: (E2163 -> E2163)})  <!<  α2099
-//│ ╟── while constraining:  (add<> & {lhs: lhs2161, rhs: rhs2167, Add#E: (E2163 -> E2163)})  <!<  α2098
-//│ ╟── while constraining:  (add<> & {lhs: lhs2161, rhs: rhs2167, Add#E: (E2163 -> E2163)})  <!<  α2105
-//│ ╟── while constraining:  arg2160  <!<  α2105
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  {arg: α2105}
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  α2104
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  ((nega<> & α2104) | (α2106 & ~(nega<>)))
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  α2103
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  α2102
-//│ ╟── while constraining:  (nega<> & {arg: arg2160, Nega#E: (E2168 -> E2168)})  <!<  ((lit<> & α2100) | (((add<> & α2086) | (α2102 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  α2159  <!<  ((lit<> & α2100) | (((add<> & α2086) | (α2102 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1346'  <!<  ((lit<> & α2100) | (((add<> & α2086) | (α2102 & ~(add<>))) & ~(lit<>)))
-//│ ╟── while constraining:  ∀ 0. α1346'  <!<  α2099
-//│ ╟── while constraining:  (∀ 0. α1346',)  <!<  (α2099,)
-//│ ╟── while constraining:  ((α2099,) -> (α2123 | (α2124 | α2125)))  <!<  ((∀ 0. α1346',) -> α2158)
-//│ ╙── while constraining:  α2157  <!<  ((∀ 0. α1346',) -> α2158)
+//│ ╟── while constraining:  (lit<> & {val: val2218})  <!<  α2200
+//│ ╟── while constraining:  arg2217  <!<  α2200
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  {arg: α2200}
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  α2199
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  ((nega<> & α2199) | (α2202 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  α2198
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  α2197
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  ((lit<> & α2192) | (((add<> & α2194) | (α2197 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  α2191
+//│ ╟── while constraining:  (nega<> & {arg: arg2217, Nega#E: (E2219 -> E2219)})  <!<  α2195
+//│ ╟── while constraining:  rhs2220  <!<  α2195
+//│ ╟── while constraining:  (add<> & {Add#E: (E2216 -> E2216), lhs: lhs2214, rhs: rhs2220})  <!<  {rhs: α2195}
+//│ ╟── while constraining:  (add<> & {Add#E: (E2216 -> E2216), lhs: lhs2214, rhs: rhs2220})  <!<  α2194
+//│ ╟── while constraining:  (add<> & {Add#E: (E2216 -> E2216), lhs: lhs2214, rhs: rhs2220})  <!<  ((lit<> & α2192) | (((add<> & α2194) | (α2197 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: (E2216 -> E2216), lhs: lhs2214, rhs: rhs2220})  <!<  α2191
+//│ ╟── while constraining:  (add<> & {Add#E: (E2216 -> E2216), lhs: lhs2214, rhs: rhs2220})  <!<  α2132
+//│ ╟── while constraining:  (add<> & {lhs: lhs2214, rhs: rhs2220, Add#E: (E2216 -> E2216)})  <!<  ((lit<> & α2146) | (((add<> & α2132) | (α2148 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs2214, rhs: rhs2220, Add#E: (E2216 -> E2216)})  <!<  α2145
+//│ ╟── while constraining:  (add<> & {lhs: lhs2214, rhs: rhs2220, Add#E: (E2216 -> E2216)})  <!<  α2144
+//│ ╟── while constraining:  (add<> & {lhs: lhs2214, rhs: rhs2220, Add#E: (E2216 -> E2216)})  <!<  α2151
+//│ ╟── while constraining:  arg2213  <!<  α2151
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  {arg: α2151}
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  α2150
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  ((nega<> & α2150) | (α2152 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  α2149
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  α2148
+//│ ╟── while constraining:  (nega<> & {arg: arg2213, Nega#E: (E2221 -> E2221)})  <!<  ((lit<> & α2146) | (((add<> & α2132) | (α2148 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α2212  <!<  ((lit<> & α2146) | (((add<> & α2132) | (α2148 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1356'  <!<  ((lit<> & α2146) | (((add<> & α2132) | (α2148 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1356'  <!<  α2145
+//│ ╟── while constraining:  (∀ 0. α1356',)  <!<  (α2145,)
+//│ ╟── while constraining:  ((α2145,) -> (α2169 | (α2170 | α2178)))  <!<  ((∀ 0. α1356',) -> α2211)
+//│ ╙── while constraining:  α2210  <!<  ((∀ 0. α1356',) -> α2211)
 //│ res: error
 //│    = '-1'
 //│ constrain calls  : 486
 //│ annoying  calls  : 79
-//│ subtyping calls  : 363218
+//│ subtyping calls  : 363241
 
 
 
@@ -594,7 +594,7 @@ prettier2 done eval2
 //│    = [Function (anonymous)]
 //│ constrain calls  : 59
 //│ annoying  calls  : 0
-//│ subtyping calls  : 317
+//│ subtyping calls  : 340
 
 :e
 :stats
@@ -635,7 +635,7 @@ prettier2 done eval2 e1
 //│    = '123'
 //│ constrain calls  : 227
 //│ annoying  calls  : 62
-//│ subtyping calls  : 229
+//│ subtyping calls  : 254
 
 :e
 :stats

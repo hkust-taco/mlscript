@@ -540,7 +540,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
       (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty, upperLvl: Level = MaxLevel): SimpleType =
-    // TODO use upperLvl to be more precise?...
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
@@ -549,13 +548,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(extrude(ar, lvl, pol))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
-      case tv: TypeVariable if tv.level > upperLvl => cache.getOrElse(tv -> true, {
-        val nv = freshVar(tv.prov, tv.nameHint)(tv.level)
-        cache += tv -> true -> nv
-        nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true))
-        nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false))
-        nv
-      })
+      case tv: TypeVariable if tv.level > upperLvl =>
+        // If the TV's level is strictly greater than `upperLvl`,
+        //  it means the TV is quantified by a type being copied,
+        //  so all we need to do is copy this TV along (it is not extruded).
+        if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
+        else cache.getOrElse(tv -> true, {
+          val nv = freshVar(tv.prov, tv.nameHint)(tv.level)
+          cache += tv -> true -> nv
+          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true))
+          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false))
+          nv
+        })
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
         cache += tv -> pol -> nv
@@ -602,18 +606,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     raise(Warning(msgs))
   
   
-  /** Freshens all the type variables whose level is comprised in `(above, below]`. */
+  /** Freshens all the type variables whose level is comprised in `(above, below]`
+    *   or which have bounds and whose level is greater than `above`. */
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
         (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
-    def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType =
-    // trace(s"FRESHEN $ty | $lim .. $upperLim")
+    def freshenImpl(ty: SimpleType, below: Int): SimpleType =
+    // trace(s"FRESHEN $ty | $lim .. $below")
     {
-      def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, upperLim)
+      def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...
         && ty.level <= above) ty else ty match {
-      case tv: TypeVariable if tv.level > upperLim => tv // FIXME bounds?
+      case tv: TypeVariable
+        if tv.level > below
+        // It is not sound to ignore the bounds here,
+        //    as the bounds could contain references to other TVs with lower level;
+        //  OTOH, we don't want to traverse the whole bounds graph every time just to check
+        //    (using `levelBelow`),
+        //    so if there are any bounds registered, we just conservatively freshen the TV.
+        && tv.lowerBounds.isEmpty
+        && tv.upperBounds.isEmpty
+        => tv
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
         case None if rigidify =>
@@ -665,7 +679,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case _: ClassTag | _: TraitTag => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
-      case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl, freshenImpl(bod, upperLim = lvl))
+      case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl,
+        // Setting `upperLim` here is essentially just an optimization,
+        //  to avoid having to copy some type variables needlessly
+        freshenImpl(bod, below = lvl))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r")
