@@ -487,7 +487,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   /** Copies a type up to its type variables of wrong level (and their extruded bounds). */
   def extrude(ty: SimpleType, lvl: Int, pol: Boolean)
-      (implicit ctx: Ctx, cache: MutMap[TV, TV] = MutMap.empty): SimpleType =
+      (implicit ctx: Ctx, cache: MutMap[PolarVariable, TV] = MutMap.empty): SimpleType =
     if (ty.level <= lvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lvl, true) else extrude(lb, lvl, false)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lvl, !pol), extrude(r, lvl, pol))(t.prov)
@@ -496,13 +496,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ TupleType(fs) => TupleType(fs.map(nt => nt._1 -> extrude(nt._2, lvl, pol)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(extrude(ar, lvl, pol))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
-      case tv: TypeVariable => cache.getOrElse(tv, {
+      case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
-        cache += (tv -> nv)
-        if (pol) { tv.upperBounds ::= nv
-          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol)) }
-        else { tv.lowerBounds ::= nv
-          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol)) }
+        cache += tv -> pol -> nv
+        if (pol) {
+          tv.upperBounds ::= nv
+          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, pol))
+        } else {
+          tv.lowerBounds ::= nv
+          nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, pol))
+        }
         nv
       })
       case n @ NegType(neg) => NegType(extrude(neg, lvl, pol))(n.prov)
