@@ -969,16 +969,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool) extend
         val vl = typeTerm(rhs)
         con(vl, fieldType, UnitType.withProv(prov))
       case Assign(s @ Subs(a, i), rhs) => 
-        val a_ty = typeTerm(a)
         val i_ty = typeTerm(i)
         con(i_ty, IntType, TopType)
+        val a_ty = typeTerm(a)
         val sprov = tp(s.toLoc, "assigned array element")
         val elemType = freshVar(sprov)
-        val vl = typeTerm(rhs)
         val arr_ty =
             // Note: this proxy does not seem to make any difference:
             mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
         con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), UnitType.withProv(prov))
+        val vl = typeTerm(rhs)
+        con(vl, elemType, UnitType.withProv(prov))
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
