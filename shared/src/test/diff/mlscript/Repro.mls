@@ -1,0 +1,36 @@
+
+(fun x -> x x) (fun x -> x x)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (100)
+//│ ║  l.2: 	(fun x -> x x) (fun x -> x x)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α19
+//│ ╟── while constraining α17 <: α19
+//│ ╟── while constraining (α17,) <: (α19,)
+//│ ╟── while constraining ((α19,) -> α20) <: ((α17,) -> α18)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: ((α17,) -> α18)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α17
+//│ ╟── while constraining α15 <: α17
+//│ ╟── while constraining (α15,) <: (α17,)
+//│ ╟── while constraining ((α17,) -> α18) <: ((α15,) -> α16)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: ((α15,) -> α16)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α15
+//│ ╟── while constraining α13 <: α15
+//│ ╟── while constraining (α13,) <: (α15,)
+//│ ╟── while constraining ((α15,) -> α16) <: ((α13,) -> α14)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: ((α13,) -> α14)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α13
+//│ ╟── while constraining α11 <: α13
+//│ ╟── while constraining (α11,) <: (α13,)
+//│ ╟── while constraining ((α13,) -> α14) <: ((α11,) -> α12)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: ((α11,) -> α12)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α11
+//│ ╟── while constraining α6 <: α11
+//│ ╟── while constraining (α6,) <: (α11,)
+//│ ╟── while constraining ((α11,) -> α12) <: ((α6,) -> α7)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: ((α6,) -> α7)
+//│ ╟── while constraining ∀ 0. ((α8',) -> α9') <: α6
+//│ ╟── while constraining (∀ 0. ((α8',) -> α9'),) <: (α6,)
+//│ ╙── while constraining ((α6,) -> α7) <: ((∀ 0. ((α8',) -> α9'),) -> α10)
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded

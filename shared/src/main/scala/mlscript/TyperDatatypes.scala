@@ -48,9 +48,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val res = body.freshenAbove(polymLevel, rigidify = false)
       // println(s"INST  $this  ~>  $res")
       // println(s"  where  ${res.showBounds}")
-      println(s"INST   $this  ~>  $res")
+      println(s"INST [${level}]   $this")
       println(s"  where  ${showBounds}")
-      println(s"TO ~>  $res")
+      println(s"TO [${lvl}] ~>  $res")
       println(s"  where  ${res.showBounds}")
       res
     }
@@ -372,7 +372,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
-    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
+    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
   }
   type TV = TypeVariable
   private var freshCount = 0

@@ -9,7 +9,47 @@ def e2: Add['e] as 'e
 // FIXME SOF
 // :d
 e2 : Add['e] as 'e
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e. ?e <: ?e0` exceeded recursion depth limit (100)
+//│ ║  l.11: 	e2 : Add['e] as 'e
+//│ ║        	^^
+//│ ╟── while constraining ∀ 0. 'e7' <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: 'e22
+//│ ╟── while constraining 'e18 <: 'e22
+//│ ╟── while constraining ('e18,) <: ('e22,)
+//│ ╟── while constraining (('e22,) -> 'e22) <: (('e18,) -> 'e18)
+//│ ╟── while constraining {x: (('e22,) -> 'e22)} <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining Add['e22] <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining 'e22 <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: 'e21
+//│ ╟── while constraining 'e18 <: 'e21
+//│ ╟── while constraining ('e18,) <: ('e21,)
+//│ ╟── while constraining (('e21,) -> 'e21) <: (('e18,) -> 'e18)
+//│ ╟── while constraining {x: (('e21,) -> 'e21)} <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining Add['e21] <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining 'e21 <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: 'e20
+//│ ╟── while constraining 'e18 <: 'e20
+//│ ╟── while constraining ('e18,) <: ('e20,)
+//│ ╟── while constraining (('e20,) -> 'e20) <: (('e18,) -> 'e18)
+//│ ╟── while constraining {x: (('e20,) -> 'e20)} <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining Add['e20] <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining 'e20 <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: 'e19
+//│ ╟── while constraining 'e18 <: 'e19
+//│ ╟── while constraining ('e18,) <: ('e19,)
+//│ ╟── while constraining (('e19,) -> 'e19) <: (('e18,) -> 'e18)
+//│ ╟── while constraining {x: (('e19,) -> 'e19)} <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining Add['e19] <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining 'e19 <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: {x: (('e18,) -> 'e18)}
+//│ ╟── while constraining ∀ 0. 'e7' <: Add['e18]
+//│ ╙── while constraining ∀ 0. 'e7' <: 'e18
+//│ res: (forall 'e, 'b. 'e0 | 'e | error | {x: ({x: nothing} & 'e0 & 'e) -> 'a}) as 'a
+//│    = <no result>
+//│      e2 is not implemented
 
 
 def f0: ('a -> int) as 'a
@@ -22,7 +62,41 @@ f0 = f0
 //│ 'a | ('b -> int & 'a) -> int as 'b
 //│   <:  f0:
 //│ 'a | ('b -> int & 'a) -> int as 'b
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
+//│ ║  l.61: 	f0 = f0
+//│ ║        	^^^^^^^
+//│ ╟── while constraining ∀ 0. 'a42' <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: 'a65
+//│ ╟── while constraining 'a61 <: 'a65
+//│ ╟── while constraining ('a61,) <: ('a65,)
+//│ ╟── while constraining (('a65,) -> Int) <: (('a61,) -> Int)
+//│ ╟── while constraining (('a65,) -> Int) <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining 'a65 <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: 'a64
+//│ ╟── while constraining 'a61 <: 'a64
+//│ ╟── while constraining ('a61,) <: ('a64,)
+//│ ╟── while constraining (('a64,) -> Int) <: (('a61,) -> Int)
+//│ ╟── while constraining (('a64,) -> Int) <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining 'a64 <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: 'a63
+//│ ╟── while constraining 'a61 <: 'a63
+//│ ╟── while constraining ('a61,) <: ('a63,)
+//│ ╟── while constraining (('a63,) -> Int) <: (('a61,) -> Int)
+//│ ╟── while constraining (('a63,) -> Int) <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining 'a63 <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: 'a62
+//│ ╟── while constraining 'a61 <: 'a62
+//│ ╟── while constraining ('a61,) <: ('a62,)
+//│ ╟── while constraining (('a62,) -> Int) <: (('a61,) -> Int)
+//│ ╟── while constraining (('a62,) -> Int) <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining 'a62 <: ('a | (('a61,) -> Int))
+//│ ╟── while constraining ∀ 0. 'a42' <: ('a | (('a61,) -> Int))
+//│ ╙── while constraining ∀ 0. 'a42' <: 'a61
+//│   = <no result>
+//│     f0 is not implemented
 
 
 type F1 = F1 -> int

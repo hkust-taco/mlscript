@@ -519,7 +519,7 @@ abstract class TyperHelpers { self: Typer =>
         tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-      ).mkString(", ")
+      ).mkString(" ;  ")
     
     def expPos(implicit ctx: Ctx): Type = (
       // this
