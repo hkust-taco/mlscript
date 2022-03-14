@@ -125,13 +125,45 @@ rc2.x <- "hello"
 //│ rc2: {x: 'a .. 1 | 'a}
 
 def g r = (fun x -> r) (r.x <- 3)
-//│ g: ({x: 3 | 'a .. 'a} & 'b) -> 'b
-
 g rc1
-//│ res: {x: int .. int}
-
 g rc2
+//│ g: ({x: 3 | 'a .. 'a} & 'b) -> 'b
+//│ res: {x: int .. int}
 //│ res: {x: 'a .. 1 | 3 | 'a}
+
+:e 
+g {x = 3}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.135: 	g {x = 3}
+//│ ║         	^^^^^^^^^
+//│ ╟── record field of type `3` is not mutable
+//│ ║  l.135: 	g {x = 3}
+//│ ╙──       	   ^^^^^
+//│ res: error | {x: 3}
+
+def ga r = (fun x -> r) (r[1] <- 6)
+ga muta1
+//│ ga: (MutArray[6 | 'a .. 'a] & 'b) -> 'b
+//│ res: MutArray[int .. int]
+
+:e
+ga a1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.150: 	ga a1
+//│ ║         	^^^^^
+//│ ╟── type `Array[int]` does not match type `MutArray[?a .. ?a]`
+//│ ║  l.26: 	def a1: Array[int]
+//│ ║        	        ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `MutArray[?b .. ?b]`
+//│ ║  l.150: 	ga a1
+//│ ║         	   ^^
+//│ ╟── Note: constraint arises from assignment:
+//│ ║  l.144: 	def ga r = (fun x -> r) (r[1] <- 6)
+//│ ║         	                         ^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.144: 	def ga r = (fun x -> r) (r[1] <- 6)
+//│ ╙──       	                         ^
+//│ res: Array[int] | error
 
 trait T
 //│ Defined trait T
@@ -151,22 +183,22 @@ t1.x <- 4
 t1.y <- true
 t2.x <- 3
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.151: 	t1.y <- true
+//│ ║  l.183: 	t1.y <- true
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record field of type `bool` is not mutable
-//│ ║  l.139: 	def t1 : T & {mut x : int; y : bool}
+//│ ║  l.171: 	def t1 : T & {mut x : int; y : bool}
 //│ ║         	                           ^^^^^^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.151: 	t1.y <- true
+//│ ║  l.183: 	t1.y <- true
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.152: 	t2.x <- 3
+//│ ║  l.184: 	t2.x <- 3
 //│ ║         	^^^^^^^^^
 //│ ╟── record field of type `2` is not mutable
-//│ ║  l.141: 	t2 = T {x = 2}
+//│ ║  l.173: 	t2 = T {x = 2}
 //│ ║         	        ^^^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.152: 	t2.x <- 3
+//│ ║  l.184: 	t2.x <- 3
 //│ ╙──       	   ^
 
 class B: { mut x: int; y: bool }
@@ -189,56 +221,56 @@ b1.Foo
 :e
 b1.Foo <- 0
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.190: 	b1.Foo <- 0
+//│ ║  l.222: 	b1.Foo <- 0
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `B` does not have field 'Foo'
-//│ ║  l.177: 	def b1 : B
+//│ ║  l.209: 	def b1 : B
 //│ ║         	         ^
 //│ ╟── but it flows into reference with expected type `{Foo = ?a}`
-//│ ║  l.190: 	b1.Foo <- 0
+//│ ║  l.222: 	b1.Foo <- 0
 //│ ║         	^^
 //│ ╟── Note: constraint arises from assigned selection:
-//│ ║  l.190: 	b1.Foo <- 0
+//│ ║  l.222: 	b1.Foo <- 0
 //│ ╙──       	^^^^^^
 
 :e
 b3 = B {x = 6; y = false}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	b3 = B {x = 6; y = false}
+//│ ║  l.237: 	b3 = B {x = 6; y = false}
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record field of type `6` is not mutable
-//│ ║  l.205: 	b3 = B {x = 6; y = false}
+//│ ║  l.237: 	b3 = B {x = 6; y = false}
 //│ ╙──       	        ^^^^^
 //│ b3: (B with {x: int & 'x .. 6 | 'x, y: false}) | error
 
 :e
 b2.y <- b1.y
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.215: 	b2.y <- b1.y
+//│ ║  l.247: 	b2.y <- b1.y
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── record field of type `?y` is not mutable
-//│ ║  l.172: 	class B: { mut x: int; y: bool }
+//│ ║  l.204: 	class B: { mut x: int; y: bool }
 //│ ║         	                       ^^^^^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.215: 	b2.y <- b1.y
+//│ ║  l.247: 	b2.y <- b1.y
 //│ ╙──       	   ^
 
 :e
 b2.x <- b1.y
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.227: 	b2.x <- b1.y
+//│ ║  l.259: 	b2.x <- b1.y
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `bool` does not match type `int`
-//│ ║  l.172: 	class B: { mut x: int; y: bool }
+//│ ║  l.204: 	class B: { mut x: int; y: bool }
 //│ ║         	                          ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.227: 	b2.x <- b1.y
+//│ ║  l.259: 	b2.x <- b1.y
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.172: 	class B: { mut x: int; y: bool }
+//│ ║  l.204: 	class B: { mut x: int; y: bool }
 //│ ║         	                  ^^^
 //│ ╟── from assigned selection:
-//│ ║  l.227: 	b2.x <- b1.y
+//│ ║  l.259: 	b2.x <- b1.y
 //│ ╙──       	^^^^
 
 b2.x <- b1.x
@@ -257,13 +289,13 @@ h b1 2
 :e
 h {mut x = 4} 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.258: 	h {mut x = 4} 2
+//│ ║  l.290: 	h {mut x = 4} 2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: ?a .. ?a}` is not an instance of type B
-//│ ║  l.258: 	h {mut x = 4} 2
+//│ ║  l.290: 	h {mut x = 4} 2
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.247: 	def h : B -> int -> int
+//│ ║  l.279: 	def h : B -> int -> int
 //│ ╙──       	        ^
 //│ res: error | int
 
@@ -284,9 +316,8 @@ mt1 : (int, bool)
 //│ res: (int, bool,)
 
 def emt: (mut int)
-//│ emt: (int .. int,)
-
 emt._1
+//│ emt: (int .. int,)
 //│ res: int
 
 k1 = (mut 233, "hello", mut true)
@@ -296,16 +327,14 @@ k1._1 <- k1._1 + 1
 :e
 k1._2 <- 233
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.297: 	k1._2 <- 233
+//│ ║  l.328: 	k1._2 <- 233
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── tuple field of type `"hello"` is not mutable
-//│ ║  l.292: 	k1 = (mut 233, "hello", mut true)
+//│ ║  l.323: 	k1 = (mut 233, "hello", mut true)
 //│ ║         	               ^^^^^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.297: 	k1._2 <- 233
+//│ ║  l.328: 	k1._2 <- 233
 //│ ╙──       	   ^^
-
-muta1[0] <- 1
 
 mt1 = (mut 3, mut false)
 //│ ('a .. 3 | 'a, 'b .. false | 'b,)
@@ -321,58 +350,68 @@ amf mt3
 :e
 amf mt4
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.322: 	amf mt4
+//│ ║  l.351: 	amf mt4
 //│ ║         	^^^^^^^
 //│ ╟── type `(bool .. bool, bool, bool,)` does not match type `MutArray[?a .. ?a]`
-//│ ║  l.273: 	def mt4: (mut bool, bool, bool)
+//│ ║  l.305: 	def mt4: (mut bool, bool, bool)
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `MutArray[?a .. ?a]`
-//│ ║  l.322: 	amf mt4
+//│ ║  l.351: 	amf mt4
 //│ ║         	    ^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.315: 	def amf : MutArray['a] -> 'a
+//│ ║  l.344: 	def amf : MutArray['a] -> 'a
 //│ ╙──       	          ^^^^^^^^^^^^
 //│ res: bool | error
 
 :e
 a1[0] <- 1
 mt1[0] <- mt2._1
+mt4[3] <- true
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.338: 	a1[0] <- 1
+//│ ║  l.367: 	a1[0] <- 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `Array[int]` does not match type `MutArray[?a .. ?a]`
 //│ ║  l.26: 	def a1: Array[int]
 //│ ║        	        ^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `MutArray[?a .. ?a]`
-//│ ║  l.338: 	a1[0] <- 1
+//│ ║  l.367: 	a1[0] <- 1
 //│ ╙──       	^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.339: 	mt1[0] <- mt2._1
+//│ ║  l.368: 	mt1[0] <- mt2._1
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `bool`
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	                       ^^^^
 //│ ╟── from assigned array element:
-//│ ║  l.339: 	mt1[0] <- mt2._1
+//│ ║  l.368: 	mt1[0] <- mt2._1
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.339: 	mt1[0] <- mt2._1
+//│ ║  l.368: 	mt1[0] <- mt2._1
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `bool`
-//│ ║  l.271: 	def mt2: (int, int)
+//│ ║  l.303: 	def mt2: (int, int)
 //│ ║         	          ^^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.339: 	mt1[0] <- mt2._1
+//│ ║  l.368: 	mt1[0] <- mt2._1
 //│ ║         	          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	                       ^^^^
 //│ ╟── from assigned array element:
-//│ ║  l.339: 	mt1[0] <- mt2._1
+//│ ║  l.368: 	mt1[0] <- mt2._1
 //│ ╙──       	^^^^^^
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.369: 	mt4[3] <- true
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `(bool .. bool, bool, bool,)` does not match type `MutArray[?a .. ?a]`
+//│ ║  l.305: 	def mt4: (mut bool, bool, bool)
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `MutArray[?a .. ?a]`
+//│ ║  l.369: 	mt4[3] <- true
+//│ ╙──       	^^^
 
 mt1._1 <- mt2._1
 mt1._1 <- mt1._1 * 2
@@ -387,68 +426,68 @@ mt1._1 <- (b1.t <- 4)
 (mt1._1 <- b1.t) <- 4
 b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.384: 	mt1._1 <- mt1._2
+//│ ║  l.423: 	mt1._1 <- mt1._2
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `bool` does not match type `int`
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	                       ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.384: 	mt1._1 <- mt1._2
+//│ ║  l.423: 	mt1._1 <- mt1._2
 //│ ║         	          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	              ^^^
 //│ ╟── from assigned selection:
-//│ ║  l.384: 	mt1._1 <- mt1._2
+//│ ║  l.423: 	mt1._1 <- mt1._2
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.385: 	mt1._2 <- 1
+//│ ║  l.424: 	mt1._2 <- 1
 //│ ║         	^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `bool`
-//│ ║  l.385: 	mt1._2 <- 1
+//│ ║  l.424: 	mt1._2 <- 1
 //│ ║         	          ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	                       ^^^^
 //│ ╟── from assigned selection:
-//│ ║  l.385: 	mt1._2 <- 1
+//│ ║  l.424: 	mt1._2 <- 1
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^^^^^^^^
 //│ ╟── type `B` does not have field 't'
-//│ ║  l.177: 	def b1 : B
+//│ ║  l.209: 	def b1 : B
 //│ ║         	         ^
 //│ ╟── but it flows into reference with expected type `{t: ?a .. ?a}`
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^
 //│ ╟── Note: constraint arises from assigned selection:
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ╙──       	           ^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── assignment of type `unit` does not match type `int`
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.270: 	def mt1: (mut int, mut bool)
+//│ ║  l.302: 	def mt1: (mut int, mut bool)
 //│ ║         	              ^^^
 //│ ╟── from assigned selection:
-//│ ║  l.386: 	mt1._1 <- (b1.t <- 4)
+//│ ║  l.425: 	mt1._1 <- (b1.t <- 4)
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Illegal assignment
-//│ ║  l.387: 	(mt1._1 <- b1.t) <- 4
+//│ ║  l.426: 	(mt1._1 <- b1.t) <- 4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── cannot assign to assignment
-//│ ║  l.387: 	(mt1._1 <- b1.t) <- 4
+//│ ║  l.426: 	(mt1._1 <- b1.t) <- 4
 //│ ╙──       	^^^^^^^^^^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] Illegal assignment
-//│ ║  l.388: 	b1.x <- 1 + 2 <- 4
+//│ ║  l.427: 	b1.x <- 1 + 2 <- 4
 //│ ║         	            ^^^^^^
 //│ ╟── cannot assign to integer literal
-//│ ║  l.388: 	b1.x <- 1 + 2 <- 4
+//│ ║  l.427: 	b1.x <- 1 + 2 <- 4
 //│ ╙──       	            ^
 
 def f : {mut _1 : int} -> int -> unit
@@ -466,20 +505,20 @@ f mt1 1
 :e
 f mt2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.467: 	f mt2
+//│ ║  l.506: 	f mt2
 //│ ║         	^^^^^
 //│ ╟── tuple field of type `int` is not mutable
-//│ ║  l.271: 	def mt2: (int, int)
+//│ ║  l.303: 	def mt2: (int, int)
 //│ ╙──       	          ^^^
 //│ res: int -> unit | error
 
 :e
 g (1, true) 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.477: 	g (1, true) 2
+//│ ║  l.516: 	g (1, true) 2
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple field of type `1` is not mutable
-//│ ║  l.477: 	g (1, true) 2
+//│ ║  l.516: 	g (1, true) 2
 //│ ╙──       	   ^
 //│ res: error | unit
 
@@ -509,13 +548,13 @@ st2._1 <- 8
 :e
 st1._1 <- 9
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.510: 	st1._1 <- 9
+//│ ║  l.549: 	st1._1 <- 9
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple field of type `int` is not mutable
-//│ ║  l.493: 	def st1 : (int, )
+//│ ║  l.532: 	def st1 : (int, )
 //│ ║         	           ^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.510: 	st1._1 <- 9
+//│ ║  l.549: 	st1._1 <- 9
 //│ ╙──       	    ^^
 
 def am1 : Array[(mut int)]
@@ -533,36 +572,36 @@ foreach am1 (fun y -> y._1 <- 2)
 (1,2,3)[0] <- true
 (1,2,3)._1 <- "hello"
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.533: 	(1,2,3)[0] <- true
+//│ ║  l.572: 	(1,2,3)[0] <- true
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `MutArray[?a .. ?a]`
-//│ ║  l.533: 	(1,2,3)[0] <- true
+//│ ║  l.572: 	(1,2,3)[0] <- true
 //│ ╙──       	^^^^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.534: 	(1,2,3)._1 <- "hello"
+//│ ║  l.573: 	(1,2,3)._1 <- "hello"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple field of type `1` is not mutable
-//│ ║  l.534: 	(1,2,3)._1 <- "hello"
+//│ ║  l.573: 	(1,2,3)._1 <- "hello"
 //│ ║         	 ^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.534: 	(1,2,3)._1 <- "hello"
+//│ ║  l.573: 	(1,2,3)._1 <- "hello"
 //│ ╙──       	        ^^
 
 :e
 (0,)["oops"]
 (mut 0,)["oops"] <- 1
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.552: 	(0,)["oops"]
+//│ ║  l.591: 	(0,)["oops"]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.552: 	(0,)["oops"]
+//│ ║  l.591: 	(0,)["oops"]
 //│ ╙──       	     ^^^^^^
 //│ res: 0
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.553: 	(mut 0,)["oops"] <- 1
+//│ ║  l.592: 	(mut 0,)["oops"] <- 1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.553: 	(mut 0,)["oops"] <- 1
+//│ ║  l.592: 	(mut 0,)["oops"] <- 1
 //│ ╙──       	         ^^^^^^
 
 oops = "oops"
@@ -574,22 +613,22 @@ arr = (mut 0,)
 arr[oops]
 arr[oops] <- 1
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.574: 	arr[oops]
+//│ ║  l.613: 	arr[oops]
 //│ ║         	^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.568: 	oops = "oops"
+//│ ║  l.607: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.574: 	arr[oops]
+//│ ║  l.613: 	arr[oops]
 //│ ╙──       	    ^^^^
 //│ res: 0
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.575: 	arr[oops] <- 1
+//│ ║  l.614: 	arr[oops] <- 1
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.568: 	oops = "oops"
+//│ ║  l.607: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.575: 	arr[oops] <- 1
+//│ ║  l.614: 	arr[oops] <- 1
 //│ ╙──       	    ^^^^
 
