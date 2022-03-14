@@ -145,7 +145,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
     require(alts.length > 1)
-    def approximatePos = {
+    def approximatePos: FunctionType = {
       val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
       FunctionType(lhss.reduce(_ & _), rhss.reduce(_ | _))(prov)
     }

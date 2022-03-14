@@ -1,8 +1,6 @@
 package mlscript
 
-import scala.language.implicitConversions
-import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Stack => MutStack}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -14,20 +12,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def startingFuel: Int = 2000
   def depthLimit: Int = 100
   
-  protected type Depth <: Long
-  // protected implicit def toDepth(n: Long): Depth = n.asInstanceOf[Depth]
-  protected def toDepth(n: Long): Depth = n.asInstanceOf[Depth]
-  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
-    
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
-    val depthLimit: Depth = self.depthLimit.toLong |> toDepth
     val startingFuel = self.startingFuel
     var fuel = startingFuel
-    val stack = mutable.Stack.empty[ST -> ST]
+    val stack = MutStack.empty[ST -> ST]
     
     println(s"CONSTRAIN $lhs <! $rhs")
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
@@ -37,32 +29,31 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     val ret = () => return
     
-    def consumeFuel()(implicit cctx: ConCtx, depth: Int) =
+    def consumeFuel()(implicit cctx: ConCtx) = {
+      def msgHead = msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}`"
       if (stack.size > depthLimit) {
         err(
-          msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}` exceeded recursion depth limit (${depthLimit.toString})" -> prov.loco
-          // :: stack.iterator.map(c => msg"while constraining ${s"${c._1} <: ${c._2}"}" -> c._1.prov.loco.orElse(c._2.prov.loco)).toList
-          // :: stack.iterator.map(c => msg"while constraining ${s"${c._1} <: ${c._2}"}" -> N).toList
-          :: stack.toList.filterOutConsecutive().map(c => msg"while constraining ${s"${c._1} <: ${c._2}"}" -> N)
-          // ::: stack.iterator.flatMap(s => Iterator(s._1, s._2)).map(_.getVars).foldLeft(Set.empty[TV])(_ ++ _)
-          //   .toArray.sorted.map(v => msg"[${v.level.toString}] ${v.toString}  <:  ${v.upperBounds.mkString(" ; ")}  :>  ${v.lowerBounds.mkString(" ; ")}" -> {v.prov.loco}).toList
+          msg"$msgHead exceeded recursion depth limit (${depthLimit.toString})" -> prov.loco
+          :: (
+            if (verbose) stack.toList.filterOutConsecutive().flatMap { case (l, r) =>
+              msg"while constraining:  ${s"$l"}" -> l.prov.loco ::
+              msg"                       <!<  ${s"$r"}" -> r.prov.loco ::
+              Nil
+            } else stack.toList.filterOutConsecutive().map(c =>
+              msg"while constraining:  ${s"${c._1}  <!<  ${c._2}"}" -> N)
+          )
         )
         ret()
       } else
-      // if (fuel <= 0 || depth > depthLimit) {
       if (fuel <= 0) {
-        // err(s"Whoops", N)
-        // err(s"Whoops", prov.loco)
-        // err(s"Whoops" -> prov.loco :: (cctx.map(c => msg"${c._1.pos}" -> N)))
         err(
-          msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}` took too many steps and ran out of fuel (${startingFuel.toString})" -> prov.loco
-          // :: cctx._1.map(c => msg" + ${c.expPos}" -> c.prov.loco)
-          // ::: cctx._2.map(c => msg" - ${c.expNeg}" -> c.prov.loco)
+          msg"$msgHead took too many steps and ran out of fuel (${startingFuel.toString})" -> prov.loco
           :: cctx._1.map(c => msg" + ${s"$c"}" -> c.prov.loco)
           ::: cctx._2.map(c => msg" - ${s"$c"}" -> c.prov.loco)
         )
         ret()
       } else fuel -= 1
+    }
     
     def mkCase[A](str: Str)(k: Str => A)(implicit dbgHelp: Str): A = {
       val newStr = dbgHelp + "." + str
@@ -71,10 +62,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     /* To solve constraints that are more tricky. */
-    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, depth: Depth): Unit =
+    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx): Unit =
       constrainDNF(DNF.mk(MaxLevel, lhs, true), DNF.mk(MaxLevel, rhs, false), rhs)
     
-    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, depth: Depth): Unit =
+    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
@@ -145,14 +136,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, depth: Depth, dbgHelp: Str = "Case"): Unit = {
+          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
         consumeFuel()
-        annoyingImpl(ls, done_ls, rs, done_rs)(cctx, depth + 1 |> toDepth, dbgHelp)
+        annoyingImpl(ls, done_ls, rs, done_rs)(cctx, dbgHelp)
       }
     
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, depth: Depth, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
+          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
         def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
         tys.reduceOption(_ | _).getOrElse(BotType)
@@ -215,6 +206,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
         case (Nil, Nil) =>
           // println(done_ls, done_rs)
+          
           // TODO improve:
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
@@ -258,8 +250,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(b.inner, ar.inner, false)
             case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError
             case (LhsRefined(S(ov: Overload), ts, r), _) =>
-              // rec(ov.approximatePos, rhs, true) // FIXME approx
-              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r), Nil, done_rs) // FIXME approx
+              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r), Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
@@ -273,11 +264,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
     
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
-          (implicit raise: Raise, cctx: ConCtx, depth: Depth): Unit = {
+          (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       val lhs_rhs = lhs -> rhs
-      // val toPush = !stack.headOption.contains(lhs_rhs)
-      // if (toPush) 
       stack.push(lhs_rhs)
       println(stack.size)
       consumeFuel()
@@ -287,15 +276,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
-        else (lhs :: Nil) -> (rhs :: Nil),
-        depth + 1 |> toDepth
+        else (lhs :: Nil) -> (rhs :: Nil)
       )
-      // if (toPush) 
       stack.pop()
       ()
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
-          (implicit raise: Raise, cctx: ConCtx, depth: Depth): Unit =
+          (implicit raise: Raise, cctx: ConCtx): Unit =
     trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
@@ -395,34 +382,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (poly: PolymorphicType, _) =>
-            // TODO here it might actually be better to try and put poly into a TV if the RHS contains one
+            // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF
-            println(lvl)
             rec(poly.instantiate, rhs, true)
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
             goToWork(lhs, rhs)
           case (ov: Overload, _) =>
-            rec(ov.approximatePos, rhs, true) // FIXME approx
+            rec(ov.approximatePos, rhs, true) // TODO remove approx. with ambiguous constraints
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
           case _ => reportError
-          // case _ =>
-          //   val failureOpt = lhs_rhs match {
-          //     case (RecordType(fs0), RecordType(fs1)) =>
-          //       var fieldErr: Opt[Message] = N
-          //       fs1.foreach { case (n1, t1) =>
-          //         fs0.find(_._1 === n1).fold {
-          //           if (fieldErr.isEmpty) fieldErr = S(doesntHaveField(n1.name))
-          //         } { case (n0, t0) => rec(t0, t1) }
-          //       }
-          //       fieldErr
-          //     case (_, FunctionType(_, _)) => S(msg"is not a function")
-          //     case (_, RecordType((n, _) :: Nil)) => S(doesntHaveField(n.name))
-          //     case _ => S(doesntMatch(lhs_rhs._2))
-          //   }
-          //   failureOpt.foreach(f => reportError(f))
       }
     }}()
     
@@ -556,7 +527,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil, 0L |> toDepth)
+    rec(lhs, rhs, true)(raise, Nil -> Nil)
   }
   
   
@@ -611,6 +582,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         extrude(tr.expand, lvl, pol).withProvOf(tr)
       case PolymorphicType(polymLevel, body) =>
         PolymorphicType(polymLevel, extrude(body, lvl, pol)(ctx, cache, upperLvl = polymLevel))
+      case o @ Overload(alts) => Overload(alts.map(extrude(_, lvl, pol).asInstanceOf[FunctionType]))(o.prov)
     }
   
   
@@ -630,9 +602,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     raise(Warning(msgs))
   
   
-  // Note: maybe this and `extrude` should be merged?
-  def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false, upperLim: Int = MaxLevel)(implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
-    // val freshened = MutMap.empty[TV, SimpleType]
+  /** Freshens all the type variables whose level is comprised in `(above, below]`. */
+  def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
+        (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
     def freshenImpl(ty: SimpleType, upperLim: Int): SimpleType =
     // trace(s"FRESHEN $ty | $lim .. $upperLim")
     {
@@ -640,7 +612,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...
-        && ty.level <= lim) ty else ty match {
+        && ty.level <= above) ty else ty match {
       case tv: TypeVariable if tv.level > upperLim => tv // FIXME bounds?
       case tv: TypeVariable => freshened.get(tv) match {
         case Some(tv) => tv
@@ -694,9 +666,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(lvl, bod) => PolymorphicType(lvl, freshenImpl(bod, upperLim = lvl))
+      case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r")
-    freshenImpl(ty, upperLim)
+    freshenImpl(ty, below)
   }
   
   

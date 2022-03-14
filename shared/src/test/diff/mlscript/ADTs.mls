@@ -45,49 +45,49 @@ eval e
 //│ res: int
 //│    = 4
 
-:e // a curious infinite recursion, reproduced in `ADRsRepro.mls`
+:e // FIXME a curious infinite recursion, reproduced in `ADRsRepro.mls`
 eval (e : Lit | Add['e] | Nega['e] as 'e)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?e, ?e0. ?e0 <: ?e1` exceeded recursion depth limit (100)
 //│ ║  l.49: 	eval (e : Lit | Add['e] | Nega['e] as 'e)
 //│ ║        	      ^
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e188
-//│ ╟── while constraining 'e184 <: 'e188
-//│ ╟── while constraining ('e188 -> 'e188) <: ('e184 -> 'e184)
-//│ ╟── while constraining ((add<> & {lhs: 'e188, rhs: 'e188}) & {Add#E: ('e188 -> 'e188)}) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining Add['e188] <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining (Lit | Add['e188]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ((Lit | Add['e188]) | Nega['e188]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining 'e188 <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e187
-//│ ╟── while constraining 'e184 <: 'e187
-//│ ╟── while constraining ('e187 -> 'e187) <: ('e184 -> 'e184)
-//│ ╟── while constraining ((add<> & {lhs: 'e187, rhs: 'e187}) & {Add#E: ('e187 -> 'e187)}) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining Add['e187] <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining (Lit | Add['e187]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ((Lit | Add['e187]) | Nega['e187]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining 'e187 <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e186
-//│ ╟── while constraining 'e184 <: 'e186
-//│ ╟── while constraining ('e186 -> 'e186) <: ('e184 -> 'e184)
-//│ ╟── while constraining ((add<> & {lhs: 'e186, rhs: 'e186}) & {Add#E: ('e186 -> 'e186)}) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining Add['e186] <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining (Lit | Add['e186]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ((Lit | Add['e186]) | Nega['e186]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining 'e186 <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e185
-//│ ╟── while constraining 'e184 <: 'e185
-//│ ╟── while constraining ('e185 -> 'e185) <: ('e184 -> 'e184)
-//│ ╟── while constraining ((add<> & {lhs: 'e185, rhs: 'e185}) & {Add#E: ('e185 -> 'e185)}) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining Add['e185] <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining (Lit | Add['e185]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ((Lit | Add['e185]) | Nega['e185]) <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining 'e185 <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e184]) | Nega['e184])
-//│ ╙── while constraining ∀ 0. 'e129' <: 'e184
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e188
+//│ ╟── while constraining:  'e184  <!<  'e188
+//│ ╟── while constraining:  ('e188 -> 'e188)  <!<  ('e184 -> 'e184)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e188, rhs: 'e188}) & {Add#E: ('e188 -> 'e188)})  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  Add['e188]  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  (Lit | Add['e188])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ((Lit | Add['e188]) | Nega['e188])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  'e188  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e187
+//│ ╟── while constraining:  'e184  <!<  'e187
+//│ ╟── while constraining:  ('e187 -> 'e187)  <!<  ('e184 -> 'e184)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e187, rhs: 'e187}) & {Add#E: ('e187 -> 'e187)})  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  Add['e187]  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  (Lit | Add['e187])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ((Lit | Add['e187]) | Nega['e187])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  'e187  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e186
+//│ ╟── while constraining:  'e184  <!<  'e186
+//│ ╟── while constraining:  ('e186 -> 'e186)  <!<  ('e184 -> 'e184)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e186, rhs: 'e186}) & {Add#E: ('e186 -> 'e186)})  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  Add['e186]  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  (Lit | Add['e186])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ((Lit | Add['e186]) | Nega['e186])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  'e186  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e185
+//│ ╟── while constraining:  'e184  <!<  'e185
+//│ ╟── while constraining:  ('e185 -> 'e185)  <!<  ('e184 -> 'e184)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e185, rhs: 'e185}) & {Add#E: ('e185 -> 'e185)})  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  Add['e185]  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  (Lit | Add['e185])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ((Lit | Add['e185]) | Nega['e185])  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  'e185  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
+//│ ╙── while constraining:  ∀ 0. 'e129'  <!<  'e184
 //│ res: int
 //│    = 4
 
@@ -128,44 +128,44 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?e, ?e0. ?e0 <: ?e1` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e255
-//│ ╟── while constraining 'e251 <: 'e255
-//│ ╟── while constraining ('e255 -> 'e255) <: ('e251 -> 'e251)
-//│ ╟── while constraining ((add<> & {lhs: 'e255, rhs: 'e255}) & {Add#E: ('e255 -> 'e255)}) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining Add['e255] <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining (Lit | Add['e255]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ((Lit | Add['e255]) | Nega['e255]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining 'e255 <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e254
-//│ ╟── while constraining 'e251 <: 'e254
-//│ ╟── while constraining ('e254 -> 'e254) <: ('e251 -> 'e251)
-//│ ╟── while constraining ((add<> & {lhs: 'e254, rhs: 'e254}) & {Add#E: ('e254 -> 'e254)}) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining Add['e254] <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining (Lit | Add['e254]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ((Lit | Add['e254]) | Nega['e254]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining 'e254 <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e253
-//│ ╟── while constraining 'e251 <: 'e253
-//│ ╟── while constraining ('e253 -> 'e253) <: ('e251 -> 'e251)
-//│ ╟── while constraining ((add<> & {lhs: 'e253, rhs: 'e253}) & {Add#E: ('e253 -> 'e253)}) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining Add['e253] <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining (Lit | Add['e253]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ((Lit | Add['e253]) | Nega['e253]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining 'e253 <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: 'e252
-//│ ╟── while constraining 'e251 <: 'e252
-//│ ╟── while constraining ('e252 -> 'e252) <: ('e251 -> 'e251)
-//│ ╟── while constraining ((add<> & {lhs: 'e252, rhs: 'e252}) & {Add#E: ('e252 -> 'e252)}) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining Add['e252] <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining (Lit | Add['e252]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ((Lit | Add['e252]) | Nega['e252]) <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining 'e252 <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining ∀ 0. 'e129' <: ((Lit | Add['e251]) | Nega[Int])
-//│ ╙── while constraining ∀ 0. 'e129' <: 'e251
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e255
+//│ ╟── while constraining:  'e251  <!<  'e255
+//│ ╟── while constraining:  ('e255 -> 'e255)  <!<  ('e251 -> 'e251)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e255, rhs: 'e255}) & {Add#E: ('e255 -> 'e255)})  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  Add['e255]  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  (Lit | Add['e255])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ((Lit | Add['e255]) | Nega['e255])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  'e255  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e254
+//│ ╟── while constraining:  'e251  <!<  'e254
+//│ ╟── while constraining:  ('e254 -> 'e254)  <!<  ('e251 -> 'e251)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e254, rhs: 'e254}) & {Add#E: ('e254 -> 'e254)})  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  Add['e254]  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  (Lit | Add['e254])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ((Lit | Add['e254]) | Nega['e254])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  'e254  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e253
+//│ ╟── while constraining:  'e251  <!<  'e253
+//│ ╟── while constraining:  ('e253 -> 'e253)  <!<  ('e251 -> 'e251)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e253, rhs: 'e253}) & {Add#E: ('e253 -> 'e253)})  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  Add['e253]  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  (Lit | Add['e253])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ((Lit | Add['e253]) | Nega['e253])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  'e253  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e252
+//│ ╟── while constraining:  'e251  <!<  'e252
+//│ ╟── while constraining:  ('e252 -> 'e252)  <!<  ('e251 -> 'e251)
+//│ ╟── while constraining:  ((add<> & {lhs: 'e252, rhs: 'e252}) & {Add#E: ('e252 -> 'e252)})  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  Add['e252]  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  (Lit | Add['e252])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ((Lit | Add['e252]) | Nega['e252])  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  'e252  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
+//│ ╙── while constraining:  ∀ 0. 'e129'  <!<  'e251
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

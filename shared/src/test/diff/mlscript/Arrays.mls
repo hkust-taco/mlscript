@@ -57,40 +57,40 @@ ty3A = ty3A
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a107
-//│ ╟── while constraining 'a103 <: 'a107
-//│ ╟── while constraining (Int, 'a103,) <: (Int, 'a107,)
-//│ ╟── while constraining ((Int, 'a107,) -> ()) <: ((Int, 'a103,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a107,) -> ()), get: ((Int,) -> 'a107)}) & {MyArray#A: ('a107 -> 'a107)}) <: ('a | MyArray['a103])
-//│ ╟── while constraining MyArray['a107] <: ('a | MyArray['a103])
-//│ ╟── while constraining 'a107 <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a106
-//│ ╟── while constraining 'a103 <: 'a106
-//│ ╟── while constraining (Int, 'a103,) <: (Int, 'a106,)
-//│ ╟── while constraining ((Int, 'a106,) -> ()) <: ((Int, 'a103,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a106,) -> ()), get: ((Int,) -> 'a106)}) & {MyArray#A: ('a106 -> 'a106)}) <: ('a | MyArray['a103])
-//│ ╟── while constraining MyArray['a106] <: ('a | MyArray['a103])
-//│ ╟── while constraining 'a106 <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a105
-//│ ╟── while constraining 'a103 <: 'a105
-//│ ╟── while constraining (Int, 'a103,) <: (Int, 'a105,)
-//│ ╟── while constraining ((Int, 'a105,) -> ()) <: ((Int, 'a103,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a105,) -> ()), get: ((Int,) -> 'a105)}) & {MyArray#A: ('a105 -> 'a105)}) <: ('a | MyArray['a103])
-//│ ╟── while constraining MyArray['a105] <: ('a | MyArray['a103])
-//│ ╟── while constraining 'a105 <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a104
-//│ ╟── while constraining 'a103 <: 'a104
-//│ ╟── while constraining (Int, 'a103,) <: (Int, 'a104,)
-//│ ╟── while constraining ((Int, 'a104,) -> ()) <: ((Int, 'a103,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a104,) -> ()), get: ((Int,) -> 'a104)}) & {MyArray#A: ('a104 -> 'a104)}) <: ('a | MyArray['a103])
-//│ ╟── while constraining MyArray['a104] <: ('a | MyArray['a103])
-//│ ╟── while constraining 'a104 <: ('a | MyArray['a103])
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray['a103])
-//│ ╙── while constraining ∀ 0. 'a72' <: 'a103
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a107
+//│ ╟── while constraining:  'a103  <!<  'a107
+//│ ╟── while constraining:  (Int, 'a103,)  <!<  (Int, 'a107,)
+//│ ╟── while constraining:  ((Int, 'a107,) -> ())  <!<  ((Int, 'a103,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a107,) -> ()), get: ((Int,) -> 'a107)}) & {MyArray#A: ('a107 -> 'a107)})  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  MyArray['a107]  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  'a107  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a106
+//│ ╟── while constraining:  'a103  <!<  'a106
+//│ ╟── while constraining:  (Int, 'a103,)  <!<  (Int, 'a106,)
+//│ ╟── while constraining:  ((Int, 'a106,) -> ())  <!<  ((Int, 'a103,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a106,) -> ()), get: ((Int,) -> 'a106)}) & {MyArray#A: ('a106 -> 'a106)})  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  MyArray['a106]  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  'a106  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a105
+//│ ╟── while constraining:  'a103  <!<  'a105
+//│ ╟── while constraining:  (Int, 'a103,)  <!<  (Int, 'a105,)
+//│ ╟── while constraining:  ((Int, 'a105,) -> ())  <!<  ((Int, 'a103,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a105,) -> ()), get: ((Int,) -> 'a105)}) & {MyArray#A: ('a105 -> 'a105)})  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  MyArray['a105]  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  'a105  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a104
+//│ ╟── while constraining:  'a103  <!<  'a104
+//│ ╟── while constraining:  (Int, 'a103,)  <!<  (Int, 'a104,)
+//│ ╟── while constraining:  ((Int, 'a104,) -> ())  <!<  ((Int, 'a103,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a104,) -> ()), get: ((Int,) -> 'a104)}) & {MyArray#A: ('a104 -> 'a104)})  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  MyArray['a104]  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  'a104  <!<  ('a | MyArray['a103])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray['a103])
+//│ ╙── while constraining:  ∀ 0. 'a72'  <!<  'a103
 //│ constrain calls  : 109
 //│ annoying  calls  : 68
 //│ subtyping calls  : 501
@@ -107,63 +107,63 @@ ty3B = ty3A
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
-//│ ╟── while constraining MyArray['a168] <: 'a169
-//│ ╟── while constraining 'a164 <: 'a169
-//│ ╟── while constraining (Int, 'a164,) <: (Int, 'a169,)
-//│ ╟── while constraining ((Int, 'a169,) -> ()) <: ((Int, 'a164,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a169,) -> ()), get: ((Int,) -> 'a169)}) & {MyArray#A: ('a169 -> 'a169)}) <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining MyArray['a169] <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining 'a169 <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a168
-//│ ╟── while constraining 'a167 <: 'a168
-//│ ╟── while constraining (Int, 'a167,) <: (Int, 'a168,)
-//│ ╟── while constraining ((Int, 'a168,) -> ()) <: ((Int, 'a167,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)}) <: {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)}) <: (myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)}) <: ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)}) <: MyArray['a167]
-//│ ╟── while constraining MyArray['a168] <: MyArray['a167]
-//│ ╟── while constraining MyArray['a168] <: 'a167
-//│ ╟── while constraining 'a168 <: 'a167
-//│ ╟── while constraining (Int, 'a168,) <: (Int, 'a167,)
-//│ ╟── while constraining ((Int, 'a167,) -> ()) <: ((Int, 'a168,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)}) <: {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)}) <: (myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)}) <: ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)}) <: MyArray['a168]
-//│ ╟── while constraining MyArray['a167] <: MyArray['a168]
-//│ ╟── while constraining MyArray['a167] <: 'a168
-//│ ╟── while constraining 'a164 <: 'a168
-//│ ╟── while constraining (Int, 'a164,) <: (Int, 'a168,)
-//│ ╟── while constraining ((Int, 'a168,) -> ()) <: ((Int, 'a164,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)}) <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining MyArray['a168] <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining 'a168 <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: 'a167
-//│ ╟── while constraining 'a164 <: 'a167
-//│ ╟── while constraining (Int, 'a164,) <: (Int, 'a167,)
-//│ ╟── while constraining ((Int, 'a167,) -> ()) <: ((Int, 'a164,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)}) <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining MyArray['a167] <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining 'a167 <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
-//│ ╟── while constraining ∀ 0. 'a72' <: (myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)})
-//│ ╟── while constraining ∀ 0. 'a72' <: ((myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}) & {MyArray#A: ('a164 -> 'a164)})
-//│ ╟── while constraining ∀ 0. 'a72' <: MyArray['a164]
-//│ ╟── while constraining 'a164 <: MyArray['a164]
-//│ ╟── while constraining ('a164 -> 'a164) <: (MyArray['a164] -> MyArray['a164])
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}) & {MyArray#A: ('a164 -> 'a164)}) <: ('a | MyArray[MyArray['a164]])
-//│ ╟── while constraining MyArray['a164] <: ('a | MyArray[MyArray['a164]])
-//│ ╟── while constraining MyArray['a164] <: 'a165
-//│ ╟── while constraining (Int, MyArray['a164],) <: (Int, 'a165,)
-//│ ╟── while constraining ((Int, 'a165,) -> ()) <: ((Int, MyArray['a164],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a165,) -> ()), get: ((Int,) -> 'a165)}) & {MyArray#A: ('a165 -> 'a165)}) <: ('a | MyArray[MyArray['a164]])
-//│ ╟── while constraining MyArray['a165] <: ('a | MyArray[MyArray['a164]])
-//│ ╟── while constraining 'a165 <: ('a | MyArray[MyArray['a164]])
-//│ ╟── while constraining ∀ 0. 'a72' <: ('a | MyArray[MyArray['a164]])
-//│ ╙── while constraining ∀ 0. 'a72' <: 'a164
+//│ ╟── while constraining:  MyArray['a168]  <!<  'a169
+//│ ╟── while constraining:  'a164  <!<  'a169
+//│ ╟── while constraining:  (Int, 'a164,)  <!<  (Int, 'a169,)
+//│ ╟── while constraining:  ((Int, 'a169,) -> ())  <!<  ((Int, 'a164,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a169,) -> ()), get: ((Int,) -> 'a169)}) & {MyArray#A: ('a169 -> 'a169)})  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  MyArray['a169]  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  'a169  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a168
+//│ ╟── while constraining:  'a167  <!<  'a168
+//│ ╟── while constraining:  (Int, 'a167,)  <!<  (Int, 'a168,)
+//│ ╟── while constraining:  ((Int, 'a168,) -> ())  <!<  ((Int, 'a167,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})  <!<  {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})  <!<  MyArray['a167]
+//│ ╟── while constraining:  MyArray['a168]  <!<  MyArray['a167]
+//│ ╟── while constraining:  MyArray['a168]  <!<  'a167
+//│ ╟── while constraining:  'a168  <!<  'a167
+//│ ╟── while constraining:  (Int, 'a168,)  <!<  (Int, 'a167,)
+//│ ╟── while constraining:  ((Int, 'a167,) -> ())  <!<  ((Int, 'a168,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})  <!<  {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})  <!<  MyArray['a168]
+//│ ╟── while constraining:  MyArray['a167]  <!<  MyArray['a168]
+//│ ╟── while constraining:  MyArray['a167]  <!<  'a168
+//│ ╟── while constraining:  'a164  <!<  'a168
+//│ ╟── while constraining:  (Int, 'a164,)  <!<  (Int, 'a168,)
+//│ ╟── while constraining:  ((Int, 'a168,) -> ())  <!<  ((Int, 'a164,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a168,) -> ()), get: ((Int,) -> 'a168)}) & {MyArray#A: ('a168 -> 'a168)})  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  MyArray['a168]  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  'a168  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  'a167
+//│ ╟── while constraining:  'a164  <!<  'a167
+//│ ╟── while constraining:  (Int, 'a164,)  <!<  (Int, 'a167,)
+//│ ╟── while constraining:  ((Int, 'a167,) -> ())  <!<  ((Int, 'a164,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a167,) -> ()), get: ((Int,) -> 'a167)}) & {MyArray#A: ('a167 -> 'a167)})  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  MyArray['a167]  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  'a167  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  (myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)})
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ((myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}) & {MyArray#A: ('a164 -> 'a164)})
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  MyArray['a164]
+//│ ╟── while constraining:  'a164  <!<  MyArray['a164]
+//│ ╟── while constraining:  ('a164 -> 'a164)  <!<  (MyArray['a164] -> MyArray['a164])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a164,) -> ()), get: ((Int,) -> 'a164)}) & {MyArray#A: ('a164 -> 'a164)})  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╟── while constraining:  MyArray['a164]  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╟── while constraining:  MyArray['a164]  <!<  'a165
+//│ ╟── while constraining:  (Int, MyArray['a164],)  <!<  (Int, 'a165,)
+//│ ╟── while constraining:  ((Int, 'a165,) -> ())  <!<  ((Int, MyArray['a164],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a165,) -> ()), get: ((Int,) -> 'a165)}) & {MyArray#A: ('a165 -> 'a165)})  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╟── while constraining:  MyArray['a165]  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╟── while constraining:  'a165  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╟── while constraining:  ∀ 0. 'a72'  <!<  ('a | MyArray[MyArray['a164]])
+//│ ╙── while constraining:  ∀ 0. 'a72'  <!<  'a164
 //│ constrain calls  : 404
 //│ annoying  calls  : 237
 //│ subtyping calls  : 1968
@@ -177,78 +177,78 @@ ty3A = ty3B
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── while constraining MyArray[MyArray['a209]] <: 'a208
-//│ ╟── while constraining MyArray[MyArray['a209]] <: 'a209
-//│ ╟── while constraining 'a208 <: 'a209
-//│ ╟── while constraining (Int, 'a208,) <: (Int, 'a209,)
-//│ ╟── while constraining ((Int, 'a209,) -> ()) <: ((Int, 'a208,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)}) <: {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)}) <: (myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)}) <: ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)}) <: MyArray['a208]
-//│ ╟── while constraining MyArray['a209] <: MyArray['a208]
-//│ ╟── while constraining MyArray['a209] <: 'a206
-//│ ╟── while constraining ((Int,) -> MyArray['a209]) <: ((Int,) -> 'a206)
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])}) <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])}) <: (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])}) <: ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])}) <: MyArray['a206]
-//│ ╟── while constraining MyArray[MyArray['a209]] <: MyArray['a206]
-//│ ╟── while constraining MyArray[MyArray['a209]] <: 'a208
-//│ ╟── while constraining 'a209 <: 'a208
-//│ ╟── while constraining (Int, 'a209,) <: (Int, 'a208,)
-//│ ╟── while constraining ((Int, 'a208,) -> ()) <: ((Int, 'a209,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)}) <: {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)}) <: (myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)}) <: ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)}) <: MyArray['a209]
-//│ ╟── while constraining MyArray['a208] <: MyArray['a209]
-//│ ╟── while constraining 'a206 <: MyArray['a209]
-//│ ╟── while constraining (Int, 'a206,) <: (Int, MyArray['a209],)
-//│ ╟── while constraining ((Int, MyArray['a209],) -> ()) <: ((Int, 'a206,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])}) <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining MyArray[MyArray['a209]] <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining 'a209 <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ∀ 0. 'a115' <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ∀ 0. 'a115' <: 'a208
-//│ ╟── while constraining 'a205 <: 'a208
-//│ ╟── while constraining (Int, 'a205,) <: (Int, 'a208,)
-//│ ╟── while constraining ((Int, 'a208,) -> ()) <: ((Int, 'a205,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)}) <: ('a | MyArray['a205])
-//│ ╟── while constraining MyArray['a208] <: ('a | MyArray['a205])
-//│ ╟── while constraining MyArray['a208] <: 'a206
-//│ ╟── while constraining ((Int,) -> MyArray['a208]) <: ((Int,) -> 'a206)
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])}) <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])}) <: (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])}) <: ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])}) <: MyArray['a206]
-//│ ╟── while constraining MyArray[MyArray['a208]] <: MyArray['a206]
-//│ ╟── while constraining 'a208 <: MyArray['a206]
-//│ ╟── while constraining (Int, 'a208,) <: (Int, MyArray['a206],)
-//│ ╟── while constraining ((Int, MyArray['a206],) -> ()) <: ((Int, 'a208,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])}) <: {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])}) <: (myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])}) <: ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])}) <: MyArray['a208]
-//│ ╟── while constraining MyArray[MyArray['a206]] <: MyArray['a208]
-//│ ╟── while constraining 'a206 <: MyArray['a208]
-//│ ╟── while constraining (Int, 'a206,) <: (Int, MyArray['a208],)
-//│ ╟── while constraining ((Int, MyArray['a208],) -> ()) <: ((Int, 'a206,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])}) <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining MyArray[MyArray['a208]] <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining 'a208 <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ∀ 0. 'a115' <: {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
-//│ ╟── while constraining ∀ 0. 'a115' <: (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
-//│ ╟── while constraining ∀ 0. 'a115' <: ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
-//│ ╟── while constraining ∀ 0. 'a115' <: MyArray['a206]
-//│ ╟── while constraining 'a205 <: MyArray['a206]
-//│ ╟── while constraining (Int, 'a205,) <: (Int, MyArray['a206],)
-//│ ╟── while constraining ((Int, MyArray['a206],) -> ()) <: ((Int, 'a205,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])}) <: ('a | MyArray['a205])
-//│ ╟── while constraining MyArray[MyArray['a206]] <: ('a | MyArray['a205])
-//│ ╟── while constraining 'a206 <: ('a | MyArray['a205])
-//│ ╟── while constraining ∀ 0. 'a115' <: ('a | MyArray['a205])
-//│ ╙── while constraining ∀ 0. 'a115' <: 'a205
+//│ ╟── while constraining:  MyArray[MyArray['a209]]  <!<  'a208
+//│ ╟── while constraining:  MyArray[MyArray['a209]]  <!<  'a209
+//│ ╟── while constraining:  'a208  <!<  'a209
+//│ ╟── while constraining:  (Int, 'a208,)  <!<  (Int, 'a209,)
+//│ ╟── while constraining:  ((Int, 'a209,) -> ())  <!<  ((Int, 'a208,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})  <!<  {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})  <!<  MyArray['a208]
+//│ ╟── while constraining:  MyArray['a209]  <!<  MyArray['a208]
+//│ ╟── while constraining:  MyArray['a209]  <!<  'a206
+//│ ╟── while constraining:  ((Int,) -> MyArray['a209])  <!<  ((Int,) -> 'a206)
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])})  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])})  <!<  (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])})  <!<  MyArray['a206]
+//│ ╟── while constraining:  MyArray[MyArray['a209]]  <!<  MyArray['a206]
+//│ ╟── while constraining:  MyArray[MyArray['a209]]  <!<  'a208
+//│ ╟── while constraining:  'a209  <!<  'a208
+//│ ╟── while constraining:  (Int, 'a209,)  <!<  (Int, 'a208,)
+//│ ╟── while constraining:  ((Int, 'a208,) -> ())  <!<  ((Int, 'a209,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})  <!<  {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a209,) -> ()), get: ((Int,) -> 'a209)}) & {MyArray#A: ('a209 -> 'a209)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})  <!<  MyArray['a209]
+//│ ╟── while constraining:  MyArray['a208]  <!<  MyArray['a209]
+//│ ╟── while constraining:  'a206  <!<  MyArray['a209]
+//│ ╟── while constraining:  (Int, 'a206,)  <!<  (Int, MyArray['a209],)
+//│ ╟── while constraining:  ((Int, MyArray['a209],) -> ())  <!<  ((Int, 'a206,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a209],) -> ()), get: ((Int,) -> MyArray['a209])}) & {MyArray#A: (MyArray['a209] -> MyArray['a209])})  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  MyArray[MyArray['a209]]  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  'a209  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  'a208
+//│ ╟── while constraining:  'a205  <!<  'a208
+//│ ╟── while constraining:  (Int, 'a205,)  <!<  (Int, 'a208,)
+//│ ╟── while constraining:  ((Int, 'a208,) -> ())  <!<  ((Int, 'a205,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})  <!<  ('a | MyArray['a205])
+//│ ╟── while constraining:  MyArray['a208]  <!<  ('a | MyArray['a205])
+//│ ╟── while constraining:  MyArray['a208]  <!<  'a206
+//│ ╟── while constraining:  ((Int,) -> MyArray['a208])  <!<  ((Int,) -> 'a206)
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])})  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])})  <!<  (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])})  <!<  MyArray['a206]
+//│ ╟── while constraining:  MyArray[MyArray['a208]]  <!<  MyArray['a206]
+//│ ╟── while constraining:  'a208  <!<  MyArray['a206]
+//│ ╟── while constraining:  (Int, 'a208,)  <!<  (Int, MyArray['a206],)
+//│ ╟── while constraining:  ((Int, MyArray['a206],) -> ())  <!<  ((Int, 'a208,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])})  <!<  {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])})  <!<  (myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a208,) -> ()), get: ((Int,) -> 'a208)}) & {MyArray#A: ('a208 -> 'a208)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])})  <!<  MyArray['a208]
+//│ ╟── while constraining:  MyArray[MyArray['a206]]  <!<  MyArray['a208]
+//│ ╟── while constraining:  'a206  <!<  MyArray['a208]
+//│ ╟── while constraining:  (Int, 'a206,)  <!<  (Int, MyArray['a208],)
+//│ ╟── while constraining:  ((Int, MyArray['a208],) -> ())  <!<  ((Int, 'a206,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a208],) -> ()), get: ((Int,) -> MyArray['a208])}) & {MyArray#A: (MyArray['a208] -> MyArray['a208])})  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  MyArray[MyArray['a208]]  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  'a208  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  (myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)})
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  ((myArray<> & {size: Int, set: ((Int, 'a206,) -> ()), get: ((Int,) -> 'a206)}) & {MyArray#A: ('a206 -> 'a206)})
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  MyArray['a206]
+//│ ╟── while constraining:  'a205  <!<  MyArray['a206]
+//│ ╟── while constraining:  (Int, 'a205,)  <!<  (Int, MyArray['a206],)
+//│ ╟── while constraining:  ((Int, MyArray['a206],) -> ())  <!<  ((Int, 'a205,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a206],) -> ()), get: ((Int,) -> MyArray['a206])}) & {MyArray#A: (MyArray['a206] -> MyArray['a206])})  <!<  ('a | MyArray['a205])
+//│ ╟── while constraining:  MyArray[MyArray['a206]]  <!<  ('a | MyArray['a205])
+//│ ╟── while constraining:  'a206  <!<  ('a | MyArray['a205])
+//│ ╟── while constraining:  ∀ 0. 'a115'  <!<  ('a | MyArray['a205])
+//│ ╙── while constraining:  ∀ 0. 'a115'  <!<  'a205
 //│ constrain calls  : 143
 //│ annoying  calls  : 146
 //│ subtyping calls  : 1861
@@ -265,74 +265,74 @@ ty4B = ty4B
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── while constraining ∀ 0. 'a216' <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: 'a301
-//│ ╟── while constraining 'a298 <: 'a301
-//│ ╟── while constraining (Int, 'a298,) <: (Int, 'a301,)
-//│ ╟── while constraining ((Int, 'a301,) -> ()) <: ((Int, 'a298,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)}) <: {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)}) <: (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)}) <: ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)}) <: MyArray['a298]
-//│ ╟── while constraining MyArray['a301] <: MyArray['a298]
-//│ ╟── while constraining (Int, MyArray['a301],) <: (Int, MyArray['a298],)
-//│ ╟── while constraining ((Int, MyArray['a298],) -> ()) <: ((Int, MyArray['a301],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: (myArray<> & {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: ((myArray<> & {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])}) & {MyArray#A: (MyArray['a301] -> MyArray['a301])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: MyArray[MyArray['a301]]
-//│ ╟── while constraining MyArray[MyArray['a298]] <: MyArray[MyArray['a301]]
-//│ ╟── while constraining (Int, MyArray[MyArray['a298]],) <: (Int, MyArray[MyArray['a301]],)
-//│ ╟── while constraining ((Int, MyArray[MyArray['a301]],) -> ()) <: ((Int, MyArray[MyArray['a298]],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a301]],) -> ()), get: ((Int,) -> MyArray[MyArray['a301]])}) & {MyArray#A: (MyArray[MyArray['a301]] -> MyArray[MyArray['a301]])}) <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining MyArray[MyArray[MyArray['a301]]] <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining 'a301 <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: 'a300
-//│ ╟── while constraining 'a298 <: 'a300
-//│ ╟── while constraining (Int, 'a298,) <: (Int, 'a300,)
-//│ ╟── while constraining ((Int, 'a300,) -> ()) <: ((Int, 'a298,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)}) <: {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)}) <: (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)}) <: ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)}) <: MyArray['a298]
-//│ ╟── while constraining MyArray['a300] <: MyArray['a298]
-//│ ╟── while constraining (Int, MyArray['a300],) <: (Int, MyArray['a298],)
-//│ ╟── while constraining ((Int, MyArray['a298],) -> ()) <: ((Int, MyArray['a300],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: (myArray<> & {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: ((myArray<> & {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])}) & {MyArray#A: (MyArray['a300] -> MyArray['a300])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: MyArray[MyArray['a300]]
-//│ ╟── while constraining MyArray[MyArray['a298]] <: MyArray[MyArray['a300]]
-//│ ╟── while constraining (Int, MyArray[MyArray['a298]],) <: (Int, MyArray[MyArray['a300]],)
-//│ ╟── while constraining ((Int, MyArray[MyArray['a300]],) -> ()) <: ((Int, MyArray[MyArray['a298]],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a300]],) -> ()), get: ((Int,) -> MyArray[MyArray['a300]])}) & {MyArray#A: (MyArray[MyArray['a300]] -> MyArray[MyArray['a300]])}) <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining MyArray[MyArray[MyArray['a300]]] <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining 'a300 <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: 'a299
-//│ ╟── while constraining 'a298 <: 'a299
-//│ ╟── while constraining (Int, 'a298,) <: (Int, 'a299,)
-//│ ╟── while constraining ((Int, 'a299,) -> ()) <: ((Int, 'a298,) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)}) <: {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)}) <: (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)}) <: ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)}) <: MyArray['a298]
-//│ ╟── while constraining MyArray['a299] <: MyArray['a298]
-//│ ╟── while constraining (Int, MyArray['a299],) <: (Int, MyArray['a298],)
-//│ ╟── while constraining ((Int, MyArray['a298],) -> ()) <: ((Int, MyArray['a299],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])}
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: (myArray<> & {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: ((myArray<> & {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])}) & {MyArray#A: (MyArray['a299] -> MyArray['a299])})
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])}) <: MyArray[MyArray['a299]]
-//│ ╟── while constraining MyArray[MyArray['a298]] <: MyArray[MyArray['a299]]
-//│ ╟── while constraining (Int, MyArray[MyArray['a298]],) <: (Int, MyArray[MyArray['a299]],)
-//│ ╟── while constraining ((Int, MyArray[MyArray['a299]],) -> ()) <: ((Int, MyArray[MyArray['a298]],) -> ())
-//│ ╟── while constraining ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a299]],) -> ()), get: ((Int,) -> MyArray[MyArray['a299]])}) & {MyArray#A: (MyArray[MyArray['a299]] -> MyArray[MyArray['a299]])}) <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining MyArray[MyArray[MyArray['a299]]] <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining 'a299 <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╟── while constraining ∀ 0. 'a216' <: ('a | MyArray[MyArray[MyArray['a298]]])
-//│ ╙── while constraining ∀ 0. 'a216' <: 'a298
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  'a301
+//│ ╟── while constraining:  'a298  <!<  'a301
+//│ ╟── while constraining:  (Int, 'a298,)  <!<  (Int, 'a301,)
+//│ ╟── while constraining:  ((Int, 'a301,) -> ())  <!<  ((Int, 'a298,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)})  <!<  {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a301,) -> ()), get: ((Int,) -> 'a301)}) & {MyArray#A: ('a301 -> 'a301)})  <!<  MyArray['a298]
+//│ ╟── while constraining:  MyArray['a301]  <!<  MyArray['a298]
+//│ ╟── while constraining:  (Int, MyArray['a301],)  <!<  (Int, MyArray['a298],)
+//│ ╟── while constraining:  ((Int, MyArray['a298],) -> ())  <!<  ((Int, MyArray['a301],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  (myArray<> & {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  ((myArray<> & {size: Int, set: ((Int, MyArray['a301],) -> ()), get: ((Int,) -> MyArray['a301])}) & {MyArray#A: (MyArray['a301] -> MyArray['a301])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  MyArray[MyArray['a301]]
+//│ ╟── while constraining:  MyArray[MyArray['a298]]  <!<  MyArray[MyArray['a301]]
+//│ ╟── while constraining:  (Int, MyArray[MyArray['a298]],)  <!<  (Int, MyArray[MyArray['a301]],)
+//│ ╟── while constraining:  ((Int, MyArray[MyArray['a301]],) -> ())  <!<  ((Int, MyArray[MyArray['a298]],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a301]],) -> ()), get: ((Int,) -> MyArray[MyArray['a301]])}) & {MyArray#A: (MyArray[MyArray['a301]] -> MyArray[MyArray['a301]])})  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  MyArray[MyArray[MyArray['a301]]]  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  'a301  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  'a300
+//│ ╟── while constraining:  'a298  <!<  'a300
+//│ ╟── while constraining:  (Int, 'a298,)  <!<  (Int, 'a300,)
+//│ ╟── while constraining:  ((Int, 'a300,) -> ())  <!<  ((Int, 'a298,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)})  <!<  {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a300,) -> ()), get: ((Int,) -> 'a300)}) & {MyArray#A: ('a300 -> 'a300)})  <!<  MyArray['a298]
+//│ ╟── while constraining:  MyArray['a300]  <!<  MyArray['a298]
+//│ ╟── while constraining:  (Int, MyArray['a300],)  <!<  (Int, MyArray['a298],)
+//│ ╟── while constraining:  ((Int, MyArray['a298],) -> ())  <!<  ((Int, MyArray['a300],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  (myArray<> & {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  ((myArray<> & {size: Int, set: ((Int, MyArray['a300],) -> ()), get: ((Int,) -> MyArray['a300])}) & {MyArray#A: (MyArray['a300] -> MyArray['a300])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  MyArray[MyArray['a300]]
+//│ ╟── while constraining:  MyArray[MyArray['a298]]  <!<  MyArray[MyArray['a300]]
+//│ ╟── while constraining:  (Int, MyArray[MyArray['a298]],)  <!<  (Int, MyArray[MyArray['a300]],)
+//│ ╟── while constraining:  ((Int, MyArray[MyArray['a300]],) -> ())  <!<  ((Int, MyArray[MyArray['a298]],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a300]],) -> ()), get: ((Int,) -> MyArray[MyArray['a300]])}) & {MyArray#A: (MyArray[MyArray['a300]] -> MyArray[MyArray['a300]])})  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  MyArray[MyArray[MyArray['a300]]]  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  'a300  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  'a299
+//│ ╟── while constraining:  'a298  <!<  'a299
+//│ ╟── while constraining:  (Int, 'a298,)  <!<  (Int, 'a299,)
+//│ ╟── while constraining:  ((Int, 'a299,) -> ())  <!<  ((Int, 'a298,) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)})  <!<  {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)})  <!<  (myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)})  <!<  ((myArray<> & {size: Int, set: ((Int, 'a298,) -> ()), get: ((Int,) -> 'a298)}) & {MyArray#A: ('a298 -> 'a298)})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a299,) -> ()), get: ((Int,) -> 'a299)}) & {MyArray#A: ('a299 -> 'a299)})  <!<  MyArray['a298]
+//│ ╟── while constraining:  MyArray['a299]  <!<  MyArray['a298]
+//│ ╟── while constraining:  (Int, MyArray['a299],)  <!<  (Int, MyArray['a298],)
+//│ ╟── while constraining:  ((Int, MyArray['a298],) -> ())  <!<  ((Int, MyArray['a299],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])}
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  (myArray<> & {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  ((myArray<> & {size: Int, set: ((Int, MyArray['a299],) -> ()), get: ((Int,) -> MyArray['a299])}) & {MyArray#A: (MyArray['a299] -> MyArray['a299])})
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a298],) -> ()), get: ((Int,) -> MyArray['a298])}) & {MyArray#A: (MyArray['a298] -> MyArray['a298])})  <!<  MyArray[MyArray['a299]]
+//│ ╟── while constraining:  MyArray[MyArray['a298]]  <!<  MyArray[MyArray['a299]]
+//│ ╟── while constraining:  (Int, MyArray[MyArray['a298]],)  <!<  (Int, MyArray[MyArray['a299]],)
+//│ ╟── while constraining:  ((Int, MyArray[MyArray['a299]],) -> ())  <!<  ((Int, MyArray[MyArray['a298]],) -> ())
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a299]],) -> ()), get: ((Int,) -> MyArray[MyArray['a299]])}) & {MyArray#A: (MyArray[MyArray['a299]] -> MyArray[MyArray['a299]])})  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  MyArray[MyArray[MyArray['a299]]]  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  'a299  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╟── while constraining:  ∀ 0. 'a216'  <!<  ('a | MyArray[MyArray[MyArray['a298]]])
+//│ ╙── while constraining:  ∀ 0. 'a216'  <!<  'a298
 //│ constrain calls  : 125
 //│ annoying  calls  : 141
 //│ subtyping calls  : 37968
