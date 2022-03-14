@@ -80,7 +80,7 @@ foo arg
 //│ res: error | int | string | {l: bool, r: nothing}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 53
+//│ constrain calls  : 54
 //│ annoying  calls  : 40
 //│ subtyping calls  : 131
 
@@ -90,7 +90,7 @@ foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│ Runtime error:
 //│   ReferenceError: arg is not defined
-//│ constrain calls  : 48
+//│ constrain calls  : 50
 //│ annoying  calls  : 38
 //│ subtyping calls  : 96
 

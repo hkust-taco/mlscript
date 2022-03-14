@@ -201,7 +201,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Test(l, r) => "'is' test"
     case With(t, fs) =>  "`with` extension"
     case CaseOf(scrut, cases) =>  "`case` expression" 
-    case Subs(arr, idx) => "array subscript"
+    case Subs(arr, idx) => "array access"
     case Assign(lhs, rhs) => "assignment"
   }
   
@@ -288,6 +288,11 @@ trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
     case Var(name) => name
     case lit: Lit => lit.toString
   }
+}
+
+trait FieldImpl extends Located { self: Field =>
+  def children: List[Located] =
+    self.in.toList ::: self.out :: Nil
 }
 
 trait Located {
