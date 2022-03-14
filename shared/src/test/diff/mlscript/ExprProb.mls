@@ -287,10 +287,11 @@ e2 = add (lit 1) (nega e1)
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
 //│     }
 
+:e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
 eval2 done e2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?E, ?arg, ?b. ?b) -> ?c` exceeded recursion depth limit (100)
-//│ ║  l.291: 	eval2 done e2
+//│ ║  l.292: 	eval2 done e2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── while constraining (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1253}) <: {rhs: α1222}
 //│ ╟── while constraining (add<> & {Add#E: (E1251 -> E1251), lhs: lhs1249, rhs: rhs1253}) <: α1221
@@ -335,10 +336,11 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E .. 'E | (Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}})] with {arg: Add['E0 .. 'E0 | Lit & {val: 1} | (Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}})] with {lhs: Lit & {val: 1}, rhs: Nega['E1 .. 'E1 | Lit & {val: 1}] with {arg: Lit & {val: 1}}}}
 //│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
+:e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
 eval2 done d2
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?val, ?lhs, ?E, ?rhs, ?val0, ?arg, ?E0, ?E1, ?b, ?arg0, ?lhs0, ?val1, ?E2, ?arg1, ?val2, ?E3, ?rhs0, ?E4. ?b) -> ?c` exceeded recursion depth limit (100)
-//│ ║  l.339: 	eval2 done d2
+//│ ║  l.341: 	eval2 done d2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── while constraining (lit<> & {val: val1396}) <: ((lit<> & α1371) | (((add<> & α1373) | (α1376 & ~(add<>))) & ~(lit<>)))
 //│ ╟── while constraining (lit<> & {val: val1396}) <: α1370
@@ -392,6 +394,7 @@ prettier2 done (eval1 done)
 //│ annoying  calls  : 0
 //│ subtyping calls  : 7165
 
+:e // FIXME (reproduced in `ADRsRepro.mls`)
 :stats
 prettier2 done (eval2 done)
 prettier2 done (eval2 done) e2
@@ -399,7 +402,7 @@ prettier2 done (eval2 done) d2
 //│ res: (((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | (Nega[?] with {arg: 'b | (Nega[?] with {arg: 'd}) as 'd}) as 'c, rhs: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | (Nega[?] with {arg: 'b | (Nega[?] with {arg: 'd}) as 'd}) as 'e}) | Lit as 'b) | (Nega[?] with {arg: 'a}) as 'a) -> string
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?E, ?arg, ?b. ?b) -> ?c` exceeded recursion depth limit (100)
-//│ ║  l.397: 	prettier2 done (eval2 done) e2
+//│ ║  l.400: 	prettier2 done (eval2 done) e2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining (add<> & {lhs: lhs1960, rhs: rhs1964, Add#E: (E1962 -> E1962)}) <: ((lit<> & α1929) | (((add<> & α1931) | (α1934 & ~(add<>))) & ~(lit<>)))
 //│ ╟── while constraining (add<> & {lhs: lhs1960, rhs: rhs1964, Add#E: (E1962 -> E1962)}) <: α1928
@@ -438,7 +441,7 @@ prettier2 done (eval2 done) d2
 //│ res: error
 //│    = '1-123'
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?val, ?lhs, ?E, ?rhs, ?val0, ?arg, ?E0, ?E1, ?b, ?arg0, ?lhs0, ?val1, ?E2, ?arg1, ?val2, ?E3, ?rhs0, ?E4. ?b) -> ?c` exceeded recursion depth limit (100)
-//│ ║  l.398: 	prettier2 done (eval2 done) d2
+//│ ║  l.401: 	prettier2 done (eval2 done) d2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining (lit<> & {val: val2165}) <: α2147
 //│ ╟── while constraining arg2164 <: α2147

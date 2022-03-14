@@ -109,7 +109,6 @@ def x: int & ~0
 //│ x: int & ~0
 //│  = <missing implementation>
 
-:re
 safeDiv 1 x
 //│ res: int
 //│    = <no result>

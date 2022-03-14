@@ -173,6 +173,7 @@ x => y => x y x
 x => y => x x y
 //│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
+:e // Omega: causes divergence in first-class-polymorphic type inference, as expected
 (x => x x) (x => x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(x => x x) (x => x x)
@@ -208,6 +209,7 @@ x => {l: x x, r: x }
 
 // From https://github.com/stedolan/mlsub
 // Y combinator:
+:e // similarly to Omega
 (f => (x => f (x x)) (x => f (x x)))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e. ?c -> ?e) -> ?f` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
@@ -237,6 +239,7 @@ x => {l: x x, r: x }
 //│ res: (nothing -> anything & nothing -> anything) -> error
 
 // Z combinator:
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
@@ -266,6 +269,7 @@ x => {l: x x, r: x }
 //│ res: ((anything -> nothing) -> anything & (anything -> nothing) -> anything) -> error
 
 // Function that takes arbitrarily many arguments:
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)

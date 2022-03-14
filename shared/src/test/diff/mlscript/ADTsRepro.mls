@@ -6,8 +6,8 @@ def e2: Add['e] as 'e
 //│ e2: 'e | {x: ({x: 'a -> 'b} & 'e as 'b) -> 'a} as 'a
 //│   = <missing implementation>
 
-// FIXME SOF
 // :d
+// FIXME
 e2 : Add['e] as 'e
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?e. ?e <: ?e0` exceeded recursion depth limit (100)
 //│ ║  l.11: 	e2 : Add['e] as 'e
@@ -56,8 +56,8 @@ def f0: ('a -> int) as 'a
 //│ f0: 'a | ('b -> int & 'a) -> int as 'b
 //│   = <missing implementation>
 
-// FIXME SOF
 // :d
+// FIXME
 f0 = f0
 //│ 'a | ('b -> int & 'a) -> int as 'b
 //│   <:  f0:

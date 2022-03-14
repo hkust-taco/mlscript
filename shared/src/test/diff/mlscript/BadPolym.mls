@@ -122,6 +122,7 @@ bar1 = bar1
 //│       bar1 is not implemented
 
 
+:re
 error: int -> int & string -> string : (int & string) -> (int | string)
 //│ res: nothing -> (int | string)
 //│ Runtime error:
@@ -130,13 +131,13 @@ error: int -> int & string -> string : (int & string) -> (int | string)
 :e
 error: int -> int & string -> string : int -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.131: 	error: int -> int & string -> string : int -> int
+//│ ║  l.132: 	error: int -> int & string -> string : int -> int
 //│ ║         	^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.131: 	error: int -> int & string -> string : int -> int
+//│ ║  l.132: 	error: int -> int & string -> string : int -> int
 //│ ║         	                                       ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.131: 	error: int -> int & string -> string : int -> int
+//│ ║  l.132: 	error: int -> int & string -> string : int -> int
 //│ ╙──       	                    ^^^^^^
 //│ res: int -> int
 //│ Runtime error:

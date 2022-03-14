@@ -1,20 +1,16 @@
+:NoJS
+
 
 rec def x = {u = x}
 //│ x: {u: 'a} as 'a
-//│ Runtime error:
-//│   ReferenceError: x is not defined
 
 :ns
 {u = x; v = x}
 //│ res: {u: forall 'a. {u: 'b} as 'b, v: forall 'a. {u: 'b} as 'b}
-//│ Runtime error:
-//│   ReferenceError: x is not defined
 
 // > FIXME: foralls?
 {u = x; v = x}
 //│ res: {u: {u: 'a} as 'a, v: {u: 'a} as 'a}
-//│ Runtime error:
-//│   ReferenceError: x is not defined
 
 
 
@@ -26,86 +22,65 @@ class C[A]: {x: A}
 
 c = C{x = 1}
 //│ c: C['A .. 1 | 'A] with {x: 1}
-//│  = C { x: 1 }
 
 def mkC() = C{x = 1}
 //│ mkC: () -> (C['A .. 1 | 'A] with {x: 1})
-//│    = [Function: mkC]
 
-// :d
 def arg = if true then c else 0
 //│ arg: 0 | (C['A .. 1 | 'A] with {x: 1})
-//│    = C { x: 1 }
 
-// :d
 def arg = if true then mkC() else 0
 //│ arg: 0 | (C['A .. 1 | 'A] with {x: 1})
-//│    = C { x: 1 }
 
 
-// :d
 def arg = if true then C{x = 42} else 0
 //│ arg: 0 | (C['A .. 42 | 'A] with {x: 42})
-//│    = C { x: 42 }
 
 def arg = if true then c else 0
 //│ arg: 0 | (C['A .. 1 | 'A] with {x: 1})
-//│    = C { x: 1 }
 
 :ns
 def arg = if true then C{x = 42} else C{x = 1}
 //│ arg: forall 'x, 'A, 'x0, 'A0, 'a. c & {x: 42, C#A :> 'A <: 42} | c & {x: 1, C#A :> 'A0 <: 1}
-//│    = C { x: 42 }
 
 :ns
 arg
 //│ res: forall 'x, 'A, 'x0, 'A0, 'a. c & {x: 42, C#A :> 'A <: 42} | c & {x: 1, C#A :> 'A0 <: 1}
-//│    = C { x: 42 }
 
-// :d
 arg
 //│ res: (C['A .. 42 | 'A] with {x: 42}) | (C['A0 .. 1 | 'A0] with {x: 1})
-//│    = C { x: 42 }
 
 C.X
 //│ res: C['A] -> 'A
-//│    = undefined
 
 :ns
 C.X
 //│ res: C['A] -> 'A
-//│    = undefined
 
 res arg
 //│ res: 1 | 42
-//│ Runtime error:
-//│   TypeError: res is not a function
 
 arg.X
 //│ res: 1 | 42
-//│    = 42
 
 :e
 arg: C[nothing]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.89: 	arg: C[nothing]
+//│ ║  l.67: 	arg: C[nothing]
 //│ ║        	^^^
 //│ ╟── integer literal of type `42` does not match type `nothing`
-//│ ║  l.56: 	def arg = if true then C{x = 42} else C{x = 1}
+//│ ║  l.43: 	def arg = if true then C{x = 42} else C{x = 1}
 //│ ║        	                             ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.89: 	arg: C[nothing]
+//│ ║  l.67: 	arg: C[nothing]
 //│ ╙──      	       ^^^^^^^
 //│ res: C[nothing]
-//│    = C { x: 42 }
 
 
 test x = case x of { C -> x.X }
 //│ test: C['A] -> 'A
-//│     = [Function: test]
 
 test x = case x of { C -> x.X | int -> x }
 //│ test: (C['A] | int & 'a) -> ('A | 'a)
-//│     = [Function: test1]
 
 
