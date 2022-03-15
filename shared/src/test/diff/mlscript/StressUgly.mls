@@ -28,7 +28,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Add[?b]` does not match type `int`
+//│ ╟── type `Add[?b] with {lhs: ?b, rhs: ?b}` does not match type `int`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -128,5 +128,5 @@ eval1_ty = eval1_ty_ugly
 //│           eval1_ty_ugly is not implemented
 //│ constrain calls  : 62
 //│ annoying  calls  : 53
-//│ subtyping calls  : 310
+//│ subtyping calls  : 448
 

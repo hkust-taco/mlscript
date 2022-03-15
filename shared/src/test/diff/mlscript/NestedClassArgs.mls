@@ -1,0 +1,44 @@
+
+class C[A]
+//│ Defined class C
+
+def c: C[C[int]]
+//│ c: C[C[int]]
+//│  = <missing implementation>
+
+def c: 'a -> C[C['a]]
+//│ c: 'a -> C[C['a]]
+//│  = <missing implementation>
+
+def c: C[C['a]] -> 'a
+//│ c: C[C['a]] -> 'a
+//│  = <missing implementation>
+
+def c: C['a] as 'a
+//│ c: 'a | C[C['c .. 'd] & 'a .. 'b] as 'b
+//│  = <missing implementation>
+
+def c: C[C['a]] as 'a
+//│ c: 'a | C[C['c .. 'd] .. C[C[C['e .. 'b] .. 'f] & 'a as 'e .. 'b]] as 'b
+//│  = <missing implementation>
+
+
+def c: C['a]
+//│ c: C['a]
+//│  = <missing implementation>
+
+
+class C2[A]: { a: A }
+//│ Defined class C2
+
+
+def mkC: 'a -> C['a]
+//│ mkC: 'a -> C['a]
+//│    = <missing implementation>
+
+rec def rc = mkC(rc)
+//│ rc: C['a .. 'a | 'b] as 'b
+//│   = <no result>
+//│     mkC is not implemented
+
+

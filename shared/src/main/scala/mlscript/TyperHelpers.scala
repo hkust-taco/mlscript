@@ -270,11 +270,15 @@ abstract class TyperHelpers { self: Typer =>
       // Unnecessary and can complicate constraint solving quite a lot:
       // case (ComposedType(true, l, r), _) => l & that | r & that
       case (_: ClassTag, _: FunctionType) => BotType
+      case (FunctionType(l1, r1), FunctionType(l2, r2)) =>
+        FunctionType(l1 | l2, r1 & r2)(prov)
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
         if (fs0.sizeCompare(fs1) =/= 0) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
+      case (TypeBounds(l0, u0), TypeBounds(l1, u1)) =>
+        TypeBounds(l0 | l1, u0 & u1)(prov)
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => BotType

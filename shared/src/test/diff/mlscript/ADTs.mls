@@ -86,7 +86,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── type `int` does not match type `Add[?e] | Lit | Nega[int]`
+//│ ╟── type `int` does not match type `(Add[?e] with {lhs: ?e, rhs: ?e}) | Lit | Nega[int]`
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from union type:

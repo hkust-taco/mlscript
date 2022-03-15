@@ -71,7 +71,16 @@ trait TypeSimplifier { self: Typer =>
                     case pt: ClassTag => pt
                   },
                   ts,
-                  RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                  // RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
+                  RecordType(fs.map {
+                    case (nme, ty) if nme.name.isCapitalized && nme.name.contains('#') =>
+                      ty match {
+                        case FunctionType(lb, ub) =>
+                          nme -> FunctionType(goDeep(lb, !pol), goDeep(ub, pol))(ty.prov)
+                        case _ => lastWords(s"$nme: $ty")
+                      }
+                    case (nme, ty) => nme -> goDeep(ty, pol)
+                  })(noProv)
                 )
                 case LhsTop => LhsTop
               }
@@ -352,11 +361,21 @@ trait TypeSimplifier { self: Typer =>
                   val td = ctx.tyDefs(clsNme)
                   val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
-                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
-                      case (_, FunctionType(ub, lb)) if lb >:< ub => lb
-                      case (_, FunctionType(lb, ub)) =>
-                        TypeBounds.mk(go(lb, false), go(ub, true))
-                    }.getOrElse(TypeBounds(BotType, TopType)(noProv))
+                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
+                    //   case (_, FunctionType(lb, ub)) =>
+                    //     TypeBounds.mk(go(lb, false), go(ub, true))
+                    // }.foldLeft(TypeBounds(BotType, TopType)(noProv): ST)(_ & _)
+                    rcd.fields.iterator.filter(_._1 === fieldTagNme).foldLeft((BotType: ST, TopType: ST)) {
+                      case ((acc_lb, acc_ub), (_, FunctionType(lb, ub))) => (acc_lb | lb, acc_ub & ub)
+                      // case ((acc_lb, acc_ub), (_, _)) => die
+                      case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
+                    }.pipe {
+                      case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
+                    }
+                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
+                    //   case (_, ft: FunctionType) => ft
+                    //   case _ => die
+                    // }.foldLeft(FunctionType(BotType, TopType)(noProv): ST)(_ & _)
                   })(noProv)
                   val clsFields = fieldsOf(
                     typeRef.expandWith(paramTags = false), paramTags = false)

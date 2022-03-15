@@ -64,7 +64,7 @@ rec def eval1 k e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 81
 //│ annoying  calls  : 0
-//│ subtyping calls  : 695
+//│ subtyping calls  : 701
 
 :ns
 eval1
@@ -113,7 +113,7 @@ def eval1_ty_ugly = eval1
 //│              = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
-//│ subtyping calls  : 7054
+//│ subtyping calls  : 7020
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -133,7 +133,7 @@ def eval1_ty = eval1
 //│         = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
-//│ subtyping calls  : 1381
+//│ subtyping calls  : 1349
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -143,7 +143,7 @@ eval1_ty_ugly = eval1_ty
 //│              = [Function: eval1]
 //│ constrain calls  : 15
 //│ annoying  calls  : 1
-//│ subtyping calls  : 6932
+//│ subtyping calls  : 6854
 
 :stats
 eval1_ty = eval1_ty_ugly
@@ -153,7 +153,7 @@ eval1_ty = eval1_ty_ugly
 //│         = [Function: eval1]
 //│ constrain calls  : 15
 //│ annoying  calls  : 1
-//│ subtyping calls  : 7108
+//│ subtyping calls  : 7030
 
 
 // Workaround:
@@ -177,7 +177,7 @@ def eval1_ty = eval1
 //│         = [Function: eval1]
 //│ constrain calls  : 80
 //│ annoying  calls  : 38
-//│ subtyping calls  : 1083
+//│ subtyping calls  : 1057
 
 
 rec def pretty1 k e = case e of {
@@ -202,7 +202,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 164
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1579
+//│ subtyping calls  : 1593
 
 :stats
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
@@ -222,7 +222,7 @@ prettier1 done (eval1 done) e1
 //│    = '123'
 //│ constrain calls  : 667
 //│ annoying  calls  : 240
-//│ subtyping calls  : 746
+//│ subtyping calls  : 728
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
 eval1 done e1
@@ -268,7 +268,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│          = [Function: prettier2]
 //│ constrain calls  : 174
 //│ annoying  calls  : 0
-//│ subtyping calls  : 22811
+//│ subtyping calls  : 22847
 
 
 
@@ -318,7 +318,7 @@ prettier2 done (eval1 done)
 //│    = [Function (anonymous)]
 //│ constrain calls  : 76
 //│ annoying  calls  : 0
-//│ subtyping calls  : 7063
+//│ subtyping calls  : 7087
 
 :stats
 prettier2 done (eval2 done)
@@ -332,7 +332,7 @@ prettier2 done (eval2 done) d2
 //│    = '-1'
 //│ constrain calls  : 1012
 //│ annoying  calls  : 335
-//│ subtyping calls  : 88034
+//│ subtyping calls  : 88074
 
 
 
@@ -348,7 +348,7 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
 //│ ║  l.246: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -384,7 +384,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.19: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -406,7 +406,7 @@ prettier2 done (eval1 done) e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
 //│ ║  l.246: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -420,7 +420,7 @@ prettier2 done (eval1 done) e2
 //│   Error: non-exhaustive case expression
 //│ constrain calls  : 529
 //│ annoying  calls  : 198
-//│ subtyping calls  : 533
+//│ subtyping calls  : 525
 
 :e
 :stats
@@ -446,7 +446,7 @@ prettier2 done eval2
 //│    = [Function (anonymous)]
 //│ constrain calls  : 55
 //│ annoying  calls  : 0
-//│ subtyping calls  : 305
+//│ subtyping calls  : 313
 
 :e
 :stats
@@ -471,7 +471,7 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.19: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -487,7 +487,7 @@ prettier2 done eval2 e1
 //│    = '123'
 //│ constrain calls  : 221
 //│ annoying  calls  : 62
-//│ subtyping calls  : 233
+//│ subtyping calls  : 231
 
 :e
 :stats
@@ -512,7 +512,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.19: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -528,7 +528,7 @@ prettier2 done eval2 e2
 //│    = '1-123'
 //│ constrain calls  : 314
 //│ annoying  calls  : 107
-//│ subtyping calls  : 403
+//│ subtyping calls  : 391
 
 :e
 :stats
@@ -553,7 +553,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.19: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -566,7 +566,7 @@ prettier2 done eval2 d2
 //│    = '-1-1'
 //│ constrain calls  : 221
 //│ annoying  calls  : 73
-//│ subtyping calls  : 201
+//│ subtyping calls  : 203
 
 :e
 :stats
@@ -591,7 +591,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` is not a function
+//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` is not a function
 //│ ║  l.19: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║        	                  ^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
@@ -607,5 +607,5 @@ prettier2 done eval1 e2
 //│    = '1-123'
 //│ constrain calls  : 311
 //│ annoying  calls  : 107
-//│ subtyping calls  : 401
+//│ subtyping calls  : 387
 
