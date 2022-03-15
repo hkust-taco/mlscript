@@ -573,14 +573,14 @@ class Dup[A, A]: { x: A }
 //│ Defined Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'a) -> 'a
 
 t = Dup { x = 42 }
-//│ t: Dup['A | 'A0 .. 42 & 'A | 'A & 'A0, 'A | 'A0 .. 42 & 'A | 'A & 'A0] with {x: 42}
+//│ t: Dup['A | 'A0 .. 'A & (42 | 'A0), 'A | 'A0 .. 'A & (42 | 'A0)] with {x: 42}
 
 :stats
 t : Dup[bool, int]
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
 //│ constrain calls  : 57
 //│ annoying  calls  : 47
-//│ subtyping calls  : 101
+//│ subtyping calls  : 100
 
 :stats
 t : Dup[int, bool]
@@ -596,20 +596,20 @@ t : Dup[int, bool]
 //│ res: Dup[bool | int .. nothing, bool | int .. nothing]
 //│ constrain calls  : 72
 //│ annoying  calls  : 47
-//│ subtyping calls  : 94
+//│ subtyping calls  : 93
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 98
-//│ annoying  calls  : 36
-//│ subtyping calls  : 57
+//│ constrain calls  : 88
+//│ annoying  calls  : 33
+//│ subtyping calls  : 45
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 83
-//│ annoying  calls  : 32
+//│ constrain calls  : 78
+//│ annoying  calls  : 31
 //│ subtyping calls  : 68
 
 
