@@ -176,21 +176,25 @@ g tx
 //│ Runtime error:
 //│   ReferenceError: Hey is not defined
 
+:ge
 if bool then (1,) else (2,)
 //│ res: (1 | 2,)
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
+:ge
 if bool then (1,) else (2, 3)
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
+:ge
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
 //│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
+:ge
 if bool then (1,) else fun x -> x
 //│ res: anything
 //│ Code generation encountered an error:
@@ -231,16 +235,16 @@ t = (1, 2, 3) with {_1 = "oops"}
 :e
 (t: ("oops",int,int,))._1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.232: 	(t: ("oops",int,int,))._1
+//│ ║  l.236: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.226: 	t = (1, 2, 3) with {_1 = "oops"}
+//│ ║  l.230: 	t = (1, 2, 3) with {_1 = "oops"}
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.232: 	(t: ("oops",int,int,))._1
+//│ ║  l.236: 	(t: ("oops",int,int,))._1
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.232: 	(t: ("oops",int,int,))._1
+//│ ║  l.236: 	(t: ("oops",int,int,))._1
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'

@@ -20,9 +20,10 @@ True: Boolean
 //│      True is not implemented
 
 :e
+:ge
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.23: 	Boolean
+//│ ║  l.24: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:

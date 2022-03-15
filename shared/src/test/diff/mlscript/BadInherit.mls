@@ -6,10 +6,11 @@ class Parent2: { name: int }
 //│ Defined class Parent2
 
 :e
+:ge
 class Child: Parent1 & Parent2
 //│ ╔══[ERROR] class Child cannot inherit from class Parent2 as it already inherits from class Parent1
-//│ ║  l.9: 	class Child: Parent1 & Parent2
-//│ ╙──     	      ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.10: 	class Child: Parent1 & Parent2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cannot have 2 base classes: Parent1, Parent2
 
@@ -29,50 +30,53 @@ def f(x:Child) = x: nothing
 
 :pe
 def c = Child(Parent1{name="A"} with Parent2{name="B"})
-//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.31:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
+//│ /!\ Parse error: Expected ")":1:33, found "with Paren" at l.32:33: def c = Child(Parent1{name="A"} with Parent2{name="B"})
 
 :e
 def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.35: 	def c = Child(Parent1{name="A"})
+//│ ║  l.36: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Parent1 & {name: ?name}` is not an instance of type Parent2
-//│ ║  l.35: 	def c = Child(Parent1{name="A"})
+//│ ║  l.36: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.17: 	def Child: (Parent1 & Parent2) -> Child
+//│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
 //│ ║        	                      ^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.17: 	def Child: (Parent1 & Parent2) -> Child
+//│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
 //│ c: error
 //│  = <no result>
 //│    Child is not implemented
 
 :e
+:ge
 type Sly1 = Parent2
 class Child2: Parent1 & Sly1
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.54: 	class Child2: Parent1 & Sly1
+//│ ║  l.56: 	class Child2: Parent1 & Sly1
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly1
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly1
 
 :e
+:ge
 type Sly2[A] = A
 class Child2: Sly2[Parent1] & Parent2
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.64: 	class Child2: Sly2[Parent1] & Parent2
+//│ ║  l.67: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias Sly2
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly2
 
 :e
+:ge
 class Crazy[A]: A & { name: A }
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.73: 	class Crazy[A]: A & { name: A }
+//│ ║  l.77: 	class Crazy[A]: A & { name: A }
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   undeclared type name A when resolving base classes
@@ -96,17 +100,17 @@ def c = Crazy({ name = "Bob"; age = 42 })
 :e
 c: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.97: 	c: nothing
-//│ ║        	^
+//│ ║  l.101: 	c: nothing
+//│ ║         	^
 //│ ╟── record literal of type `{name: "Bob", age: 42}` does not match type `~Crazy[?a]`
-//│ ║  l.91: 	def c = Crazy({ name = "Bob"; age = 42 })
+//│ ║  l.95: 	def c = Crazy({ name = "Bob"; age = 42 })
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~Crazy[?a]`
-//│ ║  l.97: 	c: nothing
-//│ ║        	^
+//│ ║  l.101: 	c: nothing
+//│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.97: 	c: nothing
-//│ ╙──      	   ^^^^^^^
+//│ ║  l.101: 	c: nothing
+//│ ╙──       	   ^^^^^^^
 //│ res: nothing
 //│    = <no result>
 //│      c and Crazy are not implemented
@@ -125,31 +129,32 @@ d: nothing
 :e
 class Stupid: Parent1 | Parent2
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.126: 	class Stupid: Parent1 | Parent2
+//│ ║  l.130: 	class Stupid: Parent1 | Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: Parent1 -> Parent2
 //│ ╔══[ERROR] cannot inherit from a function type
-//│ ║  l.131: 	class Stupid: Parent1 -> Parent2
+//│ ║  l.135: 	class Stupid: Parent1 -> Parent2
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 :e
 class Stupid: ~Parent1
 //│ ╔══[ERROR] cannot inherit from a type negation
-//│ ║  l.136: 	class Stupid: ~Parent1
+//│ ║  l.140: 	class Stupid: ~Parent1
 //│ ╙──       	      ^^^^^^^^^^^^^^^^
 
 :e // TODO don't report several times
+:ge
 class Cycle1: Cycle2
 class Cycle2: Cycle1
 type Stutter = Cycle1
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.142: 	class Cycle1: Cycle2
+//│ ║  l.147: 	class Cycle1: Cycle2
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle2
-//│ ║  l.143: 	class Cycle2: Cycle1
+//│ ║  l.148: 	class Cycle2: Cycle1
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] illegal cycle involving type Cycle1
-//│ ║  l.144: 	type Stutter = Cycle1
+//│ ║  l.149: 	type Stutter = Cycle1
 //│ ╙──       	     ^^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cyclic inheritance detected
@@ -158,13 +163,13 @@ type Stutter = Cycle1
 def c = Cycle1 error
 c: Cycle1
 //│ ╔══[ERROR] identifier not found: Cycle1
-//│ ║  l.158: 	def c = Cycle1 error
+//│ ║  l.163: 	def c = Cycle1 error
 //│ ╙──       	        ^^^^^^
 //│ c: error
 //│ Runtime error:
 //│   ReferenceError: Cycle1 is not defined
 //│ ╔══[ERROR] type identifier not found: Cycle1
-//│ ║  l.159: 	c: Cycle1
+//│ ║  l.164: 	c: Cycle1
 //│ ╙──       	   ^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -175,9 +180,10 @@ type N[A] = ~A
 //│ Defined type alias N
 
 :e
+:ge
 class Cycle: N[Cycle]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.178: 	class Cycle: N[Cycle]
+//│ ║  l.184: 	class Cycle: N[Cycle]
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias N
@@ -189,7 +195,7 @@ class Cycle: N[Cycle]
 class D: int
 //│ Defined class D
 
-:re
+:ge
 add (D{}) 2
 //│ res: int
 //│ Code generation encountered an error:
@@ -202,28 +208,29 @@ class E: 1
 //│ Defined class E
 
 :e
+:ge
 E{}: 1
 E{}: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.205: 	E{}: 1
+//│ ║  l.212: 	E{}: 1
 //│ ║         	^^^
 //│ ╟── application of type `E` does not match type `1`
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.205: 	E{}: 1
+//│ ║  l.212: 	E{}: 1
 //│ ║         	     ^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.201: 	class E: 1
+//│ ║  l.207: 	class E: 1
 //│ ╙──       	      ^
 //│ res: 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.206: 	E{}: int
+//│ ║  l.213: 	E{}: int
 //│ ║         	^^^
 //│ ╟── application of type `E` does not match type `int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.206: 	E{}: int
+//│ ║  l.213: 	E{}: int
 //│ ║         	     ^^^
 //│ ╟── Note: class E is defined at:
-//│ ║  l.201: 	class E: 1
+//│ ║  l.207: 	class E: 1
 //│ ╙──       	      ^
 //│ res: int
 //│ Code generation encountered an error:
@@ -231,13 +238,14 @@ E{}: int
 
 
 :e
+:ge
 class F: nothing
 F{}
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.234: 	class F: nothing
+//│ ║  l.242: 	class F: nothing
 //│ ╙──       	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: F
-//│ ║  l.235: 	F{}
+//│ ║  l.243: 	F{}
 //│ ╙──       	^
 //│ res: error
 //│ Code generation encountered an error:
@@ -261,16 +269,17 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.262: 	class Weird: {} | {}
+//│ ║  l.270: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
 :e
+:ge
 class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.271: 	class B: Id[A]
+//│ ║  l.280: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
@@ -282,7 +291,7 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.283: 	class Class3B: Class3A & 'a
+//│ ║  l.292: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 

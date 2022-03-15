@@ -80,11 +80,12 @@ class True[A]
 
 
 :e
+:ge
 class Hey
     rec method A = B
     rec method B = 1
 //│ ╔══[ERROR] identifier not found: B
-//│ ║  l.84: 	    rec method A = B
+//│ ║  l.85: 	    rec method A = B
 //│ ╙──      	                   ^
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error

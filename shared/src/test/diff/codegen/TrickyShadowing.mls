@@ -89,10 +89,11 @@ type B = Test2
 //│ // End of generated code
 
 :e
+:ge
 :js
 class C: B
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.93: 	class C: B
+//│ ║  l.94: 	class C: B
 //│ ╙──      	      ^^^^
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias B
@@ -226,10 +227,11 @@ type Lol = 1
 //│ Defined type alias Lol
 
 :e
+:ge
 :js
 Lol
 //│ ╔══[ERROR] identifier not found: Lol
-//│ ║  l.230: 	Lol
+//│ ║  l.232: 	Lol
 //│ ╙──       	^^^
 //│ res: error
 //│ Code generation encountered an error:
