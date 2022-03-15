@@ -65,7 +65,7 @@ eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{hello: 1}` does not match type `Lit & {val: int} | Add & {lhs: Expr[?b], rhs: Expr[?b]} | ?b & ~add & ~lit`
+//│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~add & ~lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
 //│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

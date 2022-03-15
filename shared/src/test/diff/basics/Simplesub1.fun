@@ -270,7 +270,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('c & 'a & 'b) as 'a) -> 'b
+//│ res: ('b -> ('a & 'b & 'c) as 'a) -> 'c
 
 next => 0
 //│ res: anything -> 0
@@ -285,16 +285,16 @@ x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> ('c | 'a | 'b) as 'a
+//│ res: 'b -> ('a | 'b) as 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> ('c | 'a | 'b) as 'a
+//│ res: 'b -> ('a | 'b) as 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ('c | ({u: 'a | 'b, v: 'd} as 'd)) as 'a
+//│ res: 'b -> ({u: 'a | 'b, v: 'c} as 'c) as 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ('c | ({u: 'd, v: 'a | 'b} as 'd)) as 'a
+//│ res: 'b -> ({u: 'c, v: 'a | 'b} as 'c) as 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: ('a -> anything & 'b) -> 'b as 'a
@@ -303,6 +303,6 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: 'b -> ('c | 'a | 'b) as 'a
+//│ x: 'b -> ('a | 'b) as 'a
 //│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
 

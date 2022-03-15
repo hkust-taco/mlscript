@@ -174,12 +174,12 @@ id: Runaway2
 //│ ╟── from type reference:
 //│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
-//│ res: {x: (('b,) | ('b,) | ('b | 'c,)) -> ('b & 'c)} -> 'a as 'a
+//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
 //│    = [Function: id]
 
 :re
 error: Runaway2
-//│ res: {x: (('b,) | ('b,) | ('b | 'c,)) -> ('b & 'c)} -> 'a as 'a
+//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -195,13 +195,13 @@ error: {x: int} -> nothing : Runaway2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
-//│ res: {x: (('b,) | ('b,) | ('b | 'c,)) -> ('b & 'c)} -> 'a as 'a
+//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 :re
 error: {x: 'x -> 'x} -> nothing : Runaway2
-//│ res: {x: (('b,) | ('b,) | ('b | 'c,)) -> ('b & 'c)} -> 'a as 'a
+//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

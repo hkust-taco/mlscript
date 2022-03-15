@@ -86,10 +86,11 @@ final case class ClassSymbol(
 }
 
 final case class TraitSymbol(
-    val lexicalName: Str,
-    val runtimeName: Str,
-    val params: Ls[Str],
-    val body: Type
+    lexicalName: Str,
+    runtimeName: Str,
+    params: Ls[Str],
+    body: Type,
+    methods: Ls[MethodDef[Left[Term, Type]]],
 ) extends TypeSymbol
     with RuntimeSymbol {
   override def toString: Str = s"trait $lexicalName"

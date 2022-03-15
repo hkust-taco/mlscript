@@ -92,7 +92,7 @@ def f x = case x of {
   | Parent -> x.name
   | _ -> ""
   }
-//│ f: ((Parent with {name: 'a}) | ~Parent) -> ("" | 'a)
+//│ f: ((Parent with {name: 'a}) | ~parent) -> ("" | 'a)
 //│  = [Function: f2]
 
 f c

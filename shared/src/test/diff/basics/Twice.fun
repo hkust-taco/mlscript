@@ -17,10 +17,10 @@ let f = x => 1, x
 //  because function types would effectively become non-mergeable without losing precsion...
 // (I found this example while reading the HN thread: https://news.ycombinator.com/item?id=13783237)
 twice f
-//│ res: 'a -> ((1, 'c | 'b | 'a,) as 'b)
+//│ res: 'a -> ((1, 'b | 'a,) as 'b)
 
 twice / x => x, x
-//│ res: 'a -> (('c | 'b | 'a, 'c | 'b | 'a,) as 'b)
+//│ res: 'a -> (('b | 'a, 'b | 'a,) as 'b)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }

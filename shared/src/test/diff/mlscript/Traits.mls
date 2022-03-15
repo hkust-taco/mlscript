@@ -29,7 +29,7 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {x: 0 & 'x | 1 & 'x, y: string & 'y} -> (D with {x: 'x, y: 'y})
+//│ res: {x: 'x & (0 | 1), y: string & 'y} -> (D with {x: 'x, y: 'y})
 //│    = [Function: res]
 
 :re
@@ -47,11 +47,11 @@ def dv = D{}
 //│ ║  l.42: 	def dv = D{}
 //│ ╙──      	          ^^
 //│ dv: D & {x: nothing, y: nothing} | error
-//│   = D { x: undefined }
+//│   = D { x: undefined, y: undefined }
 
 def dv = D { x = 0; y = "hello" }
 //│ dv: D & {x: 0, y: "hello"}
-//│   = D { x: 0 }
+//│   = D { x: 0, y: 'hello' }
 
 :e
 dv: nothing
@@ -68,11 +68,11 @@ dv: nothing
 //│ ║  l.57: 	dv: nothing
 //│ ╙──      	    ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 dv: A & B
 //│ res: {x: int, y: string} & a & b
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 :e
 dv: A & B: nothing
@@ -86,7 +86,7 @@ dv: A & B: nothing
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ╙──      	           ^^^^^^^
 //│ res: nothing
-//│    = D { x: 0 }
+//│    = D { x: 0, y: 'hello' }
 
 
 trait Indirect: C
@@ -161,24 +161,24 @@ def c1 = C1 { }
 //│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
-//│   = C1 { y: undefined }
+//│   = C1 { y: undefined, x: undefined }
 
 def c1 = C1 { x = 1; y = "hi" }
 //│ c1: C1 & {x: 1, y: "hi"}
-//│   = C1 { y: 'hi' }
+//│   = C1 { y: 'hi', x: 1 }
 
 c1: T1
 //│ res: C & a & t1
-//│    = C1 { y: 'hi' }
+//│    = C1 { y: 'hi', x: 1 }
 
 c1: A
 //│ res: {x: int} & a
-//│    = C1 { y: 'hi' }
+//│    = C1 { y: 'hi', x: 1 }
 
 c1.x
 c1.y
 //│ res: 1
-//│    = undefined
+//│    = 1
 //│ res: "hi"
 //│    = 'hi'
 

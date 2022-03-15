@@ -12,16 +12,16 @@ class E
 //│ Defined class E
 
 def ty0: ('a & 'b & A | 'b & 'c & B | 'c & 'd & C | 'd & 'e & D | 'e & 'f & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
-//│ ty0: (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ ty0: (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 
 :stats
 ty0 = ty0
-//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty0:
-//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│ constrain calls  : 99
 //│ annoying  calls  : 45
-//│ subtyping calls  : 372
+//│ subtyping calls  : 256
 
 def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ty1: (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
@@ -30,15 +30,15 @@ def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f
 ty0 = ty1
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│   <:  ty0:
-//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│ constrain calls  : 65
 //│ annoying  calls  : 30
-//│ subtyping calls  : 275
+//│ subtyping calls  : 181
 
 :stats
 :e
 ty1 = ty0
-//│ (A & 'a & 'b | B & 'b & 'c | C & 'c & 'd | D & 'd & 'e | E & 'e & 'f) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (C & 'c & 'd | 'b & (A & 'a | B & 'c) | 'e & (D & 'd | E & 'f)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty1:
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -88,6 +88,6 @@ ty1 = ty0
 //│ ╙──      	                                                                              ^^
 //│ constrain calls  : 99
 //│ annoying  calls  : 60
-//│ subtyping calls  : 280
+//│ subtyping calls  : 186
 
 
