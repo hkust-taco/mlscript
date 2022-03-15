@@ -16,48 +16,53 @@ case 1 of { }
 //│   Error: non-exhaustive case expression
 
 :e
+:ge
 case 1 of { A -> 0 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.19: 	case 1 of { A -> 0 }
+//│ ║  l.20: 	case 1 of { A -> 0 }
 //│ ╙──      	            ^
 //│ res: error
 //│ Code generation encountered an error:
 //│   unknown match case: A
 
 :e
+:ge
 case 1 of { A -> 0 | B -> 1 }
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.28: 	case 1 of { A -> 0 | B -> 1 }
+//│ ║  l.30: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	            ^
 //│ res: error
 //│ Code generation encountered an error:
 //│   unknown match case: B
 
 :e
+:ge
 def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.37: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
+//│ ║  l.40: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
 //│ Code generation encountered an error:
 //│   unknown match case: Bar
 
 :e
+:ge
 def f = fun x -> case x of
   { Foo -> 0
   | Bar -> 1
   }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.47: 	  { Foo -> 0
+//│ ║  l.51: 	  { Foo -> 0
 //│ ╙──      	    ^^^
 //│ f: error -> error
 //│ Code generation encountered an error:
 //│   unknown match case: Bar
 
 :e
+:ge
 def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.58: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ║  l.63: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
 //│ Code generation encountered an error:
