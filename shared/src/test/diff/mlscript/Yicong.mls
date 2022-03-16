@@ -543,43 +543,43 @@ true[false]
 ge[2]
 //│ ge: int -> int
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.531: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.540: 	ta3[ge 3][ge (1+2)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
 //│ ║  l.527: 	ta3 = ((1,2,3), "hello", false)
 //│ ║         	                ^^^^^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.531: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.540: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 2 | 3 | error
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.532: 	true[false]
+//│ ║  l.541: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
-//│ ║  l.532: 	true[false]
+//│ ║  l.541: 	true[false]
 //│ ╙──       	     ^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.532: 	true[false]
+//│ ║  l.541: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
 //│ ║  l.541: 	true[false]
 //│ ╙──       	^^^^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.533: 	4["hello"]
+//│ ║  l.542: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `int`
-//│ ║  l.533: 	4["hello"]
+//│ ║  l.542: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.533: 	4["hello"]
+//│ ║  l.542: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `4` does not match type `Array[?a]`
 //│ ║  l.542: 	4["hello"]
 //│ ╙──       	^
 //│ res: error
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.534: 	ge[2]
+//│ ║  l.543: 	ge[2]
 //│ ║         	^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Array[?c]`
 //│ ║  l.539: 	def ge x = x + 1
@@ -606,14 +606,14 @@ mkarr (1,true,"hi")[0]
 mkarr 3 [  1]
 mk1[2  ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.597: 	mkarr 3 [  1]
+//│ ║  l.606: 	mkarr 3 [  1]
 //│ ║         	      ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
 //│ ║  l.606: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ res: Array[error]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.598: 	mk1[2  ]
+//│ ║  l.607: 	mk1[2  ]
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `6` does not match type `Array[?a]`
 //│ ║  l.594: 	mk1 = (mkarr 6)[ 0]
@@ -653,7 +653,7 @@ dup ara[1]._1 arb[10][8]._2 + 1
 :e
 (1,2,3)._1[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.645: 	(1,2,3)._1[1]
+//│ ║  l.654: 	(1,2,3)._1[1]
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
 //│ ║  l.654: 	(1,2,3)._1[1]

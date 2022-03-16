@@ -146,7 +146,7 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ // start ts
 //│ export declare const g: (arg1: int, arg2: int) => int
 //│ export declare const h<a>: (arg1: int, arg2: [(arg4: a) => int, a]) => int
-//│ export declare const k<b, a>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
+//│ export declare const k<a, b>: (arg1: int, arg2: [(arg4: int) => a, int]) => (arg6: int, arg7: (arg9: int) => (arg11: a) => b, arg12: int) => b
 //│ export declare const l: (arg1: [1, 2], arg2: [3, 4]) => 5
 //│ // end ts
 

@@ -147,13 +147,13 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.125: 	(arr[0])[1][2]
+//│ ║  l.148: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.57: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array access with expected type `Array[?a]`
-//│ ║  l.125: 	(arr[0])[1][2]
+//│ ║  l.148: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ res: nothing
 //│ Runtime error:
@@ -172,7 +172,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
-//│ tuuu: (2, true,)
+//│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
 //│     = <missing implementation>
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
@@ -345,9 +345,9 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: Array[bool | int]
 //│    = <missing implementation>
-//│ test: ("hello", 1,)
+//│ test: (string, 1,) & {_1: "hello", _2: 1}
 //│     = <missing implementation>
-//│ test2: ("hello", 1,) & {_3: int}
+//│ test2: (string, 1,) & {_1: "hello", _2: 1, _3: int}
 //│      = <missing implementation>
 
 test: { _1: 'a }

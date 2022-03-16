@@ -146,7 +146,7 @@ x => foo { v: x }
 
 // Notice that in MLscript, `(0, 0) | (1, 1)` is equivalent to `(0 | 1, 0 | 1)`
 let bar(r: (0, 0) | (1, 1)) = if r._1 < 1 then r._1 else r._2
-//│ bar: (r: (0 & 'a | 1 & 'a, 0 & 'a | 1 & 'a,),) -> 'a
+//│ bar: (r: (0 | 1, 0 | 1,) & {_1: 0 & 'a | 1 & 'a, _2: 0 & 'a | 1 & 'a},) -> 'a
 
 bar(0, 1)
 //│ res: 0 | 1
@@ -261,7 +261,7 @@ x => baz(x, x)
 
 
 let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: (0 & 'a | 1 & 'a, 'a,),) -> 'a
+//│ baz: (r: (0 | 1, anything,) & {_1: 0 & 'a | 1 & 'a, _2: 'a},) -> 'a
 
 :e
 baz(0)

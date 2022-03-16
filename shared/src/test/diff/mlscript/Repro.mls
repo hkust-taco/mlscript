@@ -31,18 +31,19 @@ C { x = 1 }
 
 def r: { x: int }
 //│ r: {x: int}
+//│  = <missing implementation>
 
 :re
 r
 //│ res: {x: int}
-//│ Runtime error:
-//│   ReferenceError: r is not defined
+//│    = <no result>
+//│      r is not implemented
 
 :re
 r: { x: 'a }
 //│ res: {x: int}
-//│ Runtime error:
-//│   ReferenceError: r is not defined
+//│    = <no result>
+//│      r is not implemented
 
 
 
