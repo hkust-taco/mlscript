@@ -2,7 +2,7 @@
 class Addable[A]
   method Add: A -> A
 //│ Defined class Addable
-//│ Declared Addable.Add: Addable[A] -> 'A -> 'A
+//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
 
 class Num: Addable[Num] & { val: int }
   method Add that = Num { val = this.val + that.val }
@@ -19,34 +19,16 @@ n = Num { val = 1 }
 //│  = Num { val: 1 }
 
 n.Add n
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.21: 	n.Add n
-//│ ║        	^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
-//│ res: error
+//│ res: Num & {val: 1}
 //│    = Num { val: 2 }
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable[A] -> 'a -> 'a
+//│ addTwo: Addable['A | Num .. Num & 'A] -> (Num & 'a) -> (Num | 'a)
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.39: 	addTwo n n
-//│ ║        	^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
-//│ res: error
+//│ res: Num
 //│    = Num { val: 2 }
 
 s = Str { val = "hey" }
@@ -55,11 +37,11 @@ s = Str { val = "hey" }
 
 s.Add s
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.56: 	s.Add s
+//│ ║  l.38: 	s.Add s
 //│ ║        	^^^^^
-//│ ╟── type `A` is not an instance of type Str
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ╙──      	                   ^^^
@@ -68,11 +50,11 @@ s.Add s
 
 addTwo s s
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.69: 	addTwo s s
+//│ ║  l.51: 	addTwo s s
 //│ ║        	^^^^^^^^
-//│ ╟── type `A` is not an instance of type Str
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ╙──      	                   ^^^
@@ -82,48 +64,110 @@ addTwo s s
 
 
 def addSame a = a.Add a
-//│ addSame: (Addable[A] & 'a) -> 'a
+//│ addSame: nothing -> Num
 //│        = [Function: addSame]
 
 addSame n
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.88: 	addSame n
+//│ ║  l.70: 	addSame n
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── application of type `Num & {val: ?val}` is not an instance of type Str
+//│ ║  l.17: 	n = Num { val = 1 }
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Str`
+//│ ║  l.70: 	addSame n
+//│ ║        	        ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.66: 	def addSame a = a.Add a
+//│ ╙──      	                      ^
 //│ res: error
 //│    = Num { val: 2 }
 
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable[A] & 'a) -> int -> 'a
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.90: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
+//│ ╟── but it flows into application with expected type `Str`
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ║        	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from application:
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                               ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.90: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Str` is not an instance of type Num
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.90: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                                 ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                                 ^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.90: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ╙──      	                                 ^^^^^^
+//│ addNTimes: nothing -> int -> Num
 //│          = [Function: addNTimes]
 
 addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.107: 	addNTimes n 12
+//│ ║  l.145: 	addNTimes n 12
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── application of type `Num & {val: ?val}` is not an instance of type Str
+//│ ║  l.17: 	n = Num { val = 1 }
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Str`
+//│ ║  l.145: 	addNTimes n 12
+//│ ║         	          ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.91: 	  if n <= 1 then a else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                 ^
 //│ res: error
 //│    = Num { val: 12 }
 
 addNTimes s 5
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.120: 	addNTimes s 5
+//│ ║  l.164: 	addNTimes s 5
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Str
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ╙──      	                   ^^^
@@ -143,52 +187,331 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[A] -> int -> 0
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+3: 	addNTimes n 12
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type Str
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `Str`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type Addable
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `Addable[?]`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	           ^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` does not have field 'Addable#A'
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `{Addable#A = Str}`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	           ^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` does not have field 'val'
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `{val: string}`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type Num
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `Num`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not an instance of type Addable
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `Addable[?]`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	           ^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` does not have field 'Addable#A'
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `{Addable#A = Num}`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	           ^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` does not have field 'val'
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                ^
+//│ ╟── but it flows into application with expected type `{val: int}`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                          ^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
+//│ ╟── but it flows into application with expected type `Str`
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from application:
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Str` is not an instance of type Num
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
 //│ ╙──     	                   ^^^
-//│ res: error
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                                 ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                                 ^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ╙──      	                                 ^^^^^^
+//│ addNTimes: Addable[Num .. nothing] -> int -> (0 | Num)
+//│ res: 0 | Num
 
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: Addable[A] -> int -> 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+3: 	addNTimes n 12
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	                        ^^^^^^^^^^^^^^^^^
+//│ ╟── type `Num` is not a function
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
+//│ ╟── but it flows into application with expected type `?a -> ?b`
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                        ^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Str
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Addable
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	           ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` does not have field 'Addable#A'
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	           ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` does not have field 'val'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                          ^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Num
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
-//│ res: error
+//│ ║       	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Addable
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	           ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` does not have field 'Addable#A'
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	           ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.+1: 	rec def addNTimes a n =
+//│ ║        	                  ^^^^^
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` does not have field 'val'
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                          ^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
+//│ ╙──      	                              ^^^^^^^^^
+//│ addNTimes: Addable[Num .. nothing] -> int -> (0 | error)
+//│ res: 0 | error
 
 addSame n n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addSame n n
 //│ ║        	^^^^^^^^^
-//│ ╟── type `A` is not an instance of type Num
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── application of type `Num & {val: ?val}` is not an instance of type Str
+//│ ║  l.17: 	n = Num { val = 1 }
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Str`
+//│ ║  l.+1: 	addSame n n
+//│ ║        	        ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ║        	                   ^^^
+//│ ╟── from reference:
+//│ ║  l.66: 	def addSame a = a.Add a
+//│ ╙──      	                      ^
 //│ res: error
 
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addTwo s n
 //│ ║        	^^^^^^^^
-//│ ╟── type `A` is not an instance of type Str
-//│ ║  l.2: 	class Addable[A]
-//│ ║       	              ^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ║       	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ╙──      	                   ^^^

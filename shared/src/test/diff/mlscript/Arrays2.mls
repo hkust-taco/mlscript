@@ -4,8 +4,8 @@ class MyArray[A]: { size: int }
   method Set: (int, A) -> ()
   method Get: int -> A 
 //│ Defined class MyArray
-//│ Declared MyArray.Set: MyArray[A] -> (int, anything,) -> ()
-//│ Declared MyArray.Get: MyArray[A] -> int -> nothing
+//│ Declared MyArray.Set: MyArray['A] -> (int, 'A,) -> ()
+//│ Declared MyArray.Get: MyArray['A] -> int -> 'A
 
 
 
@@ -13,8 +13,8 @@ class Dummy[A]: MyArray[A] & { size: 0 }
   method Set (i, a) = ()
   method Get i = error
 //│ Defined class Dummy
-//│ Defined Dummy.Set: Dummy[A] -> (anything, anything,) -> ()
-//│ Defined Dummy.Get: Dummy[A] -> anything -> nothing
+//│ Defined Dummy.Set: Dummy['A] -> (anything, anything,) -> ()
+//│ Defined Dummy.Get: Dummy['A] -> anything -> nothing
 
 
 dummy = Dummy { size = 0 }

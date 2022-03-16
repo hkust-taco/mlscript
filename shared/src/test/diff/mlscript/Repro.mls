@@ -40,12 +40,13 @@ mib0.Map plus1
 //│    = MappableIntBox { value: 1 }
 
 // Naughty map...
+:e
 mib0.Map (fun _ -> "str")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.43: 	mib0.Map (fun _ -> "str")
+//│ ║  l.44: 	mib0.Map (fun _ -> "str")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"str"` does not match type `int`
-//│ ║  l.43: 	mib0.Map (fun _ -> "str")
+//│ ║  l.44: 	mib0.Map (fun _ -> "str")
 //│ ║        	                   ^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class IntBox: { value: int }
@@ -76,22 +77,52 @@ class Monoid[A]
 //│ => ⊤ | 
 //│ >>> Going through method Empty in Monoid
 //│ >>> reverseRigid2 (2 entries)
-//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+72)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+72)›)
-//│ >>> 1. Empty.this1 ([NO PROV]) -> Empty.this1 ([NO PROV])
+//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+73)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+73)›)
+//│ >>> 1. this1 ([NO PROV]) -> this1 ([NO PROV])
 //│ 1. Typing type TypeName(A)
 //│ | vars=Map(A -> A) newDefsInfo=Map()
 //│ => A | 
 //│ >>> substituted method body type: PolymorphicType(0,A0')
-//│ >>> Monoid.Empty : PolymorphicType(0,(((Monoid[A] & Empty.this1),) -> A0'))
-//│ >> Checking subsumption for declared type of Empty : MethodType(0,Some(((Monoid[A] & Empty.this1),A0')),List(TypeName(Monoid)),false)
+//│ >>> Monoid.Empty : PolymorphicType(0,((this1,) -> A0'))
+//│ >> Checking subsumption for declared type of Empty : MethodType(0,Some((this1,A0')),List(TypeName(Monoid)),false)
 //│ Defined class Monoid
-//│ Typed as: (((Monoid[A] & Empty.this1),) -> A0')
-//│  where: Empty.this1 <: Monoid[A]
-//│ Declared Monoid.Empty: Monoid[A] -> nothing
+//│ Typed as: ((this1,) -> A0')
+//│  where: this1 <: Monoid[A0']
+//│ Declared Monoid.Empty: Monoid['A] -> 'A
+
+// Some more interesting case. Are they valid at the main branch?
+// Yeah... The result are the same.
+:d
+class Myself[A]
+  method Me = this
+//│ 0. Typing type Top
+//│ | vars=Map(A -> A0') newDefsInfo=Map(Myself -> (Cls,1))
+//│ => ⊤ | 
+//│ >>> Going through method Me in Myself
+//│ >>> reverseRigid2 (2 entries)
+//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+96)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+96)›)
+//│ >>> 1. this1 ([NO PROV]) -> this1 ([NO PROV])
+//│ 1. Typing term this
+//│ 1. : [this1]
+//│ >>> substituted method body type: PolymorphicType(0,this1)
+//│ >>> Myself.Me : PolymorphicType(0,((this1,) -> this1))
+//│ >> Checking subsumption for inferred type of Me : MethodType(0,Some((this1,this1)),List(TypeName(Myself)),false)
+//│ Defined class Myself
+//│ Typed as: ((this1,) -> this1)
+//│  where: this1 <: Myself[A0']
+//│ Defined Myself.Me: (Myself['A] & 'this) -> 'this
+
+m0 = Myself {}
+//│ m0: Myself['A]
+//│   = Myself {}
+
+m0.Me
+//│ res: Myself['A]
+//│    = Myself {}
 
 // Make box generic!
 // Looks fine.
 class Box[A]: { value: A }
   method Get = this.value
 //│ Defined class Box
-//│ Defined Box.Get: (Box[A] & {value: A & 'a}) -> 'a
+//│ Defined Box.Get: (Box['A] & {value: 'A & 'a}) -> 'a

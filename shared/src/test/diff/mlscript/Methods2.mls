@@ -9,14 +9,14 @@ class None[A]: Option[A]
     method Get = error
     method Destruct = this
 //│ Defined class Option
-//│ Declared Option.Get: Option[A] -> nothing
-//│ Declared Option.Destruct: Option[A] -> (None['A] | Some['A])
+//│ Declared Option.Get: Option['A] -> 'A
+//│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
 //│ Defined class Some
-//│ Defined Some.Get: (Some[A] & {payload: A & 'a}) -> 'a
-//│ Defined Some.Destruct: (Some[A] & 'Destruct.this) -> (Some['A] & 'Destruct.this)
+//│ Defined Some.Get: (Some['A] & {payload: A & 'A & 'a}) -> 'a
+//│ Defined Some.Destruct: (Some['A] & 'this) -> 'this
 //│ Defined class None
-//│ Defined None.Get: None[A] -> nothing
-//│ Defined None.Destruct: (None[A] & 'Destruct.this) -> (None['A] & 'Destruct.this)
+//│ Defined None.Get: None['A] -> nothing
+//│ Defined None.Destruct: (None['A] & 'this) -> 'this
 
 
 class List[A]
@@ -24,41 +24,41 @@ class List[A]
     method HeadOption: Option[A]
     method Map[B]: (A -> B) -> List[B]
 //│ Defined class List
-//│ Declared List.Size: List[A] -> int
-//│ Declared List.HeadOption: List[A] -> Option['A]
-//│ Declared List.Map: List[A] -> (nothing -> 'B) -> List['B]
+//│ Declared List.Size: List['A] -> int
+//│ Declared List.HeadOption: List['A] -> Option['A]
+//│ Declared List.Map: List['A] -> ('A -> 'B) -> List['B]
 
 class Nil[A]: List[A]
     method Size = 0
     method HeadOption = None {}
     method Map[B] f = Nil {}
 //│ Defined class Nil
-//│ Defined Nil.Size: Nil[A] -> 0
-//│ Defined Nil.HeadOption: Nil[A] -> None['A]
-//│ Defined Nil.Map: Nil[A] -> anything -> Nil['A]
+//│ Defined Nil.Size: Nil['A] -> 0
+//│ Defined Nil.HeadOption: Nil['A] -> None['A0]
+//│ Defined Nil.Map: Nil['A] -> anything -> Nil['A0]
 
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons
-//│ Defined Cons.Size: (Cons[A] with {tail: List[A]}) -> int
-//│ Defined Cons.HeadOption: (Cons[A] with {head: A & 'a, tail: List[A]}) -> (Some['b .. 'a | 'b] with {payload: 'a})
-//│ Defined Cons.Map: (Cons[A] with {tail: List[A]}) -> (nothing -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
+//│ Defined Cons.Size: (Cons['A] with {tail: List['A | 'A0 .. 'A & 'A0]}) -> int
+//│ Defined Cons.HeadOption: (Cons['A] with {head: A & 'A & 'a, tail: List['A]}) -> (Some['b .. 'a | 'b] with {payload: 'a})
+//│ Defined Cons.Map: (Cons['A] with {head: A & 'A & 'a, tail: List['A | 'A0 .. 'A & 'A0]}) -> ('a -> ('b & 'c)) -> (Cons['b] with {head: 'c, tail: List['b]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
 //  as we do not try to expand type aliases right now.
 Cons.Size
-//│ res: (Cons[A] with {tail: List[A]}) -> int
+//│ res: (Cons['A] with {tail: List['A | 'A0 .. 'A & 'A0]}) -> int
 //│    = undefined
 
 List.HeadOption
-//│ res: List[A] -> Option['A]
+//│ res: List['A] -> Option['A0]
 //│    = undefined
 
 Cons.HeadOption
-//│ res: (Cons[A] with {head: A & 'a, tail: List[A]}) -> (Some['b .. 'a | 'b] with {payload: 'a})
+//│ res: (Cons['A] with {head: A & 'A & 'a, tail: List['A]}) -> (Some['b .. 'a | 'b] with {payload: 'a})
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
@@ -66,59 +66,41 @@ l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.68: 	l.Size
-//│ ║        	^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type A
-//│ ║  l.64: 	l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ ║        	                                          ^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.22: 	class List[A]
-//│ ╙──      	           ^
-//│ res: error | int
+//│ res: int
 //│    = 2
 
 l.Map (fun x -> mul x 2)
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.81: 	l.Map (fun x -> mul x 2)
-//│ ║        	^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type A
-//│ ║  l.64: 	l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ ║        	                                          ^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.22: 	class List[A]
-//│ ╙──      	           ^
-//│ res: error | List['B .. 'B | int]
+//│ res: List['B .. 'B | int]
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.94: 	o = l.(Cons.HeadOption)
+//│ ║  l.76: 	o = l.(Cons.HeadOption)
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type A
+//│ ╟── integer literal of type `0` is not an instance of type A
 //│ ║  l.64: 	l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ ║        	                                          ^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.40: 	class Cons[A]: List[A] & { head: A; tail: List[A] }
-//│ ╙──      	           ^
-//│ o: error
+//│ ║        	                  ^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.42: 	    method HeadOption = Some { payload = this.head }
+//│ ╙──      	                                         ^^^^^^^^^
+//│ o: error | (Some['a .. 0 | 'a] with {payload: 0})
 //│  = undefined
 
 o = l.HeadOption
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.107: 	o = l.HeadOption
-//│ ║         	    ^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type A
-//│ ║  l.64: 	l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ ║        	                                          ^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.22: 	class List[A]
-//│ ╙──      	           ^
-//│ o: error
+//│ o: Option[int & 'A .. 0 | 1 | 'A]
 //│  = Some { payload: 0 }
 
 :e
 case o of {None -> 0 | Some -> o.payload}
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.94: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
+//│ ║  l.24: 	    method HeadOption: Option[A]
+//│ ║        	                       ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
+//│ ║  l.94: 	case o of {None -> 0 | Some -> o.payload}
+//│ ╙──      	     ^
 //│ res: 0
 //│    = 0
 
@@ -155,11 +137,22 @@ case res of {None -> 0 | Some -> res.payload}
 :e
 case o of {
     Some -> o.Get | None -> 0 }
-//│ res: 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.138: 	case o of {
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.139: 	    Some -> o.Get | None -> 0 }
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
+//│ ║  l.24: 	    method HeadOption: Option[A]
+//│ ║        	                       ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
+//│ ║  l.138: 	case o of {
+//│ ╙──       	     ^
+//│ res: 0 | 1
 //│    = 0
 
 case o of {
     Some -> o.Get | None -> 0 | Option -> error }
-//│ res: 0
+//│ res: 0 | 1
 //│    = 0
 

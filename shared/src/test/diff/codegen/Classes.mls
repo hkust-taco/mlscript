@@ -10,9 +10,9 @@ class Box[T]: { inner: T }
   method Map f = Box { inner = f this.inner }
   method Get = this.inner
 //│ Defined class Box
-//│ Declared Box.Map: Box[T] -> (nothing -> 'a) -> Box['a]
-//│ Defined Box.Map: (Box[T] & {inner: T & 'a}) -> ('a -> ('T & 'b)) -> (Box['T] with {inner: 'b})
-//│ Defined Box.Get: (Box[T] & {inner: T & 'a}) -> 'a
+//│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
+//│ Defined Box.Map: (Box['T] & {inner: T & 'T & 'a}) -> ('a -> ('T0 & 'b)) -> (Box['T0] with {inner: 'b})
+//│ Defined Box.Get: (Box['T] & {inner: 'T & 'a}) -> 'a
 //│ // Prelude
 //│ class Box {
 //│   constructor(fields) {
@@ -50,16 +50,7 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ // End of generated code
 //│ box1: Box['T .. 1 | 'T] with {inner: 1}
 //│     = Box { inner: 1 }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.43: 	def box2 = box1.Map (fun x -> add x 1)
-//│ ║        	           ^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type T
-//│ ║  l.42: 	def box1 = Box 1
-//│ ║        	               ^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.8: 	class Box[T]: { inner: T }
-//│ ╙──     	          ^
-//│ box2: error
+//│ box2: Box['a .. 'a | int]
 //│     = Box { inner: 2 }
 
 :js
@@ -76,7 +67,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (nothing -> ('T & 'a)) -> (Box['T] with {info: nothing, inner: 'a})
+//│ Defined MyBox.Map: (MyBox & {info: string & 'a, inner: int & 'b}) -> ('b -> ('T & 'c)) -> (Box['T] with {info: 'a, inner: 'c})
 //│ Defined MyBox.Inc: MyBox -> (MyBox & {info: nothing})
 //│ // Prelude
 //│ class MyBox extends Box {
@@ -130,29 +121,11 @@ mb2.Get
 //│   = MyBox { inner: 1, info: 'hello' }
 //│ mb: MyBox & {info: nothing}
 //│   = MyBox { inner: 2, info: 'hello' }
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.112: 	mb.Get
-//│ ║         	^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type T
-//│ ║  l.76: 	  method Inc = MyBox { inner = this.inner + 1; info = this.info }
-//│ ║        	                               ^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.8: 	class Box[T]: { inner: T }
-//│ ╙──     	          ^
-//│ res: error | int & T
+//│ res: int
 //│    = 2
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.113: 	mb2 = mb.Map (fun x -> x * 3)
-//│ ║         	      ^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type T
-//│ ║  l.76: 	  method Inc = MyBox { inner = this.inner + 1; info = this.info }
-//│ ║        	                               ^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from class type parameter:
-//│ ║  l.8: 	class Box[T]: { inner: T }
-//│ ╙──     	          ^
-//│ mb2: error
+//│ mb2: Box['a .. 'a | int]
 //│    = Box { inner: 6, info: 'hello' }
-//│ res: int & T
+//│ res: int
 //│    = 6
 
 // FIXME

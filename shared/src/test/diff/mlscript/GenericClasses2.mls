@@ -36,7 +36,7 @@ class Foo2[A]
 class Bar2: Foo2[int] & { x: int }
   method M2 = 1
 //│ Defined class Foo2
-//│ Declared Foo2.M2: Foo2[A] -> nothing
+//│ Declared Foo2.M2: Foo2['A] -> 'A
 //│ Defined class Bar2
 //│ Defined Bar2.M2: Bar2 -> 1
 
@@ -114,16 +114,7 @@ c = b: Foo2[string]
 //│  = Bar2 { x: 1 }
 
 c.M2
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.116: 	c.M2
-//│ ║         	^^^^
-//│ ╟── type `A` does not match type `string`
-//│ ║  l.34: 	class Foo2[A]
-//│ ║        	           ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.103: 	c = b: Foo2[string]
-//│ ╙──       	            ^^^^^^
-//│ res: error
+//│ res: nothing
 //│    = 1
 
 d = b: Bar2
@@ -132,15 +123,15 @@ d = b: Bar2
 
 d.M2
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.133: 	d.M2
+//│ ║  l.124: 	d.M2
 //│ ║         	^^^^
-//│ ╟── type `A` does not match type `int`
-//│ ║  l.34: 	class Foo2[A]
-//│ ║        	           ^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.103: 	c = b: Foo2[string]
+//│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
 //│ ╙──      	                 ^^^
-//│ res: error
+//│ res: error | string
 //│    = 1
 
 d: Foo2['a]
@@ -150,10 +141,10 @@ d: Foo2['a]
 :e
 d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.151: 	d: Foo2[string]
+//│ ║  l.142: 	d: Foo2[string]
 //│ ║         	^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.151: 	d: Foo2[string]
+//│ ║  l.142: 	d: Foo2[string]
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
