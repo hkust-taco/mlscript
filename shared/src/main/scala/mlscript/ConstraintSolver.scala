@@ -543,6 +543,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def freshenAbove(lim: Int, ty: SimpleType, rigidify: Bool = false)(implicit lvl: Int): SimpleType = {
     val freshened = MutMap.empty[TV, SimpleType]
     def freshen(ty: SimpleType): SimpleType =
+      // only if we rigidify or the level of ty is greater than limit
       if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...

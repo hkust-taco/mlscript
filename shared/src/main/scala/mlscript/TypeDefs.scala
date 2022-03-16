@@ -137,7 +137,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
+    // Map[Str,(TypeDefKind, Int)] where TypeDefKind is Als, Trt or Cls
     val newDefsInfo = newDefs0.iterator.map { case td => td.nme.name -> (td.kind, td.tparams.size) }.toMap
+    // Each item in newDefs is a type alias, a trait or a class.
     val newDefs = newDefs0.map { td0 =>
       val n = td0.nme.name.capitalize
       val td = if (td0.nme.name.isCapitalized) td0
@@ -156,6 +158,8 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             :: tps.map(tp => msg"Declared at" -> tp.toLoc))
         case _ =>
       }
+      // What's going on here?
+      // basically, it creates TypeDefs.TypeDef from the parser's TypeDef
       val dummyTargs = td.tparams.map(p =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
@@ -175,6 +179,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
         
+        /** Traverse base classes */
         def gatherMthNames(td: TypeDef): (Set[Var], Set[Var]) =
           td.baseClasses.iterator.flatMap(bn => ctx.tyDefs.get(bn.name)).map(gatherMthNames(_)).fold(
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
@@ -185,6 +190,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             defns1 ++ defns2
           )}
         
+        /* Check if there is cyclic type references and if some type variables in its own bounds. */
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
             ty match {
@@ -205,6 +211,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         }
         // }()
         
+        // Whether the parent type is okay.
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case k: ObjDefKind =>
@@ -424,24 +431,40 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.addMthDefn(tn.name, mn, mt)
         }
       }
+      // for each type alias, trait, and class
       newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
         /* Recursive traverse the type definition and type the bodies of method definitions 
          * by applying the targs in `TypeRef` and rigidifying class type parameters. */
+        // note that td.targs are TypeVariables created in newDefs
+        // rigidify type arguments, we get a list of rigid type variables
         val rigidtargs = td.targs.map(freshenAbove(ctx.lvl, _, true))
+        // we need to support look-up from rigid type arguments to original type variables
+        // why original type variables are being used?
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
+        // this function analyze type references and
+        // returns a set of methods defined in the referenced type
         def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
+          // create a nested context for the type declaration
+          // in which `this` is a type reference to this type
           implicit val thisCtx: Ctx = ctx.nest
           thisCtx += "this" -> tr
+          // td2 is currently visited type definitions. It might be `td` or base
+          // classes of `td`.
           val td2 = ctx.tyDefs(tr.defn.name)
+          // a map from type parameter names to type arguments
           val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
+          // all declared methods so far
           val declared = MutMap.empty[Str, Opt[Loc]]
+          // all defined methods so far
           val defined = MutMap.empty[Str, Opt[Loc]]
           
+          // get all type references in a type
           def filterTR(ty: SimpleType): List[TypeRef] = ty match {
             case tr: TypeRef => tr :: Nil
             case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
             case _ => Nil
           }
+          // process a single method declaration or definition
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
             val MethodDef(rec, prt, nme, tparams, rhs) = md
             val prov: TypeProvenance = tp(md.toLoc,
@@ -471,13 +494,22 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 case N =>
               })
             }
+            // add the rhs to its own map
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
+            // create dummy rigid type arguments. Note that:
+            // - the type parameters are from the method, not the type, and
+            // - type arguments applied to the type are in `tr.targs`.
             val dummyTargs2 = tparams.map(p =>
               TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+            // this contains correspondence from both the type and the method
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
+            // map from type arguments to type variables
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
               t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
+            // rhs might be L(Term) or R(Type)
+            // replace rigid type arguments to type variables
             val bodyTy = subst(rhs.fold(term =>
+              // if rhs is a term, try to type it or get from the context
               ctx.getMthDefn(prt.name, nme.name)
                 .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
@@ -492,11 +524,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                     case pt => pt
                   }
                 ),
+              // if rhs is a type, convert it to `SimpleType` first
               ty => PolymorphicType(thisCtx.lvl,
                 typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
+            // create a MethodType, the difference is MethodType describes `this`
             val mthTy = td2.wrapMethod(bodyTy, prov)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
@@ -504,14 +538,21 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             nme.name -> mthTy
           }
+          // expand the type reference so that we can analyze base types
+          // then process method declarations and definitinos respectively
+          // finally construct a MethodSet
           MethodSet(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
         }
+        // start by processing T[...TARGS]
         val mds = rec(TypeRef(td.nme, rigidtargs)(tp(td.toLoc, "type definition")), true)(ctx)
+        // check subsumption on method declarations
         checkSubsume(td, mds)
       }}
       ctx
     }
+
+    // First, we type typeDefs. Then, we type methods.
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, mthEnv = allMthEnv, tyDefs = allDefs)))
   }
   
