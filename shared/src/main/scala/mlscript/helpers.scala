@@ -100,7 +100,7 @@ abstract class TypeImpl extends Located { self: Type =>
   lazy val collectFields: Ls[Str] = this match {
     case Record(fields) => fields.map(_._1.name)
     case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
-    case _: Union | _: Function | _: Tuple | _: Arr | _: Recursive
+    case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
       Nil
@@ -114,7 +114,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case TypeName(name) => name :: Nil
     case AppliedType(TypeName(name), _) => name :: Nil
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
-    case _: Union | _: Function | _: Record | _: Tuple | _: Arr | _: Recursive
+    case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
         | _: Literal | _: TypeVar =>
       Nil
