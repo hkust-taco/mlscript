@@ -172,7 +172,7 @@ def myval: A & { x: anything }
 
 
 def tuuu: (1 | 2, true) & {_1: 2 | 3}
-//│ tuuu: (1 | 2, true,) & {_1: 2, _2: true}
+//│ tuuu: (2, true,)
 //│     = <missing implementation>
 // tuuu: ((1 | 2) & (2 | 3), true,)
 // tuuu: (2, true,)
@@ -345,9 +345,9 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: Array[bool | int]
 //│    = <missing implementation>
-//│ test: (string, 1,) & {_1: "hello", _2: 1}
+//│ test: ("hello", 1,)
 //│     = <missing implementation>
-//│ test2: (string, 1,) & {_1: "hello", _2: 1, _3: int}
+//│ test2: ("hello", 1,) & {_3: int}
 //│      = <missing implementation>
 
 test: { _1: 'a }

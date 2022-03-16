@@ -371,15 +371,26 @@ trait TypeSimplifier { self: Typer =>
                 case _ =>
                   val nFields = rcd.fields.filterNot(_._1.name.isCapitalized).mapValues(_.update(go(_, !pol), go(_, pol)))
                   val (res, nfs) = bo match {
-                    case S(tt @ TupleType(fs)) => 
-                      val tupres = TupleType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(tt.prov)
-                      val rcdtup = tupres.toRecord.fields.map(f => f._1.name -> f._2).toSet
-                      S(tupres) -> (
-                        if (rcdtup.subsetOf(nFields.map(f => f._1.name -> f._2).toSet))
-                          nFields.filterNot(e => rcdtup.contains(e._1.name -> e._2))
-                        else
-                          nFields
-                      )
+                    case S(tt @ TupleType(fs)) =>
+                       val arity = fs.size
+                       val (componentFields, rcdFields) = rcd.fields
+                         .filterNot(_._1.name.isCapitalized)
+                         .partitionMap(f =>
+                           if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
+                             val namePostfix = f._1.name.tail
+                             if (namePostfix.forall(_.isDigit)) {
+                               val index = namePostfix.toInt
+                               if (index <= arity && index > 0) L(index -> f._2)
+                               else R(f)
+                             }
+                             else R(f)
+                           } else R(f)
+                         )
+                       val componentFieldsMap = componentFields.toMap
+                       val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
+                         nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, !pol), go(_, pol))
+                       }.toList
+                       S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, !pol), go(_, pol)))
                     case S(ct: ClassTag) => S(ct) -> nFields
                     case S(ft @ FunctionType(l, r)) => S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
                     case S(at @ ArrayType(inner)) => S(ArrayType(inner.update(go(_, !pol), go(_, pol)))(at.prov)) -> nFields

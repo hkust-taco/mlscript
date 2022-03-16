@@ -167,14 +167,14 @@ f_2 = f_1
 
 
 def test: (string, 1) & { _1: "hello" }
-//│ test: (string, 1,) & {_1: "hello", _2: 1}
+//│ test: ("hello", 1,)
 //│     = <missing implementation>
 
 :e
 test = ("hi", 1)
 //│ ("hi", 1,)
 //│   <:  test:
-//│ (string, 1,) & {_1: "hello", _2: 1}
+//│ ("hello", 1,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.174: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
@@ -189,7 +189,7 @@ test = ("hi", 1)
 test = ("hello", 1)
 //│ ("hello", 1,)
 //│   <:  test:
-//│ (string, 1,) & {_1: "hello", _2: 1}
+//│ ("hello", 1,)
 //│     = [ 'hello', 1 ]
 
 (fun ((a, b)) -> a) test

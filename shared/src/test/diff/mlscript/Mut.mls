@@ -6,7 +6,7 @@ class A: { x: int }
 def muta1: MutArray[int]
 //│ muta1: MutArray[int .. int]
 
-muta1[2] <- 233
+muta1[2] <- 666
 
 :e
 muta1[1] <- false
