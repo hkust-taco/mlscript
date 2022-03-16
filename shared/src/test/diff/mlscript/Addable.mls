@@ -2,7 +2,7 @@
 class Addable[A]
   method Add: A -> A
 //│ Defined class Addable
-//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
+//│ Declared Addable.Add: Addable[A] -> 'A -> 'A
 
 class Num: Addable[Num] & { val: int }
   method Add that = Num { val = this.val + that.val }
@@ -19,16 +19,34 @@ n = Num { val = 1 }
 //│  = Num { val: 1 }
 
 n.Add n
-//│ res: Num
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.21: 	n.Add n
+//│ ║        	^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
+//│ res: error
 //│    = Num { val: 2 }
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable['A] -> 'A -> 'A
+//│ addTwo: Addable[A] -> 'a -> 'a
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ res: Num
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.39: 	addTwo n n
+//│ ║        	^^^^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
+//│ res: error
 //│    = Num { val: 2 }
 
 s = Str { val = "hey" }
@@ -36,35 +54,80 @@ s = Str { val = "hey" }
 //│  = Str { val: 'hey' }
 
 s.Add s
-//│ res: Str
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.56: 	s.Add s
+//│ ║        	^^^^^
+//│ ╟── type `A` is not an instance of type Str
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ╙──      	                   ^^^
+//│ res: error
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ res: Str
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.69: 	addTwo s s
+//│ ║        	^^^^^^^^
+//│ ╟── type `A` is not an instance of type Str
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ╙──      	                   ^^^
+//│ res: error
 //│    = Str { val: 'heyhey' }
 
 
 
 def addSame a = a.Add a
-//│ addSame: (Addable['A] & 'A) -> 'A
+//│ addSame: (Addable[A] & 'a) -> 'a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: Num
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.88: 	addSame n
+//│ ║        	^^^^^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
+//│ res: error
 //│    = Num { val: 2 }
 
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
+//│ addNTimes: (Addable[A] & 'a) -> int -> 'a
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: Num
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.107: 	addNTimes n 12
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
+//│ res: error
 //│    = Num { val: 12 }
 
 addNTimes s 5
-//│ res: Str
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.120: 	addNTimes s 5
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `A` is not an instance of type Str
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class Str: Addable[Str] & { val: string }
+//│ ╙──      	                   ^^^
+//│ res: error
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -80,13 +143,13 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> (0 | 'A)
+//│ addNTimes: Addable[A] -> int -> 0
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type Num
-//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
-//│ ║        	                ^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
 //│ ╙──     	                   ^^^
@@ -95,15 +158,13 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c) -> int -> (0 | 'b)
+//│ addNTimes: Addable[A] -> int -> 0
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Num
-//│ ║  l.+1: 	rec def addNTimes a n =
-//│ ║        	                  ^^^^^
-//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	class Num: Addable[Num] & { val: int }
 //│ ╙──     	                   ^^^
@@ -112,44 +173,29 @@ addNTimes n 12
 addSame n n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addSame n n
-//│ ║        	^^^^^^^^^^^
-//│ ╟── application of type `Num & {val: ?val}` is not a function
-//│ ║  l.17: 	n = Num { val = 1 }
-//│ ║        	    ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?b`
-//│ ║  l.+1: 	addSame n n
-//│ ╙──      	        ^
+//│ ║        	^^^^^^^^^
+//│ ╟── type `A` is not an instance of type Num
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
+//│ ╙──     	                   ^^^
 //│ res: error
 
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addTwo s n
-//│ ║        	^^^^^^^^^^
-//│ ╟── application of type `Num & {val: ?val}` is not an instance of type Str
-//│ ║  l.17: 	n = Num { val = 1 }
-//│ ║        	    ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Str`
-//│ ║  l.+1: 	addTwo s n
-//│ ║        	         ^
+//│ ║        	^^^^^^^^
+//│ ╟── type `A` is not an instance of type Str
+//│ ║  l.2: 	class Addable[A]
+//│ ║       	              ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
-//│ ║        	                   ^^^
-//│ ╟── from reference:
-//│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
-//│ ╙──      	                          ^^
+//│ ╙──      	                   ^^^
 //│ res: error
 
 class Str_bad_0: Addable[Str_bad_0] & { val: string }
   method Add that = Str_bad_0 { val = this.val + that.val }
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
-//│ ║        	                                      ^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
-//│ ║  l.+1: 	class Str_bad_0: Addable[Str_bad_0] & { val: string }
-//│ ║        	                                             ^^^^^^
-//│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
-//│ ╙──      	                                      ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -169,5 +215,5 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                                 ^^^^^^^^
 //│ Defined class Str_bad_0
-//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
+//│ Defined Str_bad_0.Add: (Str_bad_0 & {val: nothing}) -> {val: int} -> (error | (Str_bad_0 with {val: int}))
 

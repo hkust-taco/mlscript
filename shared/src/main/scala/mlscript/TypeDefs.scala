@@ -29,8 +29,8 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def thisTy(prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
-    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
-      MethodType(pt.level, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
+    def wrapMethod(thisTv: TypeVariable, pt: PolymorphicType, prov: TypeProvenance): MethodType =
+      MethodType(pt.level, S((thisTy(prov) & thisTv, pt.body)), nme :: Nil, isInherited = false)(prov)
   }
   
   /** Represent a set of methods belonging to some owner type.
@@ -466,6 +466,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           }
           // process a single method declaration or definition
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
+            println(s">>> Going through method ${md.nme.name} in ${td2.nme.name}")
+            // this type variable refers to `this`. It is only used in this method.
+            val thisTv = freshVar(noProv, S(s"${md.nme.name}.this"), Nil, tr :: Nil)
+            // type of `this` should be composed with type variable we just made
+            val thisTy = tr & thisTv
+            // temporarily set
+            thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
             val prov: TypeProvenance = tp(md.toLoc,
               (if (!top) "inherited " else "")
@@ -505,7 +512,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             // map from type arguments to type variables
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
+              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTv -> thisTv)
             // rhs might be L(Term) or R(Type)
             // replace rigid type arguments to type variables
             val bodyTy = subst(rhs.fold(term =>
@@ -530,14 +537,18 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
+            println(s">>> substituted method body type: $bodyTy")
             // create a MethodType, the difference is MethodType describes `this`
-            val mthTy = td2.wrapMethod(bodyTy, prov)
+            val mthTy = MethodType(bodyTy.level, S((thisTy, bodyTy.body)), td2.nme :: Nil, false)(prov)
+            println(s">>> ${td2.nme.name}.${md.nme.name} : ${mthTy.toPT}")
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
               thisCtx.addMth(N, nme.name, mthTy)
             }
             nme.name -> mthTy
           }
+          // restore `this` in type context
+          thisCtx += "this" -> tr
           // expand the type reference so that we can analyze base types
           // then process method declarations and definitinos respectively
           // finally construct a MethodSet

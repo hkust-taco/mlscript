@@ -1,0 +1,94 @@
+// Preamble
+def plus1 x = x + 1
+//│ plus1: int -> int
+//│      = [Function: plus1]
+
+// Let's try something with type parameters.
+class IntBox: { value: int }
+  method Get = this.value
+//│ Defined class IntBox
+//│ Defined IntBox.Get: (IntBox & {value: int & 'a}) -> 'a
+
+ib0 = IntBox { value = 0 }
+//│ ib0: IntBox & {value: 0}
+//│    = IntBox { value: 0 }
+
+ib0.Get
+//│ res: 0
+//│    = 0
+
+// Extend with some function.
+class MappableIntBox: IntBox
+  method Map f = MappableIntBox { value = f this.value }
+//│ Defined class MappableIntBox
+//│ Defined MappableIntBox.Map: (MappableIntBox & {value: int & 'a}) -> ('a -> (int & 'b)) -> (MappableIntBox with {value: 'b})
+
+mib0 = MappableIntBox { value = 0 }
+//│ mib0: MappableIntBox & {value: 0}
+//│     = MappableIntBox { value: 0 }
+
+mib0.Get
+//│ res: 0
+//│    = 0
+
+mib0.Map
+//│ res: (0 -> (int & 'a)) -> (MappableIntBox with {value: 'a})
+//│    = [Function: Map]
+
+mib0.Map plus1
+//│ res: MappableIntBox
+//│    = MappableIntBox { value: 1 }
+
+// Naughty map...
+mib0.Map (fun _ -> "str")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.43: 	mib0.Map (fun _ -> "str")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"str"` does not match type `int`
+//│ ║  l.43: 	mib0.Map (fun _ -> "str")
+//│ ║        	                   ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.7: 	class IntBox: { value: int }
+//│ ║       	                       ^^^
+//│ ╟── from application:
+//│ ║  l.22: 	  method Map f = MappableIntBox { value = f this.value }
+//│ ╙──      	                                          ^^^^^^^^^^^^
+//│ res: error | (MappableIntBox with {value: "str"})
+//│    = MappableIntBox { value: 'str' }
+
+// What if without the derivation?
+// Oh it's the same.
+class BetterIntBox: { value: int }
+  method Get = this.value
+  method Map f = BetterIntBox { value = f this.value }
+//│ Defined class BetterIntBox
+//│ Defined BetterIntBox.Get: (BetterIntBox & {value: int & 'a}) -> 'a
+//│ Defined BetterIntBox.Map: (BetterIntBox & {value: int & 'a}) -> ('a -> (int & 'b)) -> (BetterIntBox with {value: 'b})
+
+// I think the return type should be BetterIntBox & {value: int & 'b}
+
+// Some examples from TypeClasses.mls
+:d
+class Monoid[A]
+  method Empty: A
+//│ 0. Typing type Top
+//│ | vars=Map(A -> A0') newDefsInfo=Map(Monoid -> (Cls,1))
+//│ => ⊤ | 
+//│ >>> Going through method Empty in Monoid
+//│ 1. Typing type TypeName(A)
+//│ | vars=Map(A -> A) newDefsInfo=Map()
+//│ => A | 
+//│ >>> substituted method body type: PolymorphicType(0,A0')
+//│ >>> Monoid.Empty : PolymorphicType(0,(((Monoid[A] & Empty.this1),) -> A0'))
+//│ >> Checking subsumption for declared type of Empty : MethodType(0,Some(((Monoid[A] & Empty.this1),A0')),List(TypeName(Monoid)),false)
+//│ Defined class Monoid
+//│ Typed as: (((Monoid[A] & Empty.this1),) -> A0')
+//│  where: Empty.this1 <: Monoid[A]
+//│ Declared Monoid.Empty: Monoid[A] -> nothing
+
+// Make box generic!
+// Looks fine.
+class Box[A]: { value: A }
+  method Get = this.value
+//│ Defined class Box
+//│ Defined Box.Get: (Box[A] & {value: A & 'a}) -> 'a
