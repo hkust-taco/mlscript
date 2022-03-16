@@ -27,7 +27,12 @@ dummy: MyArray[int]
 
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
+<<<<<<< HEAD
 //│ ty4B: 'a | MyArray['c & MyArray['d .. MyArray['e .. 'f]] .. MyArray['g & MyArray['e .. 'f] .. MyArray['f & MyArray[MyArray[MyArray['e .. 'f] .. 'h] .. 'c] & 'a .. 'b] as 'h]] as 'b
+=======
+//│ ty4B: 'a | MyArray['c & MyArray['d .. MyArray[?]] .. MyArray['e & MyArray[?] .. MyArray['g & MyArray[MyArray[MyArray['h .. 'g] .. 'f] .. 'c] & 'a .. 'b] as 'f]] as 'b
+//│     = <missing implementation>
+>>>>>>> origin/mlscript-before-refactor
 
 
 

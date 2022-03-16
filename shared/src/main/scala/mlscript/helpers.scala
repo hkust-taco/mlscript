@@ -16,6 +16,16 @@ abstract class TypeImpl extends Located { self: Type =>
     case Recursive(n, b) => n :: b.typeVarsList
     case _ => children.flatMap(_.typeVarsList)
   }
+
+  /**
+    * @return
+    *  set of non-recursive type variables in type
+    */
+  lazy val freeTypeVariables: Set[TypeVar] = this match {
+    case Recursive(uv, body) => body.freeTypeVariables - uv
+    case t: TypeVar => Set.single(t)
+    case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
+  }
   
   def show: Str =
     showIn(ShowCtx.mk(this :: Nil), 0)
@@ -82,11 +92,49 @@ abstract class TypeImpl extends Located { self: Type =>
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
   }
-  
+
+  /**
+    * Collect fields recursively during code generation.
+    * Note that the type checker will reject illegal cases.
+    */
+  lazy val collectFields: Ls[Str] = this match {
+    case Record(fields) => fields.map(_._1.name)
+    case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
+    case _: Union | _: Function | _: Tuple | _: Arr | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+      Nil
+  }
+
+  /**
+    * Collect `TypeName`s recursively during code generation.
+    * Note that the type checker will reject illegal cases.
+    */
+  lazy val collectTypeNames: Ls[Str] = this match {
+    case TypeName(name) => name :: Nil
+    case AppliedType(TypeName(name), _) => name :: Nil
+    case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
+    case _: Union | _: Function | _: Record | _: Tuple | _: Arr | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar =>
+      Nil
+  }
+
 }
 
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {
+  /**
+    * Create a context from a list of types. For named variables and
+    * hinted variables use what is given. For unnamed variables generate
+    * completely new names. If same name exists increment counter suffix
+    * in the name.
+    *
+    * @param tys
+    * @param pre
+    * @param debug
+    * @return
+    */
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
@@ -112,6 +160,7 @@ object ShowCtx {
       // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet
+    // generate names for unnamed variables
     val names = Iterator.unfold(0) { idx =>
       S(('a' + idx % ('z' - 'a')).toChar.toString, idx + 1)
     }.filterNot(used).map(assignName)

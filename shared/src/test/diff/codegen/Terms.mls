@@ -86,8 +86,30 @@ if true then 1 else 2
 trait T: { x: int }
 T { x = 0 }
 //│ Defined trait T
+//│ // Prelude
+//│ const T = function () {
+//│   const tag = Symbol();
+//│   return ({
+//│     implement: function implement(instance) {
+//│       if (tag in instance) {
+//│         return;
+//│       }
+//│       Object.defineProperty(instance, tag, { value: {} });
+//│     },
+//│     build: function build(instance) {
+//│       if (typeof instance !== "object") {
+//│         instance = Object.assign(instance, {});
+//│       }
+//│       this.implement(instance);
+//│       return instance;
+//│     },
+//│     is: function is(x) {
+//│       return typeof x === "object" && x !== null && tag in x;
+//│     }
+//│   });
+//│ }();
 //│ // Query 1
-//│ res = { x: 0 };
+//│ res = T.build({ x: 0 });
 //│ // End of generated code
 //│ res: {x: 0} & t
 //│    = { x: 0 }
@@ -221,8 +243,8 @@ let x = 0 in x + 1
 def f x = case x of { }
 //│ // Query 1
 //│ globalThis.f1 = function f1(x) {
-//│   let temp;
-//│   return (temp = x, (function () {
+//│   let a;
+//│   return (a = x, (function () {
 //│     throw new Error("non-exhaustive case expression");
 //│   })());
 //│ };
@@ -260,8 +282,8 @@ case 0 of
   | _ -> 0
   }
 //│ // Query 1
-//│ let temp;
-//│ res = (temp = 0, temp instanceof A ? 1 : temp instanceof B ? 2 : 0);
+//│ let a;
+//│ res = (a = 0, a instanceof A ? 1 : a instanceof B ? 2 : 0);
 //│ // End of generated code
 //│ res: 0 | 1 | 2
 //│    = 0
@@ -273,8 +295,8 @@ case A { a = 0 } of
   | B -> "B"
   }
 //│ // Query 1
-//│ let temp1;
-//│ res = (temp1 = new A({ a: 0 }), temp1 instanceof A ? "A" : temp1 instanceof B ? "B" : (function () {
+//│ let b;
+//│ res = (b = new A({ a: 0 }), b instanceof A ? "A" : b instanceof B ? "B" : (function () {
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
@@ -334,6 +356,16 @@ rcd2 = rcd1 with { x = 1; z = 2 }
 //│   }
 //│   if (target instanceof String || target instanceof Number || target instanceof Boolean || target instanceof BigInt) {
 //│     return Object.assign(target.valueOf(), target, fields);
+//│   }
+//│   if (Array.isArray(target)) {
+//│     const clone = Array.from(target);
+//│     for (const key in target){
+//│       clone[key] = target[key];
+//│     }
+//│     for (const key in fields){
+//│       clone[key] = fields[key];
+//│     }
+//│     return clone;
 //│   }
 //│   const copy = Object.assign({}, target, fields);
 //│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));

@@ -435,6 +435,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       val tighestRelevantFailure = relevantFailures.headOption
       
+      val shownLocos = MutSet.empty[Loc]
+      def show(loco: Opt[Loc]): Opt[Loc] =
+        loco.tap(_.foreach(shownLocos.+=))
+      
       val originProvList = (lhsChain.headOption ++ rhsChain.lastOption).iterator
         .map(_.prov).collect {
             case tp @ TypeProvenance(loco, desc, S(nme), _) if loco.isDefined => nme -> tp
@@ -446,33 +450,34 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         else msg"${prov.desc} of type"
       
       val mismatchMessage =
-        msg"Type mismatch in ${prov.desc}:" -> prov.loco :: (
+        msg"Type mismatch in ${prov.desc}:" -> show(prov.loco) :: (
           msg"${printProv(lhsProv)} `${lhs.expPos}` $failure"
-        ) -> (if (lhsProv.loco === prov.loco) N else lhsProv.loco) :: Nil
+        ) -> (if (lhsProv.loco === prov.loco) N else show(lhsProv.loco)) :: Nil
       
       val flowHint = 
         tighestRelevantFailure.map { l =>
           val expTyMsg = msg" with expected type `${rhs.expNeg}`"
-          msg"but it flows into ${l.prov.desc}$expTyMsg" -> l.prov.loco :: Nil
+          msg"but it flows into ${l.prov.desc}$expTyMsg" -> show(l.prov.loco) :: Nil
         }.toList.flatten
       
       val constraintProvenanceHints = 
         if (rhsProv.loco.isDefined && rhsProv2.loco =/= prov.loco)
-          msg"Note: constraint arises from ${rhsProv.desc}:" -> rhsProv.loco :: (
+          msg"Note: constraint arises from ${rhsProv.desc}:" -> show(rhsProv.loco) :: (
             if (rhsProv2.loco.isDefined && rhsProv2.loco =/= rhsProv.loco && rhsProv2.loco =/= prov.loco)
-              msg"from ${rhsProv2.desc}:" -> rhsProv2.loco :: Nil
+              msg"from ${rhsProv2.desc}:" -> show(rhsProv2.loco) :: Nil
             else Nil
           )
         else Nil
       
       var first = true
-      val originProvHints = originProvList.map { case (nme, l) => 
-        val msgHead =
-          if (first)
-                msg"Note: ${l.desc} $nme"
-          else  msg"      ${l.desc} $nme"
-        first = false
-        msg"${msgHead} is defined at: " -> l.loco 
+      val originProvHints = originProvList.collect {
+        case (nme, l) if l.loco.exists(!shownLocos.contains(_)) =>
+          val msgHead =
+            if (first)
+                  msg"Note: ${l.desc} $nme"
+            else  msg"      ${l.desc} $nme"
+          first = false
+          msg"${msgHead} is defined at:" -> l.loco 
       }
       
       val detailedContext =
@@ -487,7 +492,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
         else Nil
       
-      val msgs: Ls[Message -> Opt[Loc]] = Ls[Ls[Message -> Opt[Loc]]](
+      val msgs = Ls[Ls[Message -> Opt[Loc]]](
         mismatchMessage,
         flowHint,
         constraintProvenanceHints,

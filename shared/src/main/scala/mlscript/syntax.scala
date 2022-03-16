@@ -19,6 +19,18 @@ final case class TypeDef(
   mthDecls: List[MethodDef[Right[Term, Type]]] = Nil,
   mthDefs: List[MethodDef[Left[Term, Type]]] = Nil,
 ) extends Decl
+
+/**
+  * Method type can be a definition or a declaration based
+  * on the type parameter set. A declaration has `Type` in rhs
+  * and definition has `Term` in rhs.
+  *
+  * @param rec indicates that the method is recursive
+  * @param prt name of class to which method belongs
+  * @param nme name of method
+  * @param tparams list of parameters for the method if any
+  * @param rhs term or type if definition and declaration respectively
+  */
 final case class MethodDef[RHS <: Term \/ Type](
   rec: Bool,
   parent: TypeName,
@@ -98,8 +110,13 @@ sealed abstract class NullaryType                        extends Type
 
 case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
+
+// Literal type or singleton type i.e.
+// type `0` is a type with only one possible value
+// which is the literal integer 0 itself
 final case class Literal(lit: Lit)                       extends NullaryType
 
+// reference an existing type with the given name
 final case class TypeName(name: Str)                    extends NullaryType
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType {

@@ -21,8 +21,8 @@ case 1 of { A -> 0 }
 //│ ║  l.19: 	case 1 of { A -> 0 }
 //│ ╙──      	            ^
 //│ res: error
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│ Code generation encountered an error:
+//│   unknown match case: A
 
 :e
 case 1 of { A -> 0 | B -> 1 }
@@ -30,8 +30,8 @@ case 1 of { A -> 0 | B -> 1 }
 //│ ║  l.28: 	case 1 of { A -> 0 | B -> 1 }
 //│ ╙──      	            ^
 //│ res: error
-//│ Runtime error:
-//│   ReferenceError: A is not defined
+//│ Code generation encountered an error:
+//│   unknown match case: B
 
 :e
 def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
@@ -39,7 +39,8 @@ def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ║  l.37: 	def f = fun x -> case x of { Foo -> 0 | Bar -> 1 }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
-//│  = [Function: f]
+//│ Code generation encountered an error:
+//│   unknown match case: Bar
 
 :e
 def f = fun x -> case x of
@@ -47,16 +48,18 @@ def f = fun x -> case x of
   | Bar -> 1
   }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.46: 	  { Foo -> 0
+//│ ║  l.47: 	  { Foo -> 0
 //│ ╙──      	    ^^^
 //│ f: error -> error
-//│  = [Function: f1]
+//│ Code generation encountered an error:
+//│   unknown match case: Bar
 
 :e
 def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.56: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
+//│ ║  l.58: 	def f = fun x -> case x of { Foo -> x | Bar -> x }
 //│ ╙──      	                             ^^^
 //│ f: error -> error
-//│  = [Function: f2]
+//│ Code generation encountered an error:
+//│   unknown match case: Bar
 

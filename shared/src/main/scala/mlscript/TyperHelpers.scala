@@ -173,10 +173,13 @@ abstract class TyperHelpers { self: Typer =>
       case ProvType(und) => und.hashCode
       case p: Product => scala.runtime.ScalaRunTime._hashCode(p)
     }
-    override def equals(that: Any): Bool = this match {
+    override def equals(that: Any): Bool = 
+        // trace(s"$this == $that") {
+        this match {
       case ProvType(und) => (und: Any) === that
       case tv1: TV => that match {
         case tv2: Typer#TV => tv1.uid === tv2.uid
+        case ProvType(und) => this === und
         case _ => false
       }
       case p1: Product => that match {
@@ -184,7 +187,7 @@ abstract class TyperHelpers { self: Typer =>
           case ProvType(und) => this === und
           case tv: TV => false
           case p2: Product =>
-            p1.canEqual(p2) && {
+            p1.canEqual(p2) && p1.productArity === p2.productArity && {
               val it1 = p1.productIterator
               val it2 = p2.productIterator
               while(it1.hasNext && it2.hasNext) {
@@ -196,6 +199,7 @@ abstract class TyperHelpers { self: Typer =>
         case _ => false
       }
     }
+    // }(r => s"= $r")
     
     def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
@@ -397,8 +401,8 @@ abstract class TyperHelpers { self: Typer =>
       case _ => this
     }
     
-    def children: List[SimpleType] = this match {
-      case tv: TypeVariable => tv.lowerBounds ::: tv.upperBounds
+    def children(includeBounds: Bool): List[SimpleType] = this match {
+      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case ComposedType(_, l, r) => l :: r :: Nil
       case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ++ (f._2.ub :: Nil))
@@ -418,8 +422,8 @@ abstract class TyperHelpers { self: Typer =>
       @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
         case (tv: TypeVariable) :: tys =>
           if (res(tv)) rec(tys)
-          else { res += tv; rec(tv.children ::: tys) }
-        case ty :: tys => rec(ty.children ::: tys)
+          else { res += tv; rec(tv.children(includeBounds = true) ::: tys) }
+        case ty :: tys => rec(ty.children(includeBounds = true) ::: tys)
         case Nil => ()
       }
       rec(this :: Nil)

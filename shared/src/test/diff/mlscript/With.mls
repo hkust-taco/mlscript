@@ -100,12 +100,12 @@ foo 123
 
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
 //│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
+//│          = <missing implementation>
 
-:re
 fooManual 123
 //│ res: 42
-//│ Runtime error:
-//│   ReferenceError: fooManual is not defined
+//│    = <no result>
+//│      fooManual is not implemented
 
 def foo x =
   let xf = x with { f = 42 }

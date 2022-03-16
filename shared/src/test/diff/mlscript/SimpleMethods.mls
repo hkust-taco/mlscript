@@ -9,7 +9,7 @@ class C0
 //│ ╟── reference of type `A` does not match type `int`
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
 //│ ║       	                         ^
-//│ ╟── Note: method type parameter A is defined at: 
+//│ ╟── Note: method type parameter A is defined at:
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
 //│ ╙──     	              ^
 //│ Defined class C0
@@ -64,7 +64,7 @@ class C5[A]
 //│ ╟── reference of type `A` does not match type `int`
 //│ ║  l.60: 	  method F(x: A) = x + 1
 //│ ║        	                   ^
-//│ ╟── Note: class type parameter A is defined at: 
+//│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.59: 	class C5[A]
 //│ ╙──      	         ^
 //│ Defined class C5
@@ -89,4 +89,6 @@ class Hey
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error
 //│ Defined Hey.B: Hey -> 1
+//│ Code generation encountered an error:
+//│   unresolved symbol B
 
