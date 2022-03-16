@@ -230,7 +230,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }()
 
     /** Helper function to constrain Field lower bounds */
-    def recLb[U](lhs: FieldType, rhs: FieldType)
+    def recLb(lhs: FieldType, rhs: FieldType)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
