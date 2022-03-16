@@ -68,15 +68,15 @@ class C5[A]
 //│ ║  l.59: 	class C5[A]
 //│ ╙──      	         ^
 //│ Defined class C5
-//│ Defined C5.F: C5['A] -> 'A -> (error | int)
+//│ Defined C5.F: C5[A] -> anything -> (error | int)
 
 
 class Tru[A]
     method Test f = true
     method Tru = this.Test (fun x -> error)
 //│ Defined class Tru
-//│ Defined Tru.Test: Tru['A] -> anything -> true
-//│ Defined Tru.Tru: Tru['A] -> true
+//│ Defined Tru.Test: Tru[A] -> anything -> true
+//│ Defined Tru.Tru: Tru[A] -> true
 
 
 :e

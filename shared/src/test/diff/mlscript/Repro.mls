@@ -75,6 +75,9 @@ class Monoid[A]
 //│ | vars=Map(A -> A0') newDefsInfo=Map(Monoid -> (Cls,1))
 //│ => ⊤ | 
 //│ >>> Going through method Empty in Monoid
+//│ >>> reverseRigid2 (2 entries)
+//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+72)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+72)›)
+//│ >>> 1. Empty.this1 ([NO PROV]) -> Empty.this1 ([NO PROV])
 //│ 1. Typing type TypeName(A)
 //│ | vars=Map(A -> A) newDefsInfo=Map()
 //│ => A | 

@@ -513,6 +513,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             // map from type arguments to type variables
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
               t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTv -> thisTv)
+            println(s">>> reverseRigid2 (${reverseRigid2.size} entries)")
+            reverseRigid2.zipWithIndex.foreach { case ((st, tv), i) =>
+              println(s">>> $i. $st (${st.prov}) -> $tv (${tv.prov})")
+            }
             // rhs might be L(Term) or R(Type)
             // replace rigid type arguments to type variables
             val bodyTy = subst(rhs.fold(term =>
