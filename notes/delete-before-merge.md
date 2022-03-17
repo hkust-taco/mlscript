@@ -182,3 +182,76 @@ class Monoid[A]
 Oh, I see. It should be `Monoid[A0']` in `PolymorphicType(0,(((Monoid[A] & Empty.this1),) -> A0'))`.
 So we should update `tr`, making its type arguments up-to-date.
 ~~But why the debug log is very short? Oh it's because my main branch is outdated.~~
+
+## Commit f25facd
+
+Some type variables are leaking...
+
+```
+class Addable[A]
+  method Add: A -> A
+//│ Defined class Addable
+//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
+
+class Num: Addable[Num] & { val: int }
+  method Add that = Num { val = this.val + that.val }
+//│ Defined class Num
+//│ Defined Num.Add: Num -> {val: int} -> Num
+
+class Str: Addable[Str] & { val: string }
+  method Add that = Str { val = concat this.val that.val }
+//│ Defined class Str
+//│ Defined Str.Add: Str -> {val: string} -> Str
+
+n = Num { val = 1 }
+//│ n: Num & {val: 1}
+//│  = Num { val: 1 }
+
+n.Add n
+//│ res: Num & {val: 1}
+//│    = Num { val: 2 }
+
+s = Str { val = "hey" }
+//│ s: Str & {val: "hey"}
+//│  = Str { val: 'hey' }
+
+s.Add s
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.160: 	s.Add s
+//│ ║         	^^^^^
+//│ ╟── type `Num` is not an instance of type Str
+//│ ║  l.138: 	class Num: Addable[Num] & { val: int }
+//│ ║         	                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.143: 	class Str: Addable[Str] & { val: string }
+//│ ╙──       	                   ^^^
+//│ res: error
+//│    = Str { val: 'heyhey' }
+```
+
+There's no way `Num` is involved in `s`.
+
+**Correct output:**
+
+CONSTRAIN `((Addable[A3],) -> ((A3,) -> A3)) <! (([α0],) -> α2)` where
+
+- `α0 :> [(str<addable> & {Addable#A: (Str -> Str), val: val1})]`,
+- `val1 :> ["hey"<string>] <: String`
+
+**Wrong output:**
+
+CONSTRAIN `((this30,) -> ((A3,) -> A3)) <! (([α0],) -> α2)` where
+
+- `α0 :> [(str<addable> & {Addable#A: (Str -> Str), val: val1})]` (this is fine),
+- `val1 :> ["hey"<string>] <: String` (this is also fine),
+- `A3 :> [[Num]] <: [[Num]]` (what the heck?),
+- `A29' :> [[Num]] <: [[Num]]`
+- `this30 :> [[[(num<addable> & {Addable#A: (Num -> Num), val: val117})]]] <: Addable[A29']` (the leak should be here),
+- `val117 :> [1<int,number>] <: Int`
+
+**Questions**
+
+- Why `A3` has bounds?
+- Why `this30` has bounds containing `Num`?
+
+Ohhhhhhh! The 30 in `this30` is changing?

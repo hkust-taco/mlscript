@@ -468,9 +468,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
             println(s">>> Going through method ${md.nme.name} in ${td2.nme.name}")
             // this type variable refers to `this`. It is only used in this method.
-            val thisTv = freshVar(noProv, S("this"), Nil, td.thisTy(noProv) :: Nil)
+            val thisTv = freshVar(noProv, S("this"), Nil, td.thisTy(noProv) :: Nil)(lvl + 1)
+            println(s">>> Created a type variable for this $thisTv <: ${thisTv.upperBounds.head}")
             // type of `this` should be composed with type variable we just made
-            val thisTy = thisTv
+            val thisTag = TraitTag(Var("this"))(noProv)
+            val thisTy = thisTag & td.thisTy(noProv)
             // temporarily set
             thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -512,7 +514,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             // map from type arguments to type variables
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTv -> thisTv)
+              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTag -> thisTv)
             println(s">>> reverseRigid2 (${reverseRigid2.size} entries)")
             reverseRigid2.zipWithIndex.foreach { case ((st, tv), i) =>
               println(s">>> $i. $st (${st.prov}) -> $tv (${tv.prov})")
@@ -544,7 +546,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             println(s">>> substituted method body type: $bodyTy")
             // create a MethodType, the difference is MethodType describes `this`
             // we used to call `td2.wrapMethod` here.
-            val mthTy = MethodType(bodyTy.level, S((thisTy, bodyTy.body)), td2.nme :: Nil, false)(prov)
+            val mthTy = MethodType(bodyTy.level, S((thisTv & td.thisTy(noProv), bodyTy.body)), td2.nme :: Nil, false)(prov)
             println(s">>> ${td2.nme.name}.${md.nme.name} : ${mthTy.toPT}")
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)

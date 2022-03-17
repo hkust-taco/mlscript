@@ -7,32 +7,32 @@ def plus1 x = x + 1
 class IntBox: { value: int }
   method Get = this.value
 //│ Defined class IntBox
-//│ Defined IntBox.Get: (IntBox & {value: int & 'a}) -> 'a
+//│ Defined IntBox.Get: IntBox -> int
 
 ib0 = IntBox { value = 0 }
 //│ ib0: IntBox & {value: 0}
 //│    = IntBox { value: 0 }
 
 ib0.Get
-//│ res: 0
+//│ res: int
 //│    = 0
 
 // Extend with some function.
 class MappableIntBox: IntBox
   method Map f = MappableIntBox { value = f this.value }
 //│ Defined class MappableIntBox
-//│ Defined MappableIntBox.Map: (MappableIntBox & {value: int & 'a}) -> ('a -> (int & 'b)) -> (MappableIntBox with {value: 'b})
+//│ Defined MappableIntBox.Map: MappableIntBox -> (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
 
 mib0 = MappableIntBox { value = 0 }
 //│ mib0: MappableIntBox & {value: 0}
 //│     = MappableIntBox { value: 0 }
 
 mib0.Get
-//│ res: 0
+//│ res: int
 //│    = 0
 
 mib0.Map
-//│ res: (0 -> (int & 'a)) -> (MappableIntBox with {value: 'a})
+//│ res: (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
 //│    = [Function: Map]
 
 mib0.Map plus1
@@ -63,54 +63,23 @@ class BetterIntBox: { value: int }
   method Get = this.value
   method Map f = BetterIntBox { value = f this.value }
 //│ Defined class BetterIntBox
-//│ Defined BetterIntBox.Get: (BetterIntBox & {value: int & 'a}) -> 'a
-//│ Defined BetterIntBox.Map: (BetterIntBox & {value: int & 'a}) -> ('a -> (int & 'b)) -> (BetterIntBox with {value: 'b})
+//│ Defined BetterIntBox.Get: BetterIntBox -> int
+//│ Defined BetterIntBox.Map: BetterIntBox -> (int -> (int & 'a)) -> (BetterIntBox with {value: 'a})
 
 // I think the return type should be BetterIntBox & {value: int & 'b}
 
 // Some examples from TypeClasses.mls
-:d
 class Monoid[A]
   method Empty: A
-//│ 0. Typing type Top
-//│ | vars=Map(A -> A0') newDefsInfo=Map(Monoid -> (Cls,1))
-//│ => ⊤ | 
-//│ >>> Going through method Empty in Monoid
-//│ >>> reverseRigid2 (2 entries)
-//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+73)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+73)›)
-//│ >>> 1. this1 ([NO PROV]) -> this1 ([NO PROV])
-//│ 1. Typing type TypeName(A)
-//│ | vars=Map(A -> A) newDefsInfo=Map()
-//│ => A | 
-//│ >>> substituted method body type: PolymorphicType(0,A0')
-//│ >>> Monoid.Empty : PolymorphicType(0,((this1,) -> A0'))
-//│ >> Checking subsumption for declared type of Empty : MethodType(0,Some((this1,A0')),List(TypeName(Monoid)),false)
 //│ Defined class Monoid
-//│ Typed as: ((this1,) -> A0')
-//│  where: this1 <: Monoid[A0']
 //│ Declared Monoid.Empty: Monoid['A] -> 'A
 
 // Some more interesting case. Are they valid at the main branch?
 // Yeah... The result are the same.
-:d
 class Myself[A]
   method Me = this
-//│ 0. Typing type Top
-//│ | vars=Map(A -> A0') newDefsInfo=Map(Myself -> (Cls,1))
-//│ => ⊤ | 
-//│ >>> Going through method Me in Myself
-//│ >>> reverseRigid2 (2 entries)
-//│ >>> 0. A (o: ‹class type parameter:Loc(13,14,Repro:+96)›) -> A0' (o: ‹class type parameter:Loc(13,14,Repro:+96)›)
-//│ >>> 1. this1 ([NO PROV]) -> this1 ([NO PROV])
-//│ 1. Typing term this
-//│ 1. : [this1]
-//│ >>> substituted method body type: PolymorphicType(0,this1)
-//│ >>> Myself.Me : PolymorphicType(0,((this1,) -> this1))
-//│ >> Checking subsumption for inferred type of Me : MethodType(0,Some((this1,this1)),List(TypeName(Myself)),false)
 //│ Defined class Myself
-//│ Typed as: ((this1,) -> this1)
-//│  where: this1 <: Myself[A0']
-//│ Defined Myself.Me: (Myself['A] & 'this) -> 'this
+//│ Defined Myself.Me: (Myself['A] & 'this) -> (Myself['A] & 'this)
 
 m0 = Myself {}
 //│ m0: Myself['A]
@@ -125,4 +94,52 @@ m0.Me
 class Box[A]: { value: A }
   method Get = this.value
 //│ Defined class Box
-//│ Defined Box.Get: (Box['A] & {value: 'A & 'a}) -> 'a
+//│ Defined Box.Get: Box['A] -> 'A
+
+// More test cases from Addable.mls!
+// It seems some type variables leaked from the context...
+
+:e
+class Addable[A]
+  method Me = this
+  method Oops = this.oops // disallowed if rigid
+  method Add: A -> A
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.105: 	  method Oops = this.oops // disallowed if rigid
+//│ ║         	                ^^^^^^^^^
+//│ ╟── reference of type `Addable[?A] & this` does not have field 'oops'
+//│ ║  l.105: 	  method Oops = this.oops // disallowed if rigid
+//│ ╙──       	                ^^^^
+//│ Defined class Addable
+//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
+//│ Defined Addable.Me: (Addable['A] & 'this) -> (Addable['A] & 'this)
+//│ Defined Addable.Oops: Addable['A] -> error
+
+class Num: Addable[Num] & { val: int }
+  method Add that = Num { val = this.val + that.val }
+//│ Defined class Num
+//│ Defined Num.Add: Num -> {val: int} -> Num
+
+class Str: Addable[Str] & { val: string }
+  method Add that = Str { val = concat this.val that.val }
+//│ Defined class Str
+//│ Defined Str.Add: Str -> {val: string} -> Str
+
+n = Num { val = 1 }
+//│ n: Num & {val: 1}
+//│  = Num { val: 1 }
+
+n.Add n
+//│ res: Num
+//│    = Num { val: 2 }
+
+s = Str { val = "hey" }
+//│ s: Str & {val: "hey"}
+//│  = Str { val: 'hey' }
+
+s.Add
+//│ res: (Str & 'A) -> ('A | Str)
+//│    = [Function: Add]
+
+// Make inherited methods agree with the current this.
+// Import more examples from the old branch!
