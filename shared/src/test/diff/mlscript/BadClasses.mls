@@ -1,0 +1,33 @@
+:AllowTypeErrors
+
+
+ class Box[T]: { inner: T }
+   method Get = this.inner
+   method Get2 = this.x
+ //│ ╔══[ERROR] Type mismatch in field selection:
+ //│ ║  l.6: 	  method Get2 = this.x
+ //│ ║       	                ^^^^^^
+ //│ ╟── reference of type `Box[?T] & this` does not have field 'x'
+ //│ ║  l.6: 	  method Get2 = this.x
+ //│ ╙──     	                ^^^^
+ //│ Defined class Box
+ //│ Defined Box.Get: (Box['T] & this) -> 'T
+ //│ Defined Box.Get2: (Box['T] & this) -> error
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.6: 	   method Get2 = this.x
+//│ ║       	                 ^^^^^^
+//│ ╟── reference of type `Box[?T] & this` does not have field 'x'
+//│ ║  l.6: 	   method Get2 = this.x
+//│ ╙──     	                 ^^^^
+//│ Defined class Box
+//│ Defined Box.Get: Box['T] -> 'T
+//│ Defined Box.Get2: Box['T] -> error
+
+
+ // FIXME this should not be accepted... it seems it uses a flexible version of T
+ class Box2[T]: { inner: T }
+   method Test = this.inner + 1
+ //│ Defined class Box2
+ //│ Defined Box2.Test: (Box2['T .. int & 'T] & this) -> int
+//│ Defined class Box2
+//│ Defined Box2.Test: Box2['T .. int & 'T] -> int

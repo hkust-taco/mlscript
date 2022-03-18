@@ -1,0 +1,37 @@
+:NoJS
+
+class A
+  method Foo: int -> this
+//│ ╔══[ERROR] type identifier not found: this
+//│ ║  l.4: 	  method Foo: int -> this
+//│ ╙──     	                     ^^^^
+//│ Defined class A
+//│ Declared A.Foo: A -> int -> error
+
+class B: A
+  method Foo n = this
+//│ ╔══[ERROR] type identifier not found: this
+//│ ║  l.4: 	  method Foo: int -> this
+//│ ╙──     	                     ^^^^
+//│ Defined class B
+//│ Defined B.Foo: (B & 'this) -> anything -> (B & 'this)
+
+a = B{}
+//│ a: B
+
+a.Foo 1 // : B
+//│ res: error
+
+def b: A
+b = a
+b.Foo 1 // : A
+//│ b: A
+//│ B
+//│   <:  b:
+//│ A
+//│ res: error
+
+class Box[T]: { inner: T }
+  method Get = this.inner // Used to be Box.Get: Box['T] -> 'T
+//│ Defined class Box
+//│ Defined Box.Get: Box['T] -> 'T
