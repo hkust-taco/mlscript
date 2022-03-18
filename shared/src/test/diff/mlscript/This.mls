@@ -2,17 +2,11 @@
 
 class A
   method Foo: int -> this
-//│ ╔══[ERROR] type identifier not found: this
-//│ ║  l.4: 	  method Foo: int -> this
-//│ ╙──     	                     ^^^^
 //│ Defined class A
-//│ Declared A.Foo: A -> int -> error
+//│ Declared A.Foo: (A & 'this) -> int -> (A & 'this)
 
 class B: A
   method Foo n = this
-//│ ╔══[ERROR] type identifier not found: this
-//│ ║  l.4: 	  method Foo: int -> this
-//│ ╙──     	                     ^^^^
 //│ Defined class B
 //│ Defined B.Foo: (B & 'this) -> anything -> (B & 'this)
 
@@ -20,7 +14,7 @@ a = B{}
 //│ a: B
 
 a.Foo 1 // : B
-//│ res: error
+//│ res: B
 
 def b: A
 b = a
@@ -29,7 +23,7 @@ b.Foo 1 // : A
 //│ B
 //│   <:  b:
 //│ A
-//│ res: error
+//│ res: A
 
 class Box[T]: { inner: T }
   method Get = this.inner // Used to be Box.Get: Box['T] -> 'T
