@@ -11,8 +11,8 @@ class Box[T]: { inner: T }
   method Get = this.inner
 //│ Defined class Box
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: (Box['T] & {inner: T & 'T & 'a}) -> ('a -> ('T0 & 'b)) -> (Box['T0] with {inner: 'b})
-//│ Defined Box.Get: (Box['T] & {inner: 'T & 'a}) -> 'a
+//│ Defined Box.Map: Box['T] -> ('T -> ('T0 & 'a)) -> (Box['T0] with {inner: 'a})
+//│ Defined Box.Get: Box['T] -> 'T
 //│ // Prelude
 //│ class Box {
 //│   constructor(fields) {
@@ -67,8 +67,8 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: (MyBox & {info: string & 'a, inner: int & 'b}) -> ('b -> ('T & 'c)) -> (Box['T] with {info: 'a, inner: 'c})
-//│ Defined MyBox.Inc: MyBox -> (MyBox & {info: nothing})
+//│ Defined MyBox.Map: MyBox -> (int -> ('a & 'b)) -> (Box['b] with {info: string, inner: 'a})
+//│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {
 //│   constructor(fields) {
@@ -119,7 +119,7 @@ mb2.Get
 //│ // End of generated code
 //│ mb: MyBox & {info: "hello", inner: 1}
 //│   = MyBox { inner: 1, info: 'hello' }
-//│ mb: MyBox & {info: nothing}
+//│ mb: MyBox
 //│   = MyBox { inner: 2, info: 'hello' }
 //│ res: int
 //│    = 2
@@ -137,10 +137,10 @@ MyBox.Map mb (fun x -> x * 3)
 //│ // Query 2
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
-//│ res: Box['T .. 'T | int] with {info: nothing, inner: int}
+//│ res: Box['a .. int | 'a] with {info: string, inner: int}
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
-//│ res: Box['T .. 'T | int] with {info: nothing, inner: int}
+//│ res: Box['a .. int | 'a] with {info: string, inner: int}
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
 

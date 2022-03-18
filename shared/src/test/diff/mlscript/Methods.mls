@@ -12,7 +12,7 @@ class Bar: Foo[int, bool]
 
 Foo.Fun
 Bar.Fun
-//│ res: Foo['A, 'B] -> ('A0 -> 'B0 -> 'C) -> 'A0 -> 'B0 -> 'C
+//│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
 //│ res: Bar -> 'a -> 'a
 //│    = undefined
@@ -22,7 +22,7 @@ f = Foo { x = 1; y = 2 }
 //│  = Foo { x: 1, y: 2 }
 
 f.(Foo.Fun)
-//│ res: ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
+//│ res: ((1 | 'A) -> (2 | 'B) -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
 
 :re
@@ -46,16 +46,7 @@ g = Bar { x = 42; y = true }
 
 g.(Foo.Fun)
 g.(Bar.Fun)
-//│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.47: 	g.(Foo.Fun)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `bool`
-//│ ║  l.20: 	f = Foo { x = 1; y = 2 }
-//│ ║        	                     ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.8: 	class Bar: Foo[int, bool]
-//│ ╙──     	                    ^^^^
-//│ res: (int -> (2 | bool) -> 'C) -> int -> bool -> 'C | error
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│    = undefined
 //│ res: 'a -> 'a
 //│    = undefined
@@ -63,7 +54,7 @@ g.(Bar.Fun)
 :re
 Foo.Fun g
 Bar.Fun g
-//│ res: (int -> (2 | bool) -> 'C) -> int -> bool -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│ Runtime error:
 //│   TypeError: (intermediate value).Fun is not a function
 //│ res: 'a -> 'a
@@ -71,14 +62,14 @@ Bar.Fun g
 //│   TypeError: (intermediate value).Fun is not a function
 
 g.Fun
-//│ res: (int -> (2 | bool) -> 'C) -> int -> bool -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│    = [Function: Fun]
 
 h = Bar { x = 43; y = true }
 h.Fun
 //│ h: Bar & {x: 43, y: true}
 //│  = Bar { x: 43, y: true }
-//│ res: (int -> (2 | bool) -> 'C) -> int -> bool -> 'C
+//│ res: (int -> bool -> 'C) -> int -> bool -> 'C
 //│    = [Function: Fun]
 
 
@@ -90,26 +81,26 @@ class Wrapper[A]: { x: A }
     // method Apply f = Wrapper { x = f this.x }
 //│ Defined class Wrapper
 //│ Declared Wrapper.Apply: Wrapper['A] -> ('A -> 'B) -> Wrapper['B]
-//│ Defined Wrapper.Apply: (Wrapper['A] & {x: A & 'A & 'a}) -> ('a -> ('A0 & 'b)) -> (Wrapper['A0] with {x: 'b})
+//│ Defined Wrapper.Apply: Wrapper['A] -> ('A -> ('A0 & 'a)) -> (Wrapper['A0] with {x: 'a})
 
 class IntWrapper: Wrapper[int]
     method Apply f = Wrapper { x = f this.x }
 //│ Defined class IntWrapper
-//│ Defined IntWrapper.Apply: (IntWrapper & {x: int & 'a}) -> ('a -> ('A & 'b)) -> (Wrapper['A] with {x: 'b})
+//│ Defined IntWrapper.Apply: IntWrapper -> (int -> ('a & 'b)) -> (Wrapper['b] with {x: 'a})
 
 class Psyduck[B]: Wrapper[B]
     method Apply[A]: (B -> A) -> Psyduck[A]
     method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck
 //│ Declared Psyduck.Apply: Psyduck['B] -> ('B -> 'A) -> Psyduck['A]
-//│ Defined Psyduck.Apply: (Psyduck['B] & {x: B & 'B & 'a}) -> ('a -> ('B0 & 'b)) -> (Psyduck['B0] with {x: 'b})
+//│ Defined Psyduck.Apply: Psyduck['B] -> ('B -> ('B0 & 'a)) -> (Psyduck['B0] with {x: 'a})
 
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper
 //│ Declared WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A]}) -> ('A -> 'B) -> (WrapperWrapper['B] with {x: Wrapper['B]})
-//│ Defined WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A | 'A0 .. 'A & 'A0]}) -> (nothing -> 'a) -> (WrapperWrapper['a] with {x: Wrapper['a]})
+//│ Defined WrapperWrapper.Apply2: (WrapperWrapper['A] with {x: Wrapper['A]}) -> (nothing -> 'a) -> (WrapperWrapper['a] with {x: Wrapper['a]})
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: WrapperWrapper['A .. 0 | 'A] with {x: Psyduck['A .. 0 | 'A] with {x: 0}}
@@ -130,8 +121,8 @@ class Asc[A, B]: { x: A; y: B }
     method Left = { x = this.x; y = this.y } : { x: A }
     method Right2 = this : { y: B }
 //│ Defined class Asc
-//│ Defined Asc.Left: (Asc['A, 'B] & {x: A & 'A}) -> {x: 'A}
-//│ Defined Asc.Right2: (Asc['A, 'B] & {y: B & 'B}) -> {y: 'B}
+//│ Defined Asc.Left: Asc['A .. A & 'A, 'B .. B & 'B] -> {x: 'A}
+//│ Defined Asc.Right2: Asc['A .. A & 'A, 'B .. B & 'B] -> {y: 'B}
 
 
 
@@ -159,9 +150,37 @@ class AbstractPair[A, B]: { x: A; y: B }
 class Pair[A, B]: AbstractPair[A, B]
     method Test(f: A -> B -> bool) = f this.x this.y
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.152: 	    method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `C & ~A & ~_α648` does not match type `A | _α649 | _α658`
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ╙──       	                                       ^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.152: 	    method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `C & ~A & ~_α648` does not match type `A | _α649`
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ╙──       	                                       ^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.152: 	    method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `D & ~B & ~_α652` does not match type `B | _α653 | _α661`
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ╙──       	                                              ^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.152: 	    method Map fx fy = Pair { x = fx this.x; y = fy this.y }
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `D & ~B & ~_α652` does not match type `B | _α653`
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ╙──       	                                              ^^^^^^
 //│ Defined class Pair
-//│ Defined Pair.Test: (Pair['A, 'B] & {x: A & 'A, y: B & 'B}) -> ('A -> 'B -> bool) -> bool
-//│ Defined Pair.Map: (Pair['A, 'B] & {x: A & 'A & 'a, y: B & 'B & 'b}) -> ('a -> ('A0 & 'c)) -> ('b -> ('B0 & 'd)) -> (Pair['A0, 'B0] with {x: 'c, y: 'd})
+//│ Defined Pair.Test: Pair['A .. A & 'A, 'B .. B & 'B] -> ('A -> 'B -> bool) -> bool
+//│ Defined Pair.Map: Pair['A .. A & 'A, 'B .. B & 'B] -> ('A -> (A & 'A & 'a & 'b)) -> ('B -> (B & 'B & 'c & 'd)) -> (Pair[A & 'A & 'b .. 'b, B & 'B & 'd .. 'd] with {x: 'a, y: 'c})
 
 class Tru[A, B]: Pair[A, B]
     method Test f = true
@@ -183,7 +202,16 @@ p = Pair { x = 42; y = true }
 fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
-//│ p: Pair['A .. 42 | 'A, 'B .. 'B | true] with {x: 42, y: true}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.201: 	p = Pair { x = 42; y = true }
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type B
+//│ ║  l.201: 	p = Pair { x = 42; y = true }
+//│ ║         	                       ^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ╙──       	                                              ^^^^^^
+//│ p: error | (Pair[A & 'A .. 42 | 'A, B & 'B .. 'B | true] with {x: 42, y: true})
 //│  = Pair { x: 42, y: true }
 //│ fx: int -> int
 //│   = [Function: fx]
@@ -195,10 +223,46 @@ ft = fun x -> fun y -> if (y) then gt x 0 else y
 p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
-//│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool]
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.223: 	p.Map fx fy
+//│ ║         	^^^^^
+//│ ╟── integer literal of type `42` is not an instance of type A
+//│ ║  l.201: 	p = Pair { x = 42; y = true }
+//│ ║         	               ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ║         	                                       ^^^^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.150: 	class Pair[A, B]: AbstractPair[A, B]
+//│ ╙──       	           ^
+//│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool] | error
 //│    = Pair { x: 84, y: false }
-//│ res: bool
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.224: 	p.Test ft
+//│ ║         	^^^^^^
+//│ ╟── integer literal of type `42` is not an instance of type A
+//│ ║  l.201: 	p = Pair { x = 42; y = true }
+//│ ║         	               ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ║         	                                       ^^^^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.150: 	class Pair[A, B]: AbstractPair[A, B]
+//│ ╙──       	           ^
+//│ res: bool | error
 //│    = true
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.225: 	(p.Map fx fy).Test ft
+//│ ║         	 ^^^^^
+//│ ╟── integer literal of type `42` is not an instance of type A
+//│ ║  l.201: 	p = Pair { x = 42; y = true }
+//│ ║         	               ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.151: 	    method Test(f: A -> B -> bool) = f this.x this.y
+//│ ║         	                                       ^^^^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.150: 	class Pair[A, B]: AbstractPair[A, B]
+//│ ╙──       	           ^
 //│ res: bool
 //│    = false
 
@@ -254,19 +318,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.255: 	    method MtdB = 42
+//│ ║  l.319: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.255: 	    method MtdB = 42
+//│ ║  l.319: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.255: 	    method MtdB = 42
+//│ ║  l.319: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.239: 	class Class2C: Class2B[int, bool]
+//│ ║  l.303: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.238: 	    method MtdB: B
+//│ ║  l.302: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: (Class3C & trait2A) -> 42
@@ -281,7 +345,7 @@ class Test2[B]: Test1[Id[B]] & { x: B }
 //│ Defined class Test1
 //│ Declared Test1.F: Test1['A] -> 'A
 //│ Defined class Test2
-//│ Defined Test2.F: (Test2['B] with {x: B & 'B & 'a}) -> 'a
+//│ Defined Test2.F: Test2['B] -> 'B
 
 
 class Test3A: Test1['a -> 'a]
@@ -302,10 +366,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.302: 	class Test4A[A]: { x: A }
+//│ ║  l.366: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.303: 	    method Mth4A[A]: A
+//│ ║  l.367: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing
@@ -315,8 +379,8 @@ class Test[A]: { x: A }
     method Mth[B]: (A -> B) -> B
     method Mth[B] (f: A -> B) = f this.x
 //│ Defined class Test
-//│ Declared Test.Mth: Test['A] -> ('A -> 'B) -> 'B
-//│ Defined Test.Mth: (Test['A] & {x: A & 'A}) -> ('A -> 'B) -> 'B
+//│ Declared Test.Mth: Test['A .. A & 'A] -> ('A -> 'B) -> 'B
+//│ Defined Test.Mth: Test['A .. A & 'A] -> ('A -> 'B) -> 'B
 
 
 
@@ -357,13 +421,13 @@ Ber.F
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.358: 	Ber
+//│ ║  l.422: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.350: 	class Ber: Fee & Fee2
+//│ ║  l.414: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.350: 	class Ber: Fee & Fee2
+//│ ║  l.414: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function: res]
@@ -380,19 +444,19 @@ class Test5A[A]: { a: A }
 trait Test5B: { tag: int }
     method Mth5B = this.tag
 //│ Defined trait Test5B
-//│ Defined Test5B.Mth5B: ({tag: int & 'a} & test5B) -> 'a
+//│ Defined Test5B.Mth5B: ({tag: int} & test5B) -> int
 
 
 class Test5C[A]: Test5A[A] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
 //│ Defined class Test5C
-//│ Defined Test5C.Mth5A: (Test5C['A] & {a: A & 'A & 'a, tag: 0 | int & ~0} & test5B) -> ('a -> 'b) -> 'b
+//│ Defined Test5C.Mth5A: (Test5C['A] & test5B) -> ('A -> 'a) -> 'a
 
 
 class Test5D: Test5A[int] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
 //│ Defined class Test5D
-//│ Defined Test5D.Mth5A: (Test5D & {a: int & 'a, tag: 0 | int & ~0} & test5B) -> ('a -> 'b) -> 'b
+//│ Defined Test5D.Mth5A: (Test5D & test5B) -> (int -> 'a) -> 'a
 
 
 
