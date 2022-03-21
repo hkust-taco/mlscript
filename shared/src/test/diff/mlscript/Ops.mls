@@ -21,18 +21,19 @@
 //│    = 5
 
 :e
+:ge
 :p
 1 |> 2 || 3
 //│ Parsed: ((|| ((((|> ((1,false),)) ((2,false),)),false),)) ((3,false),));
 //│ Desugared: ((|| ((((|> ((1,false),)) ((2,false),)),false),)) ((3,false),))
 //│ ╔══[ERROR] identifier not found: |>
-//│ ║  l.25: 	1 |> 2 || 3
+//│ ║  l.26: 	1 |> 2 || 3
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.25: 	1 |> 2 || 3
+//│ ║  l.26: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `bool`
-//│ ║  l.25: 	1 |> 2 || 3
+//│ ║  l.26: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error
 //│ Code generation encountered an error:
@@ -50,8 +51,8 @@ true || false && true || false
 
 :pe
 -1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.52:1: -1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "-1;" at l.53:1: -1
 
 :pe
 - 1
-//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.56:1: - 1
+//│ /!\ Parse error: Expected end-of-input:1:1, found "- 1;" at l.57:1: - 1

@@ -39,7 +39,7 @@ foo arg
 //│      arg is not implemented
 //│ constrain calls  : 39
 //│ annoying  calls  : 30
-//│ subtyping calls  : 78
+//│ subtyping calls  : 72
 
 :stats
 foo (arg with { fC = true })
@@ -48,7 +48,7 @@ foo (arg with { fC = true })
 //│      arg is not implemented
 //│ constrain calls  : 32
 //│ annoying  calls  : 28
-//│ subtyping calls  : 85
+//│ subtyping calls  : 79
 
 def foo x = case x of {
   | A -> add x.fA x.payload
@@ -81,7 +81,7 @@ foo arg
 //│      arg is not implemented
 //│ constrain calls  : 54
 //│ annoying  calls  : 40
-//│ subtyping calls  : 131
+//│ subtyping calls  : 119
 
 :stats
 foo (arg with { payload = 1 })
@@ -90,5 +90,5 @@ foo (arg with { payload = 1 })
 //│      arg is not implemented
 //│ constrain calls  : 50
 //│ annoying  calls  : 38
-//│ subtyping calls  : 96
+//│ subtyping calls  : 90
 

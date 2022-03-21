@@ -1,17 +1,17 @@
 
 :p
-data type Boolean of True, False
-//│ Parsed: data type Boolean of True; False;;
-//│ Desugared: type alias Boolean = True[] | False[]
-//│ Desugared: class True: {}
-//│ Desugared: class False: {}
-//│ Desugared: def True: [] -> True[]
-//│ Desugared: def False: [] -> False[]
+data type Boolean of Tru, Fals
+//│ Parsed: data type Boolean of Tru; Fals;;
+//│ Desugared: type alias Boolean = Tru[] | Fals[]
+//│ Desugared: class Tru: {}
+//│ Desugared: class Fals: {}
+//│ Desugared: def Tru: [] -> Tru[]
+//│ Desugared: def Fals: [] -> Fals[]
 //│ Defined type alias Boolean
-//│ Defined class True
-//│ Defined class False
-//│ True: true
-//│ False: false
+//│ Defined class Tru
+//│ Defined class Fals
+//│ Tru: Tru
+//│ Fals: Fals
 
 :e
 Boolean
@@ -70,31 +70,31 @@ Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 
-True
-//│ res: true
+Tru
+//│ res: Tru
 
 :e // TODO support types on RHS of `as`
-True as Boolean
-True : Boolean
+Tru as Boolean
+Tru : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.77: 	True as Boolean
-//│ ╙──      	        ^^^^^^^
+//│ ║  l.77: 	Tru as Boolean
+//│ ╙──      	       ^^^^^^^
 //│ res: error
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.78: 	True : Boolean
-//│ ╙──      	       ^^^^^^^
-//│ res: (True: error,)
+//│ ║  l.78: 	Tru : Boolean
+//│ ╙──      	      ^^^^^^^
+//│ res: (Tru: error,)
 
 :e // Maybe we shouldn't interpret capitalized identifiers as field names...
-True : Boolean
+Tru : Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.89: 	True : Boolean
-//│ ╙──      	       ^^^^^^^
-//│ res: (True: error,)
+//│ ║  l.89: 	Tru : Boolean
+//│ ╙──      	      ^^^^^^^
+//│ res: (Tru: error,)
 
 :pe
-(True) : Boolean
-//│ /!\ Parse error: Expected end-of-input:1:8, found ": Boolean\n" at l.96:8: (True) : Boolean
+(Tru) : Boolean
+//│ /!\ Parse error: Expected end-of-input:1:7, found ": Boolean\n" at l.96:7: (Tru) : Boolean
 
 
 // TODO treat the ending curly-blocks as bodies (not params)?
@@ -119,7 +119,7 @@ data type List a of
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: Nil['a]
-//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
+//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -151,10 +151,10 @@ Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
-//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'd | 'c | Nil['a]}) as 'c)
-//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'd | 'c | Nil['b .. 1 | 'b]}) as 'c)
-//│ res: (Cons['b .. 2 | 'b] with {tail: 'c | 'a | Nil['b .. 2 | 'b]}) as 'a
-//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
+//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
+//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'c | Nil['b .. 1 | 'b]}) as 'c)
+//│ res: (Cons['b .. 2 | 'b] with {tail: 'a | Nil['b .. 2 | 'b]}) as 'a
+//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -198,7 +198,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.197: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Nil[?a] | Cons[?a]`
+//│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?a]`
 //│ ║  l.197: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
@@ -207,7 +207,7 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: ((Cons['b .. 1 | 'b] with {tail: 'c | 'a | Nil['b .. 1 | 'b]}) as 'a) | error
+//│ res: ((Cons['b .. 1 | 'b] with {tail: 'a | Nil['b .. 1 | 'b]}) as 'a) | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

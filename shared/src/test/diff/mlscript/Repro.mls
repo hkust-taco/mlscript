@@ -14,10 +14,10 @@ class C: { x: int }
 :ns
 C
 //│ 0. Typing term C
-//│ 0. : [((None..{x: None..x0}) -> (c<> & {x: None..x0}))]
-//│ Typed as: [((None..{x: None..x0}) -> (c<> & {x: None..x0}))]
+//│ 0. : [((None..{x: None..x0},) -> (c<> & {x: None..x0}))]
+//│ Typed as: [((None..{x: None..x0},) -> (c<> & {x: None..x0}))]
 //│  where: x0 <: Int
-//│ res: {x: 'x & int} -> (c & {x: 'x})
+//│ res: {x: int} -> (c & {x: 'x})
 //│    = [Function: res]
 
 C

@@ -50,7 +50,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── integer literal of type `42` does not match type `Some[int] | None`
+//│ ╟── integer literal of type `42` does not match type `None | Some[int]`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
@@ -138,7 +138,7 @@ f: (Foo2[?] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A :> nothing} | ~foo2 | ~(foo2 & {Foo2#A :> nothing})) & (foo2 | ~(foo2 & {Foo2#A :> nothing}))) -> (Foo2[?] & 'a0 as 'a0)
+//│ res: (Foo2[?] & (foo2 | ~{Foo2#A :> nothing} | ~foo2 | ~(foo2 & {Foo2#A :> nothing})) & (foo2 | ~(foo2 & {Foo2#A :> nothing}))) -> (Foo2[?] & 'a as 'a)
 //│    = [Function: f]
 
 f

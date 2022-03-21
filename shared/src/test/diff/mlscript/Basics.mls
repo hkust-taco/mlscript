@@ -89,9 +89,10 @@ def f x y z = add x y
 
 
 :e
+:ge
 def f (x y z) = add x y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.92: 	def f (x y z) = add x y
+//│ ║  l.93: 	def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
 //│ Code generation encountered an error:

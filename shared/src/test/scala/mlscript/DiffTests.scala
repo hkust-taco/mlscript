@@ -51,13 +51,31 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val unmergedChanges = mutable.Buffer.empty[Int]
     
     case class Mode(
-      expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
-      fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-      explainErrors: Bool, dbg: Bool, fullExceptionStack: Bool, stats: Bool,
-      stdout: Bool, noExecution: Bool, noGeneration: Bool, showGeneratedJS: Bool,
-      generateTsDeclarations: Bool, expectRuntimeErrors: Bool, showRepl: Bool, allowEscape: Bool)
-    val defaultMode = Mode(false, false, false, false, false, false, false, false,
-      false, false, false, false, false, false, false, false, false, false, false)
+      expectTypeErrors: Bool = false,
+      expectWarnings: Bool = false,
+      expectParseErrors: Bool = false,
+      fixme: Bool = false,
+      showParse: Bool = false,
+      verbose: Bool = false,
+      noSimplification: Bool = false,
+      explainErrors: Bool = false,
+      dbg: Bool = false,
+      dbgSimplif: Bool = false,
+      fullExceptionStack: Bool = false,
+      stats: Bool = false,
+      stdout: Bool = false,
+      noExecution: Bool = false,
+      noGeneration: Bool = false,
+      showGeneratedJS: Bool = false,
+      generateTsDeclarations: Bool = false,
+      expectRuntimeErrors: Bool = false,
+      expectCodeGenErrors: Bool = false,
+      showRepl: Bool = false,
+      allowEscape: Bool = false,
+    ) {
+      def isDebugging: Bool = dbg || dbgSimplif
+    }
+    val defaultMode = Mode()
     
     var allowTypeErrors = false
     var showRelativeLineNums = false
@@ -77,6 +95,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
+          case "ds" => mode.copy(dbgSimplif = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -91,6 +110,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(generateTsDeclarations = true)
+          case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
@@ -159,7 +179,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectParseErrors)
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
-            if (mode.dbg) typer.resetState()
+            if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
@@ -169,6 +189,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             var totalTypeErrors = 0
             var totalWarnings = 0
             var totalRuntimeErrors = 0
+            var totalCodeGenErrors = 0
             
             // report errors and warnings
             def report(diags: Ls[Diagnostic]): Unit = {
@@ -243,30 +264,21 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.uninstantiatedBody
-              if (mode.dbg) output(s"Typed as: $wty")
-              if (mode.dbg) output(s" where: ${wty.showBounds}")
+              if (mode.isDebugging) output(s"Typed as: $wty")
+              if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
+                typer.dbg = mode.dbgSimplif
                 val cty = typer.canonicalizeType(wty)(ctx)
-                if (mode.dbg) output(s"Canon: ${cty}")
-                if (mode.dbg) output(s" where: ${cty.showBounds}")
+                if (mode.dbgSimplif) output(s"Canon: ${cty}")
+                if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 val sim = typer.simplifyType(cty)(ctx)
-                if (mode.dbg) output(s"Type after simplification: ${sim}")
-                if (mode.dbg) output(s" where: ${sim.showBounds}")
-                // val exp = typer.expandType(sim)
-                
-                // TODO: would be better toa void having to do a second pass,
-                // but would require more work:
-                val reca = typer.canonicalizeType(sim)(ctx)
-                if (mode.dbg) output(s"Recanon: ${reca}")
-                if (mode.dbg) output(s" where: ${reca.showBounds}")
-                val resim = typer.simplifyType(reca)(ctx)
-                if (mode.dbg) output(s"Resimplified: ${resim}")
-                if (mode.dbg) output(s" where: ${resim.showBounds}")
-                val recons = typer.reconstructClassTypes(resim, true, ctx)
-                if (mode.dbg) output(s"Recons: ${recons}")
+                if (mode.dbgSimplif) output(s"Type after simplification: ${sim}")
+                if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
+                val recons = typer.reconstructClassTypes(sim, true, ctx)
+                if (mode.dbgSimplif) output(s"Recons: ${recons}")
+                if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
                 val exp = typer.expandType(recons, true)
-                
                 exp
               }
             }
@@ -481,14 +493,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // If code generation fails, show the error message.
             results match {
               case IllFormedCode(message) =>
-                totalRuntimeErrors += 1
+                totalCodeGenErrors += 1
+                if (!mode.expectCodeGenErrors && !mode.fixme)
+                  failures += blockLineNum
                 output("Code generation encountered an error:")
                 output(s"  ${message}")
               case Unimplemented(message) =>
                 output("Unable to execute the code:")
                 output(s"  ${message}")
               case UnexpectedCrash(name, message) =>
-                failures += blockLineNum
+                if (!mode.fixme)
+                  failures += blockLineNum
                 output("Code generation crashed:")
                 output(s"  $name: $message")
               case _ => ()
@@ -507,6 +522,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
               failures += blockLineNum
             if (mode.expectWarnings && totalWarnings =:= 0)
+              failures += blockLineNum
+            if (mode.expectCodeGenErrors && totalCodeGenErrors =:= 0)
               failures += blockLineNum
             if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
               failures += blockLineNum

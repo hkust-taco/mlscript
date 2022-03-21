@@ -7,7 +7,7 @@ class Add[E]: { lhs: E; rhs: E }
 
 
 def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ eval1_ty_ugly: 'a & ~lit | 'b | (Add['a & 'b & ~{val: int} | 'a & 'b & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd}) & 'b as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ eval1_ty_ugly: 'a & ~lit | 'b | (Add['b & ((Add['e .. 'f] with {lhs: 'd, rhs: 'd}) | 'a & (~{val: int} | ~lit)) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
 //│              = <missing implementation>
 
 // def eval1_ty: Add['b]
@@ -22,7 +22,7 @@ def eval1_ty: Add[int] // ~500
 :stats
 :e
 eval1_ty = eval1_ty_ugly
-//│ 'a & ~lit | 'b | (Add['a & 'b & ~{val: int} | 'a & 'b & ~lit | (Add['e .. 'f] with {lhs: 'd, rhs: 'd}) & 'b as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ 'a & ~lit | 'b | (Add['b & ((Add['e .. 'f] with {lhs: 'd, rhs: 'd}) | 'a & (~{val: int} | ~lit)) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
 //│   <:  eval1_ty:
 //│ Add[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -85,10 +85,10 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `{lhs: int, rhs: int} | Lit`
+//│ ╟── type `int` does not match type `Lit | {lhs: int, rhs: int}`
 //│ ║  l.14: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
+//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -100,10 +100,10 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `{lhs: int, rhs: int} | Lit`
+//│ ╟── type `int` does not match type `Lit | {lhs: int, rhs: int}`
 //│ ║  l.14: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `{lhs: int, rhs: int} | Lit`
+//│ ╟── but it flows into reference with expected type `Lit | {lhs: int, rhs: int}`
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -115,10 +115,10 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `{Add#E = int} | Lit`
+//│ ╟── type `int` does not match type `Lit | {Add#E = int}`
 //│ ║  l.14: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
-//│ ╟── but it flows into reference with expected type `{Add#E = int} | Lit`
+//│ ╟── but it flows into reference with expected type `Lit | {Add#E = int}`
 //│ ║  l.24: 	eval1_ty = eval1_ty_ugly
 //│ ║        	           ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -128,5 +128,5 @@ eval1_ty = eval1_ty_ugly
 //│           eval1_ty_ugly is not implemented
 //│ constrain calls  : 61
 //│ annoying  calls  : 53
-//│ subtyping calls  : 473
+//│ subtyping calls  : 324
 

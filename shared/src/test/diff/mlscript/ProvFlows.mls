@@ -345,17 +345,17 @@ def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ty00: (A & 'a | B & 'b) -> ('a, 'b,)
 
 def ty11: ('a & A | 'a & B) -> ('a, 'a)
-//│ ty11: (A & 'a | B & 'a) -> ('a, 'a,)
+//│ ty11: ('a & (A | B)) -> ('a, 'a,)
 
 ty11 = ty00
 //│ (A & 'a | B & 'b) -> ('a, 'b,)
 //│   <:  ty11:
-//│ (A & 'a | B & 'a) -> ('a, 'a,)
+//│ ('a & (A | B)) -> ('a, 'a,)
 
 // :d
 :ex
 ty00 = ty11
-//│ (A & 'a | B & 'a) -> ('a, 'a,)
+//│ ('a & (A | B)) -> ('a, 'a,)
 //│   <:  ty00:
 //│ (A & 'a | B & 'b) -> ('a, 'b,)
 //│ ╔══[ERROR] Type mismatch in def definition:
