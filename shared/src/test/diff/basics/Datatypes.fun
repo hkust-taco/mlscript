@@ -119,7 +119,7 @@ data type List a of
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: Nil['a]
-//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
+//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a] as 'b}) as 'c)
 
 // TODO interpret as free type variable?
 :p
@@ -151,8 +151,8 @@ Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
-//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
-//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'c | Nil['b .. 1 | 'b]}) as 'c)
+//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a] as 'b}) as 'c)
+//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'c | Nil['b .. 1 | 'b] as 'a}) as 'c)
 //│ res: (Cons['b .. 2 | 'b] with {tail: 'a | Nil['b .. 2 | 'b]}) as 'a
 //│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
 

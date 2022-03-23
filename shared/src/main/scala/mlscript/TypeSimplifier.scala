@@ -9,7 +9,8 @@ trait TypeSimplifier { self: Typer =>
   
   
   def canonicalizeType(ty: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
-    type PolarType = (DNF, Bool)
+    // type PolarType = (DNF, Bool)
+    type PolarType = DNF
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
     
@@ -51,7 +52,8 @@ trait TypeSimplifier { self: Typer =>
     def go1(ty: DNF, pol: Bool)
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
       if (ty.isBot) ty.toType(sort = true) else {
-        val pty = ty -> pol
+        // val pty = ty -> pol
+        val pty = ty
         if (inProcess.contains(pty))
           recursive.getOrElseUpdate(pty, freshVar(noProv)(ty.level))
         else {

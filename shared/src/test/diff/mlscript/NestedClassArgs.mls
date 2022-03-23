@@ -14,10 +14,10 @@ def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
 
 def c: C['a] as 'a
-//│ c: 'a | C[C['c .. 'd] & 'a .. 'b] as 'b
+//│ c: 'a | C[C['b .. 'c] & 'a as 'c .. 'b] as 'b
 
 def c: C[C['a]] as 'a
-//│ c: 'a | C[C['c .. 'd] .. C[C[C['e .. 'b] .. 'f] & 'a as 'e .. 'b]] as 'b
+//│ c: 'a | (C[C['b .. 'c & 'a] .. C['c & 'a .. 'b]] as 'c) as 'b
 
 
 def c: C['a]
@@ -46,22 +46,23 @@ def c: 'a -> C3['a]
 class C4[A]: { a: C[C4[A]] }
 //│ Defined class C4
 
+// :ds
 def c: 'a -> C4['a]
-//│ c: 'a -> ((C4['a] with {a: C[C4['a] with {a: C['c .. 'd]} .. 'b]}) as 'b)
+//│ c: 'a -> ((C4['a] with {a: C['b]}) as 'b)
 
 
 class C5[A]: { a: C2[C5[A]] }
 //│ Defined class C5
 
 def c: 'a -> C5['a]
-//│ c: 'a -> ((C5['a] with {a: C2[(C5['a] with {a: C2['d .. 'e] with {a: 'c}}) as 'c .. 'b] with {a: 'b}}) as 'b)
+//│ c: 'a -> ((C5['a] with {a: C2['b] with {a: 'b}}) as 'b)
 
 
 class C6[A]: { a: C5[C6[A]] }
 //│ Defined class C6
 
 def c: 'a -> C6['a]
-//│ c: 'a -> ((C6['a] with {a: (C5[C6['a] with {a: (C5['e .. 'f] with {a: C2['g .. 'h] with {a: 'd}}) as 'd} .. 'b] with {a: C2[(C5['e .. 'f] with {a: C2['g .. 'h] with {a: 'd}}) as 'd .. 'c] with {a: 'c}}) as 'c}) as 'b)
+//│ c: 'a -> ((C6['a] with {a: (C5['b] with {a: C2['c] with {a: 'c}}) as 'c}) as 'b)
 
 
 

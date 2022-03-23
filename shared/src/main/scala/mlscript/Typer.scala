@@ -729,13 +729,15 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     // TODO improve/simplify? (take inspiration from other impls?)
     //    see: duplication of recursive.get(st_pol) logic
     
-    val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
-    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type =
+    // val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
+    val recursive = mutable.Map.empty[SimpleType, TypeVar]
+    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType]): Type =
       // trace(s"expand $st, $polarity  — $inProcess") {
         goImpl(st.unwrapProvs, polarity)
       // }(r => s"=> $r")
-    def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
-      val st_pol = st -> polarity
+    def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType]): Type = {
+      // val st_pol = st -> polarity
+      val st_pol = st
       if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
         case tv: TypeVariable => tv.nameHint
       })(0).asTypeVar)
@@ -746,8 +748,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val bound =
             if (polarity) bounds.foldLeft(BotType: SimpleType)(_ | _)
             else bounds.foldLeft(TopType: SimpleType)(_ & _)
-          if (inProcess(bound -> polarity))
-            recursive.getOrElseUpdate(bound -> polarity, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
+          // if (inProcess(bound -> polarity))
+          //   recursive.getOrElseUpdate(bound -> polarity, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
+          if (inProcess(bound))
+            recursive.getOrElseUpdate(bound, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
           else {
             val boundTypes = bounds.map(go(_, polarity))
             val mrg = if (polarity) Union else Inter

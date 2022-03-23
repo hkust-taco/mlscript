@@ -156,43 +156,43 @@ foo
 type Rec = C[Rec]
 def foo_ty: Rec -> nothing
 //│ Defined type alias Rec
-//│ foo_ty: ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+//│ foo_ty: ((C['a] with {a: 'a}) as 'a) -> nothing
 //│       = <missing implementation>
 
 foo_ty = foo
 //│ (C['a .. 'c] & {a: 'b & 'a} as 'b) -> nothing
 //│   <:  foo_ty:
-//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+//│ ((C['a] with {a: 'a}) as 'a) -> nothing
 //│       = [Function: foo]
 
 def foo_ty2: (C['r] as 'r) -> nothing
-//│ foo_ty2: ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+//│ foo_ty2: ((C['b .. 'a] with {a: 'a}) & 'r as 'a) -> nothing
 //│        = <missing implementation>
 
 :ns
 foo_ty2
-//│ res: (C['r .. C['r .. 'r0] as 'r0] as 'r) -> nothing
+//│ res: (C['r] as 'r) -> nothing
 //│    = <no result>
 //│      foo_ty2 is not implemented
 
 foo_ty = foo_ty2
-//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+//│ ((C['b .. 'a] with {a: 'a}) & 'r as 'a) -> nothing
 //│   <:  foo_ty:
-//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+//│ ((C['a] with {a: 'a}) as 'a) -> nothing
 //│       = <no result>
 //│         foo_ty2 is not implemented
 
 foo_ty2 = foo_ty
-//│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
+//│ ((C['a] with {a: 'a}) as 'a) -> nothing
 //│   <:  foo_ty2:
-//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+//│ ((C['b .. 'a] with {a: 'a}) & 'r as 'a) -> nothing
 //│        = <no result>
 //│          foo_ty and foo_ty2 are not implemented
 
 foo_ty2 = foo
 //│ (C['a .. 'c] & {a: 'b & 'a} as 'b) -> nothing
 //│   <:  foo_ty2:
-//│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
+//│ ((C['b .. 'a] with {a: 'a}) & 'r as 'a) -> nothing
 //│        = [Function: foo]
 
 
@@ -205,49 +205,49 @@ rec def bar = C { a = bar }
 type Rec2 = C[Rec2]
 def bar_ty: Rec2
 //│ Defined type alias Rec2
-//│ bar_ty: (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+//│ bar_ty: (C['a] with {a: 'a}) as 'a
 //│       = <missing implementation>
 
 bar_ty = bar
 //│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty:
-//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+//│ (C['a] with {a: 'a}) as 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
 def bar_ty2: C['r] as 'r
-//│ bar_ty2: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ bar_ty2: 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│        = <missing implementation>
 
 :ns
 bar_ty2
-//│ res: C[C['r0 .. 'r] as 'r0 .. 'r] as 'r
+//│ res: C['r] as 'r
 //│    = <no result>
 //│      bar_ty2 is not implemented
 
 bar_ty2
-//│ res: 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ res: 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│    = <no result>
 //│      bar_ty2 is not implemented
 
 bar_ty = bar_ty2
-//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty:
-//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+//│ (C['a] with {a: 'a}) as 'a
 //│       = <no result>
 //│         bar_ty2 is not implemented
 
 bar_ty2 = bar_ty
-//│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
+//│ (C['a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
-//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│        = <no result>
 //│          bar_ty and bar_ty2 are not implemented
 
 bar_ty2 = bar
 //│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
-//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -280,7 +280,7 @@ bar2_ty2 = bar2_ty
 
 :e
 bar2_ty2 = bar_ty2
-//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│   <:  bar2_ty2:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -302,7 +302,7 @@ bar2_ty2 = bar_ty2
 bar_ty2 = bar2_ty2
 //│ {x: 'a} as 'a
 //│   <:  bar_ty2:
-//│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
+//│ 'r | (C[(C['a .. 'b] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.302: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^

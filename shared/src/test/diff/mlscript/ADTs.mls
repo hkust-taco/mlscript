@@ -32,13 +32,13 @@ eval ex
 //│    = 4
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ e: 'e | (Add['e & ((Add['a .. 'b] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['a .. 'b] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['a .. 'b] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['a .. 'b] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
 //│  = <missing implementation>
 
 def e = ex
 //│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
 //│   <:  e:
-//│ 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ 'e | (Add['e & ((Add['a .. 'b] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['a .. 'b] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['a .. 'b] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['a .. 'b] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
