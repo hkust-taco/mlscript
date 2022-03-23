@@ -1,0 +1,49 @@
+
+class A: {mut x : int}
+//│ Defined class A
+
+a1 = A {mut x = 233}
+//│ a1: A with {x: int & 'x .. 233 | 'x}
+//│   = A { x: 233 }
+
+a1.x <- 666
+//│ = []
+
+a1.x
+//│ res: 233
+//│    = 666
+
+t1 = (mut "hello", mut true)
+//│ t1: ('a .. "hello" | 'a, 'b .. true | 'b,)
+//│   = [ 'hello', true ]
+
+t1._1 <- "bye"
+//│ = []
+
+t1._1
+//│ res: "hello"
+//│    = 'bye'
+
+def muta1 : MutArray[int]
+muta1 = (mut 1, mut 2, mut 3, mut 4)
+//│ muta1: MutArray[int .. int]
+//│      = <missing implementation>
+//│ ('a .. 1 | 'a, 'b .. 2 | 'b, 'c .. 3 | 'c, 'd .. 4 | 'd,)
+//│   <:  muta1:
+//│ MutArray[int .. int]
+//│      = [ 1, 2, 3, 4 ]
+
+muta1[1] <- 233
+//│ = []
+
+muta1
+//│ res: MutArray[int .. int]
+//│    = [ 1, 233, 3, 4 ]
+
+def xpp rc = (fun _ -> rc) (rc.x <- rc.x + 1)
+//│ xpp: ({x: int .. int} & 'a) -> 'a
+//│    = [Function: xpp]
+
+xpp a1
+//│ res: A
+//│    = A { x: 667 }
