@@ -255,12 +255,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class TypeBounds(lb: SimpleType, ub: SimpleType)(val prov: TypeProvenance) extends SimpleType {
     def level: Int = lb.level max ub.level
     override def toString = s"$lb..$ub"
-    def && (that: TypeBounds, prov: TypeProvenance = noProv): TypeBounds =
-      TypeBounds(lb | that.lb, ub & that.ub)(prov)
-    def || (that: TypeBounds, prov: TypeProvenance = noProv): TypeBounds =
-      TypeBounds(lb & that.lb, ub | that.ub)(prov)
-    def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): TypeBounds =
-      TypeBounds(lb(this.lb), ub(this.ub))(prov)
   }
   object TypeBounds {
     def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
