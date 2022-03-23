@@ -410,9 +410,9 @@ trait TypeSimplifier { self: Typer =>
                       }.toList
                       S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, !pol), go(_, pol)))
                     case S(ct: ClassTag) => S(ct) -> nFields
-                    case S(ft @ FunctionType(l, r)) => 
+                    case S(ft @ FunctionType(l, r)) =>
                       S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
-                    case S(at @ ArrayType(inner)) => 
+                    case S(at @ ArrayType(inner)) =>
                       S(ArrayType(inner.update(go(_, !pol), go(_, pol)))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields
