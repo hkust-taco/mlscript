@@ -255,6 +255,12 @@ F{}
 :e
 class String
 class Bool
+//│ ╔══[ERROR] Type name 'String' is reserved.
+//│ ║  l.256: 	class String
+//│ ╙──       	      ^^^^^^
+//│ ╔══[ERROR] Type name 'Bool' is reserved.
+//│ ║  l.257: 	class Bool
+//│ ╙──       	      ^^^^
 //│ Defined class String
 //│ Defined class Bool
 
@@ -269,7 +275,7 @@ true : Bool
 :e
 class Weird: {} | {}
 //│ ╔══[ERROR] cannot inherit from a type union
-//│ ║  l.270: 	class Weird: {} | {}
+//│ ║  l.276: 	class Weird: {} | {}
 //│ ╙──       	      ^^^^^^^^^^^^^^
 
 
@@ -279,7 +285,7 @@ class A
 type Id[T] = T
 class B: Id[A]
 //│ ╔══[ERROR] cannot inherit from a type alias
-//│ ║  l.280: 	class B: Id[A]
+//│ ║  l.286: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
 //│ Defined type alias Id
@@ -291,7 +297,7 @@ class B: Id[A]
 class Class3A
 class Class3B: Class3A & 'a
 //│ ╔══[ERROR] cannot inherit from a type variable
-//│ ║  l.292: 	class Class3B: Class3A & 'a
+//│ ║  l.298: 	class Class3B: Class3A & 'a
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Class3A
 
