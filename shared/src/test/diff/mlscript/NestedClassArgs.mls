@@ -1,31 +1,27 @@
+:NoJS
+
 
 class C[A]
 //│ Defined class C
 
 def c: C[C[int]]
 //│ c: C[C[int]]
-//│  = <missing implementation>
 
 def c: 'a -> C[C['a]]
 //│ c: 'a -> C[C['a]]
-//│  = <missing implementation>
 
 def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
-//│  = <missing implementation>
 
 def c: C['a] as 'a
 //│ c: 'a | C[C['c .. 'd] & 'a .. 'b] as 'b
-//│  = <missing implementation>
 
 def c: C[C['a]] as 'a
 //│ c: 'a | C[C['c .. 'd] .. C[C[C['e .. 'b] .. 'f] & 'a as 'e .. 'b]] as 'b
-//│  = <missing implementation>
 
 
 def c: C['a]
 //│ c: C['a]
-//│  = <missing implementation>
 
 
 class C2[A]: { a: A }
@@ -34,11 +30,41 @@ class C2[A]: { a: A }
 
 def mkC: 'a -> C['a]
 //│ mkC: 'a -> C['a]
-//│    = <missing implementation>
 
 rec def rc = mkC(rc)
 //│ rc: C['a .. 'a | 'b] as 'b
-//│   = <no result>
-//│     mkC is not implemented
+
+
+
+class C3[A]: { a: C3[A] }
+//│ Defined class C3
+
+def c: 'a -> C3['a]
+//│ c: 'a -> ((C3['a] with {a: 'b}) as 'b)
+
+
+class C4[A]: { a: C[C4[A]] }
+//│ Defined class C4
+
+def c: 'a -> C4['a]
+//│ c: 'a -> ((C4['a] with {a: C[C4['a] with {a: C['c .. 'd]} .. 'b]}) as 'b)
+
+
+class C5[A]: { a: C2[C5[A]] }
+//│ Defined class C5
+
+def c: 'a -> C5['a]
+//│ c: 'a -> ((C5['a] with {a: C2[(C5['a] with {a: C2['d .. 'e] with {a: 'c}}) as 'c .. 'b] with {a: 'b}}) as 'b)
+
+
+class C6[A]: { a: C5[C6[A]] }
+//│ Defined class C6
+
+def c: 'a -> C6['a]
+//│ c: 'a -> ((C6['a] with {a: (C5[C6['a] with {a: (C5['e .. 'f] with {a: C2['g .. 'h] with {a: 'd}}) as 'd} .. 'b] with {a: C2[(C5['e .. 'f] with {a: C2['g .. 'h] with {a: 'd}}) as 'd .. 'c] with {a: 'c}}) as 'c}) as 'b)
+
+
+
+
 
 
