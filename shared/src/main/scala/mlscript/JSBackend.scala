@@ -51,7 +51,8 @@ class JSBackend {
     case Bra(_, trm) => translatePattern(trm)
     case Tup(fields) => JSArrayPattern(fields map { case (_, (t, _)) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs =>
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind
+       | _: Test | _: With | _: CaseOf | _: Subs | _: Assign =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
@@ -203,6 +204,7 @@ class JSBackend {
       JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
+    case Assign(field, value) => ???  // TODO
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }

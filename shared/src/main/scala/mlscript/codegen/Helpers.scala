@@ -43,5 +43,6 @@ object Helpers {
     case DecLit(value)  => s"DecLit($value)"
     case StrLit(value)  => s"StrLit($value)"
     case Subs(arr, idx) => s"Subs(${inspect(arr)}, ${inspect(idx)})"
+    case Assign(f, v)   => s"Assign(${inspect(f)}, ${inspect(v)})"
   }
 }

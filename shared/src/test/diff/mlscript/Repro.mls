@@ -33,13 +33,11 @@ def r: { x: int }
 //│ r: {x: int}
 //│  = <missing implementation>
 
-:re
 r
 //│ res: {x: int}
 //│    = <no result>
 //│      r is not implemented
 
-:re
 r: { x: 'a }
 //│ res: {x: int}
 //│    = <no result>
