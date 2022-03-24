@@ -31,7 +31,7 @@ def foo x = case x of {
 //│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | ~f & ({fG: 'a} & g | {fH: 'a} & h & ~g))))))) -> 'a
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 465
+//│ subtyping calls  : 302
 
 
 // ====== 1 & all ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 50
 //│ annoying  calls  : 32
-//│ subtyping calls  : 140
+//│ subtyping calls  : 124
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 105
 //│ annoying  calls  : 84
-//│ subtyping calls  : 525
+//│ subtyping calls  : 497
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 116
 //│ annoying  calls  : 97
-//│ subtyping calls  : 633
+//│ subtyping calls  : 588
 
 :stats
 :e
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 120
 //│ annoying  calls  : 97
-//│ subtyping calls  : 789
+//│ subtyping calls  : 722
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 124
 //│ annoying  calls  : 97
-//│ subtyping calls  : 992
+//│ subtyping calls  : 898
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 128
 //│ annoying  calls  : 97
-//│ subtyping calls  : 1246
+//│ subtyping calls  : 1120
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
@@ -354,7 +354,7 @@ foo_manual = foo
 //│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
 //│ constrain calls  : 96
 //│ annoying  calls  : 183
-//│ subtyping calls  : 1098
+//│ subtyping calls  : 892
 
 
 // ====== 8 ====== //
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 132
 //│ annoying  calls  : 97
-//│ subtyping calls  : 1555
+//│ subtyping calls  : 1392
 
 

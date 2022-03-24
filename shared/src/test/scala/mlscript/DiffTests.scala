@@ -425,6 +425,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               // statement only declares a new term with it's type
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
+                typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
                     vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
@@ -437,6 +438,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
+                typer.dbg = mode.dbg
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
                 // statement does not have a declared type for the body
@@ -458,12 +460,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(exp.show)
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
+                    typer.dbg = mode.dbg
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
+                typer.dbg = mode.dbg
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
                   // when does this happen??
                   case R(binds) =>

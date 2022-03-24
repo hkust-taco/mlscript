@@ -33,6 +33,8 @@ trait TypeSimplifier { self: Typer =>
     def go0(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
     trace(s"ty[$pol] $ty") {
       
+      implicit val etf: ExpandTupleFields = false
+      
       // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
       def rec(dnf: DNF, done: Set[TV], pol: Bool): DNF = dnf.cs.iterator.map { c =>
         val vs = c.vars.filterNot(done)
@@ -42,7 +44,7 @@ trait TypeSimplifier { self: Typer =>
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)
           // println(s"b $b")
-          val bd = rec(DNF.mk(b, pol)(ctx, preserveTypeRefs = true), done + tv, pol)
+          val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol)
           // println(s"bd $bd")
           bd
         }
@@ -50,7 +52,7 @@ trait TypeSimplifier { self: Typer =>
       }.foldLeft(DNF.extr(false))(_ | _)
       
       // rec(DNF.mk(ty, pol)(ctx), Set.empty)
-      DNF.mk(ty, pol)(ctx) match {
+      DNF.mk(ty, pol)(ctx, ptr = true, etf = false) match {
         case R(dnf) =>
           // println(dnf.cs.map(_.vars.isEmpty))
           pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
@@ -533,7 +535,7 @@ trait TypeSimplifier { self: Typer =>
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize
         }
-        DNF.mk(ty, pol)(ctx) match {
+        DNF.mk(ty, pol)(ctx, ptr = true, etf = false) match {
           case R(dnf) => helper(dnf, pol)
           case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
         }

@@ -54,6 +54,9 @@ abstract class TyperHelpers { self: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
+  def recordIntersection(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] =
+    mergeMap(fs1, fs2)(_ & _).toList
+  
   def recordUnion(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] = {
     val fs2m = fs2.toMap
     fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }

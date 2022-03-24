@@ -42,6 +42,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case S(v) =>
             rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
+            implicit val etf: ExpandTupleFields = true
             val fullRhs = nvars.iterator.map(DNF.mk(_, true))
               .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
             println(s"Consider ${lnf} <: ${fullRhs}")
@@ -71,7 +72,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
               
               // println(s"Possible? $r ${lnf & r.lnf}")
-              !vars.exists(r.nvars) && (lnf & r.lnf).isDefined && ((lnf, r.rnf) match {
+              !vars.exists(r.nvars) && ((lnf & r.lnf)(etf = false)).isDefined && ((lnf, r.rnf) match {
                 case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest))
                   if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
                   => false
@@ -164,7 +165,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
         
-        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, done_ls & l getOrElse
+        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & l)(etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
         case (ls, (r: BaseTypeOrTag) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
           (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))

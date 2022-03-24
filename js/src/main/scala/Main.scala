@@ -212,7 +212,7 @@ object Main {
       println(s"Resimplified: ${resim}")
       println(s" where: ${resim.showBounds}")
       // val exp = typer.expandType(resim, true)
-      val recons = typer.reconstructClassTypes(resim, true, ctx)
+      val recons = typer.reconstructClassTypes(resim, S(true), ctx)
       println(s"Recons: ${recons}")
       val exp = typer.expandType(recons, true)
       exp

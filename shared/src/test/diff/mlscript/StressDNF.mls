@@ -21,7 +21,7 @@ ty0 = ty0
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│ constrain calls  : 99
 //│ annoying  calls  : 45
-//│ subtyping calls  : 256
+//│ subtyping calls  : 192
 
 def ty1: ('a & A | 'b & B | 'c & C | 'd & D | 'e & E) -> ('a, 'b, 'c, 'd, 'e, 'f)
 //│ ty1: (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
@@ -33,7 +33,7 @@ ty0 = ty1
 //│ (E & 'e & 'f | 'd & (C & 'c | D & 'e) | 'b & (A & 'a | B & 'c)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│ constrain calls  : 65
 //│ annoying  calls  : 30
-//│ subtyping calls  : 181
+//│ subtyping calls  : 127
 
 :stats
 :e
@@ -88,6 +88,6 @@ ty1 = ty0
 //│ ╙──      	                                                                              ^^
 //│ constrain calls  : 99
 //│ annoying  calls  : 60
-//│ subtyping calls  : 186
+//│ subtyping calls  : 132
 
 
