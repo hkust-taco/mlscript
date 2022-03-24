@@ -32,13 +32,13 @@ eval ex
 //│    = 4
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: (Lit | Add['b .. 'a] | Nega['b .. 'a] as 'b) as 'a
+//│ e: 'e | Lit | (Add['e & (Lit | 'b | Nega['c]) as 'c .. 'a as 'c] as 'b) | (Nega['e & (Lit | (Add['c] as 'b) | 'd) as 'c .. 'a as 'c] as 'd) as 'a
 //│  = <missing implementation>
 
 def e = ex
 //│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
 //│   <:  e:
-//│ (Lit | Add['b .. 'a] | Nega['b .. 'a] as 'b) as 'a
+//│ 'e | Lit | (Add['e & (Lit | 'b | Nega['c]) as 'c .. 'a as 'c] as 'b) | (Nega['e & (Lit | (Add['c] as 'b) | 'd) as 'c .. 'a as 'c] as 'd) as 'a
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e

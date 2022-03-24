@@ -153,17 +153,8 @@ Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
 //│ res: (head: 'a,) -> (tail: List['a],) -> Cons['a]
 //│ res: (tail: List['a .. 1 | 'a],) -> Cons['a .. 1 | 'a]
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α51 has no occurrences...
-//│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
-//│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
-//│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
-//│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
-//│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
-//│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:482)
+//│ res: Cons['a .. 2 | 'a]
+//│ res: Cons['a .. 1 | 2 | 'a]
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -175,20 +166,20 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.176: 	not (Cons 42 Nil).head
+//│ ║  l.167: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.176: 	not (Cons 42 Nil).head
+//│ ║  l.167: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.176: 	not (Cons 42 Nil).head
+//│ ║  l.167: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.189: 	(Cons 4).head
+//│ ║  l.180: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.109: 	data type List a of
@@ -198,17 +189,17 @@ not (Cons 42 Nil).head
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?b}`
-//│ ║  l.189: 	(Cons 4).head
+//│ ║  l.180: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.206: 	Cons 1 2
+//│ ║  l.197: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Nil[?a] | Cons[?a]`
-//│ ║  l.206: 	Cons 1 2
+//│ ║  l.197: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.109: 	data type List a of
@@ -222,7 +213,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.223: 	let List.head = () // ...
+//│ ║  l.214: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

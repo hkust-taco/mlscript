@@ -293,9 +293,9 @@ rep5 1 with {_1 = 10}
 a2 = rep5 2 with {_2 = true; x = "haha"}
 a2._2
 a2.x
-//│ res: Array[1] & {_1: 10}
+//│ res: Array['a | 1] & {_1: 10}
 //│    = [ 1, 1, 1, 1, 1, _1: 10 ]
-//│ a2: Array[2] & {_2: true, x: "haha"}
+//│ a2: Array['a | 2] & {_2: true, x: "haha"}
 //│   = [ 2, 2, 2, 2, 2, _2: true, x: 'haha' ]
 //│ res: true
 //│    = true

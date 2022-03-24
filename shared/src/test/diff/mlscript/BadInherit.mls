@@ -116,7 +116,7 @@ c: nothing
 //│      c and Crazy are not implemented
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: (Parent1 with {name: "Bob" | 'name}) | Crazy['a .. 'a | (Parent1 with {name: "Bob" | 'name})] & 'a
+//│ d: Parent1 & {name: "Bob"} | Crazy['a .. 'a | Parent1 & {name: "Bob"}] & 'a
 //│  = <no result>
 //│    Crazy is not implemented
 

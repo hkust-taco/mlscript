@@ -63,7 +63,7 @@ cmi.Empty.real
 //│    = 0
 
 cmi.Add (Complex 1 2) (Complex 3 4)
-//│ res: (Complex[int & 'A & 'A0 .. 1 | 2 | 3 | 4 | 'A0 | int] with {imaginary: 2, real: 1}) | (Complex[int & 'A & 'A0 .. 1 | 2 | 3 | 4 | 'A0 | int] with {imaginary: 4, real: 3}) | Complex[int & 'A & 'A0 .. 1 | 2 | 3 | 4 | 'A | int]
+//│ res: (Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int] with {imaginary: 2, real: 1}) | (Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int] with {imaginary: 4, real: 3}) | Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int]
 //│    = Complex { real: 4, imaginary: 6 }
 
 

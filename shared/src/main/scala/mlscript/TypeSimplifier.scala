@@ -141,9 +141,12 @@ trait TypeSimplifier { self: Typer =>
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
     val analyzed = MutSet.empty[PolarVariable]
-    val analyzed2 = MutSet.empty[TypeRef -> Bool]
+    // val analyzed2 = MutSet.empty[TypeRef -> Bool]
+    // val analyzed2 = MutSet.empty[TypeRef]
     
-    def analyze(st: SimpleType, pol: Bool): Unit = st match {
+    def analyze(st: SimpleType, pol: Bool): Unit =
+        trace(s"analyze[$pol] $st") {
+        st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case ArrayType(inner) => analyze(inner, pol)
@@ -176,17 +179,22 @@ trait TypeSimplifier { self: Typer =>
         }
       case NegType(und) => analyze(und, !pol)
       case ProxyType(underlying) => analyze(underlying, pol)
+      // case tr @ TypeRef(defn, targs) =>
+      //   // analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
+      //   if (analyzed2.contains(tr -> pol)) ()
+      //   else {
+      //     analyzed2 += tr -> pol
+      //     analyze(tr.expand, pol)
+      //   }
       case tr @ TypeRef(defn, targs) =>
-        // analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
-        if (analyzed2.contains(tr -> pol)) ()
-        else {
-          analyzed2 += tr -> pol
-          analyze(tr.expand, pol)
-        }
+        // TODO improve with variance analysis
+        targs.foreach(analyze(_, true))
+        targs.foreach(analyze(_, false))
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
-        if (pol) analyze(ub, true) else analyze(ub, false)
+        if (pol) analyze(ub, true) else analyze(lb, false)
     }
+    }()
     def processBounds(tv: TV, pol: Bool) = {
       if (!analyzed(tv -> pol)) {
         analyzed(tv -> pol) = true
