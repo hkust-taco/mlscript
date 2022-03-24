@@ -7,7 +7,7 @@ class Add[E]: { lhs: E; rhs: E }
 
 
 def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ eval1_ty_ugly: 'a & ~lit | 'b | (Add['b & ((Add['c .. 'd] with {lhs: 'd, rhs: 'd}) | 'a & (~{val: int} | ~lit)) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ eval1_ty_ugly: (Add['b | ~{val: int} | ~lit .. 'a] as 'b) as 'a
 //│              = <missing implementation>
 
 // def eval1_ty: Add['b]
@@ -22,7 +22,7 @@ def eval1_ty: Add[int] // ~500
 :stats
 :e
 eval1_ty = eval1_ty_ugly
-//│ 'a & ~lit | 'b | (Add['b & ((Add['c .. 'd] with {lhs: 'd, rhs: 'd}) | 'a & (~{val: int} | ~lit)) as 'd .. 'c] with {lhs: 'c, rhs: 'c}) as 'c
+//│ (Add['b | ~{val: int} | ~lit .. 'a] as 'b) as 'a
 //│   <:  eval1_ty:
 //│ Add[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -128,5 +128,5 @@ eval1_ty = eval1_ty_ugly
 //│           eval1_ty_ugly is not implemented
 //│ constrain calls  : 62
 //│ annoying  calls  : 53
-//│ subtyping calls  : 448
+//│ subtyping calls  : 257
 

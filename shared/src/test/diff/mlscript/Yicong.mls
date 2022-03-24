@@ -31,9 +31,9 @@ t1 = T1 t2
 
 t1: T1
 t1: T2
-//│ res: t1
+//│ res: T1
 //│    = [Number: 1]
-//│ res: t2
+//│ res: T2
 //│    = [Number: 1]
 
 
@@ -101,7 +101,7 @@ fun (x, y) -> f ((x,y))
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
-//│ res: (nothing, nothing,) -> anything
+//│ res: (nothing, nothing,) -> (anything | error)
 //│    = <no result>
 //│      f is not implemented
 
@@ -235,7 +235,7 @@ sum t2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.218: 	def sum: Array[int] -> int
 //│ ╙──       	               ^^^
-//│ res: error | int
+//│ res: int | error
 
 t2: (1, 1, 2, bool)
 t2: Array[int | bool]
@@ -248,8 +248,8 @@ class Wrapped[A]: {len: int; inner: Array[A]}
 :NoJS
 def tk: Array['a] -> Wrapped['a]
 tk ((1,2,3,true,false))
-//│ tk: Array['a] -> (Wrapped['a] with {inner: Array['a]})
-//│ res: Wrapped['a .. 'a | 1 | 2 | 3 | false | true] with {inner: Array['a | 1 | 2 | 3 | false | true]}
+//│ tk: Array['a] -> Wrapped['a]
+//│ res: Wrapped['a .. 'a | 1 | 2 | 3 | false | true]
 
 class Two[A, B]: {fst: Array[A]; snd: Array[B]}
 two = Two {fst=(1,2,3); snd=(true,false)}
@@ -258,7 +258,7 @@ tk (two.snd)
 //│ Defined class Two
 //│ two: Two['A .. 1 | 2 | 3 | 'A, 'B .. 'B | false | true] with {fst: (1, 2, 3,), snd: (true, false,)}
 //│ res: (1, 2, 3,)
-//│ res: Wrapped['a .. 'a | false | true] with {inner: Array['a | false | true]}
+//│ res: Wrapped['a .. 'a | false | true]
 
 :e
 def a1: Array[int]
@@ -312,30 +312,30 @@ getx (a123 with {x=('hello', a123)})
 def append: Array['a] -> Array['b] -> Array['a | 'b]
 append ((1,2,false))(((), 'hi'))
 //│ append: Array['a] -> Array['a] -> Array['a]
-//│ res: Array["hi" | () | 1 | 2 | false]
+//│ res: Array[anything .. "hi" | () | 1 | 2 | false]
 
 def ta: T1 & Array[int]
 ta = T1 a123
-//│ ta: Array[int] & t1
+//│ ta: 'a
 //│ Array[int] & t1
 //│   <:  ta:
-//│ Array[int] & t1
+//│ 'a
 
 def tb: T2 & Array[int]
 tb = T2 ((1,2,3))
 def tba: (T2 & Array[int | bool]) -> (T2 & int)
 tba tb
-//│ tb: Array[int] & t2
+//│ tb: 'a
 //│ (1, 2, 3,) & t2
 //│   <:  tb:
-//│ Array[int] & t2
-//│ tba: (Array[bool | int] & t2) -> (int & t2)
-//│ res: int & t2
+//│ 'a
+//│ tba: 'a -> 'b
+//│ res: 'a
 
 def k: (true, false, 3) & Array[int | true]
 def k2: Array[1 | 2 | 3] & (true, 'hi', 2, 3)
-//│ k: (true, nothing, 3,)
-//│ k2: (nothing, nothing, 2, 3,)
+//│ k: {_1: true, _2: false, _3: 3} & 'a as 'a
+//│ k2: {_1: true, _2: nothing, _3: 2, _4: 3} & 'a as 'a
 
 def gett1 p q = case p of {T1 -> p | _ -> q}
 gett1 ta (T1 123)
@@ -346,11 +346,11 @@ tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ gett1: (t1 & 'a | ~t1) -> 'a -> 'a
 //│ res: t1 & (123 | Array[int])
-//│ gt: (Array[bool | int] & t1) -> Array[int]
+//│ gt: 'a -> Array[int]
 //│ res: Array[int]
-//│ tg: (Array[bool] & t2 | Array[int] & t1) -> (t1 | t2)
-//│ res: t1 | t2
-//│ res: t1 | t2
+//│ tg: ('a | 'b) -> (T1 | T2)
+//│ res: T1 | T2
+//│ res: T1 | T2
 
 def fst ((a, b)) = a
 def snd ((a, b)) = b
@@ -369,7 +369,7 @@ get ((1,2,3)) 1
 def intersect: Array['a] -> Array['b] -> Array['a & 'b]
 iarr = intersect ((1,2,3,false)) ((1,5,true,'hi',false))
 //│ intersect: Array['a] -> Array['b] -> Array['a & 'b]
-//│ iarr: Array[1 | false]
+//│ iarr: Array[anything .. 1 | false]
 
 :e
 fst iarr
@@ -412,18 +412,18 @@ r1 = inn2 (T2 v3)
 inn (T1 (T2 v3))
 //│ v1: (1, 2, true,) & t1 & t2
 //│ v2: (1, 2, true,) & {x: (1, 2, true,) & t1 & t2} & t1 & t2
-//│ inn: (Array['a] & t1 & t2) -> 'a
-//│ inn2: (Array[Array['a]] & t2) -> Array[t1 & 'a]
+//│ inn: 'a -> nothing
+//│ inn2: 'a -> Array[T1 .. nothing]
 //│ res: 1 | 2 | true
 //│ res: 1 | 2 | true
 //│ v3: Array[Array[(int, true,)]]
-//│ r1: Array[(int, true,) & t1]
+//│ r1: Array[T1 .. {_1: int, _2: true} & 'a as 'a]
 //│ res: Array[(int, true,)]
 
 v3: Array[Array[Array[int | bool]]]
 inn2 (T2 r1)
 //│ res: Array[Array[Array[bool | int]]]
-//│ res: Array[t1 & (int | true)]
+//│ res: Array[T1 .. 'a | 'b]
 
 :e
 inn (T1 v3)
@@ -453,16 +453,16 @@ inn2 v1
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.407: 	def inn2: (T2 & Array[Array['a]]) -> Array[T1 & 'a]
 //│ ╙──       	                      ^^^^^^^^^
-//│ res: Array[nothing] | error
+//│ res: Array[T1 .. nothing] | error
 
 def ra: ('a, 'a) as 'a
 ra: Array[Array['a]] as 'a
 ra: Array[('a, 'a)] as 'a
 ra: (Array['a], Array['a]) as 'a
 //│ ra: ('a, 'a,) as 'a
-//│ res: Array[Array['a]] as 'a
-//│ res: Array[('a, 'a,)] as 'a
-//│ res: (Array['a], Array['a],) as 'a
+//│ res: (('b, 'b,) as 'b) | (Array[Array['c .. 'a]] as 'c) as 'a
+//│ res: (('b, 'b,) as 'b) | (Array[('c, 'c,) .. ('a, 'a,)] as 'c) as 'a
+//│ res: ((('b, 'b,) as 'b) | (Array[('c, 'c,) .. 'a] as 'c), (('b, 'b,) as 'b) | (Array[('c, 'c,) .. 'a] as 'c),) as 'a
 
 :e
 ra: ('a, 'a, 'a) as 'a
@@ -492,7 +492,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.469: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: Array[Array['a]] & {_1: Array['a], _2: Array['a]} | error as 'a
+//│ res: Array[(('b, 'b,) as 'b) | (Array[('c, 'c, 'c,) .. 'a] as 'c)] & {_1: (('b, 'b,) as 'b) | (Array[('c, 'c, 'c,) .. 'a] as 'c), _2: (('b, 'b,) as 'b) | (Array[('c, 'c, 'c,) .. 'a] as 'c)} | error as 'a
 
 def tktup t = (t._2, t._3)
 tktup ((1,2,3,true))
@@ -528,7 +528,7 @@ ta3[1-2]
 //│ ta1: (2, 3, 4, 5,)
 //│ res: 2 | 3 | 4 | 5
 //│ ta2: ((1, 2, 4,), (true, false,),)
-//│ res: false | int | true
+//│ res: 1 | 2 | 4 | int | false | true
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│ res: "hello" | (1, 2, 3,) | false
 //│ res: 1 | 2 | 3
@@ -598,7 +598,7 @@ mkarr (1,true,"hi")[0]
 //│ 'a -> Array['a]
 //│ mk1: 6
 //│ res: int
-//│ res: Array["hi" | 1 | true]
+//│ res: Array[anything .. "hi" | 1 | true]
 
 :e 
 mkarr 3 [  1]
@@ -609,7 +609,7 @@ mk1[2  ]
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
 //│ ║  l.604: 	mkarr 3 [  1]
 //│ ╙──       	      ^
-//│ res: Array[nothing]
+//│ res: Array[anything .. nothing]
 //│ ╔══[ERROR] Type mismatch in array subscript:
 //│ ║  l.605: 	mk1[2  ]
 //│ ║         	^^^^^

@@ -33,7 +33,7 @@ type Hello = int
 //│ Defined type alias Hello
 
 42: Hello
-//│ res: int
+//│ res: Hello
 //│    = 42
 
 :e
@@ -103,18 +103,18 @@ type Bad = { x: 'a }
 
 // :d
 {x = 123}: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│    = { x: 123 }
 
 // Note: we should get {x: 123 | "ah"} here; but there seems to be a TV problem
 // :d
 {x = "ah"}: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│    = { x: 'ah' }
 
 :re
 error: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -129,7 +129,7 @@ type BadRec = { x: 'a; y: BadRec }
 
 :re
 error: BadRec
-//│ res: {x: nothing, y: 'a} as 'a
+//│ res: BadRec
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

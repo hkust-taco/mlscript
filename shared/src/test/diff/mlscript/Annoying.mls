@@ -292,20 +292,20 @@ def ty2: TT & { x: int }
 //│ Defined class AA
 //│ Defined trait TT
 //│ ty: AA
-//│ ty2: {x: int} & tT
+//│ ty2: TT & {x: int}
 
 :e
 ty = ty2
-//│ {x: int} & tT
+//│ TT & {x: int}
 //│   <:  ty:
 //│ AA
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `{x: int} & tT` does not match type `'a\x | AA`
+//│ ╟── type `TT & {x: int}` does not match type `AA | 'a\x`
 //│ ║  l.290: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `'a\x | AA`
+//│ ╟── but it flows into reference with expected type `AA | 'a\x`
 //│ ║  l.298: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:

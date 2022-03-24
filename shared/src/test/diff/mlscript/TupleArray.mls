@@ -164,7 +164,7 @@ class A: { x: int }
 //│ Defined class A
 
 def myval: A & { x: anything }
-//│ myval: A
+//│ myval: A & {x: anything}
 //│      = <missing implementation>
 
 // def myval: a & { x: string }
@@ -217,7 +217,7 @@ trait T: { x: int }
 //│ Defined trait T
 
 def t: T
-//│ t: {x: int} & t
+//│ t: T
 //│  = <missing implementation>
 
 t.x
@@ -343,15 +343,15 @@ hg1 ((5,5,5))
 def ta1: Array[int] | (int, bool)
 def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
-//│ ta1: Array[bool | int]
+//│ ta1: (int, bool,) | Array[int]
 //│    = <missing implementation>
-//│ test: ("hello", 1,)
+//│ test: (string & 'a, 1,)
 //│     = <missing implementation>
-//│ test2: ("hello", 1,) & {_3: int}
+//│ test2: (string & 'a, 1,) & {_3: int}
 //│      = <missing implementation>
 
 test: { _1: 'a }
-//│ res: {_1: "hello"}
+//│ res: {_1: 'a}
 //│    = <no result>
 //│      test is not implemented
 
@@ -359,7 +359,7 @@ test: { _1: 'a }
 //    but we currently don't recover the intersected positional field from the record
 //    when constraining refined tuples.
 test: ('a, 1)
-//│ res: (string, 1,)
+//│ res: (string | 'a, 1,)
 //│    = <no result>
 //│      test is not implemented
 
@@ -391,7 +391,7 @@ def p1: T | Array[bool] | (int, string) | (true, 3)
 def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t._1)
 pf((1,2,3))
-//│ p1: Array[bool | int | string] | {x: int} & t
-//│ p2: Array[bool | int | string] | {x: int} & t
+//│ p1: (int | true, 3 | string,) | Array[bool] | T
+//│ p2: (2 | string, 4 | bool,) | Array[int] | T
 //│ pf: (Array['a] & {_1: 'b}) -> ('a, 'b,)
 //│ res: (1 | 2 | 3, 1,)

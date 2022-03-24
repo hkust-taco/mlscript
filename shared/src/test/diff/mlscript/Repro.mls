@@ -1,0 +1,14 @@
+
+class C
+//│ Defined class C
+
+:p
+def n: C{}
+//│ Parsed: rec def n: [] -> C; {};
+//│ Desugared: rec def n: [] -> C
+//│ Desugared: {}
+//│ n: C
+//│  = <missing implementation>
+//│ res: anything
+//│    = {}
+

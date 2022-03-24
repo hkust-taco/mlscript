@@ -12,83 +12,83 @@ dummy = MyArray {
 //│ dummy: MyArray['A] with {get: anything -> nothing, set: (anything, anything,) -> (), size: 0}
 
 dummy: MyArray[int]
-//│ res: MyArray[int] with {get: int -> int, set: (int, int,) -> ()}
+//│ res: MyArray[int]
 
 def ty1A: MyArray[int]
 def ty1B: MyArray[0 | 1]
-//│ ty1A: MyArray[int] with {get: int -> int, set: (int, int,) -> ()}
-//│ ty1B: MyArray[0 | 1] with {get: int -> (0 | 1), set: (int, 0 | 1,) -> ()}
+//│ ty1A: MyArray[int]
+//│ ty1B: MyArray[0 | 1]
 
 
 def ty2A: MyArray['a]
-//│ ty2A: MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}
+//│ ty2A: MyArray['a]
 
 :stats
 ty2A = ty2A
-//│ MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}
+//│ MyArray['a]
 //│   <:  ty2A:
-//│ MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}
+//│ MyArray['a]
 //│ constrain calls  : 22
 //│ annoying  calls  : 20
-//│ subtyping calls  : 90
+//│ subtyping calls  : 32
 
 def ty2B: MyArray[MyArray['a]]
-//│ ty2B: MyArray[MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}] with {get: int -> (MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}), set: (int, MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()},) -> ()}
+//│ ty2B: MyArray[MyArray['a]]
 
 :stats
 ty2B = ty2A
-//│ MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}
+//│ MyArray['a]
 //│   <:  ty2B:
-//│ MyArray[MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}] with {get: int -> (MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}), set: (int, MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()},) -> ()}
+//│ MyArray[MyArray['a]]
 //│ constrain calls  : 20
 //│ annoying  calls  : 20
-//│ subtyping calls  : 217
+//│ subtyping calls  : 33
 
 
 def ty3A: MyArray['a] as 'a
-//│ ty3A: 'a | (MyArray[(MyArray['b .. 'c] with {get: int -> 'c, set: (int, 'b,) -> ()}) & 'a as 'c .. 'b] with {get: int -> 'b, set: (int, (MyArray['b .. 'c] with {get: int -> 'c, set: 'd}) & 'a as 'c,) -> () as 'd}) as 'b
+//│ ty3A: (MyArray['b .. 'a] as 'b) as 'a
 
 :stats
 ty3A = ty3A
-//│ 'a | (MyArray[(MyArray['b .. 'c] with {get: int -> 'c, set: (int, 'b,) -> ()}) & 'a as 'c .. 'b] with {get: int -> 'b, set: (int, (MyArray['b .. 'c] with {get: int -> 'c, set: 'd}) & 'a as 'c,) -> () as 'd}) as 'b
+//│ (MyArray['b .. 'a] as 'b) as 'a
 //│   <:  ty3A:
-//│ 'a | (MyArray[(MyArray['b .. 'c] with {get: int -> 'c, set: (int, 'b,) -> ()}) & 'a as 'c .. 'b] with {get: int -> 'b, set: (int, (MyArray['b .. 'c] with {get: int -> 'c, set: 'd}) & 'a as 'c,) -> () as 'd}) as 'b
+//│ (MyArray['b .. 'a] as 'b) as 'a
 //│ constrain calls  : 51
 //│ annoying  calls  : 44
-//│ subtyping calls  : 340
+//│ subtyping calls  : 78
 
 def ty3B: MyArray[MyArray['a]] as 'a
-//│ ty3B: 'a | ((MyArray[(MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}) as 'd .. (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd) as 'e, set: (int, (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ ty3B: (MyArray[MyArray['b .. 'a]] as 'b) as 'a
 
 :stats
 ty3B = ty3A
-//│ 'a | (MyArray[(MyArray['b .. 'c] with {get: int -> 'c, set: (int, 'b,) -> ()}) & 'a as 'c .. 'b] with {get: int -> 'b, set: (int, (MyArray['b .. 'c] with {get: int -> 'c, set: 'd}) & 'a as 'c,) -> () as 'd}) as 'b
+//│ (MyArray['b .. 'a] as 'b) as 'a
 //│   <:  ty3B:
-//│ 'a | ((MyArray[(MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}) as 'd .. (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd) as 'e, set: (int, (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ (MyArray[MyArray['b .. 'a]] as 'b) as 'a
 //│ constrain calls  : 144
 //│ annoying  calls  : 127
-//│ subtyping calls  : 843
+//│ subtyping calls  : 218
 
 :stats
 ty3A = ty3B
-//│ 'a | ((MyArray[(MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}) as 'd .. (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}) as 'd) as 'e, set: (int, (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ (MyArray[MyArray['b .. 'a]] as 'b) as 'a
 //│   <:  ty3A:
-//│ 'a | (MyArray[(MyArray['b .. 'c] with {get: int -> 'c, set: (int, 'b,) -> ()}) & 'a as 'c .. 'b] with {get: int -> 'b, set: (int, (MyArray['b .. 'c] with {get: int -> 'c, set: 'd}) & 'a as 'c,) -> () as 'd}) as 'b
+//│ (MyArray['b .. 'a] as 'b) as 'a
 //│ constrain calls  : 139
 //│ annoying  calls  : 127
-//│ subtyping calls  : 829
+//│ subtyping calls  : 204
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
-//│ ty4B: 'a | ((MyArray[(MyArray[MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()} .. MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()},) -> ()}) as 'd .. (MyArray[MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd) as 'e, set: (int, (MyArray[MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()} .. MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()},) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ ty4B: (MyArray[MyArray[MyArray['b .. 'a]]] as 'b) as 'a
 
 :stats
 ty4B = ty4B
-//│ 'a | ((MyArray[(MyArray[MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()} .. MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()},) -> ()}) as 'd .. (MyArray[MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd) as 'e, set: (int, (MyArray[MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()} .. MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()},) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ (MyArray[MyArray[MyArray['b .. 'a]]] as 'b) as 'a
 //│   <:  ty4B:
-//│ 'a | ((MyArray[(MyArray[MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()} .. MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()},) -> ()}) as 'd .. (MyArray[MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (('c with {get: int -> 'd, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd] as 'c) with {get: int -> ((MyArray[MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()} .. MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}] with {get: int -> (MyArray[((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a,) -> ()}), set: (int, MyArray['b .. ((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: 'e, set: (int, 'd,) -> ()}) & 'a), set: (int, 'b,) -> ()},) -> ()}) as 'd) as 'e, set: (int, (MyArray[MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()} .. MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}] with {get: int -> (MyArray['b .. ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a] with {get: int -> (((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a), set: (int, 'b,) -> ()}), set: (int, MyArray[((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a .. 'b] with {get: int -> 'b, set: (int, ((MyArray['d] as 'c) with {get: int -> 'd as 'e, set: 'f}) & 'a,) -> ()},) -> ()}) as 'd,) -> () as 'f}) as 'b
+//│ (MyArray[MyArray[MyArray['b .. 'a]]] as 'b) as 'a
 //│ constrain calls  : 120
 //│ annoying  calls  : 136
-//│ subtyping calls  : 4993
+//│ subtyping calls  : 187
 
 
 
@@ -98,9 +98,9 @@ ty4B = ty4B
 :e
 :stats
 ty1A = ty1B
-//│ MyArray[0 | 1] with {get: int -> (0 | 1), set: (int, 0 | 1,) -> ()}
+//│ MyArray[0 | 1]
 //│   <:  ty1A:
-//│ MyArray[int] with {get: int -> int, set: (int, int,) -> ()}
+//│ MyArray[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty1A = ty1B
 //│ ║        	^^^^^^^^^^^
@@ -112,14 +112,14 @@ ty1A = ty1B
 //│ ╙──      	                  ^^^^^
 //│ constrain calls  : 25
 //│ annoying  calls  : 29
-//│ subtyping calls  : 112
+//│ subtyping calls  : 44
 
 :e
 :stats
 ty1B = ty1A
-//│ MyArray[int] with {get: int -> int, set: (int, int,) -> ()}
+//│ MyArray[int]
 //│   <:  ty1B:
-//│ MyArray[0 | 1] with {get: int -> (0 | 1), set: (int, 0 | 1,) -> ()}
+//│ MyArray[0 | 1]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty1B = ty1A
 //│ ║        	^^^^^^^^^^^
@@ -131,15 +131,15 @@ ty1B = ty1A
 //│ ╙──      	                  ^^^^^
 //│ constrain calls  : 25
 //│ annoying  calls  : 29
-//│ subtyping calls  : 117
+//│ subtyping calls  : 49
 
 
 :e
 :stats
 ty2A = ty2B
-//│ MyArray[MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}] with {get: int -> (MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}), set: (int, MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()},) -> ()}
+//│ MyArray[MyArray['a]]
 //│   <:  ty2A:
-//│ MyArray['a] with {get: int -> 'a, set: (int, 'a,) -> ()}
+//│ MyArray['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
@@ -181,6 +181,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^
 //│ constrain calls  : 30
 //│ annoying  calls  : 28
-//│ subtyping calls  : 227
+//│ subtyping calls  : 43
 
 

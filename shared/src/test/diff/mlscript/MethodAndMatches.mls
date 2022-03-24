@@ -21,7 +21,7 @@ def foo b x = case b of {
   | Derived1 -> b.M2
   | Base1 -> b.M1 x
   }
-//│ foo: (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
+//│ foo: ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
 //│    = [Function: foo]
 
 d1 = Derived1 { x = 1 }
@@ -50,7 +50,7 @@ bar0 d1 0
 // This is ill-typed because type `Base1[int]` includes things like `Derived1\x` (a `Derived` instance without an `x` field)
 :e
 def bar0 = foo
-//│ (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
+//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
 //│   <:  bar0:
 //│ Base1[int] -> int -> Base1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -68,20 +68,20 @@ def bar0 = foo
 def bar1: Type1[int] -> int -> Type1[int]
 bar1 d1
 bar1 d1 0
-//│ bar1: (Derived1 | Derived2['a, 'b]) -> int -> (Derived1 | Derived2['a, 'b])
+//│ bar1: Type1[int] -> int -> Type1[int]
 //│     = <missing implementation>
-//│ res: int -> (Derived1 | Derived2['a, 'b])
+//│ res: int -> Type1[int]
 //│    = <no result>
 //│      bar1 is not implemented
-//│ res: Derived1 | Derived2['a, 'b]
+//│ res: Type1[int]
 //│    = <no result>
 //│      bar1 is not implemented
 
 :e
 def bar1 = foo
-//│ (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
+//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
 //│   <:  bar1:
-//│ (Derived1 | Derived2['a, 'b]) -> int -> (Derived1 | Derived2['a, 'b])
+//│ Type1[int] -> int -> Type1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.81: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
@@ -158,17 +158,17 @@ bar2 d1
 bar2 d1 0
 //│ bar2: Base1['a] -> 'a -> Base1['a]
 //│     = <missing implementation>
-//│ res: int -> Base1[int]
+//│ res: (int & 'a) -> Base1[int & 'a .. 'a | int]
 //│    = <no result>
 //│      bar2 is not implemented
-//│ res: Base1[int]
+//│ res: Base1[int & 'a .. 'a | 0 | int]
 //│    = <no result>
 //│      bar2 is not implemented
 
 // Note that typing this would require GADT reasoning! Though it also suffers from the previous "Derived1 with missing x field" problem.
 :e
 def bar2 = foo
-//│ (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
+//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
 //│   <:  bar2:
 //│ Base1['a] -> 'a -> Base1['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

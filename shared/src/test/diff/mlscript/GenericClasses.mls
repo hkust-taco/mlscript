@@ -23,9 +23,9 @@ type Option[A] = Some[A] | None
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = None {}
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = Some { value: 42 }
 
 :e
@@ -39,7 +39,7 @@ res.value
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
-//│ res: error | int
+//│ res: int | error
 //│    = 42
 
 :e
@@ -57,7 +57,7 @@ res.value
 //│ ╟── from applied type reference:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = 42
 
 
@@ -75,11 +75,11 @@ g = Bar1 { x = 42 }
 //│  = Bar1 { x: 42 }
 
 g: Foo1['a]
-//│ res: Foo1[int]
+//│ res: Foo1[int & 'a .. 'a | 42 | int]
 //│    = Bar1 { x: 42 }
 
 res.x
-//│ res: int
+//│ res: 42 | int
 //│    = 42
 
 g: Foo1['a]: Foo1[int]
@@ -128,12 +128,12 @@ f (Foo2 {})
 
 :re
 error: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: ('a & ('b | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
 //│    = [Function: f]
 
 :ns

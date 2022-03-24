@@ -121,7 +121,7 @@ mb2.Get
 //│   = MyBox { inner: 1, info: 'hello' }
 //│ mb: MyBox
 //│   = MyBox { inner: 2, info: 'hello' }
-//│ res: int
+//│ res: int | int
 //│    = 2
 //│ mb2: Box['a .. 'a | int]
 //│    = Box { inner: 6, info: 'hello' }

@@ -50,7 +50,7 @@ foo arg
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.31: 	def foo: ("A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J") -> int
 //│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | int
+//│ res: int | error
 //│    = <no result>
 //│      foo is not implemented
 

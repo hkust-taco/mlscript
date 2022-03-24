@@ -82,7 +82,7 @@ fun x -> safeDiv 1 x
 //│    = [Function: res]
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: (int & ~0 | ~int) -> (int | None)
+//│ res: (~int | 'a & ~0) -> (int | None)
 //│    = [Function: res]
 
 :e // we no longer refine x's type here, as that was rather unexpected
@@ -110,20 +110,20 @@ fun (x: int & ~0) -> safeDiv 1 x
 //│    = [Function: res]
 
 def tryDiv: int -> int -> Option[int]
-//│ tryDiv: int -> int -> (None | Some[int])
+//│ tryDiv: int -> int -> Option[int]
 //│       = <missing implementation>
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
 //│ int -> (0 | int & ~0) -> (None | (Some['A .. 'A | int] with {value: int}))
 //│   <:  tryDiv:
-//│ int -> int -> (None | Some[int])
+//│ int -> int -> Option[int]
 //│       = [Function: tryDiv]
 // ^ Note: `0 | int & ~0` could be further simplified
 
 tryDiv 1 1
 tryDiv 1 0
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = Some { value: 1 }
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = None {}
 

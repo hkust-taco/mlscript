@@ -101,7 +101,7 @@ foo 42
 //│   unresolved symbol foo
 
 42: TypeA
-//│ res: int
+//│ res: TypeA
 //│    = 42
 
 :e
@@ -115,15 +115,15 @@ type TypeC = TypeA
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias TypeB
 //│ Defined type alias TypeC
-//│ test: int -> int
+//│ test: TypeB -> TypeB
 //│     = [Function: test]
-//│ res: int
+//│ res: TypeB
 //│    = 42
 
 
 
 def test = fun (x: TypeB) -> x
-//│ test: int -> int
+//│ test: TypeB -> TypeB
 //│     = [Function: test1]
 
 
@@ -135,12 +135,12 @@ type Lol = { x: 'a -> 'a }
 
 :re
 error: Lol -> Lol
-//│ res: {x: 'a -> 'a} -> {x: 'a -> 'a}
+//│ res: Lol -> Lol
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 { x = id } : Lol
-//│ res: {x: 'a -> 'a}
+//│ res: Lol
 //│    = { x: [Function: id] }
 
 
@@ -174,12 +174,12 @@ id: Runaway2
 //│ ╟── from type reference:
 //│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
-//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
+//│ res: Runaway2
 //│    = [Function: id]
 
 :re
 error: Runaway2
-//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
+//│ res: Runaway2
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -195,13 +195,13 @@ error: {x: int} -> nothing : Runaway2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
-//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
+//│ res: Runaway2
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 :re
 error: {x: 'x -> 'x} -> nothing : Runaway2
-//│ res: {x: ('b | 'c) -> ('b & 'c)} -> 'a as 'a
+//│ res: Runaway2
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -215,22 +215,22 @@ type A2[A] = A -> A2[A]
 
 def ty1: A1[anything]
 def ty2: A2[anything]
-//│ ty1: anything -> anything -> 'a as 'a
+//│ ty1: A1[anything]
 //│    = <missing implementation>
-//│ ty2: anything -> 'a as 'a
+//│ ty2: A2[anything]
 //│    = <missing implementation>
 
 ty1 = ty2
-//│ anything -> 'a as 'a
+//│ A2[anything]
 //│   <:  ty1:
-//│ anything -> anything -> 'a as 'a
+//│ A1[anything]
 //│    = <no result>
 //│      ty2 is not implemented
 
 ty2 = ty1
-//│ anything -> anything -> 'a as 'a
+//│ A1[anything]
 //│   <:  ty2:
-//│ anything -> 'a as 'a
+//│ A2[anything]
 //│    = <no result>
 //│      ty1 and ty2 are not implemented
 

@@ -389,9 +389,9 @@ class Class2B: Class2A[int] & Trait2A[string]
 //│ Defined class Class2A
 //│ Declared Class2A.MtdA: Class2A['A] -> 'A
 //│ Defined trait Trait2A
-//│ Declared Trait2A.MtdA: trait2A -> 'B
+//│ Declared Trait2A.MtdA: Trait2A['B] -> 'B
 //│ Defined class Class2B
-//│ Defined Class2B.MtdA: (Class2B & trait2A) -> "ok"
+//│ Defined Class2B.MtdA: Class2B -> "ok"
 
 
 :e
@@ -492,7 +492,7 @@ class Test6C: Test6A[int] & Test6B
 //│ Declared Test6A.Mth6A: Test6A['A] -> 'A
 //│ Declared Test6A.Mth6B: Test6A['A] -> ('A -> 'B) -> 'B
 //│ Defined trait Test6B
-//│ Declared Test6B.Mth6A: test6B -> bool
+//│ Declared Test6B.Mth6A: Test6B -> bool
 //│ Defined class Test6C
 
 :e
@@ -569,18 +569,18 @@ class Dup[A, A]: { x: A }
 //│ ║  l.549: 	        B]: (A -> B) -> B
 //│ ╙──       	        ^
 //│ Defined class Dup
-//│ Declared Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'B) -> 'B
-//│ Defined Dup.MthDup: Dup['A | 'A0 .. 'A & 'A0, 'A | 'A0 .. 'A & 'A0] -> ('A0 -> 'a) -> 'a
+//│ Declared Dup.MthDup: Dup['A, 'A0] -> ('A0 -> 'B) -> 'B
+//│ Defined Dup.MthDup: Dup['A, 'A0] -> ('A0 -> 'a) -> 'a
 
 t = Dup { x = 42 }
 //│ t: Dup['A | 'A0 .. 'A & (42 | 'A0), 'A | 'A0 .. 'A & (42 | 'A0)] with {x: 42}
 
 :stats
 t : Dup[bool, int]
-//│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+//│ res: Dup[bool, int]
 //│ constrain calls  : 55
 //│ annoying  calls  : 41
-//│ subtyping calls  : 70
+//│ subtyping calls  : 46
 
 :stats
 t : Dup[int, bool]
@@ -593,10 +593,10 @@ t : Dup[int, bool]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.586: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
-//│ res: Dup[bool | int .. nothing, bool | int .. nothing]
+//│ res: Dup[int, bool]
 //│ constrain calls  : 70
 //│ annoying  calls  : 41
-//│ subtyping calls  : 69
+//│ subtyping calls  : 46
 
 :stats
 t.MthDup (fun x -> mul 2 x)
@@ -660,17 +660,17 @@ class H: D & E
 //│ ║  l.636: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ Defined trait D
-//│ Defined D.G: d -> 1
+//│ Defined D.G: D -> 1
 //│ Defined trait E
-//│ Declared E.G: e -> int
+//│ Declared E.G: E -> int
 //│ Defined class H
-//│ Defined H.G: (H & d & e) -> 2
+//│ Defined H.G: H -> 2
 
 h = H{}
 //│ h: H
 
 d = h: D
-//│ d: d
+//│ d: D
 
 d.(D.G)
 //│ res: 1
@@ -700,9 +700,9 @@ class H2: D2 & E2
 //│ ║  l.685: 	  method G2: bool
 //│ ╙──       	         ^^^^^^^^
 //│ Defined trait D2
-//│ Defined D2.G2: d2 -> 1
+//│ Defined D2.G2: D2 -> 1
 //│ Defined trait E2
-//│ Declared E2.G2: e2 -> bool
+//│ Declared E2.G2: E2 -> bool
 //│ Defined class H2
 
 
@@ -715,11 +715,11 @@ trait Test7B
   method Mth7A: int
   method Mth7A = 43
 //│ Defined trait Test7A
-//│ Declared Test7A.Mth7A: test7A -> int
-//│ Defined Test7A.Mth7A: test7A -> 42
+//│ Declared Test7A.Mth7A: Test7A -> int
+//│ Defined Test7A.Mth7A: Test7A -> 42
 //│ Defined trait Test7B
-//│ Declared Test7B.Mth7A: test7B -> int
-//│ Defined Test7B.Mth7A: test7B -> 43
+//│ Declared Test7B.Mth7A: Test7B -> int
+//│ Defined Test7B.Mth7A: Test7B -> 43
 
 :e
 class Test7C: Test7A & Test7B
@@ -741,7 +741,7 @@ Test7C.Mth7A
 class Test7D: Test7A & Test7B
   method Mth7A = this.(Test7A.Mth7A) * this.(Test7B.Mth7A)
 //│ Defined class Test7D
-//│ Defined Test7D.Mth7A: (Test7D & test7A & test7B) -> int
+//│ Defined Test7D.Mth7A: Test7D -> int
 
 :e // TODO: suppress?
 class Test7E: Test7C
@@ -757,12 +757,12 @@ class Test7E: Test7C
 //│ ║  l.716: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7E
-//│ Defined Test7E.Mth7A: (Test7E & test7A & test7B) -> 0
+//│ Defined Test7E.Mth7A: Test7E -> 0
 
 trait Test7F
   method Mth7A = 0
 //│ Defined trait Test7F
-//│ Defined Test7F.Mth7A: test7F -> 0
+//│ Defined Test7F.Mth7A: Test7F -> 0
 
 :e
 class Test7G: Test7C & Test7F

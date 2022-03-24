@@ -126,7 +126,7 @@ d.M2
 //│    = 1
 
 d: Foo2['a]
-//│ res: Foo2[int]
+//│ res: Foo2[int & 'a .. 'a | int]
 //│    = Bar2 { x: 1 }
 
 :e

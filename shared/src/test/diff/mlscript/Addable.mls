@@ -19,16 +19,16 @@ n = Num { val = 1 }
 //│  = Num { val: 1 }
 
 n.Add n
-//│ res: Num
+//│ res: Num | Num & {val: 1}
 //│    = Num { val: 2 }
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable['A] -> 'A -> 'A
+//│ addTwo: Addable['A & 'a .. 'A] -> ('A & 'a) -> 'a
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ res: Num
+//│ res: Num | Num & {val: 1}
 //│    = Num { val: 2 }
 
 s = Str { val = "hey" }
@@ -36,35 +36,35 @@ s = Str { val = "hey" }
 //│  = Str { val: 'hey' }
 
 s.Add s
-//│ res: Str
+//│ res: Str | Str & {val: "hey"}
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ res: Str
+//│ res: Str | Str & {val: "hey"}
 //│    = Str { val: 'heyhey' }
 
 
 
 def addSame a = a.Add a
-//│ addSame: (Addable['A] & 'A) -> 'A
+//│ addSame: (Addable['A & 'a .. 'A] & 'A & 'a) -> 'a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: Num
+//│ res: Num | Num & {val: 1}
 //│    = Num { val: 2 }
 
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
+//│ addNTimes: (Addable['A & 'a .. 'A] & 'A & 'a) -> int -> 'a
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: Num
+//│ res: Num | Num & {val: 1}
 //│    = Num { val: 12 }
 
 addNTimes s 5
-//│ res: Str
+//│ res: Str | Str & {val: "hey"}
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -80,34 +80,32 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> (0 | 'A)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+3: 	addNTimes n 12
-//│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type Num
-//│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
-//│ ║        	                ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
-//│ res: error
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α214' has no occurrences...
+//│ 	at: scala.Predef$.assert(Predef.scala:279)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:284)
+//│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:283)
+//│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
+//│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: ((Addable['a | 'A .. 'b -> int -> 'c & 'A],) as 'b) -> int -> (0 | 'c) as 'a
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+3: 	addNTimes n 12
-//│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Num
-//│ ║  l.+1: 	rec def addNTimes a n =
-//│ ║        	                  ^^^^^
-//│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.7: 	class Num: Addable[Num] & { val: int }
-//│ ╙──     	                   ^^^
-//│ res: error
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α241' has no occurrences...
+//│ 	at: scala.Predef$.assert(Predef.scala:279)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:284)
+//│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:283)
+//│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
+//│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 
 addSame n n
 //│ ╔══[ERROR] Type mismatch in application:
@@ -119,7 +117,17 @@ addSame n n
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	addSame n n
 //│ ╙──      	        ^
-//│ res: error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:24)
+//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:17)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:226)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$16(NormalForms.scala:322)
+//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:322)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$14(NormalForms.scala:319)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:319)
+//│ 	at: mlscript.NormalForms$DNF$.merge(NormalForms.scala:349)
 
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
@@ -137,7 +145,17 @@ addTwo s n
 //│ ╟── from reference:
 //│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
-//│ res: error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.NormalForms$LhsNf.mkType(NormalForms.scala:21)
+//│ 	at: mlscript.NormalForms$LhsNf.underlying$lzycompute(NormalForms.scala:24)
+//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:24)
+//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:17)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:226)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$16(NormalForms.scala:322)
+//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
+//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:322)
+//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$14(NormalForms.scala:319)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
 
 class Str_bad_0: Addable[Str_bad_0] & { val: string }
   method Add that = Str_bad_0 { val = this.val + that.val }

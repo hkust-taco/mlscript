@@ -37,14 +37,14 @@ trait TypeSimplifier { self: Typer =>
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)
           // println(s"b $b")
-          val bd = rec(DNF.mk(b, pol), done + tv)
+          val bd = rec(DNF.mk(b, pol)(ctx, preserveTypeRefs = true), done + tv)
           // println(s"bd $bd")
           bd
         }
         .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
       }.foldLeft(DNF.extr(false))(_ | _)
       
-      rec(DNF.mk(ty, pol), Set.empty)
+      rec(DNF.mk(ty, pol)(ctx, preserveTypeRefs = true), Set.empty)
       
     }(r => s"-> $r")
     
@@ -64,6 +64,13 @@ trait TypeSimplifier { self: Typer =>
                   b.map {
                     case ft @ FunctionType(l, r) =>
                       FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
+                    // case wo @ Without(b, ns) if ns.isEmpty =>
+                    case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
+                      // FIXME hacky!!
+                      // FIXedME recurse in type args!!! not sound otherwise
+                      // TODO actually make polarity optional and recurse with None
+                      Without(TypeRef(defn, targs.map(targ =>
+                        TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov), ns)(wo.prov)
                     case wo @ Without(b, ns) =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
@@ -128,6 +135,7 @@ trait TypeSimplifier { self: Typer =>
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
     val analyzed = MutSet.empty[PolarVariable]
+    val analyzed2 = MutSet.empty[TypeRef -> Bool]
     
     def analyze(st: SimpleType, pol: Bool): Unit = st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
@@ -162,7 +170,13 @@ trait TypeSimplifier { self: Typer =>
         }
       case NegType(und) => analyze(und, !pol)
       case ProxyType(underlying) => analyze(underlying, pol)
-      case tr @ TypeRef(defn, targs) => analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
+      case tr @ TypeRef(defn, targs) =>
+        // analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
+        if (analyzed2.contains(tr -> pol)) ()
+        else {
+          analyzed2 += tr -> pol
+          analyze(tr.expand, pol)
+        }
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze(ub, true) else analyze(ub, false)
@@ -292,7 +306,9 @@ trait TypeSimplifier { self: Typer =>
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
       case NegType(und) => transform(und, !pol).neg()
       case ProxyType(underlying) => transform(underlying, pol)
-      case tr @ TypeRef(defn, targs) => transform(tr.expand, pol) // FIXME may diverge; and we should try to keep these!
+      case tr @ TypeRef(defn, targs) =>
+        // transform(tr.expand, pol) // FIXME may diverge; and we should try to keep these!
+        TypeRef(defn, targs.map(targ => TypeBounds(transform(targ, false), transform(targ, true))(noProv)))(tr.prov)
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol)
         else Without(transform(base, pol), names)(wo.prov)
@@ -340,7 +356,7 @@ trait TypeSimplifier { self: Typer =>
           TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
         })(tr.prov)
       case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
-        val dnf @ DNF(cs) = DNF.mk(ty, pol)
+        val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
             

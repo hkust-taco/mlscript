@@ -14,10 +14,10 @@ def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
 
 def c: C['a] as 'a
-//│ c: 'a | C[C['b .. 'c] & 'a as 'c .. 'b] as 'b
+//│ c: (C['b .. 'a] as 'b) as 'a
 
 def c: C[C['a]] as 'a
-//│ c: 'a | (C[C['b .. 'c & 'a] .. C['c & 'a .. 'b]] as 'c) as 'b
+//│ c: (C[C['b .. 'a]] as 'b) as 'a
 
 
 def c: C['a]
@@ -32,7 +32,7 @@ def mkC: 'a -> C['a]
 //│ mkC: 'a -> C['a]
 
 rec def rc = mkC(rc)
-//│ rc: C['a .. 'a | 'b] as 'b
+//│ rc: C[anything .. 'a] as 'a
 
 
 
@@ -40,7 +40,7 @@ class C3[A]: { a: C3[A] }
 //│ Defined class C3
 
 def c: 'a -> C3['a]
-//│ c: 'a -> ((C3['a] with {a: 'b}) as 'b)
+//│ c: 'a -> C3['a]
 
 
 class C4[A]: { a: C[C4[A]] }
@@ -48,22 +48,21 @@ class C4[A]: { a: C[C4[A]] }
 
 // :ds
 def c: 'a -> C4['a]
-//│ c: 'a -> ((C4['a] with {a: C['b]}) as 'b)
+//│ c: 'a -> C4['a]
 
 
 class C5[A]: { a: C2[C5[A]] }
 //│ Defined class C5
 
 def c: 'a -> C5['a]
-//│ c: 'a -> ((C5['a] with {a: C2['b] with {a: 'b}}) as 'b)
+//│ c: 'a -> C5['a]
 
 
 class C6[A]: { a: C5[C6[A]] }
 //│ Defined class C6
 
 def c: 'a -> C6['a]
-//│ c: 'a -> ((C6['a] with {a: (C5['b] with {a: C2['c] with {a: 'c}}) as 'c}) as 'b)
-
+//│ c: 'a -> C6['a]
 
 
 

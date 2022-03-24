@@ -83,12 +83,12 @@ def arr: Array[1]
 //│    = <missing implementation>
 
 arr: Array[2] | (1, 1)
-//│ res: Array[1 | 2]
+//│ res: (1, 1,) | Array[2]
 //│    = <no result>
 //│      arr is not implemented
 
 arr: Array[2] | (1, 2)
-//│ res: Array[1 | 2]
+//│ res: (1, 2,) | Array[2]
 //│    = <no result>
 //│      arr is not implemented
 
@@ -167,14 +167,14 @@ f_2 = f_1
 
 
 def test: (string, 1) & { _1: "hello" }
-//│ test: ("hello", 1,)
+//│ test: (string & 'a, 1,)
 //│     = <missing implementation>
 
 :e
 test = ("hi", 1)
 //│ ("hi", 1,)
 //│   <:  test:
-//│ ("hello", 1,)
+//│ (string & 'a, 1,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.174: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
@@ -189,19 +189,19 @@ test = ("hi", 1)
 test = ("hello", 1)
 //│ ("hello", 1,)
 //│   <:  test:
-//│ ("hello", 1,)
+//│ (string & 'a, 1,)
 //│     = [ 'hello', 1 ]
 
 (fun ((a, b)) -> a) test
-//│ res: string
+//│ res: string | 'a
 //│    = 'hello'
 
 test: { _1: 'a }
-//│ res: {_1: "hello"}
+//│ res: {_1: 'a}
 //│    = [ 'hello', 1 ]
 
 test: ('a, 1)
-//│ res: (string, 1,)
+//│ res: (string | 'a, 1,)
 //│    = [ 'hello', 1 ]
 
 :e

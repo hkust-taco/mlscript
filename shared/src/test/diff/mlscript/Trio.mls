@@ -76,7 +76,7 @@ foo arg
 //│ ╟── from reference:
 //│ ║  l.53: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: error | int | string | {l: bool, r: nothing}
+//│ res: string | error | int | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 53
@@ -85,7 +85,7 @@ foo arg
 
 :stats
 foo (arg with { payload = 1 })
-//│ res: int | string | {l: bool, r: 1}
+//│ res: string | int | {l: bool, r: 1}
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 48

@@ -347,7 +347,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF): DNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx): DNF = (if (pol) ty.pushPosWithout else ty) match {
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, preserveTypeRefs: Bool = false): DNF = (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => of(bt)
       case bt: TraitTag => of(bt)
       case rt @ RecordType(fs) => of(rt)
@@ -356,6 +356,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case NegType(und) => DNF(CNF.mk(und, !pol).ds.map(_.neg))
       case tv: TypeVariable => of(SortedSet.single(tv))
       case ProxyType(underlying) => mk(underlying, pol)
+      case tr @ TypeRef(defn, targs) if preserveTypeRefs => of(Without(tr, SortedSet.empty)(noProv))
       case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
@@ -381,7 +382,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), SortedSet.empty, LhsTop, SortedSet.empty)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF): CNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx): CNF =
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, preserveTypeRefs: Bool): CNF =
       // trace(s"?C $ty") {
       ty match {
         case bt: BaseType => of(bt)

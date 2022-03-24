@@ -65,16 +65,16 @@ add 1 : Als1[?]
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.60: 	add 1 : Als1[?]
 //│ ╙──      	             ^
-//│ res: int -> anything
+//│ res: Als1[?]
 //│    = [Function (anonymous)]
 
 def a1: Als1[?]
 a1 = add 1
-//│ a1: int -> anything
+//│ a1: Als1[?]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a1:
-//│ int -> anything
+//│ Als1[?]
 //│   = [Function (anonymous)]
 
 
@@ -89,16 +89,16 @@ add 1 : Als2[?]
 //│ ╟── type `anything` does not match type `int`
 //│ ║  l.85: 	add 1 : Als2[?]
 //│ ╙──      	             ^
-//│ res: nothing -> int
+//│ res: Als2[?]
 //│    = [Function (anonymous)]
 
 def a2: Als2[?]
 a2 = add 1
-//│ a2: nothing -> int
+//│ a2: Als2[?]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a2:
-//│ nothing -> int
+//│ Als2[?]
 //│   = [Function (anonymous)]
 
 

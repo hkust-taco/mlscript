@@ -17,15 +17,15 @@ class Child: Parent1 & Parent2
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
 //│ Defined type alias Child
-//│ Child: nothing -> nothing
+//│ Child: 'a -> Child
 //│      = <missing implementation>
 
 def f(x:Child) = x.name
-//│ f: nothing -> nothing
+//│ f: Child -> nothing
 //│  = [Function: f]
 
 def f(x:Child) = x: nothing
-//│ f: nothing -> nothing
+//│ f: Child -> nothing
 //│  = [Function: f1]
 
 :pe
@@ -46,7 +46,7 @@ def c = Child(Parent1{name="A"})
 //│ ╟── from intersection type:
 //│ ║  l.18: 	def Child: (Parent1 & Parent2) -> Child
 //│ ╙──      	           ^^^^^^^^^^^^^^^^^^^
-//│ c: error
+//│ c: Child | error
 //│  = <no result>
 //│    Child is not implemented
 
@@ -93,7 +93,7 @@ Crazy
 //│      Crazy is not implemented
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a | (Crazy['a .. 'a | {age: 42, name: "Bob"}] with {age: 42, name: "Bob" & {age: 42, name: "Bob"} | "Bob" & 'a})
+//│ c: Crazy['a .. 'a | {age: 42, name: "Bob"}] & {age: 42, name: "Bob"} | Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a
 //│  = <no result>
 //│    Crazy is not implemented
 
@@ -116,7 +116,7 @@ c: nothing
 //│      c and Crazy are not implemented
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: (Crazy['a .. 'a | Parent1 & {name: "Bob"}] with {name: 'a | Parent1 & {name: "Bob"}}) & 'a
+//│ d: Crazy['a .. 'a | (Parent1 with {name: "Bob" | 'name})] & 'a | {name: "Bob" | 'name} & 'b
 //│  = <no result>
 //│    Crazy is not implemented
 
@@ -266,9 +266,9 @@ class Bool
 
 "1" : String
 true : Bool
-//│ res: string
+//│ res: String
 //│    = '1'
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 

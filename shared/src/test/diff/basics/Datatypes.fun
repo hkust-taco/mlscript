@@ -119,7 +119,7 @@ data type List a of
 //│ Defined class Nil
 //│ Defined class Cons
 //│ Nil: Nil['a]
-//│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a] as 'b}) as 'c)
+//│ Cons: (head: 'a,) -> (tail: List['a],) -> Cons['a]
 
 // TODO interpret as free type variable?
 :p
@@ -143,7 +143,7 @@ data type Ls2 of LsA2 `a
 //│ Desugared: def LsA2: [] -> 'a -> LsA2[]
 //│ Defined type alias Ls2
 //│ Defined class LsA2
-//│ LsA2: anything -> (LsA2 with {`a: nothing})
+//│ LsA2: anything -> LsA2
 
 Nil
 Cons
@@ -151,10 +151,19 @@ Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
-//│ res: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a] as 'b}) as 'c)
-//│ res: (tail: (Cons[1 | 'b .. 'b] with {tail: 'a}) | Nil[1 | 'b .. 'b] as 'a,) -> ((Cons['b .. 1 | 'b] with {tail: 'c | Nil['b .. 1 | 'b] as 'a}) as 'c)
-//│ res: (Cons['b .. 2 | 'b] with {tail: 'a | Nil['b .. 2 | 'b]}) as 'a
-//│ res: (Cons['b .. 1 | 2 | 'b] with {tail: 'a | Nil['b .. 1 | 2 | 'b]}) as 'a
+//│ res: (head: 'a,) -> (tail: List['a],) -> Cons['a]
+//│ res: (tail: List['a .. 1 | 'a],) -> Cons['a .. 1 | 'a]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α51 has no occurrences...
+//│ 	at: scala.Predef$.assert(Predef.scala:279)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
+//│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
+//│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
+//│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:482)
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -166,20 +175,20 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.176: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.176: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.176: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.180: 	(Cons 4).head
+//│ ║  l.189: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.109: 	data type List a of
@@ -189,17 +198,17 @@ not (Cons 42 Nil).head
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?b}`
-//│ ║  l.180: 	(Cons 4).head
+//│ ║  l.189: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	Cons 1 2
+//│ ║  l.206: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `(Cons[?a] with {head: ?a, tail: List[?a]}) | Nil[?a]`
-//│ ║  l.197: 	Cons 1 2
+//│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?a]`
+//│ ║  l.206: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.109: 	data type List a of
@@ -207,13 +216,13 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: ((Cons['b .. 1 | 'b] with {tail: 'a | Nil['b .. 1 | 'b]}) as 'a) | error
+//│ res: Cons['a .. 1 | 'a] | error
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.214: 	let List.head = () // ...
+//│ ║  l.223: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

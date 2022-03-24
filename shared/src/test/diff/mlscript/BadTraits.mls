@@ -112,7 +112,7 @@ type Als = A & B
 
 :re
 t: Als
-//│ res: nothing
+//│ res: Als
 //│ Runtime error:
 //│   ReferenceError: t is not defined
 
@@ -156,7 +156,7 @@ t.x
 //│    = 1
 
 t = s: S
-//│ t: {x: int} & s
+//│ t: S
 //│  = { x: 1 }
 
 t.x
@@ -169,7 +169,7 @@ trait Lol
 class Hey
   method Foo = "oops"
 //│ Defined trait Lol
-//│ Defined Lol.Foo: lol -> 1
+//│ Defined Lol.Foo: Lol -> 1
 //│ Defined class Hey
 //│ Defined Hey.Foo: Hey -> "oops"
 
