@@ -101,7 +101,7 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 //│              = <missing implementation>
 
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
-//│ res: ('a -> int) -> ('b & (Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd) | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
+//│ res: ('a -> int) -> ('b & ((Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
 //│    = <no result>
 //│      eval1_ty_ugly is not implemented
 
@@ -109,7 +109,7 @@ eval1_ty_ugly // TODO simplify positive record negatins to bottom!
 def eval1_ty_ugly = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty_ugly:
-//│ ('a -> int) -> ('b & (Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd) | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
+//│ ('a -> int) -> ('b & ((Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
 //│              = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
@@ -121,7 +121,7 @@ def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
 //│         = <missing implementation>
 
 eval1_ty
-//│ res: ('a -> int) -> ('b & ('a & ~add & ~lit | Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd)) as 'c) -> int
+//│ res: ('a -> int) -> ('b & ('a & ~add & ~lit | (Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit) as 'c) -> int
 //│    = <no result>
 //│      eval1_ty is not implemented
 
@@ -129,7 +129,7 @@ eval1_ty
 def eval1_ty = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty:
-//│ ('a -> int) -> ('b & ('a & ~add & ~lit | Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd)) as 'c) -> int
+//│ ('a -> int) -> ('b & ('a & ~add & ~lit | (Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit) as 'c) -> int
 //│         = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
@@ -137,9 +137,9 @@ def eval1_ty = eval1
 
 :stats
 eval1_ty_ugly = eval1_ty
-//│ ('a -> int) -> ('b & ('a & ~add & ~lit | Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd)) as 'c) -> int
+//│ ('a -> int) -> ('b & ('a & ~add & ~lit | (Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit) as 'c) -> int
 //│   <:  eval1_ty_ugly:
-//│ ('a -> int) -> ('b & (Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd) | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
+//│ ('a -> int) -> ('b & ((Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
 //│              = [Function: eval1]
 //│ constrain calls  : 15
 //│ annoying  calls  : 1
@@ -147,9 +147,9 @@ eval1_ty_ugly = eval1_ty
 
 :stats
 eval1_ty = eval1_ty_ugly
-//│ ('a -> int) -> ('b & (Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd) | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
+//│ ('a -> int) -> ('b & ((Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)) as 'c) -> int
 //│   <:  eval1_ty:
-//│ ('a -> int) -> ('b & ('a & ~add & ~lit | Lit | (Add['c .. 'a & ~add & ~lit | 'b | Lit | 'd] as 'd)) as 'c) -> int
+//│ ('a -> int) -> ('b & ('a & ~add & ~lit | (Add['c .. 'a & ~add & ~lit | 'b | 'd | Lit] as 'd) | Lit) as 'c) -> int
 //│         = [Function: eval1]
 //│ constrain calls  : 15
 //│ annoying  calls  : 1

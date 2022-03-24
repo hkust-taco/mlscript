@@ -373,7 +373,7 @@ def tb1: (int, true)
 fta1 tb1
 r1 = if true then (1,2,3) else (1, 2)
 fta1 r1
-//│ fta1: Array[int | bool] -> int
+//│ fta1: Array[bool | int] -> int
 //│     = <missing implementation>
 //│ tb1: (int, true,)
 //│    = <missing implementation>
@@ -391,7 +391,7 @@ def p1: T | Array[bool] | (int, string) | (true, 3)
 def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t._1)
 pf((1,2,3))
-//│ p1: (int | true, 3 | string,) | T | Array[bool]
-//│ p2: (2 | string, 4 | bool,) | T | Array[int]
+//│ p1: (int | true, 3 | string,) | Array[bool] | T
+//│ p2: (2 | string, 4 | bool,) | Array[int] | T
 //│ pf: (Array['a] & {_1: 'b}) -> ('a, 'b,)
 //│ res: (1 | 2 | 3, 1,)

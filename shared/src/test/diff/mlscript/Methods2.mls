@@ -10,7 +10,7 @@ class None[A]: Option[A]
     method Destruct = this
 //│ Defined class Option
 //│ Declared Option.Get: Option['A] -> 'A
-//│ Declared Option.Destruct: Option['A] -> (Some['A] | None['A])
+//│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
 //│ Defined class Some
 //│ Defined Some.Get: Some['A] -> 'A
 //│ Defined Some.Destruct: Some['A] -> Some['A]
@@ -97,7 +97,7 @@ case o of {None -> 0 | Some -> o.payload}
 
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
-//│ v: Some['A .. 0 | 1 | 'A] | None['A .. 0 | 1 | 'A]
+//│ v: None['A .. 0 | 1 | 'A] | Some['A .. 0 | 1 | 'A]
 //│  = Some { payload: 0 }
 //│ res: 0 | 1
 //│    = 0

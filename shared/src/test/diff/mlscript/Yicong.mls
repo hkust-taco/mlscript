@@ -240,7 +240,7 @@ sum t2
 t2: (1, 1, 2, bool)
 t2: Array[int | bool]
 //│ res: (1, 1, 2, bool,)
-//│ res: Array[int | bool]
+//│ res: Array[bool | int]
 
 class Wrapped[A]: {len: int; inner: Array[A]}
 //│ Defined class Wrapped
@@ -329,7 +329,7 @@ tba tb
 //│ (1, 2, 3,) & t2
 //│   <:  tb:
 //│ Array[int] & T2
-//│ tba: (Array[int | bool] & T2) -> (T2 & int)
+//│ tba: (Array[bool | int] & T2) -> (T2 & int)
 //│ res: T2 & int
 
 def k: (true, false, 3) & Array[int | true]
@@ -346,9 +346,9 @@ tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ gett1: (t1 & 'a | ~t1) -> 'a -> 'a
 //│ res: t1 & (123 | Array[int])
-//│ gt: (Array[int | bool] & T1) -> Array[int]
+//│ gt: (Array[bool | int] & T1) -> Array[int]
 //│ res: Array[int]
-//│ tg: (Array[int] & T1 | Array[bool] & T2) -> (T1 | T2)
+//│ tg: (Array[bool] & T2 | Array[int] & T1) -> (T1 | T2)
 //│ res: T1 | T2
 //│ res: T1 | T2
 
@@ -422,8 +422,8 @@ inn (T1 (T2 v3))
 
 v3: Array[Array[Array[int | bool]]]
 inn2 (T2 r1)
-//│ res: Array[Array[Array[int | bool]]]
-//│ res: Array[T1 & 'a .. T1 & int | T1 & true | T1 & 'a]
+//│ res: Array[Array[Array[bool | int]]]
+//│ res: Array[T1 & 'a .. T1 & 'a | T1 & int | T1 & true]
 
 :e
 inn (T1 v3)

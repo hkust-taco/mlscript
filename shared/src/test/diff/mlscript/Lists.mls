@@ -107,10 +107,10 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Nil | Cons[?A]`
+//│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`
+//│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:

@@ -146,8 +146,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
           
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, done_ls & tr getOrElse
+          (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
+        
+        // TODO
+        // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
         
         /*
         // This logic is now in `constrainDNF`... and even if we got here,
@@ -177,14 +181,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           //    the original constraining context!
           (done_ls, done_rs) match {
             case (LhsRefined(S(Without(b, _)), _, _, _), RhsBot) => rec(b, BotType, true)
-            case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _)
-              | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
+            // case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _)
+            //   | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
+            //   // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
+            //   reportError
+            case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
               reportError
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
             
-            case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty => ???
+            case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
+              // val (d, tr) = trs.head
+              // annoying(tr.expand :: Nil, LhsRefined(bo, ts, r, trs - d), Nil, done_rs)
+              annoying(trs.valuesIterator.map(_.expand).toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
+            
             // From this point on, trs should be empty!
+            
+            case (_, RhsBot) | (_, RhsBases(Nil, N)) =>
+              // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
+              reportError
             
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
@@ -335,8 +350,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fs1.foreach(f => rec(err, f._2, false))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2, err, false))
+          
+          // TODO
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
+          
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
           case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)

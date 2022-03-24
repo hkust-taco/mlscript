@@ -32,13 +32,13 @@ eval ex
 //│    = 4
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: 'e | Lit | (Add['e & (Lit | 'b | Nega['c]) as 'c .. 'a as 'c] as 'b) | (Nega['e & (Lit | (Add['c] as 'b) | 'd) as 'c .. 'a as 'c] as 'd) as 'a
+//│ e: 'e | (Add['e & ('b | Lit | Nega['c]) as 'c .. 'a as 'c] as 'b) | Lit | (Nega['e & ((Add['c] as 'b) | Lit | 'd) as 'c .. 'a as 'c] as 'd) as 'a
 //│  = <missing implementation>
 
 def e = ex
 //│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
 //│   <:  e:
-//│ 'e | Lit | (Add['e & (Lit | 'b | Nega['c]) as 'c .. 'a as 'c] as 'b) | (Nega['e & (Lit | (Add['c] as 'b) | 'd) as 'c .. 'a as 'c] as 'd) as 'a
+//│ 'e | (Add['e & ('b | Lit | Nega['c]) as 'c .. 'a as 'c] as 'b) | Lit | (Nega['e & ((Add['c] as 'b) | Lit | 'd) as 'c .. 'a as 'c] as 'd) as 'a
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -86,7 +86,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── type `int` does not match type `Lit | Add[?e] | Nega[int]`
+//│ ╟── type `int` does not match type `Add[?e] | Lit | Nega[int]`
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from union type:
