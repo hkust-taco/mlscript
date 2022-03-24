@@ -345,17 +345,10 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: (int, bool,) | Array[int]
 //│    = <missing implementation>
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
-//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
-//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
-//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
+//│ test: ("hello" & string, 1,)
+//│     = <missing implementation>
+//│ test2: ("hello" & string, 1,) & {_3: int}
+//│      = <missing implementation>
 
 test: { _1: 'a }
 //│ res: {_1: "hello" & string}

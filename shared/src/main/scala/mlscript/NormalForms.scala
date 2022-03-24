@@ -85,7 +85,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => S(LhsRefined(N, ssEmp, RecordType.empty, SortedMap.single(that.defn -> that)))
       case LhsRefined(b, ts, rt, trs) =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
-          ???
+          assert(that.targs.sizeCompare(other.targs) === 0)
+          TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
+            case (ta1, ta2) => TypeBounds(ta1 | ta2, ta1 & ta2)(noProv)
+          }.toList)(that.prov)
         })
         S(LhsRefined(b, ts, rt, trs2))
     }
