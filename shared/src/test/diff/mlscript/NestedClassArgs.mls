@@ -28,11 +28,22 @@ class C2[A]: { a: A }
 //│ Defined class C2
 
 
-def mkC: 'a -> C['a]
-//│ mkC: 'a -> C['a]
+def mkC: 'a -> C2['a]
+//│ mkC: 'a -> C2['a]
+
+mkC' a = C2 { a }
+//│ mkC': ('a & 'A) -> (C2['A] with {a: 'a})
+
+mkC = mkC'
+//│ ('a & 'A) -> (C2['A] with {a: 'a})
+//│   <:  mkC:
+//│ 'a -> C2['a]
 
 rec def rc = mkC(rc)
-//│ rc: C['a .. 'a | 'b] as 'b
+//│ rc: C2['a .. 'a | 'b] as 'b
+
+rec def rc = mkC'(rc)
+//│ rc: (C2['A .. 'A | 'a] with {a: 'a}) as 'a
 
 
 
@@ -42,6 +53,16 @@ class C3[A]: { a: C3[A] }
 def c: 'a -> C3['a]
 //│ c: 'a -> C3['a]
 
+rec def c a = C3 { a = c a }
+//│ anything -> ((C3['A] with {a: 'a}) as 'a)
+//│   <:  c:
+//│ 'a -> C3['a]
+
+rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
+//│ anything -> C3['X]
+//│   <:  c:
+//│ 'a -> C3['a]
+
 
 class C4[A]: { a: C[C4[A]] }
 //│ Defined class C4
@@ -50,12 +71,28 @@ class C4[A]: { a: C[C4[A]] }
 def c: 'a -> C4['a]
 //│ c: 'a -> C4['a]
 
+def c4 a = C4{ a = C{} }
+//│ c4: anything -> (C4['A] with {a: C[C4['A] & 'A0 .. 'A0 | C4['A]]})
+
+def c = c4
+//│ anything -> (C4['A] with {a: C[C4['A] & 'A0 .. 'A0 | C4['A]]})
+//│   <:  c:
+//│ 'a -> C4['a]
+
 
 class C5[A]: { a: C2[C5[A]] }
 //│ Defined class C5
 
 def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
+
+rec def c5 a = C5{ a = C2 { a = c5 a } }
+//│ c5: anything -> ((C5['A] with {a: C2[C5['A] & 'A0 .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+
+c = c5
+//│ anything -> ((C5['A] with {a: C2[C5['A] & 'A0 .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+//│   <:  c:
+//│ 'a -> C5['a]
 
 
 class C6[A]: { a: C5[C6[A]] }
@@ -64,7 +101,24 @@ class C6[A]: { a: C5[C6[A]] }
 def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
+rec def c a = C6{ a = c5 (c a) }
+//│ anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2[C5[C6['A]] & 'A1 .. 'A1 | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]] | C5[C6['A]]] with {a: 'a}}) as 'a})
+//│   <:  c:
+//│ 'a -> C6['a]
 
 
+
+class N: {}
+class S[T]: { v: T }
+type O[T] = S[T] | N
+class L[T]: { h: T; t: O[L[T]] }
+  method Append: T -> L[T]
+  method Append elem = L { h = elem; t = S { v = this } }
+//│ Defined class N
+//│ Defined class S
+//│ Defined type alias O
+//│ Defined class L
+//│ Declared L.Append: L['T] -> 'T -> L['T]
+//│ Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
 
 

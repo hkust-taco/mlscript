@@ -180,7 +180,7 @@ trait TypeSimplifier { self: Typer =>
       case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
-        // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
+        println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         coOccurrences(pol -> tv) = MutSet(tv)
         processBounds(tv, pol)
       case _: ObjectTag | ExtrType(_) => ()
@@ -196,9 +196,10 @@ trait TypeSimplifier { self: Typer =>
           case _ => analyze(st, pol)
         }
         go(ct)
+        // println(s"newOccs ${newOccs}")
         newOccs.foreach {
           case tv: TypeVariable =>
-            // println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+            println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
             coOccurrences.get(pol -> tv) match {
               case Some(os) => os.filterInPlace(newOccs) // computes the intersection
               case None => coOccurrences(pol -> tv) = newOccs
