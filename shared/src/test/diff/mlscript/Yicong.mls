@@ -101,7 +101,7 @@ fun (x, y) -> f ((x,y))
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.77: 	def f: ((1,2)&t1 | (3,4)&t2) -> anything
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^
-//│ res: (nothing, nothing,) -> (anything | error)
+//│ res: (nothing, nothing,) -> (error | anything)
 //│    = <no result>
 //│      f is not implemented
 
@@ -235,12 +235,12 @@ sum t2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.218: 	def sum: Array[int] -> int
 //│ ╙──       	               ^^^
-//│ res: int | error
+//│ res: error | int
 
 t2: (1, 1, 2, bool)
 t2: Array[int | bool]
 //│ res: (1, 1, 2, bool,)
-//│ res: Array[bool | int]
+//│ res: Array[int | bool]
 
 class Wrapped[A]: {len: int; inner: Array[A]}
 //│ Defined class Wrapped
@@ -316,26 +316,26 @@ append ((1,2,false))(((), 'hi'))
 
 def ta: T1 & Array[int]
 ta = T1 a123
-//│ ta: 'a
+//│ ta: Array[int] & T1
 //│ Array[int] & t1
 //│   <:  ta:
-//│ 'a
+//│ Array[int] & T1
 
 def tb: T2 & Array[int]
 tb = T2 ((1,2,3))
 def tba: (T2 & Array[int | bool]) -> (T2 & int)
 tba tb
-//│ tb: 'a
+//│ tb: Array[int] & T2
 //│ (1, 2, 3,) & t2
 //│   <:  tb:
-//│ 'a
-//│ tba: 'a -> 'b
-//│ res: 'a
+//│ Array[int] & T2
+//│ tba: (Array[int | bool] & T2) -> (T2 & int)
+//│ res: T2 & int
 
 def k: (true, false, 3) & Array[int | true]
 def k2: Array[1 | 2 | 3] & (true, 'hi', 2, 3)
-//│ k: {_1: true, _2: false, _3: 3} & 'a as 'a
-//│ k2: {_1: true, _2: nothing, _3: 2, _4: 3} & 'a as 'a
+//│ k: (true, false, 3,) & Array[int | true]
+//│ k2: (true, nothing, 2, 3,) & Array[1 | 2 | 3]
 
 def gett1 p q = case p of {T1 -> p | _ -> q}
 gett1 ta (T1 123)
@@ -346,9 +346,9 @@ tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ gett1: (t1 & 'a | ~t1) -> 'a -> 'a
 //│ res: t1 & (123 | Array[int])
-//│ gt: 'a -> Array[int]
+//│ gt: (Array[int | bool] & T1) -> Array[int]
 //│ res: Array[int]
-//│ tg: ('a | 'b) -> (T1 | T2)
+//│ tg: (Array[int] & T1 | Array[bool] & T2) -> (T1 | T2)
 //│ res: T1 | T2
 //│ res: T1 | T2
 
@@ -412,18 +412,18 @@ r1 = inn2 (T2 v3)
 inn (T1 (T2 v3))
 //│ v1: (1, 2, true,) & t1 & t2
 //│ v2: (1, 2, true,) & {x: (1, 2, true,) & t1 & t2} & t1 & t2
-//│ inn: 'a -> nothing
-//│ inn2: 'a -> Array[T1 .. nothing]
+//│ inn: (Array['a] & T1 & T2) -> 'a
+//│ inn2: (Array[Array['a]] & T2) -> Array[T1 & 'a]
 //│ res: 1 | 2 | true
 //│ res: 1 | 2 | true
 //│ v3: Array[Array[(int, true,)]]
-//│ r1: Array[T1 .. {_1: int, _2: true} & 'a as 'a]
+//│ r1: Array[T1 .. (int, true,) & T1]
 //│ res: Array[(int, true,)]
 
 v3: Array[Array[Array[int | bool]]]
 inn2 (T2 r1)
-//│ res: Array[Array[Array[bool | int]]]
-//│ res: Array[T1 .. 'a | 'b]
+//│ res: Array[Array[Array[int | bool]]]
+//│ res: Array[T1 .. T1 & int | T1 & true]
 
 :e
 inn (T1 v3)
@@ -443,7 +443,7 @@ inn2 v1
 //│ ╟── from intersection type:
 //│ ║  l.406: 	def inn: (T1 & T2 & Array['a]) -> 'a
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^
-//│ res: Array[(int, true,)] | error
+//│ res: error | Array[(int, true,)]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.430: 	inn2 v1
 //│ ║         	^^^^^^^
@@ -453,15 +453,15 @@ inn2 v1
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.407: 	def inn2: (T2 & Array[Array['a]]) -> Array[T1 & 'a]
 //│ ╙──       	                      ^^^^^^^^^
-//│ res: Array[T1 .. nothing] | error
+//│ res: error | Array[T1 .. nothing]
 
 def ra: ('a, 'a) as 'a
 ra: Array[Array['a]] as 'a
 ra: Array[('a, 'a)] as 'a
 ra: (Array['a], Array['a]) as 'a
 //│ ra: ('a, 'a,) as 'a
-//│ res: (('b, 'b,) as 'b) | (Array[Array['c .. 'a]] as 'c) as 'a
-//│ res: (('b, 'b,) as 'b) | (Array[('c, 'c,) .. ('a, 'a,)] as 'c) as 'a
+//│ res: (('b, 'b,) as 'b) | Array[Array[Array['c] .. 'a] as 'c] as 'a
+//│ res: (('b, 'b,) as 'b) | Array[(Array['c], Array['c],) as 'c .. ('a, 'a,) as 'c] as 'a
 //│ res: ((('b, 'b,) as 'b) | (Array[('c, 'c,) .. 'a] as 'c), (('b, 'b,) as 'b) | (Array[('c, 'c,) .. 'a] as 'c),) as 'a
 
 :e
@@ -528,7 +528,7 @@ ta3[1-2]
 //│ ta1: (2, 3, 4, 5,)
 //│ res: 2 | 3 | 4 | 5
 //│ ta2: ((1, 2, 4,), (true, false,),)
-//│ res: 1 | 2 | 4 | int | false | true
+//│ res: 1 | 2 | 4 | false | true | int
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│ res: "hello" | (1, 2, 3,) | false
 //│ res: 1 | 2 | 3

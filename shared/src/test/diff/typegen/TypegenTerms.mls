@@ -51,7 +51,7 @@ def g x y = if x.b == 1 then x else x.a
 //│ fact: int -> int
 //│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
 //│ // start ts
-//│ export declare const f: (arg1: int) => (arg3: string) => (arg5: bool) => Omit<int, {}> | Omit<string, {}>
+//│ export declare const f: (arg1: int) => (arg3: string) => (arg5: bool) => int | string
 //│ export declare const fact: (arg1: int) => int
 //│ export declare const g<a>: (arg1: {a: a, b: int} & a) => (arg3: unknown) => a
 //│ // end ts
@@ -117,7 +117,7 @@ def y: "a" | "b" | ~string
 //│ y: "a" | "b" | ~string
 //│ // start ts
 //│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
-//│ export declare const x: Omit<int, {}> | Neg<string, a>
+//│ export declare const x: int | Neg<string, a>
 //│ export declare const y: "a" | "b" | Neg<string, a>
 //│ // end ts
 

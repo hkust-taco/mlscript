@@ -69,11 +69,11 @@ rec def r (a: bool) (a: bool) (a: bool) = r
 //│  = [Function: r3]
 
 if true then l else r
-//│ res: 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'a as 'a
+//│ res: (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> 'a as 'a
 //│    = [Function: l2]
 
 if true then l else r
-//│ res: 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'a as 'a
+//│ res: (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> 'a as 'a
 //│    = [Function: l2]
 
 if true then (fun x -> add x 1) else (fun y -> not y)
@@ -94,11 +94,11 @@ rec def r (a: int) (a: bool) (a: bool) = r
 //│  = [Function: r4]
 
 if true then l else r
-//│ res: int -> bool -> 'b -> 'c -> 'b -> bool -> 'a as 'a
+//│ res: int -> bool -> (bool & int) -> (bool & int) -> (bool & int) -> bool -> 'a as 'a
 //│    = [Function: l3]
 
 if true then l else r
-//│ res: int -> bool -> 'b -> 'c -> 'b -> bool -> 'a as 'a
+//│ res: int -> bool -> (bool & int) -> (bool & int) -> (bool & int) -> bool -> 'a as 'a
 //│    = [Function: l3]
 
 
@@ -150,14 +150,14 @@ rec def foo (c: C['a]) = foo (c.a)
 
 // TODO figure ou why some type variables are not simplified here
 foo
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α446 has no occurrences...
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α422 has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:482)
@@ -169,20 +169,20 @@ def foo_ty: Rec -> nothing
 //│       = <missing implementation>
 
 foo_ty = foo
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α455' has no occurrences...
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α431' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:441)
 
 def foo_ty2: (C['r] as 'r) -> nothing
-//│ foo_ty2: ((C['a .. 'b] as 'b) as 'a) -> nothing
+//│ foo_ty2: ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
 //│        = <missing implementation>
 
 :ns
@@ -192,7 +192,7 @@ foo_ty2
 //│      foo_ty2 is not implemented
 
 foo_ty = foo_ty2
-//│ ((C['a .. 'b] as 'b) as 'a) -> nothing
+//│ ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
 //│   <:  foo_ty:
 //│ Rec -> nothing
 //│       = <no result>
@@ -201,19 +201,19 @@ foo_ty = foo_ty2
 foo_ty2 = foo_ty
 //│ Rec -> nothing
 //│   <:  foo_ty2:
-//│ ((C['a .. 'b] as 'b) as 'a) -> nothing
+//│ ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
 //│        = <no result>
 //│          foo_ty and foo_ty2 are not implemented
 
 foo_ty2 = foo
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α497' has no occurrences...
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α476' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:441)
@@ -524,13 +524,22 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: (({a: 'a} as 'a) & 'b & 'c) -> ('b | 'd\a & {a: int} as 'd)
-//│            = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
 
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.531: 	f_manual_ns ainf
+//│ ║  l.540: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not have field 'a'
 //│ ║  l.526: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
@@ -573,13 +582,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.574: 	r.a
+//│ ║  l.583: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.563: 	r = f 1
+//│ ║  l.572: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.574: 	r.a
+//│ ║  l.583: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:

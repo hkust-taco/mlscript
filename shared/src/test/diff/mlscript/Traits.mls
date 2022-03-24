@@ -29,12 +29,12 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {x: 'x & ('a | 'b), y: string & 'y} -> (D with {x: 'x, y: 'y})
+//│ res: {x: 'x & (0 & int | 1 & int), y: string & 'y} -> (D with {x: 'x, y: 'y})
 //│    = [Function: res]
 
 :re
 error: A & B
-//│ res: 'a
+//│ res: A & B
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -55,35 +55,38 @@ def dv = D { x = 0; y = "hello" }
 
 :e
 dv: nothing
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.equals$(TyperHelpers.scala:217)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.equals(TyperDatatypes.scala:76)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:268)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:266)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:76)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:282)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:266)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:76)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$mkType$2(NormalForms.scala:21)
-//│ 	at: scala.Option.fold(Option.scala:263)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.57: 	dv: nothing
+//│ ║        	^^
+//│ ╟── application of type `D with {x: ?x, y: ?y}` does not match type `nothing`
+//│ ║  l.52: 	def dv = D { x = 0; y = "hello" }
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.57: 	dv: nothing
+//│ ║        	^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.57: 	dv: nothing
+//│ ╙──      	    ^^^^^^^
+//│ res: nothing
+//│    = D { x: 0, y: 'hello' }
 
 dv: A & B
-//│ res: 'a
+//│ res: A & B
 //│    = D { x: 0, y: 'hello' }
 
 :e
 dv: A & B: nothing
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: scala.collection.SortedSet.equals$(SortedSet.scala:30)
-//│ 	at: scala.collection.immutable.TreeSet.equals(TreeSet.scala:225)
-//│ 	at: scala.runtime.BoxesRunTime.equals2(BoxesRunTime.java:133)
-//│ 	at: scala.runtime.BoxesRunTime.equals(BoxesRunTime.java:119)
-//│ 	at: mlscript.utils.package$AnyOps.$eq$eq$eq(package.scala:15)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:62)
-//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:227)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$16(NormalForms.scala:322)
-//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.78: 	dv: A & B: nothing
+//│ ║        	^^
+//│ ╟── type `A & B` does not match type `nothing`
+//│ ║  l.78: 	dv: A & B: nothing
+//│ ║        	    ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.78: 	dv: A & B: nothing
+//│ ╙──      	           ^^^^^^^
+//│ res: nothing
+//│    = D { x: 0, y: 'hello' }
 
 
 trait Indirect: C
@@ -95,10 +98,10 @@ class E: Indirect
 :e
 E{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.96: 	E{}
+//│ ║  l.99: 	E{}
 //│ ║        	^^^
 //│ ╟── record literal of type `anything` does not have field 'x'
-//│ ║  l.96: 	E{}
+//│ ║  l.99: 	E{}
 //│ ╙──      	 ^^
 //│ res: E & {x: nothing} | error
 //│    = E {}
@@ -117,19 +120,19 @@ trait T1: C & A
 :e
 def t = T1 (A { x = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	        ^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{x: 1}` does not match type `C | ~a`
-//│ ║  l.118: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	              ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `C | ~a`
-//│ ║  l.118: 	def t = T1 (A { x = 1 })
+//│ ║  l.121: 	def t = T1 (A { x = 1 })
 //│ ║         	            ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.114: 	trait T1: C & A
+//│ ║  l.117: 	trait T1: C & A
 //│ ║         	          ^
 //│ ╟── from intersection type:
-//│ ║  l.114: 	trait T1: C & A
+//│ ║  l.117: 	trait T1: C & A
 //│ ╙──       	          ^^^^^
 //│ t: error | {x: 1} & a & t1
 //│  = { x: 1 }
@@ -152,10 +155,10 @@ class C1: B & T1 & { y: "hi" | "hello" }
 :e
 def c1 = C1 { }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.153: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ║         	         ^^^^^^
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
-//│ ║  l.153: 	def c1 = C1 { }
+//│ ║  l.156: 	def c1 = C1 { }
 //│ ╙──       	            ^^^
 //│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined, x: undefined }

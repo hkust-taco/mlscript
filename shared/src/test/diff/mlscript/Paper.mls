@@ -82,7 +82,7 @@ fun x -> safeDiv 1 x
 //│    = [Function: res]
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: (~int | 'a & ~0) -> (int | None)
+//│ res: (int & int & ~0 | ~int) -> (int | None)
 //│    = [Function: res]
 
 :e // we no longer refine x's type here, as that was rather unexpected

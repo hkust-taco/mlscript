@@ -10,7 +10,7 @@ class None[A]: Option[A]
     method Destruct = this
 //│ Defined class Option
 //│ Declared Option.Get: Option['A] -> 'A
-//│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
+//│ Declared Option.Destruct: Option['A] -> (Some['A] | None['A])
 //│ Defined class Some
 //│ Defined Some.Get: Some['A] -> 'A
 //│ Defined Some.Destruct: Some['A] -> Some['A]
@@ -80,12 +80,12 @@ o = l.(Cons.HeadOption)
 o = l.HeadOption
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: A249' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:441)
@@ -99,12 +99,12 @@ v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α274' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:441)

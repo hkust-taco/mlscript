@@ -195,8 +195,8 @@ d: C['a]
 //│ Typed as: C[['a3]]
 //│  where: A2 :> [[[[[[[[1<int,number>]]]]]]]] | [[[[["hi"<string>]]]]] | [[1<int,number>]] <: [['a3]], 'a3 :> [[[[[1<int,number>]]]]] | [["hi"<string>]] <: [[A2]]
 //│ ty[true] C[['a3]]
-//│ -> DNF(C[['a3]]\{})
-//│ DNF[true] DNF(C[['a3]]\{})
+//│ -> DNF({})
+//│ DNF[true] DNF({})
 //│ | ty[false] ['a3]
 //│ | | Consider 'a3 List([[[[[1<int,number>]]]]], [["hi"<string>]]) List([[A2]])
 //│ | | Consider A2 List([[[[[[[[1<int,number>]]]]]]]], [[[[["hi"<string>]]]]], [[1<int,number>]]) List([['a3]])
@@ -210,8 +210,8 @@ d: C['a]
 //│ | -> DNF('a3 | 1<int,number>{} | "hi"<string>{})
 //│ | DNF[true] DNF('a3 | 1<int,number>{} | "hi"<string>{})
 //│ | ~> ("hi"<string> | ('a5 | 1<int,number>))
-//│ ~> C[(A4 & 'a5)..("hi"<string> | ('a5 | 1<int,number>))]\
-//│ Canon: C[(A4 & 'a5)..("hi"<string> | ('a5 | 1<int,number>))]\
+//│ ~> C[(A4 & 'a5)..("hi"<string> | ('a5 | 1<int,number>))]
+//│ Canon: C[(A4 & 'a5)..("hi"<string> | ('a5 | 1<int,number>))]
 //│  where: 
 //│ [occs] LinkedHashMap((true,'a5) -> HashSet('a5, "hi"<string>, 1<int,number>), (false,'a5) -> HashSet('a5))
 //│ [vars] TreeSet(A4, 'a5)
@@ -219,12 +219,12 @@ d: C['a]
 //│ [rec] HashSet()
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: A4 has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:482)

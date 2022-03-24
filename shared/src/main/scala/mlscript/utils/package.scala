@@ -155,6 +155,9 @@ package object utils {
   implicit class SortedSetObjectHelpers(self: SortedSet.type) {
     def single[A: Ordering](a: A): SortedSet[A] = (SortedSet.newBuilder[A] += a).result()
   }
+  implicit class SortedMapObjectHelpers(self: SortedMap.type) {
+    def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
+  }
   
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")

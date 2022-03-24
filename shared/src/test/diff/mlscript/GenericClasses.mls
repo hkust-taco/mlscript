@@ -39,7 +39,7 @@ res.value
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 42
 
 :e
@@ -50,7 +50,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── integer literal of type `42` does not match type `None | Some[int]`
+//│ ╟── integer literal of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
@@ -133,7 +133,7 @@ error: (Foo2[?] & 'a) -> 'a
 //│   Error: unexpected runtime error
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: ('a & ('b | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
+//│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
 //│    = [Function: f]
 
 :ns

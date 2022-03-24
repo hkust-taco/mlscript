@@ -84,7 +84,7 @@ f (c: Parent)
 //│ ╟── from reference:
 //│ ║  l.63: 	def f x = case x of {
 //│ ╙──      	               ^
-//│ res: string | error
+//│ res: error | string
 //│    = 'Bob'
 
 

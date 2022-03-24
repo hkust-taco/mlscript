@@ -107,10 +107,10 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
+//│ ╟── integer literal of type `2` does not match type `Nil | Cons[?A]`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
+//│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -182,8 +182,8 @@ c 1 (c 2 Nil)
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
-//│ c: 'a -> (List['b] & 'l) -> (Cons[anything] & {head: 'a, tail: 'l})
+//│ c: 'a -> (List['b] & 'l) -> ({head: 'a, tail: 'l} & Cons[anything])
 //│  = <missing implementation>
-//│ res: Cons[anything] & {head: 1, tail: Cons[anything] & {head: 2, tail: Nil}}
+//│ res: {head: 1, tail: {head: 2, tail: Nil} & Cons[anything]} & Cons[anything]
 //│    = <no result>
 //│      c is not implemented

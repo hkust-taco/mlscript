@@ -32,13 +32,13 @@ eval ex
 //│    = 4
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: (Add['b .. 'a] | Lit | Nega['b .. 'a] as 'b) as 'a
+//│ e: (Lit | Add['b .. 'a] | Nega['b .. 'a] as 'b) as 'a
 //│  = <missing implementation>
 
 def e = ex
 //│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
 //│   <:  e:
-//│ (Add['b .. 'a] | Lit | Nega['b .. 'a] as 'b) as 'a
+//│ (Lit | Add['b .. 'a] | Nega['b .. 'a] as 'b) as 'a
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -86,7 +86,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── type `int` does not match type `Add[?e] | Lit | Nega[int]`
+//│ ╟── type `int` does not match type `Lit | Add[?e] | Nega[int]`
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -107,6 +107,6 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
-//│ res: int | error | int
+//│ res: error | int | int
 
 

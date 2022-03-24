@@ -155,12 +155,12 @@ Cons 1 (Cons 2 Nil)
 //│ res: (tail: List['a .. 1 | 'a],) -> Cons['a .. 1 | 'a]
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α51 has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 //│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:482)
@@ -207,7 +207,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.206: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?a]`
+//│ ╟── integer literal of type `2` does not match type `Nil[?a] | Cons[?a]`
 //│ ║  l.206: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
@@ -216,7 +216,7 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: Cons['a .. 1 | 'a] | error
+//│ res: error | Cons['a .. 1 | 'a]
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

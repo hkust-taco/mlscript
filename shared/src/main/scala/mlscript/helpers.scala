@@ -218,6 +218,10 @@ trait DeclImpl extends Located { self: Decl =>
   }
 }
 
+trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
+  def compare(that: TypeName): Int = this.name compare that.name
+}
+
 trait TermImpl extends StatementImpl { self: Term =>
   val original: this.type = this
   

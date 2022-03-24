@@ -167,52 +167,66 @@ f_2 = f_1
 
 
 def test: (string, 1) & { _1: "hello" }
-//│ test: (string & 'a, 1,)
-//│     = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
 
 :e
 test = ("hi", 1)
-//│ ("hi", 1,)
-//│   <:  test:
-//│ (string & 'a, 1,)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.174: 	test = ("hi", 1)
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hi"` does not match type `"hello"`
-//│ ║  l.174: 	test = ("hi", 1)
-//│ ║         	        ^^^^
-//│ ╟── Note: constraint arises from literal type:
-//│ ║  l.169: 	def test: (string, 1) & { _1: "hello" }
-//│ ╙──       	                              ^^^^^^^
-//│     = [ 'hi', 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
 
 test = ("hello", 1)
-//│ ("hello", 1,)
-//│   <:  test:
-//│ (string & 'a, 1,)
-//│     = [ 'hello', 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
 
 (fun ((a, b)) -> a) test
-//│ res: string | 'a
+//│ res: string
 //│    = 'hello'
 
 test: { _1: 'a }
-//│ res: {_1: 'a}
+//│ res: {_1: "hello" & string}
 //│    = [ 'hello', 1 ]
 
 test: ('a, 1)
-//│ res: (string | 'a, 1,)
+//│ res: (string, 1,)
 //│    = [ 'hello', 1 ]
 
 :e
 class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.208: 	class A: (1,2)
+//│ ║  l.222: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
 
 
 :re
 error: Array[1] & { _1: int }
-//│ res: Array[1] & {_1: int}
+//│ res: {_1: int} & Array[1]
 //│ Runtime error:
 //│   Error: unexpected runtime error

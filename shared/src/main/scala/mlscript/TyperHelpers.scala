@@ -115,7 +115,7 @@ abstract class TyperHelpers { self: Typer =>
       }
       c.lnf match {
         case LhsTop => ()
-        case LhsRefined(_, ttags, _) =>
+        case LhsRefined(_, ttags, _, _) =>
           ttags.foreach { ttg =>
             factors(ttg) = factors.getOrElse(ttg, 0) + 1
           }

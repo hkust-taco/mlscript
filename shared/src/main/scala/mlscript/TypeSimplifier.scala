@@ -60,17 +60,17 @@ trait TypeSimplifier { self: Typer =>
           (inProcess + pty) pipe { implicit inProcess =>
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
               def adapt(pol: Bool)(l: LhsNf): LhsNf = l match {
-                case LhsRefined(b, ts, RecordType(fs)) => LhsRefined(
+                case LhsRefined(b, ts, RecordType(fs), trs) => LhsRefined(
                   b.map {
                     case ft @ FunctionType(l, r) =>
                       FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
                     // case wo @ Without(b, ns) if ns.isEmpty =>
-                    case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
-                      // FIXME hacky!!
-                      // FIXedME recurse in type args!!! not sound otherwise
-                      // TODO actually make polarity optional and recurse with None
-                      Without(TypeRef(defn, targs.map(targ =>
-                        TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov), ns)(wo.prov)
+                    // case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
+                    //   // FIXME hacky!!
+                    //   // FIXedME recurse in type args!!! not sound otherwise
+                    //   // TODO actually make polarity optional and recurse with None
+                    //   Without(TypeRef(defn, targs.map(targ =>
+                    //     TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov), ns)(wo.prov)
                     case wo @ Without(b, ns) =>
                       Without(goDeep(b, pol), ns)(noProv)
                     case ft @ TupleType(fs) =>
@@ -89,7 +89,13 @@ trait TypeSimplifier { self: Typer =>
                         case _ => lastWords(s"$nme: $ty")
                       }
                     case (nme, ty) => nme -> goDeep(ty, pol)
-                  })(noProv)
+                  })(noProv),
+                  trs.map {
+                    case (d, tr @ TypeRef(defn, targs)) =>
+                      // TODO actually make polarity optional and recurse with None
+                      d -> TypeRef(defn, targs.map(targ =>
+                        TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov)
+                  }
                 )
                 case LhsTop => LhsTop
               }
@@ -360,7 +366,7 @@ trait TypeSimplifier { self: Typer =>
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
             
-            case LhsRefined(bo, tts, rcd) =>
+            case LhsRefined(bo, tts, rcd, trs) =>
               // The handling of type parameter fields is currently a little wrong here,
               //  because we remove:
               //    - type parameter fields of parent classes,
@@ -370,6 +376,13 @@ trait TypeSimplifier { self: Typer =>
               //    - type parameter fields of the current trait tags
               //        whereas we don't actually reconstruct applied trait types...
               //        it would be better to just reconstruct them (TODO)
+              
+              val trs2 = trs.map {
+                case (d, tr @ TypeRef(defn, targs)) =>
+                  // TODO actually make polarity optional and recurse with None
+                  d -> TypeRef(defn, targs.map(targ =>
+                    TypeBounds(go(targ, false), go(targ, true))(noProv)))(tr.prov)
+              }
               
               val traitPrefixes =
                 tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
@@ -416,6 +429,11 @@ trait TypeSimplifier { self: Typer =>
                     else Without(typeRef, removedFields)(noProv)
                   val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
                     else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
+                  
+                  val withTrs =
+                    // TODO merge these with reconstructed ones...
+                    trs2.valuesIterator.foldLeft(withType)(_ & _)
+                  
                   tts.toArray.sorted // TODO also filter out tts that are inherited by the class
                     .foldLeft(withType: ST)(_ & _)
                 case _ =>
@@ -448,7 +466,7 @@ trait TypeSimplifier { self: Typer =>
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields
                   }
-                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)
+                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted, trs2).toType(sort = true)
               }
             case LhsTop => TopType
           }, {

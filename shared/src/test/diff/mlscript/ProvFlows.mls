@@ -43,7 +43,7 @@ succ x3
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 
 f1 y1 = succ y1
@@ -96,7 +96,7 @@ f3 true
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 
 :ex
@@ -154,7 +154,7 @@ f3 x3
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 
 h1 f x = f x
@@ -237,7 +237,7 @@ h3 f3 x3
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 
 :ex
@@ -271,7 +271,7 @@ h3 f3 x3
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 // :d
 :ex
@@ -331,7 +331,7 @@ succ foo
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╙── [info] flowing into expression of type `int`
-//│ res: int | error
+//│ res: error | int
 
 
 

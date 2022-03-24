@@ -21,7 +21,7 @@ def foo b x = case b of {
   | Derived1 -> b.M2
   | Base1 -> b.M1 x
   }
-//│ foo: ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
+//│ foo: (Base1[?] & ~derived1 | Derived1) -> 'A -> (Derived1 | Base1['A])
 //│    = [Function: foo]
 
 d1 = Derived1 { x = 1 }
@@ -30,9 +30,9 @@ d1 = Derived1 { x = 1 }
 
 foo d1
 foo d1 0
-//│ res: 'A -> (Base1['A] | Derived1)
+//│ res: 'A -> (Derived1 | Base1['A])
 //│    = [Function (anonymous)]
-//│ res: Base1['A .. 0 | 'A] | Derived1
+//│ res: Derived1 | Base1['A .. 0 | 'A]
 //│    = Derived1 { x: 2 }
 
 def bar0: Base1[int] -> int -> Base1[int]
@@ -50,7 +50,7 @@ bar0 d1 0
 // This is ill-typed because type `Base1[int]` includes things like `Derived1\x` (a `Derived` instance without an `x` field)
 :e
 def bar0 = foo
-//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
+//│ (Base1[?] & ~derived1 | Derived1) -> 'A -> (Derived1 | Base1['A])
 //│   <:  bar0:
 //│ Base1[int] -> int -> Base1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -79,7 +79,7 @@ bar1 d1 0
 
 :e
 def bar1 = foo
-//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
+//│ (Base1[?] & ~derived1 | Derived1) -> 'A -> (Derived1 | Base1['A])
 //│   <:  bar1:
 //│ Type1[int] -> int -> Type1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -168,7 +168,7 @@ bar2 d1 0
 // Note that typing this would require GADT reasoning! Though it also suffers from the previous "Derived1 with missing x field" problem.
 :e
 def bar2 = foo
-//│ ('a | 'b & ~derived1) -> 'A -> (Base1['A] | Derived1)
+//│ (Base1[?] & ~derived1 | Derived1) -> 'A -> (Derived1 | Base1['A])
 //│   <:  bar2:
 //│ Base1['a] -> 'a -> Base1['a]
 //│ ╔══[ERROR] Type mismatch in def definition:

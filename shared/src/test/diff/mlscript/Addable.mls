@@ -19,7 +19,7 @@ n = Num { val = 1 }
 //│  = Num { val: 1 }
 
 n.Add n
-//│ res: Num | Num & {val: 1}
+//│ res: Num & {val: 1} | Num
 //│    = Num { val: 2 }
 
 
@@ -28,7 +28,7 @@ def addTwo a0 a1 = a0.Add a1
 //│       = [Function: addTwo]
 
 addTwo n n
-//│ res: Num | Num & {val: 1}
+//│ res: Num & {val: 1} | Num
 //│    = Num { val: 2 }
 
 s = Str { val = "hey" }
@@ -36,11 +36,11 @@ s = Str { val = "hey" }
 //│  = Str { val: 'hey' }
 
 s.Add s
-//│ res: Str | Str & {val: "hey"}
+//│ res: Str & {val: "hey"} | Str
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ res: Str | Str & {val: "hey"}
+//│ res: Str & {val: "hey"} | Str
 //│    = Str { val: 'heyhey' }
 
 
@@ -50,7 +50,7 @@ def addSame a = a.Add a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: Num | Num & {val: 1}
+//│ res: Num & {val: 1} | Num
 //│    = Num { val: 2 }
 
 
@@ -60,11 +60,11 @@ rec def addNTimes a n =
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: Num | Num & {val: 1}
+//│ res: Num & {val: 1} | Num
 //│    = Num { val: 12 }
 
 addNTimes s 5
-//│ res: Str | Str & {val: "hey"}
+//│ res: Str & {val: "hey"} | Str
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -82,13 +82,13 @@ rec def addNTimes a n =
 addNTimes n 12
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α214' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:283)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 
@@ -97,13 +97,13 @@ rec def addNTimes a n =
 addNTimes n 12
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α241' has no occurrences...
 //│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:214)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:207)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10(TypeSimplifier.scala:220)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$10$adapted(TypeSimplifier.scala:213)
 //│ 	at: scala.collection.immutable.RedBlackTree$._foreachKey(RedBlackTree.scala:284)
 //│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:283)
 //│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:207)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:133)
+//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:139)
 //│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
 //│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:275)
 
@@ -117,17 +117,7 @@ addSame n n
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
 //│ ║  l.+1: 	addSame n n
 //│ ╙──      	        ^
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:24)
-//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:17)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:226)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$16(NormalForms.scala:322)
-//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:322)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$14(NormalForms.scala:319)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:319)
-//│ 	at: mlscript.NormalForms$DNF$.merge(NormalForms.scala:349)
+//│ res: error
 
 addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
@@ -145,17 +135,7 @@ addTwo s n
 //│ ╟── from reference:
 //│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.NormalForms$LhsNf.mkType(NormalForms.scala:21)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying$lzycompute(NormalForms.scala:24)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:24)
-//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:17)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:226)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$16(NormalForms.scala:322)
-//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:322)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$14(NormalForms.scala:319)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ res: error
 
 class Str_bad_0: Addable[Str_bad_0] & { val: string }
   method Add that = Str_bad_0 { val = this.val + that.val }

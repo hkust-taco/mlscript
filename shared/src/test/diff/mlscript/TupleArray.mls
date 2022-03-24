@@ -68,7 +68,7 @@ fr : Array[int] & {b: int}
 //│ fr: (1, 2, 3,) & {b: 2}
 //│   = <no result>
 //│     r is not implemented
-//│ res: Array[int] & {b: int}
+//│ res: {b: int} & Array[int]
 //│    = <no result>
 //│      fr and r are not implemented
 
@@ -164,7 +164,7 @@ class A: { x: int }
 //│ Defined class A
 
 def myval: A & { x: anything }
-//│ myval: A & {x: anything}
+//│ myval: {x: anything} & A
 //│      = <missing implementation>
 
 // def myval: a & { x: string }
@@ -345,13 +345,20 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: (int, bool,) | Array[int]
 //│    = <missing implementation>
-//│ test: (string & 'a, 1,)
-//│     = <missing implementation>
-//│ test2: (string & 'a, 1,) & {_3: int}
-//│      = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$9(NormalForms.scala:88)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:87)
+//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$$amp$12(NormalForms.scala:97)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ 	at: scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ 	at: scala.collection.AbstractIterator.foldLeft(Iterator.scala:1288)
+//│ 	at: mlscript.NormalForms$LhsNf.$amp(NormalForms.scala:97)
+//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:246)
 
 test: { _1: 'a }
-//│ res: {_1: 'a}
+//│ res: {_1: "hello" & string}
 //│    = <no result>
 //│      test is not implemented
 
@@ -359,13 +366,13 @@ test: { _1: 'a }
 //    but we currently don't recover the intersected positional field from the record
 //    when constraining refined tuples.
 test: ('a, 1)
-//│ res: (string | 'a, 1,)
+//│ res: (string, 1,)
 //│    = <no result>
 //│      test is not implemented
 
 // TODO in principe, we could narrow the refinement to ` & { _1: 1 }` here...
 def test3: Array[1] & { _1: int }
-//│ test3: Array[1] & {_1: int}
+//│ test3: {_1: int} & Array[1]
 //│      = <missing implementation>
 
 def fta1: Array[int | bool] -> int
@@ -373,7 +380,7 @@ def tb1: (int, true)
 fta1 tb1
 r1 = if true then (1,2,3) else (1, 2)
 fta1 r1
-//│ fta1: Array[bool | int] -> int
+//│ fta1: Array[int | bool] -> int
 //│     = <missing implementation>
 //│ tb1: (int, true,)
 //│    = <missing implementation>
@@ -391,7 +398,7 @@ def p1: T | Array[bool] | (int, string) | (true, 3)
 def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t._1)
 pf((1,2,3))
-//│ p1: (int | true, 3 | string,) | Array[bool] | T
-//│ p2: (2 | string, 4 | bool,) | Array[int] | T
+//│ p1: (int | true, 3 | string,) | T | Array[bool]
+//│ p2: (2 | string, 4 | bool,) | T | Array[int]
 //│ pf: (Array['a] & {_1: 'b}) -> ('a, 'b,)
 //│ res: (1 | 2 | 3, 1,)
