@@ -536,6 +536,7 @@ trait TypeSimplifier { self: Typer =>
         }.foldLeft(BotType: ST)(_ | _) |> factorize
         }
         DNF.mk(ty, pol)(ctx, ptr = true, etf = false) match {
+        // DNF.mk(ty, pol)(ctx, ptr = false, etf = false) match {
           case R(dnf) => helper(dnf, pol)
           case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
         }

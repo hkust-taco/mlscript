@@ -150,6 +150,39 @@ def mrg: Foo2[int] & Foo2[string]
 //│ mrg: Foo2[int | string .. int & string]
 //│    = <missing implementation>
 
+mrg: Foo2[int]
+//│ res: Foo2[int]
+//│    = <no result>
+//│      mrg is not implemented
+
+:e
+mrg = Foo2{}
+//│ Foo2['A]
+//│   <:  mrg:
+//│ Foo2[int | string .. int & string]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.159: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.108: 	class Foo2[A]
+//│ ╙──       	           ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.159: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	                          ^^^^^^
+//│    = Foo2 {}
+
 def mrg: Foo2[int] | Foo2[string]
 //│ mrg: Foo2[int] | Foo2[string]
 //│    = <missing implementation>

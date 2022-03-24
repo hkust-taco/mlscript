@@ -67,10 +67,15 @@ rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
 class C4[A]: { a: C[C4[A]] }
 //│ Defined class C4
 
-// :ds
 def c: 'a -> C4['a]
 //│ c: 'a -> C4['a]
 
+// :d
+// :ds
+C{}
+//│ res: C['A]
+
+// :ds
 def c4 a = C4{ a = C{} }
 //│ c4: anything -> (C4['A] with {a: C[C4['A] & 'A0 .. 'A0 | C4['A]]})
 
@@ -101,10 +106,17 @@ class C6[A]: { a: C5[C6[A]] }
 def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
-rec def c a = C6{ a = c5 (c a) }
-//│ anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2[C5[C6['A]] & 'A1 .. 'A1 | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]] | C5[C6['A]]] with {a: 'a}}) as 'a})
-//│   <:  c:
-//│ 'a -> C6['a]
+// :s
+// :d
+// rec def c a = C6{ a = c5 (c a) }
+
+rec def c6 a = C6{ a = c5 (c6 a) }
+//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2[C5[C6['A]] & 'A1 .. 'A1 | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]] | C5[C6['A]]] with {a: 'a}}) as 'a})
+
+// FIXME SOF
+// :d
+// c = c6
+
 
 
 
@@ -121,4 +133,7 @@ class L[T]: { h: T; t: O[L[T]] }
 //│ Declared L.Append: L['T] -> 'T -> L['T]
 //│ Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
 
+
+S{v=1}
+//│ res: S['T .. 1 | 'T] with {v: 1}
 

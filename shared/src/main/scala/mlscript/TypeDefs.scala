@@ -267,8 +267,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
+                  // val fields = fieldsOf(td.bodyTy, false)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
                     tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                  // val tref = 
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -283,7 +285,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
-                        )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
+                        )(noProv)
+                        // TypeRef(td.nme, td.tparamsargs.unzip._2)(noProv) & RecordType.mk(fieldsRefined)(noProv)
+                      )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
                       val tv = freshVar(noProv)(1)

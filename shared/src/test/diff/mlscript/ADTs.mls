@@ -31,6 +31,14 @@ eval ex
 //│ res: int
 //│    = 4
 
+def e: Add['e] as 'e
+//│ e: 'e | (Add['b & 'e .. 'a] as 'b) as 'a
+//│  = <missing implementation>
+
+def e: Lit | Add['e] as 'e
+//│ e: 'e | (Add['e & ('b | Lit) .. 'a] as 'b) | Lit as 'a
+//│  = <missing implementation>
+
 def e: Lit | Add['e] | Nega['e] as 'e
 //│ e: 'e | (Add['e & ('b | Lit | Nega['c]) as 'c .. 'a as 'c] as 'b) | Lit | (Nega['e & ((Add['c] as 'b) | Lit | 'd) as 'c .. 'a as 'c] as 'd) as 'a
 //│  = <missing implementation>
@@ -93,7 +101,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.34: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.42: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)

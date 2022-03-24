@@ -12,3 +12,27 @@ def n: C{}
 //│ res: anything
 //│    = {}
 
+
+// class G[A]: { a: G[A] & A & G[A] }
+class G[A]: { a: G[A] }
+//│ Defined class G
+
+def g: G['a] & {a: 'a} as 'a
+//│ g: 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+//│  = <missing implementation>
+
+:NoJS
+
+// rec def g2 a = G { a }
+// :re
+rec def g2 = G { a = g2 }
+//│ g2: (G['A] with {a: 'a}) as 'a
+
+// g = g2
+// :d
+// :re
+g = g
+//│ 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+//│   <:  g:
+//│ 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+
