@@ -385,6 +385,22 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
+    
+    // TODO inline logic
+    def mk(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx): Either[(DNF, DNF), DNF] = {
+      implicit val preserveTypeRefs: Bool = true
+      pol match {
+        case S(true) => R(mk(ty, true))
+        case S(false) => R(mk(ty, false))
+        case N =>
+          // TODO less inefficient! don't recompute
+          val dnf1 = mk(ty, true)
+          // if (dnf1.cs.exists(_.vars.nonEmpty))
+          val dnf2 = mk(ty, false)
+          if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
+          else L(dnf1 -> dnf2)
+      }
+    }
   }
   
   

@@ -8,7 +8,7 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
-  def canonicalizeType(ty: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     // type PolarType = (DNF, Bool)
     type PolarType = DNF
     
@@ -21,15 +21,20 @@ trait TypeSimplifier { self: Typer =>
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    def goDeep(ty: SimpleType, pol: Bool)(implicit inProcess: Set[PolarType]): SimpleType =
-      go1(go0(ty, pol), pol)
+    def goDeep(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): SimpleType =
+      // go1(go0(ty, pol), pol)
+      go0(ty, pol) match {
+        case R(dnf) => go1(dnf, pol)
+        case L((dnf1, dnf2)) =>
+          TypeBounds(go1(dnf1, S(false)), go1(dnf2, S(true)))(noProv)
+      }
     
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
-    def go0(ty: SimpleType, pol: Bool)(implicit inProcess: Set[PolarType]): DNF = 
+    def go0(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
     trace(s"ty[$pol] $ty") {
       
-      // TODO should we also coalesce nvars? is it bad if we don't?
-      def rec(dnf: DNF, done: Set[TV]): DNF = dnf.cs.iterator.map { c =>
+      // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
+      def rec(dnf: DNF, done: Set[TV], pol: Bool): DNF = dnf.cs.iterator.map { c =>
         val vs = c.vars.filterNot(done)
         vs.iterator.map { tv =>
           println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
@@ -37,19 +42,25 @@ trait TypeSimplifier { self: Typer =>
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)
           // println(s"b $b")
-          val bd = rec(DNF.mk(b, pol)(ctx, preserveTypeRefs = true), done + tv)
+          val bd = rec(DNF.mk(b, pol)(ctx, preserveTypeRefs = true), done + tv, pol)
           // println(s"bd $bd")
           bd
         }
         .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
       }.foldLeft(DNF.extr(false))(_ | _)
       
-      rec(DNF.mk(ty, pol)(ctx, preserveTypeRefs = true), Set.empty)
+      // rec(DNF.mk(ty, pol)(ctx), Set.empty)
+      DNF.mk(ty, pol)(ctx) match {
+        case R(dnf) =>
+          // println(dnf.cs.map(_.vars.isEmpty))
+          pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
+        case L((dnf1, dnf2)) => L(rec(dnf1, Set.empty, false), rec(dnf2, Set.empty, true))
+      }
       
     }(r => s"-> $r")
     
     // Merge the bounds of all type variables of the given DNF, and traverse the result
-    def go1(ty: DNF, pol: Bool)
+    def go1(ty: DNF, pol: Opt[Bool])
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
       if (ty.isBot) ty.toType(sort = true) else {
         // val pty = ty -> pol
@@ -59,11 +70,11 @@ trait TypeSimplifier { self: Typer =>
         else {
           (inProcess + pty) pipe { implicit inProcess =>
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
-              def adapt(pol: Bool)(l: LhsNf): LhsNf = l match {
+              def adapt(pol: Opt[Bool])(l: LhsNf): LhsNf = l match {
                 case LhsRefined(b, ts, RecordType(fs), trs) => LhsRefined(
                   b.map {
                     case ft @ FunctionType(l, r) =>
-                      FunctionType(goDeep(l, !pol), goDeep(r, pol))(noProv)
+                      FunctionType(goDeep(l, pol.map(!_)), goDeep(r, pol))(noProv)
                     // case wo @ Without(b, ns) if ns.isEmpty =>
                     // case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
                     //   // FIXME hacky!!
@@ -85,7 +96,7 @@ trait TypeSimplifier { self: Typer =>
                     case (nme, ty) if nme.name.isCapitalized && nme.name.contains('#') =>
                       ty match {
                         case FunctionType(lb, ub) =>
-                          nme -> FunctionType(goDeep(lb, !pol), goDeep(ub, pol))(ty.prov)
+                          nme -> FunctionType(goDeep(lb, pol.map(!_)), goDeep(ub, pol))(ty.prov)
                         case _ => lastWords(s"$nme: $ty")
                       }
                     case (nme, ty) => nme -> goDeep(ty, pol)
@@ -94,12 +105,12 @@ trait TypeSimplifier { self: Typer =>
                     case (d, tr @ TypeRef(defn, targs)) =>
                       // TODO actually make polarity optional and recurse with None
                       d -> TypeRef(defn, targs.map(targ =>
-                        TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov)
+                        TypeBounds(goDeep(targ, S(false)), goDeep(targ, S(true)))(noProv)))(tr.prov)
                   }
                 )
                 case LhsTop => LhsTop
               }
-              def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
+              def adapt2(pol: Opt[Bool])(l: RhsNf): RhsNf = l match {
                 case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
                 case RhsBases(prims, bf) =>
                   // TODO refactor to handle goDeep returning something else...
@@ -114,14 +125,31 @@ trait TypeSimplifier { self: Typer =>
                   })
                 case RhsBot => RhsBot
               }
-              Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(!pol)(rnf), nvars.map(renew))
+              Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(pol.map(!_))(rnf), nvars.map(renew))
             })
             val adapted = res.toType(sort = true)
             recursive.get(pty) match {
               case Some(v) =>
-                val bs = if (pol) v.lowerBounds else v.upperBounds
-                if (bs.isEmpty) { // it's possible we have already set the bounds in a sibling call
-                  if (pol) v.lowerBounds ::= adapted else v.upperBounds ::= adapted
+                // pol match {
+                //   // case S(pol) =>
+                //   //   val bs = if (pol) v.lowerBounds else v.upperBounds
+                //   //   if (bs.isEmpty) { // it's possible we have already set the bounds in a sibling call
+                //   //     if (pol) v.lowerBounds ::= adapted else v.upperBounds ::= adapted
+                //   //   }
+                //   case S(true) =>
+                //     // it's possible we have already set the bounds in a sibling call
+                //     if (v.lowerBounds.isEmpty) {
+                //       v.lowerBounds ::= adapted
+                //     }
+                //   case N =>
+                //     v.lowerBounds ::= adapted
+                //     v.upperBounds ::= adapted
+                // }
+                if (v.lowerBounds.isEmpty && pol =/= S(false)) {
+                  v.lowerBounds ::= adapted
+                }
+                if (v.upperBounds.isEmpty && pol =/= S(true)) {
+                  v.upperBounds ::= adapted
                 }
                 v
               case None => adapted
@@ -136,7 +164,7 @@ trait TypeSimplifier { self: Typer =>
   }
   
   
-  def simplifyType(st: SimpleType, pol: Bool = true, removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
+  def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
@@ -202,7 +230,8 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
-    analyze(st, pol)
+    if (pol =/= S(false)) analyze(st, true)
+    if (pol =/= S(true)) analyze(st, false)
     
     println(s"[occs] ${coOccurrences}")
     
@@ -292,16 +321,16 @@ trait TypeSimplifier { self: Typer =>
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
-    def transform(st: SimpleType, pol: Bool): SimpleType = st match {
+    def transform(st: SimpleType, pol: Opt[Bool]): SimpleType = st match {
       case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
-      case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
+      case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_)), transform(r, pol))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
         varSubst.get(tv) match {
           case S(S(ty)) => transform(ty, pol)
-          case S(N) => ExtrType(pol)(noProv)
+          case S(N) => pol.fold(die)(pol => ExtrType(pol)(noProv))
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
@@ -311,23 +340,25 @@ trait TypeSimplifier { self: Typer =>
               nv
             })
             if (!wasDefined) {
-              res.lowerBounds = tv.lowerBounds.map(transform(_, true))
-              res.upperBounds = tv.upperBounds.map(transform(_, false))
+              res.lowerBounds = tv.lowerBounds.map(transform(_, S(true)))
+              res.upperBounds = tv.upperBounds.map(transform(_, S(false)))
             }
             res
         }
       case ty @ ComposedType(true, l, r) => transform(l, pol) | transform(r, pol)
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
-      case NegType(und) => transform(und, !pol).neg()
+      case NegType(und) => transform(und, pol.map(!_)).neg()
       case ProxyType(underlying) => transform(underlying, pol)
       case tr @ TypeRef(defn, targs) =>
-        // transform(tr.expand, pol) // FIXME may diverge; and we should try to keep these!
-        TypeRef(defn, targs.map(targ => TypeBounds(transform(targ, false), transform(targ, true))(noProv)))(tr.prov)
+        // transform(tr.expand, pol) // FIXedME may diverge; and we should try to keep these!
+        // TypeRef(defn, targs.map(targ => TypeBounds(transform(targ, false), transform(targ, true))(noProv)))(tr.prov)
+        TypeRef(defn, targs.map(transform(_, N)))(tr.prov) // TODO improve with variance analysis
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol)
         else Without(transform(base, pol), names)(wo.prov)
       case tb @ TypeBounds(lb, ub) =>
-        if (pol) transform(ub, true) else transform(lb, false)
+        pol.fold[ST](TypeBounds(transform(lb, S(false)), transform(ub, S(true)))(noProv))(pol =>
+          if (pol) transform(ub, S(true)) else transform(lb, S(false)))
     }
     transform(st, pol)
     
