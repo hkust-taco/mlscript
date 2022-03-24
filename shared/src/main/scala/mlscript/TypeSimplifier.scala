@@ -26,7 +26,7 @@ trait TypeSimplifier { self: Typer =>
       go0(ty, pol) match {
         case R(dnf) => go1(dnf, pol)
         case L((dnf1, dnf2)) =>
-          TypeBounds(go1(dnf1, S(false)), go1(dnf2, S(true)))(noProv)
+          TypeBounds.mk(go1(dnf1, S(false)), go1(dnf2, S(true)), noProv)
       }
     
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
@@ -105,7 +105,7 @@ trait TypeSimplifier { self: Typer =>
                     case (d, tr @ TypeRef(defn, targs)) =>
                       // TODO actually make polarity optional and recurse with None
                       d -> TypeRef(defn, targs.map(targ =>
-                        TypeBounds(goDeep(targ, S(false)), goDeep(targ, S(true)))(noProv)))(tr.prov)
+                        TypeBounds.mk(goDeep(targ, S(false)), goDeep(targ, S(true)), noProv)))(tr.prov)
                   }
                 )
                 case LhsTop => LhsTop
@@ -357,14 +357,14 @@ trait TypeSimplifier { self: Typer =>
         if (names.isEmpty) transform(base, pol)
         else Without(transform(base, pol), names)(wo.prov)
       case tb @ TypeBounds(lb, ub) =>
-        pol.fold[ST](TypeBounds(transform(lb, S(false)), transform(ub, S(true)))(noProv))(pol =>
+        pol.fold[ST](TypeBounds.mk(transform(lb, S(false)), transform(ub, S(true)), noProv))(pol =>
           if (pol) transform(ub, S(true)) else transform(lb, S(false)))
     }
     transform(st, pol)
     
   }
   
-  def reconstructClassTypes(st: SimpleType, pol: Bool, ctx: Ctx): SimpleType = {
+  def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
     
     implicit val ctxi: Ctx = ctx
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -376,32 +376,38 @@ trait TypeSimplifier { self: Typer =>
         case N =>
           val tv2 = freshVar(tv.prov, tv.nameHint)(tv.level)
           renewed += tv -> tv2
-          tv2.lowerBounds = tv.lowerBounds.map(go(_, true))
-          tv2.upperBounds = tv.upperBounds.map(go(_, false))
+          tv2.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
+          tv2.upperBounds = tv.upperBounds.map(go(_, S(false)))
           tv2
       }
     
-    def go(st: SimpleType, pol: Bool): SimpleType =
+    def go(st: SimpleType, pol: Opt[Bool]): SimpleType =
         // trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
         st match {
       case ExtrType(_) => st
       case tv: TypeVariable => renew(tv)
-      case NegType(und) => go(und, !pol).neg()
-      case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
+      case NegType(und) => go(und, pol.map(!_)).neg()
+      case TypeBounds(lb, ub) =>
+        pol.fold[ST](TypeBounds.mk(go(lb, S(false)), go(ub, S(true)), noProv))(pol =>
+          if (pol) go(ub, S(true)) else go(lb, S(false)))
       case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
       case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
-      case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
+      case FunctionType(l, r) => FunctionType(go(l, pol.map(!_)), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
       case wo @ Without(base, names) =>
-        if (pol) go(base, pol).withoutPos(names)
+        if (pol === S(true)) go(base, pol).withoutPos(names)
         else go(base, pol).without(names)
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
-          TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
+          // TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
+          go(targ, N)
         })(tr.prov)
       case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
-        val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
+        
+        def helper(dnf: DNF, pol: Opt[Bool]): ST = {
+        // val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
+        val cs = dnf.cs
         cs.sorted.map { c =>
           c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
             
@@ -418,9 +424,10 @@ trait TypeSimplifier { self: Typer =>
               
               val trs2 = trs.map {
                 case (d, tr @ TypeRef(defn, targs)) =>
-                  // TODO actually make polarity optional and recurse with None
-                  d -> TypeRef(defn, targs.map(targ =>
-                    TypeBounds(go(targ, false), go(targ, true))(noProv)))(tr.prov)
+                  // TODOne actually make polarity optional and recurse with None
+                  // d -> TypeRef(defn, targs.map(targ =>
+                  //   TypeBounds(go(targ, false), go(targ, true))(noProv)))(tr.prov)
+                  d -> TypeRef(defn, targs.map(go(_, N)))(tr.prov) // TODO improve with variance analysis
               }
               
               val traitPrefixes =
@@ -440,7 +447,8 @@ trait TypeSimplifier { self: Typer =>
                       // case ((acc_lb, acc_ub), (_, _)) => die
                       case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
                     }.pipe {
-                      case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
+                      // case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
+                      case (lb, ub) => TypeBounds.mk(go(lb, S(false)), go(ub, S(true)))
                     }
                     // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
                     //   case (_, ft: FunctionType) => ft
@@ -500,7 +508,7 @@ trait TypeSimplifier { self: Typer =>
                       S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(go(_, pol))
                     case S(ct: ClassTag) => S(ct) -> nFields
                     case S(ft @ FunctionType(l, r)) =>
-                      S(FunctionType(go(l, !pol), go(r, pol))(ft.prov)) -> nFields
+                      S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
                     case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields
@@ -523,6 +531,12 @@ trait TypeSimplifier { self: Typer =>
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize
+        }
+        DNF.mk(ty, pol)(ctx) match {
+          case R(dnf) => helper(dnf, pol)
+          case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+        }
+        
     }
     // }(r => s"=> $r")
     

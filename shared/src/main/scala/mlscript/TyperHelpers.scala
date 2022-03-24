@@ -503,7 +503,7 @@ abstract class TyperHelpers { self: Typer =>
       // this.normalize(true)
       // |> (canonicalizeType(_, true))
       // |> (simplifyType(_, true, removePolarVars = false))
-      |> (reconstructClassTypes(_, true, ctx))
+      |> (reconstructClassTypes(_, S(true), ctx))
       |> (expandType(_, true, stopAtTyVars = true))
     )
     def expNeg(implicit ctx: Ctx): Type = (
@@ -511,7 +511,7 @@ abstract class TyperHelpers { self: Typer =>
       // this.normalize(false)
       // |> (canonicalizeType(_, false))
       // |> (simplifyType(_, false, removePolarVars = false))
-      |> (reconstructClassTypes(_, false, ctx))
+      |> (reconstructClassTypes(_, S(false), ctx))
       |> (expandType(_, false, stopAtTyVars = true))
     )
     
