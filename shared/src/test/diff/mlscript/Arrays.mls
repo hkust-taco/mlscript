@@ -46,49 +46,49 @@ ty2B = ty2A
 
 
 def ty3A: MyArray['a] as 'a
-//│ ty3A: 'a | (MyArray['c & 'a .. 'b] as 'c) as 'b
+//│ ty3A: MyArray['a] as 'a
 
 :stats
 ty3A = ty3A
-//│ 'a | (MyArray['c & 'a .. 'b] as 'c) as 'b
+//│ MyArray['a] as 'a
 //│   <:  ty3A:
-//│ 'a | (MyArray['c & 'a .. 'b] as 'c) as 'b
+//│ MyArray['a] as 'a
 //│ constrain calls  : 51
 //│ annoying  calls  : 44
-//│ subtyping calls  : 104
+//│ subtyping calls  : 52
 
 def ty3B: MyArray[MyArray['a]] as 'a
-//│ ty3B: 'a | (MyArray['d & MyArray['c & 'a .. 'b] .. 'd | MyArray['c & 'a .. 'b]] as 'c) as 'b
+//│ ty3B: MyArray[MyArray['a]] as 'a
 
 :stats
 ty3B = ty3A
-//│ 'a | (MyArray['c & 'a .. 'b] as 'c) as 'b
+//│ MyArray['a] as 'a
 //│   <:  ty3B:
-//│ 'a | (MyArray['d & MyArray['c & 'a .. 'b] .. 'd | MyArray['c & 'a .. 'b]] as 'c) as 'b
+//│ MyArray[MyArray['a]] as 'a
 //│ constrain calls  : 144
 //│ annoying  calls  : 127
-//│ subtyping calls  : 249
+//│ subtyping calls  : 193
 
 :stats
 ty3A = ty3B
-//│ 'a | (MyArray['d & MyArray['c & 'a .. 'b] .. 'd | MyArray['c & 'a .. 'b]] as 'c) as 'b
+//│ MyArray[MyArray['a]] as 'a
 //│   <:  ty3A:
-//│ 'a | (MyArray['c & 'a .. 'b] as 'c) as 'b
+//│ MyArray['a] as 'a
 //│ constrain calls  : 139
 //│ annoying  calls  : 127
-//│ subtyping calls  : 235
+//│ subtyping calls  : 179
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
-//│ ty4B: 'a | (MyArray['d & MyArray[MyArray['c & 'a .. 'b]] .. 'd | MyArray[MyArray['c & 'a .. 'b]]] as 'c) as 'b
+//│ ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 
 :stats
 ty4B = ty4B
-//│ 'a | (MyArray['d & MyArray[MyArray['c & 'a .. 'b]] .. 'd | MyArray[MyArray['c & 'a .. 'b]]] as 'c) as 'b
+//│ MyArray[MyArray[MyArray['a]]] as 'a
 //│   <:  ty4B:
-//│ 'a | (MyArray['d & MyArray[MyArray['c & 'a .. 'b]] .. 'd | MyArray[MyArray['c & 'a .. 'b]]] as 'c) as 'b
+//│ MyArray[MyArray[MyArray['a]]] as 'a
 //│ constrain calls  : 120
 //│ annoying  calls  : 136
-//│ subtyping calls  : 231
+//│ subtyping calls  : 143
 
 
 

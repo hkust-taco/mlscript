@@ -162,23 +162,33 @@ x => { a: x }.b
 
 
 x => x x
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
+//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
+//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
+//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
 
 x => x x x
-//│ res: ('a -> 'a -> 'b & 'a) -> 'b
+//│ res: ('b -> 'a as 'b) -> 'c as 'a
 
 x => y => x y x
 //│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
 
 x => y => x x y
-//│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
+//│ res: 'a -> 'b -> 'c as 'a
 
 (x => x x) (x => x x)
 //│ res: nothing
 
 
 x => {l: x x, r: x }
-//│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
+//│ res: ('a -> 'b as 'a) -> {l: 'b, r: nothing as 'a}
 
 
 // From https://github.com/stedolan/mlsub
@@ -199,7 +209,7 @@ let rec trutru = g => trutru (g true)
 //│ trutru: (true -> 'a as 'a) -> nothing
 
 i => if ((i i) true) then true else true
-//│ res: ('a -> true -> bool & 'a) -> true
+//│ res: ('a -> true -> bool as 'a) -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -267,34 +277,54 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: 0
 
 (x => (let y = (x x); 0))
-//│ res: ('a -> anything & 'a) -> 0
+//│ res: ('a -> anything as 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('a & 'b) as 'a) -> 'b
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:28)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:283)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$9(TypeSimplifier.scala:292)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$9$adapted(TypeSimplifier.scala:292)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:292)
 
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: 'b -> 'a | 'b as 'a
+//│ res: (('b & 'c) -> 'a as 'a) | 'c
 
 (let rec x = (y => (x (y y))); x)
-//│ res: ('b -> 'a & 'b as 'a) -> nothing
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: mlscript.TypeSimplifier$$Lambda$12475/1311077947.get$Lambda(Unknown Source)
+//│ 	at: mlscript.TypeSimplifier.analyze$1(TypeSimplifier.scala:213)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$2(TypeSimplifier.scala:217)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TypeSimplifier.analyze$1(TypeSimplifier.scala:211)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:285)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
+//│ res: ('a -> 'b) -> ('c -> 'a as 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> ('a | 'b) as 'a
+//│ res: ('b & anything) -> 'a as 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> ('a | 'b) as 'a
+//│ res: ('b & anything) -> 'a as 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ({u: 'a | 'b, v: 'c} as 'c) as 'a
+//│ res: 'b -> ({u: 'a, v: 'c} as 'c) as 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ({u: 'c, v: 'a | 'b} as 'c) as 'a
+//│ res: 'b -> ({u: 'c, v: 'a} as 'c) as 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: ('a -> anything & 'b) -> 'b as 'a
@@ -303,6 +333,6 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: 'b -> ('a | 'b) as 'a
-//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
+//│ x: ('b & anything) -> 'a as 'a
+//│ res: ({u: 'a} & 'b & 'c & anything) -> ('a | ({u: 'a} -> 'a | 'd -> 'd as 'd)) | 'c
 

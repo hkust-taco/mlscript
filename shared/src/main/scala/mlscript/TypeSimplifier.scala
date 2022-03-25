@@ -8,37 +8,70 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
+  // TODO inline logic
+  private def mkDNF(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields, cache: MutMap[TV, Opt[Bool]]): Either[(DNF, DNF), DNF] = {
+    // implicit val preserveTypeRefs: Bool = true
+    // println(s"mk[${printPol(pol)}] ${ty}")
+    pol match {
+      case S(true) => R(DNF.mk(ty, true))
+      case S(false) => R(DNF.mk(ty, false))
+      case N =>
+        // TODO less inefficient! don't recompute
+        val dnf1 = DNF.mk(ty, true)
+        // if (dnf1.cs.exists(_.vars.nonEmpty))
+        val dnf2 = DNF.mk(ty, false)
+        // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
+        println(s"vars ${dnf1.cs.map(_.vars)}")
+        if (dnf1.cs.forall(_.vars.forall(_.isRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
+        else L(dnf1 -> dnf2)
+    }
+  }
+  
   def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     // type PolarType = (DNF, Bool)
     type PolarType = DNF
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
+    val recursiveVars = MutSet.empty[TypeVariable] // For rec nonpolar vars
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    
+    implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
     
     val allVars = ty.getVars
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    def goDeep(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): SimpleType =
+    def goDeep(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
+        case tv: TV if recursiveVars.contains(tv) => renew(tv)
+        case _ =>
       // go1(go0(ty, pol), pol)
       go0(ty, pol) match {
         case R(dnf) => go1(dnf, pol)
         case L((dnf1, dnf2)) =>
           TypeBounds.mk(go1(dnf1, S(false)), go1(dnf2, S(true)), noProv)
       }
+    }
     
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
     def go0(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
-    trace(s"ty[$pol] $ty") {
+    trace(s"ty[${printPol(pol)}] $ty") {
       
       implicit val etf: ExpandTupleFields = false
       
       // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
       def rec(dnf: DNF, done: Set[TV], pol: Bool): DNF = dnf.cs.iterator.map { c =>
-        val vs = c.vars.filterNot(done)
+        // val vs = c.vars.filterNot(done)
+        val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
+          recursiveVars += v
+          val nv = renew(v)
+          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
+          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
+          true
+        } || done(v))
         vs.iterator.map { tv =>
+        // vs.iterator.filter(_.isRecursive =/= S(false)).map { tv =>
           println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
           val b =
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
@@ -52,7 +85,7 @@ trait TypeSimplifier { self: Typer =>
       }.foldLeft(DNF.extr(false))(_ | _)
       
       // rec(DNF.mk(ty, pol)(ctx), Set.empty)
-      DNF.mk(ty, pol)(ctx, ptr = true, etf = false) match {
+      mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
         case R(dnf) =>
           // println(dnf.cs.map(_.vars.isEmpty))
           pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
@@ -63,7 +96,7 @@ trait TypeSimplifier { self: Typer =>
     
     // Merge the bounds of all type variables of the given DNF, and traverse the result
     def go1(ty: DNF, pol: Opt[Bool])
-        (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
+        (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[${printPol(pol)}] $ty") {
       if (ty.isBot) ty.toType(sort = true) else {
         // val pty = ty -> pol
         val pty = ty
@@ -175,8 +208,8 @@ trait TypeSimplifier { self: Typer =>
     // val analyzed2 = MutSet.empty[TypeRef]
     
     def analyze(st: SimpleType, pol: Bool): Unit =
-        trace(s"analyze[$pol] $st") {
-        // trace(s"analyze[$pol] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
+        trace(s"analyze[${printPol(S(pol))}] $st") {
+        // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
         st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
@@ -242,7 +275,9 @@ trait TypeSimplifier { self: Typer =>
     // def process(st: SimpleType, pol: Bool, newOccs: MutSet[SimpleType]) = {
     def process(st: SimpleType, pol: Bool) = {
       val newOccs = MutSet.empty[SimpleType]
-      def go(st: SimpleType): Unit = st match {
+      def go(st: SimpleType): Unit =
+          trace(s"go $st   (${newOccs.mkString(", ")})") {
+          st match {
         case ComposedType(p, l, r) =>
           // println(s">> $pol $l $r")
           if (p === pol) { go(l); go(r) }
@@ -258,6 +293,7 @@ trait TypeSimplifier { self: Typer =>
           }
         case _ => analyze(st, pol)
       }
+      }()
       go(st)
       var firstTime = false
       newOccs.foreach {
@@ -408,6 +444,8 @@ trait TypeSimplifier { self: Typer =>
   
   def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
     
+    implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    
     implicit val ctxi: Ctx = ctx
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
     
@@ -424,7 +462,7 @@ trait TypeSimplifier { self: Typer =>
       }
     
     def go(st: SimpleType, pol: Opt[Bool]): SimpleType =
-        trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
+        trace(s"recons[${printPol(pol)}] $st  (${st.getClass.getSimpleName})") {
         st match {
       case ExtrType(_) => st
       case tv: TypeVariable => renew(tv)
@@ -575,8 +613,8 @@ trait TypeSimplifier { self: Typer =>
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize
         }
-        DNF.mk(ty, pol)(ctx, ptr = true, etf = false) match {
-        // DNF.mk(ty, pol)(ctx, ptr = false, etf = false) match {
+        mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
+        // mkDNF(ty, pol)(ctx, ptr = false, etf = false, cache) match {
           case R(dnf) => helper(dnf, pol)
           case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
         }

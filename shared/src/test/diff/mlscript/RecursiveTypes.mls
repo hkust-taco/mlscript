@@ -105,17 +105,17 @@ if true then l else r
 
 rec def l (a: int) b = if true then l else b
 rec def r (a: int) b c = if true then r else if true then b else c
-//│ l: int -> 'b -> ('a | 'b) as 'a
+//│ l: int -> 'b -> 'a as 'a
 //│  = [Function: l4]
-//│ r: int -> 'b -> 'b -> ('a | 'b) as 'a
+//│ r: int -> 'b -> 'b -> 'a as 'a
 //│  = [Function: r5]
 
 if true then l else r
-//│ res: int -> ('b & 'c) -> ((int & 'c) -> ((int & 'b) -> ((int & 'c) -> ('b & 'c) -> ('a | 'b | 'c) | 'b) | 'c) | 'b) as 'a
+//│ res: int -> ('a & 'b) -> (('b -> (int -> 'd -> 'c as 'd) as 'c) | (int -> 'e -> 'e as 'e))
 //│    = [Function: l4]
 
 if true then l else r
-//│ res: int -> ('b & 'c) -> ((int & 'c) -> ((int & 'b) -> ((int & 'c) -> ('b & 'c) -> ('a | 'b | 'c) | 'b) | 'c) | 'b) as 'a
+//│ res: int -> ('a & 'b) -> (('b -> (int -> 'd -> 'c as 'd) as 'c) | (int -> 'e -> 'e as 'e))
 //│    = [Function: l4]
 
 
@@ -166,7 +166,7 @@ foo_ty = foo
 //│       = [Function: foo]
 
 def foo_ty2: (C['r] as 'r) -> nothing
-//│ foo_ty2: ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
+//│ foo_ty2: (C['r] as 'r) -> nothing
 //│        = <missing implementation>
 
 :ns
@@ -176,7 +176,7 @@ foo_ty2
 //│      foo_ty2 is not implemented
 
 foo_ty = foo_ty2
-//│ ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
+//│ (C['r] as 'r) -> nothing
 //│   <:  foo_ty:
 //│ Rec -> nothing
 //│       = <no result>
@@ -185,20 +185,20 @@ foo_ty = foo_ty2
 foo_ty2 = foo_ty
 //│ Rec -> nothing
 //│   <:  foo_ty2:
-//│ ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
+//│ (C['r] as 'r) -> nothing
 //│        = <no result>
 //│          foo_ty and foo_ty2 are not implemented
 
 foo_ty2 = foo
 //│ (C['b & 'a .. 'a] as 'b) -> nothing
 //│   <:  foo_ty2:
-//│ ((C['a .. 'r | 'b] as 'b) & 'r as 'a) -> nothing
+//│ (C['r] as 'r) -> nothing
 //│        = [Function: foo]
 
 
 
 rec def bar = C { a = bar }
-//│ bar: (C['A .. 'A | 'a] with {a: 'a}) as 'a
+//│ bar: (C['A0 .. 'A] with {a: 'A}) as 'A
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -209,14 +209,14 @@ def bar_ty: Rec2
 //│       = <missing implementation>
 
 bar_ty = bar
-//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
+//│ (C['A0 .. 'A] with {a: 'A}) as 'A
 //│   <:  bar_ty:
 //│ Rec2
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
 def bar_ty2: C['r] as 'r
-//│ bar_ty2: 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ bar_ty2: C['r] as 'r
 //│        = <missing implementation>
 
 :ns
@@ -226,12 +226,12 @@ bar_ty2
 //│      bar_ty2 is not implemented
 
 bar_ty2
-//│ res: 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ res: C['r] as 'r
 //│    = <no result>
 //│      bar_ty2 is not implemented
 
 bar_ty = bar_ty2
-//│ 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ C['r] as 'r
 //│   <:  bar_ty:
 //│ Rec2
 //│       = <no result>
@@ -240,14 +240,14 @@ bar_ty = bar_ty2
 bar_ty2 = bar_ty
 //│ Rec2
 //│   <:  bar_ty2:
-//│ 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ C['r] as 'r
 //│        = <no result>
 //│          bar_ty and bar_ty2 are not implemented
 
 bar_ty2 = bar
-//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
+//│ (C['A0 .. 'A] with {a: 'A}) as 'A
 //│   <:  bar_ty2:
-//│ 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ C['r] as 'r
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -280,7 +280,7 @@ bar2_ty2 = bar2_ty
 
 :e
 bar2_ty2 = bar_ty2
-//│ 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ C['r] as 'r
 //│   <:  bar2_ty2:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -302,7 +302,7 @@ bar2_ty2 = bar_ty2
 bar_ty2 = bar2_ty2
 //│ {x: 'a} as 'a
 //│   <:  bar_ty2:
-//│ 'r | (C['b & 'r .. 'a] as 'b) as 'a
+//│ C['r] as 'r
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.302: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
@@ -608,7 +608,7 @@ r: int
 
 def fancyBottom1: 'a & ('a -> 'a) as 'a
 def fancyBottom2: 'a\x as 'a
-//│ fancyBottom1: nothing
+//│ fancyBottom1: 'a -> 'a & 'a as 'a
 //│             = <missing implementation>
 //│ fancyBottom2: 'a\x as 'a
 //│             = <missing implementation>

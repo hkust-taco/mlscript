@@ -498,9 +498,9 @@ ra: Array[Array['a]] as 'a
 ra: Array[('a, 'a)] as 'a
 ra: (Array['a], Array['a]) as 'a
 //│ ra: ('a, 'a,) as 'a
-//│ res: 'a | (('c, 'c,) as 'c) | (Array['e & Array['d & 'a .. 'b] .. 'e | Array['d & 'a .. 'b]] as 'd) as 'b
-//│ res: 'a | (('c, 'c,) as 'c) | (Array['e & ('d & 'a, 'd & 'a,) .. 'e | ('b, 'b,)] as 'd) as 'b
-//│ res: 'a | ((('c, 'c,) as 'c) | (Array[('d, 'd,) & 'a .. 'b] as 'd), (('c, 'c,) as 'c) | (Array[('d, 'd,) & 'a .. 'b] as 'd),) as 'b
+//│ res: (('b, 'b,) as 'b) | Array[Array['a]] as 'a
+//│ res: (('b, 'b,) as 'b) | Array[('a, 'a,)] as 'a
+//│ res: nothing
 
 :e
 ra: ('a, 'a, 'a) as 'a
@@ -530,7 +530,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.507: 	ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: 'a | Array[(('c, 'c,) as 'c) | (Array[('d, 'd, 'd,) & 'a .. 'b] as 'd)] & {_1: (('c, 'c,) as 'c) | (Array[('d, 'd, 'd,) & 'a .. 'b] as 'd), _2: (('c, 'c,) as 'c) | (Array[('d, 'd, 'd,) & 'a .. 'b] as 'd)} | error as 'b
+//│ res: nothing
 
 def tktup t = (t._2, t._3)
 tktup ((1,2,3,true))

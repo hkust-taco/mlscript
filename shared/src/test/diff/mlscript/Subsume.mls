@@ -194,26 +194,26 @@ def f: (int & 'a) -> 'a
 //│  = <missing implementation>
 
 def impl a = a a
-//│ impl: ('b & ('a,)) -> 'c as 'a
-//│     = [Function: impl]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
+//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
+//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
+//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
 
 :e
 def f = impl
-//│ ('b & ('a,)) -> 'c as 'a
+//│ ╔══[ERROR] identifier not found: impl
+//│ ║  l.210: 	def f = impl
+//│ ╙──       	        ^^^^
+//│ error
 //│   <:  f:
 //│ (int & 'a) -> 'a
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.201: 	def f = impl
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `int & 'a` is not a function
-//│ ║  l.192: 	def f: (int & 'a) -> 'a
-//│ ║         	       ^^^^^^^^^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.196: 	def impl a = a a
-//│ ║         	             ^^^
-//│ ╟── from reference:
-//│ ║  l.196: 	def impl a = a a
-//│ ╙──       	             ^
 //│  = [Function: impl]
 
 :re
@@ -238,7 +238,7 @@ f 1
 
 :e
 def f a b = if gt a b then a else b b // mistake!
-//│ (int & 'a) -> nothing -> 'a
+//│ (int & 'a) -> (('c & ('b & int,)) -> 'a as 'b)
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -336,19 +336,26 @@ def self1: ('a -> 'b & 'a) -> 'b
 //│      = <missing implementation>
 
 def self1 a = a a
-//│ ('b & ('a,)) -> 'c as 'a
-//│   <:  self1:
-//│ ('a -> 'b & 'a) -> 'b
-//│      = [Function: self1]
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
+//│ 	at: scala.Predef$.assert(Predef.scala:264)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
+//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
+//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
+//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
 
 def self2: 'a -> 'b as 'a
-//│ self2: ('c & ('a,)) -> 'b as 'a
+//│ self2: nothing
 //│      = <missing implementation>
 
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
-//│ ('c & ('a,)) -> 'b as 'a
+//│ nothing
 //│      = [Function: self1]
 
 

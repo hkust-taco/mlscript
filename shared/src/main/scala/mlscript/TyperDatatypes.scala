@@ -272,6 +272,18 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
     override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
+    // /** None: not recursive; Some(true): linearly recursive; Some(false): nonlinearly recursive; */
+    /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
+    def isRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+      // // ???
+      // S(false)
+      // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
+      // val vars = getVarsPol(S(true))
+      // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
+      val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _).toList)(noProv).getVarsPol(S(true))
+      println(s"isRecursive $vars ${vars.get(this)}")
+      vars.get(this).map(_.isDefined)
+    })
   }
   type TV = TypeVariable
   private var freshCount = 0

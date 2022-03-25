@@ -13,12 +13,86 @@ def c: 'a -> C[C['a]]
 def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
 
+:ds
 def c: C['a] as 'a
-//│ c: 'a | (C['c & 'a .. 'b] as 'c) as 'b
+//│ Typed as: 'a0'
+//│  where: 'a0' :> C['a0'] <: C['a0']
+//│ ty[+] 'a0'
+//│ | isRecursive TreeMap('a0' -> None) Some(None)
+//│ | Renewed 'a0' ~> 'a1'
+//│ | ty[+] C['a0']
+//│ | -> Right(DNF({}∧C['a0']))
+//│ | DNF[+] DNF({}∧C['a0'])
+//│ | ~> C['a1']
+//│ | ty[-] C['a0']
+//│ | -> Right(DNF({}∧C['a0']))
+//│ | DNF[-] DNF({}∧C['a0'])
+//│ | ~> C['a1']
+//│ -> Right(DNF('a0'))
+//│ DNF[+] DNF('a0')
+//│ ~> 'a1'
+//│ Canon: 'a1'
+//│  where: 'a1' :> C['a1'] <: C['a1']
+//│ analyze[+] 'a1'
+//│ | go 'a1'   ()
+//│ | | go C['a1']   ('a1')
+//│ | | | analyze[+] C['a1']
+//│ | | | | analyze[+] 'a1'
+//│ | | | | analyze[-] 'a1'
+//│ | | | | | go 'a1'   ()
+//│ | | | | | | go C['a1']   ('a1')
+//│ | | | | | | | analyze[-] C['a1']
+//│ | | | | | | | | analyze[+] 'a1'
+//│ | | | | | | | | analyze[-] 'a1'
+//│ | | | | | >>>> 'a1' HashSet('a1') None
+//│ | >>>> 'a1' HashSet('a1') None
+//│ [occs] LinkedHashMap((false,'a1') -> HashSet('a1'), (true,'a1') -> HashSet('a1'))
+//│ [vars] TreeSet('a1')
+//│ [bounds] 'a1' :> C['a1'] <: C['a1']
+//│ [rec] HashSet('a1')
+//│ [v] 'a1' Some(HashSet('a1')) Some(HashSet('a1'))
+//│ [sub] 
+//│ Renewed 'a1' ~> 'a2'
+//│ Type after simplification: 'a2'
+//│  where: 'a2' :> C['a2'] <: C['a2']
+//│ recons[+] 'a2'  (TypeVariable)
+//│ | recons[+] C['a2']  (TypeRef)
+//│ | | recons[=] 'a2'  (TypeVariable)
+//│ | | => 'a3'
+//│ | => C['a3']
+//│ | recons[-] C['a2']  (TypeRef)
+//│ | | recons[=] 'a2'  (TypeVariable)
+//│ | | => 'a3'
+//│ | => C['a3']
+//│ => 'a3'
+//│ Recons: 'a3'
+//│  where: 'a3' :> C['a3'] <: C['a3']
+//│ allVarPols: ='a3'
+//│ c: C['a] as 'a
+
+// :ds
+def c: C['a] | 'a as 'a
+//│ c: 'a | C['a] as 'a
 
 def c: C[C['a]] as 'a
-//│ c: 'a | (C['d & C['c & 'a .. 'b] .. 'd | C['c & 'a .. 'b]] as 'c) as 'b
+//│ c: C[C['a]] as 'a
 
+// :ds
+def c: C[C['a] & 'a] as 'a
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ 	at: scala.runtime.BoxesRunTime.equals(BoxesRunTime.java:119)
+//│ 	at: mlscript.utils.package$AnyOps.$eq$eq$eq(package.scala:15)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:283)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
+//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:297)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$2(TypeSimplifier.scala:249)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+
+// FIXME SOF
+// def c: C[C['a] & 'a | 'a] as 'a
 
 def c: C['a]
 //│ c: C['a]
@@ -39,11 +113,83 @@ mkC = mkC'
 //│   <:  mkC:
 //│ 'a -> C2['a]
 
+:ds
 rec def rc = mkC(rc)
-//│ rc: C2['a .. 'a | 'b] as 'b
+//│ Typed as: α0'
+//│  where: α0' :> [[[[C2[['a1']]]]]] <: [['a1']], 'a1' :> [[[[[[C2[['a1']]]]]]]]
+//│ ty[+] α0'
+//│ | isRecursive TreeMap('a1' -> None) None
+//│ | Consider α0' List([[[[C2[['a1']]]]]]) List([['a1']])
+//│ | isRecursive TreeMap('a1' -> None) None
+//│ -> Right(DNF(α0' | {}∧C2[['a1']]))
+//│ DNF[+] DNF(α0' | {}∧C2[['a1']])
+//│ | Renewed α0' ~> α3'
+//│ | ty[-] ['a1']
+//│ | | isRecursive TreeMap('a1' -> None) Some(None)
+//│ | | Renewed 'a1' ~> 'a4'
+//│ | | ty[+] [[[[[[C2[['a1']]]]]]]]
+//│ | | -> Right(DNF({}∧C2[['a1']]))
+//│ | | DNF[+] DNF({}∧C2[['a1']])
+//│ | | | ty[-] ['a1']
+//│ | | | -> Right(DNF('a1'))
+//│ | | | DNF[-] DNF('a1')
+//│ | | | ~> 'a4'
+//│ | | | ty[+] ['a1']
+//│ | | | -> Right(DNF('a1'))
+//│ | | | DNF[+] DNF('a1')
+//│ | | | ~> 'a4'
+//│ | | ~> C2['a4']
+//│ | -> Right(DNF('a1'))
+//│ | DNF[-] DNF('a1')
+//│ | ~> 'a4'
+//│ | ty[+] ['a1']
+//│ | -> Right(DNF('a1'))
+//│ | DNF[+] DNF('a1')
+//│ | ~> 'a4'
+//│ ~> (C2['a4'] | α3')
+//│ Canon: (C2['a4'] | α3')
+//│  where: 'a4' :> C2['a4']
+//│ analyze[+] (C2['a4'] | α3')
+//│ | go (C2['a4'] | α3')   ()
+//│ | | go C2['a4']   ()
+//│ | | | analyze[+] C2['a4']
+//│ | | | | analyze[+] 'a4'
+//│ | | | | | go 'a4'   ()
+//│ | | | | | | go C2['a4']   ('a4')
+//│ | | | | | | | analyze[+] C2['a4']
+//│ | | | | | | | | analyze[+] 'a4'
+//│ | | | | | | | | analyze[-] 'a4'
+//│ | | | | | | | | | go 'a4'   ()
+//│ | | | | | | | | | >>>> 'a4' HashSet('a4') None
+//│ | | | | | >>>> 'a4' HashSet('a4') None
+//│ | | | | analyze[-] 'a4'
+//│ | | go α3'   ()
+//│ | >>>> α3' HashSet(α3') None
+//│ [occs] LinkedHashMap((false,'a4') -> HashSet('a4'), (true,'a4') -> HashSet('a4'), (true,α3') -> HashSet(α3'))
+//│ [vars] TreeSet(α3', 'a4')
+//│ [bounds] 'a4' :> C2['a4']
+//│ [rec] HashSet('a4')
+//│ [!] α3'
+//│ [v] 'a4' Some(HashSet('a4')) Some(HashSet('a4'))
+//│ [sub] α3' -> None
+//│ Renewed 'a4' ~> 'a5'
+//│ Type after simplification: C2['a5']
+//│  where: 'a5' :> C2['a5']
+//│ recons[+] C2['a5']  (TypeRef)
+//│ | recons[=] 'a5'  (TypeVariable)
+//│ | | recons[+] C2['a5']  (TypeRef)
+//│ | | | recons[=] 'a5'  (TypeVariable)
+//│ | | | => 'a6'
+//│ | | => C2['a6']
+//│ | => 'a6'
+//│ => C2['a6']
+//│ Recons: C2['a6']
+//│  where: 'a6' :> C2['a6']
+//│ allVarPols: ='a6'
+//│ rc: C2['a0 .. 'a] as 'a
 
 rec def rc = mkC'(rc)
-//│ rc: (C2['A .. 'A | 'a] with {a: 'a}) as 'a
+//│ rc: (C2['A0 .. 'A] with {a: 'A}) as 'A
 
 
 
@@ -92,10 +238,10 @@ def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
-//│ c5: anything -> ((C5['A] with {a: C2[C5['A] & 'A0 .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ c5: anything -> ((C5['A] with {a: C2['A0 & C5['A] .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
 
 c = c5
-//│ anything -> ((C5['A] with {a: C2[C5['A] & 'A0 .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ anything -> ((C5['A] with {a: C2['A0 & C5['A] .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
 //│   <:  c:
 //│ 'a -> C5['a]
 
@@ -111,7 +257,7 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2[C5[C6['A]] & 'A1 .. 'A1 | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]] | C5[C6['A]]] with {a: 'a}}) as 'a})
+//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2['A1 & C5[C6['A]] & C5[C6['A] & 'A0 .. 'A0 | C6['A]] .. 'A1 | C5[C6['A]] | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]]] with {a: 'a}}) as 'a})
 
 // FIXME SOF
 // :d

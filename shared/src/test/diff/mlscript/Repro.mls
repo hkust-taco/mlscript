@@ -18,7 +18,7 @@ class G[A]: { a: G[A] }
 //│ Defined class G
 
 def g: G['a] & {a: 'a} as 'a
-//│ g: 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+//│ g: {a: 'a} & G['a] as 'a
 //│  = <missing implementation>
 
 :NoJS
@@ -32,7 +32,7 @@ rec def g2 = G { a = g2 }
 // :d
 // :re
 g = g
-//│ 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+//│ {a: 'a} & G['a] as 'a
 //│   <:  g:
-//│ 'a | {a: 'b} & (G[{a: 'd} & 'c & 'a as 'd .. 'b] as 'c) as 'b
+//│ {a: 'a} & G['a] as 'a
 
