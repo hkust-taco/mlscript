@@ -83,8 +83,8 @@ def c: C[C['a]] as 'a
 def c: C[C['a] & 'a] as 'a
 //│ c: C[C['a] & 'a] as 'a
 
-// FIXME SOF
-// def c: C[C['a] & 'a | 'a] as 'a
+def c: C[C['a] & 'a | 'a] as 'a
+//│ c: C['a] as 'a
 
 def c: C['a]
 //│ c: C['a]

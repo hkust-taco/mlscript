@@ -20,7 +20,7 @@ let id = v => v
 //│ id: 'a -> 'a
 
 f => f f
-//│ res: 'a -> nothing as 'a
+//│ res: 'a -> 'b as 'a
 
 f => id f id f id
 //│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd & 'b) -> 'd

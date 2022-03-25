@@ -194,12 +194,12 @@ def f: (int & 'a) -> 'a
 //│  = <missing implementation>
 
 def impl a = a a
-//│ impl: 'a -> nothing as 'a
+//│ impl: 'a -> 'b as 'a
 //│     = [Function: impl]
 
 :e
 def f = impl
-//│ 'a -> nothing as 'a
+//│ 'a -> 'b as 'a
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -238,7 +238,7 @@ f 1
 
 :e
 def f a b = if gt a b then a else b b // mistake!
-//│ (int & 'a) -> (('c & ('b & int,)) -> 'a as 'b)
+//│ (int & 'a) -> (('c & ('d & 'b & int,)) -> 'a as 'b)
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -336,7 +336,7 @@ def self1: ('a -> 'b & 'a) -> 'b
 //│      = <missing implementation>
 
 def self1 a = a a
-//│ 'a -> nothing as 'a
+//│ 'a -> 'b as 'a
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│      = [Function: self1]

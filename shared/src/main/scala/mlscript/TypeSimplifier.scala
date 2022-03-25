@@ -180,10 +180,12 @@ trait TypeSimplifier { self: Typer =>
                 //     v.lowerBounds ::= adapted
                 //     v.upperBounds ::= adapted
                 // }
-                if (v.lowerBounds.isEmpty && pol =/= S(false)) {
+                // if (v.lowerBounds.isEmpty && pol =/= S(false)) {
+                if (v.lowerBounds.isEmpty) {
                   v.lowerBounds ::= adapted
                 }
-                if (v.upperBounds.isEmpty && pol =/= S(true)) {
+                // if (v.upperBounds.isEmpty && pol =/= S(true)) {
+                if (v.upperBounds.isEmpty) {
                   v.upperBounds ::= adapted
                 }
                 v
@@ -328,7 +330,8 @@ trait TypeSimplifier { self: Typer =>
     // This will be filled up after the analysis phase, to influence the reconstruction phase:
     val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
     
-    val allVars = st.getVars
+    // val allVars = st.getVars
+    val allVars = st.getVarsPol(pol).keySet
     val recVars = MutSet.from(
       allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
     

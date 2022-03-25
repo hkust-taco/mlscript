@@ -2204,17 +2204,7 @@ add
 //│ res: {u: 0, v: nothing}
 
 (let rec x = (x x); {u: 0, v: x})
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α798 has no occurrences...
-//│ 	at: scala.Predef$.assert(Predef.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:347)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20$adapted(TypeSimplifier.scala:340)
-//│ 	at: scala.collection.immutable.RedBlackTree$.foreachKey(RedBlackTree.scala:284)
-//│ 	at: scala.collection.immutable.TreeSet.foreach(TreeSet.scala:118)
-//│ 	at: mlscript.TypeSimplifier.simplifyType(TypeSimplifier.scala:340)
-//│ 	at: mlscript.TypeSimplifier.simplifyType$(TypeSimplifier.scala:204)
-//│ 	at: mlscript.Typer.simplifyType(Typer.scala:16)
-//│ 	at: mlscript.DiffTests.getType$1(DiffTests.scala:276)
-//│ 	at: mlscript.DiffTests.$anonfun$new$37(DiffTests.scala:487)
+//│ res: {u: 0, v: nothing}
 
 (x => {u: add})
 //│ res: anything -> {u: int -> int -> int}

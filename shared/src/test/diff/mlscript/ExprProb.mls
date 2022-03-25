@@ -64,7 +64,7 @@ rec def eval1 k e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 81
 //│ annoying  calls  : 0
-//│ subtyping calls  : 384
+//│ subtyping calls  : 390
 
 :ns
 eval1
@@ -113,7 +113,7 @@ def eval1_ty_ugly = eval1
 //│              = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
-//│ subtyping calls  : 959
+//│ subtyping calls  : 965
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -133,7 +133,7 @@ def eval1_ty = eval1
 //│         = [Function: eval1]
 //│ constrain calls  : 76
 //│ annoying  calls  : 36
-//│ subtyping calls  : 501
+//│ subtyping calls  : 507
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -177,7 +177,7 @@ def eval1_ty = eval1
 //│         = [Function: eval1]
 //│ constrain calls  : 80
 //│ annoying  calls  : 38
-//│ subtyping calls  : 436
+//│ subtyping calls  : 442
 
 
 rec def pretty1 k e = case e of {
@@ -203,7 +203,7 @@ rec def prettier1 k ev e = case e of {
 //│          = [Function: prettier1]
 //│ constrain calls  : 164
 //│ annoying  calls  : 0
-//│ subtyping calls  : 890
+//│ subtyping calls  : 902
 
 :stats
 e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
@@ -269,7 +269,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│          = [Function: prettier2]
 //│ constrain calls  : 174
 //│ annoying  calls  : 0
-//│ subtyping calls  : 11641
+//│ subtyping calls  : 11667
 
 
 
@@ -319,7 +319,7 @@ prettier2 done (eval1 done)
 //│    = [Function (anonymous)]
 //│ constrain calls  : 76
 //│ annoying  calls  : 0
-//│ subtyping calls  : 3717
+//│ subtyping calls  : 3735
 
 :stats
 prettier2 done (eval2 done)
@@ -333,7 +333,7 @@ prettier2 done (eval2 done) d2
 //│    = '-1'
 //│ constrain calls  : 1012
 //│ annoying  calls  : 335
-//│ subtyping calls  : 44631
+//│ subtyping calls  : 44660
 
 
 
@@ -447,7 +447,7 @@ prettier2 done eval2
 //│    = [Function (anonymous)]
 //│ constrain calls  : 55
 //│ annoying  calls  : 0
-//│ subtyping calls  : 211
+//│ subtyping calls  : 213
 
 :e
 :stats

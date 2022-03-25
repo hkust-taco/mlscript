@@ -188,7 +188,7 @@ x => x x
 //│ | ~> α4
 //│ ~> α3
 //│ Canon: α3
-//│  where: α2 <: α3, α3 :> (α2 -> α4)
+//│  where: α2 <: α3, α3 :> (α2 -> α4) <: (α2 -> α4)
 //│ analyze[+] α3       HashSet()
 //│ | go α3   ()
 //│ | | α3 false
@@ -199,39 +199,56 @@ x => x x
 //│ | | | | | | α2 false
 //│ | | | | | | go α3   (α2)
 //│ | | | | | | | α3 false
-//│ | | | | | >>>> α2 HashSet(α2, α3) None
-//│ | | | | | >>>> α3 HashSet(α2, α3) None
-//│ | | | | analyze[+] α4       HashSet((α2,false), (α3,true), ((α2 -> α4),true))
+//│ | | | | | | | go (α2 -> α4)   (α2, α3)
+//│ | | | | | | | | analyze[-] (α2 -> α4)       HashSet((α2,false), (α3,true), ((α2 -> α4),true))
+//│ | | | | | | | | | analyze[+] α2       HashSet((α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
+//│ | | | | | | | | | | go α2   ()
+//│ | | | | | | | | | | | α2 false
+//│ | | | | | | | | | | >>>> α2 HashSet(α2) None
+//│ | | | | | | | | | analyze[-] α4       HashSet((α2,true), (α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
+//│ | | | | | | | | | | go α4   ()
+//│ | | | | | | | | | | | α4 false
+//│ | | | | | | | | | | >>>> α4 HashSet(α4) None
+//│ | | | | | >>>> α2 HashSet(α2, α3, (α2 -> α4)) None
+//│ | | | | | >>>> α3 HashSet(α2, α3, (α2 -> α4)) None
+//│ | | | | analyze[+] α4       HashSet((α4,false), (α2,true), (α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
 //│ | | | | | go α4   ()
 //│ | | | | | | α4 false
 //│ | | | | | >>>> α4 HashSet(α4) None
 //│ | >>>> α3 HashSet(α3, (α2 -> α4)) None
-//│ [occs] -α2 {α2,α3} ; -α3 {α2,α3} ; +α4 {α4} ; +α3 {α3,(α2 -> α4)}
+//│ [occs] +α2 {α2} ; -α4 {α4} ; -α2 {α2,α3,(α2 -> α4)} ; -α3 {α2,α3,(α2 -> α4)} ; +α4 {α4} ; +α3 {α3,(α2 -> α4)}
 //│ [vars] TreeSet(α2, α3, α4)
-//│ [bounds] α2 <: α3, α3 :> (α2 -> α4)
+//│ [bounds] α2 <: α3, α3 :> (α2 -> α4) <: (α2 -> α4)
 //│ [rec] HashSet(α2, α3)
-//│ [!] α4
-//│ [v] α2 None Some(HashSet(α2, α3))
-//│ [w] α3 Some(HashSet(α2, α3))
+//│ [v] α2 Some(HashSet(α2)) Some(HashSet(α2, α3, (α2 -> α4)))
+//│ [w] α3 Some(HashSet(α2, α3, (α2 -> α4)))
 //│ [U] α3 := α2
-//│ [sub] α3 -> Some(α2), α4 -> None
+//│ [v] α4 Some(HashSet(α4)) Some(HashSet(α4))
+//│ [sub] α3 -> Some(α2)
 //│ Renewed α2 ~> α5
+//│ Renewed α4 ~> α6
 //│ Type after simplification: α5
-//│  where: α5 :> (α5 -> ⊥) <: α5
+//│  where: α5 :> (α5 -> α6) <: (α5 -> α6) & α5
 //│ recons[+] α5  (TypeVariable)
-//│ | recons[+] (α5 -> ⊥)  (FunctionType)
+//│ | recons[+] (α5 -> α6)  (FunctionType)
 //│ | | recons[-] α5  (TypeVariable)
+//│ | | => α7
+//│ | | recons[+] α6  (TypeVariable)
 //│ | | => α6
-//│ | | recons[+] ⊥  (ExtrType)
-//│ | | => ⊥
-//│ | => (α6 -> ⊥)
+//│ | => (α7 -> α6)
+//│ | recons[-] (α5 -> α6)  (FunctionType)
+//│ | | recons[+] α5  (TypeVariable)
+//│ | | => α7
+//│ | | recons[-] α6  (TypeVariable)
+//│ | | => α6
+//│ | => (α7 -> α6)
 //│ | recons[-] α5  (TypeVariable)
-//│ | => α6
-//│ => α6
-//│ Recons: α6
-//│  where: α6 :> (α6 -> ⊥) <: α6
-//│ allVarPols: =α6
-//│ res: 'a -> nothing as 'a
+//│ | => α7
+//│ => α7
+//│ Recons: α7
+//│  where: α7 :> (α7 -> α6) <: (α7 -> α6) & α7
+//│ allVarPols: =α6, =α7
+//│ res: 'a -> 'b as 'a
 
 res id
 //│ res: (('b & 'c) -> 'a as 'a) | 'c
