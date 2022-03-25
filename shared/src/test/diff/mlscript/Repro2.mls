@@ -1,0 +1,42 @@
+:NoJS
+
+class Option[A]
+class Some[A]: Option[A] & { payload: A }
+class None[A]: Option[A]
+//│ Defined class Option
+//│ Defined class Some
+//│ Defined class None
+
+
+class List[A]
+    method HeadOption: Option[A]
+//│ Defined class List
+//│ Declared List.HeadOption: List['A] -> Option['A]
+
+class Nil[A]: List[A]
+    method HeadOption = None {}
+//│ Defined class Nil
+//│ Defined Nil.HeadOption: Nil['A] -> None['A0]
+
+// class Cons[A]: List[A] & { head: A; tail: Nil[A] }
+// class Cons[A]: List[A] & { head: A; tail: list }
+// class Cons[A]: List[A] & { head: A; tail: anything }
+class Cons[A]: List[A] & { head: A; tail: List[A] }
+    method HeadOption = Some { payload = error: A }
+//│ Defined class Cons
+//│ Defined Cons.HeadOption: Cons['A] -> (Some['a .. 'A | 'a] with {payload: 'A})
+
+// l0 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+
+l0 = Cons { head = 1; tail = Nil {} }
+//│ l0: Cons['A .. 1 | 'A] with {head: 1, tail: Nil['A .. 1 | 'A]}
+
+// :d
+:stats
+Cons.HeadOption l0
+//│ res: Some['a .. 1 | 'a] with {payload: 1}
+//│ constrain calls  : 76
+//│ annoying  calls  : 27
+//│ subtyping calls  : 110
+
+

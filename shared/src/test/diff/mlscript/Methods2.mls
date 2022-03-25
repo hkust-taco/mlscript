@@ -69,17 +69,50 @@ l.Size
 //│ res: int
 //│    = 2
 
+:stats
 l.Map (fun x -> mul x 2)
 //│ res: List['B .. 'B | int]
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
+//│ constrain calls  : 109
+//│ annoying  calls  : 6
+//│ subtyping calls  : 28
 
+// :ds
+
+l0 = Cons { head = 0; tail = Nil {} }
+//│ l0: Cons['A .. 0 | 'A] with {head: 0, tail: Nil['A .. 0 | 'A]}
+//│   = Cons { head: 0, tail: Nil {} }
+
+:re
 :stats
-o = l.(Cons.HeadOption)
-//│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
-//│  = undefined
-//│ constrain calls  : 140
+Cons.HeadOption l0
+//│ res: Some['a .. 0 | 'a] with {payload: 0}
+//│ Runtime error:
+//│   TypeError: (intermediate value).HeadOption is not a function
+//│ constrain calls  : 76
 //│ annoying  calls  : 27
-//│ subtyping calls  : 231
+//│ subtyping calls  : 110
+
+
+l1 = Cons { head = 0; tail = Nil {} }
+//│ l1: Cons['A .. 0 | 'A] with {head: 0, tail: Nil['A .. 0 | 'A]}
+//│   = Cons { head: 0, tail: Nil {} }
+
+:re
+:stats
+Cons.HeadOption l1
+//│ res: Some['a .. 0 | 'a] with {payload: 0}
+//│ Runtime error:
+//│   TypeError: (intermediate value).HeadOption is not a function
+//│ constrain calls  : 76
+//│ annoying  calls  : 27
+//│ subtyping calls  : 110
+
+// :stats
+// Cons.HeadOption l
+
+// :stats
+// o = l.(Cons.HeadOption)
 
 o = l.HeadOption
 //│ o: Option['A .. 0 | 1 | 'A]
@@ -88,14 +121,14 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.89: 	case o of {None -> 0 | Some -> o.payload}
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.122: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.89: 	case o of {None -> 0 | Some -> o.payload}
-//│ ╙──      	     ^
+//│ ║  l.122: 	case o of {None -> 0 | Some -> o.payload}
+//│ ╙──       	     ^
 //│ res: 0
 //│    = 0
 
@@ -133,15 +166,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.133: 	case o of {
+//│ ║  l.166: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.134: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.167: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.133: 	case o of {
+//│ ║  l.166: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0
