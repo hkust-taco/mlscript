@@ -157,13 +157,14 @@ def weird: ('a -> (int, int)) as 'a
 def weird: ((int, 'a) as 'a) -> int
 def weird: ((int, bool) | 'a) -> 'a
 //│ weird: (int, int,) -> 'a as 'a
-//│ weird: nothing
+//│ weird: 'a -> (int, int,) as 'a
 //│ weird: ((int, 'a,) as 'a) -> int
 //│ weird: ('a | (int, bool,)) -> 'a
 //│ // start ts
 //│ export type a = (arg1: int, arg2: int) => a
 //│ export declare const weird: a
-//│ export declare const weird: never
+//│ export type a = (arg1: a) => [int, int]
+//│ export declare const weird: a
 //│ export type a = [int, a]
 //│ export declare const weird: (arg1: a) => int
 //│ export declare const weird<a>: (arg1: a | [int, bool]) => a

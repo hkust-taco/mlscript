@@ -194,26 +194,26 @@ def f: (int & 'a) -> 'a
 //│  = <missing implementation>
 
 def impl a = a a
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
-//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
-//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
-//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
+//│ impl: 'a -> nothing as 'a
+//│     = [Function: impl]
 
 :e
 def f = impl
-//│ ╔══[ERROR] identifier not found: impl
-//│ ║  l.210: 	def f = impl
-//│ ╙──       	        ^^^^
-//│ error
+//│ 'a -> nothing as 'a
 //│   <:  f:
 //│ (int & 'a) -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.201: 	def f = impl
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `int & 'a` is not a function
+//│ ║  l.192: 	def f: (int & 'a) -> 'a
+//│ ║         	       ^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.196: 	def impl a = a a
+//│ ║         	             ^^^
+//│ ╟── from reference:
+//│ ║  l.196: 	def impl a = a a
+//│ ╙──       	             ^
 //│  = [Function: impl]
 
 :re
@@ -336,26 +336,19 @@ def self1: ('a -> 'b & 'a) -> 'b
 //│      = <missing implementation>
 
 def self1 a = a a
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
-//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
-//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
-//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
+//│ 'a -> nothing as 'a
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: self1]
 
 def self2: 'a -> 'b as 'a
-//│ self2: nothing
+//│ self2: 'a -> 'b as 'a
 //│      = <missing implementation>
 
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
-//│ nothing
+//│ 'a -> 'b as 'a
 //│      = [Function: self1]
 
 

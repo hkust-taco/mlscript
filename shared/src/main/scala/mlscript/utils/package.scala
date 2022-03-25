@@ -149,6 +149,15 @@ package object utils {
     def dlof[B](f: A => B)(b: => B): B = opt.fold(b)(f)
   }
   
+  implicit class MutSetHelpers[A](self: mutable.Set[A]) {
+    def setAndIfUnset(x: A)(thunk: => Unit): Unit = {
+      if (!self.contains(x)) {
+        self += x
+        thunk
+      }
+    }
+  }
+  
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }

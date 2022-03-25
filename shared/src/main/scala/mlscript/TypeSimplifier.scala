@@ -199,6 +199,8 @@ trait TypeSimplifier { self: Typer =>
   }
   
   
+  /** Precondition: we assume that the type has been through canonicalizeType,
+    * so that all type variables that still have bounds are recursive ones... */
   def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
@@ -206,11 +208,14 @@ trait TypeSimplifier { self: Typer =>
     val analyzed = MutSet.empty[PolarVariable]
     // val analyzed2 = MutSet.empty[TypeRef -> Bool]
     // val analyzed2 = MutSet.empty[TypeRef]
+    val analyzed2 = MutSet.empty[ST -> Bool]
     
     def analyze(st: SimpleType, pol: Bool): Unit =
-        trace(s"analyze[${printPol(S(pol))}] $st") {
+        // trace(s"analyze[${printPol(S(pol))}] $st") {
+        trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
         // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
-        st match {
+          analyzed2.setAndIfUnset(st -> pol) {
+            st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case ArrayType(inner) => analyze(inner, pol)
@@ -219,10 +224,10 @@ trait TypeSimplifier { self: Typer =>
         // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         // coOccurrences(pol -> tv) = MutSet(tv)
         // processBounds(tv, pol)
-        if (!analyzed(tv -> pol)) {
-          analyzed(tv -> pol) = true
+        // if (!analyzed(tv -> pol)) {
+          // analyzed(tv -> pol) = true
           process(tv, pol)
-        }
+        // }
       case _: ObjectTag | ExtrType(_) => ()
       case ct: ComposedType =>
         // val newOccs = MutSet.empty[SimpleType]
@@ -263,7 +268,7 @@ trait TypeSimplifier { self: Typer =>
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze(ub, true) else analyze(lb, false)
-    }
+    }}
     }()
     // }(_ => s"~> ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}")
     // def processBounds(tv: TV, pol: Bool) = {
@@ -285,11 +290,14 @@ trait TypeSimplifier { self: Typer =>
         case _: BaseType => newOccs += st; analyze(st, pol)
         // TODO simple TypeRefs
         case tv: TypeVariable =>
+          println(s"$tv ${newOccs.contains(tv)}")
           if (!newOccs.contains(tv)) {
+            // analyzed(tv -> pol) = true
             newOccs += st
             // processBounds(tv, pol)
             // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(process(_, pol, newOccs))
             (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            // analyze(tv, pol)
           }
         case _ => analyze(st, pol)
       }
@@ -311,7 +319,11 @@ trait TypeSimplifier { self: Typer =>
     if (pol =/= S(false)) analyze(st, true)
     if (pol =/= S(true)) analyze(st, false)
     
-    println(s"[occs] ${coOccurrences}")
+    // println(s"[occs] ${coOccurrences}")
+    println(s"[occs] ${coOccurrences.iterator
+      .map(occ => s"${printPol(S(occ._1._1))}${occ._1._2} ${occ._2.mkString("{",",","}")}")
+      .mkString(" ; ")
+    }")
     
     // This will be filled up after the analysis phase, to influence the reconstruction phase:
     val varSubst = MutMap.empty[TypeVariable, Option[TypeVariable]]
@@ -360,7 +372,8 @@ trait TypeSimplifier { self: Typer =>
               //  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
               // recVars.get(w) match {
               //   case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
-              if (recVars.contains(w)) { // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
+              /* 
+              if (false && recVars.contains(w)) { // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
                 assert(w.lowerBounds.isEmpty || w.upperBounds.isEmpty)
                 val (pol, b_w) = (w.lowerBounds, w.upperBounds) match {
                   case (Nil, b) => false -> b
@@ -375,20 +388,25 @@ trait TypeSimplifier { self: Typer =>
                 if (pol) v.lowerBounds :::= b_w
                 else v.upperBounds :::= b_w
               } else { // `w` is NOT recursive
+              */
                 /* 
                 val wCoOcss = coOccurrences((!pol) -> w)
                 // ^ this must be defined otherwise we'd already have simplified away the non-rec variable
                 coOccurrences((!pol) -> v).filterInPlace(t => t === v || wCoOcss(t))
                 // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
                 */
+                recVars -= w
+                v.lowerBounds :::= w.lowerBounds
+                v.upperBounds :::= w.upperBounds
                 // When removePolarVars is enabled, wCoOcss/vCoOcss may not be defined:
                 for {
                   wCoOcss <- coOccurrences.get((!pol) -> w)
                   vCoOcss <- coOccurrences.get((!pol) -> v)
                 } vCoOcss.filterInPlace(t => t === v || wCoOcss(t))
-              }
+              // }
             }; ()
-          case atom: BaseType if (coOccurrences.get(!pol -> v).exists(_(atom))) =>
+          case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+            println(s"[..] $v ${atom}")
             varSubst += v -> None; ()
           case _ =>
         }

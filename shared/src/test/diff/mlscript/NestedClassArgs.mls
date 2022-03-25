@@ -33,20 +33,22 @@ def c: C['a] as 'a
 //│ ~> 'a1'
 //│ Canon: 'a1'
 //│  where: 'a1' :> C['a1'] <: C['a1']
-//│ analyze[+] 'a1'
+//│ analyze[+] 'a1'       HashSet()
 //│ | go 'a1'   ()
+//│ | | 'a1' false
 //│ | | go C['a1']   ('a1')
-//│ | | | analyze[+] C['a1']
-//│ | | | | analyze[+] 'a1'
-//│ | | | | analyze[-] 'a1'
+//│ | | | analyze[+] C['a1']       HashSet(('a1',true))
+//│ | | | | analyze[+] 'a1'       HashSet(('a1',true), (C['a1'],true))
+//│ | | | | analyze[-] 'a1'       HashSet(('a1',true), (C['a1'],true))
 //│ | | | | | go 'a1'   ()
+//│ | | | | | | 'a1' false
 //│ | | | | | | go C['a1']   ('a1')
-//│ | | | | | | | analyze[-] C['a1']
-//│ | | | | | | | | analyze[+] 'a1'
-//│ | | | | | | | | analyze[-] 'a1'
+//│ | | | | | | | analyze[-] C['a1']       HashSet(('a1',true), (C['a1'],true), ('a1',false))
+//│ | | | | | | | | analyze[+] 'a1'       HashSet(('a1',true), (C['a1'],false), (C['a1'],true), ('a1',false))
+//│ | | | | | | | | analyze[-] 'a1'       HashSet(('a1',true), (C['a1'],false), (C['a1'],true), ('a1',false))
 //│ | | | | | >>>> 'a1' HashSet('a1') None
 //│ | >>>> 'a1' HashSet('a1') None
-//│ [occs] LinkedHashMap((false,'a1') -> HashSet('a1'), (true,'a1') -> HashSet('a1'))
+//│ [occs] -'a1' {'a1'} ; +'a1' {'a1'}
 //│ [vars] TreeSet('a1')
 //│ [bounds] 'a1' :> C['a1'] <: C['a1']
 //│ [rec] HashSet('a1')
@@ -79,17 +81,7 @@ def c: C[C['a]] as 'a
 
 // :ds
 def c: C[C['a] & 'a] as 'a
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: scala.runtime.BoxesRunTime.equals(BoxesRunTime.java:119)
-//│ 	at: mlscript.utils.package$AnyOps.$eq$eq$eq(package.scala:15)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:283)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
-//│ 	at: mlscript.TypeSimplifier.process$1(TypeSimplifier.scala:297)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$2(TypeSimplifier.scala:249)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ c: C[C['a] & 'a] as 'a
 
 // FIXME SOF
 // def c: C[C['a] & 'a | 'a] as 'a
@@ -149,23 +141,24 @@ rec def rc = mkC(rc)
 //│ ~> (C2['a4'] | α3')
 //│ Canon: (C2['a4'] | α3')
 //│  where: 'a4' :> C2['a4']
-//│ analyze[+] (C2['a4'] | α3')
+//│ analyze[+] (C2['a4'] | α3')       HashSet()
 //│ | go (C2['a4'] | α3')   ()
 //│ | | go C2['a4']   ()
-//│ | | | analyze[+] C2['a4']
-//│ | | | | analyze[+] 'a4'
+//│ | | | analyze[+] C2['a4']       HashSet(((C2['a4'] | α3'),true))
+//│ | | | | analyze[+] 'a4'       HashSet((C2['a4'],true), ((C2['a4'] | α3'),true))
 //│ | | | | | go 'a4'   ()
+//│ | | | | | | 'a4' false
 //│ | | | | | | go C2['a4']   ('a4')
-//│ | | | | | | | analyze[+] C2['a4']
-//│ | | | | | | | | analyze[+] 'a4'
-//│ | | | | | | | | analyze[-] 'a4'
-//│ | | | | | | | | | go 'a4'   ()
-//│ | | | | | | | | | >>>> 'a4' HashSet('a4') None
+//│ | | | | | | | analyze[+] C2['a4']       HashSet((C2['a4'],true), ('a4',true), ((C2['a4'] | α3'),true))
 //│ | | | | | >>>> 'a4' HashSet('a4') None
-//│ | | | | analyze[-] 'a4'
+//│ | | | | analyze[-] 'a4'       HashSet((C2['a4'],true), ('a4',true), ((C2['a4'] | α3'),true))
+//│ | | | | | go 'a4'   ()
+//│ | | | | | | 'a4' false
+//│ | | | | | >>>> 'a4' HashSet('a4') None
 //│ | | go α3'   ()
+//│ | | | α3' false
 //│ | >>>> α3' HashSet(α3') None
-//│ [occs] LinkedHashMap((false,'a4') -> HashSet('a4'), (true,'a4') -> HashSet('a4'), (true,α3') -> HashSet(α3'))
+//│ [occs] +'a4' {'a4'} ; -'a4' {'a4'} ; +α3' {α3'}
 //│ [vars] TreeSet(α3', 'a4')
 //│ [bounds] 'a4' :> C2['a4']
 //│ [rec] HashSet('a4')

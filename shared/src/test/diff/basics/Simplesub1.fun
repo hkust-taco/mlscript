@@ -161,18 +161,85 @@ x => { a: x }.b
 // --- self-app --- //
 
 
+:ds
 x => x x
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed
-//│ 	at: scala.Predef$.assert(Predef.scala:264)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24(TypeSimplifier.scala:370)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$24$adapted(TypeSimplifier.scala:343)
-//│ 	at: scala.collection.IterableOnceOps.foreach(IterableOnce.scala:563)
-//│ 	at: scala.collection.IterableOnceOps.foreach$(IterableOnce.scala:561)
-//│ 	at: scala.collection.AbstractIterator.foreach(Iterator.scala:1288)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22(TypeSimplifier.scala:343)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$22$adapted(TypeSimplifier.scala:342)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$20(TypeSimplifier.scala:342)
+//│ Typed as: (α0 -> α1)
+//│  where: α0 <: [[[[([[α0]] -> α1)]]]]
+//│ ty[+] (α0 -> α1)
+//│ -> Right(DNF((α0 -> α1){}))
+//│ DNF[+] DNF((α0 -> α1){})
+//│ | ty[-] α0
+//│ | | isRecursive TreeMap(α0 -> None, α1 -> None) Some(None)
+//│ | | Renewed α0 ~> α2
+//│ | | ty[-] [[[[([[α0]] -> α1)]]]]
+//│ | | -> Right(DNF(([[α0]] -> α1){}))
+//│ | | DNF[-] DNF(([[α0]] -> α1){})
+//│ | | ~> α3
+//│ | -> Right(DNF(α0))
+//│ | DNF[-] DNF(α0)
+//│ | ~> α2
+//│ | ty[+] α1
+//│ | | isRecursive TreeMap() None
+//│ | | Consider α1 List() List()
+//│ | | isRecursive TreeMap() None
+//│ | -> Right(DNF(α1))
+//│ | DNF[+] DNF(α1)
+//│ | | Renewed α1 ~> α4
+//│ | ~> α4
+//│ ~> α3
+//│ Canon: α3
+//│  where: α2 <: α3, α3 :> (α2 -> α4)
+//│ analyze[+] α3       HashSet()
+//│ | go α3   ()
+//│ | | α3 false
+//│ | | go (α2 -> α4)   (α3)
+//│ | | | analyze[+] (α2 -> α4)       HashSet((α3,true))
+//│ | | | | analyze[-] α2       HashSet((α3,true), ((α2 -> α4),true))
+//│ | | | | | go α2   ()
+//│ | | | | | | α2 false
+//│ | | | | | | go α3   (α2)
+//│ | | | | | | | α3 false
+//│ | | | | | >>>> α2 HashSet(α2, α3) None
+//│ | | | | | >>>> α3 HashSet(α2, α3) None
+//│ | | | | analyze[+] α4       HashSet((α2,false), (α3,true), ((α2 -> α4),true))
+//│ | | | | | go α4   ()
+//│ | | | | | | α4 false
+//│ | | | | | >>>> α4 HashSet(α4) None
+//│ | >>>> α3 HashSet(α3, (α2 -> α4)) None
+//│ [occs] -α2 {α2,α3} ; -α3 {α2,α3} ; +α4 {α4} ; +α3 {α3,(α2 -> α4)}
+//│ [vars] TreeSet(α2, α3, α4)
+//│ [bounds] α2 <: α3, α3 :> (α2 -> α4)
+//│ [rec] HashSet(α2, α3)
+//│ [!] α4
+//│ [v] α2 None Some(HashSet(α2, α3))
+//│ [w] α3 Some(HashSet(α2, α3))
+//│ [U] α3 := α2
+//│ [sub] α3 -> Some(α2), α4 -> None
+//│ Renewed α2 ~> α5
+//│ Type after simplification: α5
+//│  where: α5 :> (α5 -> ⊥) <: α5
+//│ recons[+] α5  (TypeVariable)
+//│ | recons[+] (α5 -> ⊥)  (FunctionType)
+//│ | | recons[-] α5  (TypeVariable)
+//│ | | => α6
+//│ | | recons[+] ⊥  (ExtrType)
+//│ | | => ⊥
+//│ | => (α6 -> ⊥)
+//│ | recons[-] α5  (TypeVariable)
+//│ | => α6
+//│ => α6
+//│ Recons: α6
+//│  where: α6 :> (α6 -> ⊥) <: α6
+//│ allVarPols: =α6
+//│ res: 'a -> nothing as 'a
+
+res id
+//│ res: (('b & 'c) -> 'a as 'a) | 'c
+
+
+let f = (x => x + 1); {a: f; b: f 2}
+//│ f: int -> int
+//│ res: {a: int -> int, b: int}
 
 x => x x x
 //│ res: ('b -> 'a as 'b) -> 'c as 'a
@@ -280,17 +347,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: ('a -> anything as 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:28)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:283)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$9(TypeSimplifier.scala:292)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$9$adapted(TypeSimplifier.scala:292)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:292)
+//│ res: ('b -> ('c & 'a) as 'a) -> 'c
 
 next => 0
 //│ res: anything -> 0
@@ -299,17 +356,7 @@ next => 0
 //│ res: (('b & 'c) -> 'a as 'a) | 'c
 
 (let rec x = (y => (x (y y))); x)
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TypeSimplifier$$Lambda$12475/1311077947.get$Lambda(Unknown Source)
-//│ 	at: mlscript.TypeSimplifier.analyze$1(TypeSimplifier.scala:213)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$2(TypeSimplifier.scala:217)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.TypeSimplifier.analyze$1(TypeSimplifier.scala:211)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$simplifyType$8(TypeSimplifier.scala:285)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:279)
+//│ res: ('a -> 'a as 'a) -> nothing
 
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a as 'c) -> 'b
@@ -332,7 +379,7 @@ x => (y => (x (y y)))
 (x => (let y = (x x.v); 0))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
-let rec x = (let y = (x x); (z => z)); (x (y => y.u))
+let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│ x: ('b & anything) -> 'a as 'a
 //│ res: ({u: 'a} & 'b & 'c & anything) -> ('a | ({u: 'a} -> 'a | 'd -> 'd as 'd)) | 'c
 
