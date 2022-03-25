@@ -161,97 +161,18 @@ x => { a: x }.b
 // --- self-app --- //
 
 
-:ds
+// :ds
 x => x x
-//│ Typed as: (α0 -> α1)
-//│  where: α0 <: [[[[([[α0]] -> α1)]]]]
-//│ ty[+] (α0 -> α1)
-//│ -> Right(DNF((α0 -> α1){}))
-//│ DNF[+] DNF((α0 -> α1){})
-//│ | ty[-] α0
-//│ | | isRecursive TreeMap(α0 -> None, α1 -> None) Some(None)
-//│ | | Renewed α0 ~> α2
-//│ | | ty[-] [[[[([[α0]] -> α1)]]]]
-//│ | | -> Right(DNF(([[α0]] -> α1){}))
-//│ | | DNF[-] DNF(([[α0]] -> α1){})
-//│ | | ~> α3
-//│ | -> Right(DNF(α0))
-//│ | DNF[-] DNF(α0)
-//│ | ~> α2
-//│ | ty[+] α1
-//│ | | isRecursive TreeMap() None
-//│ | | Consider α1 List() List()
-//│ | | isRecursive TreeMap() None
-//│ | -> Right(DNF(α1))
-//│ | DNF[+] DNF(α1)
-//│ | | Renewed α1 ~> α4
-//│ | ~> α4
-//│ ~> α3
-//│ Canon: α3
-//│  where: α2 <: α3, α3 :> (α2 -> α4) <: (α2 -> α4)
-//│ analyze[+] α3       HashSet()
-//│ | go α3   ()
-//│ | | α3 false
-//│ | | go (α2 -> α4)   (α3)
-//│ | | | analyze[+] (α2 -> α4)       HashSet((α3,true))
-//│ | | | | analyze[-] α2       HashSet((α3,true), ((α2 -> α4),true))
-//│ | | | | | go α2   ()
-//│ | | | | | | α2 false
-//│ | | | | | | go α3   (α2)
-//│ | | | | | | | α3 false
-//│ | | | | | | | go (α2 -> α4)   (α2, α3)
-//│ | | | | | | | | analyze[-] (α2 -> α4)       HashSet((α2,false), (α3,true), ((α2 -> α4),true))
-//│ | | | | | | | | | analyze[+] α2       HashSet((α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
-//│ | | | | | | | | | | go α2   ()
-//│ | | | | | | | | | | | α2 false
-//│ | | | | | | | | | | >>>> α2 HashSet(α2) None
-//│ | | | | | | | | | analyze[-] α4       HashSet((α2,true), (α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
-//│ | | | | | | | | | | go α4   ()
-//│ | | | | | | | | | | | α4 false
-//│ | | | | | | | | | | >>>> α4 HashSet(α4) None
-//│ | | | | | >>>> α2 HashSet(α2, α3, (α2 -> α4)) None
-//│ | | | | | >>>> α3 HashSet(α2, α3, (α2 -> α4)) None
-//│ | | | | analyze[+] α4       HashSet((α4,false), (α2,true), (α2,false), ((α2 -> α4),false), (α3,true), ((α2 -> α4),true))
-//│ | | | | | go α4   ()
-//│ | | | | | | α4 false
-//│ | | | | | >>>> α4 HashSet(α4) None
-//│ | >>>> α3 HashSet(α3, (α2 -> α4)) None
-//│ [occs] +α2 {α2} ; -α4 {α4} ; -α2 {α2,α3,(α2 -> α4)} ; -α3 {α2,α3,(α2 -> α4)} ; +α4 {α4} ; +α3 {α3,(α2 -> α4)}
-//│ [vars] TreeSet(α2, α3, α4)
-//│ [bounds] α2 <: α3, α3 :> (α2 -> α4) <: (α2 -> α4)
-//│ [rec] HashSet(α2, α3)
-//│ [v] α2 Some(HashSet(α2)) Some(HashSet(α2, α3, (α2 -> α4)))
-//│ [w] α3 Some(HashSet(α2, α3, (α2 -> α4)))
-//│ [U] α3 := α2
-//│ [v] α4 Some(HashSet(α4)) Some(HashSet(α4))
-//│ [sub] α3 -> Some(α2)
-//│ Renewed α2 ~> α5
-//│ Renewed α4 ~> α6
-//│ Type after simplification: α5
-//│  where: α5 :> (α5 -> α6) <: (α5 -> α6) & α5
-//│ recons[+] α5  (TypeVariable)
-//│ | recons[+] (α5 -> α6)  (FunctionType)
-//│ | | recons[-] α5  (TypeVariable)
-//│ | | => α7
-//│ | | recons[+] α6  (TypeVariable)
-//│ | | => α6
-//│ | => (α7 -> α6)
-//│ | recons[-] (α5 -> α6)  (FunctionType)
-//│ | | recons[+] α5  (TypeVariable)
-//│ | | => α7
-//│ | | recons[-] α6  (TypeVariable)
-//│ | | => α6
-//│ | => (α7 -> α6)
-//│ | recons[-] α5  (TypeVariable)
-//│ | => α7
-//│ => α7
-//│ Recons: α7
-//│  where: α7 :> (α7 -> α6) <: (α7 -> α6) & α7
-//│ allVarPols: =α6, =α7
-//│ res: 'a -> 'b as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'a -> 'b
+//│ 		   <: 'a -> 'b & 'a
 
 res id
-//│ res: (('b & 'c) -> 'a as 'a) | 'c
+//│ res: ('b -> 'b as 'a) | 'c
+//│ 	where
+//│ 		'b :> 'a
+//│ 		   <: 'c
 
 
 let f = (x => x + 1); {a: f; b: f 2}
@@ -259,20 +180,26 @@ let f = (x => x + 1); {a: f; b: f 2}
 //│ res: {a: int -> int, b: int}
 
 x => x x x
-//│ res: ('b -> 'a as 'b) -> 'c as 'a
+//│ res: 'b -> 'c as 'a
+//│ 	where
+//│ 		'b <: 'b -> 'a
 
 x => y => x y x
 //│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
 
 x => y => x x y
-//│ res: 'a -> 'b -> 'c as 'a
+//│ res: 'b -> 'c -> 'd as 'a
+//│ 	where
+//│ 		'b <: 'a
 
 (x => x x) (x => x x)
 //│ res: nothing
 
 
 x => {l: x x, r: x }
-//│ res: ('a -> 'b as 'a) -> {l: 'b, r: nothing as 'a}
+//│ res: 'a -> {l: 'b, r: 'a}
+//│ 	where
+//│ 		'a <: 'a -> 'b
 
 
 // From https://github.com/stedolan/mlsub
@@ -293,7 +220,9 @@ let rec trutru = g => trutru (g true)
 //│ trutru: (true -> 'a as 'a) -> nothing
 
 i => if ((i i) true) then true else true
-//│ res: ('a -> true -> bool as 'a) -> true
+//│ res: 'a -> true
+//│ 	where
+//│ 		'a <: 'a -> true -> bool
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -361,34 +290,62 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: 0
 
 (x => (let y = (x x); 0))
-//│ res: ('a -> anything as 'a) -> 0
+//│ res: 'a -> 0
+//│ 	where
+//│ 		'a <: 'a -> anything
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('c & 'a) as 'a) -> 'c
+//│ res: 'a
+//│ 	where
+//│ 		'a :> ('c -> ('d & 'b) as 'b) -> 'd
+//│ 		   <: ('c -> ('d & 'b) as 'b) & 'a -> (('e -> ('d & 'e) as 'b) as 'e)
 
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: (('b & 'c) -> 'a as 'a) | 'c
+//│ res: ('b -> 'b as 'a) | 'c
+//│ 	where
+//│ 		'b :> 'a
+//│ 		   <: 'c
 
 (let rec x = (y => (x (y y))); x)
-//│ res: ('a -> 'a as 'a) -> nothing
+//│ res: 'a -> nothing
+//│ 	where
+//│ 		'a <: 'a -> 'a
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a as 'c) -> 'b
+//│ res: ('a -> 'b) -> 'c -> 'b
+//│ 	where
+//│ 		'c <: 'c -> 'a
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: ('b & anything) -> 'a as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'c -> 'c as 'b
+//│ 		   <: 'c & 'a -> anything
+//│ 		'c :> 'b
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: ('b & anything) -> 'a as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'c -> 'c as 'b
+//│ 		   <: 'c & 'a -> anything
+//│ 		'c :> 'b
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ({u: 'a, v: 'c} as 'c) as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'c -> ({u: 'c, v: 'd} as 'd) as 'b
+//│ 		   <: 'c & 'a -> anything
+//│ 		'c :> 'b
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ({u: 'c, v: 'a} as 'c) as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'c -> ({u: 'd, v: 'c} as 'd) as 'b
+//│ 		   <: 'c & 'a -> anything
+//│ 		'c :> 'b
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: ('a -> anything & 'b) -> 'b as 'a
@@ -397,6 +354,13 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: ('b & anything) -> 'a as 'a
-//│ res: ({u: 'a} & 'b & 'c & anything) -> ('a | ({u: 'a} -> 'a | 'd -> 'd as 'd)) | 'c
+//│ x: 'a
+//│ 	where
+//│ 		'a :> 'c -> 'c as 'b
+//│ 		   <: 'c & 'a -> anything
+//│ 		'c :> 'b
+//│ res: ({u: 'a} & 'b) -> ('a | 'b) | 'c
+//│ 	where
+//│ 		'b :> {u: 'a} -> 'a | 'b -> 'b
+//│ 		   <: 'c
 

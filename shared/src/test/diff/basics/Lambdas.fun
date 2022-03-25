@@ -20,14 +20,17 @@ let id = v => v
 //│ id: 'a -> 'a
 
 f => f f
-//│ res: 'a -> 'b as 'a
+//│ res: 'a
+//│ 	where
+//│ 		'a :> 'a -> 'b
+//│ 		   <: 'a -> 'b & 'a
 
 f => id f id f id
 //│ res: (('a -> 'a) -> 'b -> ('c -> 'c) -> 'd & 'b) -> 'd
 
 :pe
 let oops = hu(h
-//│ /!\ Parse error: Expected end-of-input:1:14, found "(h\n" at l.29:14: let oops = hu(h
+//│ /!\ Parse error: Expected end-of-input:1:14, found "(h\n" at l.32:14: let oops = hu(h
 
 x => x; y => y
 //│ res: 'a -> 'a
@@ -35,7 +38,7 @@ x => x; y => y
 
 :pe
 x => let y = x; y
-//│ /!\ Parse error: Expected expression:1:1, found "x => let y" at l.37:1: x => let y = x; y
+//│ /!\ Parse error: Expected expression:1:1, found "x => let y" at l.40:1: x => let y = x; y
 
 x => (let y = x; y)
 x =>
@@ -63,7 +66,7 @@ let f x y z = { log x; if y < z then y else z }
 :pe
 let f / x: int = x + 1
 let f / x: int, y: int = x + y
-//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "let f / x:" at l.64:1: let f / x: int = x + 1
+//│ /!\ Parse error: Expected (data type definition | data definition | let binding | expression):1:1, found "let f / x:" at l.67:1: let f / x: int = x + 1
 
 // TODO
 // let f (
@@ -83,26 +86,26 @@ f (x: 42)
 :e
 f (y: 42)
 //│ ╔══[ERROR] Wrong tuple field name: found 'y' instead of 'x'
-//│ ║  l.84: 	f (y: 42)
+//│ ║  l.87: 	f (y: 42)
 //│ ╙──      	   ^^^^^
 //│ res: error | int
 
 :e
 f (x: 42, y: 43)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║  l.94: 	f (x: 42, y: 43)
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── tuple of type `(x: 42, y: 43,)` does not match type `int`
-//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║  l.94: 	f (x: 42, y: 43)
 //│ ║        	   ^^^^^^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
-//│ ║  l.91: 	f (x: 42, y: 43)
+//│ ║  l.94: 	f (x: 42, y: 43)
 //│ ║        	  ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.74: 	let f(x: int) = x + 1
+//│ ║  l.77: 	let f(x: int) = x + 1
 //│ ║        	                ^
 //│ ╟── from binding:
-//│ ║  l.74: 	let f(x: int) = x + 1
+//│ ║  l.77: 	let f(x: int) = x + 1
 //│ ╙──      	      ^^^^^^
 //│ res: error | int
 

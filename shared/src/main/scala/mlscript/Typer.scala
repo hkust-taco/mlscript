@@ -731,8 +731,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     val allVarPols = st.getVarsPol(S(polarity))
     println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
     
+    implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    
+    var bounds: Ls[TypeVar -> Bounds] = Nil
+    
     // val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
     val recursive = mutable.Map.empty[SimpleType, TypeVar]
+    
     def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType]): Type =
       // trace(s"expand $st, $polarity  — $inProcess") {
         goImpl(st.unwrapProvs, polarity)
@@ -745,6 +750,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       })(0).asTypeVar)
       else (inProcess + st_pol) pipe { implicit inProcess => st match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
+        case tv: TypeVariable if tv.isRecursive === S(false) =>
+          val nv = tv.asTypeVar
+          if (!recursive.contains(tv)) {
+            recursive += tv -> nv
+            // FIXME inProcess
+            val lb = go(tv.lowerBounds.foldLeft(BotType: SimpleType)(_ | _), true)
+            val ub = go(tv.upperBounds.foldLeft(TopType: SimpleType)(_ & _), false)
+            if (lb === ub) Recursive(nv, lb)
+            else {
+              // recursive += tv -> nv
+              // val lb = go(tv.lowerBounds.foldLeft(BotType: SimpleType)(_ | _), true)(inProcess = Set.empty)
+              // val ub = go(tv.upperBounds.foldLeft(TopType: SimpleType)(_ & _), false)(inProcess = Set.empty)
+              bounds ::= nv -> Bounds(lb, ub)
+              nv
+            }
+          } else nv
         case tv: TypeVariable =>
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
           val bound =
@@ -811,7 +832,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }
     }}
     
-    go(st, polarity)(Set.empty)
+    val res = go(st, polarity)(Set.empty)
+    if (bounds.isEmpty) res
+    else Constrained(res, bounds)
   }
   
 }

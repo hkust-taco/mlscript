@@ -2203,8 +2203,19 @@ add
 (let rec x = (x add); {u: 0, v: x})
 //│ res: {u: 0, v: nothing}
 
+// FIXME
 (let rec x = (x x); {u: 0, v: x})
-//│ res: {u: 0, v: nothing}
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: α800
+//│ //│ 	at: scala.collection.MapOps.default(Map.scala:274)
+//│ //│ 	at: scala.collection.MapOps.default$(Map.scala:273)
+//│ //│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
+//│ //│ 	at: scala.collection.MapOps.apply(Map.scala:176)
+//│ //│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
+//│ //│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
+//│ //│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:792)
+//│ //│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
+//│ //│ 	at: mlscript.Typer.goImpl$1(Typer.scala:751)
+//│ //│ 	at: mlscript.Typer.go$1(Typer.scala:743)
 
 (x => {u: add})
 //│ res: anything -> {u: int -> int -> int}

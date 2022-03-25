@@ -72,6 +72,16 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
+    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n\twhere${ws.map {
+      case (uv, Bounds(Bot, ub)) =>
+        s"\n\t\t${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, Top)) =>
+        s"\n\t\t${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, ub)) =>
+        val vstr = ctx.vs(uv)
+        s"\n\t\t${vstr             } :> ${lb.showIn(ctx, 0)}" +
+        s"\n\t\t${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+    }.mkString}", outerPrec > 0)
   }
   
   def children: List[Type] = this match {
@@ -88,6 +98,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
   }
 
   /**

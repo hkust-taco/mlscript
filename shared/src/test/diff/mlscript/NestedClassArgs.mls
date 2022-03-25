@@ -70,6 +70,7 @@ def c: C['a] as 'a
 //│ Recons: 'a3'
 //│  where: 'a3' :> C['a3'] <: C['a3']
 //│ allVarPols: ='a3'
+//│ isRecursive TreeMap('a3' -> None) Some(None)
 //│ c: C['a] as 'a
 
 // :ds
@@ -179,10 +180,16 @@ rec def rc = mkC(rc)
 //│ Recons: C2['a6']
 //│  where: 'a6' :> C2['a6']
 //│ allVarPols: ='a6'
-//│ rc: C2['a0 .. 'a] as 'a
+//│ isRecursive TreeMap('a6' -> None) Some(None)
+//│ isRecursive TreeMap('a6' -> None) Some(None)
+//│ rc: C2['a] as 'b
+//│ 	where
+//│ 		'a :> 'b
 
 rec def rc = mkC'(rc)
-//│ rc: (C2['A0 .. 'A] with {a: 'A}) as 'A
+//│ rc: (C2['A] with {a: 'a}) as 'a
+//│ 	where
+//│ 		'A :> 'a
 
 
 
@@ -231,10 +238,16 @@ def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
-//│ c5: anything -> ((C5['A] with {a: C2['A0 & C5['A] .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ c5: anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
+//│ 	where
+//│ 		'A0 :> 'a | C5['A]
+//│ 		    <: C5['A]
 
 c = c5
-//│ anything -> ((C5['A] with {a: C2['A0 & C5['A] .. 'A0 | 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
+//│ 	where
+//│ 		'A0 :> 'a | C5['A]
+//│ 		    <: C5['A]
 //│   <:  c:
 //│ 'a -> C5['a]
 
@@ -250,7 +263,10 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2['A1 & C5[C6['A]] & C5[C6['A] & 'A0 .. 'A0 | C6['A]] .. 'A1 | C5[C6['A]] | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]]] with {a: 'a}}) as 'a})
+//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2['A1] with {a: 'a}}) as 'a})
+//│ 	where
+//│ 		'A1 :> C5[C6['A]] | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]]
+//│ 		    <: C5[C6['A]] & C5[C6['A] & 'A0 .. 'A0 | C6['A]]
 
 // FIXME SOF
 // :d

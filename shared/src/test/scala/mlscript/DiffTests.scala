@@ -37,7 +37,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
-    def output(str: String) = out.println(outputMarker + str)
+    def output(str: String) =
+      // out.println(outputMarker + str)
+      str.splitSane('\n').foreach(l => out.println(outputMarker + l))
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
     var stdout = false
@@ -280,6 +282,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"Recons: ${recons}")
                 if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
                 val exp = typer.expandType(recons, true)
+                // val canon2 = typer.canonicalizeType(recons)(ctx)
+                // val exp = typer.expandType(canon2, true)
                 exp
               }
             }

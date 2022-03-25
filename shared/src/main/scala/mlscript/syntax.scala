@@ -103,6 +103,7 @@ final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+final case class Constrained(base: Type, where: Ls[TypeVar -> Bounds])  extends Type
 
 sealed abstract class NullaryType                        extends Type
 

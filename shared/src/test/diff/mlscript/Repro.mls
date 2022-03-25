@@ -51,93 +51,22 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.40: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: (('b & nothing & 'c & (('b & nothing & 'c) -> ('b | 'a -> nothing | 'd) as 'd) -> 'c & 'a -> nothing as 'a) & 'b & nothing & 'c) -> (nothing | ((('e & ('e -> 'e as 'd) -> 'c & 'f as 'a) -> nothing as 'f) | ('e -> 'e as 'd) as 'e)) | error | nothing | 'c
+//│ res: ('a & 'b) -> (nothing | 'b) | error | nothing | 'c
+//│ 	where
+//│ 		'a :> ('b -> 'b as 'd) | 'a -> nothing
+//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> nothing
+//│ 		'b :> 'a -> nothing | 'd
+//│ 		   <: nothing & 'c
 
-:ds
+// :ds
 def manual: 'a -> anything as 'a
-//│ Typed as: 'a0'
-//│  where: 'a0' :> (('a0',) -> anything) <: (('a0',) -> anything)
-//│ ty[+] 'a0'
-//│ | isRecursive TreeMap('a0' -> None) Some(None)
-//│ | Renewed 'a0' ~> 'a1'
-//│ | ty[+] (('a0',) -> anything)
-//│ | -> Right(DNF((('a0',) -> anything){}))
-//│ | DNF[+] DNF((('a0',) -> anything){})
-//│ | | ty[-] ('a0',)
-//│ | | -> Right(DNF(('a0',){}))
-//│ | | DNF[-] DNF(('a0',){})
-//│ | | ~> ('a1',)
-//│ | | ty[+] anything
-//│ | | -> Right(DNF({}∧anything))
-//│ | | DNF[+] DNF({}∧anything)
-//│ | | ~> anything
-//│ | ~> (('a1',) -> anything)
-//│ | ty[-] (('a0',) -> anything)
-//│ | -> Right(DNF((('a0',) -> anything){}))
-//│ | DNF[-] DNF((('a0',) -> anything){})
-//│ | | ty[+] ('a0',)
-//│ | | -> Right(DNF(('a0',){}))
-//│ | | DNF[+] DNF(('a0',){})
-//│ | | ~> ('a1',)
-//│ | | ty[-] anything
-//│ | | -> Right(DNF({}∧anything))
-//│ | | DNF[-] DNF({}∧anything)
-//│ | | ~> anything
-//│ | ~> (('a1',) -> anything)
-//│ -> Right(DNF('a0'))
-//│ DNF[+] DNF('a0')
-//│ ~> 'a1'
-//│ Canon: 'a1'
-//│  where: 'a1' :> (('a1',) -> anything) <: (('a1',) -> anything)
-//│ analyze[+] 'a1'       HashSet()
-//│ | go 'a1'   ()
-//│ | | 'a1' false
-//│ | | go (('a1',) -> anything)   ('a1')
-//│ | | | analyze[+] (('a1',) -> anything)       HashSet(('a1',true))
-//│ | | | | analyze[-] ('a1',)       HashSet(('a1',true), ((('a1',) -> anything),true))
-//│ | | | | | analyze[-] 'a1'       HashSet(('a1',true), ((('a1',) -> anything),true), (('a1',),false))
-//│ | | | | | | go 'a1'   ()
-//│ | | | | | | | 'a1' false
-//│ | | | | | | | go (('a1',) -> anything)   ('a1')
-//│ | | | | | | | | analyze[-] (('a1',) -> anything)       HashSet(('a1',true), ((('a1',) -> anything),true), ('a1',false), (('a1',),false))
-//│ | | | | | | | | | analyze[+] ('a1',)       HashSet(('a1',true), ((('a1',) -> anything),true), ('a1',false), (('a1',),false), ((('a1',) -> anything),false))
-//│ | | | | | | | | | | analyze[+] 'a1'       HashSet(('a1',true), ((('a1',) -> anything),true), ('a1',false), (('a1',),false), (('a1',),true), ((('a1',) -> anything),false))
-//│ | | | | | | | | | analyze[-] anything       HashSet(('a1',true), ((('a1',) -> anything),true), ('a1',false), (('a1',),false), (('a1',),true), ((('a1',) -> anything),false))
-//│ | | | | | | >>>> 'a1' HashSet('a1', (('a1',) -> anything)) None
-//│ | | | | analyze[+] anything       HashSet(('a1',true), ((('a1',) -> anything),true), (anything,false), ('a1',false), (('a1',),false), (('a1',),true), ((('a1',) -> anything),false))
-//│ | >>>> 'a1' HashSet('a1', (('a1',) -> anything)) None
-//│ [occs] -'a1' {'a1',(('a1',) -> anything)} ; +'a1' {'a1',(('a1',) -> anything)}
-//│ [vars] TreeSet('a1')
-//│ [bounds] 'a1' :> (('a1',) -> anything) <: (('a1',) -> anything)
-//│ [rec] HashSet('a1')
-//│ [v] 'a1' Some(HashSet('a1', (('a1',) -> anything))) Some(HashSet('a1', (('a1',) -> anything)))
-//│ [sub] 
-//│ Renewed 'a1' ~> 'a2'
-//│ Type after simplification: 'a2'
-//│  where: 'a2' :> (('a2',) -> anything) <: (('a2',) -> anything)
-//│ recons[+] 'a2'  (TypeVariable)
-//│ | recons[+] (('a2',) -> anything)  (FunctionType)
-//│ | | recons[-] ('a2',)  (TupleType)
-//│ | | | recons[-] 'a2'  (TypeVariable)
-//│ | | | => 'a3'
-//│ | | => ('a3',)
-//│ | | recons[+] anything  (TypeRef)
-//│ | | => anything
-//│ | => (('a3',) -> anything)
-//│ | recons[-] (('a2',) -> anything)  (FunctionType)
-//│ | | recons[+] ('a2',)  (TupleType)
-//│ | | | recons[+] 'a2'  (TypeVariable)
-//│ | | | => 'a3'
-//│ | | => ('a3',)
-//│ | | recons[-] anything  (TypeRef)
-//│ | | => anything
-//│ | => (('a3',) -> anything)
-//│ => 'a3'
-//│ Recons: 'a3'
-//│  where: 'a3' :> (('a3',) -> anything) <: (('a3',) -> anything)
-//│ allVarPols: ='a3'
 //│ manual: 'a -> anything as 'a
 
 manual id
-//│ res: (('b & anything & 'c & (('b & anything & 'c) -> ('b | 'a -> anything | 'd) as 'd) -> 'c & 'a -> anything as 'a) & 'b & anything & 'c) -> (anything | ((('e & ('e -> 'e as 'd) -> 'c & 'f as 'a) -> anything as 'f) | ('e -> 'e as 'd) as 'e)) | anything | 'c
+//│ res: ('a & 'b) -> (anything | 'b) | anything | 'c
+//│ 	where
+//│ 		'a :> ('b -> 'b as 'd) | 'a -> anything
+//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> anything
+//│ 		'b :> 'a -> anything | 'd
+//│ 		   <: anything & 'c
 
