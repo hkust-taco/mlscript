@@ -176,38 +176,44 @@ trait TypeSimplifier { self: Typer =>
     
     def analyze(st: SimpleType, pol: Bool): Unit =
         trace(s"analyze[$pol] $st") {
+        // trace(s"analyze[$pol] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
         st match {
       case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
       case ArrayType(inner) => analyze(inner, pol)
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
-        println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
-        coOccurrences(pol -> tv) = MutSet(tv)
-        processBounds(tv, pol)
+        // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
+        // coOccurrences(pol -> tv) = MutSet(tv)
+        // processBounds(tv, pol)
+        if (!analyzed(tv -> pol)) {
+          analyzed(tv -> pol) = true
+          process(tv, pol)
+        }
       case _: ObjectTag | ExtrType(_) => ()
       case ct: ComposedType =>
-        val newOccs = MutSet.empty[SimpleType]
-        def go(st: SimpleType): Unit = st match {
-          case ComposedType(p, l, r) =>
-            // println(s">> $pol $l $r")
-            if (p === pol) { go(l); go(r) }
-            else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
-          case _: BaseType => newOccs += st; analyze(st, pol)
-          case tv: TypeVariable => newOccs += st; processBounds(tv, pol)
-          case _ => analyze(st, pol)
-        }
-        go(ct)
-        // println(s"newOccs ${newOccs}")
-        newOccs.foreach {
-          case tv: TypeVariable =>
-            println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
-            coOccurrences.get(pol -> tv) match {
-              case Some(os) => os.filterInPlace(newOccs) // computes the intersection
-              case None => coOccurrences(pol -> tv) = newOccs
-            }
-          case _ => ()
-        }
+        // val newOccs = MutSet.empty[SimpleType]
+        // def go(st: SimpleType): Unit = st match {
+        //   case ComposedType(p, l, r) =>
+        //     // println(s">> $pol $l $r")
+        //     if (p === pol) { go(l); go(r) }
+        //     else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
+        //   case _: BaseType => newOccs += st; analyze(st, pol)
+        //   case tv: TypeVariable => newOccs += st; processBounds(tv, pol)
+        //   case _ => analyze(st, pol)
+        // }
+        // go(ct)
+        // // println(s"newOccs ${newOccs}")
+        // newOccs.foreach {
+        //   case tv: TypeVariable =>
+        //     println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+        //     coOccurrences.get(pol -> tv) match {
+        //       case Some(os) => os.filterInPlace(newOccs) // computes the intersection
+        //       case None => coOccurrences(pol -> tv) = newOccs
+        //     }
+        //   case _ => ()
+        // }
+        process(ct, pol)
       case NegType(und) => analyze(und, !pol)
       case ProxyType(underlying) => analyze(underlying, pol)
       // case tr @ TypeRef(defn, targs) =>
@@ -226,10 +232,43 @@ trait TypeSimplifier { self: Typer =>
         if (pol) analyze(ub, true) else analyze(lb, false)
     }
     }()
-    def processBounds(tv: TV, pol: Bool) = {
-      if (!analyzed(tv -> pol)) {
-        analyzed(tv -> pol) = true
-        (if (pol) tv.lowerBounds else tv.upperBounds).foreach(analyze(_, pol))
+    // }(_ => s"~> ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}")
+    // def processBounds(tv: TV, pol: Bool) = {
+    //   if (!analyzed(tv -> pol)) {
+    //     analyzed(tv -> pol) = true
+    //     (if (pol) tv.lowerBounds else tv.upperBounds).foreach(analyze(_, pol))
+    //   }
+    // }
+    // def process(st: SimpleType, pol: Bool, newOccs: MutSet[SimpleType]) = {
+    def process(st: SimpleType, pol: Bool) = {
+      val newOccs = MutSet.empty[SimpleType]
+      def go(st: SimpleType): Unit = st match {
+        case ComposedType(p, l, r) =>
+          // println(s">> $pol $l $r")
+          if (p === pol) { go(l); go(r) }
+          else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
+        case _: BaseType => newOccs += st; analyze(st, pol)
+        // TODO simple TypeRefs
+        case tv: TypeVariable =>
+          if (!newOccs.contains(tv)) {
+            newOccs += st
+            // processBounds(tv, pol)
+            // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(process(_, pol, newOccs))
+            (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+          }
+        case _ => analyze(st, pol)
+      }
+      go(st)
+      var firstTime = false
+      newOccs.foreach {
+        case tv: TypeVariable =>
+          println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+          coOccurrences.get(pol -> tv) match {
+            case Some(os) => os.filterInPlace(newOccs) // computes the intersection
+            case None => coOccurrences(pol -> tv) = newOccs.clone()
+          }
+          // println(s">> $pol ${coOccurrences.get(pol -> tv)}")
+        case _ => ()
       }
     }
     
