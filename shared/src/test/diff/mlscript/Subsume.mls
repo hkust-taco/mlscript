@@ -194,12 +194,12 @@ def f: (int & 'a) -> 'a
 //│  = <missing implementation>
 
 def impl a = a a
-//│ impl: 'a -> 'b as 'a
+//│ impl: ('b & ('a,)) -> 'c as 'a
 //│     = [Function: impl]
 
 :e
 def f = impl
-//│ 'a -> 'b as 'a
+//│ ('b & ('a,)) -> 'c as 'a
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -336,19 +336,19 @@ def self1: ('a -> 'b & 'a) -> 'b
 //│      = <missing implementation>
 
 def self1 a = a a
-//│ 'a -> 'b as 'a
+//│ ('b & ('a,)) -> 'c as 'a
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│      = [Function: self1]
 
 def self2: 'a -> 'b as 'a
-//│ self2: 'a -> 'b as 'a
+//│ self2: ('c & ('a,)) -> 'b as 'a
 //│      = <missing implementation>
 
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
-//│ 'a -> 'b as 'a
+//│ ('c & ('a,)) -> 'b as 'a
 //│      = [Function: self1]
 
 

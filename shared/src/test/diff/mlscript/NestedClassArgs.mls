@@ -17,7 +17,7 @@ def c: C['a] as 'a
 //│ c: 'a | (C['c & 'a .. 'b] as 'c) as 'b
 
 def c: C[C['a]] as 'a
-//│ c: 'a | (C[C['c & 'a .. 'b]] as 'c) as 'b
+//│ c: 'a | (C['d & C['c & 'a .. 'b] .. 'd | C['c & 'a .. 'b]] as 'c) as 'b
 
 
 def c: C['a]

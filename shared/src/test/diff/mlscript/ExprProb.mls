@@ -46,7 +46,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: (lit & 'b | (add & {lhs: 'a} | 'c & ~add) & ~lit as 'a) -> (1 | 'd | 0 as 'd)
+//│ eval1_stub: (lit & anything | (add & {lhs: 'a} | anything & ~add) & ~lit as 'a) -> (1 | 'b | 0 as 'b)
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -68,7 +68,7 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: ('a -> int) -> (lit & {val: int} | (add & {rhs: 'b} & {lhs: 'b} | 'a & ~add) & ~lit as 'b) -> ('c | int | 'd)
+//│ res: ('a -> ('b & int)) -> (lit & {val: 'd & int} | (add & {rhs: 'c} & {lhs: 'c} | 'a & ~add) & ~lit as 'c) -> ('d | int | 'b)
 //│    = [Function: eval1]
 
 :re
@@ -199,7 +199,7 @@ rec def prettier1 k ev e = case e of {
       in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
   | _ -> k e
   }
-//│ prettier1: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit as 'c, rhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'e & ~add & ~lit as 'd}) & 'b | Lit | 'a & ~add & ~lit) -> (string | string)
+//│ prettier1: ('a -> string) -> ('b -> int) -> ((Add[?] with {lhs: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit as 'c, rhs: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | anything & ~add & ~lit as 'd}) & 'b | Lit | 'a & ~add & ~lit) -> (string | string)
 //│          = [Function: prettier1]
 //│ constrain calls  : 164
 //│ annoying  calls  : 0

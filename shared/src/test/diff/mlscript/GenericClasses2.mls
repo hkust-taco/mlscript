@@ -47,7 +47,7 @@ class Bar3: Foo2[int]
 :ns
 Bar2
 Bar3
-//│ res: {x: int} -> (bar2 & {Foo2#A = int, x: 'x})
+//│ res: {x: 'x & int} -> (bar2 & {Foo2#A = int, x: 'x})
 //│    = [Function: res]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.49: 	Bar3

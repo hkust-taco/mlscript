@@ -1,15 +1,15 @@
 :NoJS
 def foo: ~int\x
-//│ foo: ~int
+//│ foo: ~int\x
 
 foo: ~(int\x)
-//│ res: ~int
+//│ res: ~int\x
 
 foo: (~int)\x
 //│ res: ~int
 
 res: ~(int\x)
-//│ res: ~int
+//│ res: ~int\x
 
 
 def foo: (~ 'a \ x) -> 'a -> 'a
@@ -29,14 +29,14 @@ class X: {}
 //│ Defined class X
 
 def v0: (~(X\x))\y
-//│ v0: ~X
+//│ v0: ~X\x\y
 
 :e
 v0: int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.35: 	v0: int
 //│ ║        	^^
-//│ ╟── type `~X` does not match type `int`
+//│ ╟── type `~X\x\y` does not match type `int`
 //│ ║  l.31: 	def v0: (~(X\x))\y
 //│ ║        	        ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -195,7 +195,7 @@ v: A | { x: 'a }
 //│ res: {x: 1} | A
 
 (error: A) with { x = 1 }
-//│ res: A & {x: 1}
+//│ res: A\x & {x: 1}
 
 // Note that we get {x: nothing} because the LHS is a subtype of A so 'a is not constrained
 (error: A) with { x = 1 } : A | { x: 'a }
@@ -215,7 +215,7 @@ v: A | { x: 'a }
 
 
 def funny = error: nothing\x
-//│ funny: nothing
+//│ funny: nothing\x
 
 // It could be agrued this should fail... but that would make constraint solving more awkward!
 funny.x

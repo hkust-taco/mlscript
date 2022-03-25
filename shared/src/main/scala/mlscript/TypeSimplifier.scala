@@ -424,7 +424,7 @@ trait TypeSimplifier { self: Typer =>
       }
     
     def go(st: SimpleType, pol: Opt[Bool]): SimpleType =
-        // trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
+        trace(s"recons[$pol] $st  (${st.getClass.getSimpleName})") {
         st match {
       case ExtrType(_) => st
       case tv: TypeVariable => renew(tv)
@@ -448,6 +448,7 @@ trait TypeSimplifier { self: Typer =>
       case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
         
         def helper(dnf: DNF, pol: Opt[Bool]): ST = {
+        println(s"DNF: $dnf")
         // val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
         val cs = dnf.cs
         cs.sorted.map { c =>
@@ -581,7 +582,7 @@ trait TypeSimplifier { self: Typer =>
         }
         
     }
-    // }(r => s"=> $r")
+    }(r => s"=> $r")
     
     go(st, pol)
     

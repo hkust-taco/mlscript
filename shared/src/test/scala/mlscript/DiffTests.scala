@@ -270,6 +270,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               else {
                 typer.dbg = mode.dbgSimplif
                 val cty = typer.canonicalizeType(wty)(ctx)
+                // val cty = wty
                 if (mode.dbgSimplif) output(s"Canon: ${cty}")
                 if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 val sim = typer.simplifyType(cty)(ctx)

@@ -713,21 +713,22 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   
-  /** Convert an inferred SimpleType into the immutable Type representation.
-    * Important precondition:
-    *   We require that only polar variables
-    *     (those occurring strictly positively or strictly negatively)
-    *   have bounds.
-    *   So typically, only recursive variables whose recursion is expressed through the bound
-    *     (since other polar variables would be simplified away).
-    *   This is because we re-tie the recursive knots by using hash consing
-    *     in order to simplify recursive structures,
-    *     after which we want to be able to discard the old leftover polar variables. */
+  /** Convert an inferred SimpleType into the immutable Type representation. */
   def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
     val expandType = ()
     
     // TODO improve/simplify? (take inspiration from other impls?)
     //    see: duplication of recursive.get(st_pol) logic
+    
+    // * We do a polarity analysis on the type variables because some type variables will be polar
+    // *  (i.e., occurring strictly positively or strictly negatively).
+    // * Typically, only recursive variables whose recursion is expressed through the bound
+    // *  (since other polar variables would usually have been simplified away at this point).
+    // * After we re-tie the recursive knots by using hash consing
+    // *  in order to simplify recursive structures,
+    // *  we'll want to be able to discard the old leftover polar variables.
+    val allVarPols = st.getVarsPol(S(polarity))
+    println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
     
     // val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
     val recursive = mutable.Map.empty[SimpleType, TypeVar]
@@ -756,12 +757,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val boundTypes = bounds.map(go(_, polarity))
             val mrg = if (polarity) Union else Inter
             recursive.get(st_pol) match {
-              case Some(variable) =>
+              case Some(variable) => // FIXME does this assume polar rec?
                 Recursive(variable, boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
               case None =>
-                if (boundTypes.isEmpty)
+                // if (boundTypes.isEmpty)
+                //   boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
+                // else // see precondition
+                //   boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top)
+                // 
+                // if (tv.isRecursive.isDefined)
+                // println(s"?? ${allVarPols(tv)}")
+                if (allVarPols(tv).isEmpty) // if the variable is not polar, include it
                   boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
-                else // see precondition
+                else
                   boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top)
             }
           }

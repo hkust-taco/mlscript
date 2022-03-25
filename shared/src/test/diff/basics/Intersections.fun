@@ -7,15 +7,15 @@ let foo = _ as (_: (Int => Int) & (Bool => Bool))
 :ns
 let foo = _ as (_: (Int => Int) & (Bool => Bool))
 let foo = (_ as (_: (Int => Int) & (Bool => Bool)))._1
-//│ foo: (_: 'a,)
-//│ foo: 'a
+//│ foo: (_: nothing,)
+//│ foo: nothing
 
 foo(1)
 //│ res: nothing
 
 :ns
 foo(1)
-//│ res: 'a
+//│ res: nothing
 
 succ / foo(1)
 //│ res: int

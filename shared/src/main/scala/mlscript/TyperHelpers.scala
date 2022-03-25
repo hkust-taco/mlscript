@@ -54,6 +54,12 @@ abstract class TyperHelpers { self: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
+  def printPol(pol: Opt[Bool]): Str = pol match {
+    case S(true) => "+"
+    case S(false) => "-"
+    case N => "="
+  }
+  
   def recordIntersection(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] =
     mergeMap(fs1, fs2)(_ & _).toList
   
@@ -425,15 +431,15 @@ abstract class TyperHelpers { self: Typer =>
     }
     def withProvOf(ty: SimpleType): ProvType = withProv(ty.prov)
     def withProv(p: TypeProvenance): ProvType = ProvType(this)(p)
-    def pushPosWithout(implicit ctx: Ctx): SimpleType = this match {
+    def pushPosWithout(implicit ctx: Ctx, ptr: PreserveTypeRefs): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
-      case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else b.unwrapAll.withoutPos(ns) match {
+      case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else (if (preserveTypeRefs) b.unwrapProxies else b.unwrapAll).withoutPos(ns) match {
         case Without(c @ ComposedType(pol, l, r), ns) => ComposedType(pol, l.withoutPos(ns), r.withoutPos(ns))(c.prov)
         case Without(NegType(nt), ns) => nt.negNormPos(_.pushPosWithout, nt.prov).withoutPos(ns) match {
           case rw @ Without(NegType(nt), ns) =>
             nt match {
               case _: TypeVariable | _: ClassTag | _: RecordType => rw
-              case _ => lastWords(s"$this  $rw  (${nt.getClass})")
+              case _ => if (preserveTypeRefs) rw else lastWords(s"$this  $rw  (${nt.getClass})")
             }
           case rw => rw
         }
@@ -462,6 +468,55 @@ abstract class TyperHelpers { self: Typer =>
       case NegType(tt: TraitTag) if !union => NegTrait(tt) :: Nil
       case ProvType(und) => und.components(union)
       case _ => this :: Nil
+    }
+    
+    def childrenPol(pol: Opt[Bool]): List[Opt[Bool] -> SimpleType] = this match {
+      case tv: TypeVariable =>
+        (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
+        (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
+      case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
+      case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
+      case RecordType(fs) => fs.map(pol -> _._2)
+      case TupleType(fs) => fs.map(pol -> _._2)
+      case ArrayType(inner) => pol -> inner :: Nil
+      case NegType(n) => pol.map(!_) -> n :: Nil
+      case ExtrType(_) => Nil
+      case ProxyType(und) => pol -> und :: Nil
+      case _: ObjectTag => Nil
+      case TypeRef(d, ts) => ts.map(N -> _)
+      case Without(b, ns) => pol -> b :: Nil
+      case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
+    }
+    
+    def getVarsPol(pol: Opt[Bool]): Map[TypeVariable, Opt[Bool]] = {
+      val res = MutMap.empty[TypeVariable, Opt[Bool]]
+      @tailrec
+      def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =
+          // trace(s"getVarsPol ${queue.iterator.map(e => s"${printPol(e._1)}${e._2}").mkString(", ")}") {
+          queue match {
+        case (tvp, tv: TypeVariable) :: tys =>
+          // if (res(tv)) rec(tys)
+          // else { res += tv; rec(tv.children(includeBounds = true) ::: tys) }
+          res.get(tv) match {
+            case S(N) => rec(tys)
+            // case S(p) if p === tvp || tvp.isEmpty => rec(tys)
+            case S(p) if p === tvp => rec(tys)
+            case S(S(p)) =>
+              assert(!tvp.contains(p))
+              // println(s"$tv -> =")
+              res += tv -> N
+              rec(tv.childrenPol(tvp) ::: tys)
+            case N =>
+              res += tv -> tvp
+              // println(s"$tv -> ${printPol(tvp)}")
+              rec(tv.childrenPol(tvp) ::: tys)
+          }
+        case (typ, ty) :: tys => rec(ty.childrenPol(typ) ::: tys)
+        case Nil => ()
+      }
+      // }()
+      rec(pol -> this :: Nil)
+      SortedMap.from(res)(Ordering.by(_.uid))
     }
     
     def children(includeBounds: Bool): List[SimpleType] = this match {
@@ -502,7 +557,7 @@ abstract class TyperHelpers { self: Typer =>
     
     def expPos(implicit ctx: Ctx): Type = (
       // this
-      this.pushPosWithout
+      this.pushPosWithout(ctx, ptr = true)
       // this.normalize(true)
       // |> (canonicalizeType(_, true))
       // |> (simplifyType(_, true, removePolarVars = false))
