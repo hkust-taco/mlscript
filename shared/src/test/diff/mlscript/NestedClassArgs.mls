@@ -13,64 +13,8 @@ def c: 'a -> C[C['a]]
 def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
 
-:ds
+// :ds
 def c: C['a] as 'a
-//│ Typed as: 'a0'
-//│  where: 'a0' :> C['a0'] <: C['a0']
-//│ ty[+] 'a0'
-//│ | isRecursive TreeMap('a0' -> None) Some(None)
-//│ | Renewed 'a0' ~> 'a1'
-//│ | ty[+] C['a0']
-//│ | -> Right(DNF({}∧C['a0']))
-//│ | DNF[+] DNF({}∧C['a0'])
-//│ | ~> C['a1']
-//│ | ty[-] C['a0']
-//│ | -> Right(DNF({}∧C['a0']))
-//│ | DNF[-] DNF({}∧C['a0'])
-//│ | ~> C['a1']
-//│ -> Right(DNF('a0'))
-//│ DNF[+] DNF('a0')
-//│ ~> 'a1'
-//│ Canon: 'a1'
-//│  where: 'a1' :> C['a1'] <: C['a1']
-//│ analyze[+] 'a1'       HashSet()
-//│ | go 'a1'   ()
-//│ | | 'a1' false
-//│ | | go C['a1']   ('a1')
-//│ | | | analyze[+] C['a1']       HashSet(('a1',true))
-//│ | | | | analyze[+] 'a1'       HashSet(('a1',true), (C['a1'],true))
-//│ | | | | analyze[-] 'a1'       HashSet(('a1',true), (C['a1'],true))
-//│ | | | | | go 'a1'   ()
-//│ | | | | | | 'a1' false
-//│ | | | | | | go C['a1']   ('a1')
-//│ | | | | | | | analyze[-] C['a1']       HashSet(('a1',true), (C['a1'],true), ('a1',false))
-//│ | | | | | | | | analyze[+] 'a1'       HashSet(('a1',true), (C['a1'],false), (C['a1'],true), ('a1',false))
-//│ | | | | | | | | analyze[-] 'a1'       HashSet(('a1',true), (C['a1'],false), (C['a1'],true), ('a1',false))
-//│ | | | | | >>>> 'a1' HashSet('a1') None
-//│ | >>>> 'a1' HashSet('a1') None
-//│ [occs] -'a1' {'a1'} ; +'a1' {'a1'}
-//│ [vars] TreeSet('a1')
-//│ [bounds] 'a1' :> C['a1'] <: C['a1']
-//│ [rec] HashSet('a1')
-//│ [v] 'a1' Some(HashSet('a1')) Some(HashSet('a1'))
-//│ [sub] 
-//│ Renewed 'a1' ~> 'a2'
-//│ Type after simplification: 'a2'
-//│  where: 'a2' :> C['a2'] <: C['a2']
-//│ recons[+] 'a2'  (TypeVariable)
-//│ | recons[+] C['a2']  (TypeRef)
-//│ | | recons[=] 'a2'  (TypeVariable)
-//│ | | => 'a3'
-//│ | => C['a3']
-//│ | recons[-] C['a2']  (TypeRef)
-//│ | | recons[=] 'a2'  (TypeVariable)
-//│ | | => 'a3'
-//│ | => C['a3']
-//│ => 'a3'
-//│ Recons: 'a3'
-//│  where: 'a3' :> C['a3'] <: C['a3']
-//│ allVarPols: ='a3'
-//│ isRecursive TreeMap('a3' -> None) Some(None)
 //│ c: C['a] as 'a
 
 // :ds
@@ -106,82 +50,8 @@ mkC = mkC'
 //│   <:  mkC:
 //│ 'a -> C2['a]
 
-:ds
+// :ds
 rec def rc = mkC(rc)
-//│ Typed as: α0'
-//│  where: α0' :> [[[[C2[['a1']]]]]] <: [['a1']], 'a1' :> [[[[[[C2[['a1']]]]]]]]
-//│ ty[+] α0'
-//│ | isRecursive TreeMap('a1' -> None) None
-//│ | Consider α0' List([[[[C2[['a1']]]]]]) List([['a1']])
-//│ | isRecursive TreeMap('a1' -> None) None
-//│ -> Right(DNF(α0' | {}∧C2[['a1']]))
-//│ DNF[+] DNF(α0' | {}∧C2[['a1']])
-//│ | Renewed α0' ~> α3'
-//│ | ty[-] ['a1']
-//│ | | isRecursive TreeMap('a1' -> None) Some(None)
-//│ | | Renewed 'a1' ~> 'a4'
-//│ | | ty[+] [[[[[[C2[['a1']]]]]]]]
-//│ | | -> Right(DNF({}∧C2[['a1']]))
-//│ | | DNF[+] DNF({}∧C2[['a1']])
-//│ | | | ty[-] ['a1']
-//│ | | | -> Right(DNF('a1'))
-//│ | | | DNF[-] DNF('a1')
-//│ | | | ~> 'a4'
-//│ | | | ty[+] ['a1']
-//│ | | | -> Right(DNF('a1'))
-//│ | | | DNF[+] DNF('a1')
-//│ | | | ~> 'a4'
-//│ | | ~> C2['a4']
-//│ | -> Right(DNF('a1'))
-//│ | DNF[-] DNF('a1')
-//│ | ~> 'a4'
-//│ | ty[+] ['a1']
-//│ | -> Right(DNF('a1'))
-//│ | DNF[+] DNF('a1')
-//│ | ~> 'a4'
-//│ ~> (C2['a4'] | α3')
-//│ Canon: (C2['a4'] | α3')
-//│  where: 'a4' :> C2['a4']
-//│ analyze[+] (C2['a4'] | α3')       HashSet()
-//│ | go (C2['a4'] | α3')   ()
-//│ | | go C2['a4']   ()
-//│ | | | analyze[+] C2['a4']       HashSet(((C2['a4'] | α3'),true))
-//│ | | | | analyze[+] 'a4'       HashSet((C2['a4'],true), ((C2['a4'] | α3'),true))
-//│ | | | | | go 'a4'   ()
-//│ | | | | | | 'a4' false
-//│ | | | | | | go C2['a4']   ('a4')
-//│ | | | | | | | analyze[+] C2['a4']       HashSet((C2['a4'],true), ('a4',true), ((C2['a4'] | α3'),true))
-//│ | | | | | >>>> 'a4' HashSet('a4') None
-//│ | | | | analyze[-] 'a4'       HashSet((C2['a4'],true), ('a4',true), ((C2['a4'] | α3'),true))
-//│ | | | | | go 'a4'   ()
-//│ | | | | | | 'a4' false
-//│ | | | | | >>>> 'a4' HashSet('a4') None
-//│ | | go α3'   ()
-//│ | | | α3' false
-//│ | >>>> α3' HashSet(α3') None
-//│ [occs] +'a4' {'a4'} ; -'a4' {'a4'} ; +α3' {α3'}
-//│ [vars] TreeSet(α3', 'a4')
-//│ [bounds] 'a4' :> C2['a4']
-//│ [rec] HashSet('a4')
-//│ [!] α3'
-//│ [v] 'a4' Some(HashSet('a4')) Some(HashSet('a4'))
-//│ [sub] α3' -> None
-//│ Renewed 'a4' ~> 'a5'
-//│ Type after simplification: C2['a5']
-//│  where: 'a5' :> C2['a5']
-//│ recons[+] C2['a5']  (TypeRef)
-//│ | recons[=] 'a5'  (TypeVariable)
-//│ | | recons[+] C2['a5']  (TypeRef)
-//│ | | | recons[=] 'a5'  (TypeVariable)
-//│ | | | => 'a6'
-//│ | | => C2['a6']
-//│ | => 'a6'
-//│ => C2['a6']
-//│ Recons: C2['a6']
-//│  where: 'a6' :> C2['a6']
-//│ allVarPols: ='a6'
-//│ isRecursive TreeMap('a6' -> None) Some(None)
-//│ isRecursive TreeMap('a6' -> None) Some(None)
 //│ rc: C2['a] as 'b
 //│ 	where
 //│ 		'a :> 'b
@@ -223,10 +93,10 @@ C{}
 
 // :ds
 def c4 a = C4{ a = C{} }
-//│ c4: anything -> (C4['A] with {a: C[C4['A] & 'A0 .. 'A0 | C4['A]]})
+//│ c4: anything -> (C4['A] with {a: C[C4['A]]})
 
 def c = c4
-//│ anything -> (C4['A] with {a: C[C4['A] & 'A0 .. 'A0 | C4['A]]})
+//│ anything -> (C4['A] with {a: C[C4['A]]})
 //│   <:  c:
 //│ 'a -> C4['a]
 
@@ -263,10 +133,10 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: (C5[C6['A] & 'A0 .. 'A0 | C6['A]] with {a: C2['A1] with {a: 'a}}) as 'a})
+//│ c6: anything -> (C6['A] with {a: (C5[C6['A]] with {a: C2['A0] with {a: 'a}}) as 'a})
 //│ 	where
-//│ 		'A1 :> C5[C6['A]] | 'a | C5[C6['A] & 'A0 .. 'A0 | C6['A]]
-//│ 		    <: C5[C6['A]] & C5[C6['A] & 'A0 .. 'A0 | C6['A]]
+//│ 		'A0 :> C5[C6['A]] | 'a | C5[C6['A]]
+//│ 		    <: C5[C6['A]]
 
 // FIXME SOF
 // :d
@@ -286,7 +156,23 @@ class L[T]: { h: T; t: O[L[T]] }
 //│ Defined type alias O
 //│ Defined class L
 //│ Declared L.Append: L['T] -> 'T -> L['T]
-//│ Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
+//│ Defined L.Append: L['T] -> ('T & 'a) -> (L['T] with {h: 'a, t: S[L['T]]})
+
+// before:
+//  Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
+
+L.Append
+//│ res: L['T] -> 'T -> L['T]
+
+
+def append ls elem = L { h = elem; t = S { v = ls } }
+//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] with {v: 'v}})
+
+def append0 ls = L { h = 0; t = S { v = ls } }
+//│ append0: (L['T .. 0 | 'T] & 'v) -> (L['T .. 0 | 'T] with {h: 0, t: S[L['T .. 0 | 'T]] with {v: 'v}})
+
+def appendNil elem = L { h = elem; t = N{} }
+//│ appendNil: ('h & 'T) -> (L['T] with {h: 'h, t: N})
 
 
 S{v=1}

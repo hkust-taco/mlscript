@@ -15,14 +15,16 @@ import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
+// class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   import DiffTests._
   files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
     buf ++= s"Processed  $fileName"
+    
     // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
-    // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    // println(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
     
     val beginTime = System.nanoTime()
     

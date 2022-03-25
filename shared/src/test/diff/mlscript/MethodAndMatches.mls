@@ -158,10 +158,10 @@ bar2 d1
 bar2 d1 0
 //│ bar2: Base1['a] -> 'a -> Base1['a]
 //│     = <missing implementation>
-//│ res: (int & 'a) -> Base1[int & 'a .. 'a | int]
+//│ res: int -> Base1[int]
 //│    = <no result>
 //│      bar2 is not implemented
-//│ res: Base1[int & 'a .. 'a | 0 | int]
+//│ res: Base1[int]
 //│    = <no result>
 //│      bar2 is not implemented
 

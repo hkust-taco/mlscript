@@ -75,7 +75,7 @@ g = Bar1 { x = 42 }
 //│  = Bar1 { x: 42 }
 
 g: Foo1['a]
-//│ res: Foo1[int & 'a .. 'a | 42 | int]
+//│ res: Foo1[int]
 //│    = Bar1 { x: 42 }
 
 res.x

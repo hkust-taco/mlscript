@@ -46,7 +46,7 @@ g = Bar { x = 42; y = true }
 
 g.(Foo.Fun)
 g.(Bar.Fun)
-//│ res: ((42 | 'A | int) -> ('B | true | bool) -> 'C) -> (int & 'A) -> (bool & 'B) -> 'C
+//│ res: ((42 | int) -> (true | bool) -> 'C) -> int -> bool -> 'C
 //│    = undefined
 //│ res: 'a -> 'a
 //│    = undefined
@@ -54,7 +54,7 @@ g.(Bar.Fun)
 :re
 Foo.Fun g
 Bar.Fun g
-//│ res: ((42 | 'A | int) -> ('B | true | bool) -> 'C) -> (int & 'A) -> (bool & 'B) -> 'C
+//│ res: ((42 | int) -> (true | bool) -> 'C) -> int -> bool -> 'C
 //│ Runtime error:
 //│   TypeError: (intermediate value).Fun is not a function
 //│ res: 'a -> 'a
@@ -62,14 +62,14 @@ Bar.Fun g
 //│   TypeError: (intermediate value).Fun is not a function
 
 g.Fun
-//│ res: ((42 | 'A | int) -> ('B | true | bool) -> 'C) -> (int & 'A) -> (bool & 'B) -> 'C
+//│ res: ((42 | int) -> (true | bool) -> 'C) -> int -> bool -> 'C
 //│    = [Function: Fun]
 
 h = Bar { x = 43; y = true }
 h.Fun
 //│ h: Bar & {x: 43, y: true}
 //│  = Bar { x: 43, y: true }
-//│ res: ((43 | 'A | int) -> ('B | true | bool) -> 'C) -> (int & 'A) -> (bool & 'B) -> 'C
+//│ res: ((43 | int) -> (true | bool) -> 'C) -> int -> bool -> 'C
 //│    = [Function: Fun]
 
 

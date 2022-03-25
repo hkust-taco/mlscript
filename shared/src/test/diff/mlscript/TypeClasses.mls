@@ -40,10 +40,10 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
     Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ Defined class ComplexMonoid
 //│ Defined ComplexMonoid.Empty: ComplexMonoid['A] -> (Complex['a .. 'A | 'a] with {imaginary: 'A, real: 'A})
-//│ Defined ComplexMonoid.Add: ComplexMonoid['A] -> {imaginary: 'A & 'a & 'b, real: 'A & 'a & 'c} -> {imaginary: 'A & 'a & 'b, real: 'A & 'a & 'c} -> (Complex['a .. 'A | 'a] with {imaginary: 'A | 'b, real: 'A | 'c})
+//│ Defined ComplexMonoid.Add: ComplexMonoid['A] -> {imaginary: 'A & 'a, real: 'A & 'a} -> {imaginary: 'A & 'a, real: 'A & 'a} -> (Complex['a .. 'A | 'a] with {imaginary: 'A, real: 'A})
 
 cmi = ComplexMonoid { base = IntMonoid }
-//│ cmi: ComplexMonoid[int & 'A .. 'A | int] with {base: IntMonoid}
+//│ cmi: ComplexMonoid[int] with {base: IntMonoid}
 //│    = ComplexMonoid { base: IntMonoid {} }
 
 def ComplexMonoid base = ComplexMonoid { base }
@@ -51,11 +51,11 @@ def ComplexMonoid base = ComplexMonoid { base }
 //│              = [Function: ComplexMonoid1]
 
 cmi = ComplexMonoid IntMonoid
-//│ cmi: ComplexMonoid[int & 'A .. 'A | int] with {base: IntMonoid}
+//│ cmi: ComplexMonoid[int] with {base: IntMonoid}
 //│    = ComplexMonoid { base: IntMonoid {} }
 
 cmi.Empty
-//│ res: Complex[int & 'A .. 'A | int]
+//│ res: Complex[int]
 //│    = Complex { real: 0, imaginary: 0 }
 
 cmi.Empty.real
@@ -63,7 +63,7 @@ cmi.Empty.real
 //│    = 0
 
 cmi.Add (Complex 1 2) (Complex 3 4)
-//│ res: (Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int] with {imaginary: 2, real: 1}) | (Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int] with {imaginary: 4, real: 3}) | Complex[int & 'A .. 1 | 2 | 3 | 4 | 'A | int]
+//│ res: Complex[int] & {imaginary: 2, real: 1} | Complex[int] & {imaginary: 4, real: 3} | Complex[int]
 //│    = Complex { real: 4, imaginary: 6 }
 
 

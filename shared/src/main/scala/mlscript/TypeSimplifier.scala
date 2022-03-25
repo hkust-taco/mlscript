@@ -213,8 +213,8 @@ trait TypeSimplifier { self: Typer =>
     val analyzed2 = MutSet.empty[ST -> Bool]
     
     def analyze(st: SimpleType, pol: Bool): Unit =
-        // trace(s"analyze[${printPol(S(pol))}] $st") {
-        trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
+        trace(s"analyze[${printPol(S(pol))}] $st") {
+        // trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
         // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
           analyzed2.setAndIfUnset(st -> pol) {
             st match {
@@ -289,10 +289,10 @@ trait TypeSimplifier { self: Typer =>
           // println(s">> $pol $l $r")
           if (p === pol) { go(l); go(r) }
           else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
-        case _: BaseType => newOccs += st; analyze(st, pol)
+        case _: BaseType | _: TypeRef => newOccs += st; analyze(st, pol)
         // TODO simple TypeRefs
         case tv: TypeVariable =>
-          println(s"$tv ${newOccs.contains(tv)}")
+          // println(s"$tv ${newOccs.contains(tv)}")
           if (!newOccs.contains(tv)) {
             // analyzed(tv -> pol) = true
             newOccs += st
@@ -408,9 +408,18 @@ trait TypeSimplifier { self: Typer =>
                 } vCoOcss.filterInPlace(t => t === v || wCoOcss(t))
               // }
             }; ()
-          case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+          // case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+          case atom @ (_: BaseType | _: TypeRef)
+            if !recVars(v) // can't reduce recursive sandwiches, obviously
+            && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+          // case atom @ (_: BaseType | _: TypeRef | _: TV) if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
             println(s"[..] $v ${atom}")
             varSubst += v -> None; ()
+          
+          // TODO try to preserve name hints?
+          case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(!pol -> v).exists(_(w)) =>
+            println(s"[..] $v := ${w}")
+            varSubst += v -> S(w); ()
           case _ =>
         }
       }

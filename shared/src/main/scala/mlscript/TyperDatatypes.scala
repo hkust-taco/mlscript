@@ -287,7 +287,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // val vars = getVarsPol(S(true))
       // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
       val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _).toList)(noProv).getVarsPol(S(true))
-      println(s"isRecursive $vars ${vars.get(this)}")
+      // println(s"isRecursive $vars ${vars.get(this)}")
       vars.get(this).map(_.isDefined)
     })
   }
