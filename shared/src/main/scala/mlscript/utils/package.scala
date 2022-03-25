@@ -164,6 +164,9 @@ package object utils {
   implicit class SortedSetObjectHelpers(self: SortedSet.type) {
     def single[A: Ordering](a: A): SortedSet[A] = (SortedSet.newBuilder[A] += a).result()
   }
+  implicit class MapObjectHelpers(self: Map.type) {
+    def single[A, B](ab: A -> B): Map[A, B] = (Map.newBuilder[A, B] += ab).result()
+  }
   implicit class SortedMapObjectHelpers(self: SortedMap.type) {
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
   }

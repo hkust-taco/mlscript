@@ -281,6 +281,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv.upperBounds ::= bod
         tv.lowerBounds ::= bod
         tv
+        // RecType(bod, tv)(tyTp(ty.toLoc, "recursive type"))
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
