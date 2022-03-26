@@ -228,7 +228,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
       }
     }()
-
+    
     /** Helper function to constrain Field lower bounds */
     def recLb(lhs: FieldType, rhs: FieldType)
       (implicit raise: Raise, cctx: ConCtx): Unit = {

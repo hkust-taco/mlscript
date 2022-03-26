@@ -50,7 +50,6 @@ trait TypeSimplifier { self: Typer =>
     // Merge the bounds of all type variables of the given DNF, and traverse the result
     def go1(ty: DNF, pol: Bool)
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[$pol] $ty") {
-        // println(s"inProcess ${ty.hashCode} ${inProcess.toList.map(_._1.hashCode)}")
       if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
         if (inProcess.contains(pty))
@@ -356,7 +355,7 @@ trait TypeSimplifier { self: Typer =>
                   val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
                     val fieldTagNme = tparamField(TypeName(clsNme), tp)
                     rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
-                      case (_, FieldType(ub, lb)) if lb >:< ub.getOrElse(BotType) => lb   // ? not sure
+                      case (_, FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
                       case (_, FieldType(lb, ub)) =>
                         TypeBounds.mk(go(lb.getOrElse(BotType), false), go(ub, true))
                     }.getOrElse(TypeBounds(BotType, TopType)(noProv))

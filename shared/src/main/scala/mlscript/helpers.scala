@@ -32,9 +32,9 @@ abstract class TypeImpl extends Located { self: Type =>
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
-    case Field(None, ub) => ub.showIn(ctx, 0)
-    case Field(Some(lb), Top) => s"${lb.showIn(ctx, 0)} .."
-    case Field(Some(lb), ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Field(N | S(Bot), ub) => ub.showIn(ctx, 0)
+    case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} .."
+    case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -46,18 +46,18 @@ abstract class TypeImpl extends Located { self: Type =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
-    case Function(Tuple((N,Field(None,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
+    case Function(Tuple((N,Field(N,l)) :: Nil), r) => Function(l, r).showIn(ctx, outerPrec)
     case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
         val nme = nt._1.name
         if (nme.isCapitalized) 
         nt._2 match {
-          case Field(None, Top) => s"$nme"
-          case Field(Some(lb), ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
-          case Field(None, ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
-          case Field(Some(lb), Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
-          case Field(Some(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
+          case Field(N | S(Bot), Top) => s"$nme"
+          case Field(S(lb), ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
+          case Field(N | S(Bot), ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
+          case Field(S(lb), Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
+          case Field(S(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
         else s"${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
@@ -267,12 +267,14 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Lam(name, rhs) => s"($name => $rhs)"
     case App(lhs, rhs) => s"($lhs $rhs)"
     case Rcd(fields) =>
-      fields.iterator.map(nv => nv._1.name + ": " + nv._2).mkString("{", ", ", "}")
+      fields.iterator.map(nv =>
+        (if (nv._2._2) "mut " else "") + nv._1.name + ": " + nv._2._1).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
       s"(let${if (isRec) " rec" else ""} $name = $rhs; $body)"
     case Tup(xs) =>
-      xs.iterator.map { case (n, t) => n.fold("")(_.name + ": ") + t + "," }.mkString("(", " ", ")")
+      xs.iterator.map { case (n, t) =>
+        (if (t._2) "mut " else "") + n.fold("")(_.name + ": ") + t._1 + "," }.mkString("(", " ", ")")
     case Bind(l, r) => s"($l as $r)"
     case Test(l, r) => s"($l is $r)"
     case With(t, fs) =>  s"$t with $fs"

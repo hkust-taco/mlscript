@@ -47,8 +47,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
 
   def lit[_: P]: P[Lit] =
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
+  
   def variable[_: P]: P[Var] = locate(ident.map(Var))
-
+  
   def parens[_: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(None -> t), N) => Bra(false, t)
     case (Seq(Some(_) -> t), N) => Tup(N -> (t, true) :: Nil)   // ? single tuple with mutable
@@ -56,6 +57,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   })
 
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
+  
   def subterm[_: P]: P[Term] = P( Index ~~ subtermNoSel ~ (
     // Fields:
     ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
@@ -70,10 +72,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           case Left(se) => Sel(acc, se)
           case Right((su, i1)) => Subs(acc, su).withLoc(i0, i1, origin)
         })
-        a match {
-          case None => base
-          case Some(v) => Assign(base, v)
-        }
+        a.fold(base)(Assign(base, _))
     }
 
   def record[_: P]: P[Rcd] = locate(P(
@@ -81,22 +80,29 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     ).map { fs => Rcd(fs.map{ 
         case L((mut, v, t)) => v -> (t -> mut.isDefined)
         case R(mut -> id) => id -> (id -> mut.isDefined) }.toList)})
+  
   def fun[_: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
+  
   def let[_: P]: P[Term] = locate(P(
       kw("let") ~/ kw("rec").!.?.map(_.isDefined) ~ variable ~ subterm.rep ~ "=" ~ term ~ kw("in") ~ term
     ) map {
       case (rec, id, ps, rhs, bod) => Let(rec, id, ps.foldRight(rhs)((i, acc) => Lam(toParams(i), acc)), bod)
     })
+  
   def ite[_: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
     App(App(App(Var("if"), ite._1), ite._2), ite._3))
+  
   def withsAsc[_: P]: P[Term] = P( withs ~ (":" ~/ ty).rep ).map {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)
   }
+  
   def withs[_: P]: P[Term] = P( binops ~ (kw("with") ~ record).rep ).map {
     case (as, ws) => ws.foldLeft(as)((acc, w) => With(acc, w))
   }
+  
   def mkApp(lhs: Term, rhs: Term): Term = App(lhs, toParams(rhs))
   def apps[_: P]: P[Term] = P( subterm.rep(1).map(_.reduce(mkApp)) )
+  
   def _match[_: P]: P[CaseOf] =
     locate(P( kw("case") ~/ term ~ "of" ~ "{" ~ "|".? ~ matchArms ~ "}" ).map(CaseOf.tupled))
   def matchArms[_: P]: P[CaseBranches] = P(

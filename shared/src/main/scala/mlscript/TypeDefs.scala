@@ -133,7 +133,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   
   
   def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
-
+    
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
@@ -146,7 +146,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         td0.copy(nme = td0.nme.copy(n).withLocOf(td0.nme)).withLocOf(td0)
       }
       if (primitiveTypes.contains(n)) {
-         err(msg"Type name '$n' is reserved.", td.nme.toLoc)
+        err(msg"Type name '$n' is reserved.", td.nme.toLoc)
       }
       allDefs.get(n).foreach { other =>
         err(msg"Type '$n' is already defined.", td.nme.toLoc)

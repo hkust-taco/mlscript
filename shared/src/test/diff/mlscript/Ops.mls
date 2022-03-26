@@ -1,22 +1,22 @@
 
 :p
 2 + 2
-//│ Parsed: ((+ ((2,false),)) ((2,false),));
-//│ Desugared: ((+ ((2,false),)) ((2,false),))
+//│ Parsed: ((+ (2,)) (2,));
+//│ Desugared: ((+ (2,)) (2,))
 //│ res: int
 //│    = 4
 
 :p
 1 + 2 * 2 + 3
-//│ Parsed: ((+ ((((+ ((1,false),)) ((((* ((2,false),)) ((2,false),)),false),)),false),)) ((3,false),));
-//│ Desugared: ((+ ((((+ ((1,false),)) ((((* ((2,false),)) ((2,false),)),false),)),false),)) ((3,false),))
+//│ Parsed: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,));
+//│ Desugared: ((+ (((+ (1,)) (((* (2,)) (2,)),)),)) (3,))
 //│ res: int
 //│    = 8
 
 :p
 1 + 2 / 2 + 3
-//│ Parsed: ((+ ((((+ ((1,false),)) ((((/ ((2,false),)) ((2,false),)),false),)),false),)) ((3,false),));
-//│ Desugared: ((+ ((((+ ((1,false),)) ((((/ ((2,false),)) ((2,false),)),false),)),false),)) ((3,false),))
+//│ Parsed: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,));
+//│ Desugared: ((+ (((+ (1,)) (((/ (2,)) (2,)),)),)) (3,))
 //│ res: int
 //│    = 5
 
@@ -24,8 +24,8 @@
 :ge
 :p
 1 |> 2 || 3
-//│ Parsed: ((|| ((((|> ((1,false),)) ((2,false),)),false),)) ((3,false),));
-//│ Desugared: ((|| ((((|> ((1,false),)) ((2,false),)),false),)) ((3,false),))
+//│ Parsed: ((|| (((|> (1,)) (2,)),)) (3,));
+//│ Desugared: ((|| (((|> (1,)) (2,)),)) (3,))
 //│ ╔══[ERROR] identifier not found: |>
 //│ ║  l.26: 	1 |> 2 || 3
 //│ ╙──      	  ^^
@@ -41,8 +41,8 @@
 
 :p
 true || false && true || false
-//│ Parsed: ((|| ((((|| ((true,false),)) ((((&& ((false,false),)) ((true,false),)),false),)),false),)) ((false,false),));
-//│ Desugared: ((|| ((((|| ((true,false),)) ((((&& ((false,false),)) ((true,false),)),false),)),false),)) ((false,false),))
+//│ Parsed: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,));
+//│ Desugared: ((|| (((|| (true,)) (((&& (false,)) (true,)),)),)) (false,))
 //│ res: bool
 //│    = true
 

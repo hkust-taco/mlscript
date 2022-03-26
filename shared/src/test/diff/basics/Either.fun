@@ -19,10 +19,10 @@ data type Either l r of
 data type Either2 (l: _) (r: _) of
   Left2 l
   Right2 r
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((l: (_,false),);)
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((l: _,);)
 //│ ║  l.19: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                  ^^^^^^
-//│ ╔══[ERROR] illegal datatype type parameter shape: ((r: (_,false),);)
+//│ ╔══[ERROR] illegal datatype type parameter shape: ((r: _,);)
 //│ ║  l.19: 	data type Either2 (l: _) (r: _) of
 //│ ╙──      	                         ^^^^^^
 //│ ╔══[ERROR] type identifier not found: l

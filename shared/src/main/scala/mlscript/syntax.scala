@@ -104,7 +104,7 @@ final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 
-final case class Field(in: Option[Type], out: Type) extends FieldImpl
+final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
 sealed abstract class NullaryType                        extends Type
 

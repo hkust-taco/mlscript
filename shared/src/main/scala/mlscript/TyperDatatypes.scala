@@ -271,13 +271,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
-    
-    // Note: the case-class-generated equals does not seem to work,
-    //    and I don't actually understand why!
-    override def equals(that: Any): Bool = that match {
-      case that: FieldType => this.lb === that.lb && this.ub === that.ub
-      case _ => false
-    }
     override def toString = s"$lb..$ub"
   }
   

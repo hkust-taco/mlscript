@@ -233,12 +233,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case _ =>
         }
         RecordType.mk(fs.map { nt =>
-            if (nt._1.name.isCapitalized)
-              err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
-            nt._1 -> FieldType(nt._2.in.map(rec), rec(nt._2.out))(
-              tp(App(nt._1, Var("").withLocOf(nt._2)).toCoveringLoc,
-                (if (nt._2.in.isDefined) "mutable " else "") + "record field"))
-          })(prov)
+          if (nt._1.name.isCapitalized)
+            err(msg"Field identifiers must start with a small letter", nt._1.toLoc)(raise)
+          nt._1 -> FieldType(nt._2.in.map(rec), rec(nt._2.out))(
+            tp(App(nt._1, Var("").withLocOf(nt._2)).toCoveringLoc,
+              (if (nt._2.in.isDefined) "mutable " else "") + "record field"))
+        })(prov)
       case Function(lhs, rhs) => FunctionType(rec(lhs), rec(rhs))(tyTp(ty.toLoc, "function type"))
       case WithExtension(b, r) => WithType(rec(b),
         RecordType(
@@ -825,13 +825,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             case ArrayType(FieldType(None, ub)) =>
               AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
             case ArrayType(FieldType(Some(lb), ub)) =>
-              AppliedType(TypeName("MutArray"), 
-                Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
+              AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case WithType(base, rcd) => WithExtension(go(base, polarity),
-              Record(rcd.fields.mapValues(f => Field(f.lb.map(go(_, polarity)), go(f.ub, polarity)))))
+              Record(rcd.fields.mapValues(f => Field(f.lb.map(go(_, !polarity)), go(f.ub, polarity)))))
             case ProxyType(und) => go(und, polarity)
             case tag: ObjectTag => tag.id match {
               case Var(n) => TypeName(n)

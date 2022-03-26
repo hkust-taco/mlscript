@@ -464,8 +464,8 @@ abstract class TyperHelpers { self: Typer =>
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case ComposedType(_, l, r) => l :: r :: Nil
-      case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ++ (f._2.ub :: Nil))
-      case TupleType(fs) => fs.flatMap(f => f._2.lb.toList ++ (f._2.ub :: Nil))
+      case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
+      case TupleType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
       case ArrayType(inner) => inner.lb.toList ++ (inner.ub :: Nil)
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
