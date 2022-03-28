@@ -167,14 +167,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       td1
     }
     import ctx.{tyDefs => oldDefs}
-
+    
     /* Type the bodies of type definitions, ensuring the correctness of parent types
      * and the regularity of the definitions, then register the constructors and types in the context. */
     def typeTypeDefs(implicit ctx: Ctx): Ctx =
       ctx.copy(tyDefs = oldDefs ++ newDefs.flatMap { td =>
         implicit val prov: TypeProvenance = tp(td.toLoc, "type definition")
         val n = td.nme
-
+        
         def gatherMthNames(td: TypeDef): (Set[Var], Set[Var]) =
           td.baseClasses.iterator.flatMap(bn => ctx.tyDefs.get(bn.name)).map(gatherMthNames(_)).fold(
             (td.mthDecls.iterator.map(md => md.nme.copy().withLocOf(md)).toSet,
@@ -184,7 +184,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               if (mns.size > 1) Var(mn.name).withLoc(td.toLoc) else mn }.toSet,
             defns1 ++ defns2
           )}
-
+        
         def checkCycle(ty: SimpleType)(implicit travsersed: Set[TypeName \/ TV]): Bool =
             // trace(s"Cycle? $ty {${travsersed.mkString(",")}}") {
             ty match {
@@ -204,7 +204,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
         }
         // }()
-
+        
         val rightParents = td.kind match {
           case Als => checkCycle(td.bodyTy)(Set.single(L(td.nme)))
           case k: ObjDefKind =>
@@ -302,7 +302,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             checkParents(td.bodyTy) && checkCycle(td.bodyTy)(Set.single(L(td.nme))) && checkAbstractAddCtors
         }
-
+        
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
             case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
@@ -322,14 +322,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           }
           case _ => ty.children(includeBounds = false).forall(checkRegular)
         }
-
+        
         // Note: this will end up going through some types several times... We could make sure to
         //    only go through each type once, but the error messages would be worse.
         if (rightParents && checkRegular(td.bodyTy)(Map(n.name -> td.targs)))
           td.nme.name -> td :: Nil
         else Nil
       })
-
+    
     def typeMethods(implicit ctx: Ctx): Ctx = {
       /* Perform subsumption checking on method declarations and definitions by rigidifying class type variables,
        * then register the method signatures in the context */
