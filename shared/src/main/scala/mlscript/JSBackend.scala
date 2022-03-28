@@ -203,8 +203,13 @@ class JSBackend {
       JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
-    case Assign(field, value) => 
-      JSCommaExpr(JSAssignExpr(translateTerm(field), translateTerm(value)) :: JSArray(Nil) :: Nil)
+    case Assign(lhs, value) =>
+      lhs match {
+        case _: Subs | _: Sel | _: Var =>
+          JSCommaExpr(JSAssignExpr(translateTerm(lhs), translateTerm(value)) :: JSArray(Nil) :: Nil)
+        case _ =>
+          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
+      }
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
