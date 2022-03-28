@@ -540,52 +540,52 @@ true[false]
 4["hello"]
 ge[2]
 //│ ge: int -> int
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.538: 	ta3[ge 3][ge (1+2)]
-//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
 //│ ║  l.525: 	ta3 = ((1,2,3), "hello", false)
 //│ ║         	                ^^^^^^^
-//│ ╟── but it flows into array subscript with expected type `Array[?b]`
+//│ ╟── but it flows into array access with expected type `Array[?b]`
 //│ ║  l.538: 	ta3[ge 3][ge (1+2)]
-//│ ╙──       	^^^^^^^^
-//│ res: 1 | 2 | 3
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╙──       	^^^^^^^^^
+//│ res: 1 | 2 | 3 | error
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.539: 	true[false]
-//│ ║         	^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.539: 	true[false]
-//│ ╙──       	^^^^
-//│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.539: 	true[false]
-//│ ║         	^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
 //│ ║  l.539: 	true[false]
 //│ ╙──       	     ^^^^^
-//│ res: nothing
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.539: 	true[false]
+//│ ║         	^^^^^^^^^^^
+//│ ╟── reference of type `true` does not match type `Array[?a]`
+//│ ║  l.539: 	true[false]
+//│ ╙──       	^^^^
+//│ res: error
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.540: 	4["hello"]
-//│ ║         	^^^^^^^^^
-//│ ╟── integer literal of type `4` does not match type `Array[?a]`
-//│ ║  l.540: 	4["hello"]
-//│ ╙──       	^
-//│ ╔══[ERROR] Type mismatch in array subscript:
-//│ ║  l.540: 	4["hello"]
-//│ ║         	^^^^^^^^^
+//│ ║         	^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `int`
 //│ ║  l.540: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
-//│ res: nothing
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.540: 	4["hello"]
+//│ ║         	^^^^^^^^^^
+//│ ╟── integer literal of type `4` does not match type `Array[?a]`
+//│ ║  l.540: 	4["hello"]
+//│ ╙──       	^
+//│ res: error
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.541: 	ge[2]
-//│ ║         	^^^^
+//│ ║         	^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Array[?c]`
 //│ ║  l.537: 	def ge x = x + 1
 //│ ║         	       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Array[?c]`
 //│ ║  l.541: 	ge[2]
 //│ ╙──       	^^
-//│ res: nothing
+//│ res: error
 
 def mkarr: 'a -> Array['a]
 def mkarr x = (x,x,x,x,x)
@@ -603,23 +603,23 @@ mkarr (1,true,"hi")[0]
 :e 
 mkarr 3 [  1]
 mk1[2  ]
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.604: 	mkarr 3 [  1]
-//│ ║         	      ^^^^^^
+//│ ║         	      ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
 //│ ║  l.604: 	mkarr 3 [  1]
 //│ ╙──       	      ^
-//│ res: Array[nothing]
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ res: Array[error]
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.605: 	mk1[2  ]
-//│ ║         	^^^^^
+//│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `6` does not match type `Array[?a]`
 //│ ║  l.592: 	mk1 = (mkarr 6)[ 0]
 //│ ║         	             ^
 //│ ╟── but it flows into reference with expected type `Array[?a]`
 //│ ║  l.605: 	mk1[2  ]
 //│ ╙──       	^^^
-//│ res: nothing
+//│ res: error
 
 def s1 a = (a[1] + a[2], a[(1,2)._2])
 def s2 a = (a[1][0])._2 + (a[2])._1
@@ -650,13 +650,13 @@ dup ara[1]._1 arb[10][8]._2 + 1
 
 :e
 (1,2,3)._1[1]
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.652: 	(1,2,3)._1[1]
-//│ ║         	^^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
 //│ ║  l.652: 	(1,2,3)._1[1]
 //│ ║         	 ^
 //│ ╟── but it flows into field selection with expected type `Array[?a]`
 //│ ║  l.652: 	(1,2,3)._1[1]
 //│ ╙──       	^^^^^^^^^^
-//│ res: nothing
+//│ res: error

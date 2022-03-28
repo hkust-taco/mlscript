@@ -134,24 +134,24 @@ final class TsTypegenCodeBuilder {
         )
       case Record(fields) =>
         SourceCode.recordWithEntries(
-          fields.map(entry => (SourceCode(entry._1.name), toTsType(entry._2)))
+          fields.map(entry => (SourceCode(entry._1.name), toTsType(entry._2.out)))
         )
       case Tuple(fields) =>
         // tuple that is a function argument becomes
         // multi-parameter argument list
         if (funcArg) {
           val argList = fields
-            .map(field => {
+            .map{case field => {
               val arg = typegenCtx.termScope.declareRuntimeSymbol("arg");
-              val argType = toTsType(field._2)
+              val argType = toTsType(field._2.out)
               SourceCode(s"$arg: ") ++ argType
-            })
+            }}
             .toList
           SourceCode.sepBy(argList).parenthesized
         }
         // regular tuple becomes fixed length array
         else {
-          SourceCode.horizontalArray(fields.map(field => toTsType(field._2)))
+          SourceCode.horizontalArray(fields.map(field => toTsType(field._2.out)))
         }
       case Top            => SourceCode("unknown")
       case Bot            => SourceCode("never")
@@ -266,7 +266,6 @@ final class TsTypegenCodeBuilder {
           .getOrElse({
             throw CodeGenError(s"Did not find mapping for type variable $t. Unable to generated ts type.")
           })
-      case Arr(_) => throw CodeGenError(s"Array type currently not supported for $mlType")
     }
   }
 

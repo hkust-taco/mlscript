@@ -83,7 +83,7 @@ Bar3
 //│ ╔══[ERROR] Field identifiers must start with a small letter
 //│ ║  l.82: 	{A = 1}
 //│ ╙──      	^^^^^^^
-//│ res: {A: 1}
+//│ res: {A <: 1}
 //│    = { A: 1 }
 
 :e
@@ -91,7 +91,7 @@ error: {A: 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
 //│ ║  l.90: 	error: {A: 1}
 //│ ╙──      	        ^
-//│ res: {A: 1}
+//│ res: {A <: 1}
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

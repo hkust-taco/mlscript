@@ -114,13 +114,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, FieldType] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
       case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
-        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
@@ -268,17 +268,21 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
-                        else f._1 ->
-                          freshVar(noProv,
+                        else {
+                          val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2)
-                        ).toList
+                          )(1).tap(_.upperBounds ::= f._2.ub)
+                          f._1 -> (
+                            if (f._2.lb.isDefined) FieldType(Some(fv), fv)(f._2.prov)
+                            else fv.toUpper(f._2.prov)
+                          )
+                        }).toList
                       PolymorphicType(0, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(

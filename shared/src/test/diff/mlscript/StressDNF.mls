@@ -38,7 +38,7 @@ ty0 = ty1
 :stats
 :e
 ty1 = ty0
-//│ (C & 'c & 'd | 'b & (A & 'a | B & 'c) | 'e & (D & 'd | E & 'f)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
+//│ (E & 'e & 'f | 'b & (A & 'a | B & 'c) | 'd & (C & 'c | D & 'e)) -> ('a, 'b, 'c, 'd, 'e, 'f,)
 //│   <:  ty1:
 //│ (A & 'a | B & 'b | C & 'c | D & 'd | E & 'e) -> ('a, 'b, 'c, 'd, 'e, nothing,)
 //│ ╔══[ERROR] Type mismatch in def definition:

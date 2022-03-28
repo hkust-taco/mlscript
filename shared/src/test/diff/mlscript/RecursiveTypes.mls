@@ -150,7 +150,7 @@ rec def foo (c: C['a]) = foo (c.a)
 
 // TODO figure ou why some type variables are not simplified here
 foo
-//│ res: ((C[?] with {a: 'b & 'a}) as 'b) -> nothing
+//│ res: (C['a .. 'c] & {a: 'b & 'a} as 'b) -> nothing
 //│    = [Function: foo]
 
 type Rec = C[Rec]
@@ -160,7 +160,7 @@ def foo_ty: Rec -> nothing
 //│       = <missing implementation>
 
 foo_ty = foo
-//│ ((C[?] with {a: 'b & 'a}) as 'b) -> nothing
+//│ (C['a .. 'c] & {a: 'b & 'a} as 'b) -> nothing
 //│   <:  foo_ty:
 //│ ((C['b .. 'c] with {a: 'a}) as 'a) -> nothing
 //│       = [Function: foo]
@@ -190,7 +190,7 @@ foo_ty2 = foo_ty
 //│          foo_ty and foo_ty2 are not implemented
 
 foo_ty2 = foo
-//│ ((C[?] with {a: 'b & 'a}) as 'b) -> nothing
+//│ (C['a .. 'c] & {a: 'b & 'a} as 'b) -> nothing
 //│   <:  foo_ty2:
 //│ ((C['b .. 'c] with {a: 'a}) & 'r as 'a) -> nothing
 //│        = [Function: foo]
@@ -198,7 +198,7 @@ foo_ty2 = foo
 
 
 rec def bar = C { a = bar }
-//│ bar: (C[?] with {a: 'a}) as 'a
+//│ bar: (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -209,7 +209,7 @@ def bar_ty: Rec2
 //│       = <missing implementation>
 
 bar_ty = bar
-//│ (C[?] with {a: 'a}) as 'a
+//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty:
 //│ (C[(C['c .. 'd] with {a: 'b}) as 'b .. 'a] with {a: 'a}) as 'a
 //│ Runtime error:
@@ -245,7 +245,7 @@ bar_ty2 = bar_ty
 //│          bar_ty and bar_ty2 are not implemented
 
 bar_ty2 = bar
-//│ (C[?] with {a: 'a}) as 'a
+//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ 'r | (C[(C['c .. 'd] with {a: 'b}) & 'r as 'b .. 'a] with {a: 'a}) as 'a
 //│ Runtime error:
