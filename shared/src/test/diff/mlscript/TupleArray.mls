@@ -146,15 +146,15 @@ f(1,2,3) : 1 | 2 | 3
 
 :e
 (arr[0])[1][2]
-//│ ╔══[ERROR] Type mismatch in array subscript:
+//│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.148: 	(arr[0])[1][2]
-//│ ║         	^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.57: 	def arr: Array[int]
 //│ ║        	               ^^^
-//│ ╟── but it flows into array subscript with expected type `Array[?a]`
+//│ ╟── but it flows into array access with expected type `Array[?a]`
 //│ ║  l.148: 	(arr[0])[1][2]
-//│ ╙──       	 ^^^^^
+//│ ╙──       	 ^^^^^^
 //│ res: nothing
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading '2')
