@@ -778,3 +778,66 @@ x
 //│ res: 1
 //│    = 2
 
+
+
+fun x -> (x.a <- 0, x.a + 1)
+//│ res: {a: 0 | 'a .. int & 'a} -> (unit, int,)
+//│    = [Function: res]
+
+def foo x y = (x.a <- 0, x.a + 1, x.a, x.a <- y)
+//│ foo: {a: 0 | 'a .. int & 'a & 'b} -> 'a -> (unit, int, 'b, unit,)
+//│    = [Function: foo]
+
+def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ foo: {a: 0 | 'a .. int & 'a & 'b & 'c} -> 'a -> ('c -> 'd) -> (unit, int, 'b, unit, 'd,)
+//│    = [Function: foo1]
+
+foo { mut a = 1 } 2 add
+//│ res: (unit, int, 0 | 1 | 2, unit, int -> int,)
+//│    = [ [], 1, 0, [], [Function (anonymous)] ]
+
+:e
+foo { mut a = 1 } 2 3
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.800: 	foo { mut a = 1 } 2 3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `3` is not a function
+//│ ║  l.800: 	foo { mut a = 1 } 2 3
+//│ ║         	                    ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.791: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║         	                                                   ^^^^^
+//│ ╟── from reference:
+//│ ║  l.791: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ╙──       	                                                   ^
+//│ res: (unit, int, 0 | 1 | 2, unit, nothing,) | error
+//│ Runtime error:
+//│   TypeError: z is not a function
+
+:e
+foo { mut a = "oops" } 2
+foo { a = 1 } 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.818: 	foo { mut a = "oops" } 2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ║  l.818: 	foo { mut a = "oops" } 2
+//│ ║         	              ^^^^^^
+//│ ╟── but it flows into mutable record field with expected type `int`
+//│ ║  l.818: 	foo { mut a = "oops" } 2
+//│ ║         	          ^^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.791: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ╙──       	                           ^^^
+//│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
+//│    = [Function (anonymous)]
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.819: 	foo { a = 1 } 2
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── record field of type `1` is not mutable
+//│ ║  l.819: 	foo { a = 1 } 2
+//│ ╙──       	      ^^^^^
+//│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
+//│    = [Function (anonymous)]
+
+

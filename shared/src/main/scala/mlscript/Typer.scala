@@ -470,7 +470,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(App(n, t).toLoc, (if (mut) "mutable " else "") + "record field")
           if (mut) {
-            val res = freshVar(prov)
+            val res = freshVar(fprov)
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -480,9 +480,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Tup(fs) =>
         TupleType(fs.map { case (n, (t, mut)) =>
           val tym = typeTerm(t)
-          val fprov = tp(t.toLoc, "tuple field")
+          val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
-            val res = freshVar(tym.prov)
+            val res = freshVar(fprov)
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
