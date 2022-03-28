@@ -280,6 +280,13 @@ final class TsTypegenCodeBuilder {
           fields.map(entry => (SourceCode(entry._1.name), toTsType(entry._2.out)))
         )
       case Tuple(fields) =>
+        // ts can only handle fields that have only out type or the same in out types
+        if (fields.iterator
+          .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
+          .exists(!_)) {
+            throw CodeGenError("Cannot convert mutable record field with different in out types to typescript")
+          }
+
         // tuple that is a function argument becomes
         // multi-parameter argument list
         if (funcArg) {
