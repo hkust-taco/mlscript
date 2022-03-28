@@ -410,9 +410,9 @@ a1.x
 //│ globalThis.a1 = new M({ x: 233 });
 //│ res = a1;
 //│ // Query 2
-//│ res = (function (_) {
-//│   return [];
-//│ })(a1.x = 666);
+//│ res = (function () {
+//│   return a1.x = 666, [];
+//│ })();
 //│ // Query 3
 //│ res = a1.x;
 //│ // End of generated code
@@ -438,9 +438,9 @@ t1 = (mut "hello", mut true)
 t1._1 <- "bye"
 t1._1
 //│ // Query 1
-//│ res = (function (_) {
-//│   return [];
-//│ })(t1["_1"] = "bye");
+//│ res = (function () {
+//│   return t1["_1"] = "bye", [];
+//│ })();
 //│ // Query 2
 //│ res = t1["_1"];
 //│ // End of generated code
@@ -472,9 +472,9 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 muta1[1] <- 233
 muta1
 //│ // Query 1
-//│ res = (function (_) {
-//│   return [];
-//│ })(muta1[1] = 233);
+//│ res = (function () {
+//│   return muta1[1] = 233, [];
+//│ })();
 //│ // Query 2
 //│ res = muta1;
 //│ // End of generated code
@@ -487,9 +487,9 @@ def xpp rc = (fun _ -> rc) (rc.x <- rc.x + 1)
 xpp a1
 //│ // Query 1
 //│ globalThis.xpp = function xpp(rc) {
-//│   return (((_) => rc)((function (_) {
-//│     return [];
-//│   })(rc.x = rc.x + 1)));
+//│   return (((_) => rc)((function () {
+//│     return rc.x = rc.x + 1, [];
+//│   })()));
 //│ };
 //│ res = xpp;
 //│ // Query 2
