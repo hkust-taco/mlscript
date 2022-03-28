@@ -203,9 +203,8 @@ class JSBackend {
       JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
-    case Assign(field, value) => JSImmEvalFn(N, Nil, 
-      L(JSCommaExpr(JSAssignExpr(translateTerm(field), translateTerm(value)) :: JSArray(Nil) :: Nil)), 
-      Nil)
+    case Assign(field, value) => 
+      JSCommaExpr(JSAssignExpr(translateTerm(field), translateTerm(value)) :: JSArray(Nil) :: Nil)
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }

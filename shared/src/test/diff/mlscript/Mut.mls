@@ -576,8 +576,7 @@ b1.x <- 1 + 2 <- 4
 //│ ║  l.516: 	(mt1._1 <- b1.t) <- 4
 //│ ╙──       	^^^^^^^^^^^^^^^^
 //│ res: error
-//│ Runtime error:
-//│   ReferenceError: Invalid left-hand side in assignment
+//│    = []
 //│ ╔══[ERROR] Illegal assignment
 //│ ║  l.517: 	b1.x <- 1 + 2 <- 4
 //│ ║         	            ^^^^^^
@@ -605,7 +604,7 @@ f mt1 1
 :e
 f mt2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.606: 	f mt2
+//│ ║  l.605: 	f mt2
 //│ ║         	^^^^^
 //│ ╟── tuple field of type `int` is not mutable
 //│ ║  l.361: 	def mt2: (int, int)
@@ -617,10 +616,10 @@ f mt2
 :e
 g (1, true) 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.618: 	g (1, true) 2
+//│ ║  l.617: 	g (1, true) 2
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple field of type `1` is not mutable
-//│ ║  l.618: 	g (1, true) 2
+//│ ║  l.617: 	g (1, true) 2
 //│ ╙──       	   ^
 //│ res: error | unit
 //│    = <no result>
@@ -660,13 +659,13 @@ st2._1 <- 8
 :e
 st1._1 <- 9
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.661: 	st1._1 <- 9
+//│ ║  l.660: 	st1._1 <- 9
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple field of type `int` is not mutable
-//│ ║  l.639: 	def st1 : (int, )
+//│ ║  l.638: 	def st1 : (int, )
 //│ ║         	           ^^^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.661: 	st1._1 <- 9
+//│ ║  l.660: 	st1._1 <- 9
 //│ ╙──       	    ^^
 //│ = []
 
@@ -691,20 +690,20 @@ foreach am1 (fun y -> y._1 <- 2)
 (1,2,3)[0] <- true
 (1,2,3)._1 <- "hello"
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.691: 	(1,2,3)[0] <- true
+//│ ║  l.690: 	(1,2,3)[0] <- true
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `MutArray[?a .. ?a]`
-//│ ║  l.691: 	(1,2,3)[0] <- true
+//│ ║  l.690: 	(1,2,3)[0] <- true
 //│ ╙──       	^^^^^^^
 //│ = []
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.692: 	(1,2,3)._1 <- "hello"
+//│ ║  l.691: 	(1,2,3)._1 <- "hello"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple field of type `1` is not mutable
-//│ ║  l.692: 	(1,2,3)._1 <- "hello"
+//│ ║  l.691: 	(1,2,3)._1 <- "hello"
 //│ ║         	 ^
 //│ ╟── but it flows into assigned field with expected type `?a`
-//│ ║  l.692: 	(1,2,3)._1 <- "hello"
+//│ ║  l.691: 	(1,2,3)._1 <- "hello"
 //│ ╙──       	        ^^
 //│ = []
 
@@ -712,18 +711,18 @@ foreach am1 (fun y -> y._1 <- 2)
 (0,)["oops"]
 (mut 0,)["oops"] <- 1
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.712: 	(0,)["oops"]
+//│ ║  l.711: 	(0,)["oops"]
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.712: 	(0,)["oops"]
+//│ ║  l.711: 	(0,)["oops"]
 //│ ╙──       	     ^^^^^^
 //│ res: 0
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.713: 	(mut 0,)["oops"] <- 1
+//│ ║  l.712: 	(mut 0,)["oops"] <- 1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.713: 	(mut 0,)["oops"] <- 1
+//│ ║  l.712: 	(mut 0,)["oops"] <- 1
 //│ ╙──       	         ^^^^^^
 //│ = []
 
@@ -738,24 +737,24 @@ arr = (mut 0,)
 arr[oops]
 arr[oops] <- 1
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.738: 	arr[oops]
+//│ ║  l.737: 	arr[oops]
 //│ ║         	^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.730: 	oops = "oops"
+//│ ║  l.729: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.738: 	arr[oops]
+//│ ║  l.737: 	arr[oops]
 //│ ╙──       	    ^^^^
 //│ res: 0
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.739: 	arr[oops] <- 1
+//│ ║  l.738: 	arr[oops] <- 1
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.730: 	oops = "oops"
+//│ ║  l.729: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.739: 	arr[oops] <- 1
+//│ ║  l.738: 	arr[oops] <- 1
 //│ ╙──       	    ^^^^
 //│ = []
 
