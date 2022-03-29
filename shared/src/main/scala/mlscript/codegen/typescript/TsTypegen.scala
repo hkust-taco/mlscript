@@ -177,7 +177,7 @@ final class TsTypegenCodeBuilder {
       traitDeclaration += addMethodDeclaration(traitInfo.params.toSet, name, methodType)
     }
 
-    typegenCode += traitDeclaration
+    typegenCode += traitDeclaration + SourceCode.closeCurlyBrace
   }
 
   def addTypeGenClassDef(classInfo: ClassSymbol, methods: List[(String, Type)]): Unit = {
@@ -188,8 +188,12 @@ final class TsTypegenCodeBuilder {
 
     // create mapping for class body fields and types
     // class body includes fields from all implemented traits
-    val traitFieldsAndTypes = getTraitFieldAndTypes(classBody, typeScope)
-    val bodyFieldAndTypes = getClassFieldAndTypes(classInfo) ::: traitFieldsAndTypes
+    val classFieldsAndType = getClassFieldAndTypes(classInfo)
+    val bodyFieldAndTypes = typeScope
+      .resolveImplementedTraits(classBody)
+      .foldLeft(classFieldsAndType){ case (fields, symb) =>
+        fields ::: getTraitFieldAndTypes(symb.body, typeScope)
+      }
 
     // extend with base class if it exists
     var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)

@@ -16,18 +16,15 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 //│ export type H = int | Neg<string, a>
 //│ export declare class Box<T> {
 //│     length: T
-//│     length: T
-//│     constructor(fields: {length: T, length: T})
+//│     constructor(fields: {length: T})
 //│ }
 //│ export declare class RectangleBox<T> extends Box<T> {
 //│     breadth: T
-//│     breadth: T
-//│     constructor(fields: {breadth: T, breadth: T, length: T})
+//│     constructor(fields: {breadth: T, length: T})
 //│ }
 //│ export declare class StackedRectangleBoxes<N, T> extends RectangleBox<T> {
 //│     size: N
-//│     size: N
-//│     constructor(fields: {size: N, size: N, breadth: T, length: T})
+//│     constructor(fields: {size: N, breadth: T, length: T})
 //│ }
 //│ // end ts
 
@@ -58,16 +55,13 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│ // start ts
 //│ export declare class Lock<T> {
 //│     pins: T
-//│     pins: T
-//│     constructor(fields: {pins: T, pins: T})
+//│     constructor(fields: {pins: T})
 //│     Map<a>(arg: (arg1: T) => a): Lock<a>
 //│ }
 //│ export declare class Bank {
 //│     lock: Lock<int>
 //│     cash: int
-//│     lock: Lock<int>
-//│     cash: int
-//│     constructor(fields: {lock: Lock<int>, cash: int, lock: Lock<int>, cash: int})
+//│     constructor(fields: {lock: Lock<int>, cash: int})
 //│     readonly Potential: int
 //│     Better(arg: Omit<Bank, "lock"> & {lock: Lock<int>}): bool
 //│ }
@@ -100,17 +94,14 @@ def Some v = Some { value = v }
 //│ }
 //│ export declare class Some<T> {
 //│     value: T
-//│     value: T
-//│     constructor(fields: {value: T, value: T})
+//│     constructor(fields: {value: T})
 //│ }
 //│ export type Option = Some<T> | None
 //│ export type a<d, c, T> = Omit<LinkedList<T>, "tail"> & {tail: None | Omit<Some<a<d, c, T>>, "value"> & {value: a<d, c, T>}}
 //│ export declare class LinkedList<T> {
 //│     head: T
 //│     tail: Option<LinkedList<T>>
-//│     head: T
-//│     tail: Option<LinkedList<T>>
-//│     constructor(fields: {head: T, tail: Option<LinkedList<T>>, head: T, tail: Option<LinkedList<T>>})
+//│     constructor(fields: {head: T, tail: Option<LinkedList<T>>})
 //│     Append<d, c>(arg: T): a<d, c, T>
 //│ }
 //│ export declare const None: None
@@ -127,12 +118,13 @@ class C: { x: 0 | 1 }
 //│ // start ts
 //│ export interface A {
 //│     x: int
+//│ }
 //│ export interface B extends A {
 //│     y: string
+//│ }
 //│ export declare class C {
 //│     x: 0 | 1
-//│     x: 0 | 1
-//│     constructor(fields: {x: 0 | 1, x: 0 | 1})
+//│     constructor(fields: {x: 0 | 1})
 //│ }
 //│ // end ts
 
@@ -147,9 +139,7 @@ class LL[T]: { head: T; tail: LL[T] -> int }
 //│ export declare class LL<T> {
 //│     head: T
 //│     tail: (arg: LL<T>) => int
-//│     head: T
-//│     tail: (arg: LL<T>) => int
-//│     constructor(fields: {head: T, tail: (arg: LL<T>) => int, head: T, tail: (arg: LL<T>) => int})
+//│     constructor(fields: {head: T, tail: (arg: LL<T>) => int})
 //│     Append(arg: T): a<T>
 //│ }
 //│ // end ts
