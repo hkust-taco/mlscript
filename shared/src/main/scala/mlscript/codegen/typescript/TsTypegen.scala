@@ -2,6 +2,7 @@ package mlscript
 package codegen.typescript
 
 import scala.collection.mutable.{ListBuffer, Map => MutMap, SortedMap => MutSortedMap}
+import scala.collection.immutable.Set
 
 import mlscript.codegen.CodeGenError
 import mlscript.utils._
@@ -83,19 +84,18 @@ final class TsTypegenCodeBuilder {
     tySymb match {
       case (classInfo: ClassSymbol) => addTypeGenClassDef(classInfo, methods)
       case (aliasInfo: TypeAliasSymbol) => addTypeGenTypeAlias(aliasInfo)
-      case (traitInfo: TraitSymbol) => throw CodeGenError("Typegen for traits is not supported currently")
+      case (traitInfo: TraitSymbol) => addTypegenTraitDef(traitInfo, methods)
     }
   }
 
   /**
     * Translate class method to typescript declaration
     *
-    * @param classInfo
+    * @param topTypeParams top level params from class or trait declaration
     * @param methodName
     * @param methodType
     */
-  def addClassMethod(classInfo: ClassSymbol, methodName: String, methodType: Type): SourceCode = {
-    val classTypeParams = classInfo.params.toSet
+  def addMethodDeclaration(topTypeParams: Set[String], methodName: String, methodType: Type): SourceCode = {
     // unwrap method function type to remove implicit this
     val methodSourceCode = methodType match {
       case Function(lhs, rhs) => {
@@ -116,7 +116,7 @@ final class TsTypegenCodeBuilder {
                 // ignore class type parameters since they are implicitly part of class scope
                 // if no name hint then the type variable is certainly not a class type parameter
                 // its friendly name has been generated
-                tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
+                tup._1.nameHint.fold(true)(!topTypeParams.contains(_))
               )
               .map(_._2)
               .toList
@@ -129,7 +129,7 @@ final class TsTypegenCodeBuilder {
                 // ignore class type parameters since they are implicitly part of class scope
                 // if no name hint then the type variable is certainly not a class type parameter
                 // its friendly name has been generated
-                tup._1.nameHint.fold(true)(!classTypeParams.contains(_))
+                tup._1.nameHint.fold(true)(!topTypeParams.contains(_))
               )
               .map(_._2)
               .toList
@@ -147,15 +147,49 @@ final class TsTypegenCodeBuilder {
     methodSourceCode
   }
 
+  def addTypegenTraitDef(traitInfo: TraitSymbol, methods: List[(String, Type)]): Unit = {
+    val traitName = traitInfo.lexicalName
+    val traitBody = traitInfo.body
+    val typeParams = traitInfo.params.iterator.map(SourceCode(_)).toList
+
+    // extend super traits
+    var traitDeclaration = SourceCode(s"export interface $traitName") ++ SourceCode.paramList(typeParams)
+    val superTraits = typeScope.resolveImplementedTraits(traitBody)
+    if (!superTraits.isEmpty) {
+      val superTraitsCode = superTraits.map(symb => {
+        val traitName = symb.lexicalName
+        val traitParams = symb.params.iterator.map(SourceCode(_)).toList
+        SourceCode(s"$traitName") ++ SourceCode.paramList(traitParams)
+      }).toList
+      traitDeclaration ++= SourceCode(" extends ") ++ SourceCode.sepBy(superTraitsCode)
+    }
+    traitDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
+
+    // add fields defined in the trait
+    traitBody.collectBodyFieldsAndTypes
+      .foreach{case (fieldVar, fieldType) => 
+        val fieldCode = toTsType(fieldType)(TypegenContext(fieldType), Some(true))
+        traitDeclaration += SourceCode("    ") ++ SourceCode(fieldVar.name) ++ SourceCode.colon ++ fieldCode
+      }
+
+    // add methods
+    methods.foreach { case (name, methodType) =>
+      traitDeclaration += addMethodDeclaration(traitInfo.params.toSet, name, methodType)
+    }
+
+    typegenCode += traitDeclaration
+  }
+
   def addTypeGenClassDef(classInfo: ClassSymbol, methods: List[(String, Type)]): Unit = {
     val className = classInfo.lexicalName
     val classBody = classInfo.body
     val baseClass = typeScope.resolveBaseClass(classBody)
     val typeParams = classInfo.params.iterator.map(SourceCode(_)).toList
-    var classSourceCode = SourceCode.empty
 
     // create mapping for class body fields and types
-    val bodyFieldAndTypes = getClassFieldAndTypes(classInfo)
+    // class body includes fields from all implemented traits
+    val traitFieldsAndTypes = getTraitFieldAndTypes(classBody, typeScope)
+    val bodyFieldAndTypes = getClassFieldAndTypes(classInfo) ::: traitFieldsAndTypes
 
     // extend with base class if it exists
     var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
@@ -166,7 +200,6 @@ final class TsTypegenCodeBuilder {
     })
     classDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
 
-
     // add body fields
     bodyFieldAndTypes.iterator.foreach({ case (fieldVar, fieldType) => {
       classDeclaration += SourceCode("    ") ++ fieldVar ++ SourceCode.colon ++ fieldType }})
@@ -174,12 +207,32 @@ final class TsTypegenCodeBuilder {
     val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
-    classSourceCode += classDeclaration;
 
     // add methods
-    methods.foreach { case (name, methodType) => classSourceCode += addClassMethod(classInfo, name, methodType) }
+    methods.foreach { case (name, methodType) =>
+      classDeclaration += addMethodDeclaration(classInfo.params.toSet, name, methodType)
+    }
 
-    typegenCode += classSourceCode + SourceCode.closeCurlyBrace
+    typegenCode += classDeclaration + SourceCode.closeCurlyBrace
+  }
+
+  /**
+    * List of pairs of field names and types for the trait including it's super traits
+    *
+    * @param traitSymbol
+    * @param scope current scope for resolving symbols
+    * @return
+    */
+  private def getTraitFieldAndTypes(body: Type, scope: Scope): List[(SourceCode, SourceCode)] = {
+    val bodyFields = body.collectBodyFieldsAndTypes
+      .map{case (fieldVar, fieldType) => 
+        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
+      }
+    scope
+      .resolveImplementedTraits(body)
+      .foldLeft(bodyFields){ case (fields, symb) =>
+        fields ::: getTraitFieldAndTypes(symb.body, scope)
+      }
   }
 
   // find all fields and types for class including all super classes

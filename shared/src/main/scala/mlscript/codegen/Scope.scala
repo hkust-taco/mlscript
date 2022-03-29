@@ -147,6 +147,17 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
 
   /**
+   * Look up for a trait symbol locally.
+   */
+  def getTraitSymbol(name: Str): Opt[TraitSymbol] = 
+    lexicalTypeSymbols.get(name) flatMap {
+      _ match {
+        case c: TraitSymbol => S(c)
+        case _              => N
+      }
+    }
+
+  /**
    * Look up for a type alias symbol locally.
    */
   def getTypeAliasSymbol(name: Str): Opt[TypeAliasSymbol] =
@@ -186,6 +197,19 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       )
     else
       baseClasses.headOption
+  }
+
+  def resolveImplementedTraits(ty: Type): Ls[TraitSymbol] = {
+    ty.collectTypeNames.flatMap { name =>
+      this.getType(name) match {
+        case S(sym: ClassSymbol) => N
+        case S(sym: TraitSymbol) => S(sym)
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name" )
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving implemented traits")
+      }
+    }
   }
 
   def declareTypeSymbol(typeDef: TypeDef): TypeSymbol = typeDef match {
