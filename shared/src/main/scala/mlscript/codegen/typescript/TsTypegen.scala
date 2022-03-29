@@ -5,7 +5,7 @@ import scala.collection.mutable.{ListBuffer, Map => MutMap, SortedMap => MutSort
 import scala.collection.immutable.Set
 
 import mlscript.codegen.CodeGenError
-import mlscript.utils._
+import mlscript.utils._, shorthands._
 import mlscript.codegen._
 
 /** Typescript typegen code builder for an mlscript typing unit
@@ -91,11 +91,11 @@ final class TsTypegenCodeBuilder {
   /**
     * Translate class method to typescript declaration
     *
-    * @param topTypeParams top level params from class or trait declaration
+    * @param declTypeParms type params from class or trait declaring the method
     * @param methodName
     * @param methodType
     */
-  def addMethodDeclaration(topTypeParams: Set[String], methodName: String, methodType: Type): SourceCode = {
+  def addMethodDeclaration(declTypeParams: Set[String], methodName: String, methodType: Type): SourceCode = {
     // unwrap method function type to remove implicit this
     val methodSourceCode = methodType match {
       case Function(lhs, rhs) => {
@@ -116,7 +116,7 @@ final class TsTypegenCodeBuilder {
                 // ignore class type parameters since they are implicitly part of class scope
                 // if no name hint then the type variable is certainly not a class type parameter
                 // its friendly name has been generated
-                tup._1.nameHint.fold(true)(!topTypeParams.contains(_))
+                tup._1.nameHint.fold(true)(!declTypeParams.contains(_))
               )
               .map(_._2)
               .toList
@@ -129,7 +129,7 @@ final class TsTypegenCodeBuilder {
                 // ignore class type parameters since they are implicitly part of class scope
                 // if no name hint then the type variable is certainly not a class type parameter
                 // its friendly name has been generated
-                tup._1.nameHint.fold(true)(!topTypeParams.contains(_))
+                tup._1.nameHint.fold(true)(!declTypeParams.contains(_))
               )
               .map(_._2)
               .toList
@@ -189,11 +189,9 @@ final class TsTypegenCodeBuilder {
     // create mapping for class body fields and types
     // class body includes fields from all implemented traits
     val classFieldsAndType = getClassFieldAndTypes(classInfo)
-    val bodyFieldAndTypes = typeScope
-      .resolveImplementedTraits(classBody)
-      .foldLeft(classFieldsAndType){ case (fields, symb) =>
-        fields ::: getTraitFieldAndTypes(symb.body, typeScope)
-      }
+    // fields can be re-declared with different types at different
+    // levels of inheritance. The final type is a union of all these types
+      .groupMap(_._1)(_._2)
 
     // extend with base class if it exists
     var classDeclaration = SourceCode(s"export declare class $className") ++ SourceCode.paramList(typeParams)
@@ -205,10 +203,38 @@ final class TsTypegenCodeBuilder {
     classDeclaration ++= SourceCode.space ++ SourceCode.openCurlyBrace
 
     // add body fields
-    bodyFieldAndTypes.iterator.foreach({ case (fieldVar, fieldType) => {
-      classDeclaration += SourceCode("    ") ++ fieldVar ++ SourceCode.colon ++ fieldType }})
+    classFieldsAndType
+      .map {case (fieldVar, fieldTypes) => 
+        // field types will always have 1 or more elements
+        val fieldTypesCode = if (fieldTypes.length === 1) {
+          toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
+        } else {
+          // multiple types are unioned hence using union precedence
+          // however only consider unique types for union
+          val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
+          SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
+        }
+        (SourceCode(fieldVar.name), fieldTypesCode)
+      }
+      .foreach({ case (fieldVar, fieldType) => {
+        classDeclaration += SourceCode("    ") ++ fieldVar ++ SourceCode.colon ++ fieldType
+      }})
+
     // constructor needs all fields including super classes
-    val allFieldsAndTypes = bodyFieldAndTypes ++ baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
+    val allFieldsAndTypes = (classFieldsAndType ++
+      baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty).groupMap(_._1)(_._2))
+      .map {case (fieldVar, fieldTypes) => 
+        // field types will always have 1 or more elements
+        val fieldTypesCode = if (fieldTypes.length === 1) {
+          toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
+        } else {
+          // multiple types are unioned hence using union precedence
+          // however only consider unique types for union
+          val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
+          SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
+        }
+        (SourceCode(fieldVar.name), fieldTypesCode)
+      }.toList
     classDeclaration += SourceCode("    constructor(fields: ") ++
       SourceCode.recordWithEntries(allFieldsAndTypes) ++ SourceCode(")")
 
@@ -221,34 +247,38 @@ final class TsTypegenCodeBuilder {
   }
 
   /**
-    * List of pairs of field names and types for the trait including it's super traits
+    * List of pairs of field variables and their types for the trait including its super traits
     *
     * @param traitSymbol
-    * @param scope current scope for resolving symbols
     * @return
     */
-  private def getTraitFieldAndTypes(body: Type, scope: Scope): List[(SourceCode, SourceCode)] = {
+  private def getTraitFieldAndTypes(body: Type): List[Var -> Type] = {
     val bodyFields = body.collectBodyFieldsAndTypes
-      .map{case (fieldVar, fieldType) => 
-        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
-      }
-    scope
+
+    typeScope
       .resolveImplementedTraits(body)
       .foldLeft(bodyFields){ case (fields, symb) =>
-        fields ::: getTraitFieldAndTypes(symb.body, scope)
+        fields ::: getTraitFieldAndTypes(symb.body)
       }
   }
 
-  // find all fields and types for class including all super classes
-  // optionally include base class fields as well
-  private def getClassFieldAndTypes(classSymbol: ClassSymbol, includeBaseClass: Boolean = false): List[(SourceCode, SourceCode)] = {
-    val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes
-      .map{case (fieldVar, fieldType) => 
-        (SourceCode(fieldVar.name), toTsType(fieldType)(TypegenContext(fieldType), Some(true)))
-      }
+  /**
+    * find all fields and types for class including all traits
+    * optionally include base class fields as well
+    *
+    * @param classSymbol
+    * @param includeBaseClass include base class fields if true, default is false
+    * @return
+    */
+  private def getClassFieldAndTypes(classSymbol: ClassSymbol, includeBaseClass: Boolean = false): List[Var -> Type] = {
+    val bodyFieldsAndTypes = classSymbol.body.collectBodyFieldsAndTypes ++
+      getTraitFieldAndTypes(classSymbol.body)
 
     if (includeBaseClass) {
-      bodyFieldsAndTypes ++ typeScope.resolveBaseClass(classSymbol.body).map(getClassFieldAndTypes(_, true)).getOrElse(List.empty)
+      bodyFieldsAndTypes ++
+        typeScope.resolveBaseClass(classSymbol.body)
+          .map(getClassFieldAndTypes(_, true))
+          .getOrElse(List.empty)
     } else {
       bodyFieldsAndTypes
     }
