@@ -301,31 +301,35 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
 
-                // pretty print method definitions
-                (ttd.mthDecls ++ ttd.mthDefs).foreach {
-                  case MethodDef(_, _, Var(mn), _, rhs) =>
+                // calculate types for all method definitions and declarations
+                // only once and reuse for pretty printing and type generation
+                val methodAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
+                  case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
-                      _ => ctx.getMthDefn(tn, mn),
-                      _ => ctx.getMth(S(tn), mn)
-                    ).foreach(res => {
-                      output(s"${rhs.fold(
-                        _ => "Defined",  // the method has been defined
-                        _ => "Declared"  // the method type has just been declared
-                      )} ${tn}.${mn}: ${getType(res.toPT).show}")
-                    })
+                      _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT))),
+                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT)))
+                    )
+                }
+
+                // pretty print method definitions
+                methodAndTypes.foreach {
+                  case (MethodDef(_, _, Var(mn), _, rhs), res) =>
+                    output(s"${rhs.fold(
+                      _ => "Defined",  // the method has been defined
+                      _ => "Declared"  // the method type has just been declared
+                    )} ${tn}.${mn}: ${res.show}")
                 }
 
                 // start typegen, declare methods if any and complete typegen block
                 if (mode.generateTsDeclarations) {
                   val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
-                  val onlyMethodDef = ttd.mthDefs.filter(mthd => !mthDeclSet.contains(mthd.nme.name))
-                  val methods = (ttd.mthDecls ++ onlyMethodDef).flatMap({
-                    case MethodDef(_, _, Var(mn), _, rhs) =>
-                      rhs.fold(
-                        _ => ctx.getMthDefn(tn, mn),
-                        _ => ctx.getMth(S(tn), mn),
-                      ).map(res => (mn, getType(res.toPT)))
-                  })
+                  val methods = methodAndTypes
+                    // filter method declarations and definitions
+                    // without declarations
+                    .withFilter{ case (mthd, _) =>
+                      mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
+                    }
+                    .map{case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
 
                   tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
