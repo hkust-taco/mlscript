@@ -138,8 +138,34 @@ class LL[T]: { head: T; tail: LL[T] -> int }
 //│ export type a<T> = Omit<LL<T>, "tail"> & {tail: b<a<T>, T> => int}
 //│ export declare class LL<T> {
 //│     head: T
-//│     tail: (arg: LL<T>) => int
-//│     constructor(fields: {head: T, tail: (arg: LL<T>) => int})
+//│     tail: ((arg: LL<T>) => int)
+//│     constructor(fields: {head: T, tail: ((arg: LL<T>) => int)})
 //│     Append(arg: T): a<T>
+//│ }
+//│ // end ts
+
+:ts
+trait A1: { x: int -> int }
+trait B2: { y: int }
+trait D3: { y: int }
+class E: { x: "hello"; y: int } & A1 & B2 & D3
+//│ Defined trait A1
+//│ Defined trait B2
+//│ Defined trait D3
+//│ Defined class E
+//│ // start ts
+//│ export interface A1 {
+//│     x: (arg: int) => int
+//│ }
+//│ export interface B2 {
+//│     y: int
+//│ }
+//│ export interface D3 {
+//│     y: int
+//│ }
+//│ export declare class E {
+//│     y: int
+//│     x: "hello" & ((arg: int) => int)
+//│     constructor(fields: {y: int, x: "hello" & ((arg: int) => int)})
 //│ }
 //│ // end ts
