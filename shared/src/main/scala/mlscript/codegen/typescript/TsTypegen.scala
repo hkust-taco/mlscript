@@ -209,8 +209,9 @@ final class TsTypegenCodeBuilder {
         val fieldTypesCode = if (fieldTypes.length === 1) {
           toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
         } else {
-          // multiple types are unioned hence using union precedence
-          // however only consider unique types for union
+          // multiple types are intersected hence typgen is done
+          // using intersection precedence however only unique types
+          // are considered for intersection
           val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
           SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
         }
@@ -228,8 +229,9 @@ final class TsTypegenCodeBuilder {
         val fieldTypesCode = if (fieldTypes.length === 1) {
           toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
         } else {
-          // multiple types are unioned hence using union precedence
-          // however only consider unique types for union
+          // multiple types are intersected hence typgen is done
+          // using intersection precedence however only unique types
+          // are considered for intersection
           val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
           SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
         }
@@ -438,7 +440,12 @@ final class TsTypegenCodeBuilder {
         // so now it is an applied type
         else {
           val uvTypeParams = typeVarMapping.iterator
-            .filter(tup => mlType.freeTypeVariables.contains(tup._1))
+            .filter(tup => mlType.freeTypeVariables.contains(tup._1) &&
+              // recursive type variable from outer scope have been converted
+              // to type aliases. They do not need to be part of type parameters.
+              // filter for type vars that are not declared in type scope
+              typeVarMapping.get(tup._1).flatMap(varCode => typeScope.getType(varCode.toString())).isEmpty
+            )
             .map(_._2)
             .toList
           val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)

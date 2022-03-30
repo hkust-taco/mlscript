@@ -303,7 +303,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
                 // calculate types for all method definitions and declarations
                 // only once and reuse for pretty printing and type generation
-                val methodAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
+                val methodsAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
                   case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
                       _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT))),
@@ -312,7 +312,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 }
 
                 // pretty print method definitions
-                methodAndTypes.foreach {
+                methodsAndTypes.foreach {
                   case (MethodDef(_, _, Var(mn), _, rhs), res) =>
                     output(s"${rhs.fold(
                       _ => "Defined",  // the method has been defined
@@ -323,7 +323,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 // start typegen, declare methods if any and complete typegen block
                 if (mode.generateTsDeclarations) {
                   val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
-                  val methods = methodAndTypes
+                  val methods = methodsAndTypes
                     // filter method declarations and definitions
                     // without declarations
                     .withFilter{ case (mthd, _) =>
