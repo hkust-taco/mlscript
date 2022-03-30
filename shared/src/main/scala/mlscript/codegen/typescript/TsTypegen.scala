@@ -431,6 +431,7 @@ final class TsTypegenCodeBuilder {
         // recursive type does not have any other type variables
         // (except itself)
         if (mlType.freeTypeVariables.size === 0) {
+          typeScope.declareTypeAlias(uvName.toString(), List.empty, body)
           val bodyType = toTsType(body)(typegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvName") ++
             SourceCode.equalSign ++ bodyType)
@@ -443,13 +444,14 @@ final class TsTypegenCodeBuilder {
             .filter(tup => mlType.freeTypeVariables.contains(tup._1) &&
               // recursive type variable from outer scope have been converted
               // to type aliases. They do not need to be part of type parameters.
-              // filter for type vars that are not declared in type scope
-              typeVarMapping.get(tup._1).flatMap(varCode => typeScope.getType(varCode.toString())).isEmpty
+              // filter for type vars that are not declared as type aliases in type scope
+              typeVarMapping.get(tup._1).flatMap(varCode => typeScope.getTypeAliasSymbol(varCode.toString())).isEmpty
             )
             .map(_._2)
             .toList
           val uvAppliedName = uvName ++ SourceCode.paramList(uvTypeParams)
           typeVarMapping += uv -> uvAppliedName
+          typeScope.declareTypeAlias(uvAppliedName.toString(), uvTypeParams.map(_.toString()), body)
           val bodyType = toTsType(body)(nestedTypegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvAppliedName") ++
             SourceCode.equalSign ++ bodyType)
