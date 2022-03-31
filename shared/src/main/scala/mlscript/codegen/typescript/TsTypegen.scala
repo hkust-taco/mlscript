@@ -7,6 +7,7 @@ import scala.collection.immutable.Set
 import mlscript.codegen.CodeGenError
 import mlscript.utils._, shorthands._
 import mlscript.codegen._
+import scala.annotation.meta.field
 
 /** Typescript typegen code builder for an mlscript typing unit
   */
@@ -373,8 +374,13 @@ final class TsTypegenCodeBuilder {
           }
 
         SourceCode.recordWithEntries(
-          fields.map(entry => (SourceCode(entry._1.name), toTsType(entry._2.out)))
-        )
+          fields.map(entry => 
+            if (entry._2.in.isDefined) {
+              (SourceCode(entry._1.name), toTsType(entry._2.out))
+            } else {
+              (SourceCode(s"readonly ${entry._1.name}"), toTsType(entry._2.out))
+            }
+        ))
       case Tuple(fields) =>
         // ts can only handle fields that have only out type or the same in out types
         if (fields.iterator
@@ -385,6 +391,7 @@ final class TsTypegenCodeBuilder {
 
         // tuple that is a function argument becomes
         // multi-parameter argument list
+        // ! Note: No equivalent to readonly fields for tuples
         if (funcArg) {
           val argList = fields
             .map(field => {
@@ -397,7 +404,12 @@ final class TsTypegenCodeBuilder {
         }
         // regular tuple becomes fixed length array
         else {
-          SourceCode.horizontalArray(fields.map(field => toTsType(field._2.out)))
+          val tupleArrayCode = SourceCode.horizontalArray(fields.map(field => toTsType(field._2.out)))
+          if (fields.iterator.map(_._1.isDefined).exists(identity)) {
+            tupleArrayCode
+          } else {
+            SourceCode("readonly ") ++ tupleArrayCode
+          }
         }
       case Top            => SourceCode("unknown")
       case Bot            => SourceCode("never")

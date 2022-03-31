@@ -11,7 +11,7 @@ class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
 //│ Defined class RectangleBox
 //│ Defined class StackedRectangleBoxes
 //│ // start ts
-//│ export type G = {a: T}
+//│ export type G = {readonly a: T}
 //│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
 //│ export type H = int | Neg<string, a>
 //│ export declare class Box<T> {
@@ -63,10 +63,10 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     cash: int
 //│     constructor(fields: {lock: Lock<int>, cash: int})
 //│     readonly Potential: int
-//│     Better(arg: Omit<Bank, "lock"> & {lock: Lock<int>}): bool
+//│     Better(arg: Omit<Bank, "lock"> & {readonly lock: Lock<int>}): bool
 //│ }
-//│ export declare const Lock<T, pins>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {pins: pins}
-//│ export declare const Bank<cash, lock>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {cash: cash, lock: lock}
+//│ export declare const Lock<T, pins>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {readonly pins: pins}
+//│ export declare const Bank<cash, lock>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 
@@ -97,7 +97,7 @@ def Some v = Some { value = v }
 //│     constructor(fields: {value: T})
 //│ }
 //│ export type Option = Some<T> | None
-//│ export type a<d, c, T> = Omit<LinkedList<T>, "tail"> & {tail: None | Omit<Some<a<d, c, T>>, "value"> & {value: a<d, c, T>}}
+//│ export type a<d, c, T> = Omit<LinkedList<T>, "tail"> & {readonly tail: None | Omit<Some<a<d, c, T>>, "value"> & {readonly value: a<d, c, T>}}
 //│ export declare class LinkedList<T> {
 //│     head: T
 //│     tail: Option<LinkedList<T>>
@@ -105,7 +105,7 @@ def Some v = Some { value = v }
 //│     Append<d, c>(arg: T): a<d, c, T>
 //│ }
 //│ export declare const None: None
-//│ export declare const Some<T, value>: (arg: value & T) => Omit<Some<T>, "value"> & {value: value}
+//│ export declare const Some<T, value>: (arg: value & T) => Omit<Some<T>, "value"> & {readonly value: value}
 //│ // end ts
 
 :ts
@@ -134,8 +134,8 @@ class LL[T]: { head: T; tail: LL[T] -> int }
 //│ Defined class LL
 //│ Declared LL.Append: ((LL['T] with {tail: (LL['T] with {tail: 'a -> int}) -> int},) as 'a) -> 'T -> ((LL['T] with {tail: ((LL['T] with {tail: 'b -> int},) as 'a) -> int}) as 'b)
 //│ // start ts
-//│ export type b<a<T>, T> = [Omit<LL<T>, "tail"> & {tail: (arg: a<T>) => int}]
-//│ export type a<T> = Omit<LL<T>, "tail"> & {tail: b<a<T>, T> => int}
+//│ export type b<T> = readonly [Omit<LL<T>, "tail"> & {readonly tail: (arg: a<T>) => int}]
+//│ export type a<T> = Omit<LL<T>, "tail"> & {readonly tail: b<T> => int}
 //│ export declare class LL<T> {
 //│     head: T
 //│     tail: ((arg: LL<T>) => int)
@@ -169,3 +169,4 @@ class E: { x: "hello"; y: int } & A1 & B2 & D3
 //│     constructor(fields: {y: int, x: "hello" & ((arg: int) => int)})
 //│ }
 //│ // end ts
+
