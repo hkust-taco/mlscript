@@ -7,7 +7,6 @@ import scala.collection.immutable.Set
 import mlscript.codegen.CodeGenError
 import mlscript.utils._, shorthands._
 import mlscript.codegen._
-import scala.annotation.meta.field
 
 /** Typescript typegen code builder for an mlscript typing unit
   */
@@ -476,7 +475,6 @@ final class TsTypegenCodeBuilder {
             SourceCode.equalSign ++ bodyType)
           uvAppliedName
         }
-
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
           SourceCode(base.name) ++ SourceCode.openAngleBracket ++
