@@ -488,7 +488,7 @@ final class TsTypegenCodeBuilder {
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
           SourceCode(base.name) ++ SourceCode.openAngleBracket ++
-            SourceCode.sepBy(targs.map(toTsType(_))) ++ SourceCode.closeAngleBracket
+            SourceCode.sepBy(targs.map(toTsType(_)(typegenCtx, None))) ++ SourceCode.closeAngleBracket
         } else {
           // no type arguments required then print without brackets
           SourceCode(base.name)
