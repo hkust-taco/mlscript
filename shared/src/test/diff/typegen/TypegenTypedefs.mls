@@ -135,11 +135,11 @@ class LL[T]: { head: T; tail: LL[T] -> int }
 //│ Declared LL.Append: ((LL['T] with {tail: (LL['T] with {tail: 'a -> int}) -> int},) as 'a) -> 'T -> ((LL['T] with {tail: ((LL['T] with {tail: 'b -> int},) as 'a) -> int}) as 'b)
 //│ // start ts
 //│ export type b<T> = readonly [Omit<LL<T>, "tail"> & {readonly tail: (arg: a<T>) => int}]
-//│ export type a<T> = Omit<LL<T>, "tail"> & {readonly tail: b<T> => int}
+//│ export type a<T> = Omit<LL<T>, "tail"> & {readonly tail: (...arg: b<T>) => int}
 //│ export declare class LL<T> {
 //│     head: T
 //│     tail: ((arg: LL<T>) => int)
-//│     constructor(fields: {head: T, tail: ((arg: LL<T>) => int)})
+//│     constructor(fields: {head: T, tail: (arg: LL<T>) => int})
 //│     Append(arg: T): a<T>
 //│ }
 //│ // end ts

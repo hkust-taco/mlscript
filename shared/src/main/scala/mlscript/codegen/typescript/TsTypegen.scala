@@ -220,16 +220,16 @@ final class TsTypegenCodeBuilder {
     // constructor needs all fields including super classes
     val allFieldsAndTypes = (classFieldsAndType ++
       baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty).groupMap(_._1)(_._2))
-      .map {case (fieldVar, fieldTypes) => 
-        // field types will always have 1 or more elements
-        val fieldTypesCode = if (fieldTypes.length === 1) {
-          toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
-        } else {
-          // multiple types are intersected hence typgen is done
-          // using intersection precedence however only unique types
-          // are considered for intersection
-          val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
-          SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
+      .map {case (fieldVar, fieldTypes) =>
+        val fieldTypesCode = fieldTypes.toSet[Type].toSeq match {
+          case Seq(fieldType) =>
+            toTsType(fieldType)(TypegenContext(fieldType), Some(true))
+          case uniqueFieldTypes =>
+            // multiple types are intersected hence typegen is done
+            // using intersection precedence however only unique types
+            // are considered for intersection
+            val fieldTypesCode = uniqueFieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
+            SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
         }
         (SourceCode(fieldVar.name), fieldTypesCode)
       }.toList
@@ -437,8 +437,7 @@ final class TsTypegenCodeBuilder {
         // allocate the clash-free name for uv in typegen scope
         // update mapping from type variables to
         val uvName = typegenCtx.typeVarMapping
-          .get(uv)
-          .getOrElse({
+          .getOrElse(uv, {
             throw CodeGenError(s"Did not find mapping for type variable $uv. Unable to generated ts type.")
           })
         val typeVarMapping = typegenCtx.typeVarMapping
@@ -448,7 +447,7 @@ final class TsTypegenCodeBuilder {
 
         // recursive type does not have any other type variables
         // (except itself)
-        if (mlType.freeTypeVariables.size === 0) {
+        val recTypeCode = if (mlType.freeTypeVariables.size === 0) {
           typeScope.declareTypeAlias(uvName, List.empty, r)
           val bodyType = toTsType(body)(typegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvName") ++
@@ -474,6 +473,17 @@ final class TsTypegenCodeBuilder {
           typegenCode += (SourceCode(s"export type $uvAppliedName") ++
             SourceCode.equalSign ++ bodyType)
           uvAppliedName
+        }
+
+        // if a tuple is a recursive type then it is aliased
+        // so we must use the alias name for the argument type
+        if (funcArg) {
+          // a function argument is always a tuple hence we
+          // should spread it across the argument variable
+          val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
+          (SourceCode(s"...$arg: ") ++ recTypeCode).parenthesized
+        } else {
+          recTypeCode
         }
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
