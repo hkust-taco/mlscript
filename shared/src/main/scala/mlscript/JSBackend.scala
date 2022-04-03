@@ -185,6 +185,7 @@ class JSBackend {
     case IntLit(value) => JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n"))
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSExpr(value)
+    case UnitLit(value) => if(value){JSExpr("undefined")} else{JSExpr("null")}
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`

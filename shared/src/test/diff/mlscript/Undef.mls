@@ -37,3 +37,18 @@ qmrk_qmrk 42 "123"
 //│ res: "123" | 42
 //│    = 42
 
+x = 2
+//│ x: 2
+//│  = 2
+
+b = undefined
+//│ b: undefined
+//│  = 'undefined'
+
+undefined
+//│ res: undefined
+//│    = 'undefined'
+
+b
+//│ res: undefined
+//│    = 'undefined'
