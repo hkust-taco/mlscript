@@ -177,7 +177,7 @@ class Program[T]
 //│ // end ts
 
 :ts
-// FIXME
+:e
 class Arg[T]: (T, T)
 class Prog[T]
   method Run: Arg[T] -> number
