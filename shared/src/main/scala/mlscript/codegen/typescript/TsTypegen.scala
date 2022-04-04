@@ -100,22 +100,10 @@ final class TsTypegenCodeBuilder {
 
         rhs match {
           case f@Function(lhs, rhs) =>
-            // only use free variables for type parameters
-            // flip polarity for input type of function
-            // lhs translates to the complete argument list
-            // method definition only affects source code representation of top level function
-            val lhsTypeSource = lhs match {
-              // tuple are handled specially because
-              // they create their own arg names
-              case Tuple(fields) => toTsType(lhs, true)(typegenCtx, Some(false))
-              // there are other types which might hide tuple arguments
-              // like recursive types, AppliedTypes or bounded types
-              // their tuple types can be uniformly converted
-              // using a spread operator
-              case _ => (SourceCode("...arg: ") ++ toTsType(lhs, true)(typegenCtx, Some(false))).parenthesized
-            }
+            val lhsTypeSource = toTypeTypeFunctionLhs(lhs, true)(typegenCtx, Some(false))
             val rhsTypeSource = toTsType(rhs)(typegenCtx, Some(true))
 
+            // only use free variables for type parameters
             val typeParams = typegenCtx.typeVarMapping.iterator
               .filter(tup => rhs.freeTypeVariables.contains(tup._1) &&
                 // ignore class type parameters since they are implicitly part of class scope
@@ -251,6 +239,40 @@ final class TsTypegenCodeBuilder {
     }
 
     typegenCode += classDeclaration + SourceCode.closeCurlyBrace
+  }
+
+  /**
+    * Type conversion for function arguments is a special case. Explicit tuples
+    * are handled differently from types that hide tuples.
+    * 
+    * All parameters are same as `toTsType`
+    *
+    * @param lhs
+    * @param funcArg
+    * @param typePrecedence
+    * @param typegenCtx
+    * @param pol
+    * @return
+    */
+  private def toTypeTypeFunctionLhs(lhs: Type, funcArg: Boolean = false, typePrecedence: Int = 0)(implicit
+      typegenCtx: TypegenContext,
+      pol: Option[Boolean],
+  ): SourceCode = {
+    // flip polarity for input type of function
+    // lhs translates to the complete argument list
+    // method definition only affects source code representation of top level function
+    lhs match {
+      // tuple are handled specially because
+      // they create their own arg names
+      case Tuple(fields) => toTsType(lhs, true)(typegenCtx, Some(false))
+      // there are other types which might hide tuple arguments
+      // like recursive types, AppliedTypes or bounded types
+      // their tuple types can be uniformly converted
+      // using a spread operator
+      case _ =>
+        val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
+        (SourceCode(s"...$arg: ") ++ toTsType(lhs, true)(typegenCtx, Some(false))).parenthesized
+    }
   }
 
   /**
@@ -432,17 +454,7 @@ final class TsTypegenCodeBuilder {
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function
-        val lhsTypeSource = lhs match {
-          // tuple are handled specially because
-          // they create their own arg names
-          case Tuple(fields) => toTsType(lhs, true)(typegenCtx, pol.map(!_))
-          // there are other types which might hide tuple arguments
-          // like recursive types, AppliedTypes or bounded types
-          // their tuple types can be uniformly converted
-          // using a spread operator
-          case _ => (SourceCode("...arg: ") ++ toTsType(lhs, true)(typegenCtx, pol.map(!_))).parenthesized
-        }
-
+        val lhsTypeSource = toTypeTypeFunctionLhs(lhs, true)(typegenCtx, pol.map(!_))
         val rhsTypeSource = toTsType(rhs)
         val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
         // if part of a higher precedence binary operator
