@@ -13,6 +13,24 @@ trait T0[B]: S0[B]
 :e
 class A0: S0[int] & T0[string]
 (A0{}).Foo0
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║        	             ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ╙──      	                       ^^^^^^
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ║        	                       ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.14: 	class A0: S0[int] & T0[string]
+//│ ╙──      	             ^^^
 //│ Defined class A0
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.15: 	(A0{}).Foo0
@@ -29,17 +47,35 @@ class A0: S0[int] & T0[string]
 :e
 class A0_2: S0[int] & T0[string]
   method Foo0 = 1
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║        	               ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ╙──      	                         ^^^^^^
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ║        	                         ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
+//│ ╙──      	               ^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.31: 	  method Foo0 = 1
+//│ ║  l.49: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `string`
-//│ ║  l.31: 	  method Foo0 = 1
+//│ ║  l.49: 	  method Foo0 = 1
 //│ ║        	                ^
 //│ ╟── but it flows into method definition with expected type `string`
-//│ ║  l.31: 	  method Foo0 = 1
+//│ ║  l.49: 	  method Foo0 = 1
 //│ ║        	         ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.30: 	class A0_2: S0[int] & T0[string]
+//│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	                         ^^^^^^
 //│ ╟── from inherited method declaration:
 //│ ║  l.7: 	  method Foo0: A
@@ -71,16 +107,34 @@ trait T1: R1[string]
 
 :e
 class A1: S1 & T1
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.109: 	class A1: S1 & T1
+//│ ║         	      ^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.99: 	trait S1: R1[int]
+//│ ║        	             ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.101: 	trait T1: R1[string]
+//│ ╙──       	             ^^^^^^
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.109: 	class A1: S1 & T1
+//│ ║         	      ^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.101: 	trait T1: R1[string]
+//│ ║         	             ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	trait S1: R1[int]
+//│ ╙──      	             ^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.73: 	class A1: S1 & T1
-//│ ║        	      ^^
+//│ ║  l.109: 	class A1: S1 & T1
+//│ ║         	      ^^
 //│ ╟── Definitions of method Foo1 inherited from:
 //│ ╟── • S1
-//│ ║  l.64: 	  method Foo1 = 1
-//│ ║        	         ^^^^^^^^
+//│ ║  l.100: 	  method Foo1 = 1
+//│ ║         	         ^^^^^^^^
 //│ ╟── • T1
-//│ ║  l.66: 	  method Foo1 = "a"
-//│ ╙──      	         ^^^^^^^^^^
+//│ ║  l.102: 	  method Foo1 = "a"
+//│ ╙──       	         ^^^^^^^^^^
 //│ Defined class A1
 
 a1 = A1{}
@@ -110,9 +164,28 @@ a1: R1['_]
 //│    = A1 {}
 
 
+:e
 :js
 class A1_2: S1 & T1
   method Foo1 = error
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.169: 	class A1_2: S1 & T1
+//│ ║         	      ^^^^^^^^^^^^^
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.99: 	trait S1: R1[int]
+//│ ║        	             ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.101: 	trait T1: R1[string]
+//│ ╙──       	             ^^^^^^
+//│ ╔══[ERROR] Type mismatch in type definition:
+//│ ║  l.169: 	class A1_2: S1 & T1
+//│ ║         	      ^^^^^^^^^^^^^
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.101: 	trait T1: R1[string]
+//│ ║         	             ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.99: 	trait S1: R1[int]
+//│ ╙──      	             ^^^
 //│ Defined class A1_2
 //│ Defined A1_2.Foo1: (A1_2 & r1 & s1 & t1) -> nothing
 //│ // Prelude
