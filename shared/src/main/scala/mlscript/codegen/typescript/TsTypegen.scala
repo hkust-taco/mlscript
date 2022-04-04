@@ -104,7 +104,16 @@ final class TsTypegenCodeBuilder {
             // flip polarity for input type of function
             // lhs translates to the complete argument list
             // method definition only affects source code representation of top level function
-            val lhsTypeSource = toTsType(lhs, true)(typegenCtx, Some(false))
+            val lhsTypeSource = lhs match {
+              // tuple are handled specially because
+              // they create their own arg names
+              case Tuple(fields) => toTsType(lhs, true)(typegenCtx, Some(false))
+              // there are other types which might hide tuple arguments
+              // like recursive types, AppliedTypes or bounded types
+              // their tuple types can be uniformly converted
+              // using a spread operator
+              case _ => (SourceCode("...arg: ") ++ toTsType(lhs, true)(typegenCtx, Some(false))).parenthesized
+            }
             val rhsTypeSource = toTsType(rhs)(typegenCtx, Some(true))
 
             val typeParams = typegenCtx.typeVarMapping.iterator
@@ -221,7 +230,7 @@ final class TsTypegenCodeBuilder {
     val allFieldsAndTypes = (classFieldsAndType ++
       baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty).groupMap(_._1)(_._2))
       .map {case (fieldVar, fieldTypes) =>
-        val fieldTypesCode = fieldTypes.toSet[Type].toSeq match {
+        val fieldTypesCode = fieldTypes.distinct match {
           case Seq(fieldType) =>
             toTsType(fieldType)(TypegenContext(fieldType), Some(true))
           case uniqueFieldTypes =>
@@ -400,7 +409,10 @@ final class TsTypegenCodeBuilder {
         // regular tuple becomes fixed length array
         else {
           val tupleArrayCode = SourceCode.horizontalArray(fields.map(field => toTsType(field._2.out)))
-          if (fields.iterator.map(_._1.isDefined).exists(identity)) {
+          // don't add a readonly if all fields in the tuple are mutable
+          // this is because readonly is a weak constraint and can easily
+          // be upcasted to non-readonly
+          if (fields.iterator.map(_._1.isDefined).forall(identity)) {
             tupleArrayCode
           } else {
             SourceCode("readonly ") ++ tupleArrayCode
@@ -420,9 +432,18 @@ final class TsTypegenCodeBuilder {
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function
-        val lhsTypeSource = toTsType(lhs, true)(typegenCtx, pol.map(!_))
-        val rhsTypeSource = toTsType(rhs)
+        val lhsTypeSource = lhs match {
+          // tuple are handled specially because
+          // they create their own arg names
+          case Tuple(fields) => toTsType(lhs, true)(typegenCtx, pol.map(!_))
+          // there are other types which might hide tuple arguments
+          // like recursive types, AppliedTypes or bounded types
+          // their tuple types can be uniformly converted
+          // using a spread operator
+          case _ => (SourceCode("...arg: ") ++ toTsType(lhs, true)(typegenCtx, pol.map(!_))).parenthesized
+        }
 
+        val rhsTypeSource = toTsType(rhs)
         val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
         // if part of a higher precedence binary operator
         // in this case only Inter and Union is possible
@@ -437,9 +458,9 @@ final class TsTypegenCodeBuilder {
         // allocate the clash-free name for uv in typegen scope
         // update mapping from type variables to
         val uvName = typegenCtx.typeVarMapping
-          .getOrElse(uv, {
+          .getOrElse(uv,
             throw CodeGenError(s"Did not find mapping for type variable $uv. Unable to generated ts type.")
-          })
+          )
         val typeVarMapping = typegenCtx.typeVarMapping
         // create new type gen context and recalculate rec var and
         // non-rec var for current type
@@ -447,7 +468,7 @@ final class TsTypegenCodeBuilder {
 
         // recursive type does not have any other type variables
         // (except itself)
-        val recTypeCode = if (mlType.freeTypeVariables.size === 0) {
+        if (mlType.freeTypeVariables.size === 0) {
           typeScope.declareTypeAlias(uvName, List.empty, r)
           val bodyType = toTsType(body)(typegenCtx, pol)
           typegenCode += (SourceCode(s"export type $uvName") ++
@@ -473,17 +494,6 @@ final class TsTypegenCodeBuilder {
           typegenCode += (SourceCode(s"export type $uvAppliedName") ++
             SourceCode.equalSign ++ bodyType)
           uvAppliedName
-        }
-
-        // if a tuple is a recursive type then it is aliased
-        // so we must use the alias name for the argument type
-        if (funcArg) {
-          // a function argument is always a tuple hence we
-          // should spread it across the argument variable
-          val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
-          (SourceCode(s"...$arg: ") ++ recTypeCode).parenthesized
-        } else {
-          recTypeCode
         }
       case AppliedType(base, targs) =>
         if (targs.length =/= 0) {
