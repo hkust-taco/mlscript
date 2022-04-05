@@ -348,7 +348,7 @@ final class TsTypegenCodeBuilder {
     // only use non recursive type variables for type parameters
     val typeParams = typegenCtx.typeVarMapping.iterator
       .filter(tup => mlType.freeTypeVariables.contains(tup._1))
-      .map { case (_, varName) => SourceCode(varName)}
+      .map { case (_, varName) => SourceCode(varName) }
       .toList
 
     typegenCode += (SourceCode(s"export declare const $defName") ++
