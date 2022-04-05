@@ -158,7 +158,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
 
   /**
-   * Look up for a type alias symbol locally.
+   * Look up a type alias symbol locally.
    */
   def getTypeAliasSymbol(name: Str): Opt[TypeAliasSymbol] =
     lexicalTypeSymbols.get(name) flatMap {
