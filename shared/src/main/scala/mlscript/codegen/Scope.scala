@@ -147,7 +147,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     }
 
   /**
-   * Look up for a trait symbol locally.
+   * Look up a trait symbol locally.
    */
   def getTraitSymbol(name: Str): Opt[TraitSymbol] = 
     lexicalTypeSymbols.get(name) flatMap {
