@@ -199,7 +199,10 @@ final class TsTypegenCodeBuilder {
     classFieldsAndType
       .map {case (fieldVar, fieldTypes) => 
         // field types will always have 1 or more elements
-        val fieldTypesCode = if (fieldTypes.length === 1) {
+        val fieldTypesCode = fieldTypes.distinct match {
+          case fieldType :: Nil => ...
+          case fieldTypes => ...
+        }
           toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
         } else {
           // multiple types are intersected hence typegen is done
