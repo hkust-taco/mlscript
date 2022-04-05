@@ -326,10 +326,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   val methods = methodsAndTypes
                     // filter method declarations and definitions
                     // without declarations
-                    .withFilter{ case (mthd, _) =>
+                    .withFilter { case (mthd, _) =>
                       mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
                     }
-                    .map{case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
+                    .map { case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
 
                   tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
