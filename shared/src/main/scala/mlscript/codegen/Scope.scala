@@ -301,11 +301,6 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
     * Shorthands for deriving function scopes.
     */
   def derive(name: Str, params: Ls[Str]): Scope = Scope(name, params, this)
-
-  /**
-    * An iterator over the type symbols declared in the current scope
-    */
-  def iterateTypeSymbols: Iterable[TypeSymbol] = lexicalTypeSymbols.values
 }
 
 object Scope {

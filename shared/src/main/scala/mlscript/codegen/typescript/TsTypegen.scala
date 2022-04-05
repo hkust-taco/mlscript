@@ -202,10 +202,10 @@ final class TsTypegenCodeBuilder {
         val fieldTypesCode = if (fieldTypes.length === 1) {
           toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
         } else {
-          // multiple types are intersected hence typgen is done
-          // using intersection precedence however only unique types
-          // are considered for intersection
-          val fieldTypesCode = fieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
+          // multiple types are intersected hence typegen is done
+          // using precedence of the intersection operator. However
+          // only distinct types are considered for intersection
+          val fieldTypesCode = fieldTypes.distinct.map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true)))
           SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
         }
         (SourceCode(fieldVar.name), fieldTypesCode)
@@ -223,8 +223,8 @@ final class TsTypegenCodeBuilder {
             toTsType(fieldType)(TypegenContext(fieldType), Some(true))
           case uniqueFieldTypes =>
             // multiple types are intersected hence typegen is done
-            // using intersection precedence however only unique types
-            // are considered for intersection
+            // using precedence of the intersection operator. However
+            // only distinct types are considered for intersection
             val fieldTypesCode = uniqueFieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
             SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
         }
