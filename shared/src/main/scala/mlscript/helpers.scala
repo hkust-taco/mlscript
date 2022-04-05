@@ -321,7 +321,7 @@ trait LitImpl { self: Lit =>
     case _: IntLit => Set.single(Var("int")) + Var("number")
     case _: StrLit => Set.single(Var("string"))
     case _: DecLit => Set.single(Var("number"))
-    case _: UnitLit => Set.single(Var("undefined"))
+    case _: UnitLit => Set.empty
   }
 }
 
