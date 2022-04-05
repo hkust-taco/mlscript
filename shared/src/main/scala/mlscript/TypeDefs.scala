@@ -131,7 +131,8 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
-      case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
+      case tr @ TypeRef(td, targs) =>
+        fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
         mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
@@ -274,12 +275,20 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
               val isTraitWithMethods = (k is Trt) && defns.nonEmpty
+              val fields = fieldsOf(td.bodyTy, true)
+              fields.foreach {
+                // * Make sure the LB/UB of all inherited type args are consistent.
+                // * This is not actually necessary for soundness
+                // *  (if they aren't, the object type just won't be instantiable),
+                // *  but will help report inheritance errors earlier (see test BadInherit2).
+                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case _ => ()
+              }
               (decls -- defns) match {
                 case absMths if absMths.nonEmpty || isTraitWithMethods =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
-                  val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
                     tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
