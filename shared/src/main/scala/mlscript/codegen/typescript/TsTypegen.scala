@@ -100,7 +100,7 @@ final class TsTypegenCodeBuilder {
 
         rhs match {
           case f@Function(lhs, rhs) =>
-            val lhsTypeSource = toTypeTypeFunctionLhs(lhs, true)(typegenCtx, Some(false))
+            val lhsTypeSource = toTypegenFunctionLhs(lhs, true)(typegenCtx, Some(false))
             val rhsTypeSource = toTsType(rhs)(typegenCtx, Some(true))
 
             // only use free variables for type parameters
@@ -198,19 +198,7 @@ final class TsTypegenCodeBuilder {
     // add body fields
     classFieldsAndType
       .map {case (fieldVar, fieldTypes) => 
-        // field types will always have 1 or more elements
-        val fieldTypesCode = fieldTypes.distinct match {
-          case fieldType :: Nil => ...
-          case fieldTypes => ...
-        }
-          toTsType(fieldTypes(0))(TypegenContext(fieldTypes(0)), Some(true))
-        } else {
-          // multiple types are intersected hence typegen is done
-          // using precedence of the intersection operator. However
-          // only distinct types are considered for intersection
-          val fieldTypesCode = fieldTypes.distinct.map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true)))
-          SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
-        }
+        val fieldTypesCode = toTypegenInheritedFields(fieldTypes)
         (SourceCode(fieldVar.name), fieldTypesCode)
       }
       .foreach({ case (fieldVar, fieldType) => {
@@ -221,16 +209,7 @@ final class TsTypegenCodeBuilder {
     val allFieldsAndTypes = (classFieldsAndType ++
       baseClass.map(getClassFieldAndTypes(_, true)).getOrElse(List.empty).groupMap(_._1)(_._2))
       .map {case (fieldVar, fieldTypes) =>
-        val fieldTypesCode = fieldTypes.distinct match {
-          case Seq(fieldType) =>
-            toTsType(fieldType)(TypegenContext(fieldType), Some(true))
-          case uniqueFieldTypes =>
-            // multiple types are intersected hence typegen is done
-            // using precedence of the intersection operator. However
-            // only distinct types are considered for intersection
-            val fieldTypesCode = uniqueFieldTypes.toSet[Type].map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true))).toList
-            SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
-        }
+        val fieldTypesCode = toTypegenInheritedFields(fieldTypes)
         (SourceCode(fieldVar.name), fieldTypesCode)
       }.toList
     classDeclaration += SourceCode("    constructor(fields: ") ++
@@ -242,6 +221,29 @@ final class TsTypegenCodeBuilder {
     }
 
     typegenCode += classDeclaration + SourceCode.closeCurlyBrace
+  }
+
+  /**
+    * Convert the intersections of all distinct fields
+    * in the inheritance hierarchy of a trait or class
+    * into SourceCode
+    *
+    * @param fieldTypes
+    *   list of field types
+    * @return
+    *   SourceCode
+    */
+  private def toTypegenInheritedFields(fieldTypes: List[Type]): SourceCode = {
+    // field types will always have 1 or more elements
+    fieldTypes.distinct match {
+      case fieldType :: Nil => toTsType(fieldType)(TypegenContext(fieldType), Some(true))
+      case fieldTypes =>
+      // multiple types are intersected hence typegen is done
+      // using precedence of the intersection operator. However
+      // only distinct types are considered for intersection
+      val fieldTypesCode = fieldTypes.distinct.map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true)))
+      SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
+    }
   }
 
   /**
@@ -257,7 +259,7 @@ final class TsTypegenCodeBuilder {
     * @param pol
     * @return
     */
-  private def toTypeTypeFunctionLhs(lhs: Type, funcArg: Boolean = false, typePrecedence: Int = 0)(implicit
+  private def toTypegenFunctionLhs(lhs: Type, funcArg: Boolean = false, typePrecedence: Int = 0)(implicit
       typegenCtx: TypegenContext,
       pol: Option[Boolean],
   ): SourceCode = {
@@ -454,7 +456,7 @@ final class TsTypegenCodeBuilder {
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function
-        val lhsTypeSource = toTypeTypeFunctionLhs(lhs, true)(typegenCtx, pol.map(!_))
+        val lhsTypeSource = toTypegenFunctionLhs(lhs, true)(typegenCtx, pol.map(!_))
         val rhsTypeSource = toTsType(rhs)
         val funcSourceCode = lhsTypeSource ++ SourceCode.fatArrow ++ rhsTypeSource
         // if part of a higher precedence binary operator
