@@ -150,12 +150,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
    * Look up a trait symbol locally.
    */
   def getTraitSymbol(name: Str): Opt[TraitSymbol] = 
-    lexicalTypeSymbols.get(name) flatMap {
-      _ match {
-        case c: TraitSymbol => S(c)
-        case _              => N
-      }
-    }
+    lexicalTypeSymbols.get(name) collect { case c: TraitSymbol => c }
 
   /**
    * Look up a type alias symbol locally.
