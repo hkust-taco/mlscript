@@ -71,10 +71,10 @@ final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends C
 final case class Wildcard(body: Term) extends CaseBranches
 final case object NoCases extends CaseBranches
 
-final case class IntLit(value: BigInt)      extends Lit
-final case class DecLit(value: BigDecimal)  extends Lit
-final case class StrLit(value: Str)         extends Lit
-final case class UnitLit(undefinedOrNull: Bool)    extends Lit
+final case class IntLit(value: BigInt)            extends Lit
+final case class DecLit(value: BigDecimal)        extends Lit
+final case class StrLit(value: Str)               extends Lit
+final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
 sealed abstract class SimpleTerm extends Term with SimpleTermImpl
 

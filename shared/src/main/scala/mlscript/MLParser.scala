@@ -11,8 +11,8 @@ import mlscript.Lexer._
 class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   val keywords = Set(
-    "def", "class", "trait", "type", "method",
-    "let", "rec", "in", "fun", "with", "undefined",
+    "def", "class", "trait", "type", "method", "let",
+    "rec", "in", "fun", "with", "undefined", "null",
     "if", "then", "else", "match", "case", "of")
   def kw[_: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
@@ -43,8 +43,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (pat, S(bod)) => LetS(false, pat, bod)
   }
   def term[_: P]: P[Term] = P( let | fun | ite | withsAsc | _match )
-  def lit[_: P]: P[Lit] =
-    locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)) | P(kw("undefined")).map(x => UnitLit(true)))
+  def lit[_: P]: P[Lit] = locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_))
+    | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   def variable[_: P]: P[Var] = locate(ident.map(Var))
   def parens[_: P]: P[Term] = locate(P( "(" ~/ term.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(t), N) => Bra(false, t)

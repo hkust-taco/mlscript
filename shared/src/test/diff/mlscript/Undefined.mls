@@ -1,0 +1,12 @@
+
+case ()[0] of { undefined -> 1 }
+//│ res: 1
+//│    = 1
+
+case ()[0] of { null -> 0 | undefined -> 1 }
+//│ res: 0 | 1
+//│    = 0
+
+case ()[0] of { "" -> 0 | undefined -> 1 }
+//│ res: 0 | 1
+//│    = 1
