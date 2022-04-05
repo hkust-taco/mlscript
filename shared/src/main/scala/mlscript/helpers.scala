@@ -189,16 +189,8 @@ abstract class PolyTypeImpl extends Located { self: PolyType =>
 }
 
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
-  // define an ordering for type variables
-  // order by
-  // 1. name hint - default ""
-  // 2. identifier number - default 0
-  // 3. identifier string - default ""
-  def toTuple: (String, Int, String) = self.nameHint.map((_, 0, ""))
-    .getOrElse(self.identifier.fold(("", _, ""), ("", 0, _)))
-
   def compare(that: TypeVar): Int = {
-    this.toTuple compare that.toTuple
+    (this.identifier, this.nameHint) compare (that.identifier, that.nameHint)
   }
 }
 
