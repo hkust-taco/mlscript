@@ -420,7 +420,7 @@ final class TsTypegenCodeBuilder {
         // ! Note: No equivalent to readonly fields for tuples
         if (funcArg) {
           val argList = fields
-            .map(field => {
+            .map(field =>
               val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
               val argType = toTsType(field._2.out)
               SourceCode(s"$arg: ") ++ argType
