@@ -190,7 +190,7 @@ abstract class PolyTypeImpl extends Located { self: PolyType =>
 
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
   def compare(that: TypeVar): Int = {
-    (this.identifier, this.nameHint) compare (that.identifier, that.nameHint)
+    (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
   }
 }
 

@@ -65,8 +65,8 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     readonly Potential: int
 //│     Better(arg: Omit<Bank, "lock"> & {readonly lock: Lock<int>}): bool
 //│ }
-//│ export declare const Lock<T, pins>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {readonly pins: pins}
-//│ export declare const Bank<cash, lock>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
+//│ export declare const Lock<pins, T>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {readonly pins: pins}
+//│ export declare const Bank<lock, cash>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 
@@ -88,16 +88,16 @@ def Some v = Some { value = v }
 //│ Declared LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> 'T -> ((LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. 'd] with {value: 'd})}) as 'd)
 //│ Defined LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> ('T & 'd & 'e) -> (LinkedList['T & 'e .. 'T | 'e] with {head: 'd, tail: Some[((LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f) & 'i .. (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. 'j] with {value: 'j})}) as 'j] with {value: (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. 'j] with {value: 'j})}) as 'j})}) | (LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. LinkedList['T] with {tail: 'k}] with {value: LinkedList['T] with {tail: 'k}}) as 'k}) | 'i] with {value: LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. LinkedList['T] with {tail: 'k}] with {value: LinkedList['T] with {tail: 'k}}) as 'k}}})
 //│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for invariant type Bounds(Recursive(α179,WithExtension(AppliedType(TypeName(LinkedList),List(α175)),Record(List((tail,Field(None,Union(TypeName(None),WithExtension(AppliedType(TypeName(Some),List(Bounds(α178,α177))),Record(List((value,Field(None,α179)))))))))))),α180)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:552)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$20(TsTypegen.scala:513)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:560)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$20(TsTypegen.scala:521)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:513)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:541)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:391)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$5(TsTypegen.scala:407)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:521)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:549)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:402)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:392)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$5(TsTypegen.scala:417)
 //│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:403)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:413)
 
 :ts
 trait A: { x: int }
@@ -129,7 +129,7 @@ class LL[T]: { head: T; tail: LL[T] -> int }
 //│ export type a<T> = Omit<LL<T>, "tail"> & {readonly tail: (...arg: b<T>) => int}
 //│ export declare class LL<T> {
 //│     head: T
-//│     tail: ((arg: LL<T>) => int)
+//│     tail: (arg: LL<T>) => int
 //│     constructor(fields: {head: T, tail: (arg: LL<T>) => int})
 //│     Append(arg: T): a<T>
 //│ }
