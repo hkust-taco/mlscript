@@ -329,7 +329,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     .withFilter{ case (mthd, _) =>
                       mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
                     }
-                    .map{case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
+                    .map { case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
 
                   tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
