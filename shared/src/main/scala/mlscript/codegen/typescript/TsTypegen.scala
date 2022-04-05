@@ -239,9 +239,10 @@ final class TsTypegenCodeBuilder {
       case fieldType :: Nil => toTsType(fieldType)(TypegenContext(fieldType), Some(true))
       case fieldTypes =>
       // multiple types are intersected hence typegen is done
-      // using precedence of the intersection operator. However
-      // only distinct types are considered for intersection
-      val fieldTypesCode = fieldTypes.distinct.map(fieldType => toTsType(fieldType, false, 1)(TypegenContext(fieldType), Some(true)))
+      // using the precedence of the intersection operator.
+      // Only distinct types are considered for intersection
+      val fieldTypesCode = fieldTypes.distinct
+        .map(fieldType => toTsType(fieldType, false, 2)(TypegenContext(fieldType), Some(true)))
       SourceCode.sepBy(fieldTypesCode, SourceCode.ampersand)
     }
   }
@@ -387,10 +388,15 @@ final class TsTypegenCodeBuilder {
       case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
         SourceCode("boolean")
       case u@Union(lhs, rhs) =>
-        SourceCode.sepBy(
+        val unionCode = SourceCode.sepBy(
           List(toTsType(lhs, funcArg, this.typePrecedence(u)), toTsType(rhs, funcArg, this.typePrecedence(u))),
           SourceCode.separator
         )
+        // a union has lower precedence than an intersection
+        if (this.typePrecedence(u) < typePrecedence)
+          unionCode.parenthesized
+        else
+          unionCode
       case i@Inter(lhs, rhs) =>
         SourceCode.sepBy(
           List(toTsType(lhs, funcArg, this.typePrecedence(i)), toTsType(rhs, funcArg, this.typePrecedence(i))),
@@ -577,7 +583,8 @@ final class TsTypegenCodeBuilder {
     * @return
     */
   private def typePrecedence(mlType: Type): Int = mlType match {
-    case _: Inter | _: Union => 1
+    case _: Inter => 2
+    case _: Union => 1
     case _ => 0
   }
 }
