@@ -395,36 +395,33 @@ final class TsTypegenCodeBuilder {
         // ts can only handle fields that have only out type or the same in out types
         if (fields.iterator
           .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_)) {
+          .exists(!_))
             throw CodeGenError("Cannot convert mutable record field with different in out types to typescript")
-          }
 
         SourceCode.recordWithEntries(
           fields.map(entry => 
-            if (entry._2.in.isDefined) {
+            if (entry._2.in.isDefined)
               (SourceCode(entry._1.name), toTsType(entry._2.out))
-            } else {
+            else
               (SourceCode(s"readonly ${entry._1.name}"), toTsType(entry._2.out))
-            }
         ))
       case Tuple(fields) =>
         // ts can only handle fields that have only out type or the same in out types
         if (fields.iterator
           .map(field => field._2.in.map(in => in === field._2.out).getOrElse(true))
-          .exists(!_)) {
+          .exists(!_))
             throw CodeGenError("Cannot convert mutable tuple field with different in out types to typescript")
-          }
 
         // tuple that is a function argument becomes
         // multi-parameter argument list
         // ! Note: No equivalent to readonly fields for tuples
         if (funcArg) {
           val argList = fields
-            .map(field =>
+            .map{ case field =>
               val arg = typegenCtx.termScope.declareRuntimeSymbol("arg")
               val argType = toTsType(field._2.out)
               SourceCode(s"$arg: ") ++ argType
-            })
+            }
             .toList
           SourceCode.sepBy(argList).parenthesized
         }
