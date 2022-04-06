@@ -4,6 +4,8 @@ import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
 import scala.collection.immutable.SortedSet
 
+import math.Ordered.orderingToOrdered
+
 import mlscript.utils._, shorthands._
 
 
@@ -19,7 +21,7 @@ abstract class TypeImpl extends Located { self: Type =>
 
   /**
     * @return
-    *  set of non-recursive type variables in type
+    *  set of free type variables in type
     */
   lazy val freeTypeVariables: Set[TypeVar] = this match {
     case Recursive(uv, body) => body.freeTypeVariables - uv
@@ -120,7 +122,20 @@ abstract class TypeImpl extends Located { self: Type =>
       Nil
   }
 
+  // Collect fields and types of record types that are intersected
+  // by traversing the first level of intersection. This is used
+  // for finding the fields and types of a class body, since the
+  // body is made of up an intersection of classes and records
+  lazy val collectBodyFieldsAndTypes: List[Var -> Type] = this match {
+    case Record(fields) => fields.map(field => (field._1, field._2.out))
+    case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
+    case _: Union | _: Function | _: Tuple | _: Recursive
+        | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+      Nil
+  }
 }
+
 
 final case class ShowCtx(vs: Map[TypeVar, Str], debug: Bool) // TODO make use of `debug` or rm
 object ShowCtx {
@@ -173,6 +188,11 @@ abstract class PolyTypeImpl extends Located { self: PolyType =>
   def show: Str = s"${targs.iterator.map(_.name).mkString("[", ", ", "] ->")} ${body.show}"
 }
 
+trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>
+  def compare(that: TypeVar): Int = {
+    (this.identifier.fold((_, ""), (0, _))) compare (that.identifier.fold((_, ""), (0, _)))
+  }
+}
 
 // Auxiliary definitions for terms
 

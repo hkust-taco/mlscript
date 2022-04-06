@@ -12,6 +12,19 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
+  /**
+   * TypeDef holds information about declarations like classes, interfaces, and type aliases
+   *
+   * @param kind tells if it's a class, interface or alias
+   * @param nme name of the defined type
+   * @param tparamsargs list of type parameter names and their corresponding type variable names used in the definition of the type
+   * @param tvars
+   * @param bodyTy type of the body, this means the fields of a class or interface or the type that is being aliased
+   * @param mthDecls method type declarations in a class or interface, not relevant for type alias
+   * @param mthDefs method definitions in a class or interface, not relevant for type alias
+   * @param baseClasses base class if the class or interface inherits from any
+   * @param toLoc source location related information
+   */
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,

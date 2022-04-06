@@ -463,7 +463,7 @@ class JSBackend {
   protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[(ClassSymbol, Opt[ClassSymbol])] = {
     // Cache base classes for class symbols.
     val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
-      resolveBaseClass(derivedClass.body).map(derivedClass -> _)
+      topLevelScope.resolveBaseClass(derivedClass.body).map(derivedClass -> _)
     })
     val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")
