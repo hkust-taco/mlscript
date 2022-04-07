@@ -42,7 +42,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.2",
     libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.14",
     // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?
-    libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
+    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     // 
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),

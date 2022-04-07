@@ -4,7 +4,6 @@ import fastparse._
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
-import ammonite.ops._
 import scala.collection.mutable
 import scala.collection.immutable
 import mlscript.utils._, shorthands._
@@ -33,7 +32,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val diffMidMarker = "======="
     val diffEndMarker = ">>>>>>>"
     
-    val fileContents = read(file)
+    val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
@@ -583,7 +582,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
       buf ++= s"! Updated $file\n"
-      write.over(file, result)
+      os.write.over(file, result)
     }
     print(buf.mkString)
     if (testFailed)
@@ -596,9 +595,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
 object DiffTests {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
-  private val allFiles = ls.rec(dir).filter(_.isFile)
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
@@ -608,7 +607,7 @@ object DiffTests {
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
+      val fileName = os.RelPath(filePath).baseName
       if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
