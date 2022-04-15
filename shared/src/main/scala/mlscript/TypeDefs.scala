@@ -29,8 +29,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def thisTy(prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
-    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
-      MethodType(pt.level, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
+    // This should be useless after PR #80. TODO: remove this method.
+    // def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
+    //   MethodType(pt.level, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
   }
   
   /** Represent a set of methods belonging to some owner type.
@@ -472,7 +473,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             println(s">>> Created a type variable for \"this\" $thisTv <: ${thisTv.upperBounds.head}")
             // type of `this` should be composed with type variable we just made
             val thisTag = TraitTag(Var("this"))(noProv)
-            val thisTy = thisTag & td.thisTy(noProv)
+            val thisTy = thisTag & tr
             // temporarily set
             thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -541,6 +542,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                   // What should I do next?
                   // The this type of `mt: MethodType` contains this variable from parent classes.
                   // We should replace it with current this variable.
+                  // How do we find the this variable in `mt`?
 
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,

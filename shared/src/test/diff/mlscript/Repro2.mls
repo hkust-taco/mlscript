@@ -15,29 +15,32 @@ class Box[A]: { value: A }
 //│ >>> Got nothing from the context. Try to type the term.
 //│ 1. Typing term this.value
 //│ | 1. Typing term this
-//│ | 1. : [(this & Box[A0'])]
-//│ | CONSTRAIN [[(this & Box[A0'])]] <! {value: α3'}
+//│ | 1. : [(this & Box[A])]
+//│ | CONSTRAIN [[(this & Box[A])]] <! {value: α3'}
 //│ |   where 
-//│ | C [[(this & Box[A0'])]] <! {value: α3'}
-//│ | | C [(this & Box[A0'])] <! {value: α3'}
-//│ | | | C (this & Box[A0']) <! {value: α3'}
-//│ | | | | ARGH  DNF(box<>{Box#A: (A0' -> A0'), value: A0'}∧this)  <!  DNF({value: α3'})
-//│ | | | | | Consider box<>{Box#A: (A0' -> A0'), value: A0'}∧this <: DNF({value: α3'})
+//│ | C [[(this & Box[A])]] <! {value: α3'}
+//│ | | C [(this & Box[A])] <! {value: α3'}
+//│ | | | C (this & Box[A]) <! {value: α3'}
+//│ | | | | ARGH  DNF(box<>{Box#A: (A -> A), value: A}∧this)  <!  DNF({value: α3'})
+//│ | | | | | Consider box<>{Box#A: (A -> A), value: A}∧this <: DNF({value: α3'})
 //│ | | | | | Possible: List({value: α3'})
 //│ | | | | | Factorized: List({value: α3'})
-//│ | | | | | A  box<>{Box#A: (A0' -> A0'), value: A0'}∧this  %  List()  <!  List({value: α3'})  %  ⊥
-//│ | | | | | | A  box<>{Box#A: (A0' -> A0'), value: A0'}∧this  %  List()  <!  List()  %  RhsField(value,α3')
-//│ | | | | | | | A  box<>{Box#A: (A0' -> A0'), value: A0'}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
-//│ | | | | | | | | A  {Box#A: (A0' -> A0'), value: A0'}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
-//│ | | | | | | | | | C A0' <! α3'
+//│ | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List({value: α3'})  %  ⊥
+//│ | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  RhsField(value,α3')
+//│ | | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
+//│ | | | | | | | | A  {Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
+//│ | | | | | | | | | C A <! α3'
 //│ 1. : α3'
-//│ >>> substituted method body type: PolymorphicType(0,α3')
-//│ >>> Box.Get : PolymorphicType(0,(((this2' & Box[A0']),) -> α3'))
-//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some(((this2' & Box[A0']),α3')),List(TypeName(Box)),false)
+//│ >>> substituted method body type: PolymorphicType(0,α4')
+//│ >>> Box.Get : PolymorphicType(0,(((this2' & Box[A0']),) -> α4'))
+//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some(((this2' & Box[A0']),α4')),List(TypeName(Box)),false)
 //│ Defined class Box
-//│ Typed as: (((this2' & Box[A0']),) -> α3')
-//│  where: A0' <: [[α3']], this2' <: Box[A0']
+//│ Typed as: (((this2' & Box[A0']),) -> α4')
+//│  where: this2' <: Box[A0'], α4' :> A0'
 //│ Defined Box.Get: Box['A] -> 'A
+
+// Box.Get should be PolymorphicType(0, (this1' & IntBox,) -> α3')
+//  where int <: α3' 
 
 :d
 class IntBox: Box[int]
@@ -51,8 +54,8 @@ class IntBox: Box[int]
 //│ >>> folding a term: this.value
 //│ >>> prt.name = Box, nme.name = Get
 //│ >>> So now we're inheriting Box.Get
-//│ >>> Found a method from the context: MethodType(0,Some(((this2' & Box[A0']),α3')),List(TypeName(Box)),false)
-//│ >>> Its body type is PolymorphicType(0,[α3'])
+//│ >>> Found a method from the context: MethodType(0,Some(((this2' & Box[A0']),α4')),List(TypeName(Box)),false)
+//│ >>> Its body type is PolymorphicType(0,[α4'])
 //│ >>> We're going to substitute:
 //│ >>> 1. A0' -> Int
 //│ >>> substituted method body type: PolymorphicType(0,α3')
@@ -60,10 +63,14 @@ class IntBox: Box[int]
 //│ >> Checking subsumption for inferred type of Get : MethodType(0,Some((IntBox,α3')),List(TypeName(Box)),false)
 //│ Defined class IntBox
 
+IntBox.Get
+//│ res: IntBox -> int
+//│    = undefined
+
 ib0 = IntBox { value = 0 }
 //│ ib0: IntBox & {value: 0}
 //│    = IntBox { value: 0 }
 
 ib0.(IntBox.Get)
-//│ res: nothing
+//│ res: int
 //│    = undefined
