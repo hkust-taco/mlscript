@@ -813,9 +813,101 @@ class Test9A[A]: { x: A }
 //│ Defined Test9A.Mth9A: Test9A['A] -> 'A
 
 class Test9B: Test9A[int]
+    method Mth9A : Test9A[int] -> int
+    method Mth9A = this.x
+//│ ╔══[ERROR] Overriding method Test9A.Mth9A without explicit declaration is not allowed.
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.811: 	    method Mth9A = this.x
+//│ ╙──       	           ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method declaration:
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Test9A[int] -> int` is not an instance of type _α767
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into method declaration with expected type `_α767`
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.811: 	    method Mth9A = this.x
+//│ ║         	                   ^^^^^^
+//│ ╟── from inherited method definition:
+//│ ║  l.811: 	    method Mth9A = this.x
+//│ ╙──       	           ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in method definition:
+//│ ║  l.817: 	    method Mth9A = this.x
+//│ ║         	           ^^^^^^^^^^^^^^
+//│ ╟── type `int` is not a function
+//│ ║  l.815: 	class Test9B: Test9A[int]
+//│ ║         	                     ^^^
+//│ ╟── but it flows into field selection with expected type `Test9A[int] -> int`
+//│ ║  l.817: 	    method Mth9A = this.x
+//│ ║         	                   ^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^
+//│ ╟── from method declaration:
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Test9B
+//│ Declared Test9B.Mth9A: Test9B -> Test9A[int] -> int
+//│ Defined Test9B.Mth9A: Test9B -> int
+
+:NoJS
+:d
+error
+//│ 0. Typing term error
+//│ 0. : [⊥]
+//│ Typed as: [⊥]
+//│  where: 
+//│ res: nothing
 
 :e
 :NoJS
+:d
 error.(Test9B.Mth9A): nothing
+//│ 0. Typing term error.Test9B.Mth9A : TypeName(nothing)
+//│ | 0. Typing term error.Test9B.Mth9A
+//│ | | 0. Typing term error
+//│ | | 0. : [⊥]
+//│ | | CONSTRAIN (((this1 & Test9B),) -> ((Test9A[Int],) -> Int)) <! (([⊥],) -> α0)
+//│ | |   where this1 <: Test9B
+//│ | | C (((this1 & Test9B),) -> ((Test9A[Int],) -> Int)) <! (([⊥],) -> α0)
+//│ | | | C ([⊥],) <! ((this1 & Test9B),)
+//│ | | | | C [⊥] <! (this1 & Test9B)
+//│ | | | | | C ⊥ <! (this1 & Test9B)
+//│ | | | C ((Test9A[Int],) -> Int) <! α0
+//│ | 0. : α0
+//│ | 0. Typing type TypeName(nothing)
+//│ | | vars=Map() newDefsInfo=Map()
+//│ | => nothing | 
+//│ | CONSTRAIN α0 <! nothing
+//│ |   where α0 :> [[((Test9A[Int],) -> Int)]]
+//│ | C α0 <! nothing
+//│ | | C [[((Test9A[Int],) -> Int)]] <! nothing
+//│ | | | C [((Test9A[Int],) -> Int)] <! nothing
+//│ | | | | C ((Test9A[Int],) -> Int) <! nothing
+//│ | | | | | C ((Test9A[Int],) -> Int) <! ⊥
+//│ | | | | | | CONSTRAINT FAILURE: ((Test9A[Int],) -> Int) <: ⊥
+//│ | | | | | | CONSTRAIN error<> <! nothing
+//│ | | | | | |   where 
+//│ | | | | | | C error<> <! nothing
+//│ | | | | | | | C error<> <! ⊥
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.870: 	error.(Test9B.Mth9A): nothing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Test9A[int] -> int` does not match type `nothing`
+//│ ║  l.816: 	    method Mth9A : Test9A[int] -> int
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into field selection with expected type `nothing`
+//│ ║  l.870: 	error.(Test9B.Mth9A): nothing
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.870: 	error.(Test9B.Mth9A): nothing
+//│ ╙──       	                      ^^^^^^^
+//│ 0. : nothing
+//│ Typed as: nothing
+//│  where: 
 //│ res: nothing
