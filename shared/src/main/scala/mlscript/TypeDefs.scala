@@ -470,7 +470,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             println(s">>> Going through method ${md.nme.name} in ${td2.nme.name}")
             // this type variable refers to `this`. It is only used in this method.
             val thisTv = freshVar(noProv, S("this"), Nil, td.thisTy(noProv) :: Nil)(lvl + 1)
-            println(s">>> Created a type variable for \"this\" $thisTv <: ${thisTv.upperBounds.head}")
+            println(s">>> Created a type variable for this $thisTv <: ${thisTv.upperBounds.head}")
             // type of `this` should be composed with type variable we just made
             val thisTag = TraitTag(Var("this"))(noProv)
             val thisTy = thisTag & tr
@@ -517,55 +517,33 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
               t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTag -> thisTv)
             println(s">>> reverseRigid2 (${reverseRigid2.size} entries)")
-            reverseRigid2.iterator.zipWithIndex.foreach { case ((st, tv), i) =>
-              println(s">>> ${i + 1}. $st ${st.prov} -> $tv ${tv.prov}")
+            reverseRigid2.zipWithIndex.foreach { case ((st, tv), i) =>
+              println(s">>> $i. $st (${st.prov}) -> $tv (${tv.prov})")
             }
             // rhs might be L(Term) or R(Type)
             // replace rigid type arguments to type variables
-            val bodyTy = subst(rhs.fold(term => {
-              println(s">>> folding a term: $term")
-              println(s">>> prt.name = ${prt.name}, nme.name = ${nme.name}")
-              println(s">>> So now we're inheriting ${prt.name}.${nme.name}")
+            val bodyTy = subst(rhs.fold(term =>
               // if rhs is a term, try to type it or get from the context
               ctx.getMthDefn(prt.name, nme.name)
-                .fold({
-                  println(">>> Got nothing from the context. Try to type the term.")
-                  typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2)
-                })(mt => {
-                  println(s">>> Found a method from the context: $mt")
-                  println(s">>> Its body type is ${mt.bodyPT}")
-                  println(s">>> We're going to substitute:")
-                  val theMap: Map[ST, ST] = td2.targs.lazyZip(tr.targs).toMap
-                  theMap.iterator.zipWithIndex.foreach { case ((from, to), i) =>
-                    println(s">>> ${i + 1}. $from -> $to")
-                  }
-                  // What should I do next?
-                  // The this type of `mt: MethodType` contains this variable from parent classes.
-                  // We should replace it with current this variable.
-                  // How do we find the this variable in `mt`?
-
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  subst(mt.bodyPT, theMap) match {
+                  subst(mt.bodyPT, td2.targs.lazyZip(tr.targs).toMap) match {
                     // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
                     // and will otherwise mask the more precise new prov that contains "inherited"
                     case PolymorphicType(level, ProvType(underlying)) =>
                       PolymorphicType(level, underlying)
                     case pt => pt
                   }
-                }
-                )
-                },
+                ),
               // if rhs is a type, convert it to `SimpleType` first
-              ty => {
-                println(s">>> folding a type: $ty")
-              PolymorphicType(thisCtx.lvl,
+              ty => PolymorphicType(thisCtx.lvl,
                 typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
-              }), reverseRigid2)
+              ), reverseRigid2)
             println(s">>> substituted method body type: $bodyTy")
             // create a MethodType, the difference is MethodType describes `this`
             // we used to call `td2.wrapMethod` here.

@@ -5,14 +5,10 @@ class Box[A]: { value: A }
 //│ | vars=Map(A -> A0') newDefsInfo=Map(Box -> (Cls,1))
 //│ => {value: A0'} | 
 //│ >>> Going through method Get in Box
-//│ >>> Created a type variable for "this" this2' <: Box[A0']
+//│ >>> Created a type variable for this this2' <: Box[A0']
 //│ >>> reverseRigid2 (2 entries)
-//│ >>> 1. A o: ‹class type parameter:Loc(10,11,Repro2:+2)› -> A0' o: ‹class type parameter:Loc(10,11,Repro2:+2)›
-//│ >>> 2. this [NO PROV] -> this2' [NO PROV]
-//│ >>> folding a term: this.value
-//│ >>> prt.name = Box, nme.name = Get
-//│ >>> So now we're inheriting Box.Get
-//│ >>> Got nothing from the context. Try to type the term.
+//│ >>> 0. A (o: ‹class type parameter:Loc(10,11,Repro2:+2)›) -> A0' (o: ‹class type parameter:Loc(10,11,Repro2:+2)›)
+//│ >>> 1. this ([NO PROV]) -> this2' ([NO PROV])
 //│ 1. Typing term this.value
 //│ | 1. Typing term this
 //│ | 1. : [(this & Box[A])]
@@ -48,16 +44,9 @@ class IntBox: Box[int]
 //│ | vars=Map() newDefsInfo=Map(IntBox -> (Cls,0))
 //│ => Box[Int] | 
 //│ >>> Going through method Get in Box
-//│ >>> Created a type variable for "this" this1' <: IntBox
+//│ >>> Created a type variable for this this1' <: IntBox
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 1. this [NO PROV] -> this1' [NO PROV]
-//│ >>> folding a term: this.value
-//│ >>> prt.name = Box, nme.name = Get
-//│ >>> So now we're inheriting Box.Get
-//│ >>> Found a method from the context: MethodType(0,Some(((this2' & Box[A0']),α4')),List(TypeName(Box)),false)
-//│ >>> Its body type is PolymorphicType(0,[α4'])
-//│ >>> We're going to substitute:
-//│ >>> 1. A0' -> Int
+//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
 //│ >>> substituted method body type: PolymorphicType(0,α3')
 //│ >>> Box.Get : PolymorphicType(0,(((this1' & IntBox),) -> α3'))
 //│ >> Checking subsumption for inferred type of Get : MethodType(0,Some((IntBox,α3')),List(TypeName(Box)),false)

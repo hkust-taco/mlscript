@@ -876,28 +876,19 @@ class Test9B: Test9A[int]
 //│ Declared Test9B.Mth9A: Test9B -> Test9A[int] -> int
 //│ Defined Test9B.Mth9A: Test9B -> int
 
-:NoJS
-:d
-error
-//│ 0. Typing term error
-//│ 0. : [⊥]
-//│ Typed as: [⊥]
-//│  where: 
-//│ res: nothing
-
 :e
 :NoJS
 error.(Test9B.Mth9A): nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.890: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.881: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Test9A[int] -> int` does not match type `nothing`
 //│ ║  l.837: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.890: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.881: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.890: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.881: 	error.(Test9B.Mth9A): nothing
 //│ ╙──       	                      ^^^^^^^
 //│ res: nothing
