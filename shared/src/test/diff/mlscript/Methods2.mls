@@ -13,7 +13,7 @@ class None[A]: Option[A]
 //│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
 //│ Defined class Some
 //│ Defined Some.Get: Some['A] -> 'A
-//│ Defined Some.Destruct: (Some['A] & 'this) -> (Some['a] & 'this)
+//│ Defined Some.Destruct: (Some['A] & 'this) -> (Some['A] & 'this)
 //│ Defined class None
 //│ Defined None.Get: None['A] -> nothing
 //│ Defined None.Destruct: (None['A] & 'this) -> (None['A] & 'this)
@@ -43,7 +43,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons
 //│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
-//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a] with {payload: nothing})
+//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
 //│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
@@ -58,7 +58,7 @@ List.HeadOption
 //│    = undefined
 
 Cons.HeadOption
-//│ res: (Cons['A] with {tail: List['A]}) -> (Some['a] with {payload: nothing})
+//│ res: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
@@ -74,7 +74,7 @@ l.Map (fun x -> mul x 2)
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
-//│ o: Some['a] with {payload: nothing}
+//│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
 //│  = undefined
 
 o = l.HeadOption
