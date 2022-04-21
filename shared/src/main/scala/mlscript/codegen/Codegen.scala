@@ -155,7 +155,8 @@ object SourceCode {
     new SourceCode(codes.iterator.map(_.lines).foldRight(List.empty[SourceLine])((lines, accum) => lines ::: accum))
 
   /**
-    * Comma separate elements of List[SourceCode] and wrap with curly braces
+    * Comma-separate elements of List[SourceCode] and wrap with curly braces.
+    * Each element is on a new line.
     * 
     * @param entries
     * @return
@@ -174,6 +175,26 @@ object SourceCode {
                  else { entry ++ SourceCode.comma }).indented
         }) + SourceCode("}")
     }
+
+
+  /**
+    * Comma separate elements of List[SourceCode] and wrap with curly braces
+    * on the same horizontal line
+    * 
+    * @param entries
+    * @return
+    */
+    def horizontalRecord(entries: Ls[SourceCode]): SourceCode = {
+      entries match {
+        case Nil => SourceCode("{}")
+        case _ =>
+          (entries
+            .zipWithIndex.foldLeft(SourceCode("{")) { case (acc, (entry, index)) =>
+            acc ++ entry ++ (if (index + 1 === entries.length) SourceCode.closeCurlyBrace else SourceCode.commaSpace)
+          })
+      }
+    }
+
 
     def recordWithEntries(entries: List[SourceCode -> SourceCode]): SourceCode = {
       entries match {

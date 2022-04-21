@@ -54,9 +54,9 @@ abstract class TyperHelpers { self: Typer =>
   // def dbg_assert(assertion: Boolean): Unit = scala.Predef.assert(assertion)
   
   
-  def recordUnion(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] = {
+  def recordUnion(fs1: Ls[Var -> FieldType], fs2: Ls[Var -> FieldType]): Ls[Var -> FieldType] = {
     val fs2m = fs2.toMap
-    fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v | v2)) }
+    fs1.flatMap { case (k, v) => fs2m.get(k).map(v2 => k -> (v || v2)) }
   }
 
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
@@ -66,9 +66,9 @@ abstract class TyperHelpers { self: Typer =>
     case _ if map.isDefinedAt(ts) => map(ts)
     case TypeBounds(lb, ub) => TypeBounds(subst(lb, map), subst(ub, map))(ts.prov)
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
-    case RecordType(fields) => RecordType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
-    case TupleType(fields) => TupleType(fields.map { case fn -> ft => fn -> subst(ft, map) })(ts.prov)
-    case ArrayType(inner) => ArrayType(subst(inner, map))(ts.prov)
+    case RecordType(fields) => RecordType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
+    case TupleType(fields) => TupleType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
+    case ArrayType(inner) => ArrayType(inner.update(subst(_, map), subst(_, map)))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
@@ -88,18 +88,18 @@ abstract class TyperHelpers { self: Typer =>
     case _: ObjectTag | _: ExtrType => ts
   }
   
-  def tupleIntersection(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {
+  def tupleIntersection(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
     require(fs1.size === fs2.size)
     (fs1 lazyZip fs2).map {
-      case ((S(n1), t1), (S(n2), t2)) if n1 =/= n2 => (N, t1 & t2)
-      case ((no1, t1), (no2, t2)) => (no1 orElse no2, t1 & t2)
+      case ((S(n1), t1), (S(n2), t2)) if n1 =/= n2 => (N, t1 && t2)
+      case ((no1, t1), (no2, t2)) => (no1 orElse no2, t1 && t2)
     }
   }
-  def tupleUnion(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {
+  def tupleUnion(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
     require(fs1.size === fs2.size)
     (fs1 lazyZip fs2).map {
-      case ((S(n1), t1), (S(n2), t2)) => (Option.when(n1 === n2)(n1), t1 | t2)
-      case ((no1, t1), (no2, t2)) => (N, t1 | t2)
+      case ((S(n1), t1), (S(n2), t2)) => (Option.when(n1 === n2)(n1), t1 || t2)
+      case ((no1, t1), (no2, t2)) => (N, t1 || t2)
     }
   }
   
@@ -242,6 +242,9 @@ abstract class TyperHelpers { self: Typer =>
     }
     // }(r => s"= $r")
     
+    def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
+    def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
+    
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType
       case (BotType, _) => that
@@ -271,7 +274,7 @@ abstract class TyperHelpers { self: Typer =>
       // case (ComposedType(true, l, r), _) => l & that | r & that
       case (_: ClassTag, _: FunctionType) => BotType
       case (RecordType(fs1), RecordType(fs2)) =>
-        RecordType(mergeSortedMap(fs1, fs2)(_ & _).toList)(prov)
+        RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
         if (fs0.sizeCompare(fs1) =/= 0) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
@@ -461,9 +464,9 @@ abstract class TyperHelpers { self: Typer =>
       case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case ComposedType(_, l, r) => l :: r :: Nil
-      case RecordType(fs) => fs.map(_._2)
-      case TupleType(fs) => fs.map(_._2)
-      case ArrayType(inner) => inner :: Nil
+      case RecordType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
+      case TupleType(fs) => fs.flatMap(f => f._2.lb.toList ::: f._2.ub :: Nil)
+      case ArrayType(inner) => inner.lb.toList ++ (inner.ub :: Nil)
       case NegType(n) => n :: Nil
       case ExtrType(_) => Nil
       case ProxyType(und) => und :: Nil

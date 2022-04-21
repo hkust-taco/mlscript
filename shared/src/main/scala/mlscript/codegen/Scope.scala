@@ -4,7 +4,7 @@ import mlscript.utils.shorthands._
 import mlscript.{JSStmt, JSExpr, JSLetDecl}
 import mlscript.Type
 import scala.reflect.ClassTag
-import mlscript.{TypeName, Top, Bot}
+import mlscript.{TypeName, Top, Bot, TypeDef, Als, Trt, Cls}
 import mlscript.MethodDef
 import mlscript.Term
 
@@ -139,15 +139,72 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
    * Look up for a class symbol locally.
    */
   def getClassSymbol(name: Str): Opt[ClassSymbol] =
-    lexicalTypeSymbols.get(name) flatMap {
-      _ match {
-        case c: ClassSymbol => S(c)
-        case _              => N
-      }
-    }
+    lexicalTypeSymbols.get(name) collect { case c: ClassSymbol => c }
+
+  /**
+   * Look up a trait symbol locally.
+   */
+  def getTraitSymbol(name: Str): Opt[TraitSymbol] = 
+    lexicalTypeSymbols.get(name) collect { case c: TraitSymbol => c }
+
+  /**
+   * Look up a type alias symbol locally.
+   */
+  def getTypeAliasSymbol(name: Str): Opt[TypeAliasSymbol] =
+    lexicalTypeSymbols.get(name) collect { case c: TypeAliasSymbol => c }
+
+  /**
+   * Look up for a type symbol locally.
+   */
+  def getTypeSymbol(name: Str): Opt[TypeSymbol] = lexicalTypeSymbols.get(name)
 
   def resolveValue(name: Str): Opt[RuntimeSymbol] =
     lexicalValueSymbols.get(name).orElse(enclosing.flatMap(_.resolveValue(name)))
+
+  /**
+    * Find the base class for a specific class.
+    */
+  def resolveBaseClass(ty: Type): Opt[ClassSymbol] = {
+    val baseClasses = ty.collectTypeNames.flatMap { name =>
+      this.getType(name) match {
+        case S(sym: ClassSymbol) => S(sym)
+        case S(sym: TraitSymbol) => N
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name" )
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving base classes")
+      }
+    }
+    if (baseClasses.length > 1)
+      throw CodeGenError(
+        s"cannot have ${baseClasses.length} base classes: " +
+        baseClasses.map { _.lexicalName }.mkString(", ")
+      )
+    else
+      baseClasses.headOption
+  }
+
+  def resolveImplementedTraits(ty: Type): Ls[TraitSymbol] = {
+    ty.collectTypeNames.flatMap { name =>
+      this.getType(name) match {
+        case S(sym: ClassSymbol) => N
+        case S(sym: TraitSymbol) => S(sym)
+        case S(sym: TypeAliasSymbol) =>
+          throw new CodeGenError(s"cannot inherit from type alias $name" )
+        case N =>
+          throw new CodeGenError(s"undeclared type name $name when resolving implemented traits")
+      }
+    }
+  }
+
+  def declareTypeSymbol(typeDef: TypeDef): TypeSymbol = typeDef match {
+    case TypeDef(Als, TypeName(name), tparams, body, _, _) =>
+      declareTypeAlias(name, tparams map { _.name }, body)
+    case TypeDef(Trt, TypeName(name), tparams, body, _, mthdDefs) =>
+      declareTrait(name, tparams map { _.name }, body, mthdDefs)
+    case TypeDef(Cls, TypeName(name), tparams, baseType, _, members) =>
+      declareClass(name, tparams map { _.name }, baseType, members)
+  }
 
   def declareClass(
       lexicalName: Str,
@@ -156,7 +213,7 @@ class Scope(name: Str, enclosing: Opt[Scope]) {
       methods: Ls[MethodDef[Left[Term, Type]]]
   ): ClassSymbol = {
     val runtimeName = allocateRuntimeName(lexicalName)
-    val symbol = ClassSymbol(lexicalName, runtimeName, params, base, methods)
+    val symbol = ClassSymbol(lexicalName, runtimeName, params.sorted, base, methods)
     register(symbol)
     symbol
   }

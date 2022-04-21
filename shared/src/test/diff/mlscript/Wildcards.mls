@@ -61,7 +61,7 @@ add 1 : Als1[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.60: 	add 1 : Als1[?]
 //│ ║        	^^^^^
-//│ ╟── expression of type `int` does not match type `nothing`
+//│ ╟── type `int` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.60: 	add 1 : Als1[?]
 //│ ╙──      	             ^

@@ -94,20 +94,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"($lhs -> $rhs)"
   }
   
-  case class RecordType(fields: List[(Var, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+  case class RecordType(fields: List[(Var, FieldType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
       fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
-    def mergeAllFields(fs: Iterable[Var -> SimpleType]): RecordType = {
-      val res = mutable.SortedMap.empty[Var, SimpleType]
+    def mergeAllFields(fs: Iterable[Var -> FieldType]): RecordType = {
+      val res = mutable.SortedMap.empty[Var, FieldType]
       fs.foreach(f => res.get(f._1) match {
         case N => res(f._1) = f._2
-        case S(ty) => res(f._1) = ty & f._2
+        case S(ty) => res(f._1) = ty && f._2
       })
       RecordType(res.toList)(prov)
     }
-    def addFields(fs: Ls[Var -> SimpleType]): RecordType = {
+    def addFields(fs: Ls[Var -> FieldType]): RecordType = {
       val shadowing = fs.iterator.map(_._1).toSet
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
@@ -116,21 +116,21 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   object RecordType {
     def empty: RecordType = RecordType(Nil)(noProv)
-    def mk(fields: List[(Var, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+    def mk(fields: List[(Var, FieldType)])(prov: TypeProvenance = noProv): SimpleType =
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
   sealed abstract class ArrayBase extends MiscBaseType {
-    def inner: SimpleType
+    def inner: FieldType
   }
 
-  case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
+  case class ArrayType(val inner: FieldType)(val prov: TypeProvenance) extends ArrayBase {
     def level: Int = inner.level
     override def toString = s"Array[${inner}]"
   }
 
-  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends ArrayBase {
-    lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
+  case class TupleType(fields: List[Opt[Var] -> FieldType])(val prov: TypeProvenance) extends ArrayBase {
+    lazy val inner: FieldType = fields.map(_._2).reduceLeft(_ || _)
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
@@ -206,7 +206,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-          tparamField(defn, tp) -> FunctionType(tv, tv)(noProv) }.toList)(noProv)
+            tparamField(defn, tp) -> FieldType(Some(tv), tv)(prov)
+          }.toList)(noProv)
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
@@ -258,6 +259,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   object TypeBounds {
     def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
+  }
+  
+  case class FieldType(lb: Option[SimpleType], ub: SimpleType)(val prov: TypeProvenance) {
+    def level: Int = lb.map(_.level).getOrElse(ub.level) max ub.level
+    def <:< (that: FieldType)(implicit ctx: Ctx): Bool =
+      (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
+    def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
+      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub)(prov)
+    def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
+      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
+    def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
+      FieldType(this.lb.map(lb), ub(this.ub))(prov)
+    override def toString = s"$lb..$ub"
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
