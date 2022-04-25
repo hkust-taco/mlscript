@@ -49,11 +49,19 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     locate(number.map(x => IntLit(BigInt(x))) | Lexer.stringliteral.map(StrLit(_)))
   
   def variable[_: P]: P[Var] = locate(ident.map(Var))
-  
-  def parens[_: P]: P[Term] = locate(P( "(" ~/ (kw("mut").!.? ~ term).rep(0, ",") ~ ",".!.? ~ ")" ).map {
-    case (Seq(None -> t), N) => Bra(false, t)
-    case (Seq(Some(_) -> t), N) => Tup(N -> (t, true) :: Nil)   // ? single tuple with mutable
-    case (ts, _) => Tup(ts.iterator.map(f => N -> (f._2, f._1.isDefined)).toList)
+
+  def parenCell[_: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
+    case (Some("..."), t) => Left(t)
+    case (Some("mut"), t) => Right(t -> true)
+    case (_, t) => Right(t -> false)
+  }
+
+  def parens[_: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
+    case (Seq(Right(t -> false)), N) => Bra(false, t)
+    case (Seq(Right(t -> true)), N) => Tup(N -> (t, true) :: Nil) // ? single tuple with mutable
+    case (ts, _) => 
+      if (ts.forall(_.isRight)) Tup(ts.iterator.map{ case Right(f) => N -> f }.toList)  // TODO
+      else Splice(ts.toList)
   })
 
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
