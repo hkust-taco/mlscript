@@ -122,10 +122,10 @@ bar "undefined"
 //│ res: error | undefined
 //│    = 'undefined'
 
-case (undefined) of { undefined -> "undefined it is" | null -> "hmmmm!" }
-//│ res: "hmmmm!" | "undefined it is"
+case (undefined) of { undefined -> "undefined it is" | null -> "null it is"}
+//│ res: "null it is" | "undefined it is"
 //│    = 'undefined it is'
 
-case (null) of { undefined -> "hmmmm!" | null -> "null it is" }
-//│ res: "hmmmm!" | "null it is"
-//│    = 'hmmmm!'
+case (null) of { undefined -> "undefined it is" | null -> "null it is" }
+//│ res: "null it is" | "undefined it is"
+//│    = 'null it is'

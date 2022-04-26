@@ -233,12 +233,12 @@ class JSBackend {
         case Var("int") =>
           JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
         case Var("bool") =>
-          JSBinary("==", scrut.member("constructor"), JSLit("Boolean"))
+          JSBinary("===", scrut.member("constructor"), JSLit("Boolean"))
         case Var(s @ ("true" | "false")) =>
-          JSBinary("==", scrut, JSLit(s))
+          JSBinary("===", scrut, JSLit(s))
         case Var("string") =>
           // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
-          JSBinary("==", scrut.member("constructor"), JSLit("String"))
+          JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => topLevelScope.getType(name) match {
           case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
@@ -246,7 +246,7 @@ class JSBackend {
           case N => throw new CodeGenError(s"unknown match case: $name")
         }
         case lit: Lit =>
-          JSBinary("==", scrut, JSLit(lit.idStr))
+          JSBinary("===", scrut, JSLit(lit.idStr))
       },
       _,
       _
