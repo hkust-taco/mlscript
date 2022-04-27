@@ -514,30 +514,62 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             // this contains correspondence from both the type and the method
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             // map from type arguments to type variables
+            // val allBase
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
               t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTag -> thisTv)
             println(s">>> reverseRigid2 (${reverseRigid2.size} entries)")
             reverseRigid2.zipWithIndex.foreach { case ((st, tv), i) =>
               println(s">>> $i. $st (${st.prov}) -> $tv (${tv.prov})")
             }
+            def extractThisTV(t: ST): Ls[TypeVariable] =
+              t match {
+                case FunctionType(lhs, rhs) => extractThisTV(lhs) ++ extractThisTV(rhs)
+                case RecordType(fields) => fields.flatMap {case (_, ty) => extractThisTV(ty)}
+                case ArrayType(inner) => extractThisTV(inner)
+                case TupleType(fields) =>fields.flatMap {case (_, ty) => extractThisTV(ty)}
+                case ExtrType(pol) => ???
+                case ComposedType(pol, lhs, rhs) => extractThisTV(lhs) ++ extractThisTV(rhs)
+                case NegType(negated) => extractThisTV(negated)
+                case Without(base, names) => ???
+                case ProvType(underlying) => extractThisTV(underlying)
+                case WithType(base, rcd) => ???
+                case TypeRef(defn, targs) => Nil
+                case ClassTag(id, parents) => Nil
+                case TraitTag(id) => Nil
+                case TypeBounds(lb, ub) => ???
+                case tv: TypeVariable => tv.nameHint match {
+                  case Some(value) if value.startsWith("this") => tv :: Nil
+                  case _ => Nil
+                }
+                case NegVar(tv) => ???
+                case NegTrait(tt) => ???
+              }
             // rhs might be L(Term) or R(Type)
             // replace rigid type arguments to type variables
             val bodyTy = subst(rhs.fold(term =>
               // if rhs is a term, try to type it or get from the context
               ctx.getMthDefn(prt.name, nme.name)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt => {
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  subst(mt.bodyPT, td2.targs.lazyZip(tr.targs).toMap) match {
+                  println(s">>> mt.bodyPT is ${mt.bodyPT}")
+                  val parentTvs = extractThisTV(mt.bodyPT.body)
+                  println(s">>> extractThisTv(mt.bodyPT) is ${parentTvs}")
+                  // Let's just assume that there is only one this variable.
+                  // Need a different TV in type definition
+                  var targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST]
+                  parentTvs.headOption.foreach { x => targsMap3 = targsMap3 + (x -> thisTv) }
+                  mt.bodyPT
+                  subst(mt.bodyPT, targsMap3) match {
                     // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
                     // and will otherwise mask the more precise new prov that contains "inherited"
                     case PolymorphicType(level, ProvType(underlying)) =>
                       PolymorphicType(level, underlying)
                     case pt => pt
                   }
-                ),
+                }),
               // if rhs is a type, convert it to `SimpleType` first
               ty => PolymorphicType(thisCtx.lvl,
                 typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
@@ -558,7 +590,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           // restore `this` in type context
           thisCtx += "this" -> tr
           // expand the type reference so that we can analyze base types
-          // then process method declarations and definitinos respectively
+          // then process method declarations and definitions respectively
           // finally construct a MethodSet
           MethodSet(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)

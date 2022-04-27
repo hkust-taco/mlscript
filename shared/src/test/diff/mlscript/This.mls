@@ -29,3 +29,16 @@ class Box[T]: { inner: T }
   method Get = this.inner // Used to be Box.Get: Box['T] -> 'T
 //│ Defined class Box
 //│ Defined Box.Get: Box['T] -> 'T
+
+class Base
+  method Foo: this
+  method Foo = this
+//│ Defined class Base
+//│ Declared Base.Foo: (Base & 'this) -> (Base & 'this)
+//│ Defined Base.Foo: (Base & 'this) -> (Base & 'this)
+
+class Derived: Base
+//│ Defined class Derived
+
+Derived.Foo
+//│ res: Derived -> nothing

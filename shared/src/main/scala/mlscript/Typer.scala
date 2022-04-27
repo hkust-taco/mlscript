@@ -32,7 +32,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     * The public helper functions should be preferred for manipulating `mthEnv`
    */
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeInfo], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
-      lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
+      lvl: Int, inPattern: Bool, tyDefs: Map[Str, TypeDef]) { // <-- last tyDefs
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeInfo] = env.get(name) orElse parent.dlof(_.get(name))(N)
@@ -48,6 +48,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
     private val abcCache: MutMap[Str, Set[Var]] = MutMap.empty
+    // USE THIS!!!
     def allBaseClassesOf(name: Str): Set[Var] = abcCache.getOrElseUpdate(name,
       tyDefs.get(name).fold(Set.empty[Var])(_.allBaseClasses(this)(Set.empty)))
   }

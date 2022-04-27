@@ -1,0 +1,95 @@
+:d
+class Base
+  method Foo: this
+  method Foo = this
+//│ 0. Typing type Top
+//│ | vars=Map() newDefsInfo=Map(Base -> (Cls,0))
+//│ => ⊤ | 
+//│ >>> Going through method Foo in Base
+//│ >>> Created a type variable for this this0' <: Base
+//│ >>> reverseRigid2 (1 entries)
+//│ >>> 0. this ([NO PROV]) -> this0' ([NO PROV])
+//│ 1. Typing type TypeName(this)
+//│ | vars=Map() newDefsInfo=Map()
+//│ => (this & Base) | 
+//│ >>> substituted method body type: PolymorphicType(0,(this0' & Base))
+//│ >>> Base.Foo : PolymorphicType(0,(((this0' & Base),) -> (this0' & Base)))
+//│ >>> Going through method Foo in Base
+//│ >>> Created a type variable for this this1' <: Base
+//│ >>> reverseRigid2 (1 entries)
+//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
+//│ 1. Typing term this
+//│ 1. : [(this & Base)]
+//│ >>> substituted method body type: PolymorphicType(0,[(this1' & Base)])
+//│ >>> Base.Foo : PolymorphicType(0,(((this1' & Base),) -> [(this1' & Base)]))
+//│ >> Checking subsumption for declared type of Foo : MethodType(0,Some(((this0' & Base),(this0' & Base))),List(TypeName(Base)),false)
+//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some(((this1' & Base),[(this1' & Base)])),List(TypeName(Base)),false)
+//│ CONSTRAIN [[(α3 & Base)]] <! [(α6 & Base)]
+//│   where α3 <: Base, α6 :> _α5 <: (_α5 | Base)
+//│ C [[(α3 & Base)]] <! [(α6 & Base)]
+//│ | C [(α3 & Base)] <! [(α6 & Base)]
+//│ | | C (α3 & Base) <! [(α6 & Base)]
+//│ | | | C (α3 & Base) <! (α6 & Base)
+//│ | | | | C (α3 & Base) <! α6
+//│ | | | | | C (α3 & Base) <! (_α5 | Base)
+//│ | | | | | | ARGH  DNF(base<>{}∧α3)  <!  DNF({}∧_α5 | base<>{})
+//│ | | | | | | | C α3 <! ((_α5 | base<>) | ~(base<>))
+//│ | | | | C (α3 & Base) <! Base
+//│ | | | | | C (α3 & Base) <! base<>
+//│ | | | | | | ARGH  DNF(base<>{}∧α3)  <!  DNF(base<>{})
+//│ | | | | | | | C α3 <! ⊤
+//│ Defined class Base
+//│ Typed as: (((this0' & Base),) -> (this0' & Base))
+//│  where: this0' <: Base
+//│ Declared Base.Foo: (Base & 'this) -> (Base & 'this)
+//│ Typed as: (((this1' & Base),) -> [(this1' & Base)])
+//│  where: this1' <: Base
+//│ Defined Base.Foo: (Base & 'this) -> (Base & 'this)
+
+:d
+class Derived: Base
+//│ 0. Typing type TypeName(Base)
+//│ | vars=Map() newDefsInfo=Map(Derived -> (Cls,0))
+//│ => Base | 
+//│ >>> Going through method Foo in Base
+//│ >>> Created a type variable for this this0' <: Derived
+//│ >>> reverseRigid2 (1 entries)
+//│ >>> 0. this ([NO PROV]) -> this0' ([NO PROV])
+//│ 1. Typing type TypeName(this)
+//│ | vars=Map() newDefsInfo=Map()
+//│ => (this & Base) | 
+//│ >>> substituted method body type: PolymorphicType(0,(this0' & Base))
+//│ >>> Base.Foo : PolymorphicType(0,(((this0' & Derived),) -> (this0' & Base)))
+//│ >>> Going through method Foo in Base
+//│ >>> Created a type variable for this this1' <: Derived
+//│ >>> reverseRigid2 (1 entries)
+//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
+//│ >>> mt.bodyPT is PolymorphicType(0,[[(this1' & Base)]])
+//│ >>> extractThisTv(mt.bodyPT) is List(this1')
+//│ >>> substituted method body type: PolymorphicType(0,[(α2' & Base)])
+//│ >>> Base.Foo : PolymorphicType(0,(((this1' & Derived),) -> [(α2' & Base)]))
+//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some((Derived,[(α2' & Base)])),List(TypeName(Base)),false)
+//│ CONSTRAIN [[(α4 & Base)]] <! [(α7 & Base)]
+//│   where α4 <: Derived, α7 :> _α6 <: (_α6 | Derived)
+//│ C [[(α4 & Base)]] <! [(α7 & Base)]
+//│ | C [(α4 & Base)] <! [(α7 & Base)]
+//│ | | C (α4 & Base) <! [(α7 & Base)]
+//│ | | | C (α4 & Base) <! (α7 & Base)
+//│ | | | | C (α4 & Base) <! α7
+//│ | | | | | C (α4 & Base) <! (_α6 | Derived)
+//│ | | | | | | ARGH  DNF(base<>{}∧α4)  <!  DNF({}∧_α6 | derived<base>{})
+//│ | | | | | | | C α4 <! ((_α6 | derived<base>) | ~(base<>))
+//│ | | | | C (α4 & Base) <! Base
+//│ | | | | | C (α4 & Base) <! base<>
+//│ | | | | | | ARGH  DNF(base<>{}∧α4)  <!  DNF(base<>{})
+//│ | | | | | | | C α4 <! ⊤
+//│ Defined class Derived
+
+:d
+Derived.Foo
+//│ 0. Typing term Derived.Foo
+//│ 0. : ((Derived,) -> (this0 & Base))
+//│ Typed as: ((Derived,) -> (this0 & Base))
+//│  where: this0 <: Derived
+//│ res: Derived -> nothing
+//│    = undefined
