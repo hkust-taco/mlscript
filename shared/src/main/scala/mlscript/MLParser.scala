@@ -60,8 +60,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (Seq(Right(t -> false)), N) => Bra(false, t)
     case (Seq(Right(t -> true)), N) => Tup(N -> (t, true) :: Nil) // ? single tuple with mutable
     case (ts, _) => 
-      if (ts.forall(_.isRight)) Tup(ts.iterator.map{ case Right(f) => N -> f }.toList)  // TODO
-      else Splice(ts.toList)
+      if (ts.forall(_.isRight)) Tup(ts.iterator.map{ case R(f) => N -> f case _ => ??? }.toList)  // left unreachable
+      else Splc(ts.toList)
   })
 
   def subtermNoSel[_: P]: P[Term] = P( parens | record | lit | variable )
@@ -239,12 +239,23 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         case (None, v, t) => v -> Field(None, t)
         case (Some(_), v, t) => v -> Field(Some(t), t)
       } pipe Record))
-  def parTy[_: P]: P[Type] = locate(P( "(" ~/ (kw("mut").!.? ~ ty).rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
-    case (N -> (N -> ty) :: Nil, N) => ty
-    case (fs, _) => Tuple(fs.map {
-        case (l, N -> t) => l -> Field(None, t)
-        case (l, S(_) -> t) => l -> Field(Some(t), t)
-      })
+
+  def parTyCell[_: P]: P[Either[Type, (Type, Boolean)]] = (("..." | kw("mut")).!.? ~ ty). map {
+    case (Some("..."), t) => Left(t)
+    case (Some("mut"), t) => Right(t -> true)
+    case (_, t) => Right(t -> false)
+  }
+
+  def parTy[_: P]: P[Type] = locate(P( "(" ~/ parTyCell.rep(0, ",").map(_.map(N -> _).toList) ~ ",".!.? ~ ")" ).map {
+    case (N -> Right(ty -> false) :: Nil, N) => ty
+    case (fs, _) => 
+      if (fs.forall(_._2.isRight))
+        Tuple(fs.map {
+          case (l, Right(t -> false)) => l -> Field(None, t)
+          case (l, Right(t -> true)) => l -> Field(Some(t), t)
+          case _ => ??? // unreachable
+        })
+      else Splice(fs.map{ _._2 match { case L(l) => L(l) case R(r) => R(r) } })
   })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   

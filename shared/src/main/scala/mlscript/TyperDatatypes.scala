@@ -146,8 +146,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // override def toString = s"(${fields.map(f => s"${f._1.fold("")(_+": ")}${f._2},").mkString(" ")})"
   }
 
-  case class Splice(elems: Ls[Either[SimpleType, SimpleType]])(val prov: TypeProvenance) extends BaseType {
+  case class SpliceType(elems: Ls[Either[SimpleType, SimpleType]])(val prov: TypeProvenance) extends BaseType {
     lazy val level: Int = elems.map{ case L(l) => l.level case R(r) => r.level }.max
+    def updateElems(f: SimpleType => SimpleType, g: SimpleType => SimpleType, newProv: TypeProvenance = prov): SpliceType =
+      SpliceType(elems.map{case L(l) => L(f(l)) case R(r) => R(g(r))})(newProv)
   }
   
   /** Polarity `pol` being `true` means Bot; `false` means Top. These are extrema of the subtyping lattice. */

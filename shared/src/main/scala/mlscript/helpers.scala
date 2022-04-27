@@ -65,6 +65,8 @@ abstract class TypeImpl extends Located { self: Type =>
       }.mkString("{", ", ", "}")
     case Tuple(fs) =>
       fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
+    case Splice(fs) =>
+      fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r -> _) => s"${r.showIn(ctx, 0)}"}.mkString("(", ", ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -93,6 +95,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case Splice(fs) => fs.map{ case L(l) => l case R(r -> _) => r }
   }
 
   /**
@@ -104,7 +107,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _ : Splice =>
       Nil
   }
 
@@ -118,7 +121,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar =>
+        | _: Literal | _: TypeVar | _ : Splice =>
       Nil
   }
 
@@ -131,7 +134,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _ : Splice =>
       Nil
   }
 }
@@ -272,7 +275,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(scrut, cases) =>  "`case` expression" 
     case Subs(arr, idx) => "array access"
     case Assign(lhs, rhs) => "assignment"
-    case Splice(fs) => "splice"
+    case Splc(fs) => "splice"
   }
   
   override def toString: Str = this match {
@@ -302,7 +305,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c"
     case Subs(a, i) => s"$a[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs"
-    case Splice(fields) => fields.map{
+    case Splc(fields) => fields.map{
       case L(l) => s"...$l"
       case R(r -> m) => (if (m) "mut " else "") + s"$r"
     }.mkString("(", ", ", ")")
@@ -552,7 +555,7 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
-    case Splice(fields) => fields.map{case L(l) => l case R(r) => r._1}
+    case Splc(fields) => fields.map{case L(l) => l case R(r) => r._1}
   }
   
   

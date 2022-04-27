@@ -66,7 +66,7 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
-final case class Splice(fields: Ls[Either[Term, (Term, Bool)]])      extends Term
+final case class Splc(fields: Ls[Either[Term, (Term, Bool)]])        extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
@@ -104,6 +104,7 @@ final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+final case class Splice(fields: Ls[Either[Type, Type -> Bool]]) extends Type
 
 final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 

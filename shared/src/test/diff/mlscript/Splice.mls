@@ -1,24 +1,56 @@
-def t1 (x, ...y) = x
-//│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.1: 	def t1 (x, ...y) = x
-//│ ╙──     	       ^^^^^^^^^
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.1: 	def t1 (x, ...y) = x
-//│ ╙──     	                   ^
-//│ t1: error -> error
-//│ Code generation crashed:
-//│   scala.MatchError: (x, ...y) (of class mlscript.Splice)
 
-(1, ...2, 3)
-//│ /!!!\ Uncaught error: scala.MatchError: (1, ...2, 3) (of class mlscript.Splice)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:418)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
-//│ 	at: mlscript.Typer.typeTerm(Typer.scala:643)
-//│ 	at: mlscript.Typer.typeStatement(Typer.scala:321)
-//│ 	at: mlscript.DiffTests.$anonfun$new$44(DiffTests.scala:494)
-//│ 	at: mlscript.DiffTests.$anonfun$new$44$adapted(DiffTests.scala:451)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:451)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:573)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+def t1 : ('a, ...int) -> 'a
+//│ t1: ('a, ...int) -> 'a
+//│   = <missing implementation>
+
+def t2 : (int, ...bool)
+//│ t2: (int, ...bool)
+//│   = <missing implementation>
+
+:e
+def t3 : (int, ...bool, mut int)
+//│ ╔══[ERROR] Mutable splice field
+//│ ║  l.11: 	def t3 : (int, ...bool, mut int)
+//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ t3: (int, ...bool, int)
+//│   = <missing implementation>
+
+
+:d
+def t1 (x, ...y) = x
+//│ 1. Typing term (((x, ...y),) => x)
+//│ | 1. Typing pattern ((x, ...y),)
+//│ | | 1. Typing pattern (x, ...y)
+//│ | | | 1. Typing pattern x
+//│ | | | 1. : α0'
+//│ | | | 1. Typing pattern y
+//│ | | | 1. : α1'
+//│ | | 1. : SpliceType(List(Right(α0'), Left(α1')))
+//│ | 1. : (None..SpliceType(List(Right(α0'), Left(α1'))),)
+//│ | 1. Typing term x
+//│ | 1. : [α0']
+//│ 1. : ((None..SpliceType(List(Right(α0'), Left(α1'))),) -> [α0'])
+//│ Typed as: ((None..SpliceType(List(Right(α0'), Left(α1'))),) -> [α0'])
+//│  where: 
+//│ Typed as: ((None..SpliceType(List(Right(['a7']), Left(Int))),) -> ['a7'])
+//│  where: 
+//│ ('a, ...anything) -> 'a
+//│   <:  t1:
+//│ ('a, ...int) -> 'a
+//│ /!!!\ Uncaught error: scala.MatchError: SpliceType(List(Right(α0'), Left(α1'))) (of class mlscript.TyperDatatypes$SpliceType)
+//│ 	at: mlscript.ConstraintSolver.freshen$1(ConstraintSolver.scala:580)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$13(ConstraintSolver.scala:623)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:279)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$11(ConstraintSolver.scala:623)
+//│ 	at: mlscript.utils.package$PairIterableOps$.$anonfun$mapValuesIter$1(package.scala:58)
+//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:575)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1251)
+//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1251)
+//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1288)
+
+errt = (1, ...2, 3)
+//│ errt: (1, ...2, 3)
+//│ Code generation crashed:
+//│   scala.MatchError: (1, ...2, 3) (of class mlscript.Splc)
 

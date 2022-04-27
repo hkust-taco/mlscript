@@ -68,6 +68,7 @@ abstract class TyperHelpers { self: Typer =>
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
+    case SpliceType(elems) => SpliceType(elems.map{ case L(l) => L(subst(l, map)) case R(r) => R(subst(r, map)) })(ts.prov)
     case ArrayType(inner) => ArrayType(inner.update(subst(_, map), subst(_, map)))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
@@ -389,6 +390,7 @@ abstract class TyperHelpers { self: Typer =>
           rcd.copy(fields = rcd.fields.filterNot(_._1 |> relevantNames))(rcd.prov)
         }
       case t @ ArrayType(ar) => t
+      case t @ SpliceType(fs) => ???  // TODO
       case n @ NegType(_ : ClassTag | _: FunctionType | _: RecordType) => n
       case n @ NegType(nt) if (nt match {
         case _: ComposedType | _: ExtrType | _: NegType => true
@@ -474,6 +476,7 @@ abstract class TyperHelpers { self: Typer =>
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
+      case SpliceType(fs) => fs.map{ case L(l) => l case R(r) => r }
     }
     
     def getVars: Set[TypeVariable] = {

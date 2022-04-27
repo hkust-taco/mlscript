@@ -218,6 +218,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
+      case Splice(fields) => 
+        fields.foreach {
+          // currently do not support mutable splice
+          case R(r -> m) if (m) => err(msg"Mutable splice field" -> ty.toLoc :: Nil)
+          case _ => 
+        }
+        SpliceType(fields.map{ case L(l) => L(rec(l)) case R(r -> _) => R(rec(r)) })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -523,6 +530,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
+      case Splc(es) => 
+        SpliceType(es.map{
+          case L(l) => L(typeTerm(l)) 
+          case R(r -> false) => R(typeTerm(r))
+          case R(r -> true)  => R(err(msg"mutble splice not supportted" -> prov.loco :: Nil))
+        })(prov) // TODO
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
@@ -826,6 +839,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
             case ArrayType(FieldType(Some(lb), ub)) =>
               AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
+            case SpliceType(elems) => Splice(elems.map { case L(l) => L(go(l, polarity)) case R(r) => R(go(r, polarity) -> false) })
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
