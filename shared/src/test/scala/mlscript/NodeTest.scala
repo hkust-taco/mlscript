@@ -2,7 +2,7 @@ package mlscript
 
 class NodeTests extends org.scalatest.funsuite.AnyFunSuite {
   
-  test("node versoion") {
+  test("node version") {
     
     val v = os.proc("node", "-v").call().out.lines().head
     
