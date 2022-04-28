@@ -129,3 +129,21 @@ case (undefined) of { undefined -> "undefined it is" | null -> "null it is"}
 case (null) of { undefined -> "undefined it is" | null -> "null it is" }
 //│ res: "null it is" | "undefined it is"
 //│    = 'null it is'
+
+
+absent = ()[0]
+//│ absent: nothing
+//│       = undefined
+
+case absent of { undefined -> 1 }
+//│ res: 1
+//│    = 1
+
+case absent of { null -> 0 | undefined -> 1 }
+//│ res: 0 | 1
+//│    = 1
+
+case absent of { "" -> 0 | undefined -> 1 }
+//│ res: 0 | 1
+//│    = 1
+

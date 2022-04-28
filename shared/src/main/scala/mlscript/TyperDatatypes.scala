@@ -130,7 +130,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
 
   case class TupleType(fields: List[Opt[Var] -> FieldType])(val prov: TypeProvenance) extends ArrayBase {
-    lazy val inner: FieldType = fields.map(_._2).reduceLeft(_ || _)
+    lazy val inner: FieldType = fields.map(_._2).reduceLeftOption(_ || _).getOrElse(BotType.toUpper(noProv))
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
