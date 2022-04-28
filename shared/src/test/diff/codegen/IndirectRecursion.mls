@@ -1,0 +1,50 @@
+
+
+def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = <missing implementation>
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z]
+
+
+def pow1 = z (fun pow0 -> fun n -> fun x ->
+    if n > 0 then pow0 (n - 1) x * x
+    else 1
+  )
+//│ pow1: int -> int -> int
+//│     = [Function (anonymous)]
+
+pow1 3 4
+//│ res: int
+//│    = 64
+
+
+def pow pow n x =
+    if n > 0 then pow (n - 1) x * x
+    else 1
+//│ pow: (int -> 'a -> int) -> int -> (int & 'a) -> int
+//│    = [Function: pow]
+
+def pow = z pow
+pow 3 4
+//│ pow: int -> int -> int
+//│    = [Function (anonymous)]
+//│ res: int
+//│    = 64
+
+
+def oops = z (fun f -> f)
+//│ oops: anything -> nothing
+//│     = [Function (anonymous)]
+
+:re
+oops 1
+//│ res: nothing
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
