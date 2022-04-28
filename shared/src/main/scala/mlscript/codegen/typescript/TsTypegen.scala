@@ -455,6 +455,7 @@ final class TsTypegenCodeBuilder {
         SourceCode(n.toString + (if (JSBackend isSafeInteger n) "" else "n"))
       case Literal(DecLit(n)) => SourceCode(n.toString)
       case Literal(StrLit(s)) => SourceCode(JSLit.makeStringLiteral(s))
+      case Literal(UnitLit(b)) => SourceCode(if (b) "undefined" else "null")
 
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases

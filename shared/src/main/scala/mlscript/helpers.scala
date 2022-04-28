@@ -78,6 +78,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
+    case Literal(UnitLit(b)) => if (b) "undefined" else "null"
   }
   
   def children: List[Type] = this match {
@@ -252,6 +253,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case IntLit(value) => "integer literal"
     case DecLit(value) => "decimal literal"
     case StrLit(value) => "string literal"
+    case UnitLit(value) => if (value) "undefined literal" else "null literal"
     case Var(name) => "reference" // "variable reference"
     case Asc(trm, ty) => "type ascription"
     case Lam(name, rhs) => "lambda expression"
@@ -282,6 +284,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
+    case UnitLit(value) => if (value) "undefined" else "null"
     case Var(name) => name
     case Asc(trm, ty) => s"$trm : $ty"
     case Lam(name, rhs) => s"($name => $rhs)"
@@ -345,6 +348,7 @@ trait LitImpl { self: Lit =>
     case _: IntLit => Set.single(Var("int")) + Var("number")
     case _: StrLit => Set.single(Var("string"))
     case _: DecLit => Set.single(Var("number"))
+    case _: UnitLit => Set.empty
   }
 }
 
