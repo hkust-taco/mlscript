@@ -54,3 +54,11 @@ errt = (1, ...2, 3)
 //│ Code generation crashed:
 //│   scala.MatchError: (1, ...2, 3) (of class mlscript.Splc)
 
+:e
+wrerr = (1, ...true, mut 3)
+//│ ╔══[ERROR] mutble splice not supported
+//│ ║  l.58: 	wrerr = (1, ...true, mut 3)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^
+//│ wrerr: (1, ...true, error)
+//│ Code generation crashed:
+//│   scala.MatchError: (1, ...true, mut 3) (of class mlscript.Splc)

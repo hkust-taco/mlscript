@@ -422,6 +422,7 @@ trait TypeSimplifier { self: Typer =>
                     case S(at @ ArrayType(inner)) =>
                       S(ArrayType(inner.update(go(_, !pol), go(_, pol)))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
+                    case S(sp @ SpliceType(fs)) => S(sp.updateElems(go(_, pol), go(_, pol))) -> nFields
                     case N => N -> nFields
                   }
                   LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)

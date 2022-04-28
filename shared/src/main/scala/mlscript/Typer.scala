@@ -531,11 +531,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
       case Splc(es) => 
+        // TODO: splice can only be a pattern ?
         SpliceType(es.map{
           case L(l) => L(typeTerm(l)) 
           case R(r -> false) => R(typeTerm(r))
-          case R(r -> true)  => R(err(msg"mutble splice not supportted" -> prov.loco :: Nil))
-        })(prov) // TODO
+          case R(r -> true)  => R(err(msg"mutble splice not supported" -> prov.loco :: Nil))
+        })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
       case Bra(_, trm) => typeTerm(trm)
