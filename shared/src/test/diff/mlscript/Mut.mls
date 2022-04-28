@@ -101,7 +101,7 @@ immtpl[0]
 //│    = 1
 //│ res: int
 //│    = undefined
-//│ res: int
+//│ res: int | undefined
 //│    = 1
 
 :e
@@ -498,7 +498,7 @@ mt4[3] <- true
 mt1._1 <- mt2._1
 mt1._1 <- mt1._1 * 2
 mt1._2 <- false
-mt3[0] <- mt3[1]
+mt3[0] <- let tmp = mt3[1] in case tmp of { undefined -> 0 | _ -> tmp }
 mt3[1] <- mt1._1
 //│ = <no result>
 //│   mt2 is not implemented
@@ -714,7 +714,7 @@ foreach am1 (fun y -> y._1 <- 2)
 //│ ╟── string literal of type `"oops"` does not match type `int`
 //│ ║  l.709: 	(0,)["oops"]
 //│ ╙──       	     ^^^^^^
-//│ res: 0
+//│ res: 0 | undefined
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.710: 	(mut 0,)["oops"] <- 1
@@ -743,7 +743,7 @@ arr[oops] <- 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.735: 	arr[oops]
 //│ ╙──       	    ^^^^
-//│ res: 0
+//│ res: 0 | undefined
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.736: 	arr[oops] <- 1

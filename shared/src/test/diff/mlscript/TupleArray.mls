@@ -155,7 +155,13 @@ f(1,2,3) : 1 | 2 | 3
 //│ ╟── but it flows into array access with expected type `Array[?a]`
 //│ ║  l.148: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
-//│ res: nothing
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
+//│ ║  l.148: 	(arr[0])[1][2]
+//│ ╙──       	^^^^^^^^^^^
+//│ res: error | undefined
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading '2')
 
@@ -305,13 +311,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.306: 	a2._1
+//│ ║  l.312: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true} | ~{x: "haha"}`
-//│ ║  l.283: 	def rep5: 'a -> Array['a]
+//│ ║  l.289: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true} | ~{x: "haha"}`
-//│ ║  l.306: 	a2._1
+//│ ║  l.312: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -393,5 +399,5 @@ def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | {x: int} & t
 //│ p2: Array[bool | int | string] | {x: int} & t
-//│ pf: (Array['a] & {_1: 'b}) -> ('a, 'b,)
-//│ res: (1 | 2 | 3, 1,)
+//│ pf: (Array['a] & {_1: 'b}) -> (undefined | 'a, 'b,)
+//│ res: (1 | 2 | 3 | undefined, 1,)

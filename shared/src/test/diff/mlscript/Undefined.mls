@@ -132,7 +132,7 @@ case (null) of { undefined -> "undefined it is" | null -> "null it is" }
 
 
 absent = ()[0]
-//│ absent: nothing
+//│ absent: undefined
 //│       = undefined
 
 case absent of { undefined -> 1 }

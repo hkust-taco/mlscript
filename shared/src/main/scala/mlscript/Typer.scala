@@ -497,7 +497,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_i = typeTerm(i)
         con(t_i, IntType, TopType)
         val elemType = freshVar(prov)
-        con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType)
+        con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
+          TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
