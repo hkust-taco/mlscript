@@ -2,37 +2,40 @@
 class Box[A]: { value: A }
   method Get = this.value
 //│ 0. Typing type Record(List((value,TypeName(A))))
-//│ | vars=Map(A -> A0') newDefsInfo=Map(Box -> (Cls,1))
-//│ => {value: A0'} | 
+//│ | vars=Map(A -> A17') newDefsInfo=Map(Box -> (Cls,1))
+//│ => {value: A17'} | 
+//│ >>> freshVar for Box is this18'
 //│ >>> Going through method Get in Box
-//│ >>> Created a type variable for this this2' <: Box[A0']
 //│ >>> reverseRigid2 (2 entries)
-//│ >>> 0. A (o: ‹class type parameter:Loc(10,11,Repro2:+2)›) -> A0' (o: ‹class type parameter:Loc(10,11,Repro2:+2)›)
-//│ >>> 1. this ([NO PROV]) -> this2' ([NO PROV])
+//│ >>> parent type defs: List()
+//│ >>> 0. A (o: ‹class type parameter:Loc(10,11,Repro2:+2)›) -> A17' (o: ‹class type parameter:Loc(10,11,Repro2:+2)›)
+//│ >>> 1. this ([NO PROV]) -> this18' ([NO PROV])
+//│ >>> td: Box td.thisTv: this18'
+//│ >>> td2: Box td2.thisTv: this18'
 //│ 1. Typing term this.value
 //│ | 1. Typing term this
 //│ | 1. : [(this & Box[A])]
-//│ | CONSTRAIN [[(this & Box[A])]] <! {value: α3'}
+//│ | CONSTRAIN [[(this & Box[A])]] <! {value: α20'}
 //│ |   where 
-//│ | C [[(this & Box[A])]] <! {value: α3'}
-//│ | | C [(this & Box[A])] <! {value: α3'}
-//│ | | | C (this & Box[A]) <! {value: α3'}
-//│ | | | | ARGH  DNF(box<>{Box#A: (A -> A), value: A}∧this)  <!  DNF({value: α3'})
-//│ | | | | | Consider box<>{Box#A: (A -> A), value: A}∧this <: DNF({value: α3'})
-//│ | | | | | Possible: List({value: α3'})
-//│ | | | | | Factorized: List({value: α3'})
-//│ | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List({value: α3'})  %  ⊥
-//│ | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  RhsField(value,α3')
-//│ | | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
-//│ | | | | | | | | A  {Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α3')))
-//│ | | | | | | | | | C A <! α3'
-//│ 1. : α3'
-//│ >>> substituted method body type: PolymorphicType(0,α4')
-//│ >>> Box.Get : PolymorphicType(0,(((this2' & Box[A0']),) -> α4'))
-//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some(((this2' & Box[A0']),α4')),List(TypeName(Box)),false)
+//│ | C [[(this & Box[A])]] <! {value: α20'}
+//│ | | C [(this & Box[A])] <! {value: α20'}
+//│ | | | C (this & Box[A]) <! {value: α20'}
+//│ | | | | ARGH  DNF(box<>{Box#A: (A -> A), value: A}∧this)  <!  DNF({value: α20'})
+//│ | | | | | Consider box<>{Box#A: (A -> A), value: A}∧this <: DNF({value: α20'})
+//│ | | | | | Possible: List({value: α20'})
+//│ | | | | | Factorized: List({value: α20'})
+//│ | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List({value: α20'})  %  ⊥
+//│ | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  RhsField(value,α20')
+//│ | | | | | | | A  box<>{Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α20')))
+//│ | | | | | | | | A  {Box#A: (A -> A), value: A}∧this  %  List()  <!  List()  %  |Some(Right(RhsField(value,α20')))
+//│ | | | | | | | | | C A <! α20'
+//│ 1. : α20'
+//│ >>> substituted method body type: PolymorphicType(0,α21')
+//│ >>> Box.Get : PolymorphicType(0,((this18',) -> α21'))
+//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some((this18',α21')),List(TypeName(Box)),false)
 //│ Defined class Box
-//│ Typed as: (((this2' & Box[A0']),) -> α4')
-//│  where: this2' <: Box[A0'], α4' :> A0'
+//│ Typed as: ((this18',) -> α21')
+//│  where: this18' <: Box[A17'], α21' :> A17'
 //│ Defined Box.Get: Box['A] -> 'A
 
 // Box.Get should be PolymorphicType(0, (this1' & IntBox,) -> α3')
@@ -43,13 +46,21 @@ class IntBox: Box[int]
 //│ 0. Typing type AppliedType(TypeName(Box),List(TypeName(int)))
 //│ | vars=Map() newDefsInfo=Map(IntBox -> (Cls,0))
 //│ => Box[Int] | 
+//│ >>> freshVar for IntBox is this26'
 //│ >>> Going through method Get in Box
-//│ >>> Created a type variable for this this1' <: IntBox
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
-//│ >>> substituted method body type: PolymorphicType(0,α3')
-//│ >>> Box.Get : PolymorphicType(0,(((this1' & IntBox),) -> α3'))
-//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some((IntBox,α3')),List(TypeName(Box)),false)
+//│ >>> mt.bodyPT is PolymorphicType(0,[α21'])
+//│ >>> mt is MethodType(0,Some((this18',α21')),List(TypeName(Box)),false)
+//│ >>> mt was defined at List(TypeName(Box))
+//│ >>> parent type defs: List(TypeDef(Cls,TypeName(Box),List((TypeName(A),A17')),Iterable(),{value: A17'},List(),List(MethodDef(false,TypeName(Box),Get,List(),Left(this.value))),Set(),Some(Loc(6,26,Repro2:+2))))
+//│ >>> substitute this18' -> this26'
+//│ >>> 0. this ([NO PROV]) -> this26' ([NO PROV])
+//│ >>> 1. this18' ([NO PROV]) -> this26' ([NO PROV])
+//│ >>> td: IntBox td.thisTv: this26'
+//│ >>> td2: Box td2.thisTv: this18'
+//│ >>> substituted method body type: PolymorphicType(0,α29')
+//│ >>> IntBox.Get : PolymorphicType(0,((this26',) -> α29'))
+//│ >> Checking subsumption for inferred type of Get : MethodType(0,Some((this26',α29')),List(TypeName(Box)),false)
 //│ Defined class IntBox
 
 IntBox.Get

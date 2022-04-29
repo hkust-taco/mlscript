@@ -595,14 +595,14 @@ t : Dup[int, bool]
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 91
+//│ constrain calls  : 89
 //│ annoying  calls  : 33
 //│ subtyping calls  : 45
 
 :stats
 t.MthDup id
 //│ res: 42
-//│ constrain calls  : 81
+//│ constrain calls  : 79
 //│ annoying  calls  : 31
 //│ subtyping calls  : 68
 
@@ -845,10 +845,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.837: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type _α689
+//│ ╟── type `Test9A[int] -> int` is not an instance of type _α645
 //│ ║  l.837: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `_α689`
+//│ ╟── but it flows into method declaration with expected type `_α645`
 //│ ║  l.837: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

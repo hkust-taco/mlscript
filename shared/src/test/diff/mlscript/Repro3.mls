@@ -1,3 +1,16 @@
+:NoJS
+
+class Base0
+  method Foo0: this
+//│ Defined class Base0
+//│ Declared Base0.Foo0: (Base0 & 'this) -> (Base0 & 'this)
+
+class Derived0: Base0
+//│ Defined class Derived0
+
+Derived0.Foo0
+//│ res: (Derived0 & 'this) -> (Base0 & 'this)
+
 :d
 class Base
   method Foo: this
@@ -5,45 +18,51 @@ class Base
 //│ 0. Typing type Top
 //│ | vars=Map() newDefsInfo=Map(Base -> (Cls,0))
 //│ => ⊤ | 
+//│ >>> freshVar for Base is this24'
 //│ >>> Going through method Foo in Base
-//│ >>> Created a type variable for this this0' <: Base
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 0. this ([NO PROV]) -> this0' ([NO PROV])
+//│ >>> parent type defs: List()
+//│ >>> 0. this ([NO PROV]) -> this24' ([NO PROV])
+//│ >>> td: Base td.thisTv: this24'
+//│ >>> td2: Base td2.thisTv: this24'
+//│ >>> the path of definition
 //│ 1. Typing type TypeName(this)
 //│ | vars=Map() newDefsInfo=Map()
 //│ => (this & Base) | 
-//│ >>> substituted method body type: PolymorphicType(0,(this0' & Base))
-//│ >>> Base.Foo : PolymorphicType(0,(((this0' & Base),) -> (this0' & Base)))
+//│ >>> substituted method body type: PolymorphicType(0,(this24' & Base))
+//│ >>> Base.Foo : PolymorphicType(0,((this24',) -> (this24' & Base)))
 //│ >>> Going through method Foo in Base
-//│ >>> Created a type variable for this this1' <: Base
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
+//│ >>> parent type defs: List()
+//│ >>> 0. this ([NO PROV]) -> this24' ([NO PROV])
+//│ >>> td: Base td.thisTv: this24'
+//│ >>> td2: Base td2.thisTv: this24'
 //│ 1. Typing term this
 //│ 1. : [(this & Base)]
-//│ >>> substituted method body type: PolymorphicType(0,[(this1' & Base)])
-//│ >>> Base.Foo : PolymorphicType(0,(((this1' & Base),) -> [(this1' & Base)]))
-//│ >> Checking subsumption for declared type of Foo : MethodType(0,Some(((this0' & Base),(this0' & Base))),List(TypeName(Base)),false)
-//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some(((this1' & Base),[(this1' & Base)])),List(TypeName(Base)),false)
-//│ CONSTRAIN [[(α3 & Base)]] <! [(α6 & Base)]
-//│   where α3 <: Base, α6 :> _α5 <: (_α5 | Base)
-//│ C [[(α3 & Base)]] <! [(α6 & Base)]
-//│ | C [(α3 & Base)] <! [(α6 & Base)]
-//│ | | C (α3 & Base) <! [(α6 & Base)]
-//│ | | | C (α3 & Base) <! (α6 & Base)
-//│ | | | | C (α3 & Base) <! α6
-//│ | | | | | C (α3 & Base) <! (_α5 | Base)
-//│ | | | | | | ARGH  DNF(base<>{}∧α3)  <!  DNF({}∧_α5 | base<>{})
-//│ | | | | | | | C α3 <! ((_α5 | base<>) | ~(base<>))
-//│ | | | | C (α3 & Base) <! Base
-//│ | | | | | C (α3 & Base) <! base<>
-//│ | | | | | | ARGH  DNF(base<>{}∧α3)  <!  DNF(base<>{})
-//│ | | | | | | | C α3 <! ⊤
+//│ >>> substituted method body type: PolymorphicType(0,[(this24' & Base)])
+//│ >>> Base.Foo : PolymorphicType(0,((this24',) -> [(this24' & Base)]))
+//│ >> Checking subsumption for declared type of Foo : MethodType(0,Some((this24',(this24' & Base))),List(TypeName(Base)),false)
+//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some((this24',[(this24' & Base)])),List(TypeName(Base)),false)
+//│ CONSTRAIN [[(α26 & Base)]] <! [(α29 & Base)]
+//│   where α26 <: Base, α29 :> _α28 <: (_α28 | Base)
+//│ C [[(α26 & Base)]] <! [(α29 & Base)]
+//│ | C [(α26 & Base)] <! [(α29 & Base)]
+//│ | | C (α26 & Base) <! [(α29 & Base)]
+//│ | | | C (α26 & Base) <! (α29 & Base)
+//│ | | | | C (α26 & Base) <! α29
+//│ | | | | | C (α26 & Base) <! (_α28 | Base)
+//│ | | | | | | ARGH  DNF(base<>{}∧α26)  <!  DNF({}∧_α28 | base<>{})
+//│ | | | | | | | C α26 <! ((_α28 | base<>) | ~(base<>))
+//│ | | | | C (α26 & Base) <! Base
+//│ | | | | | C (α26 & Base) <! base<>
+//│ | | | | | | ARGH  DNF(base<>{}∧α26)  <!  DNF(base<>{})
+//│ | | | | | | | C α26 <! ⊤
 //│ Defined class Base
-//│ Typed as: (((this0' & Base),) -> (this0' & Base))
-//│  where: this0' <: Base
+//│ Typed as: ((this24',) -> (this24' & Base))
+//│  where: this24' <: Base
 //│ Declared Base.Foo: (Base & 'this) -> (Base & 'this)
-//│ Typed as: (((this1' & Base),) -> [(this1' & Base)])
-//│  where: this1' <: Base
+//│ Typed as: ((this24',) -> [(this24' & Base)])
+//│  where: this24' <: Base
 //│ Defined Base.Foo: (Base & 'this) -> (Base & 'this)
 
 :d
@@ -51,45 +70,91 @@ class Derived: Base
 //│ 0. Typing type TypeName(Base)
 //│ | vars=Map() newDefsInfo=Map(Derived -> (Cls,0))
 //│ => Base | 
+//│ >>> freshVar for Derived is this34'
 //│ >>> Going through method Foo in Base
-//│ >>> Created a type variable for this this0' <: Derived
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 0. this ([NO PROV]) -> this0' ([NO PROV])
+//│ >>> mt.bodyPT is PolymorphicType(0,[[(this24' & Base)]])
+//│ >>> mt is MethodType(0,Some((this24',[(this24' & Base)])),List(TypeName(Base)),false)
+//│ >>> mt was defined at List(TypeName(Base))
+//│ >>> parent type defs: List(TypeDef(Cls,TypeName(Base),List(),Iterable(),⊤,List(MethodDef(true,TypeName(Base),Foo,List(),Right(TypeName(this)))),List(MethodDef(false,TypeName(Base),Foo,List(),Left(this))),Set(),Some(Loc(6,10,Repro3:+15))))
+//│ >>> substitute this24' -> this34'
+//│ >>> 0. this ([NO PROV]) -> this34' ([NO PROV])
+//│ >>> 1. this24' ([NO PROV]) -> this34' ([NO PROV])
+//│ >>> td: Derived td.thisTv: this34'
+//│ >>> td2: Base td2.thisTv: this24'
+//│ >>> the path of definition
 //│ 1. Typing type TypeName(this)
 //│ | vars=Map() newDefsInfo=Map()
 //│ => (this & Base) | 
-//│ >>> substituted method body type: PolymorphicType(0,(this0' & Base))
-//│ >>> Base.Foo : PolymorphicType(0,(((this0' & Derived),) -> (this0' & Base)))
+//│ >>> substituted method body type: PolymorphicType(0,(this34' & Base))
+//│ >>> Derived.Foo : PolymorphicType(0,((this34',) -> (this34' & Base)))
 //│ >>> Going through method Foo in Base
-//│ >>> Created a type variable for this this1' <: Derived
 //│ >>> reverseRigid2 (1 entries)
-//│ >>> 0. this ([NO PROV]) -> this1' ([NO PROV])
-//│ >>> mt.bodyPT is PolymorphicType(0,[[(this1' & Base)]])
-//│ >>> extractThisTv(mt.bodyPT) is List(this1')
-//│ >>> substituted method body type: PolymorphicType(0,[(α2' & Base)])
-//│ >>> Base.Foo : PolymorphicType(0,(((this1' & Derived),) -> [(α2' & Base)]))
-//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some((Derived,[(α2' & Base)])),List(TypeName(Base)),false)
-//│ CONSTRAIN [[(α4 & Base)]] <! [(α7 & Base)]
-//│   where α4 <: Derived, α7 :> _α6 <: (_α6 | Derived)
-//│ C [[(α4 & Base)]] <! [(α7 & Base)]
-//│ | C [(α4 & Base)] <! [(α7 & Base)]
-//│ | | C (α4 & Base) <! [(α7 & Base)]
-//│ | | | C (α4 & Base) <! (α7 & Base)
-//│ | | | | C (α4 & Base) <! α7
-//│ | | | | | C (α4 & Base) <! (_α6 | Derived)
-//│ | | | | | | ARGH  DNF(base<>{}∧α4)  <!  DNF({}∧_α6 | derived<base>{})
-//│ | | | | | | | C α4 <! ((_α6 | derived<base>) | ~(base<>))
-//│ | | | | C (α4 & Base) <! Base
-//│ | | | | | C (α4 & Base) <! base<>
-//│ | | | | | | ARGH  DNF(base<>{}∧α4)  <!  DNF(base<>{})
-//│ | | | | | | | C α4 <! ⊤
+//│ >>> mt.bodyPT is PolymorphicType(0,[[(this24' & Base)]])
+//│ >>> mt is MethodType(0,Some((this24',[(this24' & Base)])),List(TypeName(Base)),false)
+//│ >>> mt was defined at List(TypeName(Base))
+//│ >>> parent type defs: List(TypeDef(Cls,TypeName(Base),List(),Iterable(),⊤,List(MethodDef(true,TypeName(Base),Foo,List(),Right(TypeName(this)))),List(MethodDef(false,TypeName(Base),Foo,List(),Left(this))),Set(),Some(Loc(6,10,Repro3:+15))))
+//│ >>> substitute this24' -> this34'
+//│ >>> 0. this ([NO PROV]) -> this34' ([NO PROV])
+//│ >>> 1. this24' ([NO PROV]) -> this34' ([NO PROV])
+//│ >>> td: Derived td.thisTv: this34'
+//│ >>> td2: Base td2.thisTv: this24'
+//│ >>> substituted method body type: PolymorphicType(0,[(α36' & Base)])
+//│ >>> Derived.Foo : PolymorphicType(0,((this34',) -> [(α36' & Base)]))
+//│ >> Checking subsumption for inferred type of Foo : MethodType(0,Some((this34',[(α36' & Base)])),List(TypeName(Base)),false)
+//│ CONSTRAIN [[(α38 & Base)]] <! [(α41 & Base)]
+//│   where α38 <: Base, α41 :> _α40 <: (_α40 | Derived)
+//│ C [[(α38 & Base)]] <! [(α41 & Base)]
+//│ | C [(α38 & Base)] <! [(α41 & Base)]
+//│ | | C (α38 & Base) <! [(α41 & Base)]
+//│ | | | C (α38 & Base) <! (α41 & Base)
+//│ | | | | C (α38 & Base) <! α41
+//│ | | | | | C (α38 & Base) <! (_α40 | Derived)
+//│ | | | | | | ARGH  DNF(base<>{}∧α38)  <!  DNF({}∧_α40 | derived<base>{})
+//│ | | | | | | | C α38 <! ((_α40 | derived<base>) | ~(base<>))
+//│ | | | | C (α38 & Base) <! Base
+//│ | | | | | C (α38 & Base) <! base<>
+//│ | | | | | | ARGH  DNF(base<>{}∧α38)  <!  DNF(base<>{})
+//│ | | | | | | | C α38 <! ⊤
 //│ Defined class Derived
+
+:d
+Base.Foo
+//│ 0. Typing term Base.Foo
+//│ 0. : ((this42,) -> (this42 & Base))
+//│ Typed as: ((this42,) -> (this42 & Base))
+//│  where: this42 <: Base
+//│ res: (Base & 'this) -> (Base & 'this)
 
 :d
 Derived.Foo
 //│ 0. Typing term Derived.Foo
-//│ 0. : ((Derived,) -> (this0 & Base))
-//│ Typed as: ((Derived,) -> (this0 & Base))
-//│  where: this0 <: Derived
-//│ res: Derived -> nothing
-//│    = undefined
+//│ 0. : ((this45,) -> (this45 & Base))
+//│ Typed as: ((this45,) -> (this45 & Base))
+//│  where: this45 <: Derived
+//│ res: (Derived & 'this) -> (Base & 'this)
+
+res (Derived{})
+//│ res: Derived
+
+(error: Derived).Foo
+//│ res: Derived
+
+
+class Base2
+  method Foo2: this
+class Derived2: Base2
+  method Foo3 = (this.Foo2,)
+class DerivedDerived2: Derived2
+  method Foo2 = this.Foo3._1
+//│ Defined class Base2
+//│ Declared Base2.Foo2: (Base2 & 'this) -> (Base2 & 'this)
+//│ Defined class Derived2
+//│ Defined Derived2.Foo3: (Derived2 & 'this) -> (Derived2 & 'this,)
+//│ Defined class DerivedDerived2
+//│ Defined DerivedDerived2.Foo2: (DerivedDerived2 & 'this) -> (DerivedDerived2 & 'this)
+
+Derived2.Foo3
+DerivedDerived2.Foo3
+//│ res: (Derived2 & 'this) -> (Derived2 & 'this,)
+//│ res: DerivedDerived2 -> (nothing,)

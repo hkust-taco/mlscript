@@ -179,7 +179,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectParseErrors)
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
-            if (mode.isDebugging) typer.resetState()
+            // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             typer.verbose = mode.verbose
