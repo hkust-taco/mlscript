@@ -342,8 +342,6 @@ abstract class JSExpr extends JSCode {
 
   def :||(rhs: JSExpr): JSBinary = binary("||", rhs)
 
-  def :==(rhs: JSExpr): JSBinary = binary("==", rhs)
-
   def :===(rhs: JSExpr): JSBinary = binary("===", rhs)
 
   def :=(value: JSExpr): JSStmt = JSAssignExpr(this, value).stmt
