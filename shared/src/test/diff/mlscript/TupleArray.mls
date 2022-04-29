@@ -152,7 +152,7 @@ f(1,2,3) : 1 | 2 | 3
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.57: 	def arr: Array[int]
 //│ ║        	               ^^^
-//│ ╟── but it flows into array access with expected type `Array[?a]`
+//│ ╟── but it flows into array access with expected type `Array[?b]`
 //│ ║  l.148: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
@@ -399,5 +399,5 @@ def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | {x: int} & t
 //│ p2: Array[bool | int | string] | {x: int} & t
-//│ pf: (Array['a] & {_1: 'b}) -> (undefined | 'a, 'b,)
+//│ pf: (Array['a & ~undefined] & {_1: 'b}) -> (undefined | 'a, 'b,)
 //│ res: (1 | 2 | 3 | undefined, 1,)

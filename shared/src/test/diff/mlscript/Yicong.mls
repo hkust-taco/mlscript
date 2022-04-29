@@ -609,12 +609,18 @@ tktup a123
 //│    = [ undefined, undefined ]
 
 
-def defined x = case x of {
-  | undefined -> error
-  | _-> x
+def definedOr x els = case x of {
+  | undefined -> els()
+  | _ -> x
   }
+def defined x = definedOr x (fun () -> error)
+def ornull x = definedOr x (fun () -> null)
+//│ definedOr: (undefined | 'a & ~undefined) -> (() -> 'a) -> 'a
+//│          = [Function: definedOr]
 //│ defined: (undefined | 'a & ~undefined) -> 'a
 //│        = [Function: defined]
+//│ ornull: (undefined | 'a & ~undefined) -> (null | 'a)
+//│       = [Function: ornull]
 
 :re
 defined ()[0]
@@ -626,7 +632,7 @@ defined ()[0]
 ta1 = (2,3,4,5)
 ta1[1]
 ta2 = ((1,2,4), (true, false))
-((defined ta2[0])[1+4], ta[1])[0]
+(ornull (defined ta2[0])[1+4], defined ta[1])[0]
 ta3 = ((1,2,3), "hello", false)
 ta3[1-2]
 (1,2,3)[4]
@@ -636,13 +642,24 @@ ta3[1-2]
 //│    = 3
 //│ ta2: ((1, 2, 4,), (true, false,),)
 //│    = [ [ 1, 2, 4 ], [ true, false ] ]
-//│ res: false | int | true | undefined
-//│    = undefined
+//│ res: false | int | null | true | undefined
+//│    = null
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│    = [ [ 1, 2, 3 ], 'hello', false ]
 //│ res: "hello" | (1, 2, 3,) | false | undefined
 //│    = undefined
 //│ res: 1 | 2 | 3 | undefined
+//│    = undefined
+
+:e
+((defined ta2[0])[1+4], ta[1])[0]
+//│ ╔══[ERROR] Type mismatch in array access:
+//│ ║  l.655: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── possibly-undefined array access of type `undefined` does not match type `~undefined`
+//│ ║  l.655: 	((defined ta2[0])[1+4], ta[1])[0]
+//│ ╙──       	 ^^^^^^^^^^^^^^^^^^^^^
+//│ res: error | false | int | true | undefined
 //│    = undefined
 
 :e
@@ -654,53 +671,53 @@ ge[2]
 //│ ge: int -> int
 //│   = [Function: ge]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.650: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.667: 	ta3[ge 3][ge (1+2)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `Array[?a]`
-//│ ║  l.630: 	ta3 = ((1,2,3), "hello", false)
+//│ ║  l.636: 	ta3 = ((1,2,3), "hello", false)
 //│ ║         	                ^^^^^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.650: 	ta3[ge 3][ge (1+2)]
+//│ ║  l.667: 	ta3[ge 3][ge (1+2)]
 //│ ╙──       	^^^^^^^^^
 //│ res: 1 | 2 | 3 | error | undefined
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading '4')
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.651: 	true[false]
+//│ ║  l.668: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
-//│ ║  l.651: 	true[false]
+//│ ║  l.668: 	true[false]
 //│ ╙──       	     ^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.651: 	true[false]
+//│ ║  l.668: 	true[false]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.651: 	true[false]
+//│ ║  l.668: 	true[false]
 //│ ╙──       	^^^^
 //│ res: error | undefined
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.652: 	4["hello"]
+//│ ║  l.669: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `int`
-//│ ║  l.652: 	4["hello"]
+//│ ║  l.669: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.652: 	4["hello"]
+//│ ║  l.669: 	4["hello"]
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `4` does not match type `Array[?a]`
-//│ ║  l.652: 	4["hello"]
+//│ ║  l.669: 	4["hello"]
 //│ ╙──       	^
 //│ res: error | undefined
 //│    = undefined
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.653: 	ge[2]
+//│ ║  l.670: 	ge[2]
 //│ ║         	^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Array[?c]`
-//│ ║  l.649: 	def ge x = x + 1
+//│ ║  l.666: 	def ge x = x + 1
 //│ ║         	       ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Array[?c]`
-//│ ║  l.653: 	ge[2]
+//│ ╟── but it flows into reference with expected type `Array[?d]`
+//│ ║  l.670: 	ge[2]
 //│ ╙──       	^^
 //│ res: error | undefined
 //│    = undefined
@@ -727,21 +744,21 @@ mkarr (1,true,"hi")[0]
 mkarr 3 [  1]
 mk1[2  ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.727: 	mkarr 3 [  1]
+//│ ║  l.744: 	mkarr 3 [  1]
 //│ ║         	      ^^^^^^^
 //│ ╟── integer literal of type `3` does not match type `Array[?a]`
-//│ ║  l.727: 	mkarr 3 [  1]
+//│ ║  l.744: 	mkarr 3 [  1]
 //│ ╙──       	      ^
 //│ res: Array[error | undefined]
 //│    = [ undefined, undefined, undefined, undefined, undefined ]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.728: 	mk1[2  ]
+//│ ║  l.745: 	mk1[2  ]
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `6` does not match type `Array[?a]`
-//│ ║  l.710: 	mk1 = defined (mkarr 6)[ 0]
+//│ ║  l.727: 	mk1 = defined (mkarr 6)[ 0]
 //│ ║         	                     ^
-//│ ╟── but it flows into reference with expected type `Array[?a]`
-//│ ║  l.728: 	mk1[2  ]
+//│ ╟── but it flows into reference with expected type `Array[?b]`
+//│ ║  l.745: 	mk1[2  ]
 //│ ╙──       	^^^
 //│ res: error | undefined
 //│    = undefined
@@ -750,11 +767,11 @@ def s1 a = (defined a[1] + defined a[2], a[(1,2)._2])
 def s2 a = (defined (defined a[1])[0])._2 + (defined a[2])._1
 def s3 a = defined a._1.t[0] + defined (defined a.x[1])[2]
 (defined ((1, "hello"),(2, true, false),(3,3,4))[0])._1
-//│ s1: Array['a & (int | undefined)] -> (int, undefined | 'a,)
+//│ s1: Array[int & 'a] -> (int, undefined | 'a,)
 //│   = [Function: s1]
-//│ s2: Array[Array[undefined | {_2: int} & ~undefined] & {_1: int} | undefined] -> int
+//│ s2: Array[Array[{_2: int} & ~undefined] & {_1: int}] -> int
 //│   = [Function: s2]
-//│ s3: {_1: {t: Array[int | undefined]}, x: Array[Array[int | undefined] | undefined]} -> int
+//│ s3: {_1: {t: Array[int]}, x: Array[Array[int]]} -> int
 //│   = [Function: s3]
 //│ res: 1 | 2 | 3
 //│    = undefined
@@ -774,13 +791,13 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│ res: int
 //│    = <no result>
 //│      arb is not implemented
-//│ s4: {x: Array[undefined | {_3: Array[Array[undefined | {_h: {hello: 'a}} & ~undefined] | undefined]} & ~undefined]} -> 'a
+//│ s4: {x: Array[{_3: Array[Array[{_h: {hello: 'a}} & ~undefined]]} & ~undefined]} -> 'a
 //│   = [Function: s4]
 
 def at1 xs = (defined xs[0])._1
 def dup a b = a * 2 + b
 dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
-//│ at1: Array[undefined | {_1: 'a} & ~undefined] -> 'a
+//│ at1: Array[{_1: 'a} & ~undefined] -> 'a
 //│    = [Function: at1]
 //│ dup: int -> int -> int
 //│    = [Function: dup]
@@ -791,13 +808,13 @@ dup (defined ara[1])._1 (defined (defined arb[10])[8])._2 + 1
 :e
 (1,2,3)._1[1]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.792: 	(1,2,3)._1[1]
+//│ ║  l.809: 	(1,2,3)._1[1]
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.792: 	(1,2,3)._1[1]
+//│ ║  l.809: 	(1,2,3)._1[1]
 //│ ║         	 ^
-//│ ╟── but it flows into field selection with expected type `Array[?a]`
-//│ ║  l.792: 	(1,2,3)._1[1]
+//│ ╟── but it flows into field selection with expected type `Array[?b]`
+//│ ║  l.809: 	(1,2,3)._1[1]
 //│ ╙──       	^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:

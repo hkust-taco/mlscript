@@ -147,3 +147,76 @@ case absent of { "" -> 0 | undefined -> 1 }
 //│ res: 0 | 1
 //│    = 1
 
+
+// FIXME forbid `with` on undefined and null
+uw = undefined with { x = 1 }
+nw = null with { x = 1 }
+//│ uw: undefined & {x: 1}
+//│ Runtime error:
+//│   TypeError: Cannot convert undefined or null to object
+//│ nw: null & {x: 1}
+//│ Runtime error:
+//│   TypeError: Cannot convert undefined or null to object
+
+:re
+uw.x
+nw.x
+//│ res: 1
+//│ Runtime error:
+//│   ReferenceError: uw is not defined
+//│ res: 1
+//│ Runtime error:
+//│   ReferenceError: nw is not defined
+
+:e
+undefined.x
+null.x
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.172: 	undefined.x
+//│ ║         	^^^^^^^^^^^
+//│ ╟── undefined literal of type `undefined` does not have field 'x'
+//│ ║  l.172: 	undefined.x
+//│ ╙──       	^^^^^^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'x')
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.173: 	null.x
+//│ ║         	^^^^^^
+//│ ╟── null literal of type `null` does not have field 'x'
+//│ ║  l.173: 	null.x
+//│ ╙──       	^^^^
+//│ res: error
+//│ Runtime error:
+//│   TypeError: Cannot read properties of null (reading 'x')
+
+def bypass: nothing
+//│ bypass: nothing
+//│       = <missing implementation>
+
+
+:e
+bypass = undefined
+//│ undefined
+//│   <:  bypass:
+//│ nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.199: 	bypass = undefined
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── undefined literal of type `undefined` does not match type `nothing`
+//│ ║  l.199: 	bypass = undefined
+//│ ║         	         ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.193: 	def bypass: nothing
+//│ ╙──       	            ^^^^^^^
+//│       = undefined
+
+:re
+bypass.x
+bypass + 1
+//│ res: nothing
+//│ Runtime error:
+//│   TypeError: Cannot read properties of undefined (reading 'x')
+//│ res: int
+//│    = NaN
+
