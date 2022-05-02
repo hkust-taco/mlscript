@@ -93,6 +93,7 @@ trait TypeSimplifier { self: Typer =>
       
       // rec(DNF.mk(ty, pol)(ctx), Set.empty)
       mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
+      // mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
         case R(dnf) =>
           // println(dnf.cs.map(_.vars.isEmpty))
           pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))

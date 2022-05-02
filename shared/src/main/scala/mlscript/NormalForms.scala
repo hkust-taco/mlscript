@@ -14,14 +14,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   type ExpandTupleFields >: Bool
   type PreserveTypeRefs >: Bool
   
-  def preserveTypeRefs(implicit ptr: PreserveTypeRefs): Bool = ptr match {
-    case true => true
-    case _ => false
-  }
-  def expandTupleFields(implicit etf: ExpandTupleFields): Bool = etf match {
-    case true => true
-    case _ => false
-  }
+  def preserveTypeRefs(implicit ptr: PreserveTypeRefs): Bool = ptr === true
+  def expandTupleFields(implicit etf: ExpandTupleFields): Bool = etf === true
   
   sealed abstract class LhsNf {
     def toTypes: Ls[SimpleType] = toType() :: Nil
