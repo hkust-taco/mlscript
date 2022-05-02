@@ -18,9 +18,15 @@ n = Num { val = 1 }
 //│ n: Num & {val: 1}
 //│  = Num { val: 1 }
 
+// TODO-simplif
+// :ds
 n.Add n
 //│ res: Num & {val: 1} | Num
 //│    = Num { val: 2 }
+
+n.Add
+//│ res: Num -> Num
+//│    = [Function: Add]
 
 
 def addTwo a0 a1 = a0.Add a1
@@ -139,7 +145,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.32: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 

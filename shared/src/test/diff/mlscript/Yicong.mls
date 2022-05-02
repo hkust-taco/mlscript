@@ -394,9 +394,9 @@ tba tb
 //│   <:  tb:
 //│ Array[int] & T2
 //│   = [ 1, 2, 3 ]
-//│ tba: (Array[bool | int] & T2) -> (T2 & int)
+//│ tba: (Array[bool | int] & T2) -> (int & T2)
 //│    = <missing implementation>
-//│ res: T2 & int
+//│ res: int & T2
 //│    = <no result>
 //│      tba is not implemented
 
@@ -531,7 +531,7 @@ inn2 (T2 r1)
 //│ res: Array[Array[Array[bool | int]]]
 //│    = <no result>
 //│      v3 is not implemented
-//│ res: Array[T1 & 'a .. T1 & 'a | T1 & int | T1 & true]
+//│ res: Array[T1 & 'a .. int & T1 | true & T1 | T1 & 'a]
 //│    = <no result>
 //│      inn2 is not implemented
 
@@ -709,7 +709,7 @@ ta3[1-2]
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `~undefined`
 //│ ║  l.705: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ╙──       	 ^^^^^^^^^^^^^^^^^^^^^
-//│ res: 1 | 2 | 4 | error | false | true | int | undefined
+//│ res: error | false | int | true | undefined
 //│    = undefined
 
 :e

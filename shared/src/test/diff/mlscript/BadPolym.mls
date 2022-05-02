@@ -1,11 +1,11 @@
 
 
 def foo1: (int -> int & string -> string)
-//│ foo1: (int | string) -> (int & string)
+//│ foo1: (int | string) -> nothing
 //│     = <missing implementation>
 
 def foo: (int -> int & string -> string) -> ()
-//│ foo: ((int | string) -> (int & string)) -> ()
+//│ foo: ((int | string) -> nothing) -> ()
 //│    = <missing implementation>
 
 fooImpl f = f 1
@@ -15,7 +15,7 @@ fooImpl f = f 1
 foo = fooImpl
 //│ (1 -> 'a) -> 'a
 //│   <:  foo:
-//│ ((int | string) -> (int & string)) -> ()
+//│ ((int | string) -> nothing) -> ()
 //│    = [Function: fooImpl]
 
 :e
@@ -38,7 +38,7 @@ fooImpl id
 
 
 fooImpl2 (f: int -> int & string -> string) = f 1
-//│ fooImpl2: ((int | string) -> (int & string)) -> (int & string)
+//│ fooImpl2: ((int | string) -> nothing) -> nothing
 //│         = [Function: fooImpl2]
 
 :e
@@ -52,7 +52,7 @@ fooImpl2 id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.40: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ╙──      	                                    ^^^^^^
-//│ res: error | int & string
+//│ res: error
 //│    = 1
 
 :re

@@ -42,7 +42,7 @@ def r: {b: string; c: int}\b
 
 
 def r: int \ _1
-//│ r: int\_1
+//│ r: int
 //│  = <missing implementation>
 
 def r: (1,2,3) \ _1
@@ -351,13 +351,13 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: (int, bool,) | Array[int]
 //│    = <missing implementation>
-//│ test: ("hello" & string, 1,)
+//│ test: ("hello", 1,)
 //│     = <missing implementation>
-//│ test2: ("hello" & string, 1,) & {_3: int}
+//│ test2: ("hello", 1,) & {_3: int}
 //│      = <missing implementation>
 
 test: { _1: 'a }
-//│ res: {_1: "hello" & string}
+//│ res: {_1: "hello"}
 //│    = <no result>
 //│      test is not implemented
 

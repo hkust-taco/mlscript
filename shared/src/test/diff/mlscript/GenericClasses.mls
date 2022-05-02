@@ -79,7 +79,7 @@ g: Foo1['a]
 //│    = Bar1 { x: 42 }
 
 res.x
-//│ res: 42 | int
+//│ res: int
 //│    = 42
 
 g: Foo1['a]: Foo1[int]
@@ -132,6 +132,8 @@ error: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
+// TODO-simplif
+// :ds
 f: (Foo2[?] & 'a) -> 'a
 //│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
 //│    = [Function: f]
@@ -147,7 +149,7 @@ f
 
 
 def mrg: Foo2[int] & Foo2[string]
-//│ mrg: Foo2[int | string .. int & string]
+//│ mrg: Foo2[int | string .. nothing]
 //│    = <missing implementation>
 
 mrg: Foo2[int]
@@ -159,27 +161,27 @@ mrg: Foo2[int]
 mrg = Foo2{}
 //│ Foo2['A]
 //│   <:  mrg:
-//│ Foo2[int | string .. int & string]
+//│ Foo2[int | string .. nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.159: 	mrg = Foo2{}
+//│ ║  l.161: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.151: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.151: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.108: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.159: 	mrg = Foo2{}
+//│ ║  l.161: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.151: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.151: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 

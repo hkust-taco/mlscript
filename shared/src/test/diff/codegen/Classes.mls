@@ -121,7 +121,7 @@ mb2.Get
 //│   = MyBox { inner: 1, info: 'hello' }
 //│ mb: MyBox
 //│   = MyBox { inner: 2, info: 'hello' }
-//│ res: int | int
+//│ res: int
 //│    = 2
 //│ mb2: Box['a .. 'a | int]
 //│    = Box { inner: 6, info: 'hello' }
@@ -143,4 +143,29 @@ MyBox.Map mb (fun x -> x * 3)
 //│ res: Box['T .. 'T | int] with {info: string, inner: int}
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
+
+
+
+//  Some simplification tests:
+
+:NoJS
+
+error : 2 & int
+//│ res: 2
+
+error : 2 | int
+//│ res: int
+
+error : Box[int] & ~box
+//│ res: Box[int] & ~box
+
+error : Box[?] | Box[?] & {x: '_}
+//│ res: Box[?]
+
+error : ((Box[?] | Box[?] & {x: 'a -> int}) & 'a) -> 'a
+//│ res: (Box[?] & 'a) -> 'a
+
+error: "" | string
+//│ res: string
+
 

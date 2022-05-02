@@ -100,7 +100,7 @@ f c
 //│    = 'Bob'
 
 f (c: Parent)
-//│ res: "" | string
+//│ res: string
 //│    = 'Bob'
 
 

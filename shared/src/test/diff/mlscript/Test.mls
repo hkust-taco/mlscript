@@ -53,7 +53,7 @@ test p
 
 
 def f: 'a -> 'a & string
-//│ f: 'a -> 'a & string
+//│ f: nothing
 //│  = <missing implementation>
 
 def f: 'a -> ('a & string)

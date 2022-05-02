@@ -69,11 +69,11 @@ rec def r (a: bool) (a: bool) (a: bool) = r
 //│  = [Function: r3]
 
 if true then l else r
-//│ res: (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> 'a as 'a
+//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
 //│    = [Function: l2]
 
 if true then l else r
-//│ res: (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> (bool & int) -> 'a as 'a
+//│ res: nothing -> nothing -> nothing -> nothing -> nothing -> nothing -> 'a as 'a
 //│    = [Function: l2]
 
 if true then (fun x -> add x 1) else (fun y -> not y)
@@ -94,11 +94,11 @@ rec def r (a: int) (a: bool) (a: bool) = r
 //│  = [Function: r4]
 
 if true then l else r
-//│ res: int -> bool -> (bool & int) -> (bool & int) -> (bool & int) -> bool -> 'a as 'a
+//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
 //│    = [Function: l3]
 
 if true then l else r
-//│ res: int -> bool -> (bool & int) -> (bool & int) -> (bool & int) -> bool -> 'a as 'a
+//│ res: int -> bool -> nothing -> nothing -> nothing -> bool -> 'a as 'a
 //│    = [Function: l3]
 
 
@@ -517,7 +517,7 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: ((({a: 'a & 'd} as 'a) & int | ~{a: int})\a & ({a: 'c} as 'c) & int & 'b) -> ('b | 'd | (('b | 'e)\a & {a: int} as 'e))
+//│ f_manual_ns: (({a: 'a} as 'a) & 'b & 'c) -> ('b | 'd\a & {a: int} as 'd)
 //│            = <missing implementation>
 
 :e

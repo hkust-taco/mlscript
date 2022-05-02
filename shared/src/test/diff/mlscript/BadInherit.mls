@@ -275,9 +275,9 @@ class Bool
 
 "1" : String
 true : Bool
-//│ res: String
+//│ res: string
 //│    = '1'
-//│ res: Bool
+//│ res: bool
 //│    = true
 
 

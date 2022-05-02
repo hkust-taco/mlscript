@@ -427,9 +427,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case NegType(und) => DNF(CNF.mk(und, !pol).ds.map(_.neg))
       case tv: TypeVariable => of(SortedSet.single(tv))
       case ProxyType(underlying) => mk(underlying, pol)
-      // case tr @ TypeRef(defn, targs) if preserveTypeRefs => of(Without(tr, ssEmp)(noProv))
-      case tr @ TypeRef(defn, targs) if preserveTypeRefs => of(LhsRefined(N, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-      case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
+      case tr @ TypeRef(defn, targs) =>
+        // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
+        if (preserveTypeRefs && !primitiveTypes.contains(defn.name))
+          of(LhsRefined(N, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+        else mk(tr.expand, pol)
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
     // }(r => s"= $r")

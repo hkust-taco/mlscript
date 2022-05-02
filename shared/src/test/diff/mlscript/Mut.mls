@@ -436,7 +436,7 @@ amf mt4
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.416: 	def amf : MutArray['a] -> 'a
 //│ ╙──       	          ^^^^^^^^^^^^
-//│ res: error | bool
+//│ res: bool | error
 //│    = <no result>
 //│      amf is not implemented
 
@@ -677,10 +677,10 @@ def foreach : Array['a] -> ('a -> unit) -> Array['a]
 
 foreach am1 (fun x -> x[0] <- 1)
 foreach am1 (fun y -> y._1 <- 2)
-//│ res: Array[MutArray[1 | int .. int] & 'a .. 'a | (int .. int,)]
+//│ res: Array[MutArray[int .. int] & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
-//│ res: Array[{_1: 2 | int .. int} & 'a .. 'a | (int .. int,)]
+//│ res: Array[{_1: int .. int} & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
 

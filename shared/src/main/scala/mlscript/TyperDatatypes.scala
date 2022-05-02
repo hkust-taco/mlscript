@@ -277,7 +277,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
-    override def toString = s"$lb..$ub"
+    override def toString = s"${lb.mkString}..$ub"
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.

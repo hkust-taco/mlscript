@@ -84,7 +84,7 @@ class A0_2: S0[int] & T0[string]
 //│ Defined A0_2.Foo0: A0_2 -> 1
 
 (A0_2{}).Foo0
-//│ res: int & string
+//│ res: nothing
 //│    = 1
 
 
@@ -142,7 +142,7 @@ a1 = A1{}
 //│   = A1 {}
 
 a1.Foo1
-//│ res: int & string
+//│ res: nothing
 //│    = 1
 
 a1: S1
@@ -155,7 +155,7 @@ a1: R1['_]
 //│    = A1 {}
 //│ res: R1[string]
 //│    = A1 {}
-//│ res: R1['_ & (int | string) .. '_ | int & string]
+//│ res: R1['_ & (int | string) .. '_]
 //│    = A1 {}
 
 :ns
@@ -205,7 +205,7 @@ class A1_2: S1 & T1
 
 :re
 (A1_2{}).Foo1
-//│ res: int & string
+//│ res: nothing
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

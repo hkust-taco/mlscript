@@ -50,11 +50,11 @@ def e = ex
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
-//│ res: int | int
+//│ res: int
 //│    = 4
 
 eval (e : Lit | Add['e] | Nega['e] as 'e)
-//│ res: int | int
+//│ res: int
 //│    = 4
 
 
@@ -115,6 +115,6 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
-//│ res: error | int | int
+//│ res: error | int
 
 
