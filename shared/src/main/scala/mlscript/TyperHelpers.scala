@@ -71,7 +71,9 @@ abstract class TyperHelpers { self: Typer =>
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
     PolymorphicType(ts.level, subst(ts.body, map))
 
-  def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])(implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
+  // TODO use ts.map
+  def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])
+        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
     case _ if map.isDefinedAt(ts) => map(ts)
     case TypeBounds(lb, ub) => TypeBounds(subst(lb, map), subst(ub, map))(ts.prov)
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
@@ -96,6 +98,14 @@ abstract class TyperHelpers { self: Typer =>
     })
     case _: ObjectTag | _: ExtrType => ts
   }
+  
+  /** Substitutes only at the syntactic level, without updating type variables nor traversing their bounds. */
+  // def substSyntax(st: SimpleType, map: Map[SimpleType, SimpleType]): SimpleType =
+  def substSyntax(st: SimpleType)(mapping: PartialFunction[SimpleType, SimpleType]): SimpleType =
+    trace(s"substSyntax $st") {
+      // st.map(ty => mapping.applyOrElse[ST, ST](ty, _ => substSyntax(st)(mapping)))
+      mapping.applyOrElse[ST, ST](st, _.map(substSyntax(_)(mapping)))
+    }(r => s"=> $r")
   
   def tupleIntersection(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {
     require(fs1.size === fs2.size)
@@ -250,6 +260,22 @@ abstract class TyperHelpers { self: Typer =>
       }
     }
     // }(r => s"= $r")
+    
+    def map(f: SimpleType => SimpleType): SimpleType = this match {
+      case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
+      case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
+      case RecordType(fields) => RecordType(fields.mapValues(f))(prov)
+      case TupleType(fields) => TupleType(fields.mapValues(f))(prov)
+      case ArrayType(inner) => ArrayType(f(inner))(prov)
+      case ComposedType(pol, lhs, rhs) => ComposedType(pol, f(lhs), f(rhs))(prov)
+      case NegType(negated) => NegType(f(negated))(prov)
+      case Without(base, names) => Without(f(base), names)(prov)
+      case ProvType(underlying) => ProvType(f(underlying))(prov)
+      case WithType(bse, rcd) => WithType(f(bse), RecordType(rcd.fields.mapValues(f))(rcd.prov))(prov)
+      case ProxyType(underlying) => f(underlying) // TODO different?
+      case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
+      case _: TypeVariable | _: ObjectTag | _: ExtrType => this
+    }
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => TopType

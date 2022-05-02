@@ -39,15 +39,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
+    var stdout = false
     def output(str: String) =
       // out.println(outputMarker + str)
+      if (stdout) System.out.println(str) else
       str.splitSane('\n').foreach(l => out.println(outputMarker + l))
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
-    var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def funkyTuples = file.ext =:= "fun"
-      override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
+      // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
+      override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
@@ -545,7 +547,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // err.printStackTrace(out)
             output("/!!!\\ Uncaught error: " + err +
               err.getStackTrace().take(if (mode.fullExceptionStack) Int.MaxValue else 10)
-                .map("\n" + outputMarker + "\tat: " + _).mkString)
+                // .map("\n" + outputMarker + "\tat: " + _).mkString)
+                .map("\n" + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false
           typer.verbose = false

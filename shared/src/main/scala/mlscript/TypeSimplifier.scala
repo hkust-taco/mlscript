@@ -63,6 +63,13 @@ trait TypeSimplifier { self: Typer =>
       // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
       def rec(dnf: DNF, done: Set[TV], pol: Bool): DNF = dnf.cs.iterator.map { c =>
         // val vs = c.vars.filterNot(done)
+        // val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
+        //   recursiveVars += v
+        //   val nv = renew(v)
+        //   nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
+        //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
+        //   true
+        // } || done(v))
         val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
           recursiveVars += v
           val nv = renew(v)
@@ -207,7 +214,7 @@ trait TypeSimplifier { self: Typer =>
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
     
-    val analyzed = MutSet.empty[PolarVariable]
+    // val analyzed = MutSet.empty[PolarVariable]
     // val analyzed2 = MutSet.empty[TypeRef -> Bool]
     // val analyzed2 = MutSet.empty[TypeRef]
     val analyzed2 = MutSet.empty[ST -> Bool]
@@ -332,6 +339,7 @@ trait TypeSimplifier { self: Typer =>
     
     // val allVars = st.getVars
     val allVars = st.getVarsPol(pol).keySet
+    // TODO rm/update logic?
     val recVars = MutSet.from(
       allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
     

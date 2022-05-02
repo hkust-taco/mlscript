@@ -198,11 +198,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       base.without(rcd.fields.iterator.map(_._1).toSortedSet) & rcd
   }
   
-  /** A proxy type, `T as 'a` is equivalent to `['a -> (T as 'a))']T` and also `'a where 'a =:= T`. */
-  case class RecType(body: SimpleType, binding: TV)(val prov: TypeProvenance) extends ProxyType {
-    lazy val underlying: ST =
-      subst(body, Map.single(binding -> this))
-  }
+  // /** A proxy type, `T as 'a` is equivalent to `['a -> (T as 'a))']T` and also `'a where 'a =:= T`. */
+  // case class RecType(body: SimpleType, binding: TV)(val prov: TypeProvenance) extends ProxyType {
+  //   lazy val underlying: ST =
+  //     subst(body, Map.single(binding -> this))
+  // }
   
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
     def level: Int = targs.iterator.map(_.level).maxOption.getOrElse(0)
