@@ -17,9 +17,9 @@ object Main {
     source.addEventListener("input", typecheck)
   }
   @JSExportTopLevel("typecheck")
-  def typecheck(e: UIEvent): Unit = {
+  def typecheck(e: dom.UIEvent): Unit = {
     e.target match {
-      case elt: HTMLTextAreaElement =>
+      case elt: dom.HTMLTextAreaElement =>
         update(elt.value)
     }
   }

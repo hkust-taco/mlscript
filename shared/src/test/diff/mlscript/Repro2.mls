@@ -35,8 +35,8 @@ l0 = Cons { head = 1; tail = Nil {} }
 :stats
 Cons.HeadOption l0
 //│ res: Some['a .. 1 | 'a] with {payload: 1}
-//│ constrain calls  : 76
+//│ constrain calls  : 74
 //│ annoying  calls  : 27
-//│ subtyping calls  : 110
+//│ subtyping calls  : 118
 
 

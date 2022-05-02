@@ -59,21 +59,21 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             S(FunctionType(l0 | l1, r0 & r1)(noProv/*TODO*/))
           case (S(TupleType(fs0)), tup @ TupleType(fs1)) if fs0.size === fs1.size =>
             if (expandTupleFields)
-              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ & _).toList)(noProv)
+              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
             S(TupleType(tupleIntersection(fs0, fs1))(noProv))
           case (S(ArrayType(ar)), tup @ TupleType(fs)) =>
             if (expandTupleFields)
-              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ & _).toList)(noProv)
+              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
             S(TupleType(fs.map { ty =>
-              ty._1 -> (ar & ty._2)
+              ty._1 -> (ar && ty._2)
             })(noProv))
           case (S(TupleType(fs)), ArrayType(ar)) =>
             S(TupleType(fs.map { ty =>
-              ty._1 -> (ty._2 & ar)
+              ty._1 -> (ty._2 && ar)
             })(noProv))
           case (S(ArrayType(i1)), ArrayType(i2)) =>
             // Array[p] & Array[q] => Array[p & q]
-            S(ArrayType(i1 & i2)(noProv))
+            S(ArrayType(i1 && i2)(noProv))
           case (S(w1 @ Without(b1, ns1)), w2 @ Without(b2, ns2)) if ns1 === ns2 =>
             // This case is quite hacky... if we find two incompatible Without types,
             //  just make a new dummy Without type to merge them.
@@ -85,7 +85,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(_), _) => N
           case (N, tup: TupleType) =>
             if (expandTupleFields)
-              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ & _).toList)(noProv)
+              r1Final = RecordType(mergeSortedMap(r1Final.fields, tup.toRecord.fields)(_ && _).toList)(noProv)
             S(that)
           case (N, _) => S(that)
         }) map { b => LhsRefined(S(b), ts, r1Final, trs) }
@@ -94,7 +94,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => LhsRefined(N, ssEmp, that, smEmp)
       case LhsRefined(b1, ts, r1, trs) =>
         LhsRefined(b1, ts,
-          // RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/), trs)
+          // // RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/), trs)
+          // RecordType(mergeMap(r1.fields, that.fields)(_ && _).toList)(noProv/*TODO*/))
           RecordType(recordIntersection(r1.fields, that.fields))(noProv/*TODO*/), trs)
     }
     def & (that: TypeRef): Opt[LhsNf] = this match {
@@ -183,13 +184,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         if (fs1.size =/= fs2.size) 
           RhsBases(ps, S(L(t1.toArray))) | t2.toArray // upcast tuples of different sizes to array
         else S(RhsBases(ps, S(L(TupleType(fs1.lazyZip(fs2).map {
-          case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 | ty2)
-          case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 | ty2)
+          case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 || ty2)
+          case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 || ty2)
         })(noProv)))))
       case (RhsBases(ps, S(L(ArrayType(_)))), t@TupleType(_)) => this | t.toArray
       case (RhsBases(ps, S(L(t@TupleType(_)))), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray))) | ar
       case (RhsBases(ps, S(L(ArrayType(ar1)))), ArrayType(ar2)) => 
-        S(RhsBases(ps, S(L(ArrayType(ar1 | ar2)(noProv)))))
+        S(RhsBases(ps, S(L(ArrayType(ar1 || ar2)(noProv)))))
       case (RhsBases(_, S(L(_: Without))), _) | (_, _: Without) => die // Without should be handled elsewhere
       case (RhsBases(ps, S(L(bt))), _) if (that === bt) => S(this)
       case (RhsBases(ps, S(L(FunctionType(l0, r0)))), FunctionType(l1, r1)) =>
@@ -210,19 +211,19 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         | (RhsBases(_, S(R(_))), _: FunctionType | _: ArrayBase)
         => N
     }
-    def | (that: (Var, SimpleType)): Opt[RhsNf] = this match {
+    def | (that: (Var, FieldType)): Opt[RhsNf] = this match {
       case RhsBot => S(RhsField(that._1, that._2))
-      case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 | that._2))
+      case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 || that._2))
       case RhsBases(p, N) => S(RhsBases(p, S(R(RhsField(that._1, that._2)))))
       case RhsBases(p, S(R(RhsField(n1, t1)))) if n1 === that._1 =>
-        S(RhsBases(p, S(R(RhsField(n1, t1 | that._2)))))
+        S(RhsBases(p, S(R(RhsField(n1, t1 || that._2)))))
       case _: RhsField | _: RhsBases => N
     }
     def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
     def isBot: Bool = isInstanceOf[RhsBot.type]
   }
-  case class RhsField(name: Var, ty: SimpleType) extends RhsNf
-    { def name_ty: Var -> ST = name -> ty }
+  case class RhsField(name: Var, ty: FieldType) extends RhsNf
+    { def name_ty: Var -> FieldType = name -> ty }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField]) extends RhsNf {
     override def toString: Str = s"${tags.mkString("|")}|$rest"
   }
@@ -313,17 +314,31 @@ class NormalForms extends TyperDatatypes { self: Typer =>
               LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(tup1 @ TupleType(fs1)), S(tup2 @ TupleType(fs2))) => // TODO Q: records ok here?!
             if (fs1.size =/= fs2.size) S(Conjunct(
-              LhsRefined(S(ArrayType(tup1.inner | tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              // LhsRefined(S(ArrayType(tup1.inner | tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              // LhsRefined(S(ArrayType(tup1.inner || tup2.inner)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup1.inner || tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(tup @ TupleType(fs)), S(ArrayType(ar))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              // LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+              // LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+          // case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
+          //   S(Conjunct(
+          //     LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
+          // case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
+          //   S(Conjunct(
+          //     LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
             S(Conjunct(
-              LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+          // case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
+          //   S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+          // case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
+          //   S(Conjunct(LhsRefined(S(ArrayType(ar1 || ar2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
-            S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+            S(Conjunct(LhsRefined(S(ArrayType(ar1 || ar2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (N, N)
             | (S(_: FunctionType), S(_: ArrayBase)) | (S(_: ArrayBase), S(_: FunctionType))
           =>

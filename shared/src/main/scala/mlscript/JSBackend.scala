@@ -41,22 +41,22 @@ class JSBackend {
     // should returns ("{ x, y }", ["x", "y"])
     case Rcd(fields) =>
       JSObjectPattern(fields map {
-        case (Var(nme), Var(als)) if nme === als => nme -> N
-        case (Var(nme), subTrm)                  => nme -> S(translatePattern(subTrm))
+        case (Var(nme), (Var(als), _)) if nme === als => nme -> N
+        case (Var(nme), (subTrm, _))                  => nme -> S(translatePattern(subTrm))
       })
     // This branch supports `def f (x: int) = x`.
     case Asc(trm, _) => translatePattern(trm)
     // Replace literals with wildcards.
     case _: Lit      => JSWildcardPattern()
     case Bra(_, trm) => translatePattern(trm)
-    case Tup(fields) => JSArrayPattern(fields map { case (_, t) => translatePattern(t) })
+    case Tup(fields) => JSArrayPattern(fields map { case (_, (t, _)) => translatePattern(t) })
     // Others are not supported yet.
-    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs =>
+    case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign =>
       throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term): Ls[JSPattern] = t match {
-    case Tup(params) => params map { case _ -> p => translatePattern(p) }
+    case Tup(params) => params map { case _ -> (p -> _) => translatePattern(p) }
     case _           => throw CodeGenError(s"term $t is not a valid parameter list")
   }
 
@@ -95,7 +95,7 @@ class JSBackend {
     */
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
-    case App(App(Var(op), Tup((N -> lhs) :: Nil)), Tup((N -> rhs) :: Nil))
+    case App(App(Var(op), Tup((N -> (lhs -> _)) :: Nil)), Tup((N -> (rhs -> _)) :: Nil))
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
@@ -107,7 +107,7 @@ class JSBackend {
         case Var(nme) => translateVar(nme, true)
         case _ => translateTerm(trm)
       }
-      callee(args map { case (_, arg) => translateTerm(arg) }: _*)
+      callee(args map { case (_, (arg, _)) => translateTerm(arg) }: _*)
     case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
   }
 
@@ -122,7 +122,7 @@ class JSBackend {
       JSArrowFn(patterns, lamScope.tempVars `with` translateTerm(body)(lamScope))
     case t: App => translateApp(t)
     case Rcd(fields) =>
-      JSRecord(fields map { case (key, value) =>
+      JSRecord(fields map { case (key, (value, _)) =>
         key.name -> translateTerm(value)
       })
     case Sel(receiver, fieldName) =>
@@ -185,6 +185,7 @@ class JSBackend {
     case IntLit(value) => JSLit(value.toString + (if (JSBackend isSafeInteger value) "" else "n"))
     case DecLit(value) => JSLit(value.toString)
     case StrLit(value) => JSExpr(value)
+    case UnitLit(value) => JSLit(if (value) "undefined" else "null")
     // `Asc(x, ty)` <== `x: Type`
     case Asc(trm, _) => translateTerm(trm)
     // `c with { x = "hi"; y = 2 }`
@@ -194,15 +195,22 @@ class JSBackend {
           case S(fnName) => fnName
           case N         => polyfill.use("withConstruct", topLevelScope.declareRuntimeSymbol("withConstruct"))
         }),
-        translateTerm(trm) :: JSRecord(fields map { case (Var(name), value) =>
+        translateTerm(trm) :: JSRecord(fields map { case (Var(name), (value, _)) =>
           name -> translateTerm(value)
         }) :: Nil
       )
     case Bra(_, trm) => translateTerm(trm)
     case Tup(terms) =>
-      JSArray(terms map { case (_, term) => translateTerm(term) })
+      JSArray(terms map { case (_, (term, _)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
+    case Assign(lhs, value) =>
+      lhs match {
+        case _: Subs | _: Sel | _: Var =>
+          JSCommaExpr(JSAssignExpr(translateTerm(lhs), translateTerm(value)) :: JSArray(Nil) :: Nil)
+        case _ =>
+          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
+      }
     case _: Bind | _: Test =>
       throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
   }
@@ -225,12 +233,12 @@ class JSBackend {
         case Var("int") =>
           JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
         case Var("bool") =>
-          JSBinary("==", scrut.member("constructor"), JSLit("Boolean"))
+          JSBinary("===", scrut.member("constructor"), JSLit("Boolean"))
         case Var(s @ ("true" | "false")) =>
-          JSBinary("==", scrut, JSLit(s))
+          JSBinary("===", scrut, JSLit(s))
         case Var("string") =>
           // JS is dumb so `instanceof String` won't actually work on "primitive" strings...
-          JSBinary("==", scrut.member("constructor"), JSLit("String"))
+          JSBinary("===", scrut.member("constructor"), JSLit("String"))
         case Var(name) => topLevelScope.getType(name) match {
           case S(ClassSymbol(_, runtimeName, _, _, _)) => JSInstanceOf(scrut, JSIdent(runtimeName))
           case S(TraitSymbol(_, runtimeName, _, _, _)) => JSIdent(runtimeName)("is")(scrut)
@@ -238,7 +246,7 @@ class JSBackend {
           case N => throw new CodeGenError(s"unknown match case: $name")
         }
         case lit: Lit =>
-          JSBinary("==", scrut, JSLit(lit.idStr))
+          JSBinary("===", scrut, JSLit(lit.idStr))
       },
       _,
       _
@@ -456,7 +464,7 @@ class JSBackend {
   protected def sortClassSymbols(classSymbols: Ls[ClassSymbol]): Iterable[(ClassSymbol, Opt[ClassSymbol])] = {
     // Cache base classes for class symbols.
     val baseClasses = Map.from(classSymbols.iterator.flatMap { derivedClass =>
-      resolveBaseClass(derivedClass.body).map(derivedClass -> _)
+      topLevelScope.resolveBaseClass(derivedClass.body).map(derivedClass -> _)
     })
     val sorted = try topologicalSort(baseClasses, classSymbols) catch {
       case e: CyclicGraphError => throw CodeGenError("cyclic inheritance detected")

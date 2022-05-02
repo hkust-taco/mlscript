@@ -4,7 +4,6 @@ import fastparse._
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
-import ammonite.ops._
 import scala.collection.mutable
 import scala.collection.immutable
 import mlscript.utils._, shorthands._
@@ -35,7 +34,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val diffMidMarker = "======="
     val diffEndMarker = ">>>>>>>"
     
-    val fileContents = read(file)
+    val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
@@ -291,8 +290,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 exp
               }
             }
-            // initialize ts typegen code builder
+            // initialize ts typegen code builder and
+            // declare all type definitions for current block
             val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()
+            if (mode.generateTsDeclarations) {
+              typeDefs.iterator.filter(td =>
+                ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
+              ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
+            }
             
             // process type definitions first
             typeDefs.foreach(td =>
@@ -303,17 +308,38 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val tn = td.nme.name
                 output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
-                
-                // pretty print method definitions
-                (ttd.mthDecls ++ ttd.mthDefs).foreach {
-                  case MethodDef(_, _, Var(mn), _, rhs) =>
+
+                // calculate types for all method definitions and declarations
+                // only once and reuse for pretty printing and type generation
+                val methodsAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
+                  case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
-                      _ => ctx.getMthDefn(tn, mn),
-                      _ => ctx.getMth(S(tn), mn)
-                    ).foreach(res => output(s"${rhs.fold(
+                      _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT))),
+                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT)))
+                    )
+                }
+
+                // pretty print method definitions
+                methodsAndTypes.foreach {
+                  case (MethodDef(_, _, Var(mn), _, rhs), res) =>
+                    output(s"${rhs.fold(
                       _ => "Defined",  // the method has been defined
                       _ => "Declared"  // the method type has just been declared
-                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
+                    )} ${tn}.${mn}: ${res.show}")
+                }
+
+                // start typegen, declare methods if any and complete typegen block
+                if (mode.generateTsDeclarations) {
+                  val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
+                  val methods = methodsAndTypes
+                    // filter method declarations and definitions
+                    // without declarations
+                    .withFilter { case (mthd, _) =>
+                      mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
+                    }
+                    .map { case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
+
+                  tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
               }
             )
@@ -570,7 +596,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
       buf ++= s"! Updated $file\n"
-      write.over(file, result)
+      os.write.over(file, result)
     }
     print(buf.mkString)
     if (testFailed)
@@ -583,9 +609,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
 object DiffTests {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
-  private val allFiles = ls.rec(dir).filter(_.isFile)
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
@@ -595,7 +621,7 @@ object DiffTests {
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
+      val fileName = os.RelPath(filePath).baseName
       if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)

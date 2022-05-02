@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-ThisBuild / scalaVersion     := "2.13.6"
+ThisBuild / scalaVersion     := "2.13.8"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
@@ -37,12 +37,12 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       LeakingSealed, Overloading,
       Option2Iterable, TraversableOps, ListAppend
     ),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % Test,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.7",
-    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.2",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.2.8",
+    libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.3",
     libraryDependencies += "com.lihaoyi" %% "fansi" % "0.2.14",
     // libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.2.7", // FIXME does not resolve — why?
-    libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
+    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     // 
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),
@@ -52,8 +52,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   )
   .jsSettings(
     scalaJSUseMainModuleInitializer := true,
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.1.0",
-    libraryDependencies += "be.doeraene" %%% "scalajs-jquery" % "1.0.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
   )
 
 lazy val mlscriptJVM = mlscript.jvm

@@ -43,7 +43,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 19
 //│ annoying  calls  : 9
-//│ subtyping calls  : 62
+//│ subtyping calls  : 63
 
 :stats
 :e
@@ -63,7 +63,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 42
 //│ annoying  calls  : 32
-//│ subtyping calls  : 182
+//│ subtyping calls  : 184
 
 :stats
 :e
@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 94
 //│ annoying  calls  : 84
-//│ subtyping calls  : 555
+//│ subtyping calls  : 559
 
 :stats
 :e
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 111
 //│ annoying  calls  : 109
-//│ subtyping calls  : 1247
+//│ subtyping calls  : 1251
 
 
 // ====== 2 ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 50
 //│ annoying  calls  : 32
-//│ subtyping calls  : 124
+//│ subtyping calls  : 126
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 105
 //│ annoying  calls  : 84
-//│ subtyping calls  : 497
+//│ subtyping calls  : 501
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 116
 //│ annoying  calls  : 97
-//│ subtyping calls  : 588
+//│ subtyping calls  : 592
 
 :stats
 :e
@@ -208,7 +208,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: error
 //│ constrain calls  : 91
 //│ annoying  calls  : 94
-//│ subtyping calls  : 420
+//│ subtyping calls  : 424
 
 :stats
 :e
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 91
 //│ annoying  calls  : 94
-//│ subtyping calls  : 408
+//│ subtyping calls  : 412
 
 
 // ====== 5 ====== //
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 120
 //│ annoying  calls  : 97
-//│ subtyping calls  : 722
+//│ subtyping calls  : 726
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 124
 //│ annoying  calls  : 97
-//│ subtyping calls  : 898
+//│ subtyping calls  : 902
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 128
 //│ annoying  calls  : 97
-//│ subtyping calls  : 1120
+//│ subtyping calls  : 1124
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
@@ -345,7 +345,7 @@ foo_manual arg
 //│ res: error
 //│ constrain calls  : 27
 //│ annoying  calls  : 90
-//│ subtyping calls  : 877
+//│ subtyping calls  : 878
 
 :stats
 foo_manual = foo
@@ -354,7 +354,7 @@ foo_manual = foo
 //│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
 //│ constrain calls  : 96
 //│ annoying  calls  : 183
-//│ subtyping calls  : 892
+//│ subtyping calls  : 899
 
 
 // ====== 8 ====== //
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 132
 //│ annoying  calls  : 97
-//│ subtyping calls  : 1392
+//│ subtyping calls  : 1396
 
 

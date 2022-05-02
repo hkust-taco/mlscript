@@ -12,6 +12,19 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
+  /**
+   * TypeDef holds information about declarations like classes, interfaces, and type aliases
+   *
+   * @param kind tells if it's a class, interface or alias
+   * @param nme name of the defined type
+   * @param tparamsargs list of type parameter names and their corresponding type variable names used in the definition of the type
+   * @param tvars
+   * @param bodyTy type of the body, this means the fields of a class or interface or the type that is being aliased
+   * @param mthDecls method type declarations in a class or interface, not relevant for type alias
+   * @param mthDefs method definitions in a class or interface, not relevant for type alias
+   * @param baseClasses base class if the class or interface inherits from any
+   * @param toLoc source location related information
+   */
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
@@ -114,13 +127,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, FieldType] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
-      case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
+      case tr @ TypeRef(td, targs) =>
+        fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
-        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
@@ -261,6 +275,15 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
               val isTraitWithMethods = (k is Trt) && defns.nonEmpty
+              val fields = fieldsOf(td.bodyTy, true)
+              fields.foreach {
+                // * Make sure the LB/UB of all inherited type args are consistent.
+                // * This is not actually necessary for soundness
+                // *  (if they aren't, the object type just won't be instantiable),
+                // *  but will help report inheritance errors earlier (see test BadInherit2).
+                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case _ => ()
+              }
               (decls -- defns) match {
                 case absMths if absMths.nonEmpty || isTraitWithMethods =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
@@ -268,19 +291,25 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, true)
                   // val fields = fieldsOf(td.bodyTy, false)
+                  // val tparamTags = td.tparamsargs.map { case (tp, tv) =>
+                  //   tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                  // // val tref = 
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
-                  // val tref = 
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
-                        else f._1 ->
-                          freshVar(noProv,
+                        else {
+                          val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2)
-                        ).toList
+                          )(1).tap(_.upperBounds ::= f._2.ub)
+                          f._1 -> (
+                            if (f._2.lb.isDefined) FieldType(Some(fv), fv)(f._2.prov)
+                            else fv.toUpper(f._2.prov)
+                          )
+                        }).toList
                       PolymorphicType(0, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(

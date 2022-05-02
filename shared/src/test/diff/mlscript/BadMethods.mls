@@ -578,7 +578,7 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[bool, int]
-//│ constrain calls  : 55
+//│ constrain calls  : 53
 //│ annoying  calls  : 41
 //│ subtyping calls  : 46
 
@@ -594,21 +594,21 @@ t : Dup[int, bool]
 //│ ║  l.586: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[int, bool]
-//│ constrain calls  : 70
+//│ constrain calls  : 62
 //│ annoying  calls  : 41
 //│ subtyping calls  : 46
 
 :stats
 t.MthDup (fun x -> mul 2 x)
 //│ res: int
-//│ constrain calls  : 86
+//│ constrain calls  : 89
 //│ annoying  calls  : 27
 //│ subtyping calls  : 38
 
 :stats
 t.MthDup id
 //│ res: 42 | ('A | 42) & (42 & ~('A & anything) | 42 & 'A0 & ~('A & anything) as 'A0)
-//│ constrain calls  : 76
+//│ constrain calls  : 74
 //│ annoying  calls  : 25
 //│ subtyping calls  : 47
 

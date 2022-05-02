@@ -25,7 +25,7 @@ Boolean
 data type Bool2 of True2 & False2
 //│ Parsed: data type Bool2 of ((& True2) False2);;
 //│ Desugared: type alias Bool2 = &[True2, False2]
-//│ Desugared: class &[True2, False2]: {False2: False2, True2: True2}
+//│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
 //│ Desugared: def &: [True2, False2] -> True2 -> False2 -> &[True2, False2]
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.25: 	data type Bool2 of True2 & False2
