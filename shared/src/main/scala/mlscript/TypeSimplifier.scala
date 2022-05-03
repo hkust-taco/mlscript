@@ -27,9 +27,67 @@ trait TypeSimplifier { self: Typer =>
     }
   }
   
+  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+    
+    val pols = ty.getVarsPol(S(true))
+    
+    println(s"Pols ${pols}")
+    
+    val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    
+    def renew(tv: TypeVariable): TypeVariable =
+      renewed.getOrElseUpdate(tv,
+        freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+    
+    // def process(ty: ST): ST =
+    //     // trace(s"process($ty)") {
+    //     trace(s"process($ty)  ${renewed}") {
+    //     ty.map {
+    //   case tv: TypeVariable =>
+    //     var isNew = false
+    //     val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
+    //     // renewed.getOrElseUpdate(tv,
+    //     //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+    //     // val nv = renew(v)
+    //     if (isNew) {
+    //       if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process)
+    //       if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process).tap(b=>println(s"${b.map(_.getClass)}"))
+    //     }
+    //     println(tv, nv, nv.lowerBounds, nv.upperBounds)
+    //     nv
+    //   case st => process(st)
+    // }
+    // }(r => s"= $r")
+    
+    def process(ty: ST): ST =
+        trace(s"process($ty)") {
+        ty match {
+      case tv: TypeVariable =>
+        var isNew = false
+        val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
+        // renewed.getOrElseUpdate(tv,
+        //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+        // val nv = renew(v)
+        if (isNew) {
+          if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process)
+          if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process)//.tap(b=>println(s"${b.map(_.getClass)}"))
+        }
+        // println(tv, nv, nv.lowerBounds, nv.upperBounds)
+        nv
+      case st => st.map(process)
+    }
+    }(r => s"= $r")
+    
+    process(ty)
+  }
+  
   def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     // type PolarType = (DNF, Bool)
     type PolarType = DNF
+    
+    // val r = removeIrrelevantBounds(ty, pol)
+    // println(r)
+    // println(r.showBounds)
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
     val recursiveVars = MutSet.empty[TypeVariable] // For rec nonpolar vars

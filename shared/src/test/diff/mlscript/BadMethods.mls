@@ -215,7 +215,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	               ^
 //│ Defined class BadPair
 //│ Defined BadPair.Test: BadPair['A, 'B] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('B0 & 'A0 & 'a)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
+//│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -610,7 +610,7 @@ t.MthDup id
 //│ res: 42
 //│ constrain calls  : 74
 //│ annoying  calls  : 25
-//│ subtyping calls  : 61
+//│ subtyping calls  : 58
 
 
 // We don't currently analyze forward method declarations

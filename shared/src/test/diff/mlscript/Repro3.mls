@@ -53,4 +53,10 @@ rec def g a = a a
 
 
 
+class Some[A]: { v: A }
+//│ Defined class Some
+
+// :ds
+def Some v = Some{v}
+//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
 

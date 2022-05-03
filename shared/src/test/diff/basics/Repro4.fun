@@ -8,10 +8,7 @@ x => x x
 // TODO-simplif
 // :ds
 (let rec x = (y => (y (x x))); x)
-//│ res: 'b -> 'c as 'a
-//│ 	where
-//│ 		'b :> 'a
-//│ 		   <: 'c -> ('c & 'b)
+//│ res: ('b -> ('a & 'b) as 'a) -> 'b
 
 
 // :ds

@@ -274,7 +274,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
                 typer.dbg = mode.dbgSimplif
-                val cty = typer.canonicalizeType(wty)(ctx)
+                val rty = typer.removeIrrelevantBounds(wty)(ctx)
+                if (mode.dbgSimplif) output(s"Cleaned up: ${rty}")
+                if (mode.dbgSimplif) output(s" where: ${rty.showBounds}")
+                val cty = typer.canonicalizeType(rty)(ctx)
                 // val cty = wty
                 if (mode.dbgSimplif) output(s"Canon: ${cty}")
                 if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
