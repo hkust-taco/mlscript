@@ -294,16 +294,41 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
     // /** None: not recursive; Some(true): linearly recursive; Some(false): nonlinearly recursive; */
     /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
-    def isRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+    // def isRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+    //   // // ???
+    //   // S(false)
+    //   // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
+    //   // val vars = getVarsPol(S(true))
+    //   // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
+    //   val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+    //   // println(s"isRecursive $vars ${vars.get(this)}")
+    //   vars.get(this).map(_.isDefined)
+    // })
+    def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
       // // ???
       // S(false)
       // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
       // val vars = getVarsPol(S(true))
       // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
-      val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
-      // println(s"isRecursive $vars ${vars.get(this)}")
+      // val vars = TupleType((lowerBounds.iterator.map(_.neg()) ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+      val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator.map(_.neg())).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+      println(s"isRecursive($this) = $vars  —  ${vars.get(this)}")
       vars.get(this).map(_.isDefined)
     })
+    // /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
+    // def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+    //   // val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+    //   // // println(s"isRecursive $vars ${vars.get(this)}")
+    //   // vars.get(this).map(_.isDefined)
+    //   val lvars = TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true))
+    //   val uvars = TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true))
+    //   val locc = lvars.get(this)
+    //   val uocc = uvars.get(this)
+    //   if (locc.isDefined || uocc.isDefined) S(
+    //     !(locc.exists(_.forall(_ === false)) || 
+    //     uocc.exists(_.forall(_ === false))))
+    //   else N
+    // })
   }
   type TV = TypeVariable
   private var freshCount = 0

@@ -24,6 +24,6 @@ let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 // Inspired by [Pottier 98, chap 13.5]
 
 let rec f = x => y => if true then x else { t: f x.t y.t }
-//│ f: ({t: 'a} & 'b as 'a) -> ({t: 'c} as 'c) -> ({t: 'd} | 'b as 'd)
+//│ f: ({t: 'a} & 'b as 'a) -> ({t: 'c} as 'c) -> ({t: 'd as 'e} | 'b as 'd)
 
 

@@ -812,7 +812,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       })(0).asTypeVar)
       else (inProcess + st_pol) pipe { implicit inProcess => st match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
-        case tv: TypeVariable if tv.isRecursive === S(false) =>
+        case tv: TypeVariable if tv.isBadlyRecursive === S(false) =>
           val nv = tv.asTypeVar
           if (!recursive.contains(tv)) {
             recursive += tv -> nv

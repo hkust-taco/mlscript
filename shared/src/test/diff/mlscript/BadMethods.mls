@@ -607,10 +607,10 @@ t.MthDup (fun x -> mul 2 x)
 
 :stats
 t.MthDup id
-//│ res: 42 | ('A | 42) & (42 & ~('A & anything) | 42 & 'A0 & ~('A & anything) as 'A0)
+//│ res: 42 | 'A & (42 & ~'A | 42 & 'A0 & ~'A as 'A0)
 //│ constrain calls  : 74
 //│ annoying  calls  : 25
-//│ subtyping calls  : 47
+//│ subtyping calls  : 48
 
 
 // We don't currently analyze forward method declarations

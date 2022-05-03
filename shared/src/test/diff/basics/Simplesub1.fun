@@ -163,10 +163,7 @@ x => { a: x }.b
 
 // :ds
 x => x x
-//│ res: 'a
-//│ 	where
-//│ 		'a :> 'a -> 'b
-//│ 		   <: 'a -> 'b & 'a
+//│ res: ('a -> 'b & 'a) -> 'b
 
 res id
 //│ res: ('b -> 'b as 'a) | 'c
@@ -180,26 +177,20 @@ let f = (x => x + 1); {a: f; b: f 2}
 //│ res: {a: int -> int, b: int}
 
 x => x x x
-//│ res: 'b -> 'c as 'a
-//│ 	where
-//│ 		'b <: 'b -> 'a
+//│ res: ('a -> 'a -> 'b & 'a) -> 'b
 
 x => y => x y x
 //│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
 
 x => y => x x y
-//│ res: 'b -> 'c -> 'd as 'a
-//│ 	where
-//│ 		'b <: 'a
+//│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
 (x => x x) (x => x x)
 //│ res: nothing
 
 
 x => {l: x x, r: x }
-//│ res: 'a -> {l: 'b, r: 'a}
-//│ 	where
-//│ 		'a <: 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
 
 
 // From https://github.com/stedolan/mlsub
@@ -220,9 +211,7 @@ let rec trutru = g => trutru (g true)
 //│ trutru: (true -> 'a as 'a) -> nothing
 
 i => if ((i i) true) then true else true
-//│ res: 'a -> true
-//│ 	where
-//│ 		'a <: 'a -> true -> bool
+//│ res: ('a -> true -> bool & 'a) -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -290,15 +279,12 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: 0
 
 (x => (let y = (x x); 0))
-//│ res: 'a -> 0
-//│ 	where
-//│ 		'a <: 'a -> anything
+//│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: 'a
+//│ res: ('b -> ('c & 'b) as 'a) -> 'c
 //│ 	where
-//│ 		'a :> ('c -> ('d & 'b) as 'b) -> 'd
-//│ 		   <: ('c -> ('d & 'b) as 'b) & 'a -> (('e -> ('d & 'e) as 'b) as 'e)
+//│ 		'b <: 'a
 
 next => 0
 //│ res: anything -> 0
@@ -315,50 +301,40 @@ next => 0
 //│ 		'a <: 'a -> 'a
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> 'c -> 'b
-//│ 	where
-//│ 		'c <: 'c -> 'a
+//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'a
+//│ res: 'b -> 'b as 'a
 //│ 	where
-//│ 		'a :> 'c -> 'c as 'b
-//│ 		   <: 'c & 'a -> anything
-//│ 		'c :> 'b
+//│ 		'b :> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'a
+//│ res: 'b -> 'b as 'a
 //│ 	where
-//│ 		'a :> 'c -> 'c as 'b
-//│ 		   <: 'c & 'a -> anything
-//│ 		'c :> 'b
+//│ 		'b :> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'a
+//│ res: 'b -> ({u: 'b, v: 'c} as 'c) as 'a
 //│ 	where
-//│ 		'a :> 'c -> ({u: 'c, v: 'd} as 'd) as 'b
-//│ 		   <: 'c & 'a -> anything
-//│ 		'c :> 'b
+//│ 		'b :> 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'a
+//│ res: 'b -> ({u: 'c, v: 'b} as 'c) as 'a
 //│ 	where
-//│ 		'a :> 'c -> ({u: 'd, v: 'c} as 'd) as 'b
-//│ 		   <: 'c & 'a -> anything
-//│ 		'c :> 'b
+//│ 		'b :> 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: ('a -> anything & 'b) -> 'b as 'a
+//│ res: 'b -> 'b as 'a
+//│ 	where
+//│ 		'b <: 'a -> anything
 
 (x => (let y = (x x.v); 0))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'a
+//│ x: 'b -> 'b as 'a
 //│ 	where
-//│ 		'a :> 'c -> 'c as 'b
-//│ 		   <: 'c & 'a -> anything
-//│ 		'c :> 'b
+//│ 		'b :> 'a
 //│ res: ({u: 'a} & 'b) -> ('a | 'b) | 'c
 //│ 	where
 //│ 		'b :> {u: 'a} -> 'a | 'b -> 'b

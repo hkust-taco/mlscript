@@ -586,11 +586,16 @@ abstract class TyperHelpers { self: Typer =>
     }
     
     def showBounds: String =
+      // getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
+      //   tv.toString
+      //     + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
+      //     + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
+      // ).mkString(", ")
       getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
-        tv.toString
+        "\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-      ).mkString(", ")
+      ).mkString
     
     def expPos(implicit ctx: Ctx): Type = (
       // this

@@ -22,10 +22,7 @@ rec def l a = l
 // TODO-simplif
 // :ds
 fun a -> a a
-//│ res: 'a
-//│ 	where
-//│ 		'a :> 'a -> 'b
-//│ 		   <: 'a -> 'b & 'a
+//│ res: (('a & 'c,) as 'b) -> 'd as 'a
 
 
 // :stdout
@@ -34,16 +31,14 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ ('b & ('c,)) -> 'd as 'a
-//│ 	where
-//│ 		'c <: 'a
+//│ (('a & 'c,) as 'b) -> 'd as 'a
 //│   <:  f:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.36: 	rec def f a = a a
+//│ ║  l.33: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
-//│ ║  l.36: 	rec def f a = a a
+//│ ║  l.33: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.11: 	def f: { x: 'a } as 'a
@@ -54,9 +49,7 @@ rec def f a = a a
 // :d
 // :ds
 rec def g a = a a
-//│ g: ('b & ('c,)) -> 'd as 'a
-//│ 	where
-//│ 		'c <: 'a
+//│ g: (('a & 'c,) as 'b) -> 'd as 'a
 
 
 

@@ -22,7 +22,7 @@ trait TypeSimplifier { self: Typer =>
         val dnf2 = DNF.mk(ty, false)
         // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
         println(s"vars ${dnf1.cs.map(_.vars)}")
-        if (dnf1.cs.forall(_.vars.forall(_.isRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
+        if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
         else L(dnf1 -> dnf2)
     }
   }
@@ -70,7 +70,8 @@ trait TypeSimplifier { self: Typer =>
         //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
         //   true
         // } || done(v))
-        val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
+        val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isBadlyRecursive === S(false) && {
+          println(s"$v is badly recursive...")
           recursiveVars += v
           val nv = renew(v)
           nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
