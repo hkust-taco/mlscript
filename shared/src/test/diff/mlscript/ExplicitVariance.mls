@@ -1,0 +1,40 @@
+
+// TODO have a way of specifying the variance explicitly,
+//    because it would be too expensive to infer it when it's needed in method implementations
+//    (we'd have to re-type-check methods at every iteration of the fixed point)
+
+// class Covar[out A]
+
+:e
+class Covar[A]
+  method CovarMtd =
+    let tmp = (error : Covar[{ x: int }]) : Covar[{}]
+    in ()
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.11: 	    let tmp = (error : Covar[{ x: int }]) : Covar[{}]
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not have field 'x'
+//│ ║  l.11: 	    let tmp = (error : Covar[{ x: int }]) : Covar[{}]
+//│ ║        	                                                  ^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.11: 	    let tmp = (error : Covar[{ x: int }]) : Covar[{}]
+//│ ╙──      	                             ^^^^^^^^^^
+//│ Defined class Covar
+//│ Defined Covar.CovarMtd: Covar['A] -> ()
+
+// TODO this should work when variance analysis is implemented and taken into account 
+:e
+(error : Covar[{ x: int }]) : Covar[{}]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.27: 	(error : Covar[{ x: int }]) : Covar[{}]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not have field 'x'
+//│ ║  l.27: 	(error : Covar[{ x: int }]) : Covar[{}]
+//│ ║        	                                    ^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.27: 	(error : Covar[{ x: int }]) : Covar[{}]
+//│ ╙──      	               ^^^^^^^^^^
+//│ res: Covar[anything]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
