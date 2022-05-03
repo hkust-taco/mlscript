@@ -198,7 +198,7 @@ foo_ty2 = foo
 
 
 rec def bar = C { a = bar }
-//│ bar: (C['A .. 'A | 'a as 'b] with {a: 'a}) as 'a
+//│ bar: (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -209,7 +209,7 @@ def bar_ty: Rec2
 //│       = <missing implementation>
 
 bar_ty = bar
-//│ (C['A .. 'A | 'a as 'b] with {a: 'a}) as 'a
+//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty:
 //│ Rec2
 //│ Runtime error:
@@ -245,7 +245,7 @@ bar_ty2 = bar_ty
 //│          bar_ty and bar_ty2 are not implemented
 
 bar_ty2 = bar
-//│ (C['A .. 'A | 'a as 'b] with {a: 'a}) as 'a
+//│ (C['A .. 'A | 'a] with {a: 'a}) as 'a
 //│   <:  bar_ty2:
 //│ C['r] as 'r
 //│ Runtime error:

@@ -51,13 +51,13 @@ mkC = mkC'
 //│   <:  mkC:
 //│ 'a -> C2['a]
 
-// TODO-simplif
+// TODOne-simplif
 // :ds
 rec def rc = mkC(rc)
-//│ rc: C2['a .. 'a | 'b as 'c] as 'b
+//│ rc: C2['a .. 'a | 'b] as 'b
 
 rec def rc = mkC'(rc)
-//│ rc: (C2['A .. 'A | 'a as 'b] with {a: 'a}) as 'a
+//│ rc: (C2['A .. 'A | 'a] with {a: 'a}) as 'a
 
 
 
