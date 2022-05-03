@@ -18,6 +18,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   def funkyTuples: Bool = false
   
+  var recordProvenances: Boolean = true
+  
   type Raise = Diagnostic => Unit
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
@@ -359,7 +361,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   def mkProxy(ty: SimpleType, prov: TypeProvenance): SimpleType = {
-    ProvType(ty)(prov)
+    if (recordProvenances) ProvType(ty)(prov)
+    else ty // TODO don't do this when debugging errors
     // TODO switch to return this in perf mode:
     // ty
   }

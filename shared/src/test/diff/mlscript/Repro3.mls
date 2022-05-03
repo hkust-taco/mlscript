@@ -22,7 +22,7 @@ rec def l a = l
 // TODO-simplif
 // :ds
 fun a -> a a
-//│ res: (('a & 'c,) as 'b) -> 'd as 'a
+//│ res: ('a -> 'b & 'a) -> 'b
 
 
 // :stdout
@@ -31,7 +31,7 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ (('a & 'c,) as 'b) -> 'd as 'a
+//│ ('a -> 'b & 'a) -> 'b
 //│   <:  f:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -49,7 +49,7 @@ rec def f a = a a
 // :d
 // :ds
 rec def g a = a a
-//│ g: (('a & 'c,) as 'b) -> 'd as 'a
+//│ g: ('a -> 'b & 'a) -> 'b
 
 
 

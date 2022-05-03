@@ -326,10 +326,20 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val uocc = uvars.get(this)
       println(s"isBadlyRecursive($this) = $locc $uocc")
       if (locc.isDefined || uocc.isDefined) S(!(
-        // locc.exists(_.forall(_ === false)) && uocc.exists(_.isDefined) ||
-        // uocc.exists(_.forall(_ === true)) && locc.exists(_.isDefined)
+        
+        // // locc.exists(_.forall(_ === false)) && uocc.exists(_.isDefined) ||
+        // // uocc.exists(_.forall(_ === true)) && locc.exists(_.isDefined)
+        // locc.exists(_.forall(_ === false)) /* && uocc.isDefined */ ||
+        // // uocc.exists(_.forall(_ === true)) /* && locc.isDefined */
+        // uocc.exists(_.forall(_ === true)) /* && locc.isDefined */
+        
         locc.exists(_.forall(_ === false)) && uocc.isDefined ||
         uocc.exists(_.forall(_ === true)) && locc.isDefined
+        
+        // locc.exists(_.isEmpty) || uocc.exists(_.isEmpty) ||
+        //   locc.exists(_.forall(_ === false)) && uocc.isDefined ||
+        //   uocc.exists(_.forall(_ === true)) && locc.isDefined
+        
       ))
       else N
     })

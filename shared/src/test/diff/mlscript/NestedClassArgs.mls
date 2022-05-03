@@ -1,4 +1,5 @@
 :NoJS
+:NoProvs
 
 
 class C[A]

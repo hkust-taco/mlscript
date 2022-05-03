@@ -460,8 +460,10 @@ abstract class TyperHelpers { self: Typer =>
         // meaning negated records are basically bottoms.
       case rw => NegType(f(rw))(p)
     }
-    def withProvOf(ty: SimpleType): ProvType = withProv(ty.prov)
-    def withProv(p: TypeProvenance): ProvType = ProvType(this)(p)
+    def withProvOf(ty: SimpleType): ST = withProv(ty.prov)
+    def withProv(p: TypeProvenance): ST =
+      // ProvType(this)(p)
+      mkProxy(this, p)
     def pushPosWithout(implicit ctx: Ctx, ptr: PreserveTypeRefs): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else (if (preserveTypeRefs) b.unwrapProxies else b.unwrapAll).withoutPos(ns) match {

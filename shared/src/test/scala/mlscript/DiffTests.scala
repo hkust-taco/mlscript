@@ -77,6 +77,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      // noProvs: Bool = false,
     ) {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -85,6 +86,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var allowTypeErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
+    var noProvs = false
     var allowRuntimeErrors = false
 
     val backend = new JSTestBackend()
@@ -111,6 +113,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NoJS" => noJavaScript = true; mode
+          case "NoProvs" => noProvs = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -187,6 +190,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
+            // typer.recordProvenances = !mode.dbg && !mode.dbgSimplif
+            // typer.recordProvenances = mode.noProvs
+            typer.recordProvenances = !noProvs
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout

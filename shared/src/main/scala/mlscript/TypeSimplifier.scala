@@ -60,7 +60,7 @@ trait TypeSimplifier { self: Typer =>
     // }(r => s"= $r")
     
     def process(ty: ST): ST =
-        trace(s"process($ty)") {
+        // trace(s"process($ty)") {
         ty match {
       case tv: TypeVariable =>
         var isNew = false
@@ -76,14 +76,15 @@ trait TypeSimplifier { self: Typer =>
         nv
       case st => st.map(process)
     }
-    }(r => s"= $r")
+    // }(r => s"= $r")
     
     process(ty)
   }
   
   def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     // type PolarType = (DNF, Bool)
-    type PolarType = DNF
+    // type PolarType = DNF
+    type PolarType = (DNF, Opt[Bool])
     
     // val r = removeIrrelevantBounds(ty, pol)
     // println(r)
@@ -135,7 +136,8 @@ trait TypeSimplifier { self: Typer =>
           nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
           nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
           true
-        } || done(v))
+        // } || done(v))
+        } || done(v) && {println(s"Done $v"); true})
         vs.iterator.map { tv =>
         // vs.iterator.filter(_.isRecursive =/= S(false)).map { tv =>
           println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
@@ -165,10 +167,11 @@ trait TypeSimplifier { self: Typer =>
     def go1(ty: DNF, pol: Opt[Bool])
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[${printPol(pol)}] $ty") {
       if (ty.isBot) ty.toType(sort = true) else {
-        // val pty = ty -> pol
-        val pty = ty
+        val pty = ty -> pol
+        // val pty = ty
         if (inProcess.contains(pty))
-          recursive.getOrElseUpdate(pty, freshVar(noProv)(ty.level))
+          recursive.getOrElseUpdate(pty,
+            freshVar(noProv)(ty.level) tap { fv => println(s"Fresh rec $pty ~> $fv") })
         else {
           (inProcess + pty) pipe { implicit inProcess =>
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
@@ -243,6 +246,7 @@ trait TypeSimplifier { self: Typer =>
             val adapted = res.toType(sort = true)
             recursive.get(pty) match {
               case Some(v) =>
+                println(s"!!!")
                 // pol match {
                 //   // case S(pol) =>
                 //   //   val bs = if (pol) v.lowerBounds else v.upperBounds
@@ -267,7 +271,9 @@ trait TypeSimplifier { self: Typer =>
                   v.upperBounds ::= adapted
                 }
                 v
-              case None => adapted
+              case None =>
+                // println(s"!??")
+                adapted
             }
           }
         }
