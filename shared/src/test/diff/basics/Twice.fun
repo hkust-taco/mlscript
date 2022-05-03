@@ -19,12 +19,12 @@ let f = x => 1, x
 // TODO-simplif // FIXME 'c does not occur!
 // :ds
 twice f
-//│ res: 'a -> ((1, 'b | 'a as 'c,) as 'b)
+//│ res: 'a -> ((1, 'b | 'a,) as 'b)
 
 // TODO-simplif
 // :ds
 twice / x => x, x
-//│ res: 'a -> (('b | 'a as 'c, 'c,) as 'b)
+//│ res: 'a -> (('b | 'a, 'b | 'a,) as 'b)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }

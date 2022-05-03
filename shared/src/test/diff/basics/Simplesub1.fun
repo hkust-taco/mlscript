@@ -166,10 +166,7 @@ x => x x
 //│ res: ('a -> 'b & 'a) -> 'b
 
 res id
-//│ res: ('b -> 'b as 'a) | 'c
-//│ 	where
-//│ 		'b :> 'a
-//│ 		   <: 'c
+//│ res: 'b -> 'a | 'b as 'a
 
 
 let f = (x => x + 1); {a: f; b: f 2}
@@ -282,61 +279,42 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('c & 'b) as 'a) -> 'c
+//│ res: 'b -> 'c as 'a
 //│ 	where
-//│ 		'b <: 'a
+//│ 		'b :> 'a
+//│ 		   <: 'c -> ('c & 'b)
 
 next => 0
 //│ res: anything -> 0
 
 ((x => (x x)) (x => x))
-//│ res: ('b -> 'b as 'a) | 'c
-//│ 	where
-//│ 		'b :> 'a
-//│ 		   <: 'c
+//│ res: 'b -> 'a | 'b as 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: 'a -> nothing
-//│ 	where
-//│ 		'a <: 'a -> 'a
+//│ res: ('b -> 'a & 'b as 'a) -> nothing
 
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> 'b as 'a
-//│ 	where
-//│ 		'b :> 'a
+//│ res: 'b -> ('a | 'b) as 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> 'b as 'a
-//│ 	where
-//│ 		'b :> 'a
+//│ res: 'b -> ('a | 'b) as 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ({u: 'b, v: 'c} as 'c) as 'a
-//│ 	where
-//│ 		'b :> 'a
+//│ res: 'b -> ({u: 'a | 'b, v: 'c} as 'c) as 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ({u: 'c, v: 'b} as 'c) as 'a
-//│ 	where
-//│ 		'b :> 'a
+//│ res: 'b -> ({u: 'c, v: 'a | 'b} as 'c) as 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: 'b -> 'b as 'a
-//│ 	where
-//│ 		'b <: 'a -> anything
+//│ res: ('a -> anything & 'b) -> 'b as 'a
 
 (x => (let y = (x x.v); 0))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'b -> 'b as 'a
-//│ 	where
-//│ 		'b :> 'a
-//│ res: ({u: 'a} & 'b) -> ('a | 'b) | 'c
-//│ 	where
-//│ 		'b :> {u: 'a} -> 'a | 'b -> 'b
-//│ 		   <: 'c
+//│ x: 'b -> ('a | 'b) as 'a
+//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
 

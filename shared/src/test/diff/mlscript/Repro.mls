@@ -51,22 +51,18 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.40: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: ('a & 'b) -> (nothing | 'b) | error | nothing | 'c
+//│ res: (((nothing & 'd & 'e & 'a,) as 'c) -> ('b | nothing | 'e as 'f) as 'b) | error | nothing | 'd
 //│ 	where
-//│ 		'a :> ('b -> 'b as 'd) | 'a -> nothing
-//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> nothing
-//│ 		'b :> 'a -> nothing | 'd
-//│ 		   <: nothing & 'c
+//│ 		'a :> (nothing & 'd & 'e) -> ('b | 'e) | 'a -> nothing
+//│ 		   <: nothing & 'd & 'e & ((nothing & 'd & 'e) -> ('b | 'e)) -> 'd & 'a -> nothing
 
 // :ds
 def manual: 'a -> anything as 'a
 //│ manual: 'a -> anything as 'a
 
 manual id
-//│ res: ('a & 'b) -> (anything | 'b) | anything | 'c
+//│ res: ((((anything & 'e & 'f & 'a,) as 'd) -> ('b | 'f as 'g) as 'c) | anything as 'b) | 'e
 //│ 	where
-//│ 		'a :> ('b -> 'b as 'd) | 'a -> anything
-//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> anything
-//│ 		'b :> 'a -> anything | 'd
-//│ 		   <: anything & 'c
+//│ 		'a :> (anything & 'e & 'f) -> ('c | 'f) | 'a -> anything
+//│ 		   <: anything & 'e & 'f & ((anything & 'e & 'f) -> ('c | 'f)) -> 'e & 'a -> anything
 
