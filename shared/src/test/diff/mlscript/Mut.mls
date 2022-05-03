@@ -209,11 +209,11 @@ trait T
 def t1 : T & {mut x : int; y : bool}
 t1 = T {mut x = 2; y = false}
 t2 = T {x = 2}
-//│ t1: {x: int .. int, y: bool} & T
+//│ t1: T & {x: int .. int, y: bool}
 //│   = <missing implementation>
 //│ {x: 'a .. 2 | 'a, y: false} & t
 //│   <:  t1:
-//│ {x: int .. int, y: bool} & T
+//│ T & {x: int .. int, y: bool}
 //│   = { x: 2, y: false }
 //│ t2: {x: 2} & t
 //│   = { x: 2 }

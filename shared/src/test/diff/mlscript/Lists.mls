@@ -182,8 +182,8 @@ c 1 (c 2 Nil)
 
 def c: 'a -> ('l & List['b]) -> (Cons[anything] & { head: 'a; tail: 'l })
 c 1 (c 2 Nil)
-//│ c: 'a -> (List['b] & 'l) -> ({head: 'a, tail: 'l} & Cons[anything])
+//│ c: 'a -> (List['b] & 'l) -> (Cons[anything] & {head: 'a, tail: 'l})
 //│  = <missing implementation>
-//│ res: {head: 1, tail: {head: 2, tail: Nil} & Cons[anything]} & Cons[anything]
+//│ res: Cons[anything] & {head: 1, tail: Cons[anything] & {head: 2, tail: Nil}}
 //│    = <no result>
 //│      c is not implemented

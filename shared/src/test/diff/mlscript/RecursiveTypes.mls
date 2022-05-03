@@ -148,7 +148,7 @@ rec def foo (c: C['a]) = foo (c.a)
 //│ foo: (C['a & 'b .. 'a] as 'b) -> nothing
 //│    = [Function: foo]
 
-// TODO figure ou why some type variables are not simplified here
+// TODO-simplif figure ou why some type variables are not simplified here
 foo
 //│ res: (C['b & 'a .. 'a] as 'b) -> nothing
 //│    = [Function: foo]

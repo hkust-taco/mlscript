@@ -213,6 +213,6 @@ class A: (1,2)
 
 :re
 error: Array[1] & { _1: int }
-//│ res: {_1: int} & Array[1]
+//│ res: Array[1] & {_1: int}
 //│ Runtime error:
 //│   Error: unexpected runtime error

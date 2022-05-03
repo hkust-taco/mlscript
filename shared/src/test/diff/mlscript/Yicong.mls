@@ -394,17 +394,17 @@ tba tb
 //│   <:  tb:
 //│ Array[int] & T2
 //│   = [ 1, 2, 3 ]
-//│ tba: (Array[bool | int] & T2) -> (int & T2)
+//│ tba: (Array[bool | int] & T2) -> (T2 & int)
 //│    = <missing implementation>
-//│ res: int & T2
+//│ res: T2 & int
 //│    = <no result>
 //│      tba is not implemented
 
 def k: (true, false, 3) & Array[int | true]
 def k2: Array[1 | 2 | 3] & (true, 'hi', 2, 3)
-//│ k: (true, false, 3,) & Array[int | true]
+//│ k: Array[int | true] & (true, false, 3,)
 //│  = <missing implementation>
-//│ k2: (true, nothing, 2, 3,) & Array[1 | 2 | 3]
+//│ k2: Array[1 | 2 | 3] & (true, nothing, 2, 3,)
 //│   = <missing implementation>
 
 def gett1 p q = case p of {T1 -> p | _ -> q}
@@ -519,7 +519,7 @@ inn (T1 (T2 v3))
 //│      inn is not implemented
 //│ v3: Array[Array[(int, true,)]]
 //│   = <missing implementation>
-//│ r1: Array[T1 & 'a .. (int, true,) & T1 | T1 & 'a]
+//│ r1: Array[T1 & 'a .. T1 & (int, true,) | T1 & 'a]
 //│   = <no result>
 //│     inn2 is not implemented
 //│ res: Array[(int, true,)]
@@ -531,7 +531,7 @@ inn2 (T2 r1)
 //│ res: Array[Array[Array[bool | int]]]
 //│    = <no result>
 //│      v3 is not implemented
-//│ res: Array[T1 & 'a .. int & T1 | true & T1 | T1 & 'a]
+//│ res: Array[T1 & 'a .. T1 & int | T1 & true | T1 & 'a]
 //│    = <no result>
 //│      inn2 is not implemented
 

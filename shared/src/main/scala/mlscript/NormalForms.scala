@@ -24,7 +24,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     private def mkType(sort: Bool): SimpleType = this match {
       case LhsRefined(bo, ts, r, trs) =>
         val sr = if (sort) r.sorted else r
-        (trs.valuesIterator ++ ts.toArray.sorted).foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
+        // (trs.valuesIterator ++ ts.toArray.sorted).foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
+        val trsBase = trs.valuesIterator.foldRight(bo.fold[ST](sr)(_ & sr))(_ & _)
+        (if (sort) ts.toArray.sorted else ts.toArray).foldLeft(trsBase)(_ & _)
         // ts.toArray.sorted.foldLeft(trs.valuesIterator.foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _))(_ & _)
       case LhsTop => TopType
     }
