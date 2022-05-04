@@ -142,6 +142,7 @@ def addTwo a0 a1 = a0.Add a1
 //│ Type after simplification: ((..Addable[A13'],) -> ((..A13',) -> A13'))
 //│  where: 
 //│ 		A13' <: A13'
+//│ allVarPols: =A13'
 //│ recons[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))  (FunctionType)
 //│ | recons[-] (..Addable[A13'],)  (TupleType)
 //│ | | recons[-] Addable[A13']  (TypeRef)

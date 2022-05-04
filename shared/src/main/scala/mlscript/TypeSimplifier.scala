@@ -358,6 +358,9 @@ trait TypeSimplifier { self: Typer =>
     //     inner.lb.foreach(analyze(_, !pol))
     //     analyze(inner.ub, pol)
     def analyze(st: SimpleType, pol: Bool): Unit =
+      // analyzeImpl(st.unwrapProxies, pol)
+      analyzeImpl(st.unwrapProvs, pol)
+    def analyzeImpl(st: SimpleType, pol: Bool): Unit =
         trace(s"analyze[${printPol(S(pol))}] $st") {
         // trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
         // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
@@ -455,6 +458,7 @@ trait TypeSimplifier { self: Typer =>
       }
       }()
       go(st)
+      // println(newOccs)
       var firstTime = false
       newOccs.foreach {
         case tv: TypeVariable =>
@@ -650,6 +654,11 @@ trait TypeSimplifier { self: Typer =>
   def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
     
     implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    
+    if (dbg) {
+      val allVarPols = st.getVarsPol(pol)
+      println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
+    }
     
     implicit val ctxi: Ctx = ctx
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
