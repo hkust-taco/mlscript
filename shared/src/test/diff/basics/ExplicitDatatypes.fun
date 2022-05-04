@@ -10,7 +10,10 @@ let Either l r = Left l | Right r // TODO actual type parameters
 //│ Either: 'a -> 'b -> (Left['a] | Right['b])
 
 Either 1 2
-//│ res: Left['a .. 1 | 'a] | Right['b .. 2 | 'b]
+//│ res: Left['a] | Right['b]
+//│ 	where
+//│ 		'b :> 2
+//│ 		'a :> 1
 
 res.v
 //│ res: 1 | 2

@@ -805,6 +805,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     // val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
     val recursive = mutable.Map.empty[SimpleType, TypeVar]
     
+    // For type vars used as invariant TypeRef arguments (and other invariant places in the future?)
+    val invariant = mutable.Map.empty[TV, Type]
+    
     def go(st: SimpleType, polarity: Boolean, parents: Set[TV])(implicit inProcess: Set[SimpleType]): Type =
       // trace(s"expand $st, $polarity  — $inProcess") {
       trace(s"expand[${printPol(S(polarity))}] $st  —  ${parents.mkString(",")}") {
@@ -836,8 +839,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             recursive += tv -> nv
             // FIXME inProcess
             // FIXME self in bounds...
-            val lb = go(tv.lowerBounds.foldLeft(BotType: SimpleType)(_ | _), true, parents + tv)
-            val ub = go(tv.upperBounds.foldLeft(TopType: SimpleType)(_ & _), false, parents + tv)
+            val lb = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, parents + tv)
+            val ub = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, parents + tv)
             // println(">>>>>>", lb, ub)
             if (lb === ub) Recursive(nv, lb)
             else {
@@ -926,12 +929,45 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   // else
                   // tv
                 */  
+                case tv: TV if stopAtTyVars =>
+                  tv.asTypeVar
+                case tv: TV =>
+                  invariant.getOrElseUpdate(tv, {
+                    val newParents = parents + tv
+                    val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
+                    val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
+                    if (l === u) l else { // TODO try to rm to see what happens
+                      val nv = tv.asTypeVar
+                      // val b = Bounds(l, u)
+                      // if (b.nonEmpty)
+                      //   bounds ::= nv -> b // FIXME no dup
+                      if (l =/= Bot || u =/= Top)
+                        bounds ::= nv -> Bounds(l, u) // FIXME no dup
+                      nv
+                    }
+                  })
                 case t =>
-                val l = go(t, false, semp)
-                val u = go(t, true, semp)
-                if (l === u) l else Bounds(l, u)
+                  val l = go(t, true, parents)
+                  val u = go(t, false, parents)
+                  if (l === u) l else Bounds(l, u)
+                // case t =>
+                // // val l = go(t, false, semp)
+                // // val u = go(t, true, semp)
+                // val newParents = t match { case tv: TV => parents + tv; case _ => parents }
+                // val l = go(t, true, newParents)
+                // val u = go(t, false, newParents)
+                // // if (l === u) l else Bounds(l, u)
+                // if (l === u) l else t match {
+                // case tv: TV =>
+                //   val nv = tv.asTypeVar
+                //   bounds ::= nv -> Bounds(l, u) // FIXME no dup
+                //   nv
+                // case _ => Bounds(l, u)
+                // }
               })
-            case TypeBounds(lb, ub) => if (polarity) go(ub, true, parents) else go(lb, false, parents)
+            case TypeBounds(lb, ub) =>
+              // if (polarity) go(ub, true, parents) else go(lb, false, parents)
+              if (polarity) go(lb, true, parents) else go(ub, false, parents)
             case Without(base, names) => Rem(go(base, polarity, parents), names.toList)
             case _: TypeVariable => die
           }

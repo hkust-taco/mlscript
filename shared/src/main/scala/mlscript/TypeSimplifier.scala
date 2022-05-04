@@ -90,6 +90,8 @@ trait TypeSimplifier { self: Typer =>
     // type PolarType = DNF
     type PolarType = (DNF, Opt[Bool])
     
+    import Set.{empty => semp}
+    
     // val r = removeIrrelevantBounds(ty, pol)
     // println(r)
     // println(r.showBounds)
@@ -106,32 +108,37 @@ trait TypeSimplifier { self: Typer =>
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    def goDeep(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
+    def goDeep(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
+        case v: TV if parents(v) =>
+          ??? // uh?
+          if (pol.getOrElse(die)) // doesn't really make sense to have a parent in invariant pos
+            BotType else TopType
         case tv: TV if recursiveVars.contains(tv) => renew(tv)
-        // case v: TV if pol.isEmpty =>
-        //   println(s"$v is in a bad place...")
-        //   recursiveVars += v
-        //   val nv = renew(v)
-        //   nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
-        //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
-        //   nv
+        case v: TV if pol.isEmpty =>
+          println(s"$v is in a bad place...")
+          recursiveVars += v
+          val nv = renew(v)
+          val newParents = parents + v
+          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
+          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
+          nv
         case _ =>
       // go1(go0(ty, pol), pol)
-      go0(ty, pol) match {
-        case R(dnf) => go1(dnf, pol)
+      go0(ty, pol, parents) match {
+        case R(dnf) => go1(dnf, pol, parents)
         case L((dnf1, dnf2)) =>
-          TypeBounds.mk(go1(dnf1, S(false)), go1(dnf2, S(true)), noProv)
+          TypeBounds.mk(go1(dnf1, S(false), parents), go1(dnf2, S(true), parents), noProv)
       }
     }
     
     // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
-    def go0(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
+    def go0(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
     trace(s"ty[${printPol(pol)}] $ty") {
       
       implicit val etf: ExpandTupleFields = false
       
       // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
-      def rec(dnf: DNF, done: Set[TV], pol: Bool): DNF = dnf.cs.iterator.map { c =>
+      def rec(dnf: DNF, done: Set[TV], pol: Bool, parents: Set[TV]): DNF = dnf.cs.iterator.map { c =>
         // val vs = c.vars.filterNot(done)
         // val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
         //   recursiveVars += v
@@ -140,12 +147,13 @@ trait TypeSimplifier { self: Typer =>
         //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
         //   true
         // } || done(v))
-        val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isBadlyRecursive === S(false) && {
+        val vs = c.vars.filterNot(parents).filterNot(v => recursiveVars.contains(v) || v.isBadlyRecursive === S(false) && {
           println(s"$v is badly recursive...")
           recursiveVars += v
           val nv = renew(v)
-          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
-          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
+          val newParents = parents + v
+          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
+          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
           true
         // } || done(v))
         } || done(v) && {println(s"Done $v"); true})
@@ -156,7 +164,8 @@ trait TypeSimplifier { self: Typer =>
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)
           // println(s"b $b")
-          val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol)
+          // val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents + tv)
+          val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents ++ vs)
           // println(s"bd $bd")
           bd
         }
@@ -184,27 +193,27 @@ trait TypeSimplifier { self: Typer =>
           // pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
           pol.fold({
             // R(dnf)
-            val a = rec(dnf, Set.empty, false)
-            val b = rec(dnf, Set.empty, true) // TODO rm for perf
+            val a = rec(dnf, Set.empty, false, parents)
+            val b = rec(dnf, Set.empty, true, parents) // TODO rm for perf
             // assert(a === b, a -> b)
             // if (a === b) ???
             if (a === b)
             R(a)
             else L(a -> b)
             // else L(b -> a)
-          })(p => R(rec(dnf, Set.empty, p)))
+          })(p => R(rec(dnf, semp, p, parents)))
           // pol.fold(R(dnf))(p => {
           //   val a = rec(dnf, Set.empty, p)
           //   val b = rec(dnf, Set.empty, !p)
           //   R(a)
           // })
-        case L((dnf1, dnf2)) => L(rec(dnf1, Set.empty, false), rec(dnf2, Set.empty, true))
+        case L((dnf1, dnf2)) => L(rec(dnf1, semp, false, parents), rec(dnf2, semp, true, parents))
       }
       
     }(r => s"-> $r")
     
     // Merge the bounds of all type variables of the given DNF, and traverse the result
-    def go1(ty: DNF, pol: Opt[Bool])
+    def go1(ty: DNF, pol: Opt[Bool], parents: Set[TV])
         (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[${printPol(pol)}] $ty") {
       if (ty.isBot) ty.toType(sort = true) else {
         val pty = ty -> pol
@@ -219,7 +228,7 @@ trait TypeSimplifier { self: Typer =>
                 case LhsRefined(b, ts, RecordType(fs), trs) => LhsRefined(
                   b.map {
                     case ft @ FunctionType(l, r) =>
-                      FunctionType(goDeep(l, pol.map(!_)), goDeep(r, pol))(noProv)
+                      FunctionType(goDeep(l, pol.map(!_), semp), goDeep(r, pol, semp))(noProv)
                     // case wo @ Without(b, ns) if ns.isEmpty =>
                     // case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
                     //   // FIXME hacky!!
@@ -228,11 +237,11 @@ trait TypeSimplifier { self: Typer =>
                     //   Without(TypeRef(defn, targs.map(targ =>
                     //     TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov), ns)(wo.prov)
                     case wo @ Without(b, ns) =>
-                      Without(goDeep(b, pol), ns)(noProv)
+                      Without(goDeep(b, pol, parents), ns)(noProv)
                     case ft @ TupleType(fs) =>
-                      TupleType(fs.mapValues(_.update(goDeep(_, pol.map(!_)), goDeep(_, pol))))(noProv)
+                      TupleType(fs.mapValues(_.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))))(noProv)
                     case ar @ ArrayType(inner) =>
-                      ArrayType(inner.update(goDeep(_, pol.map(!_)), goDeep(_, pol)))(noProv)
+                      ArrayType(inner.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))(noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
@@ -247,8 +256,11 @@ trait TypeSimplifier { self: Typer =>
                     //       nme -> FieldType(lb.map(goDeep(_, pol.map(!_))), goDeep(ub, pol))(ty.prov)
                     //   }
                     // case (nme, ty) => nme -> goDeep(ty, pol)
+                    case (nme, fty @ FieldType(S(lb), ub)) if lb === ub =>
+                      val res = goDeep(ub, N, semp)
+                      nme -> FieldType(S(res), res)(fty.prov)
                     case (nme, fty @ FieldType(lb, ub)) =>
-                      nme -> FieldType(lb.map(goDeep(_, pol.map(!_))), goDeep(ub, pol))(fty.prov)
+                      nme -> FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
                   })(noProv),
                   trs.map {
                     case (d, tr @ TypeRef(defn, targs)) =>
@@ -256,7 +268,7 @@ trait TypeSimplifier { self: Typer =>
                       // d -> TypeRef(defn, targs.map(targ =>
                       //   TypeBounds.mk(goDeep(targ, S(false)), goDeep(targ, S(true)), noProv)))(tr.prov)
                       d -> TypeRef(defn, targs.map(targ =>
-                        goDeep(targ, N)))(tr.prov)
+                        goDeep(targ, N, semp)))(tr.prov)
                   }
                 )
                 case LhsTop => LhsTop
@@ -269,17 +281,18 @@ trait TypeSimplifier { self: Typer =>
               //   case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, !pol), goDeep(_, pol)))
               def adapt2(pol: Opt[Bool])(l: RhsNf): RhsNf = l match {
                 // case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
-                case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_)), goDeep(_, pol)))
+                case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))
                 case RhsBases(prims, bf) =>
                   // TODO refactor to handle goDeep returning something else...
                   RhsBases(prims, bf match {
                     case N => N
-                    case S(L(bt)) => goDeep(bt, pol) match {
+                    case S(L(bt)) => goDeep(bt, pol, parents) match {
                       case bt: MiscBaseType => S(L(bt))
                       case ExtrType(true) => N
                       case _ => ???
                     }
-                    case S(R(r)) => S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_)), goDeep(_, pol)))))
+                    case S(R(r)) =>
+                      S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))))
                   })
                 case RhsBot => RhsBot
               }
@@ -322,7 +335,7 @@ trait TypeSimplifier { self: Typer =>
       }
     }(r => s"~> $r")
     
-    goDeep(ty, pol)(Set.empty)
+    goDeep(ty, pol, semp)(semp)
     
   }
   
@@ -589,7 +602,8 @@ trait TypeSimplifier { self: Typer =>
       case tv: TypeVariable =>
         varSubst.get(tv) match {
           case S(S(ty)) => transform(ty, pol)
-          case S(N) => pol.fold(die)(pol => ExtrType(pol)(noProv))
+          // case S(N) => pol.fold(die)(pol => ExtrType(pol)(noProv))
+          case S(N) => pol.fold(TypeBounds(BotType, TopType)(noProv):ST)(pol => ExtrType(pol)(noProv))
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {

@@ -160,7 +160,7 @@ a1: R1['_]
 
 :ns
 a1: R1['_]
-//│ res: R1['_ & (int | string) .. '_ | int & string]
+//│ res: R1['_ | int & string .. '_ & (int | string)]
 //│    = A1 {}
 
 

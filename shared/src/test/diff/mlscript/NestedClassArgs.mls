@@ -16,21 +16,21 @@ def c: C[C['a]] -> 'a
 
 // :ds
 def c: C['a] as 'a
-//│ c: C['a] as 'a
+//│ c: (C['b] as 'b) as 'a
 
 // :ds
 def c: C['a] | 'a as 'a
-//│ c: 'a | C['a] as 'a
+//│ c: ('a | C['b] as 'b) as 'a
 
 def c: C[C['a]] as 'a
-//│ c: C[C['a]] as 'a
+//│ c: (C[C['b]] as 'b) as 'a
 
 // :ds
 def c: C[C['a] & 'a] as 'a
-//│ c: C[C['a] & 'a] as 'a
+//│ c: (C[C['b] & 'a] as 'b) as 'a
 
 def c: C[C['a] & 'a | 'a] as 'a
-//│ c: C['a] as 'a
+//│ c: (C['b] as 'b) as 'a
 
 def c: C['a]
 //│ c: C['a]
@@ -54,10 +54,14 @@ mkC = mkC'
 // TODOne-simplif
 // :ds
 rec def rc = mkC(rc)
-//│ rc: C2['a .. 'a | 'b] as 'b
+//│ rc: C2['a] as 'b
+//│ 	where
+//│ 		'a :> 'b
 
 rec def rc = mkC'(rc)
-//│ rc: (C2['A .. 'A | 'a] with {a: 'a}) as 'a
+//│ rc: (C2['A] with {a: 'a}) as 'a
+//│ 	where
+//│ 		'A :> 'a
 
 
 
@@ -74,6 +78,8 @@ rec def c a = C3 { a = c a }
 
 rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
 //│ anything -> C3['X]
+//│ 	where
+//│ 		'X <: 'X & 'X
 //│   <:  c:
 //│ 'a -> C3['a]
 
@@ -91,10 +97,10 @@ C{}
 
 // :ds
 def c4 a = C4{ a = C{} }
-//│ c4: anything -> (C4['A] with {a: C[C4['A]]})
+//│ c4: anything -> (C4['A] with {a: C[anything .. nothing]})
 
 def c = c4
-//│ anything -> (C4['A] with {a: C[C4['A]]})
+//│ anything -> (C4['A] with {a: C[anything .. nothing]})
 //│   <:  c:
 //│ 'a -> C4['a]
 
@@ -106,10 +112,16 @@ def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
-//│ c5: anything -> ((C5['A] with {a: C2[C5['A] .. 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ c5: anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
+//│ 	where
+//│ 		'A0 :> 'a | C5['A]
+//│ 		    <: C5['A]
 
 c = c5
-//│ anything -> ((C5['A] with {a: C2[C5['A] .. 'a | C5['A]] with {a: 'a}}) as 'a)
+//│ anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
+//│ 	where
+//│ 		'A0 :> 'a | C5['A]
+//│ 		    <: C5['A]
 //│   <:  c:
 //│ 'a -> C5['a]
 
@@ -125,7 +137,10 @@ def c: 'a -> C6['a]
 // rec def c a = C6{ a = c5 (c a) }
 
 rec def c6 a = C6{ a = c5 (c6 a) }
-//│ c6: anything -> (C6['A] with {a: (C5[C6['A]] with {a: C2[C5[C6['A]] .. 'a | C5[C6['A]]] with {a: 'a}}) as 'a})
+//│ c6: anything -> (C6['A] with {a: (C5[anything .. nothing] with {a: C2['A0] with {a: 'a}}) as 'a})
+//│ 	where
+//│ 		'A0 :> C5[C6['A]] | 'a | C5[?]
+//│ 		    <: C5[C6['A]] & C5[?]
 
 // FIXME SOF
 // :d
@@ -145,7 +160,7 @@ class L[T]: { h: T; t: O[L[T]] }
 //│ Defined type alias O
 //│ Defined class L
 //│ Declared L.Append: L['T] -> 'T -> L['T]
-//│ Defined L.Append: L['T] -> ('T & 'a) -> (L['T] with {h: 'a, t: S[L['T]]})
+//│ Defined L.Append: L['T] -> ('T & 'a) -> (L['T] with {h: 'a, t: S[anything .. nothing]})
 
 // before:
 //  Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
@@ -155,15 +170,19 @@ L.Append
 
 
 def append ls elem = L { h = elem; t = S { v = ls } }
-//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] with {v: 'v}})
+//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[anything .. nothing] with {v: 'v}})
 
 def append0 ls = L { h = 0; t = S { v = ls } }
-//│ append0: (L['T .. 0 | 'T] & 'v) -> (L['T .. 0 | 'T] with {h: 0, t: S[L['T .. 0 | 'T]] with {v: 'v}})
+//│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S[anything .. nothing] with {v: 'v}})
+//│ 	where
+//│ 		'T :> 0
 
 def appendNil elem = L { h = elem; t = N{} }
 //│ appendNil: ('h & 'T) -> (L['T] with {h: 'h, t: N})
 
 
 S{v=1}
-//│ res: S['T .. 1 | 'T] with {v: 1}
+//│ res: S['T] & {v: 1}
+//│ 	where
+//│ 		'T :> 1
 

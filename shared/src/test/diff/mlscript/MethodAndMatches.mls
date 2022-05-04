@@ -36,7 +36,9 @@ foo d1
 foo d1 0
 //│ res: 'A -> (Derived1 | Base1['A])
 //│    = [Function (anonymous)]
-//│ res: Derived1 | Base1['A .. 0 | 'A]
+//│ res: Derived1 | Base1['A]
+//│ 	where
+//│ 		'A :> 0
 //│    = Derived1 { x: 2 }
 
 def bar0: Base1[int] -> int -> Base1[int]
@@ -58,7 +60,7 @@ def bar0 = foo
 //│   <:  bar0:
 //│ Base1[int] -> int -> Base1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.56: 	def bar0 = foo
+//│ ║  l.58: 	def bar0 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── expression of type `Base1[int] & ~?a | Derived1` does not have field 'x'
 //│ ╟── Note: constraint arises from record type:
@@ -87,10 +89,10 @@ def bar1 = foo
 //│   <:  bar1:
 //│ Type1[int] -> int -> Type1[int]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `int` is not a record (expected a record with fields: c, d)
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ║        	                        ^^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.9: 	class Derived3[C, D]: Base1[{ c: C; d: D }] & { c: C; d: D }
@@ -99,7 +101,7 @@ def bar1 = foo
 //│ ║  l.26: 	  | Base1 -> b.M1 x
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -108,10 +110,10 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -120,10 +122,10 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -132,10 +134,10 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -144,10 +146,10 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -156,10 +158,10 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `{c: ?a, d: ?b}` does not match type `int`
 //│ ║  l.9: 	class Derived3[C, D]: Base1[{ c: C; d: D }] & { c: C; d: D }
@@ -168,7 +170,7 @@ def bar1 = foo
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ╙──     	                      ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.85: 	def bar1 = foo
+//│ ║  l.87: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type `Base1[?A]` does not match type `Derived1 | Derived3[?a, ?b]`
 //│ ║  l.2: 	  method M1: A -> Base1[A]
@@ -177,7 +179,7 @@ def bar1 = foo
 //│ ║  l.11: 	type Type1[A] = Derived1 | Derived3['a, 'b]
 //│ ║        	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.72: 	def bar1: Type1[int] -> int -> Type1[int]
+//│ ║  l.74: 	def bar1: Type1[int] -> int -> Type1[int]
 //│ ╙──      	                               ^^^^^^^^^^
 //│     = [Function: foo]
 
@@ -200,25 +202,25 @@ def bar2 = foo
 //│   <:  bar2:
 //│ Base1['a] -> 'a -> Base1['a]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	def bar2 = foo
+//│ ║  l.200: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of type 'a
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ║       	                      ^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.184: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ║  l.186: 	def bar2: Base1['a] -> 'a -> Base1['a]
 //│ ╙──       	                ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	def bar2 = foo
+//│ ║  l.200: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `'a` does not match type `int`
-//│ ║  l.184: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ║  l.186: 	def bar2: Base1['a] -> 'a -> Base1['a]
 //│ ║         	                ^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.3: 	class Derived1: Base1[int] & { x: int }
 //│ ╙──     	                      ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	def bar2 = foo
+//│ ║  l.200: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── expression of type `Base1['a] & ~?a | Derived1` does not have field 'x'
 //│ ╟── Note: constraint arises from record type:

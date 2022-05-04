@@ -48,7 +48,9 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ globalThis.box2 = box1.Map((x) => add(x)(1));
 //│ res = box2;
 //│ // End of generated code
-//│ box1: Box['T .. 1 | 'T] with {inner: 1}
+//│ box1: Box['T] & {inner: 1}
+//│ 	where
+//│ 		'T :> 1
 //│     = Box { inner: 1 }
 //│ box2: Box['a .. 'a | int]
 //│     = Box { inner: 2 }
@@ -137,10 +139,14 @@ MyBox.Map mb (fun x -> x * 3)
 //│ // Query 2
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
-//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ res: Box['T] & {info: string, inner: int}
+//│ 	where
+//│ 		'T :> int
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
-//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ res: Box['T] & {info: string, inner: int}
+//│ 	where
+//│ 		'T :> int
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
 

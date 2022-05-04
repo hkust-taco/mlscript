@@ -62,7 +62,7 @@ def rc1 : { mut x : int}
 rc1 = {mut x = 1}
 //│ rc1: {x: int .. int}
 //│    = <missing implementation>
-//│ {x: 'a .. 1 | 'a}
+//│ {x: 'a .. 'a | 1}
 //│   <:  rc1:
 //│ {x: int .. int}
 //│    = { x: 1 }
@@ -143,24 +143,24 @@ immtpl[0] <- 0
 rc2 = {mut x = 1}
 rc2.x <- true
 rc2.x <- "hello"
-//│ rc2: {x: 'a .. 1 | 'a}
+//│ rc2: {x: 'a .. 'a | 1}
 //│    = { x: 1 }
 //│ = []
 //│ = []
 
 // TODO let-bound values should be treated as monomorphic – see mismatch in:
 rc2
-//│ res: {x: 'a .. 1 | 'a}
+//│ res: {x: 'a .. 'a | 1}
 //│    = { x: 'hello' }
 
 def g r = (fun x -> r) (r.x <- 3)
 g rc1
 g rc2
-//│ g: ({x: 3 | 'a .. 'a} & 'b) -> 'b
+//│ g: ({x: 'a | 3 .. 'a} & 'b) -> 'b
 //│  = [Function: g]
 //│ res: {x: int .. int}
 //│    = { x: 3 }
-//│ res: {x: 'a .. 1 | 3 | 'a}
+//│ res: {x: 'a & 'a .. 'a | 1 | 3 | 1}
 //│    = { x: 3 }
 
 :e 
@@ -211,7 +211,7 @@ t1 = T {mut x = 2; y = false}
 t2 = T {x = 2}
 //│ t1: T & {x: int .. int, y: bool}
 //│   = <missing implementation>
-//│ {x: 'a .. 2 | 'a, y: false} & t
+//│ {x: 'a .. 'a | 2, y: false} & t
 //│   <:  t1:
 //│ T & {x: int .. int, y: bool}
 //│   = { x: 2, y: false }
@@ -255,11 +255,11 @@ b1 = B { mut x = 2; y = true }
 b2 = B { mut x = 1; y = false}
 //│ b1: B
 //│   = <missing implementation>
-//│ B with {x: int & 'x .. 2 | 'x, y: true}
+//│ B with {x: 'x & 'x & int .. 'x | 2, y: true}
 //│   <:  b1:
 //│ B
 //│   = B { x: 2, y: true }
-//│ b2: B with {x: int & 'x .. 1 | 'x, y: false}
+//│ b2: B with {x: 'x & 'x & int .. 'x | 1, y: false}
 //│   = B { x: 1, y: false }
 
 b1.Foo
@@ -290,7 +290,7 @@ b3 = B {x = 6; y = false}
 //│ ╟── record field of type `6` is not mutable
 //│ ║  l.286: 	b3 = B {x = 6; y = false}
 //│ ╙──       	        ^^^^^
-//│ b3: (B with {x: int & 'x .. 6 | 'x, y: false}) | error
+//│ b3: (B with {x: 'x & int .. 'x | 6, y: false}) | error
 //│   = B { x: 6, y: false }
 
 :e
@@ -625,7 +625,7 @@ g (1, true) 2
 
 w1 = 3 with {mut x = 4}
 w1.x <- 3
-//│ w1: 3 & {x: 'a .. 4 | 'a}
+//│ w1: 3 & {x: 'a .. 'a | 4}
 //│   = [Number: 3] { x: 4 }
 //│ = []
 
@@ -680,7 +680,7 @@ foreach am1 (fun y -> y._1 <- 2)
 //│ res: Array[MutArray[int .. int] & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
-//│ res: Array[{_1: int .. int} & 'a .. 'a | (int .. int,)]
+//│ res: Array[{_1: anything} & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
 

@@ -18,7 +18,10 @@ Bar.Fun
 //│    = undefined
 
 f = Foo { x = 1; y = 2 }
-//│ f: Foo['A .. 1 | 'A, 'B .. 2 | 'B] with {x: 1, y: 2}
+//│ f: Foo['A, 'B] & {x: 1, y: 2}
+//│ 	where
+//│ 		'B :> 2
+//│ 		'A :> 1
 //│  = Foo { x: 1, y: 2 }
 
 f.(Foo.Fun)
@@ -100,14 +103,21 @@ class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper
 //│ Declared WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> WrapperWrapper['B]
-//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'a) -> WrapperWrapper['a]
+//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> ('a & 'a & 'a)) -> (WrapperWrapper['a] with {x: Wrapper['a]})
+//│ 	where
+//│ 		'a <: 'a & 'a & 'a
 
 WrapperWrapper { x = Psyduck { x = 0 } }
-//│ res: WrapperWrapper['A .. 0 | 'A] with {x: Psyduck['A .. 0 | 'A] with {x: 0}}
+//│ res: WrapperWrapper['A] with {x: Psyduck['A] & {x: 0}}
+//│ 	where
+//│ 		'A :> 0
+//│ 		   <: 'A & 'A & 'A
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 res.Apply2 (fun x -> mul x 2)
-//│ res: WrapperWrapper['B .. 'B | int]
+//│ res: WrapperWrapper['B]
+//│ 	where
+//│ 		'B :> int
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 Wrapper
@@ -174,7 +184,10 @@ p = Pair { x = 42; y = true }
 fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
-//│ p: Pair['A .. 42 | 'A, 'B .. 'B | true] with {x: 42, y: true}
+//│ p: Pair['A, 'B] & {x: 42, y: true}
+//│ 	where
+//│ 		'B :> true
+//│ 		'A :> 42
 //│  = Pair { x: 42, y: true }
 //│ fx: int -> int
 //│   = [Function: fx]
@@ -186,7 +199,10 @@ ft = fun x -> fun y -> if (y) then gt x 0 else y
 p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
-//│ res: AbstractPair['C .. 'C | int, 'D .. 'D | bool]
+//│ res: AbstractPair['C, 'D]
+//│ 	where
+//│ 		'D :> bool
+//│ 		'C :> int
 //│    = Pair { x: 84, y: false }
 //│ res: bool
 //│    = true
@@ -195,14 +211,20 @@ p.Test ft
 
 t = Tru { x = "foo"; y = false }
 t.(Tru.True)
-//│ t: Tru['A .. "foo" | 'A, 'B .. 'B | false] with {x: "foo", y: false}
+//│ t: Tru['A, 'B] & {x: "foo", y: false}
+//│ 	where
+//│ 		'B :> false
+//│ 		'A :> "foo"
 //│  = Tru { x: 'foo', y: false }
 //│ res: true
 //│    = undefined
 
 t = True2 { x = "bar"; y = false }
 t.(True2.True)
-//│ t: True2['A .. "bar" | 'A, 'B .. 'B | false] with {x: "bar", y: false}
+//│ t: True2['A, 'B] & {x: "bar", y: false}
+//│ 	where
+//│ 		'B :> false
+//│ 		'A :> "bar"
 //│  = True2 { x: 'bar', y: false }
 //│ res: bool
 //│    = undefined
@@ -245,19 +267,19 @@ class Class3C: Class2C
     method MtdA = 42
     method MtdB = 42
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.268: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.268: 	    method MtdB = 42
 //│ ║         	                  ^^
 //│ ╟── but it flows into method definition with expected type `bool`
-//│ ║  l.246: 	    method MtdB = 42
+//│ ║  l.268: 	    method MtdB = 42
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.230: 	class Class2C: Class2B[int, bool]
+//│ ║  l.252: 	class Class2C: Class2B[int, bool]
 //│ ║         	                            ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.229: 	    method MtdB: B
+//│ ║  l.251: 	    method MtdB: B
 //│ ╙──       	           ^^^^^^^
 //│ Defined class Class3C
 //│ Defined Class3C.MtdA: Class3C -> 42
@@ -293,10 +315,10 @@ Test3B.F
 class Test4A[A]: { x: A }
     method Mth4A[A]: A
 //│ ╔══[WARNING] Method type parameter A
-//│ ║  l.293: 	class Test4A[A]: { x: A }
+//│ ║  l.315: 	class Test4A[A]: { x: A }
 //│ ║         	             ^
 //│ ╟── shadows class type parameter A
-//│ ║  l.294: 	    method Mth4A[A]: A
+//│ ║  l.316: 	    method Mth4A[A]: A
 //│ ╙──       	                 ^
 //│ Defined class Test4A
 //│ Declared Test4A.Mth4A: Test4A['A] -> nothing
@@ -348,13 +370,13 @@ Ber.F
 :e
 Ber
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
-//│ ║  l.349: 	Ber
+//│ ║  l.371: 	Ber
 //│ ║         	^^^
 //│ ╟── Note that class Ber is abstract:
-//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ║  l.363: 	class Ber: Fee & Fee2
 //│ ║         	      ^^^^^^^^^^^^^^^
 //│ ╟── Hint: method F is abstract
-//│ ║  l.341: 	class Ber: Fee & Fee2
+//│ ║  l.363: 	class Ber: Fee & Fee2
 //│ ╙──       	      ^^^^^^^^^^^^^^^
 //│ res: error
 //│    = [Function: res]

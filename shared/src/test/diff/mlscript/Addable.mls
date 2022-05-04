@@ -55,33 +55,20 @@ def addTwo a0 a1 = a0.Add a1
 //│ | | ty[-] α5'
 //│ | | | isBadlyRecursive(α5') = None None
 //│ | | | Consider α5' List() List([[[Addable[A6']]]])
-//│ | | | isBadlyRecursive(α5') = None None
-//│ | | | Done α5'
 //│ | | -> Right(DNF({}∧Addable[A6']∧α5'))
 //│ | | DNF[-] DNF({}∧Addable[A6']∧α5')
-//│ | | | ty[=] A6'
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | Consider A6' List() List([[α7']])
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | Done A6'
+//│ | | | A6' is in a bad place...
+//│ | | | Renewed A6' ~> A9'
+//│ | | | ty[-] [[α7']]
 //│ | | | | isBadlyRecursive(α7') = None None
 //│ | | | | Consider α7' List() List()
-//│ | | | | isBadlyRecursive(α7') = None None
-//│ | | | | Done α7'
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | Consider A6' List() List([[α7']])
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | Done A6'
-//│ | | | -> Left((DNF(A6'∧α7'),DNF(A6')))
-//│ | | | DNF[-] DNF(A6'∧α7')
-//│ | | | | Renewed A6' ~> A9'
+//│ | | | -> Right(DNF(α7'))
+//│ | | | DNF[-] DNF(α7')
 //│ | | | | Renewed α7' ~> α10'
-//│ | | | ~> (A9' & α10')
-//│ | | | DNF[+] DNF(A6')
-//│ | | | ~> A9'
+//│ | | | ~> α10'
 //│ | | | Renewed α5' ~> α11'
-//│ | | ~> (Addable[(A9' & α10')..A9'] & α11')
-//│ | ~> (..(Addable[(A9' & α10')..A9'] & α11'),)
+//│ | | ~> (Addable[A9'] & α11')
+//│ | ~> (..(Addable[A9'] & α11'),)
 //│ | ty[+] ((..α8',) -> α7')
 //│ | -> Right(DNF(((..α8',) -> α7'){}))
 //│ | DNF[+] DNF(((..α8',) -> α7'){})
@@ -91,58 +78,43 @@ def addTwo a0 a1 = a0.Add a1
 //│ | | | ty[-] α8'
 //│ | | | | isBadlyRecursive(α8') = None None
 //│ | | | | Consider α8' List() List([[[A6']]])
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | isBadlyRecursive(α8') = None None
-//│ | | | | Done α8'
-//│ | | | | Consider A6' List() List([[α7']])
-//│ | | | | isBadlyRecursive(A6') = None None
-//│ | | | | Done A6'
-//│ | | | | isBadlyRecursive(α7') = None None
-//│ | | | | Consider α7' List() List()
-//│ | | | | isBadlyRecursive(α7') = None None
-//│ | | | | Done α7'
-//│ | | | -> Right(DNF(A6'∧α7'∧α8'))
-//│ | | | DNF[-] DNF(A6'∧α7'∧α8')
+//│ | | | -> Right(DNF(A6'∧α8'))
+//│ | | | DNF[-] DNF(A6'∧α8')
 //│ | | | | Renewed α8' ~> α12'
-//│ | | | ~> ((A9' & α10') & α12')
-//│ | | ~> (..((A9' & α10') & α12'),)
+//│ | | | ~> (A9' & α12')
+//│ | | ~> (..(A9' & α12'),)
 //│ | | ty[+] α7'
 //│ | | | isBadlyRecursive(α7') = None None
 //│ | | | Consider α7' List() List()
-//│ | | | isBadlyRecursive(α7') = None None
-//│ | | | Done α7'
 //│ | | -> Right(DNF(α7'))
 //│ | | DNF[+] DNF(α7')
 //│ | | ~> α10'
-//│ | ~> ((..((A9' & α10') & α12'),) -> α10')
-//│ ~> ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
-//│ Canon: ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
+//│ | ~> ((..(A9' & α12'),) -> α10')
+//│ ~> ((..(Addable[A9'] & α11'),) -> ((..(A9' & α12'),) -> α10'))
+//│ Canon: ((..(Addable[A9'] & α11'),) -> ((..(A9' & α12'),) -> α10'))
 //│  where: 
-//│ analyze[+] ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
-//│ | analyze[-] (..(Addable[(A9' & α10')..A9'] & α11'),)
-//│ | | analyze[-] (Addable[(A9' & α10')..A9'] & α11')
-//│ | | | go (Addable[(A9' & α10')..A9'] & α11')   ()
-//│ | | | | go Addable[(A9' & α10')..A9']   ()
-//│ | | | | | analyze[-] Addable[(A9' & α10')..A9']
-//│ | | | | | | analyze[+] (A9' & α10')..A9'
-//│ | | | | | | | analyze[+] A9'
-//│ | | | | | | | | go A9'   ()
-//│ | | | | | | | | >>>> A9' HashSet(A9') None
-//│ | | | | | | analyze[-] (A9' & α10')..A9'
-//│ | | | | | | | analyze[-] (A9' & α10')
-//│ | | | | | | | | go (A9' & α10')   ()
-//│ | | | | | | | | | go A9'   ()
-//│ | | | | | | | | | go α10'   (A9')
-//│ | | | | | | | | >>>> A9' HashSet(A9', α10') None
-//│ | | | | | | | | >>>> α10' HashSet(A9', α10') None
-//│ | | | | go α11'   (Addable[(A9' & α10')..A9'])
-//│ | | | >>>> α11' HashSet(Addable[(A9' & α10')..A9'], α11') None
-//│ | analyze[+] ((..((A9' & α10') & α12'),) -> α10')
-//│ | | analyze[-] (..((A9' & α10') & α12'),)
-//│ | | | analyze[-] ((A9' & α10') & α12')
-//│ | | | | go ((A9' & α10') & α12')   ()
-//│ | | | | | go (A9' & α10')   ()
-//│ | | | | | | go A9'   ()
+//│ 		A9' <: α10'
+//│ analyze[+] ((..(Addable[A9'] & α11'),) -> ((..(A9' & α12'),) -> α10'))
+//│ | analyze[-] (..(Addable[A9'] & α11'),)
+//│ | | analyze[-] (Addable[A9'] & α11')
+//│ | | | go (Addable[A9'] & α11')   ()
+//│ | | | | go Addable[A9']   ()
+//│ | | | | | analyze[-] Addable[A9']
+//│ | | | | | | analyze[+] A9'
+//│ | | | | | | | go A9'   ()
+//│ | | | | | | | >>>> A9' HashSet(A9') None
+//│ | | | | | | analyze[-] A9'
+//│ | | | | | | | go A9'   ()
+//│ | | | | | | | | go α10'   (A9')
+//│ | | | | | | | >>>> A9' HashSet(A9', α10') None
+//│ | | | | | | | >>>> α10' HashSet(A9', α10') None
+//│ | | | | go α11'   (Addable[A9'])
+//│ | | | >>>> α11' HashSet(Addable[A9'], α11') None
+//│ | analyze[+] ((..(A9' & α12'),) -> α10')
+//│ | | analyze[-] (..(A9' & α12'),)
+//│ | | | analyze[-] (A9' & α12')
+//│ | | | | go (A9' & α12')   ()
+//│ | | | | | go A9'   ()
 //│ | | | | | | go α10'   (A9')
 //│ | | | | | go α12'   (A9', α10')
 //│ | | | | >>>> A9' HashSet(A9', α10', α12') Some(HashSet(A9', α10'))
@@ -151,13 +123,14 @@ def addTwo a0 a1 = a0.Add a1
 //│ | | analyze[+] α10'
 //│ | | | go α10'   ()
 //│ | | | >>>> α10' HashSet(α10') None
-//│ [occs] +A9' {A9'} ; -A9' {A9',α10'} ; -α10' {A9',α10'} ; -α11' {Addable[(A9' & α10')..A9'],α11'} ; -α12' {A9',α10',α12'} ; +α10' {α10'}
+//│ [occs] +A9' {A9'} ; -A9' {A9',α10'} ; -α10' {A9',α10'} ; -α11' {Addable[A9'],α11'} ; -α12' {A9',α10',α12'} ; +α10' {α10'}
 //│ isBadlyRecursive(A9') = None None
 //│ isBadlyRecursive(α10') = None None
 //│ isBadlyRecursive(α11') = None None
 //│ isBadlyRecursive(α12') = None None
 //│ [vars] TreeSet(A9', α10', α11', α12')
 //│ [bounds] 
+//│ 		A9' <: α10'
 //│ [rec] HashSet()
 //│ [!] α11'
 //│ [!] α12'
@@ -168,56 +141,63 @@ def addTwo a0 a1 = a0.Add a1
 //│ Renewed A9' ~> A13'
 //│ Type after simplification: ((..Addable[A13'],) -> ((..A13',) -> A13'))
 //│  where: 
+//│ 		A13' <: A13'
 //│ recons[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))  (FunctionType)
 //│ | recons[-] (..Addable[A13'],)  (TupleType)
 //│ | | recons[-] Addable[A13']  (TypeRef)
 //│ | | | recons[=] A13'  (TypeVariable)
-//│ | | | => A13'
-//│ | | => Addable[A13']
-//│ | => (..Addable[A13'],)
+//│ | | | | recons[-] A13'  (TypeVariable)
+//│ | | | | => A14'
+//│ | | | => A14'
+//│ | | => Addable[A14']
+//│ | => (..Addable[A14'],)
 //│ | recons[+] ((..A13',) -> A13')  (FunctionType)
 //│ | | recons[-] (..A13',)  (TupleType)
 //│ | | | recons[-] A13'  (TypeVariable)
-//│ | | | => A13'
-//│ | | => (..A13',)
+//│ | | | => A14'
+//│ | | => (..A14',)
 //│ | | recons[+] A13'  (TypeVariable)
-//│ | | => A13'
-//│ | => ((..A13',) -> A13')
-//│ => ((..Addable[A13'],) -> ((..A13',) -> A13'))
-//│ Recons: ((..Addable[A13'],) -> ((..A13',) -> A13'))
+//│ | | => A14'
+//│ | => ((..A14',) -> A14')
+//│ => ((..Addable[A14'],) -> ((..A14',) -> A14'))
+//│ Recons: ((..Addable[A14'],) -> ((..A14',) -> A14'))
 //│  where: 
-//│ allVarPols: =A13'
-//│ expand[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))  —  
-//│ | expand[-] (..Addable[A13'],)  —  
-//│ | | expand[-] Addable[A13']  —  
-//│ | | | expand[-] A13'  —  
-//│ | | | | isBadlyRecursive(A13') = None None
-//│ | | | | (>>>>>>,A13')
+//│ 		A14' <: A14'
+//│ allVarPols: =A14'
+//│ expand[+] ((..Addable[A14'],) -> ((..A14',) -> A14'))  —  
+//│ | expand[-] (..Addable[A14'],)  —  
+//│ | | expand[-] Addable[A14']  —  
+//│ | | | expand[+] ⊥  —  A14'
+//│ | | | => Bot
+//│ | | | expand[-] A14'  —  A14'
+//│ | | | | isBadlyRecursive(A14') = None Some(Some(false))
+//│ | | | | (>>>>>>,A14')
+//│ | | | | (>>>>>>,Set(A14'),true)
+//│ | | | | expand[-] A14'  —  A14'
+//│ | | | | => α14
+//│ | | | => Inter(α14,α14)
+//│ | | => AppliedType(TypeName(Addable),List(α14))
+//│ | => Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α14))))))
+//│ | expand[+] ((..A14',) -> A14')  —  
+//│ | | expand[-] (..A14',)  —  
+//│ | | | expand[-] A14'  —  
+//│ | | | | isBadlyRecursive(A14') = None Some(Some(false))
+//│ | | | | (>>>>>>,A14')
 //│ | | | | (>>>>>>,Set(),false)
-//│ | | | => α13
-//│ | | | expand[+] A13'  —  
-//│ | | | | isBadlyRecursive(A13') = None None
-//│ | | | | (>>>>>>,A13')
-//│ | | | | (>>>>>>,Set(),false)
-//│ | | | => α13
-//│ | | => AppliedType(TypeName(Addable),List(α13))
-//│ | => Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13))))))
-//│ | expand[+] ((..A13',) -> A13')  —  
-//│ | | expand[-] (..A13',)  —  
-//│ | | | expand[-] A13'  —  
-//│ | | | | isBadlyRecursive(A13') = None None
-//│ | | | | (>>>>>>,A13')
-//│ | | | | (>>>>>>,Set(),false)
-//│ | | | => α13
-//│ | | => Tuple(List((None,Field(None,α13))))
-//│ | | expand[+] A13'  —  
-//│ | | | isBadlyRecursive(A13') = None None
-//│ | | | (>>>>>>,A13')
+//│ | | | | expand[-] A14'  —  A14'
+//│ | | | | => α14
+//│ | | | => Inter(α14,α14)
+//│ | | => Tuple(List((None,Field(None,Inter(α14,α14)))))
+//│ | | expand[+] A14'  —  
+//│ | | | isBadlyRecursive(A14') = None Some(Some(false))
+//│ | | | (>>>>>>,A14')
 //│ | | | (>>>>>>,Set(),false)
-//│ | | => α13
-//│ | => Function(Tuple(List((None,Field(None,α13)))),α13)
-//│ => Function(Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13)))))),Function(Tuple(List((None,Field(None,α13)))),α13))
-//│ addTwo: Addable['A] -> 'A -> 'A
+//│ | | => α14
+//│ | => Function(Tuple(List((None,Field(None,Inter(α14,α14))))),α14)
+//│ => Function(Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α14)))))),Function(Tuple(List((None,Field(None,Inter(α14,α14))))),α14))
+//│ addTwo: Addable['A] -> ('A & 'A) -> 'A
+//│ 	where
+//│ 		'A <: 'A & 'A
 //│       = [Function: addTwo]
 
 addTwo n n
@@ -239,7 +219,9 @@ addTwo s s
 
 
 def addSame a = a.Add a
-//│ addSame: (Addable['A] & 'A) -> 'A
+//│ addSame: (Addable['A] & 'A & 'A) -> 'A
+//│ 	where
+//│ 		'A <: 'A & 'A
 //│        = [Function: addSame]
 
 addSame n
@@ -249,7 +231,9 @@ addSame n
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'A) -> int -> 'A
+//│ addNTimes: (Addable['A] & 'a & (('a & 'A0 as 'b) as 'A0)) -> int -> 'a
+//│ 	where
+//│ 		'A <: 'a & 'A & 'b as 'b
 //│          = [Function: addNTimes]
 
 addNTimes n 12
@@ -273,7 +257,10 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable['A .. 0 | 'A] -> int -> (0 | 'A)
+//│ addNTimes: Addable['A] -> int -> (0 | 'a)
+//│ 	where
+//│ 		'A :> 0
+//│ 		   <: 'a & 'A & 'b as 'b
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -288,7 +275,10 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: (Addable['b -> int -> 'c & 'A .. 'a | 'A] & 'b) -> int -> (0 | 'c) as 'a
+//│ addNTimes: (Addable['A] & 'b) -> int -> (0 | 'c) as 'a
+//│ 	where
+//│ 		'A :> 'a
+//│ 		   <: 'b -> int -> 'c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^

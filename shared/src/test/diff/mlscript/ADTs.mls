@@ -24,7 +24,9 @@ rec def eval e = case e of {
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)
-//│ ex: Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ ex: Add['E] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ 	where
+//│ 		'E :> Lit & {val: 2}
 //│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval ex
@@ -32,21 +34,23 @@ eval ex
 //│    = 4
 
 def e: Add['e] as 'e
-//│ e: Add['e] as 'e
+//│ e: (Add['a] as 'a) as 'e
 //│  = <missing implementation>
 
 def e: Lit | Add['e] as 'e
-//│ e: Add['e] | Lit as 'e
+//│ e: (Add['a] | Lit as 'a) as 'e
 //│  = <missing implementation>
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: Add['e] | Lit | Nega['e] as 'e
+//│ e: (Add['a] | Lit | Nega['a] as 'a) as 'e
 //│  = <missing implementation>
 
 def e = ex
-//│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ Add['E] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ 	where
+//│ 		'E :> Lit & {val: 2}
 //│   <:  e:
-//│ Add['e] | Lit | Nega['e] as 'e
+//│ (Add['a] | Lit | Nega['a] as 'a) as 'e
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -101,7 +105,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.42: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.44: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)

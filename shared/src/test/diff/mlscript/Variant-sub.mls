@@ -20,7 +20,9 @@ flatMap f (Some 1)
 flatMap f None
 //│ f: ('v & 'A) -> (Some['A] with {v: 'v})
 //│  = [Function: f]
-//│ res: Some['A .. 1 | 'A] with {v: 1}
+//│ res: Some['A] & {v: 1}
+//│ 	where
+//│ 		'A :> 1
 //│    = Some { v: 1 }
 //│ res: None | (Some['A] with {v: nothing})
 //│    = None {}
@@ -28,10 +30,10 @@ flatMap f None
 :e
 flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `None & ?a | Some[?] & ?b`
-//│ ║  l.29: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
@@ -73,9 +75,16 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
+//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | Some['A0] & {v: int} | Some['A1] & {v: int})
+//│ 	where
+//│ 		'A1 :> int
+//│ 		'A0 :> int
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | (Some['A .. 2 | 3 | 'A] with {v: 2 | 3}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int})
+//│ res: NoneBecause | Some['A] & {v: 2 | 3} | Some['A0] & {v: int} | Some['A1] & {v: int}
+//│ 	where
+//│ 		'A1 :> int
+//│ 		'A0 :> int
+//│ 		'A :> 3 | 2
 //│    = Some { v: 5 }
