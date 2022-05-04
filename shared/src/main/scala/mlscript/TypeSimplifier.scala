@@ -582,6 +582,10 @@ trait TypeSimplifier { self: Typer =>
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
+    def merge(pol: Bool, ts: Ls[ST]): ST =
+      if (pol) transform(ts.foldLeft(BotType: ST)(_ | _), S(pol))
+      else transform(ts.foldLeft(TopType: ST)(_ & _), S(pol))
+    
     def transform(st: SimpleType, pol: Opt[Bool]): SimpleType = st match {
       // case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       // case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
@@ -603,7 +607,13 @@ trait TypeSimplifier { self: Typer =>
         varSubst.get(tv) match {
           case S(S(ty)) => transform(ty, pol)
           // case S(N) => pol.fold(die)(pol => ExtrType(pol)(noProv))
-          case S(N) => pol.fold(TypeBounds(BotType, TopType)(noProv):ST)(pol => ExtrType(pol)(noProv))
+          // case S(N) => pol.fold(TypeBounds(BotType, TopType)(noProv):ST)(pol => ExtrType(pol)(noProv))
+          case S(N) => pol.fold(
+            TypeBounds(merge(true, tv.lowerBounds), merge(false, tv.upperBounds))(noProv): ST
+          )(pol =>
+            // (if (pol) tv.lowerBounds else tv.upperBounds).foldLeft(ExtrType(pol)(noProv)))
+            // merge(pol, tv))
+            merge(pol, if (pol) tv.lowerBounds else tv.upperBounds))
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {

@@ -86,7 +86,7 @@ def Some v = Some { value = v }
 //│ Defined type alias Option
 //│ Defined class LinkedList
 //│ Declared LinkedList.Append: LinkedList['T] -> 'T -> LinkedList['T]
-//│ Defined LinkedList.Append: LinkedList['T] -> ('T & 'a) -> (LinkedList['T] with {head: 'a, tail: Some[anything .. nothing]})
+//│ Defined LinkedList.Append: LinkedList['T] -> ('T & 'a) -> (LinkedList['T] with {head: 'a, tail: Some[LinkedList['T]]})
 //│ None: None
 //│ Some: ('value & 'T) -> (Some['T] with {value: 'value})
 //│ // start ts

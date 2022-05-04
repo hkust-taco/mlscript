@@ -47,13 +47,7 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ 		'a :> 'A
 
 cmi = ComplexMonoid { base = IntMonoid }
-//│ cmi: ComplexMonoid[anything .. nothing] with {base: IntMonoid}
-//│    = ComplexMonoid { base: IntMonoid {} }
-
-// FIXME
-// :ds
-cmi
-//│ res: ComplexMonoid[anything .. nothing] with {base: IntMonoid}
+//│ cmi: ComplexMonoid[int] with {base: IntMonoid}
 //│    = ComplexMonoid { base: IntMonoid {} }
 
 def ComplexMonoid base = ComplexMonoid { base }
@@ -61,11 +55,11 @@ def ComplexMonoid base = ComplexMonoid { base }
 //│              = [Function: ComplexMonoid1]
 
 cmi = ComplexMonoid IntMonoid
-//│ cmi: ComplexMonoid[anything .. nothing] with {base: IntMonoid}
+//│ cmi: ComplexMonoid[int] with {base: IntMonoid}
 //│    = ComplexMonoid { base: IntMonoid {} }
 
 cmi.Empty
-//│ res: Complex[?]
+//│ res: Complex[int]
 //│    = Complex { real: 0, imaginary: 0 }
 
 cmi.Empty.real
@@ -101,7 +95,7 @@ cmi = ComplexMonoid { base = IntMonoid }
 //│ ║  l.37: 	class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                     ^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.59: 	def ComplexMonoid base = ComplexMonoid { base }
+//│ ║  l.53: 	def ComplexMonoid base = ComplexMonoid { base }
 //│ ╙──      	                                         ^^^^
 //│ cmi: (ComplexMonoid['A] with {base: {base: IntMonoid}}) | error
 

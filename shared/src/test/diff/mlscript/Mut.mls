@@ -680,7 +680,7 @@ foreach am1 (fun y -> y._1 <- 2)
 //│ res: Array[MutArray[int .. int] & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
-//│ res: Array[{_1: anything} & 'a .. 'a | (int .. int,)]
+//│ res: Array[{_1: int .. int} & 'a .. 'a | (int .. int,)]
 //│    = <no result>
 //│      foreach is not implemented
 
