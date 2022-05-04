@@ -187,29 +187,33 @@ def addTwo a0 a1 = a0.Add a1
 //│ Recons: ((..Addable[A13'],) -> ((..A13',) -> A13'))
 //│  where: 
 //│ allVarPols: =A13'
-//│ expand[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))
-//│ | expand[-] (..Addable[A13'],)
-//│ | | expand[-] Addable[A13']
-//│ | | | expand[-] A13'
+//│ expand[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))  —  
+//│ | expand[-] (..Addable[A13'],)  —  
+//│ | | expand[-] Addable[A13']  —  
+//│ | | | expand[-] A13'  —  
 //│ | | | | isBadlyRecursive(A13') = None None
 //│ | | | | (>>>>>>,A13')
+//│ | | | | (>>>>>>,Set(),false)
 //│ | | | => α13
-//│ | | | expand[+] A13'
+//│ | | | expand[+] A13'  —  
 //│ | | | | isBadlyRecursive(A13') = None None
 //│ | | | | (>>>>>>,A13')
+//│ | | | | (>>>>>>,Set(),false)
 //│ | | | => α13
 //│ | | => AppliedType(TypeName(Addable),List(α13))
 //│ | => Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13))))))
-//│ | expand[+] ((..A13',) -> A13')
-//│ | | expand[-] (..A13',)
-//│ | | | expand[-] A13'
+//│ | expand[+] ((..A13',) -> A13')  —  
+//│ | | expand[-] (..A13',)  —  
+//│ | | | expand[-] A13'  —  
 //│ | | | | isBadlyRecursive(A13') = None None
 //│ | | | | (>>>>>>,A13')
+//│ | | | | (>>>>>>,Set(),false)
 //│ | | | => α13
 //│ | | => Tuple(List((None,Field(None,α13))))
-//│ | | expand[+] A13'
+//│ | | expand[+] A13'  —  
 //│ | | | isBadlyRecursive(A13') = None None
 //│ | | | (>>>>>>,A13')
+//│ | | | (>>>>>>,Set(),false)
 //│ | | => α13
 //│ | => Function(Tuple(List((None,Field(None,α13)))),α13)
 //│ => Function(Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13)))))),Function(Tuple(List((None,Field(None,α13)))),α13))
