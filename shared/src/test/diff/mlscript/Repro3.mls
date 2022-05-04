@@ -4,11 +4,12 @@
 // TODO use RecType immediately for all TVs in canon?
 
 
-:stdout
-:s
-:d
-:ds
+// :stdout
+// :s
+// :d
+// :ds
 def f: { x: 'a } as 'a
+//│ f: {x: 'a} as 'a
 
 
 // :stdout
@@ -35,10 +36,10 @@ rec def f a = a a
 //│   <:  f:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.33: 	rec def f a = a a
+//│ ║  l.34: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
-//│ ║  l.33: 	rec def f a = a a
+//│ ║  l.34: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.11: 	def f: { x: 'a } as 'a
@@ -60,3 +61,29 @@ class Some[A]: { v: A }
 def Some v = Some{v}
 //│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
 
+
+def foo(x: Some['a]) =
+  let _ = x.v : Some[?]
+  in x: Some['a & some]
+//│ foo: Some[Some[?] & 'a & 'a0 .. 'a | Some[?] & 'a0] -> Some[Some[?] & 'a0]
+
+// :ds
+def f: Some['a]
+//│ f: Some['a]
+
+
+
+// TODO MV
+
+def foo(x: 'a) = (x + 1, x)
+//│ foo: (int & 'a) -> (int, 'a,)
+
+// NOTE: currently each parameter type is typed independently – so these 'a are different!
+def foo(x: 'a, y: 'a) = (x + 1, y)
+//│ foo: (int, 'a,) -> (int, 'a,)
+
+// def foo(x: 'a) =
+def foo(f: 'a -> 'a, x: 'a) =
+  let _ = x + 1
+  in error: Some['a & some]
+//│ foo: ('a -> 'a, int,) -> Some[Some[?] & 'a0]

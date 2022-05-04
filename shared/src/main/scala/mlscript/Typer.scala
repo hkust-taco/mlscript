@@ -805,8 +805,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType]): Type =
       // trace(s"expand $st, $polarity  — $inProcess") {
+      trace(s"expand[${printPol(S(polarity))}] $st") {
         goImpl(st.unwrapProvs, polarity)
-      // }(r => s"=> $r")
+      }(r => s"=> $r")
     def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType]): Type = {
       // val st_pol = st -> polarity
       val st_pol = st
@@ -817,11 +818,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable if tv.isBadlyRecursive === S(false) =>
           val nv = tv.asTypeVar
-          if (!recursive.contains(tv)) {
+          // println(">>>>>>", tv, nv)
+          if (recursive.contains(tv)) nv else {
             recursive += tv -> nv
             // FIXME inProcess
+            // FIXME self in bounds...
             val lb = go(tv.lowerBounds.foldLeft(BotType: SimpleType)(_ | _), true)
             val ub = go(tv.upperBounds.foldLeft(TopType: SimpleType)(_ & _), false)
+            // println(">>>>>>", lb, ub)
             if (lb === ub) Recursive(nv, lb)
             else {
               // recursive += tv -> nv
@@ -830,21 +834,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               bounds ::= nv -> Bounds(lb, ub)
               nv
             }
-          } else nv
+          }
         case tv: TypeVariable =>
+          println(">>>>>>", tv)
           val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
           val bound =
+            // FIXME self in bounds...
             if (polarity) bounds.foldLeft(BotType: SimpleType)(_ | _)
             else bounds.foldLeft(TopType: SimpleType)(_ & _)
           // if (inProcess(bound -> polarity))
           //   recursive.getOrElseUpdate(bound -> polarity, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
-          if (inProcess(bound))
+          if (inProcess(bound)) {
+            println(s"Bound $bound is inProcess")
             recursive.getOrElseUpdate(bound, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
-          else {
+          } else {
             val boundTypes = bounds.map(go(_, polarity))
             val mrg = if (polarity) Union else Inter
             recursive.get(st_pol) match {
               case Some(variable) => // FIXME does this assume polar rec?
+                println(s"Type $st_pol is recursive ($variable)")
                 Recursive(variable, boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
               case None =>
                 // if (boundTypes.isEmpty)
@@ -885,7 +893,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
             case TypeRef(td, Nil) => td
             case TypeRef(td, targs) =>
-              AppliedType(td, targs.map { t =>
+              AppliedType(td, targs.map {
+                // TODO?
+                /* 
+                case tv: TV =>
+                  
+                  // bounds ::= nv -> Bounds(tv.lowerBounds.map(go(_, true)), tv.upperBounds.map(go(_, false))) // FIXME no dup
+                  
+                  // if (allVarPols(tv).isEmpty) // if the variable is not polar, include it
+                  assert(allVarPols(tv).isEmpty, allVarPols(tv)) // the variable is not polar
+                  tv.asTypeVar
+                  // else
+                  // tv
+                */  
+                case t =>
                 val l = go(t, false)
                 val u = go(t, true)
                 if (l === u) l else Bounds(l, u)

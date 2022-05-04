@@ -8,6 +8,7 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
+  // TODO rm this?! not sure still useful
   // TODO inline logic
   private def mkDNF(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields, cache: MutMap[TV, Opt[Bool]]): Either[(DNF, DNF), DNF] = {
     // implicit val preserveTypeRefs: Bool = true
@@ -17,12 +18,15 @@ trait TypeSimplifier { self: Typer =>
       case S(false) => R(DNF.mk(ty, false))
       case N =>
         // TODO less inefficient! don't recompute
-        val dnf1 = DNF.mk(ty, true)
+        // val dnf1 = DNF.mk(ty, true)
+        val dnf1 = DNF.mk(ty, false)
         // if (dnf1.cs.exists(_.vars.nonEmpty))
-        val dnf2 = DNF.mk(ty, false)
+        // val dnf2 = DNF.mk(ty, false)
+        val dnf2 = DNF.mk(ty, true)
         // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
-        println(s"vars ${dnf1.cs.map(_.vars)}")
-        if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
+        // println(s"vars ${dnf1.cs.map(_.vars)}")
+        // if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
+        if (dnf1 === dnf2) R(dnf1)
         else L(dnf1 -> dnf2)
     }
   }
@@ -104,6 +108,13 @@ trait TypeSimplifier { self: Typer =>
     
     def goDeep(ty: SimpleType, pol: Opt[Bool])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
         case tv: TV if recursiveVars.contains(tv) => renew(tv)
+        // case v: TV if pol.isEmpty =>
+        //   println(s"$v is in a bad place...")
+        //   recursiveVars += v
+        //   val nv = renew(v)
+        //   nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
+        //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
+        //   nv
         case _ =>
       // go1(go0(ty, pol), pol)
       go0(ty, pol) match {
@@ -152,12 +163,41 @@ trait TypeSimplifier { self: Typer =>
         .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
       }.foldLeft(DNF.extr(false))(_ | _)
       
+      /* 
+      if (pol.isEmpty && ty.isInstanceOf[TV]) {
+        val v = ty.asInstanceOf[TV]
+        ???
+        println(s"$v is in a bad place...")
+        recursiveVars += v
+        val nv = renew(v)
+        nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
+        nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
+        R(DNF.mk(nv, true))
+      }
+      else
+      */
       // rec(DNF.mk(ty, pol)(ctx), Set.empty)
       mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
       // mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
         case R(dnf) =>
           // println(dnf.cs.map(_.vars.isEmpty))
-          pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
+          // pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
+          pol.fold({
+            // R(dnf)
+            val a = rec(dnf, Set.empty, false)
+            val b = rec(dnf, Set.empty, true) // TODO rm for perf
+            // assert(a === b, a -> b)
+            // if (a === b) ???
+            if (a === b)
+            R(a)
+            else L(a -> b)
+            // else L(b -> a)
+          })(p => R(rec(dnf, Set.empty, p)))
+          // pol.fold(R(dnf))(p => {
+          //   val a = rec(dnf, Set.empty, p)
+          //   val b = rec(dnf, Set.empty, !p)
+          //   R(a)
+          // })
         case L((dnf1, dnf2)) => L(rec(dnf1, Set.empty, false), rec(dnf2, Set.empty, true))
       }
       
@@ -213,8 +253,10 @@ trait TypeSimplifier { self: Typer =>
                   trs.map {
                     case (d, tr @ TypeRef(defn, targs)) =>
                       // TODO actually make polarity optional and recurse with None
+                      // d -> TypeRef(defn, targs.map(targ =>
+                      //   TypeBounds.mk(goDeep(targ, S(false)), goDeep(targ, S(true)), noProv)))(tr.prov)
                       d -> TypeRef(defn, targs.map(targ =>
-                        TypeBounds.mk(goDeep(targ, S(false)), goDeep(targ, S(true)), noProv)))(tr.prov)
+                        goDeep(targ, N)))(tr.prov)
                   }
                 )
                 case LhsTop => LhsTop

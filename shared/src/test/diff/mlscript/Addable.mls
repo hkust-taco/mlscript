@@ -29,7 +29,190 @@ n.Add
 //│    = [Function: Add]
 
 
+:ds
 def addTwo a0 a1 = a0.Add a1
+//│ Typed as: ((..α0',) -> ((..α1',) -> α4'))
+//│  where: 
+//│ 		α0' <: [[[Addable[A3']]]]
+//│ 		α1' <: [[[A3']]]
+//│ 		A3' <: [[α4']]
+//│ Pols TreeMap(α0' -> Some(false), α1' -> Some(false), A3' -> None, α4' -> None)
+//│ Renewed α0' ~> α5'
+//│ Renewed A3' ~> A6'
+//│ Renewed α4' ~> α7'
+//│ Renewed α1' ~> α8'
+//│ Cleaned up: ((..α5',) -> ((..α8',) -> α7'))
+//│  where: 
+//│ 		α5' <: [[[Addable[A6']]]]
+//│ 		A6' <: [[α7']]
+//│ 		α8' <: [[[A6']]]
+//│ ty[+] ((..α5',) -> ((..α8',) -> α7'))
+//│ -> Right(DNF(((..α5',) -> ((..α8',) -> α7')){}))
+//│ DNF[+] DNF(((..α5',) -> ((..α8',) -> α7')){})
+//│ | ty[-] (..α5',)
+//│ | -> Right(DNF((..α5',){}))
+//│ | DNF[-] DNF((..α5',){})
+//│ | | ty[-] α5'
+//│ | | | isBadlyRecursive(α5') = None None
+//│ | | | Consider α5' List() List([[[Addable[A6']]]])
+//│ | | | isBadlyRecursive(α5') = None None
+//│ | | | Done α5'
+//│ | | -> Right(DNF({}∧Addable[A6']∧α5'))
+//│ | | DNF[-] DNF({}∧Addable[A6']∧α5')
+//│ | | | ty[=] A6'
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | Consider A6' List() List([[α7']])
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | Done A6'
+//│ | | | | isBadlyRecursive(α7') = None None
+//│ | | | | Consider α7' List() List()
+//│ | | | | isBadlyRecursive(α7') = None None
+//│ | | | | Done α7'
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | Consider A6' List() List([[α7']])
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | Done A6'
+//│ | | | -> Left((DNF(A6'∧α7'),DNF(A6')))
+//│ | | | DNF[-] DNF(A6'∧α7')
+//│ | | | | Renewed A6' ~> A9'
+//│ | | | | Renewed α7' ~> α10'
+//│ | | | ~> (A9' & α10')
+//│ | | | DNF[+] DNF(A6')
+//│ | | | ~> A9'
+//│ | | | Renewed α5' ~> α11'
+//│ | | ~> (Addable[(A9' & α10')..A9'] & α11')
+//│ | ~> (..(Addable[(A9' & α10')..A9'] & α11'),)
+//│ | ty[+] ((..α8',) -> α7')
+//│ | -> Right(DNF(((..α8',) -> α7'){}))
+//│ | DNF[+] DNF(((..α8',) -> α7'){})
+//│ | | ty[-] (..α8',)
+//│ | | -> Right(DNF((..α8',){}))
+//│ | | DNF[-] DNF((..α8',){})
+//│ | | | ty[-] α8'
+//│ | | | | isBadlyRecursive(α8') = None None
+//│ | | | | Consider α8' List() List([[[A6']]])
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | isBadlyRecursive(α8') = None None
+//│ | | | | Done α8'
+//│ | | | | Consider A6' List() List([[α7']])
+//│ | | | | isBadlyRecursive(A6') = None None
+//│ | | | | Done A6'
+//│ | | | | isBadlyRecursive(α7') = None None
+//│ | | | | Consider α7' List() List()
+//│ | | | | isBadlyRecursive(α7') = None None
+//│ | | | | Done α7'
+//│ | | | -> Right(DNF(A6'∧α7'∧α8'))
+//│ | | | DNF[-] DNF(A6'∧α7'∧α8')
+//│ | | | | Renewed α8' ~> α12'
+//│ | | | ~> ((A9' & α10') & α12')
+//│ | | ~> (..((A9' & α10') & α12'),)
+//│ | | ty[+] α7'
+//│ | | | isBadlyRecursive(α7') = None None
+//│ | | | Consider α7' List() List()
+//│ | | | isBadlyRecursive(α7') = None None
+//│ | | | Done α7'
+//│ | | -> Right(DNF(α7'))
+//│ | | DNF[+] DNF(α7')
+//│ | | ~> α10'
+//│ | ~> ((..((A9' & α10') & α12'),) -> α10')
+//│ ~> ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
+//│ Canon: ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
+//│  where: 
+//│ analyze[+] ((..(Addable[(A9' & α10')..A9'] & α11'),) -> ((..((A9' & α10') & α12'),) -> α10'))
+//│ | analyze[-] (..(Addable[(A9' & α10')..A9'] & α11'),)
+//│ | | analyze[-] (Addable[(A9' & α10')..A9'] & α11')
+//│ | | | go (Addable[(A9' & α10')..A9'] & α11')   ()
+//│ | | | | go Addable[(A9' & α10')..A9']   ()
+//│ | | | | | analyze[-] Addable[(A9' & α10')..A9']
+//│ | | | | | | analyze[+] (A9' & α10')..A9'
+//│ | | | | | | | analyze[+] A9'
+//│ | | | | | | | | go A9'   ()
+//│ | | | | | | | | >>>> A9' HashSet(A9') None
+//│ | | | | | | analyze[-] (A9' & α10')..A9'
+//│ | | | | | | | analyze[-] (A9' & α10')
+//│ | | | | | | | | go (A9' & α10')   ()
+//│ | | | | | | | | | go A9'   ()
+//│ | | | | | | | | | go α10'   (A9')
+//│ | | | | | | | | >>>> A9' HashSet(A9', α10') None
+//│ | | | | | | | | >>>> α10' HashSet(A9', α10') None
+//│ | | | | go α11'   (Addable[(A9' & α10')..A9'])
+//│ | | | >>>> α11' HashSet(Addable[(A9' & α10')..A9'], α11') None
+//│ | analyze[+] ((..((A9' & α10') & α12'),) -> α10')
+//│ | | analyze[-] (..((A9' & α10') & α12'),)
+//│ | | | analyze[-] ((A9' & α10') & α12')
+//│ | | | | go ((A9' & α10') & α12')   ()
+//│ | | | | | go (A9' & α10')   ()
+//│ | | | | | | go A9'   ()
+//│ | | | | | | go α10'   (A9')
+//│ | | | | | go α12'   (A9', α10')
+//│ | | | | >>>> A9' HashSet(A9', α10', α12') Some(HashSet(A9', α10'))
+//│ | | | | >>>> α10' HashSet(A9', α10', α12') Some(HashSet(A9', α10'))
+//│ | | | | >>>> α12' HashSet(A9', α10', α12') None
+//│ | | analyze[+] α10'
+//│ | | | go α10'   ()
+//│ | | | >>>> α10' HashSet(α10') None
+//│ [occs] +A9' {A9'} ; -A9' {A9',α10'} ; -α10' {A9',α10'} ; -α11' {Addable[(A9' & α10')..A9'],α11'} ; -α12' {A9',α10',α12'} ; +α10' {α10'}
+//│ isBadlyRecursive(A9') = None None
+//│ isBadlyRecursive(α10') = None None
+//│ isBadlyRecursive(α11') = None None
+//│ isBadlyRecursive(α12') = None None
+//│ [vars] TreeSet(A9', α10', α11', α12')
+//│ [bounds] 
+//│ [rec] HashSet()
+//│ [!] α11'
+//│ [!] α12'
+//│ [v] A9' Some(HashSet(A9')) Some(HashSet(A9', α10'))
+//│ [w] α10' Some(HashSet(A9', α10'))
+//│ [U] α10' := A9'
+//│ [sub] α10' -> Some(A9'), α11' -> None, α12' -> None
+//│ Renewed A9' ~> A13'
+//│ Type after simplification: ((..Addable[A13'],) -> ((..A13',) -> A13'))
+//│  where: 
+//│ recons[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))  (FunctionType)
+//│ | recons[-] (..Addable[A13'],)  (TupleType)
+//│ | | recons[-] Addable[A13']  (TypeRef)
+//│ | | | recons[=] A13'  (TypeVariable)
+//│ | | | => A13'
+//│ | | => Addable[A13']
+//│ | => (..Addable[A13'],)
+//│ | recons[+] ((..A13',) -> A13')  (FunctionType)
+//│ | | recons[-] (..A13',)  (TupleType)
+//│ | | | recons[-] A13'  (TypeVariable)
+//│ | | | => A13'
+//│ | | => (..A13',)
+//│ | | recons[+] A13'  (TypeVariable)
+//│ | | => A13'
+//│ | => ((..A13',) -> A13')
+//│ => ((..Addable[A13'],) -> ((..A13',) -> A13'))
+//│ Recons: ((..Addable[A13'],) -> ((..A13',) -> A13'))
+//│  where: 
+//│ allVarPols: =A13'
+//│ expand[+] ((..Addable[A13'],) -> ((..A13',) -> A13'))
+//│ | expand[-] (..Addable[A13'],)
+//│ | | expand[-] Addable[A13']
+//│ | | | expand[-] A13'
+//│ | | | | isBadlyRecursive(A13') = None None
+//│ | | | | (>>>>>>,A13')
+//│ | | | => α13
+//│ | | | expand[+] A13'
+//│ | | | | isBadlyRecursive(A13') = None None
+//│ | | | | (>>>>>>,A13')
+//│ | | | => α13
+//│ | | => AppliedType(TypeName(Addable),List(α13))
+//│ | => Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13))))))
+//│ | expand[+] ((..A13',) -> A13')
+//│ | | expand[-] (..A13',)
+//│ | | | expand[-] A13'
+//│ | | | | isBadlyRecursive(A13') = None None
+//│ | | | | (>>>>>>,A13')
+//│ | | | => α13
+//│ | | => Tuple(List((None,Field(None,α13))))
+//│ | | expand[+] A13'
+//│ | | | isBadlyRecursive(A13') = None None
+//│ | | | (>>>>>>,A13')
+//│ | | => α13
+//│ | => Function(Tuple(List((None,Field(None,α13)))),α13)
+//│ => Function(Tuple(List((None,Field(None,AppliedType(TypeName(Addable),List(α13)))))),Function(Tuple(List((None,Field(None,α13)))),α13))
 //│ addTwo: Addable['A] -> 'A -> 'A
 //│       = [Function: addTwo]
 
@@ -141,7 +324,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.32: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.33: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 
