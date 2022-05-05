@@ -439,11 +439,11 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 //│ ];
 //│ res = muta1;
 //│ // End of generated code
-//│ muta1: MutArray[int]
+//│ muta1: MutArray[int .. int]
 //│      = <missing implementation>
 //│ ('a .. 1 | 'a, 'b .. 2 | 'b, 'c .. 3 | 'c, 'd .. 4 | 'd,)
 //│   <:  muta1:
-//│ MutArray[int]
+//│ MutArray[int .. int]
 //│      = [ 1, 2, 3, 4 ]
 
 :js
@@ -455,7 +455,7 @@ muta1
 //│ res = muta1;
 //│ // End of generated code
 //│ = []
-//│ res: MutArray[int]
+//│ res: MutArray[int .. int]
 //│    = [ 1, 233, 3, 4 ]
 
 :js

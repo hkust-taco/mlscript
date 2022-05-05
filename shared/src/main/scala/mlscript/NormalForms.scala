@@ -132,6 +132,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def isTop: Bool = isInstanceOf[LhsTop.type]
   }
   case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[TraitTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
+    // assert(!trefs.exists(primitiveTypes contains _._1.name))
     override def toString: Str = s"${base.getOrElse("")}${reft}${
       (ttags.iterator ++ trefs.valuesIterator).map("∧"+_).mkString}"
   }

@@ -83,12 +83,12 @@ def arr: Array[1]
 //│    = <missing implementation>
 
 arr: Array[2] | (1, 1)
-//│ res: (1, 1,) | Array[2]
+//│ res: Array[1 | 2]
 //│    = <no result>
 //│      arr is not implemented
 
 arr: Array[2] | (1, 2)
-//│ res: (1, 2,) | Array[2]
+//│ res: Array[1 | 2]
 //│    = <no result>
 //│      arr is not implemented
 

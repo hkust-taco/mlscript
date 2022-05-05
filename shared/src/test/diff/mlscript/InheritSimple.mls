@@ -49,6 +49,6 @@ c: Parent & Child & {}
 //│    = Child {}
 
 c: Parent & anything & Child & {}
-//│ res: Child & Parent & anything
+//│ res: Child & Parent
 //│    = Child {}
 

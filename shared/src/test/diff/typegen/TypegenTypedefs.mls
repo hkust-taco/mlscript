@@ -72,7 +72,6 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 
 
 :ts
-// FIXME
 class None: {}
 class Some[T]: { value: T }
 type Option[T] = Some[T] | None
@@ -189,10 +188,10 @@ class Arg[T]: (T, T)
 class Prog[T]
   method Run: Arg[T] -> number
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.188: 	class Arg[T]: (T, T)
+//│ ║  l.187: 	class Arg[T]: (T, T)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Arg
-//│ ║  l.190: 	  method Run: Arg[T] -> number
+//│ ║  l.189: 	  method Run: Arg[T] -> number
 //│ ╙──       	              ^^^^^^
 //│ Defined class Prog
 //│ Declared Prog.Run: Prog['T] -> error -> number

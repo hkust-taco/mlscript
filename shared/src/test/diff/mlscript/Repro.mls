@@ -51,26 +51,12 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.40: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: (((nothing & 'd & 'a,) as 'c) -> ('b | nothing | 'd) as 'b) | error | nothing
-//│ 	where
-//│ 		'a :> 'c -> ('b | nothing | 'd)
-//│ 		   <: nothing & ('a | (nothing & 'd) -> ('b | 'd)) -> nothing & 'd
-
-// TODO-simplif why weird bounds and `nothing`?
-// :ds
-res
-//│ res: (((nothing & 'd & 'a,) as 'c) -> ('b | nothing | 'd) as 'b) | error | nothing
-//│ 	where
-//│ 		'a :> 'c -> ('b | nothing | 'd)
-//│ 		   <: nothing & ('a | (nothing & 'd) -> ('b | 'd)) -> nothing & 'd
+//│ res: (nothing -> 'a as 'a) | error
 
 // :ds
 def manual: 'a -> anything as 'a
 //│ manual: 'a -> anything as 'a
 
 manual id
-//│ res: (((anything & 'e & 'a,) as 'd) -> ('b | 'e) as 'c) | anything as 'b
-//│ 	where
-//│ 		'a :> 'd -> ('b | 'e)
-//│ 		   <: anything & ('a | (anything & 'e) -> ('c | 'e)) -> anything & 'e
+//│ res: anything
 

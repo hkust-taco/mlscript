@@ -215,7 +215,7 @@ v: A | { x: 'a }
 
 
 def funny = error: nothing\x
-//│ funny: nothing\x
+//│ funny: nothing
 
 // It could be agrued this should fail... but that would make constraint solving more awkward!
 funny.x
