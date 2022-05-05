@@ -97,6 +97,8 @@ trait TypeSimplifier { self: Typer =>
     // println(r.showBounds)
     
     val recursive = MutMap.empty[PolarType, TypeVariable]
+    
+    // TODO rename (no longer just rec vars)
     val recursiveVars = MutSet.empty[TypeVariable] // For rec nonpolar vars
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -108,6 +110,17 @@ trait TypeSimplifier { self: Typer =>
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
+    // def preserveBoudns(tv: TV, parents: Set[TV])(implicit inProcess: Set[PolarType]): TV = {
+    // def preserveBoudns(tv: TV, parents: Set[TV], inProcess: Set[PolarType] = Set.empty): TV = {
+    def preserveBounds(tv: TV, parents: Set[TV]): TV = {
+      recursiveVars += tv
+      val nv = renew(tv)
+      val newParents = parents + tv
+      nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
+      nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
+      nv
+    }
+    
     def goDeep(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
         case v: TV if parents(v) =>
           ??? // uh?
@@ -116,12 +129,13 @@ trait TypeSimplifier { self: Typer =>
         case tv: TV if recursiveVars.contains(tv) => renew(tv)
         case v: TV if pol.isEmpty =>
           println(s"$v is in a bad place...")
-          recursiveVars += v
-          val nv = renew(v)
-          val newParents = parents + v
-          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
-          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
-          nv
+          // recursiveVars += v
+          // val nv = renew(v)
+          // val newParents = parents + v
+          // nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
+          // nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
+          // nv
+          preserveBounds(v, parents)
         case _ =>
       // go1(go0(ty, pol), pol)
       go0(ty, pol, parents) match {
@@ -149,17 +163,18 @@ trait TypeSimplifier { self: Typer =>
         // } || done(v))
         val vs = c.vars.filterNot(parents).filterNot(v => recursiveVars.contains(v) || v.isBadlyRecursive === S(false) && {
           println(s"$v is badly recursive...")
-          recursiveVars += v
-          val nv = renew(v)
-          val newParents = parents + v
-          nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
-          nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
+          // recursiveVars += v
+          // val nv = renew(v)
+          // val newParents = parents + v
+          // nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
+          // nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
+          preserveBounds(v, parents)
           true
         // } || done(v))
         } || done(v) && {println(s"Done $v"); true})
         vs.iterator.map { tv =>
         // vs.iterator.filter(_.isRecursive =/= S(false)).map { tv =>
-          println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
+          // println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
           val b =
             if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
             else tv.upperBounds.foldLeft(tv:ST)(_ & _)

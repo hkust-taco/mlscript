@@ -102,7 +102,6 @@ def d = Cons 2 c
 //│ d: Cons['A] with {head: 2, tail: Cons['A] with {head: 1, tail: Nil & {size: 0}}}
 //│ 	where
 //│ 		'A :> 1 | 2 | 1 | 1 | 2 | 2
-//│ 		   <: 'A & 'A & 'A
 //│  = Cons {
 //│      size: 2,
 //│      head: 2,
@@ -121,7 +120,6 @@ d.tail
 //│ res: Cons['A] with {head: 1, tail: Nil & {size: 0}}
 //│ 	where
 //│ 		'A :> 1 | 2 | 1
-//│ 		   <: 'A & 'A
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size

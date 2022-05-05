@@ -1,3 +1,4 @@
+:NoProvs
 
 class Monoid[A]
   method Empty: A
@@ -70,9 +71,638 @@ cmi.Add (Complex 1 2) (Complex 3 4)
 //│ res: Complex['A] & {imaginary: 2, real: 1} | Complex['A] & {imaginary: 4, real: 3} | Complex['A]
 //│ 	where
 //│ 		'A :> int | 2 | 1 | 4 | 3 | int | 1 | 2 | 2 | 1 | 1 | 2 | int | 3 | 4 | 4 | 3 | int | 2 | 1 | 4 | 3 | int | 2 | 1 | int
-//│ 		   <: 'A & 'A & 'A & 'A & 'A & int & int
+//│ 		   <: anything & int
 //│    = Complex { real: 4, imaginary: 6 }
 
+// TODO-simplif why `anything?`
+:ds
+res
+//│ Typed as: α357
+//│  where: 
+//│ 		A336 :> Int | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | Int | 2<int,number> | 1<int,number> | Int <: A351 & A342 & Int
+//│ 		real341 :> 1<int,number> <: A336 & A342
+//│ 		A342 :> Int | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | Int | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> <: A336
+//│ 		imaginary344 :> 2<int,number> <: A336 & A342
+//│ 		real350 :> 3<int,number> <: A336 & A351
+//│ 		A351 :> 1<int,number> | 2<int,number> | Int | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> <: A336
+//│ 		imaginary353 :> 4<int,number> <: A336 & A351
+//│ 		α357 :> Complex[A336] | (complex<> & {real: real341, imaginary: imaginary344, Complex#A: A342..A342}) | (complex<> & {real: real350, imaginary: imaginary353, Complex#A: A351..A351})
+//│ Pols TreeMap(A336 -> None, real341 -> Some(true), A342 -> None, imaginary344 -> Some(true), real350 -> Some(true), A351 -> None, imaginary353 -> Some(true), α357 -> Some(true))
+//│ Renewed α357 ~> α0
+//│ Renewed A336 ~> A1
+//│ Renewed A351 ~> A2
+//│ Renewed A342 ~> A3
+//│ Renewed real341 ~> real4
+//│ Renewed imaginary344 ~> imaginary5
+//│ Renewed real350 ~> real6
+//│ Renewed imaginary353 ~> imaginary7
+//│ Cleaned up: α0
+//│  where: 
+//│ 		α0 :> Complex[A1] | (complex<> & {real: real4, imaginary: imaginary5, Complex#A: A3..A3}) | (complex<> & {real: real6, imaginary: imaginary7, Complex#A: A2..A2})
+//│ 		A1 :> Int | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | Int | 2<int,number> | 1<int,number> | Int <: A2 & A3 & Int
+//│ 		A2 :> 1<int,number> | 2<int,number> | Int | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> <: A1
+//│ 		A3 :> Int | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | Int | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> <: A1
+//│ 		real4 :> 1<int,number>
+//│ 		imaginary5 :> 2<int,number>
+//│ 		real6 :> 3<int,number>
+//│ 		imaginary7 :> 4<int,number>
+//│ ty[+] α0
+//│ | isBadlyRecursive(α0) = None None
+//│ -> Right(DNF(α0 | {}∧Complex[A1] | complex<>{Complex#A: A3..A3, real: real4, imaginary: imaginary5} | complex<>{Complex#A: A2..A2, real: real6, imaginary: imaginary7}))
+//│ DNF[+] DNF(α0 | {}∧Complex[A1] | complex<>{Complex#A: A3..A3, real: real4, imaginary: imaginary5} | complex<>{Complex#A: A2..A2, real: real6, imaginary: imaginary7})
+//│ | Renewed α0 ~> α8
+//│ | A1 is in a bad place...
+//│ | Renewed A1 ~> A9
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] 4<int,number>
+//│ | -> Right(DNF(4<int,number>{}))
+//│ | DNF[+] DNF(4<int,number>{})
+//│ | ~> 4<int,number>
+//│ | ty[+] 3<int,number>
+//│ | -> Right(DNF(3<int,number>{}))
+//│ | DNF[+] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[-] A2
+//│ | | isBadlyRecursive(A2) = None Some(Some(false))
+//│ | -> Right(DNF(A1∧A2))
+//│ | DNF[-] DNF(A1∧A2)
+//│ | | Renewed A2 ~> A10
+//│ | ~> (A9 & A10)
+//│ | ty[-] A3
+//│ | | isBadlyRecursive(A3) = None Some(Some(false))
+//│ | -> Right(DNF(A1∧A3))
+//│ | DNF[-] DNF(A1∧A3)
+//│ | | Renewed A3 ~> A11
+//│ | ~> (A9 & A11)
+//│ | ty[-] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[-] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | A3 is in a bad place...
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] 4<int,number>
+//│ | -> Right(DNF(4<int,number>{}))
+//│ | DNF[+] DNF(4<int,number>{})
+//│ | ~> 4<int,number>
+//│ | ty[+] 3<int,number>
+//│ | -> Right(DNF(3<int,number>{}))
+//│ | DNF[+] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] real4
+//│ | | isBadlyRecursive(real4) = None None
+//│ | -> Right(DNF(real4 | 1<int,number>{}))
+//│ | DNF[+] DNF(real4 | 1<int,number>{})
+//│ | | Renewed real4 ~> real12
+//│ | ~> (1<int,number> | real12)
+//│ | ty[+] imaginary5
+//│ | | isBadlyRecursive(imaginary5) = None None
+//│ | -> Right(DNF(imaginary5 | 2<int,number>{}))
+//│ | DNF[+] DNF(imaginary5 | 2<int,number>{})
+//│ | | Renewed imaginary5 ~> imaginary13
+//│ | ~> (2<int,number> | imaginary13)
+//│ | A2 is in a bad place...
+//│ | ty[+] 1<int,number>
+//│ | -> Right(DNF(1<int,number>{}))
+//│ | DNF[+] DNF(1<int,number>{})
+//│ | ~> 1<int,number>
+//│ | ty[+] 2<int,number>
+//│ | -> Right(DNF(2<int,number>{}))
+//│ | DNF[+] DNF(2<int,number>{})
+//│ | ~> 2<int,number>
+//│ | ty[+] Int
+//│ | -> Right(DNF(int<number>{}))
+//│ | DNF[+] DNF(int<number>{})
+//│ | ~> int<number>
+//│ | ty[+] 3<int,number>
+//│ | -> Right(DNF(3<int,number>{}))
+//│ | DNF[+] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ | ty[+] 4<int,number>
+//│ | -> Right(DNF(4<int,number>{}))
+//│ | DNF[+] DNF(4<int,number>{})
+//│ | ~> 4<int,number>
+//│ | ty[+] 4<int,number>
+//│ | -> Right(DNF(4<int,number>{}))
+//│ | DNF[+] DNF(4<int,number>{})
+//│ | ~> 4<int,number>
+//│ | ty[+] 3<int,number>
+//│ | -> Right(DNF(3<int,number>{}))
+//│ | DNF[+] DNF(3<int,number>{})
+//│ | ~> 3<int,number>
+//│ | ty[+] real6
+//│ | | isBadlyRecursive(real6) = None None
+//│ | -> Right(DNF(real6 | 3<int,number>{}))
+//│ | DNF[+] DNF(real6 | 3<int,number>{})
+//│ | | Renewed real6 ~> real14
+//│ | ~> (3<int,number> | real14)
+//│ | ty[+] imaginary7
+//│ | | isBadlyRecursive(imaginary7) = None None
+//│ | -> Right(DNF(imaginary7 | 4<int,number>{}))
+//│ | DNF[+] DNF(imaginary7 | 4<int,number>{})
+//│ | | Renewed imaginary7 ~> imaginary15
+//│ | ~> (4<int,number> | imaginary15)
+//│ ~> ((complex<> & {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)}) | ((complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}) | (Complex[A9] | α8)))
+//│ Canon: ((complex<> & {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)}) | ((complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}) | (Complex[A9] | α8)))
+//│  where: 
+//│ 		A9 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | int<number> <: (A9 & A10) & (A9 & A11) & int<number>
+//│ 		A10 :> 1<int,number> | 2<int,number> | int<number> | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> <: A9
+//│ 		A11 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> <: A9
+//│ analyze[+] ((complex<> & {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)}) | ((complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}) | (Complex[A9] | α8)))
+//│ | go ((complex<> & {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)}) | ((complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}) | (Complex[A9] | α8)))   ()
+//│ | | go (complex<> & {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)})   ()
+//│ | | | analyze[+] complex<>
+//│ | | | analyze[+] {Complex#A: A10..A10, imaginary: (4<int,number> | imaginary15), real: (3<int,number> | real14)}
+//│ | | | | analyze[-] A10
+//│ | | | | | go A10   ()
+//│ | | | | | | go A9   (A10)
+//│ | | | | | | | go (A9 & A10)   (A9, A10)
+//│ | | | | | | | | go A9   (A9, A10)
+//│ | | | | | | | | go A10   (A9, A10)
+//│ | | | | | | | go (A9 & A11)   (A9, A10)
+//│ | | | | | | | | go A9   (A9, A10)
+//│ | | | | | | | | go A11   (A9, A10)
+//│ | | | | | | | | | go A9   (A9, A10, A11)
+//│ | | | | | | | go int<number>   (A9, A10, A11)
+//│ | | | | | | | | analyze[-] int<number>
+//│ | | | | | >>>> A9 HashSet(int<number>, A9, A10, A11) None
+//│ | | | | | >>>> A10 HashSet(int<number>, A9, A10, A11) None
+//│ | | | | | >>>> A11 HashSet(int<number>, A9, A10, A11) None
+//│ | | | | analyze[+] A10
+//│ | | | | | go A10   ()
+//│ | | | | | | go 1<int,number>   (A10)
+//│ | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | go 2<int,number>   (A10, 1<int,number>)
+//│ | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | go int<number>   (2<int,number>, A10, 1<int,number>)
+//│ | | | | | | | analyze[+] int<number>
+//│ | | | | | | go 3<int,number>   (2<int,number>, int<number>, A10, 1<int,number>)
+//│ | | | | | | | analyze[+] 3<int,number>
+//│ | | | | | | go 4<int,number>   (2<int,number>, int<number>, A10, 3<int,number>, 1<int,number>)
+//│ | | | | | | | analyze[+] 4<int,number>
+//│ | | | | | | go 4<int,number>   (2<int,number>, 4<int,number>, int<number>, A10, 3<int,number>, 1<int,number>)
+//│ | | | | | | | analyze[+] 4<int,number>
+//│ | | | | | | go 3<int,number>   (2<int,number>, 4<int,number>, int<number>, A10, 3<int,number>, 1<int,number>)
+//│ | | | | | | | analyze[+] 3<int,number>
+//│ | | | | | >>>> A10 HashSet(2<int,number>, 4<int,number>, int<number>, A10, 3<int,number>, 1<int,number>) None
+//│ | | | | analyze[+] (4<int,number> | imaginary15)
+//│ | | | | | go (4<int,number> | imaginary15)   ()
+//│ | | | | | | go 4<int,number>   ()
+//│ | | | | | | | analyze[+] 4<int,number>
+//│ | | | | | | go imaginary15   (4<int,number>)
+//│ | | | | | >>>> imaginary15 HashSet(4<int,number>, imaginary15) None
+//│ | | | | analyze[+] (3<int,number> | real14)
+//│ | | | | | go (3<int,number> | real14)   ()
+//│ | | | | | | go 3<int,number>   ()
+//│ | | | | | | | analyze[+] 3<int,number>
+//│ | | | | | | go real14   (3<int,number>)
+//│ | | | | | >>>> real14 HashSet(3<int,number>, real14) None
+//│ | | go ((complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}) | (Complex[A9] | α8))   ()
+//│ | | | go (complex<> & {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)})   ()
+//│ | | | | analyze[+] complex<>
+//│ | | | | analyze[+] {Complex#A: A11..A11, imaginary: (2<int,number> | imaginary13), real: (1<int,number> | real12)}
+//│ | | | | | analyze[-] A11
+//│ | | | | | | go A11   ()
+//│ | | | | | | | go A9   (A11)
+//│ | | | | | | | | go (A9 & A10)   (A9, A11)
+//│ | | | | | | | | | go A9   (A9, A11)
+//│ | | | | | | | | | go A10   (A9, A11)
+//│ | | | | | | | | | | go A9   (A9, A10, A11)
+//│ | | | | | | | | go (A9 & A11)   (A9, A10, A11)
+//│ | | | | | | | | | go A9   (A9, A10, A11)
+//│ | | | | | | | | | go A11   (A9, A10, A11)
+//│ | | | | | | | | go int<number>   (A9, A10, A11)
+//│ | | | | | | | | | analyze[-] int<number>
+//│ | | | | | | >>>> A9 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | | | >>>> A10 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | | | >>>> A11 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | | analyze[+] A11
+//│ | | | | | | go A11   ()
+//│ | | | | | | | go int<number>   (A11)
+//│ | | | | | | | | analyze[+] int<number>
+//│ | | | | | | | go 2<int,number>   (int<number>, A11)
+//│ | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | go 1<int,number>   (2<int,number>, int<number>, A11)
+//│ | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | | go 4<int,number>   (2<int,number>, int<number>, A11, 1<int,number>)
+//│ | | | | | | | | analyze[+] 4<int,number>
+//│ | | | | | | | go 3<int,number>   (2<int,number>, 4<int,number>, int<number>, A11, 1<int,number>)
+//│ | | | | | | | | analyze[+] 3<int,number>
+//│ | | | | | | | go int<number>   (2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | analyze[+] int<number>
+//│ | | | | | | | go 1<int,number>   (2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | | go 2<int,number>   (2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | go 2<int,number>   (2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | go 1<int,number>   (2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | >>>> A11 HashSet(2<int,number>, 4<int,number>, int<number>, A11, 3<int,number>, 1<int,number>) None
+//│ | | | | | analyze[+] (2<int,number> | imaginary13)
+//│ | | | | | | go (2<int,number> | imaginary13)   ()
+//│ | | | | | | | go 2<int,number>   ()
+//│ | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | go imaginary13   (2<int,number>)
+//│ | | | | | | >>>> imaginary13 HashSet(2<int,number>, imaginary13) None
+//│ | | | | | analyze[+] (1<int,number> | real12)
+//│ | | | | | | go (1<int,number> | real12)   ()
+//│ | | | | | | | go 1<int,number>   ()
+//│ | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | | go real12   (1<int,number>)
+//│ | | | | | | >>>> real12 HashSet(real12, 1<int,number>) None
+//│ | | | go (Complex[A9] | α8)   ()
+//│ | | | | go Complex[A9]   ()
+//│ | | | | | analyze[+] Complex[A9]
+//│ | | | | | | analyze[+] A9
+//│ | | | | | | | go A9   ()
+//│ | | | | | | | | go int<number>   (A9)
+//│ | | | | | | | | | analyze[+] int<number>
+//│ | | | | | | | | go 2<int,number>   (int<number>, A9)
+//│ | | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | | go 1<int,number>   (2<int,number>, int<number>, A9)
+//│ | | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | | | go 4<int,number>   (2<int,number>, int<number>, A9, 1<int,number>)
+//│ | | | | | | | | | analyze[+] 4<int,number>
+//│ | | | | | | | | go 3<int,number>   (2<int,number>, 4<int,number>, int<number>, A9, 1<int,number>)
+//│ | | | | | | | | | analyze[+] 3<int,number>
+//│ | | | | | | | | go int<number>   (2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | | analyze[+] int<number>
+//│ | | | | | | | | go 2<int,number>   (2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | | analyze[+] 2<int,number>
+//│ | | | | | | | | go 1<int,number>   (2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | | analyze[+] 1<int,number>
+//│ | | | | | | | | go int<number>   (2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>)
+//│ | | | | | | | | | analyze[+] int<number>
+//│ | | | | | | | >>>> A9 HashSet(2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>) None
+//│ | | | | | | analyze[-] A9
+//│ | | | | | | | go A9   ()
+//│ | | | | | | | | go (A9 & A10)   (A9)
+//│ | | | | | | | | | go A9   (A9)
+//│ | | | | | | | | | go A10   (A9)
+//│ | | | | | | | | | | go A9   (A9, A10)
+//│ | | | | | | | | go (A9 & A11)   (A9, A10)
+//│ | | | | | | | | | go A9   (A9, A10)
+//│ | | | | | | | | | go A11   (A9, A10)
+//│ | | | | | | | | | | go A9   (A9, A10, A11)
+//│ | | | | | | | | go int<number>   (A9, A10, A11)
+//│ | | | | | | | | | analyze[-] int<number>
+//│ | | | | | | | >>>> A9 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | | | | >>>> A10 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | | | | >>>> A11 HashSet(int<number>, A9, A10, A11) Some(HashSet(int<number>, A9, A10, A11))
+//│ | | | | go α8   (Complex[A9])
+//│ | >>>> α8 HashSet(Complex[A9], α8) None
+//│ [occs] -A9 {int<number>,A9,A10,A11} ; -A10 {int<number>,A9,A10,A11} ; -A11 {int<number>,A9,A10,A11} ; +A10 {2<int,number>,4<int,number>,int<number>,A10,3<int,number>,1<int,number>} ; +imaginary15 {4<int,number>,imaginary15} ; +real14 {3<int,number>,real14} ; +A11 {2<int,number>,4<int,number>,int<number>,A11,3<int,number>,1<int,number>} ; +imaginary13 {2<int,number>,imaginary13} ; +real12 {real12,1<int,number>} ; +A9 {2<int,number>,4<int,number>,int<number>,A9,3<int,number>,1<int,number>} ; +α8 {Complex[A9],α8}
+//│ isBadlyRecursive(α8) = None None
+//│ isBadlyRecursive(A9) = None Some(Some(false))
+//│ isBadlyRecursive(A10) = None Some(Some(false))
+//│ isBadlyRecursive(A11) = None Some(Some(false))
+//│ isBadlyRecursive(real12) = None None
+//│ isBadlyRecursive(imaginary13) = None None
+//│ isBadlyRecursive(real14) = None None
+//│ isBadlyRecursive(imaginary15) = None None
+//│ [vars] TreeSet(α8, A9, A10, A11, real12, imaginary13, real14, imaginary15)
+//│ [bounds] 
+//│ 		A9 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | int<number> <: (A9 & A10) & (A9 & A11) & int<number>
+//│ 		A10 :> 1<int,number> | 2<int,number> | int<number> | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> <: A9
+//│ 		A11 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> <: A9
+//│ [rec] HashSet(A9, A10, A11)
+//│ [!] α8
+//│ [!] real12
+//│ [!] imaginary13
+//│ [!] real14
+//│ [!] imaginary15
+//│ [v] A9 Some(HashSet(2<int,number>, 4<int,number>, int<number>, A9, 3<int,number>, 1<int,number>)) Some(HashSet(int<number>, A9, A10, A11))
+//│ [w] A10 Some(HashSet(int<number>, A9, A10, A11))
+//│ [U] A10 := A9
+//│ [w] A11 Some(HashSet(int<number>, A9, A10, A11))
+//│ [U] A11 := A9
+//│ [sub] α8 -> None, A10 -> Some(A9), A11 -> Some(A9), real12 -> None, imaginary13 -> None, real14 -> None, imaginary15 -> None
+//│ Renewed A9 ~> A16
+//│ Type after simplification: ((complex<> & {Complex#A: A16..A16, imaginary: 4<int,number>, real: 3<int,number>}) | ((complex<> & {Complex#A: A16..A16, imaginary: 2<int,number>, real: 1<int,number>}) | Complex[A16]))
+//│  where: 
+//│ 		A16 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> | 1<int,number> | 2<int,number> | int<number> | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | int<number> <: A16 & A16 & A16 & A16 & int<number>
+//│ allVarPols: =A16
+//│ recons[+] ((complex<> & {Complex#A: A16..A16, imaginary: 4<int,number>, real: 3<int,number>}) | ((complex<> & {Complex#A: A16..A16, imaginary: 2<int,number>, real: 1<int,number>}) | Complex[A16]))  (ComposedType)
+//│ | DNF: DNF(complex<>{Complex#A: A16..A16, real: 3<int,number>, imaginary: 4<int,number>} | complex<>{Complex#A: A16..A16, real: 1<int,number>, imaginary: 2<int,number>} | {}∧Complex[A16])
+//│ | recons[-] A16  (TypeVariable)
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] 4<int,number>  (ClassTag)
+//│ | | | DNF: DNF(4<int,number>{})
+//│ | | => 4<int,number>
+//│ | | recons[+] 3<int,number>  (ClassTag)
+//│ | | | DNF: DNF(3<int,number>{})
+//│ | | => 3<int,number>
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[+] 3<int,number>  (ClassTag)
+//│ | | | DNF: DNF(3<int,number>{})
+//│ | | => 3<int,number>
+//│ | | recons[+] 4<int,number>  (ClassTag)
+//│ | | | DNF: DNF(4<int,number>{})
+//│ | | => 4<int,number>
+//│ | | recons[+] 4<int,number>  (ClassTag)
+//│ | | | DNF: DNF(4<int,number>{})
+//│ | | => 4<int,number>
+//│ | | recons[+] 3<int,number>  (ClassTag)
+//│ | | | DNF: DNF(3<int,number>{})
+//│ | | => 3<int,number>
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] 4<int,number>  (ClassTag)
+//│ | | | DNF: DNF(4<int,number>{})
+//│ | | => 4<int,number>
+//│ | | recons[+] 3<int,number>  (ClassTag)
+//│ | | | DNF: DNF(3<int,number>{})
+//│ | | => 3<int,number>
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[+] 2<int,number>  (ClassTag)
+//│ | | | DNF: DNF(2<int,number>{})
+//│ | | => 2<int,number>
+//│ | | recons[+] 1<int,number>  (ClassTag)
+//│ | | | DNF: DNF(1<int,number>{})
+//│ | | => 1<int,number>
+//│ | | recons[+] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | | recons[-] A16  (TypeVariable)
+//│ | | => A17
+//│ | | recons[-] A16  (TypeVariable)
+//│ | | => A17
+//│ | | recons[-] A16  (TypeVariable)
+//│ | | => A17
+//│ | | recons[-] A16  (TypeVariable)
+//│ | | => A17
+//│ | | recons[-] int<number>  (ClassTag)
+//│ | | | DNF: DNF(int<number>{})
+//│ | | => int<number>
+//│ | => A17
+//│ | recons[+] A16  (TypeVariable)
+//│ | => A17
+//│ | recons[+] 1<int,number>  (ClassTag)
+//│ | | DNF: DNF(1<int,number>{})
+//│ | => 1<int,number>
+//│ | recons[+] 2<int,number>  (ClassTag)
+//│ | | DNF: DNF(2<int,number>{})
+//│ | => 2<int,number>
+//│ | recons[-] A16  (TypeVariable)
+//│ | => A17
+//│ | recons[+] A16  (TypeVariable)
+//│ | => A17
+//│ | recons[+] 3<int,number>  (ClassTag)
+//│ | | DNF: DNF(3<int,number>{})
+//│ | => 3<int,number>
+//│ | recons[+] 4<int,number>  (ClassTag)
+//│ | | DNF: DNF(4<int,number>{})
+//│ | => 4<int,number>
+//│ | recons[=] A16  (TypeVariable)
+//│ | => A17
+//│ | factorize? Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>} | Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>} | Complex[A17]
+//│ | | Factors 
+//│ | yes: (((Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>}) | (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>})) | Complex[A17])
+//│ => (((Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>}) | (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>})) | Complex[A17])
+//│ Recons: (((Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>}) | (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>})) | Complex[A17])
+//│  where: 
+//│ 		A17 :> int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 1<int,number> | 2<int,number> | 2<int,number> | 1<int,number> | 1<int,number> | 2<int,number> | int<number> | 3<int,number> | 4<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | 4<int,number> | 3<int,number> | int<number> | 2<int,number> | 1<int,number> | int<number> <: A17 & A17 & A17 & A17 & int<number>
+//│ allVarPols: =A17
+//│ expand[+] (((Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>}) | (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>})) | Complex[A17])  —  
+//│ | expand[+] ((Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>}) | (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>}))  —  
+//│ | | expand[+] (Complex[A17] & {imaginary: 2<int,number>, real: 1<int,number>})  —  
+//│ | | | expand[+] Complex[A17]  —  
+//│ | | | | Invariant TV A17
+//│ | | | | expand[+] (((((((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | int<number>)  —  A17
+//│ | | | | | expand[+] ((((((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>)  —  A17
+//│ | | | | | | expand[+] (((((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>)  —  A17
+//│ | | | | | | | expand[+] ((((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>)  —  A17
+//│ | | | | | | | | expand[+] (((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>)  —  A17
+//│ | | | | | | | | | expand[+] ((((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>) | 4<int,number>)  —  A17
+//│ | | | | | | | | | | expand[+] (((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>) | 1<int,number>)  —  A17
+//│ | | | | | | | | | | | expand[+] ((((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 2<int,number>)  —  A17
+//│ | | | | | | | | | | | | expand[+] (((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>) | int<number>)  —  A17
+//│ | | | | | | | | | | | | | expand[+] ((((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>) | 3<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | expand[+] (((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>) | 4<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | expand[+] ((((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>) | 4<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | expand[+] (((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>) | 3<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | expand[+] ((((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>) | int<number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | expand[+] (((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>) | 2<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | expand[+] ((((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>) | 1<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | expand[+] (((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>) | 1<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | expand[+] ((((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>) | 2<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | expand[+] (((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>) | 2<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | expand[+] ((((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>) | 1<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | expand[+] (((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>) | int<number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] ((((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>) | 3<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] (((int<number> | 2<int,number>) | 1<int,number>) | 4<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] ((int<number> | 2<int,number>) | 1<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] (int<number> | 2<int,number>)  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] int<number>  —  A17
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | => TypeName(int)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | => Literal(2)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | => Union(TypeName(int),Literal(2))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | => Literal(1)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | => Union(Union(TypeName(int),Literal(2)),Literal(1))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] 4<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | => Literal(4)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] 3<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | => Literal(3)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | expand[+] int<number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | => TypeName(int)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | | => Literal(1)
+//│ | | | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1))
+//│ | | | | | | | | | | | | | | | | | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | | => Literal(2)
+//│ | | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2))
+//│ | | | | | | | | | | | | | | | | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | | => Literal(2)
+//│ | | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2))
+//│ | | | | | | | | | | | | | | | | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | | => Literal(1)
+//│ | | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1))
+//│ | | | | | | | | | | | | | | | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | | => Literal(1)
+//│ | | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1))
+//│ | | | | | | | | | | | | | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | | | => Literal(2)
+//│ | | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2))
+//│ | | | | | | | | | | | | | | | | | | expand[+] int<number>  —  
+//│ | | | | | | | | | | | | | | | | | | => TypeName(int)
+//│ | | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int))
+//│ | | | | | | | | | | | | | | | | | expand[+] 3<int,number>  —  
+//│ | | | | | | | | | | | | | | | | | => Literal(3)
+//│ | | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3))
+//│ | | | | | | | | | | | | | | | | expand[+] 4<int,number>  —  
+//│ | | | | | | | | | | | | | | | | => Literal(4)
+//│ | | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4))
+//│ | | | | | | | | | | | | | | | expand[+] 4<int,number>  —  
+//│ | | | | | | | | | | | | | | | => Literal(4)
+//│ | | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4))
+//│ | | | | | | | | | | | | | | expand[+] 3<int,number>  —  
+//│ | | | | | | | | | | | | | | => Literal(3)
+//│ | | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3))
+//│ | | | | | | | | | | | | | expand[+] int<number>  —  
+//│ | | | | | | | | | | | | | => TypeName(int)
+//│ | | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int))
+//│ | | | | | | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | | | | | | => Literal(2)
+//│ | | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2))
+//│ | | | | | | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | | | | | | => Literal(1)
+//│ | | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1))
+//│ | | | | | | | | | | expand[+] 4<int,number>  —  
+//│ | | | | | | | | | | => Literal(4)
+//│ | | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4))
+//│ | | | | | | | | | expand[+] 3<int,number>  —  
+//│ | | | | | | | | | => Literal(3)
+//│ | | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4)),Literal(3))
+//│ | | | | | | | | expand[+] int<number>  —  
+//│ | | | | | | | | => TypeName(int)
+//│ | | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int))
+//│ | | | | | | | expand[+] 2<int,number>  —  
+//│ | | | | | | | => Literal(2)
+//│ | | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(2))
+//│ | | | | | | expand[+] 1<int,number>  —  
+//│ | | | | | | => Literal(1)
+//│ | | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1))
+//│ | | | | | expand[+] int<number>  —  
+//│ | | | | | => TypeName(int)
+//│ | | | | => Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(Union(TypeName(int),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(1)),Literal(2)),Literal(2)),Literal(1)),Literal(1)),Literal(2)),TypeName(int)),Literal(3)),Literal(4)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),Literal(4)),Literal(3)),TypeName(int)),Literal(2)),Literal(1)),TypeName(int))
+//│ | | | | expand[-] (A17 & int<number>)  —  A17
+//│ | | | | | expand[-] A17  —  A17
+//│ | | | | | => Top
+//│ | | | | | expand[-] int<number>  —  
+//│ | | | | | => TypeName(int)
+//│ | | | | => Inter(Top,TypeName(int))
+//│ | | | => AppliedType(TypeName(Complex),List(α17))
+//│ | | | expand[+] {imaginary: 2<int,number>, real: 1<int,number>}  —  
+//│ | | | | expand[+] 2<int,number>  —  
+//│ | | | | => Literal(2)
+//│ | | | | expand[+] 1<int,number>  —  
+//│ | | | | => Literal(1)
+//│ | | | => Record(List((imaginary,Field(None,Literal(2))), (real,Field(None,Literal(1)))))
+//│ | | => Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(2))), (real,Field(None,Literal(1))))))
+//│ | | expand[+] (Complex[A17] & {imaginary: 4<int,number>, real: 3<int,number>})  —  
+//│ | | | expand[+] Complex[A17]  —  
+//│ | | | | Invariant TV A17
+//│ | | | => AppliedType(TypeName(Complex),List(α17))
+//│ | | | expand[+] {imaginary: 4<int,number>, real: 3<int,number>}  —  
+//│ | | | | expand[+] 4<int,number>  —  
+//│ | | | | => Literal(4)
+//│ | | | | expand[+] 3<int,number>  —  
+//│ | | | | => Literal(3)
+//│ | | | => Record(List((imaginary,Field(None,Literal(4))), (real,Field(None,Literal(3)))))
+//│ | | => Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(4))), (real,Field(None,Literal(3))))))
+//│ | => Union(Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(2))), (real,Field(None,Literal(1)))))),Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(4))), (real,Field(None,Literal(3)))))))
+//│ | expand[+] Complex[A17]  —  
+//│ | | Invariant TV A17
+//│ | => AppliedType(TypeName(Complex),List(α17))
+//│ => Union(Union(Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(2))), (real,Field(None,Literal(1)))))),Inter(AppliedType(TypeName(Complex),List(α17)),Record(List((imaginary,Field(None,Literal(4))), (real,Field(None,Literal(3))))))),AppliedType(TypeName(Complex),List(α17)))
+//│ res: Complex['A] & {imaginary: 2, real: 1} | Complex['A] & {imaginary: 4, real: 3} | Complex['A]
+//│ 	where
+//│ 		'A :> int | 2 | 1 | 4 | 3 | int | 1 | 2 | 2 | 1 | 1 | 2 | int | 3 | 4 | 4 | 3 | int | 2 | 1 | 4 | 3 | int | 2 | 1 | int
+//│ 		   <: anything & int
+//│    = Complex { real: 4, imaginary: 6 }
 
 
 
@@ -92,11 +722,8 @@ cmi = ComplexMonoid { base = IntMonoid }
 //│ ║  l.+1: 	cmi = ComplexMonoid { base = IntMonoid }
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.37: 	class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	                                                     ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.53: 	def ComplexMonoid base = ComplexMonoid { base }
-//│ ╙──      	                                         ^^^^
+//│ ║  l.38: 	class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
+//│ ╙──      	                                                     ^^^^^^^^^
 //│ cmi: (ComplexMonoid['A] with {base: {base: IntMonoid}}) | error
 
 
@@ -108,7 +735,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type Complex
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Complex[?]`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
@@ -117,28 +744,28 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+1: 	class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                     ^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{real: A, imaginary: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.29: 	class Complex[A]: { real: A; imaginary: A }
+//│ ║  l.30: 	class Complex[A]: { real: A; imaginary: A }
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{Complex#A = A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
@@ -147,7 +774,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+1: 	class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                     ^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0
 //│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {real: Monoid['A]}})
@@ -164,15 +791,12 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                               ^^^^^^^^^^^^^^
 //│ ╟── type definition of type `ComplexMonoid_bad_1[A]` does not have field 'imaginary'
 //│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{imaginary: ?a}`
-//│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
-//│ ╙──      	                                                               ^^^^
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type Complex
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Complex[?]`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
@@ -181,28 +805,28 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                     ^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{real: A, imaginary: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.29: 	class Complex[A]: { real: A; imaginary: A }
+//│ ║  l.30: 	class Complex[A]: { real: A; imaginary: A }
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
-//│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
+//│ ║  l.32: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{Complex#A = A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
@@ -211,7 +835,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                     ^^^^^^^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.3: 	  method Empty: A
+//│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1
 //│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {imaginary: error, real: 'A}})

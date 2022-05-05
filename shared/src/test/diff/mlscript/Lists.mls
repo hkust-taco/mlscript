@@ -35,7 +35,6 @@ def d = Cons 1 c
 //│ d: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
-//│ 		   <: 'A & 'A & 'A
 //│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
@@ -50,35 +49,30 @@ d.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2
-//│ 		   <: 'A & 'A
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 1 | 2 | 2 | 1 | 1
-//│ 		   <: 'A & 'A & 'A & 'A
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 1 | 2
-//│ 		   <: 'A & 'A & 'A
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
-//│ 		   <: 'A & 'A & 'A
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2
-//│ 		   <: 'A & 'A
 //│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
@@ -89,13 +83,13 @@ res.tail
 :e
 res.tail.head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.90: 	res.tail.head
+//│ ║  l.84: 	res.tail.head
 //│ ║        	^^^^^^^^
 //│ ╟── application of type `Nil` does not have field 'tail'
 //│ ║  l.13: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
 //│ ╟── but it flows into reference with expected type `{tail: ?a}`
-//│ ║  l.90: 	res.tail.head
+//│ ║  l.84: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── Note: class Nil is defined at:
 //│ ║  l.2: 	class Nil: {}
@@ -131,19 +125,19 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.132: 	Cons 1 res
+//│ ║  l.126: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
-//│ ║  l.121: 	Cons 2 Nil
+//│ ║  l.115: 	Cons 2 Nil
 //│ ║         	     ^
 //│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
-//│ ║  l.132: 	Cons 1 res
+//│ ║  l.126: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.110: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ║  l.104: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──       	                                          ^^^^
 //│ res: (Cons['A] with {head: 1, tail: 2}) | error
 //│ 	where
@@ -163,7 +157,6 @@ Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
-//│ 		   <: 'A & 'A & 'A
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
@@ -180,7 +173,6 @@ Cons 1 (id res)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
 //│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
-//│ 		   <: 'A & 'A & 'A
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }

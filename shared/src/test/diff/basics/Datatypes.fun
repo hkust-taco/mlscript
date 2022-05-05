@@ -158,11 +158,9 @@ Cons 1 (Cons 2 Nil)
 //│ res: Cons['a]
 //│ 	where
 //│ 		'a :> 2
-//│ 		   <: 'a & 'a
 //│ res: Cons['a]
 //│ 	where
 //│ 		'a :> 2 | 1 | 1
-//│ 		   <: 'a & 'a
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -174,20 +172,20 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.175: 	not (Cons 42 Nil).head
+//│ ║  l.173: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.175: 	not (Cons 42 Nil).head
+//│ ║  l.173: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.175: 	not (Cons 42 Nil).head
+//│ ║  l.173: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.188: 	(Cons 4).head
+//│ ║  l.186: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
 //│ ║  l.109: 	data type List a of
@@ -197,17 +195,17 @@ not (Cons 42 Nil).head
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?b}`
-//│ ║  l.188: 	(Cons 4).head
+//│ ║  l.186: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.205: 	Cons 1 2
+//│ ║  l.203: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?a]`
-//│ ║  l.205: 	Cons 1 2
+//│ ║  l.203: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.109: 	data type List a of
@@ -223,7 +221,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.224: 	let List.head = () // ...
+//│ ║  l.222: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

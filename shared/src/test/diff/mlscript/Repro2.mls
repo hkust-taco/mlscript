@@ -34,7 +34,6 @@ l0 = Cons { head = 1; tail = Nil {} }
 //│ l0: Cons['A] with {head: 1, tail: Nil['A]}
 //│ 	where
 //│ 		'A :> 1
-//│ 		   <: 'A & 'A & 'A
 
 // :d
 :stats

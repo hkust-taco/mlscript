@@ -829,7 +829,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           })(0).asTypeVar)
       }
       else (inProcess + st_pol) pipe { implicit inProcess => st match {
-        // case tv: TypeVariable if parents(tv) => if (polarity) Bot else Top
+        case tv: TypeVariable if parents(tv) => if (polarity) Bot else Top
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable if tv.isBadlyRecursive === S(false) =>
           val nv = tv.asTypeVar
@@ -932,6 +932,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 case tv: TV if stopAtTyVars =>
                   tv.asTypeVar
                 case tv: TV =>
+                  println(s"Invariant TV $tv")
                   invariant.getOrElseUpdate(tv, {
                     val newParents = parents + tv
                     val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)

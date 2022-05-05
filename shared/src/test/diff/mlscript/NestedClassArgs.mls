@@ -78,8 +78,6 @@ rec def c a = C3 { a = c a }
 
 rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
 //│ anything -> C3['X]
-//│ 	where
-//│ 		'X <: 'X & 'X
 //│   <:  c:
 //│ 'a -> C3['a]
 
