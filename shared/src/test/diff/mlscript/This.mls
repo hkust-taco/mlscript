@@ -41,4 +41,4 @@ class Derived: Base
 //│ Defined class Derived
 
 Derived.Foo
-//│ res: Derived -> nothing
+//│ res: (Derived & 'this) -> (Base & 'this)

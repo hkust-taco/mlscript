@@ -1,0 +1,22 @@
+:NoJS
+
+class Base
+  method Foo: this
+  method Bar = (this.Foo,)
+//│ Defined class Base
+//│ Declared Base.Foo: (Base & 'this) -> (Base & 'this)
+//│ Defined Base.Bar: (Base & 'this) -> (Base & 'this,)
+
+class Derived: Base
+  method Qux = this.Bar._1
+//│ Defined class Derived
+//│ Defined Derived.Qux: (Derived & 'this) -> (Derived & 'this)
+
+Derived.Foo
+//│ res: (Derived & 'this) -> (Base & 'this)
+
+Derived.Bar
+//│ res: (Derived & 'this) -> (Base & 'this,)
+
+Derived.Qux
+//│ res: (Derived & 'this) -> (Derived & 'this)

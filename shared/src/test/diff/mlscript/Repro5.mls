@@ -1,0 +1,15 @@
+class Base
+  method Foo = this
+//│ Defined class Base
+//│ Defined Base.Foo: (Base & 'this) -> (Base & 'this)
+
+class Derived: Base
+//│ Defined class Derived
+
+Base.Foo
+//│ res: (Base & 'this) -> (Base & 'this)
+//│    = undefined
+
+Derived.Foo
+//│ res: (Derived & 'this) -> (Base & 'this)
+//│    = undefined

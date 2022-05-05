@@ -548,16 +548,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
               else rcdSel(obj, fieldName) // TODO: no else?
           }
-        obj match {
-          case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
-            ctx.getMth(S(name), fieldName.name) match {
-              case S(mth_ty) => mth_ty.toPT.instantiate
-              case N =>
-                err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
-                mthCallOrSel(obj, fieldName)
-            }
-          case _ => mthCallOrSel(obj, fieldName)
-        }
+        trace(s"$lvl. Typing Sel") {
+          obj match {
+            case Var(name) if name.isCapitalized && ctx.tyDefs.isDefinedAt(name) => // explicit retrieval
+              ctx.getMth(S(name), fieldName.name) match {
+                case S(mth_ty) => trace(s"$lvl. instantiate method type ${mth_ty}") {
+                  mth_ty.toPT.instantiate
+                }(r => s"$lvl. instantiate result: ${r}")
+                case N =>
+                  err(msg"Class ${name} has no method ${fieldName.name}", term.toLoc)
+                  mthCallOrSel(obj, fieldName)
+              }
+            case _ => mthCallOrSel(obj, fieldName)
+          }
+        }(r => s"$lvl. : ${r}")
       case Let(isrec, nme, rhs, bod) =>
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
