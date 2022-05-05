@@ -30,7 +30,7 @@ ty2A = ty2A
 //│ MyArray['a]
 //│ constrain calls  : 22
 //│ annoying  calls  : 20
-//│ subtyping calls  : 33
+//│ subtyping calls  : 29
 
 def ty2B: MyArray[MyArray['a]]
 //│ ty2B: MyArray[MyArray['a]]
@@ -42,7 +42,7 @@ ty2B = ty2A
 //│ MyArray[MyArray['a]]
 //│ constrain calls  : 20
 //│ annoying  calls  : 20
-//│ subtyping calls  : 32
+//│ subtyping calls  : 28
 
 def ty3A: MyArray['a] as 'a
 //│ ty3A: (MyArray['b] as 'b) as 'a
@@ -180,6 +180,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^
 //│ constrain calls  : 29
 //│ annoying  calls  : 28
-//│ subtyping calls  : 48
+//│ subtyping calls  : 44
 
 

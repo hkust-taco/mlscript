@@ -889,6 +889,52 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
           // }
         case _ =>
+          def field(ft: FieldType): Field = ft match {
+            case FieldType(S(l: TV), u: TV) if l === u =>
+              val res = invarTV(u)
+              Field(S(res), res) // TODO improve Field
+            // case FieldType(S(l), u) if l === u =>
+            //   // val i = invar(u)
+            //   // Field(S(i), i)
+            //   // invar(u) match {
+            //   // }
+            //   u match {
+            //     case tv: TV =>
+            //       val res = invarTV(tv)
+            //       Field(S(res), res) // TODO improve
+            //     case _ =>
+            //       val res = go(u, polarity, newParents)
+            //   }
+            case f =>
+              Field(f.lb.map(go(_, !polarity, semp)), go(f.ub, polarity, semp))
+          }
+          def invarTV(tv: TV): Type = if (stopAtTyVars) tv.asTypeVar else {
+            println(s"Invariant TV $tv")
+            invariant.getOrElseUpdate(tv, {
+              val newParents = parents + tv
+              val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
+              val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
+              if (l === u) l else { // TODO try to rm to see what happens
+                val nv = tv.asTypeVar
+                // val b = Bounds(l, u)
+                // if (b.nonEmpty)
+                //   bounds ::= nv -> b // FIXME no dup
+                if (l =/= Bot || u =/= Top)
+                  bounds ::= nv -> Bounds(l, u) // FIXME no dup
+                nv
+              }
+            })
+          }
+          def invar(ty: ST): Type = ty match {
+            // case tv: TV if stopAtTyVars =>
+            //   tv.asTypeVar
+            case tv: TV =>
+              invarTV(tv)
+            case t =>
+              val l = go(t, true, parents)
+              val u = go(t, false, parents)
+              if (l === u) l else Bounds(l, u)
+          }
           val res = st match {
             case FunctionType(l, r) => Function(go(l, !polarity, semp), go(r, polarity, semp))
             
@@ -902,18 +948,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               Inter(go(l, polarity, newParents), go(r, polarity, newParents))
             
             case RecordType(fs) =>
-              Record(fs.mapValues(v => Field(v.lb.map(go(_, !polarity, semp)), go(v.ub, polarity, semp))))
+              // Record(fs.mapValues(v => Field(v.lb.map(go(_, !polarity, semp)), go(v.ub, polarity, semp))))
+              Record(fs.mapValues(field))
             case TupleType(fs) =>
-              Tuple(fs.mapValues(v => Field(v.lb.map(go(_, !polarity, semp)), go(v.ub, polarity, semp))))
+              // Tuple(fs.mapValues(v => Field(v.lb.map(go(_, !polarity, semp)), go(v.ub, polarity, semp))))
+              Tuple(fs.mapValues(field))
             case ArrayType(FieldType(None, ub)) =>
               AppliedType(TypeName("Array"), go(ub, polarity, semp) :: Nil)
-            case ArrayType(FieldType(Some(lb), ub)) =>
-              AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity, semp), go(ub, polarity, semp)) :: Nil)
+            // case ArrayType(FieldType(Some(lb), ub)) =>
+            //   AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity, semp), go(ub, polarity, semp)) :: Nil)
+            case ArrayType(f) =>
+              val f2 = field(f)
+              AppliedType(TypeName("MutArray"), Bounds(f2.in.get, f2.out) :: Nil) // FIXME pol?
             case NegType(t) => Neg(go(t, !polarity, semp)) // Note: about `semp` – it would mean sthg like `A <: ~A`
             case ExtrType(true) => Bot
             case ExtrType(false) => Top
             case WithType(base, rcd) => WithExtension(go(base, polarity, parents),
-              Record(rcd.fields.mapValues(f => Field(f.lb.map(go(_, !polarity, semp)), go(f.ub, polarity, semp)))))
+              // Record(rcd.fields.mapValues(f => Field(f.lb.map(go(_, !polarity, semp)), go(f.ub, polarity, semp)))))
+              Record(rcd.fields.mapValues(field)))
             case ProxyType(und) => go(und, polarity, parents)
             case tag: ObjectTag => tag.id match {
               case Var(n) => TypeName(n)
@@ -921,56 +973,57 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             }
             case TypeRef(td, Nil) => td
             case TypeRef(td, targs) =>
-              AppliedType(td, targs.map {
-                // TODO?
-                /* 
-                case tv: TV =>
+              AppliedType(td, targs.map(invar))
+              // AppliedType(td, targs.map {
+              //   // TODO?
+              //   /* 
+              //   case tv: TV =>
                   
-                  // bounds ::= nv -> Bounds(tv.lowerBounds.map(go(_, true)), tv.upperBounds.map(go(_, false))) // FIXME no dup
+              //     // bounds ::= nv -> Bounds(tv.lowerBounds.map(go(_, true)), tv.upperBounds.map(go(_, false))) // FIXME no dup
                   
-                  // if (allVarPols(tv).isEmpty) // if the variable is not polar, include it
-                  assert(allVarPols(tv).isEmpty, allVarPols(tv)) // the variable is not polar
-                  tv.asTypeVar
-                  // else
-                  // tv
-                */  
-                case tv: TV if stopAtTyVars =>
-                  tv.asTypeVar
-                case tv: TV =>
-                  println(s"Invariant TV $tv")
-                  invariant.getOrElseUpdate(tv, {
-                    val newParents = parents + tv
-                    val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
-                    val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
-                    if (l === u) l else { // TODO try to rm to see what happens
-                      val nv = tv.asTypeVar
-                      // val b = Bounds(l, u)
-                      // if (b.nonEmpty)
-                      //   bounds ::= nv -> b // FIXME no dup
-                      if (l =/= Bot || u =/= Top)
-                        bounds ::= nv -> Bounds(l, u) // FIXME no dup
-                      nv
-                    }
-                  })
-                case t =>
-                  val l = go(t, true, parents)
-                  val u = go(t, false, parents)
-                  if (l === u) l else Bounds(l, u)
-                // case t =>
-                // // val l = go(t, false, semp)
-                // // val u = go(t, true, semp)
-                // val newParents = t match { case tv: TV => parents + tv; case _ => parents }
-                // val l = go(t, true, newParents)
-                // val u = go(t, false, newParents)
-                // // if (l === u) l else Bounds(l, u)
-                // if (l === u) l else t match {
-                // case tv: TV =>
-                //   val nv = tv.asTypeVar
-                //   bounds ::= nv -> Bounds(l, u) // FIXME no dup
-                //   nv
-                // case _ => Bounds(l, u)
-                // }
-              })
+              //     // if (allVarPols(tv).isEmpty) // if the variable is not polar, include it
+              //     assert(allVarPols(tv).isEmpty, allVarPols(tv)) // the variable is not polar
+              //     tv.asTypeVar
+              //     // else
+              //     // tv
+              //   */  
+              //   case tv: TV if stopAtTyVars =>
+              //     tv.asTypeVar
+              //   case tv: TV =>
+              //     println(s"Invariant TV $tv")
+              //     invariant.getOrElseUpdate(tv, {
+              //       val newParents = parents + tv
+              //       val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
+              //       val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
+              //       if (l === u) l else { // TODO try to rm to see what happens
+              //         val nv = tv.asTypeVar
+              //         // val b = Bounds(l, u)
+              //         // if (b.nonEmpty)
+              //         //   bounds ::= nv -> b // FIXME no dup
+              //         if (l =/= Bot || u =/= Top)
+              //           bounds ::= nv -> Bounds(l, u) // FIXME no dup
+              //         nv
+              //       }
+              //     })
+              //   case t =>
+              //     val l = go(t, true, parents)
+              //     val u = go(t, false, parents)
+              //     if (l === u) l else Bounds(l, u)
+              //   // case t =>
+              //   // // val l = go(t, false, semp)
+              //   // // val u = go(t, true, semp)
+              //   // val newParents = t match { case tv: TV => parents + tv; case _ => parents }
+              //   // val l = go(t, true, newParents)
+              //   // val u = go(t, false, newParents)
+              //   // // if (l === u) l else Bounds(l, u)
+              //   // if (l === u) l else t match {
+              //   // case tv: TV =>
+              //   //   val nv = tv.asTypeVar
+              //   //   bounds ::= nv -> Bounds(l, u) // FIXME no dup
+              //   //   nv
+              //   // case _ => Bounds(l, u)
+              //   // }
+              // })
             case TypeBounds(lb, ub) =>
               // if (polarity) go(ub, true, parents) else go(lb, false, parents)
               if (polarity) go(lb, true, parents) else go(ub, false, parents)

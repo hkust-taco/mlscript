@@ -118,14 +118,16 @@ trait TypeSimplifier { self: Typer =>
       val newParents = parents + tv
       // nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
       // nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
-      nv.lowerBounds = tv.lowerBounds.reduceOption(_ | _).map(goDeep(_, S(true), newParents)(Set.empty)).filterNot(_ === BotType).toList
-      nv.upperBounds = tv.upperBounds.reduceOption(_ & _).map(goDeep(_, S(false), newParents)(Set.empty)).filterNot(_ === TopType).toList
+      nv.lowerBounds = tv.lowerBounds.reduceOption(_ | _)
+        .map(goDeep(_, S(true), newParents)(Set.empty)).filterNot(_ === BotType).toList
+      nv.upperBounds = tv.upperBounds.reduceOption(_ & _)
+        .map(goDeep(_, S(false), newParents)(Set.empty)).filterNot(_ === TopType).toList
       nv
     }
     
-    def goDeep(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): SimpleType = ty match {
+    def goDeep(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): SimpleType = ty.unwrapProvs match {
         case v: TV if parents(v) =>
-          ??? // uh?
+          ??? // uh? // TODO rm parents?
           if (pol.getOrElse(die)) // doesn't really make sense to have a parent in invariant pos
             BotType else TopType
         case tv: TV if recursiveVars.contains(tv) => renew(tv)
@@ -240,6 +242,13 @@ trait TypeSimplifier { self: Typer =>
             freshVar(noProv)(ty.level) tap { fv => println(s"Fresh rec $pty ~> $fv") })
         else {
           (inProcess + pty) pipe { implicit inProcess =>
+            def processField(f: FieldType): FieldType = f match {
+              case fty @ FieldType(S(lb), ub) if lb === ub =>
+                val res = goDeep(ub, N, semp)
+                FieldType(S(res), res)(fty.prov)
+              case fty @ FieldType(lb, ub) =>
+                FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
+            }
             val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
               def adapt(pol: Opt[Bool])(l: LhsNf): LhsNf = l match {
                 case LhsRefined(b, ts, RecordType(fs), trs) => LhsRefined(
@@ -256,29 +265,42 @@ trait TypeSimplifier { self: Typer =>
                     case wo @ Without(b, ns) =>
                       Without(goDeep(b, pol, parents), ns)(noProv)
                     case ft @ TupleType(fs) =>
-                      TupleType(fs.mapValues(_.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))))(noProv)
+                      // TupleType(fs.mapValues(_.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))))(noProv)
+                      // TupleType(fs.mapValues {
+                      //   case fty @ FieldType(S(lb), ub) if lb === ub =>
+                      //     val res = goDeep(ub, N, semp)
+                      //     FieldType(S(res), res)(fty.prov)
+                      //   case f => f.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))
+                      // })(noProv)
+                      TupleType(fs.mapValues(processField))(noProv)
+                    // case ar @ ArrayType(fty @ FieldType(S(lb), ub)) if lb === ub =>
+                    //   val res = goDeep(ub, N, semp)
+                    //   ArrayType(FieldType(S(res), res)(fty.prov))(noProv)
+                    // case ar @ ArrayType(inner) =>
+                    //   ArrayType(inner.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))(noProv)
                     case ar @ ArrayType(inner) =>
-                      ArrayType(inner.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))(noProv)
+                      ArrayType(processField(inner))(noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
                   // RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
-                  RecordType(fs.map {
-                    // case (nme, ty) if nme.name.isCapitalized && nme.name.contains('#') =>
-                    //   ty match {
-                    //     // case FunctionType(lb, ub) =>
-                    //     //   nme -> FunctionType(goDeep(lb, pol.map(!_)), goDeep(ub, pol))(ty.prov)
-                    //     // case _ => lastWords(s"$nme: $ty")
-                    //     case FieldType(lb, ub) =>
-                    //       nme -> FieldType(lb.map(goDeep(_, pol.map(!_))), goDeep(ub, pol))(ty.prov)
-                    //   }
-                    // case (nme, ty) => nme -> goDeep(ty, pol)
-                    case (nme, fty @ FieldType(S(lb), ub)) if lb === ub =>
-                      val res = goDeep(ub, N, semp)
-                      nme -> FieldType(S(res), res)(fty.prov)
-                    case (nme, fty @ FieldType(lb, ub)) =>
-                      nme -> FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
-                  })(noProv),
+                  // RecordType(fs.map {
+                  //   // case (nme, ty) if nme.name.isCapitalized && nme.name.contains('#') =>
+                  //   //   ty match {
+                  //   //     // case FunctionType(lb, ub) =>
+                  //   //     //   nme -> FunctionType(goDeep(lb, pol.map(!_)), goDeep(ub, pol))(ty.prov)
+                  //   //     // case _ => lastWords(s"$nme: $ty")
+                  //   //     case FieldType(lb, ub) =>
+                  //   //       nme -> FieldType(lb.map(goDeep(_, pol.map(!_))), goDeep(ub, pol))(ty.prov)
+                  //   //   }
+                  //   // case (nme, ty) => nme -> goDeep(ty, pol)
+                  //   case (nme, fty @ FieldType(S(lb), ub)) if lb === ub =>
+                  //     val res = goDeep(ub, N, semp)
+                  //     nme -> FieldType(S(res), res)(fty.prov)
+                  //   case (nme, fty @ FieldType(lb, ub)) =>
+                  //     nme -> FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
+                  // })(noProv),
+                  RecordType(fs.mapValues(processField))(noProv),
                   trs.map {
                     case (d, tr @ TypeRef(defn, targs)) =>
                       // TODO actually make polarity optional and recurse with None
@@ -298,7 +320,8 @@ trait TypeSimplifier { self: Typer =>
               //   case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, !pol), goDeep(_, pol)))
               def adapt2(pol: Opt[Bool])(l: RhsNf): RhsNf = l match {
                 // case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
-                case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))
+                // case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))
+                case RhsField(name, ty) => RhsField(name, processField(ty))
                 case RhsBases(prims, bf) =>
                   // TODO refactor to handle goDeep returning something else...
                   RhsBases(prims, bf match {
@@ -309,7 +332,8 @@ trait TypeSimplifier { self: Typer =>
                       case _ => ???
                     }
                     case S(R(r)) =>
-                      S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))))
+                      // S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))))
+                      S(R(RhsField(r.name, processField(r.ty))))
                   })
                 case RhsBot => RhsBot
               }

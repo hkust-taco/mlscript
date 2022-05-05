@@ -275,24 +275,24 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.uninstantiatedBody
-              if (mode.isDebugging) output(s"Typed as: $wty")
+              if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               typer.dbg = mode.dbgSimplif
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
                 // typer.dbg = mode.dbgSimplif
                 val rty = typer.removeIrrelevantBounds(wty)(ctx)
-                if (mode.isDebugging) output(s"Cleaned up: ${rty}")
+                if (mode.isDebugging) output(s"⬤ Cleaned up: ${rty}")
                 if (mode.isDebugging) output(s" where: ${rty.showBounds}")
                 val cty = typer.canonicalizeType(rty)(ctx)
                 // val cty = rty
-                if (mode.dbgSimplif) output(s"Canon: ${cty}")
+                if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
                 if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 val sim = typer.simplifyType(cty)(ctx)
-                if (mode.dbgSimplif) output(s"Type after simplification: ${sim}")
+                if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${sim}")
                 if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
                 val recons = typer.reconstructClassTypes(sim, S(true), ctx)
-                if (mode.dbgSimplif) output(s"Recons: ${recons}")
+                if (mode.dbgSimplif) output(s"⬤ Recons: ${recons}")
                 if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
                 val exp = typer.expandType(recons, true)
                 // val canon2 = typer.canonicalizeType(recons)(ctx)

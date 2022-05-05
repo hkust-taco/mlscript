@@ -33,10 +33,22 @@ abstract class TypeImpl extends Located { self: Type =>
     showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
+  // private def showFieldMut(f: Field): Str = if (f.in.nonEmpty) "mut " else ""
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
-    case Field(N | S(Bot), ub) => ub.showIn(ctx, 0)
-    case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} .."
-    case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Field(N, ub) => ub.showIn(ctx, 0)
+    case Field(S(lb), ub) if lb === ub => ub.showIn(ctx, 0)
+    // 
+    // case Field(S(Bot), ub) => "? : " + ub.showIn(ctx, 0)
+    // case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} : ?"
+    // case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} : ? : ${ub.showIn(ctx, 0)}"
+    // 
+    // case Field(S(Bot), ub) => s"${ub.showIn(ctx, 0)} out"
+    // case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} in"
+    // case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} in ${ub.showIn(ctx, 0)} out"
+    // 
+    case Field(S(Bot), ub) => s"out ${ub.showIn(ctx, 0)}"
+    case Field(S(lb), Top) => s"in ${lb.showIn(ctx, 0)}"
+    case Field(S(lb), ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -53,18 +65,17 @@ abstract class TypeImpl extends Located { self: Type =>
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
         val nme = nt._1.name
-        if (nme.isCapitalized) 
-        nt._2 match {
+        if (nme.isCapitalized) nt._2 match {
           case Field(N | S(Bot), Top) => s"$nme"
           case Field(S(lb), ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
           case Field(N | S(Bot), ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
           case Field(S(lb), Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
           case Field(S(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
-        else s"${nme}: ${showField(nt._2, ctx)}"
+        else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
     case Tuple(fs) =>
-      fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
+      fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -87,10 +98,18 @@ abstract class TypeImpl extends Located { self: Type =>
             .map(_.showIn(ctx, prec))
             .reduce(_ + opStr + _), outerPrec > prec)
       }
+    // 
+    // case Bounds(Bot, Top) => s"?"
+    // case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
+    // case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
+    // case Bounds(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    // 
     case Bounds(Bot, Top) => s"?"
-    case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
-    case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
-    case Bounds(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Bounds(lb, ub) if lb === ub => lb.showIn(ctx, outerPrec)
+    case Bounds(Bot, ub) => s"out ${ub.showIn(ctx, 0)}"
+    case Bounds(lb, Top) => s"in ${lb.showIn(ctx, 0)}"
+    case Bounds(lb, ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
+    // 
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
@@ -419,6 +438,8 @@ trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
 trait FieldImpl extends Located { self: Field =>
   def children: List[Located] =
     self.in.toList ::: self.out :: Nil
+  def isMutabe: Bool = in.isDefined
+  def mutStr: Str = if (isMutabe) "mut " else ""
 }
 
 trait Located {

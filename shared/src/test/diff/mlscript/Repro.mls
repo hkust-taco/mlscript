@@ -60,3 +60,20 @@ def manual: 'a -> anything as 'a
 manual id
 //│ res: anything
 
+
+def f: { mut x: int }
+//│ f: {mut x: int}
+
+f: { mut x: int }
+//│ res: {mut x: int}
+
+f = { mut x = 1 }
+//│ {mut x: 'a}
+//│ 	where
+//│ 		'a :> 1
+//│   <:  f:
+//│ {mut x: int}
+
+
+
+

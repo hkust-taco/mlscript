@@ -65,7 +65,7 @@ def Some v = Some{v}
 def foo(x: Some['a]) =
   let _ = x.v : Some[?]
   in x: Some['a & some]
-//│ foo: Some[Some[?] & 'a & 'a0 .. 'a | Some[?] & 'a0] -> Some[Some[?] & 'a0]
+//│ foo: Some[Some[?] & 'a] -> Some[Some[?] & 'a]
 
 // :ds
 def f: Some['a]

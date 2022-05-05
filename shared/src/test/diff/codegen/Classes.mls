@@ -52,7 +52,9 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ 	where
 //│ 		'T :> 1
 //│     = Box { inner: 1 }
-//│ box2: Box['a .. 'a | int]
+//│ box2: Box['a]
+//│ 	where
+//│ 		'a :> int
 //│     = Box { inner: 2 }
 
 :js
@@ -125,7 +127,9 @@ mb2.Get
 //│   = MyBox { inner: 2, info: 'hello' }
 //│ res: int
 //│    = 2
-//│ mb2: Box['a .. 'a | int]
+//│ mb2: Box['a]
+//│ 	where
+//│ 		'a :> int
 //│    = Box { inner: 6, info: 'hello' }
 //│ res: int
 //│    = 6

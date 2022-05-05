@@ -195,7 +195,9 @@ d.x
 //│    = 'hi'
 
 d: C['a]
-//│ res: C['a .. "hi" | 'a | 1]
+//│ res: C['a]
+//│ 	where
+//│ 		'a :> "hi" | 1
 //│    = C { x: 'hi', y: 2 }
 
 res.x

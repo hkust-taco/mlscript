@@ -210,7 +210,7 @@ def c: 'a -> List['b] -> List['a | 'b]
 c 1 (c 2 Nil)
 //│ c: 'a -> List['b] -> List['a | 'b]
 //│  = <missing implementation>
-//│ res: List['a .. 'a | 1 | 2]
+//│ res: List[in 'a out 'a | 1 | 2]
 //│    = <no result>
 //│      c is not implemented
 
