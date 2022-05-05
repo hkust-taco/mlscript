@@ -34,15 +34,15 @@ eval ex
 //│    = 4
 
 def e: Add['e] as 'e
-//│ e: (Add['a] as 'a) as 'e
+//│ e: Add['e] as 'e
 //│  = <missing implementation>
 
 def e: Lit | Add['e] as 'e
-//│ e: (Add['a] | Lit as 'a) as 'e
+//│ e: Add['e] | Lit as 'e
 //│  = <missing implementation>
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: (Add['a] | Lit | Nega['a] as 'a) as 'e
+//│ e: Add['e] | Lit | Nega['e] as 'e
 //│  = <missing implementation>
 
 def e = ex
@@ -50,7 +50,7 @@ def e = ex
 //│   where
 //│     'E :> Lit & {val: 2}
 //│   <:  e:
-//│ (Add['a] | Lit | Nega['a] as 'a) as 'e
+//│ Add['e] | Lit | Nega['e] as 'e
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e

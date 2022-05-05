@@ -16,21 +16,21 @@ def c: C[C['a]] -> 'a
 
 // :ds
 def c: C['a] as 'a
-//│ c: (C['b] as 'b) as 'a
+//│ c: C['a] as 'a
 
 // :ds
 def c: C['a] | 'a as 'a
-//│ c: ('a | C['b] as 'b) as 'a
+//│ c: 'a | C['a] as 'a
 
 def c: C[C['a]] as 'a
-//│ c: (C[C['b]] as 'b) as 'a
+//│ c: C[C['a]] as 'a
 
 // :ds
 def c: C[C['a] & 'a] as 'a
-//│ c: (C[C['b] & 'a] as 'b) as 'a
+//│ c: C[C['a] & 'a] as 'a
 
 def c: C[C['a] & 'a | 'a] as 'a
-//│ c: (C['b] as 'b) as 'a
+//│ c: C['a] as 'a
 
 def c: C['a]
 //│ c: C['a]

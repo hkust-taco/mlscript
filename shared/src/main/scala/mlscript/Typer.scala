@@ -839,6 +839,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // println(">>>>>>", tv, nv)
           println(s"Type $tv is badly recursive ($nv)")
           if (recursive.contains(tv)) nv else {
+            // println("!", tv, nv)
             recursive += tv -> nv
             // FIXME inProcess
             // FIXME self in bounds...
@@ -910,7 +911,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
           def invarTV(tv: TV): Type = if (stopAtTyVars) tv.asTypeVar else {
             println(s"Invariant TV $tv")
-            invariant.getOrElseUpdate(tv, {
+            recursive.getOrElse(tv, invariant.getOrElseUpdate(tv, {
               val newParents = parents + tv
               val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
               val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
@@ -923,7 +924,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   bounds ::= nv -> Bounds(l, u) // FIXME no dup
                 nv
               }
-            })
+            }))
           }
           def invar(ty: ST): Type = ty match {
             // case tv: TV if stopAtTyVars =>
