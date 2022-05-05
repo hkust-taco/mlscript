@@ -91,7 +91,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = lhs.level max rhs.level
-    override def toString = s"($lhs -> $rhs)"
+    // override def toString = s"($lhs -> $rhs)"
+    override def toString = s"(${lhs match {
+      case TupleType((N, f) :: Nil) => f.toString
+      case lhs => lhs.toString
+    }} -> $rhs)"
   }
   
   case class RecordType(fields: List[(Var, FieldType)])(val prov: TypeProvenance) extends SimpleType {
@@ -277,7 +281,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
-    override def toString = s"$lb..$ub"
+    // override def toString = s"${lb.mkString}..$ub"
+    override def toString = lb.filterNot(_ === BotType).fold(ub.toString)(lb => s"$lb..$ub")
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
@@ -294,15 +299,55 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)
     // /** None: not recursive; Some(true): linearly recursive; Some(false): nonlinearly recursive; */
     /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
-    def isRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
-      // // ???
-      // S(false)
-      // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
-      // val vars = getVarsPol(S(true))
-      // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
-      val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
-      // println(s"isRecursive $vars ${vars.get(this)}")
-      vars.get(this).map(_.isDefined)
+    // def isRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+    //   // // ???
+    //   // S(false)
+    //   // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
+    //   // val vars = getVarsPol(S(true))
+    //   // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
+    //   val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+    //   // println(s"isRecursive $vars ${vars.get(this)}")
+    //   vars.get(this).map(_.isDefined)
+    // })
+    // def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElse(this, {
+    //   // // ???
+    //   // S(false)
+    //   // getVarsPol(S(true))(this) tap (r => println(s"isRecursive ${this} $r"))
+    //   // val vars = getVarsPol(S(true))
+    //   // val vars = (lowerBounds.iterator ++ upperBounds.iterator).foldLeft(TopType)(_ | _).getVarsPol(S(true))
+    //   // val vars = TupleType((lowerBounds.iterator.map(_.neg()) ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+    //   val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator.map(_.neg())).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+    //   println(s"isRecursive($this) = $vars  —  ${vars.get(this)}")
+    //   vars.get(this).map(_.isDefined)
+    // })
+    /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
+    def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElseUpdate(this, {
+      // val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
+      // // println(s"isRecursive $vars ${vars.get(this)}")
+      // vars.get(this).map(_.isDefined)
+      val lvars = TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true))
+      val uvars = TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false))
+      val locc = lvars.get(this)
+      val uocc = uvars.get(this)
+      // println(s"C ${cache.contains(this)} $cache")
+      println(s"isBadlyRecursive($this) = $locc $uocc")
+      if (locc.isDefined || uocc.isDefined) S(!(
+        
+        // // locc.exists(_.forall(_ === false)) && uocc.exists(_.isDefined) ||
+        // // uocc.exists(_.forall(_ === true)) && locc.exists(_.isDefined)
+        // locc.exists(_.forall(_ === false)) /* && uocc.isDefined */ ||
+        // // uocc.exists(_.forall(_ === true)) /* && locc.isDefined */
+        // uocc.exists(_.forall(_ === true)) /* && locc.isDefined */
+        
+        locc.exists(_.forall(_ === false)) && uocc.isDefined ||
+        uocc.exists(_.forall(_ === true)) && locc.isDefined
+        
+        // locc.exists(_.isEmpty) || uocc.exists(_.isEmpty) ||
+        //   locc.exists(_.forall(_ === false)) && uocc.isDefined ||
+        //   uocc.exists(_.forall(_ === true)) && locc.isDefined
+        
+      ))
+      else N
     })
   }
   type TV = TypeVariable

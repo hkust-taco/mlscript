@@ -40,14 +40,21 @@ data type Either2 (l: _) (r: _) of
 let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
-//│ l: Left['a .. 1 | 'a, 'b]
-//│ r: Right['a, 'b .. "ok" | 'b]
-//│ e: Left['a .. 1 | 'a, 'b] | Right['c, 'd .. "ok" | 'd]
+//│ l: Left['a, 'b]
+//│ 	where
+//│ 		'a :> 1
+//│ r: Right['a, 'b]
+//│ 	where
+//│ 		'b :> "ok"
+//│ e: Left['a, 'b] | Right['c, 'd]
+//│ 	where
+//│ 		'd :> "ok"
+//│ 		'a :> 1
 
 :e // TODO
 e as Either Int String
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.48: 	e as Either Int String
+//│ ║  l.55: 	e as Either Int String
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^
 //│ res: error
 
@@ -58,7 +65,7 @@ e as Either Int String
 :e
 e as Either
 //│ ╔══[ERROR] identifier not found: Either
-//│ ║  l.59: 	e as Either
+//│ ║  l.66: 	e as Either
 //│ ╙──      	     ^^^^^^
 //│ res: error
 

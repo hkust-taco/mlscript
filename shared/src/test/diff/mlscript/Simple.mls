@@ -23,7 +23,9 @@ class Bar: {}
 //│ Defined class Bar
 
 def foo = Foo { field = id 1 }
-//│ foo: Foo['A .. 1 | 'A] with {field: 1}
+//│ foo: Foo['A] & {field: 1}
+//│ 	where
+//│ 		'A :> 1
 //│    = Foo { field: 1 }
 
 (if true then foo else { field = 2 }).field
@@ -31,7 +33,9 @@ def foo = Foo { field = id 1 }
 //│    = 1
 
 Foo { field = id 1 }
-//│ res: Foo['A .. 1 | 'A] with {field: 1}
+//│ res: Foo['A] & {field: 1}
+//│ 	where
+//│ 		'A :> 1
 //│    = Foo { field: 1 }
 
 def test x = case x of { Bar -> 1 | Foo -> 2 }

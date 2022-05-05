@@ -4,11 +4,12 @@
 // TODO use RecType immediately for all TVs in canon?
 
 
-:stdout
-:s
-:d
-:ds
+// :stdout
+// :s
+// :d
+// :ds
 def f: { x: 'a } as 'a
+//│ f: {x: 'a} as 'a
 
 
 // :stdout
@@ -19,98 +20,10 @@ rec def l a = l
 //│ l: anything -> 'a as 'a
 
 
-:ds
+// TODO-simplif
+// :ds
 fun a -> a a
-//│ Typed as: ((None..α0,) -> α1)
-//│  where: α0 <: [[[[([(None..[α0],)] -> α1)]]]]
-//│ ty[+] ((None..α0,) -> α1)
-//│ -> Right(DNF(((None..α0,) -> α1){}))
-//│ DNF[+] DNF(((None..α0,) -> α1){})
-//│ | ty[-] (None..α0,)
-//│ | -> Right(DNF((None..α0,){}))
-//│ | DNF[-] DNF((None..α0,){})
-//│ | | ty[-] α0
-//│ | | | Renewed α0 ~> α2
-//│ | | | ty[-] [[[[([(None..[α0],)] -> α1)]]]]
-//│ | | | -> Right(DNF(([(None..[α0],)] -> α1){}))
-//│ | | | DNF[-] DNF(([(None..[α0],)] -> α1){})
-//│ | | | ~> α3
-//│ | | -> Right(DNF(α0))
-//│ | | DNF[-] DNF(α0)
-//│ | | ~> α2
-//│ | ~> (None..α2,)
-//│ | ty[+] α1
-//│ | | Consider α1 List() List()
-//│ | -> Right(DNF(α1))
-//│ | DNF[+] DNF(α1)
-//│ | | Renewed α1 ~> α4
-//│ | ~> α4
-//│ ~> α3
-//│ Canon: α3
-//│  where: α2 <: α3, α3 :> ((None..α2,) -> α4) <: ((None..α2,) -> α4)
-//│ analyze[+] α3
-//│ | go α3   ()
-//│ | | go ((None..α2,) -> α4)   (α3)
-//│ | | | analyze[+] ((None..α2,) -> α4)
-//│ | | | | analyze[-] (None..α2,)
-//│ | | | | | analyze[-] α2
-//│ | | | | | | go α2   ()
-//│ | | | | | | | go α3   (α2)
-//│ | | | | | | | | go ((None..α2,) -> α4)   (α2, α3)
-//│ | | | | | | | | | analyze[-] ((None..α2,) -> α4)
-//│ | | | | | | | | | | analyze[+] (None..α2,)
-//│ | | | | | | | | | | | analyze[+] α2
-//│ | | | | | | | | | | | | go α2   ()
-//│ | | | | | | | | | | | | >>>> α2 HashSet(α2) None
-//│ | | | | | | | | | | analyze[-] α4
-//│ | | | | | | | | | | | go α4   ()
-//│ | | | | | | | | | | | >>>> α4 HashSet(α4) None
-//│ | | | | | | >>>> α2 HashSet(α2, α3, ((None..α2,) -> α4)) None
-//│ | | | | | | >>>> α3 HashSet(α2, α3, ((None..α2,) -> α4)) None
-//│ | | | | analyze[+] α4
-//│ | | | | | go α4   ()
-//│ | | | | | >>>> α4 HashSet(α4) None
-//│ | >>>> α3 HashSet(α3, ((None..α2,) -> α4)) None
-//│ [occs] +α2 {α2} ; -α4 {α4} ; -α2 {α2,α3,((None..α2,) -> α4)} ; -α3 {α2,α3,((None..α2,) -> α4)} ; +α4 {α4} ; +α3 {α3,((None..α2,) -> α4)}
-//│ [vars] TreeSet(α2, α3, α4)
-//│ [bounds] α2 <: α3, α3 :> ((None..α2,) -> α4) <: ((None..α2,) -> α4)
-//│ [rec] HashSet(α2, α3)
-//│ [v] α2 Some(HashSet(α2)) Some(HashSet(α2, α3, ((None..α2,) -> α4)))
-//│ [w] α3 Some(HashSet(α2, α3, ((None..α2,) -> α4)))
-//│ [U] α3 := α2
-//│ [v] α4 Some(HashSet(α4)) Some(HashSet(α4))
-//│ [sub] α3 -> Some(α2)
-//│ Renewed α2 ~> α5
-//│ Renewed α4 ~> α6
-//│ Type after simplification: α5
-//│  where: α5 :> ((None..α5,) -> α6) <: ((None..α5,) -> α6) & α5
-//│ recons[+] α5  (TypeVariable)
-//│ | recons[+] ((None..α5,) -> α6)  (FunctionType)
-//│ | | recons[-] (None..α5,)  (TupleType)
-//│ | | | recons[-] α5  (TypeVariable)
-//│ | | | => α7
-//│ | | => (None..α7,)
-//│ | | recons[+] α6  (TypeVariable)
-//│ | | => α6
-//│ | => ((None..α7,) -> α6)
-//│ | recons[-] ((None..α5,) -> α6)  (FunctionType)
-//│ | | recons[+] (None..α5,)  (TupleType)
-//│ | | | recons[+] α5  (TypeVariable)
-//│ | | | => α7
-//│ | | => (None..α7,)
-//│ | | recons[-] α6  (TypeVariable)
-//│ | | => α6
-//│ | => ((None..α7,) -> α6)
-//│ | recons[-] α5  (TypeVariable)
-//│ | => α7
-//│ => α7
-//│ Recons: α7
-//│  where: α7 :> ((None..α7,) -> α6) <: ((None..α7,) -> α6) & α7
-//│ allVarPols: =α6, =α7
-//│ res: 'a
-//│ 	where
-//│ 		'a :> 'a -> 'b
-//│ 		   <: 'a -> 'b & 'a
+//│ res: ('a -> 'b & 'a) -> 'b
 
 
 // :stdout
@@ -119,17 +32,15 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ ('b & ('c,)) -> 'd as 'a
-//│ 	where
-//│ 		'c <: 'a
+//│ ('a -> 'b & 'a) -> 'b
 //│   <:  f:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.121: 	rec def f a = a a
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	rec def f a = a a
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
-//│ ║  l.121: 	rec def f a = a a
-//│ ║         	          ^^^^^^^
+//│ ║  l.34: 	rec def f a = a a
+//│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.11: 	def f: { x: 'a } as 'a
 //│ ╙──      	       ^^^^^^^^^
@@ -139,10 +50,40 @@ rec def f a = a a
 // :d
 // :ds
 rec def g a = a a
-//│ g: ('b & ('c,)) -> 'd as 'a
-//│ 	where
-//│ 		'c <: 'a
+//│ g: ('a -> 'b & 'a) -> 'b
 
 
 
+class Some[A]: { v: A }
+//│ Defined class Some
 
+// :ds
+def Some v = Some{v}
+//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+
+
+def foo(x: Some['a]) =
+  let _ = x.v : Some[?]
+  in x: Some['a & some]
+//│ foo: Some[Some[?] & 'a & 'a0 .. 'a | Some[?] & 'a0] -> Some[Some[?] & 'a0]
+
+// :ds
+def f: Some['a]
+//│ f: Some['a]
+
+
+
+// TODO MV
+
+def foo(x: 'a) = (x + 1, x)
+//│ foo: (int & 'a) -> (int, 'a,)
+
+// NOTE: currently each parameter type is typed independently – so these 'a are different!
+def foo(x: 'a, y: 'a) = (x + 1, y)
+//│ foo: (int, 'a,) -> (int, 'a,)
+
+// def foo(x: 'a) =
+def foo(f: 'a -> 'a, x: 'a) =
+  let _ = x + 1
+  in error: Some['a & some]
+//│ foo: ('a -> 'a, int,) -> Some[Some[?] & 'a0]

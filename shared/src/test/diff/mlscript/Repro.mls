@@ -18,7 +18,7 @@ class G[A]: { a: G[A] }
 //│ Defined class G
 
 def g: G['a] & {a: 'a} as 'a
-//│ g: {a: 'a} & G['a] as 'a
+//│ g: (G['b] & {a: 'a} as 'b) as 'a
 //│  = <missing implementation>
 
 :NoJS
@@ -32,9 +32,9 @@ rec def g2 = G { a = g2 }
 // :d
 // :re
 g = g
-//│ {a: 'a} & G['a] as 'a
+//│ (G['b] & {a: 'a} as 'b) as 'a
 //│   <:  g:
-//│ {a: 'a} & G['a] as 'a
+//│ (G['b] & {a: 'a} as 'b) as 'a
 
 
 def manual: 'a -> nothing as 'a
@@ -51,22 +51,26 @@ manual id
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.40: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: ('a & 'b) -> (nothing | 'b) | error | nothing | 'c
+//│ res: (((nothing & 'd & 'a,) as 'c) -> ('b | nothing | 'd) as 'b) | error | nothing
 //│ 	where
-//│ 		'a :> ('b -> 'b as 'd) | 'a -> nothing
-//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> nothing
-//│ 		'b :> 'a -> nothing | 'd
-//│ 		   <: nothing & 'c
+//│ 		'a :> 'c -> ('b | nothing | 'd)
+//│ 		   <: nothing & ('a | (nothing & 'd) -> ('b | 'd)) -> nothing & 'd
+
+// TODO-simplif why weird bounds and `nothing`?
+// :ds
+res
+//│ res: (((nothing & 'd & 'a,) as 'c) -> ('b | nothing | 'd) as 'b) | error | nothing
+//│ 	where
+//│ 		'a :> 'c -> ('b | nothing | 'd)
+//│ 		   <: nothing & ('a | (nothing & 'd) -> ('b | 'd)) -> nothing & 'd
 
 // :ds
 def manual: 'a -> anything as 'a
 //│ manual: 'a -> anything as 'a
 
 manual id
-//│ res: ('a & 'b) -> (anything | 'b) | anything | 'c
+//│ res: (((anything & 'e & 'a,) as 'd) -> ('b | 'e) as 'c) | anything as 'b
 //│ 	where
-//│ 		'a :> ('b -> 'b as 'd) | 'a -> anything
-//│ 		   <: 'b & ('b -> 'b as 'd) -> 'c & 'a -> anything
-//│ 		'b :> 'a -> anything | 'd
-//│ 		   <: anything & 'c
+//│ 		'a :> 'd -> ('b | 'e)
+//│ 		   <: anything & ('a | (anything & 'e) -> ('c | 'e)) -> anything & 'e
 

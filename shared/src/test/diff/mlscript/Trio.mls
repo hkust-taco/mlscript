@@ -39,16 +39,16 @@ foo arg
 //│      arg is not implemented
 //│ constrain calls  : 39
 //│ annoying  calls  : 30
-//│ subtyping calls  : 150
+//│ subtyping calls  : 72
 
 :stats
 foo (arg with { fC = true })
-//│ res: true | int | string
+//│ res: int | string | true
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 32
 //│ annoying  calls  : 28
-//│ subtyping calls  : 101
+//│ subtyping calls  : 79
 
 def foo x = case x of {
   | A -> add x.fA x.payload
@@ -76,19 +76,19 @@ foo arg
 //│ ╟── from reference:
 //│ ║  l.53: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: error | int | {l: bool, r: nothing} | string
+//│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 54
 //│ annoying  calls  : 40
-//│ subtyping calls  : 122
+//│ subtyping calls  : 119
 
 :stats
 foo (arg with { payload = 1 })
-//│ res: int | {l: bool, r: 1} | string
+//│ res: int | string | {l: bool, r: 1}
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 50
 //│ annoying  calls  : 38
-//│ subtyping calls  : 96
+//│ subtyping calls  : 90
 

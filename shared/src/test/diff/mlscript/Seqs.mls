@@ -53,12 +53,12 @@ Cons
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: ('A & 'head) -> ({size: int} & List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons_old: ('head & 'A) -> (List['A] & {size: int} & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: ('A & 'head) -> ({size: int} & List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons: ('head & 'A) -> (List['A] & {size: int} & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
 //│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
@@ -77,7 +77,9 @@ Nil: ListBase[anything]
 //│    = Nil { size: 0 }
 
 def c = Cons 1 Nil
-//│ c: Cons['A .. 1 | 'A] with {head: 1, tail: Nil & {size: 0}}
+//│ c: Cons['A] with {head: 1, tail: Nil & {size: 0}}
+//│ 	where
+//│ 		'A :> 1
 //│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c: ListBase[int]
@@ -97,7 +99,9 @@ c.size
 //│    = 1
 
 def d = Cons 2 c
-//│ d: Cons['A .. 1 | 2 | 'A] with {head: 2, tail: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}}
+//│ d: Cons['A] with {head: 2, tail: Cons['A] with {head: 1, tail: Nil & {size: 0}}}
+//│ 	where
+//│ 		'A :> 1 | 2
 //│  = Cons {
 //│      size: 2,
 //│      head: 2,
@@ -113,7 +117,9 @@ d.size
 //│    = 2
 
 d.tail
-//│ res: Cons['A .. 1 | 2 | 'A] with {head: 1, tail: Nil & {size: 0}}
+//│ res: Cons['A] with {head: 1, tail: Nil & {size: 0}}
+//│ 	where
+//│ 		'A :> 1 | 2
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size

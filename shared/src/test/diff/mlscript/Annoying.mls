@@ -105,7 +105,7 @@ class C: { }
 //│ Defined class C
 
 def test: (A & { a: 'a } | B & { b: 'a } | C & { c: 'a }) -> 'a
-//│ test: ({a: 'a} & A | {b: 'a} & B | {c: 'a} & C) -> 'a
+//│ test: (A & {a: 'a} | B & {b: 'a} | C & {c: 'a}) -> 'a
 
 test (error: A & { a: int })
 test (error: B & { b: int })
@@ -119,7 +119,7 @@ test (error: B & { c: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	test (error: B & { c: int })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{c: int} & B` does not match type `{a: ?a} & A | {b: ?a} & B | {c: ?a} & C`
+//│ ╟── type `B & {c: int}` does not match type `A & {a: ?a} | B & {b: ?a} | C & {c: ?a}`
 //│ ║  l.118: 	test (error: B & { c: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -129,7 +129,7 @@ test (error: B & { c: int })
 
 
 def test: (A & { x: 'a; y: 'b } | B & { x: 'a; y: 'b } | C & { x: 'a; y: 'b }) -> { l: 'a; r: 'b }
-//│ test: ({x: 'a, y: 'b} & A | {x: 'a, y: 'b} & B | {x: 'a, y: 'b} & C) -> {l: 'a, r: 'b}
+//│ test: (A & {x: 'a, y: 'b} | B & {x: 'a, y: 'b} | C & {x: 'a, y: 'b}) -> {l: 'a, r: 'b}
 
 test (error: A & { x: int; y: string })
 test (error: B & { x: int; y: string })
@@ -143,7 +143,7 @@ test (error: A & { x: int })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	test (error: A & { x: int })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: int} & A` does not match type `{x: ?a, y: ?b} & A | {x: ?a, y: ?b} & B | {x: ?a, y: ?b} & C`
+//│ ╟── type `A & {x: int}` does not match type `A & {x: ?a, y: ?b} | B & {x: ?a, y: ?b} | C & {x: ?a, y: ?b}`
 //│ ║  l.142: 	test (error: A & { x: int })
 //│ ║         	             ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -153,7 +153,7 @@ test (error: A & { x: int })
 
 
 def test: (A & { xA: 'a; yA: 'b } | B & { xB: 'a; yB: 'b } | C & { xC: 'a; yC: 'b }) -> { l: 'a; r: 'b }
-//│ test: ({xB: 'a, yB: 'b} & B | {xA: 'a, yA: 'b} & A | {xC: 'a, yC: 'b} & C) -> {l: 'a, r: 'b}
+//│ test: (B & {xB: 'a, yB: 'b} | A & {xA: 'a, yA: 'b} | C & {xC: 'a, yC: 'b}) -> {l: 'a, r: 'b}
 
 test (error: A & { xA: int; yA: string })
 test (error: B & { xB: int; yB: string })
@@ -292,17 +292,17 @@ def ty2: TT & { x: int }
 //│ Defined class AA
 //│ Defined trait TT
 //│ ty: AA
-//│ ty2: {x: int} & TT
+//│ ty2: TT & {x: int}
 
 :e
 ty = ty2
-//│ {x: int} & TT
+//│ TT & {x: int}
 //│   <:  ty:
 //│ AA
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.298: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `{x: int} & TT` does not match type `'a\x | AA`
+//│ ╟── type `TT & {x: int}` does not match type `'a\x | AA`
 //│ ║  l.290: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'a\x | AA`

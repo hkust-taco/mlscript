@@ -396,7 +396,7 @@ a1.x
 //│ // Query 3
 //│ res = a1.x;
 //│ // End of generated code
-//│ a1: M with {x: int & 'x .. 233 | 'x}
+//│ a1: M with {x: 'x & int .. 'x | 233}
 //│   = M { x: 233 }
 //│ = []
 //│ res: 233

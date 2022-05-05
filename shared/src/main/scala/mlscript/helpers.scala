@@ -67,8 +67,26 @@ abstract class TypeImpl extends Located { self: Type =>
       fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
-    case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
-    case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
+    // case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    case c: Composed =>
+      // val iprec = if (pol)
+      // val oprec = if (pol) 20 else 25
+      val prec = if (c.pol) 20 else 25
+      val opStr = if (c.pol) " | " else " & "
+      // println(c, c.distinctComponents)
+      // parensIf(c.distinctComponents.iterator
+      //   .map(_.showIn(ctx, prec))
+      //   .reduceOption(_ + opStr + _)
+      //   .getOrElse((if (c.pol) Bot else Top).showIn(ctx, prec)), outerPrec > prec)
+      c.distinctComponents match {
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
+        case x :: Nil => x.showIn(ctx, prec)
+        case _ =>
+          parensIf(c.distinctComponents.iterator
+            .map(_.showIn(ctx, prec))
+            .reduce(_ + opStr + _), outerPrec > prec)
+      }
     case Bounds(Bot, Top) => s"?"
     case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
     case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
@@ -193,6 +211,24 @@ object ShowCtx {
     }.filterNot(used).map(assignName)
     ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
   }
+}
+
+trait ComposedImpl { self: Composed =>
+  val lhs: Type
+  val rhs: Type
+  def components: Ls[Type] = (lhs match {
+    // case Composed(`pol`, l, r) => 
+    // case c @ Composed(`pol`) => c.components
+    case c: Composed if c.pol === pol => c.components
+    case _ => lhs :: Nil
+  }) ::: (rhs match {
+    // case c @ Composed(`pol`) => c.components
+    case c: Composed if c.pol === pol => c.components
+    case _ => rhs :: Nil
+  })
+  lazy val distinctComponents =
+    // components.filterNot(c => if (pol) c === Top else c === Bot).distinct
+    components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 
 abstract class PolyTypeImpl extends Located { self: PolyType =>

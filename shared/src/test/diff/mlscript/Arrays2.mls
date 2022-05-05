@@ -27,7 +27,7 @@ dummy: MyArray[int]
 
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
-//│ ty4B: MyArray[MyArray[MyArray['a]]] as 'a
+//│ ty4B: (MyArray[MyArray[MyArray['b]]] as 'b) as 'a
 //│     = <missing implementation>
 
 

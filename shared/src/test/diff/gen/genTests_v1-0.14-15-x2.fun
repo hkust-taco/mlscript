@@ -2205,17 +2205,7 @@ add
 
 // FIXME
 (let rec x = (x x); {u: 0, v: x})
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: α801
-//│ 	at: scala.collection.MapOps.default(Map.scala:274)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:273)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:405)
-//│ 	at: scala.collection.MapOps.apply(Map.scala:176)
-//│ 	at: scala.collection.MapOps.apply$(Map.scala:175)
-//│ 	at: scala.collection.AbstractMap.apply(Map.scala:405)
-//│ 	at: mlscript.Typer.$anonfun$expandType$4(Typer.scala:854)
-//│ 	at: scala.util.ChainingOps$.pipe$extension(ChainingOps.scala:64)
-//│ 	at: mlscript.Typer.goImpl$1(Typer.scala:813)
-//│ 	at: mlscript.Typer.go$1(Typer.scala:805)
+//│ res: {u: 0, v: nothing}
 
 (x => {u: add})
 //│ res: anything -> {u: int -> int -> int}

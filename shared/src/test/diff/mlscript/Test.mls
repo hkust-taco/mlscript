@@ -16,11 +16,11 @@ def test = fun x -> case x of
 //│     = [Function: test]
 
 test: Person & {age: 'a} | Animal -> 'a | 0
-//│ res: Animal -> 0 | 0 | {age: 0} & Person
+//│ res: Animal -> 0 | 0 | Person & {age: 0}
 //│    = [Function: test]
 
 test: (Person & {age: int} | Animal) -> int
-//│ res: ({age: int} & Person | Animal) -> int
+//│ res: (Person & {age: int} | Animal) -> int
 //│    = [Function: test]
 
 def a = Animal{}
@@ -53,7 +53,7 @@ test p
 
 
 def f: 'a -> 'a & string
-//│ f: 'a -> 'a & string
+//│ f: nothing
 //│  = <missing implementation>
 
 def f: 'a -> ('a & string)

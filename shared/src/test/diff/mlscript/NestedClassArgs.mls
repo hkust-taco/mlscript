@@ -1,4 +1,5 @@
 :NoJS
+:NoProvs
 
 
 class C[A]
@@ -15,21 +16,21 @@ def c: C[C['a]] -> 'a
 
 // :ds
 def c: C['a] as 'a
-//│ c: C['a] as 'a
+//│ c: (C['b] as 'b) as 'a
 
 // :ds
 def c: C['a] | 'a as 'a
-//│ c: 'a | C['a] as 'a
+//│ c: ('a | C['b] as 'b) as 'a
 
 def c: C[C['a]] as 'a
-//│ c: C[C['a]] as 'a
+//│ c: (C[C['b]] as 'b) as 'a
 
 // :ds
 def c: C[C['a] & 'a] as 'a
-//│ c: C[C['a] & 'a] as 'a
+//│ c: (C[C['b] & 'a] as 'b) as 'a
 
 def c: C[C['a] & 'a | 'a] as 'a
-//│ c: C['a] as 'a
+//│ c: (C['b] as 'b) as 'a
 
 def c: C['a]
 //│ c: C['a]
@@ -50,6 +51,7 @@ mkC = mkC'
 //│   <:  mkC:
 //│ 'a -> C2['a]
 
+// TODOne-simplif
 // :ds
 rec def rc = mkC(rc)
 //│ rc: C2['a] as 'b
@@ -135,7 +137,7 @@ def c: 'a -> C6['a]
 rec def c6 a = C6{ a = c5 (c6 a) }
 //│ c6: anything -> (C6['A] with {a: (C5[C6['A]] with {a: C2['A0] with {a: 'a}}) as 'a})
 //│ 	where
-//│ 		'A0 :> C5[C6['A]] | 'a | C5[C6['A]]
+//│ 		'A0 :> 'a | C5[C6['A]]
 //│ 		    <: C5[C6['A]]
 
 // FIXME SOF
@@ -169,12 +171,16 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 //│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] with {v: 'v}})
 
 def append0 ls = L { h = 0; t = S { v = ls } }
-//│ append0: (L['T .. 0 | 'T] & 'v) -> (L['T .. 0 | 'T] with {h: 0, t: S[L['T .. 0 | 'T]] with {v: 'v}})
+//│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S[L['T]] with {v: 'v}})
+//│ 	where
+//│ 		'T :> 0
 
 def appendNil elem = L { h = elem; t = N{} }
 //│ appendNil: ('h & 'T) -> (L['T] with {h: 'h, t: N})
 
 
 S{v=1}
-//│ res: S['T .. 1 | 'T] with {v: 1}
+//│ res: S['T] & {v: 1}
+//│ 	where
+//│ 		'T :> 1
 

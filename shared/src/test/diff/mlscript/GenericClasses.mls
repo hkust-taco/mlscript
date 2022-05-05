@@ -13,7 +13,9 @@ def Some v = Some { value = v }
 
 Some 42
 (Some 42).value
-//│ res: Some['A .. 42 | 'A] with {value: 42}
+//│ res: Some['A] & {value: 42}
+//│ 	where
+//│ 		'A :> 42
 //│    = Some { value: 42 }
 //│ res: 42
 //│    = 42
@@ -31,13 +33,13 @@ Some 42 : Option[int]
 :e
 res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.32: 	res.value
+//│ ║  l.34: 	res.value
 //│ ║        	^^^^^^^^^
 //│ ╟── type `None` does not have field 'value'
-//│ ║  l.21: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
-//│ ║  l.32: 	res.value
+//│ ║  l.34: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
 //│    = 42
@@ -45,17 +47,17 @@ res.value
 :e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── integer literal of type `42` does not match type `None | Some[int]`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.21: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ res: Option[int]
 //│    = 42
@@ -79,7 +81,7 @@ g: Foo1['a]
 //│    = Bar1 { x: 42 }
 
 res.x
-//│ res: 42 | int
+//│ res: int
 //│    = 42
 
 g: Foo1['a]: Foo1[int]
@@ -93,13 +95,13 @@ res.x
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.65: 	class Bar1: Foo1[int]
+//│ ║  l.67: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
 //│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
@@ -132,13 +134,15 @@ error: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
+// TODO-simplif
+// :ds
 f: (Foo2[?] & 'a) -> 'a
 //│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
 //│    = [Function: f]
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> (Foo2[?] & 'a0 as 'a0)
+//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A :> anything <: nothing} | ~foo2 | ~(foo2 & {Foo2#A :> anything <: nothing})) & (foo2 | ~(foo2 & {Foo2#A :> anything <: nothing}))) -> (Foo2[?] & 'a0 as 'a0)
 //│    = [Function: f]
 
 f
@@ -147,7 +151,7 @@ f
 
 
 def mrg: Foo2[int] & Foo2[string]
-//│ mrg: Foo2[int | string .. int & string]
+//│ mrg: Foo2[int | string .. nothing]
 //│    = <missing implementation>
 
 mrg: Foo2[int]
@@ -159,27 +163,27 @@ mrg: Foo2[int]
 mrg = Foo2{}
 //│ Foo2['A]
 //│   <:  mrg:
-//│ Foo2[int | string .. int & string]
+//│ Foo2[int | string .. nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.159: 	mrg = Foo2{}
+//│ ║  l.163: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.153: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.153: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.108: 	class Foo2[A]
+//│ ║  l.110: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.159: 	mrg = Foo2{}
+//│ ║  l.163: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.153: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.149: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.153: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 

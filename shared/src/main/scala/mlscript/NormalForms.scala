@@ -24,7 +24,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     private def mkType(sort: Bool): SimpleType = this match {
       case LhsRefined(bo, ts, r, trs) =>
         val sr = if (sort) r.sorted else r
-        (trs.valuesIterator ++ ts.toArray.sorted).foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
+        // (trs.valuesIterator ++ ts.toArray.sorted).foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
+        val trsBase = trs.valuesIterator.foldRight(bo.fold[ST](sr)(_ & sr))(_ & _)
+        (if (sort) ts.toArray.sorted else ts.toArray).foldLeft(trsBase)(_ & _)
         // ts.toArray.sorted.foldLeft(trs.valuesIterator.foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _))(_ & _)
       case LhsTop => TopType
     }
@@ -427,9 +429,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case NegType(und) => DNF(CNF.mk(und, !pol).ds.map(_.neg))
       case tv: TypeVariable => of(SortedSet.single(tv))
       case ProxyType(underlying) => mk(underlying, pol)
-      // case tr @ TypeRef(defn, targs) if preserveTypeRefs => of(Without(tr, ssEmp)(noProv))
-      case tr @ TypeRef(defn, targs) if preserveTypeRefs => of(LhsRefined(N, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-      case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
+      case tr @ TypeRef(defn, targs) =>
+        // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
+        if (preserveTypeRefs && !primitiveTypes.contains(defn.name))
+          of(LhsRefined(N, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+        else mk(tr.expand, pol)
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
     // }(r => s"= $r")

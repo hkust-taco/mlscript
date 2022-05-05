@@ -42,7 +42,7 @@ def r: {b: string; c: int}\b
 
 
 def r: int \ _1
-//│ r: int\_1
+//│ r: int
 //│  = <missing implementation>
 
 def r: (1,2,3) \ _1
@@ -68,7 +68,7 @@ fr : Array[int] & {b: int}
 //│ fr: (1, 2, 3,) & {b: 2}
 //│   = <no result>
 //│     r is not implemented
-//│ res: {b: int} & Array[int]
+//│ res: Array[int] & {b: int}
 //│    = <no result>
 //│      fr and r are not implemented
 
@@ -170,7 +170,7 @@ class A: { x: int }
 //│ Defined class A
 
 def myval: A & { x: anything }
-//│ myval: {x: anything} & A
+//│ myval: A & {x: anything}
 //│      = <missing implementation>
 
 // def myval: a & { x: string }
@@ -351,13 +351,13 @@ def test: (string, 1) & { _1: "hello" }
 def test2: (string, 1) & { _1: "hello"; _3: int }
 //│ ta1: (int, bool,) | Array[int]
 //│    = <missing implementation>
-//│ test: ("hello" & string, 1,)
+//│ test: ("hello", 1,)
 //│     = <missing implementation>
-//│ test2: ("hello" & string, 1,) & {_3: int}
+//│ test2: ("hello", 1,) & {_3: int}
 //│      = <missing implementation>
 
 test: { _1: 'a }
-//│ res: {_1: "hello" & string}
+//│ res: {_1: "hello"}
 //│    = <no result>
 //│      test is not implemented
 
@@ -371,7 +371,7 @@ test: ('a, 1)
 
 // TODO in principe, we could narrow the refinement to ` & { _1: 1 }` here...
 def test3: Array[1] & { _1: int }
-//│ test3: {_1: int} & Array[1]
+//│ test3: Array[1] & {_1: int}
 //│      = <missing implementation>
 
 def fta1: Array[int | bool] -> int

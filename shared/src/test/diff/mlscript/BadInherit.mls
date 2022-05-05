@@ -93,7 +93,7 @@ Crazy
 //│      Crazy is not implemented
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: {age: 42, name: "Bob"} & Crazy['a .. 'a | {age: 42, name: "Bob"}] | Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a
+//│ c: Crazy['a .. 'a | {age: 42, name: "Bob"}] & {age: 42, name: "Bob"} | Crazy['a .. 'a | {age: 42, name: "Bob"}] & 'a
 //│  = <no result>
 //│    Crazy is not implemented
 
@@ -275,9 +275,9 @@ class Bool
 
 "1" : String
 true : Bool
-//│ res: String
+//│ res: string
 //│    = '1'
-//│ res: Bool
+//│ res: bool
 //│    = true
 
 
