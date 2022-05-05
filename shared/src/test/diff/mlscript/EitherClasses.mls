@@ -12,9 +12,9 @@ def Right value = Right{ value }
 
 def testVal = if true then Left 1 else Right 2
 //│ testVal: Left['A] & {value: 1} | Right['A0] & {value: 2}
-//│ 	where
-//│ 		'A0 :> 2
-//│ 		'A :> 1
+//│   where
+//│     'A0 :> 2
+//│     'A :> 1
 //│        = Left { value: 1 }
 
 testVal.value
@@ -41,7 +41,7 @@ def res = case testVal of
   | Right -> 1
   }
 //│ res: 1 | Left['A] & {value: 1}
-//│ 	where
-//│ 		'A :> 1
+//│   where
+//│     'A :> 1
 //│    = Left { value: 1 }
 

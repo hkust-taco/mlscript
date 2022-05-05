@@ -21,20 +21,20 @@ def Cons head tail = Cons { head; tail }
 
 Cons 2
 //│ res: (List['A] & 'tail) -> (Cons['A] with {head: 2, tail: 'tail})
-//│ 	where
-//│ 		'A :> 2
+//│   where
+//│     'A :> 2
 //│    = [Function (anonymous)]
 
 def c = Cons 2 Nil
 //│ c: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 2
+//│   where
+//│     'A :> 2
 //│  = Cons { head: 2, tail: Nil {} }
 
 def d = Cons 1 c
 //│ d: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
@@ -47,32 +47,32 @@ res: 1
 
 d.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
@@ -108,14 +108,14 @@ def Cons head tail = originalCons { head; tail } with { head; tail }
 
 Cons 2
 //│ res: (List['A] & 'tail) -> (Cons['A] with {head: 2, tail: 'tail})
-//│ 	where
-//│ 		'A :> 2
+//│   where
+//│     'A :> 2
 //│    = [Function (anonymous)]
 
 Cons 2 Nil
 //│ res: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 2
+//│   where
+//│     'A :> 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 res.head
@@ -140,8 +140,8 @@ Cons 1 res
 //│ ║  l.104: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──       	                                          ^^^^
 //│ res: (Cons['A] with {head: 1, tail: 2}) | error
-//│ 	where
-//│ 		'A :> 1
+//│   where
+//│     'A :> 1
 //│    = Cons { head: 1, tail: 2 }
 
 // Here there used to be a loss of precision in the older with-field approach.
@@ -155,8 +155,8 @@ Cons 1 res
 // 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
@@ -165,14 +165,14 @@ Cons 1 (Cons 2 Nil)
 
 Cons 2 Nil
 //│ res: Cons['A] with {head: 2, tail: Nil}
-//│ 	where
-//│ 		'A :> 2
+//│   where
+//│     'A :> 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (id res)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
@@ -182,14 +182,14 @@ Cons 1 (id res)
 
 def Cons head = originalCons { head=0; tail=Nil } with { head }
 //│ Cons: 'a -> (Cons['A] with {head: 'a, tail: Nil})
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│     = [Function: Cons3]
 
 Cons 1
 //│ res: Cons['A] with {head: 1, tail: Nil}
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│    = Cons { head: 1, tail: Nil {} }
 
 res.head
@@ -198,8 +198,8 @@ res.head
 
 def c = Cons 1
 //│ c: Cons['A] with {head: 1, tail: Nil}
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│  = Cons { head: 1, tail: Nil {} }
 
 c.head

@@ -37,8 +37,8 @@ foo d1 0
 //│ res: 'A -> (Derived1 | Base1['A])
 //│    = [Function (anonymous)]
 //│ res: Derived1 | Base1['A]
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│    = Derived1 { x: 2 }
 
 def bar0: Base1[int] -> int -> Base1[int]

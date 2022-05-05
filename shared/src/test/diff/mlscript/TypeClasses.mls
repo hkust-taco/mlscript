@@ -41,11 +41,11 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
     Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ Defined class ComplexMonoid
 //│ Defined ComplexMonoid.Empty: ComplexMonoid['A] -> (Complex['a] with {imaginary: 'A, real: 'A})
-//│ 	where
-//│ 		'a :> 'A
+//│   where
+//│     'a :> 'A
 //│ Defined ComplexMonoid.Add: ComplexMonoid['A] -> {imaginary: 'A & 'a, real: 'A & 'a} -> {imaginary: 'A & 'a, real: 'A & 'a} -> (Complex['a] with {imaginary: 'A, real: 'A})
-//│ 	where
-//│ 		'a :> 'A
+//│   where
+//│     'a :> 'A
 
 cmi = ComplexMonoid { base = IntMonoid }
 //│ cmi: ComplexMonoid[int] with {base: IntMonoid}
@@ -69,9 +69,9 @@ cmi.Empty.real
 
 cmi.Add (Complex 1 2) (Complex 3 4)
 //│ res: Complex['A] & {imaginary: 2, real: 1} | Complex['A] & {imaginary: 4, real: 3} | Complex['A]
-//│ 	where
-//│ 		'A :> int
-//│ 		   <: int
+//│   where
+//│     'A :> int
+//│        <: int
 //│    = Complex { real: 4, imaginary: 6 }
 
 // TODO-simplif >: int <: int... (comes out due to `.distinctComponents`)
@@ -79,9 +79,9 @@ cmi.Add (Complex 1 2) (Complex 3 4)
 // :ds
 res
 //│ res: Complex['A] & {imaginary: 2, real: 1} | Complex['A] & {imaginary: 4, real: 3} | Complex['A]
-//│ 	where
-//│ 		'A :> int
-//│ 		   <: int
+//│   where
+//│     'A :> int
+//│        <: int
 //│    = Complex { real: 4, imaginary: 6 }
 
 
@@ -158,8 +158,8 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0
 //│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {real: Monoid['A]}})
-//│ 	where
-//│ 		'b :> {real: Monoid['A]}
+//│   where
+//│     'b :> {real: Monoid['A]}
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
 
 
@@ -219,7 +219,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1
 //│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {imaginary: error, real: 'A}})
-//│ 	where
-//│ 		'b :> {imaginary: error, real: 'A}
+//│   where
+//│     'b :> {imaginary: error, real: 'A}
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 

@@ -115,15 +115,15 @@ abstract class TypeImpl extends Located { self: Type =>
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
-    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n\twhere${ws.map {
+    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
       case (uv, Bounds(Bot, ub)) =>
-        s"\n\t\t${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
+        s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
       case (uv, Bounds(lb, Top)) =>
-        s"\n\t\t${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+        s"\n    ${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
       case (uv, Bounds(lb, ub)) =>
         val vstr = ctx.vs(uv)
-        s"\n\t\t${vstr             } :> ${lb.showIn(ctx, 0)}" +
-        s"\n\t\t${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+        s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
+        s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
     }.mkString}", outerPrec > 0)
     case Literal(UnitLit(b)) => if (b) "undefined" else "null"
   }

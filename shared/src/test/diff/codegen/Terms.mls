@@ -397,9 +397,9 @@ a1.x
 //│ res = a1.x;
 //│ // End of generated code
 //│ a1: M with {mut x: 'x}
-//│ 	where
-//│ 		'x :> 233
-//│ 		   <: int
+//│   where
+//│     'x :> 233
+//│        <: int
 //│   = M { x: 233 }
 //│ = []
 //│ res: 233
@@ -415,9 +415,9 @@ t1 = (mut "hello", mut true)
 //│ res = t1;
 //│ // End of generated code
 //│ t1: (mut 'a, mut 'b,)
-//│ 	where
-//│ 		'b :> true
-//│ 		'a :> "hello"
+//│   where
+//│     'b :> true
+//│     'a :> "hello"
 //│   = [ 'hello', true ]
 
 :js
@@ -448,11 +448,11 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 //│ muta1: MutArray[int]
 //│      = <missing implementation>
 //│ (mut 'a, mut 'b, mut 'c, mut 'd,)
-//│ 	where
-//│ 		'd :> 4
-//│ 		'c :> 3
-//│ 		'b :> 2
-//│ 		'a :> 1
+//│   where
+//│     'd :> 4
+//│     'c :> 3
+//│     'b :> 2
+//│     'a :> 1
 //│   <:  muta1:
 //│ MutArray[int]
 //│      = [ 1, 2, 3, 4 ]
@@ -504,9 +504,9 @@ tu._2
 //│ res = tu["_2"];
 //│ // End of generated code
 //│ tu: (mut 'a, mut 'b,)
-//│ 	where
-//│ 		'b :> 2
-//│ 		'a :> ()
+//│   where
+//│     'b :> 2
+//│     'a :> ()
 //│   = [ [], 2 ]
 //│ = []
 //│ res: ()

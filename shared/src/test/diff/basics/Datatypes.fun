@@ -153,14 +153,14 @@ Cons 1 (Cons 2 Nil)
 //│ res: Nil['a]
 //│ res: (head: 'a,) -> (tail: List['a],) -> Cons['a]
 //│ res: (tail: List['a],) -> Cons['a]
-//│ 	where
-//│ 		'a :> 1
+//│   where
+//│     'a :> 1
 //│ res: Cons['a]
-//│ 	where
-//│ 		'a :> 2
+//│   where
+//│     'a :> 2
 //│ res: Cons['a]
-//│ 	where
-//│ 		'a :> 1 | 2
+//│   where
+//│     'a :> 1 | 2
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head
@@ -214,8 +214,8 @@ Cons 1 2
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
 //│ res: error | Cons['a]
-//│ 	where
-//│ 		'a :> 1
+//│   where
+//│     'a :> 1
 
 // TODO Allow method/field defintions in the same file (lose the let?):
 :e

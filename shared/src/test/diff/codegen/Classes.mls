@@ -49,12 +49,12 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ res = box2;
 //│ // End of generated code
 //│ box1: Box['T] & {inner: 1}
-//│ 	where
-//│ 		'T :> 1
+//│   where
+//│     'T :> 1
 //│     = Box { inner: 1 }
 //│ box2: Box['a]
-//│ 	where
-//│ 		'a :> int
+//│   where
+//│     'a :> int
 //│     = Box { inner: 2 }
 
 :js
@@ -128,8 +128,8 @@ mb2.Get
 //│ res: int
 //│    = 2
 //│ mb2: Box['a]
-//│ 	where
-//│ 		'a :> int
+//│   where
+//│     'a :> int
 //│    = Box { inner: 6, info: 'hello' }
 //│ res: int
 //│    = 6
@@ -144,13 +144,13 @@ MyBox.Map mb (fun x -> x * 3)
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
 //│ res: Box['T] & {info: string, inner: int}
-//│ 	where
-//│ 		'T :> int
+//│   where
+//│     'T :> int
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
 //│ res: Box['T] & {info: string, inner: int}
-//│ 	where
-//│ 		'T :> int
+//│   where
+//│     'T :> int
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
 

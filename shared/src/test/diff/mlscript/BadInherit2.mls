@@ -156,8 +156,8 @@ a1: R1['_]
 //│ res: R1[string]
 //│    = A1 {}
 //│ res: R1['_]
-//│ 	where
-//│ 		'_ <: int | string
+//│   where
+//│     '_ <: int | string
 //│    = A1 {}
 
 :ns

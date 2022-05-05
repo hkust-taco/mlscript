@@ -44,8 +44,8 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined class Cons
 //│ Defined Cons.Size: Cons['A] -> int
 //│ Defined Cons.HeadOption: Cons['A] -> (Some['a] with {payload: 'A})
-//│ 	where
-//│ 		'a :> 'A
+//│   where
+//│     'a :> 'A
 //│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b)) -> (Cons['b] with {head: 'a, tail: List['b]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
@@ -61,14 +61,14 @@ List.HeadOption
 
 Cons.HeadOption
 //│ res: Cons['A] -> (Some['a] with {payload: 'A})
-//│ 	where
-//│ 		'a :> 'A
+//│   where
+//│     'a :> 'A
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│ l: Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Nil['A]}}
-//│ 	where
-//│ 		'A :> 0 | 1
+//│   where
+//│     'A :> 0 | 1
 //│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
@@ -78,8 +78,8 @@ l.Size
 :stats
 l.Map (fun x -> mul x 2)
 //│ res: List['B]
-//│ 	where
-//│ 		'B :> int
+//│   where
+//│     'B :> int
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 //│ constrain calls  : 111
 //│ annoying  calls  : 6
@@ -89,16 +89,16 @@ l.Map (fun x -> mul x 2)
 
 l0 = Cons { head = 0; tail = Nil {} }
 //│ l0: Cons['A] with {head: 0, tail: Nil['A]}
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│   = Cons { head: 0, tail: Nil {} }
 
 :re
 :stats
 Cons.HeadOption l0
 //│ res: Some['a] & {payload: 0}
-//│ 	where
-//│ 		'a :> 0
+//│   where
+//│     'a :> 0
 //│ Runtime error:
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 74
@@ -108,16 +108,16 @@ Cons.HeadOption l0
 
 l1 = Cons { head = 0; tail = Nil {} }
 //│ l1: Cons['A] with {head: 0, tail: Nil['A]}
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│   = Cons { head: 0, tail: Nil {} }
 
 :re
 :stats
 Cons.HeadOption l1
 //│ res: Some['a] & {payload: 0}
-//│ 	where
-//│ 		'a :> 0
+//│   where
+//│     'a :> 0
 //│ Runtime error:
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 74
@@ -132,8 +132,8 @@ Cons.HeadOption l1
 
 o = l.HeadOption
 //│ o: Option['A]
-//│ 	where
-//│ 		'A :> 0 | 1
+//│   where
+//│     'A :> 0 | 1
 //│  = Some { payload: 0 }
 
 :e
@@ -153,8 +153,8 @@ case o of {None -> 0 | Some -> o.payload}
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
 //│ v: None['A] | Some['A]
-//│ 	where
-//│ 		'A :> 0 | 1
+//│   where
+//│     'A :> 0 | 1
 //│  = Some { payload: 0 }
 //│ res: 0 | 1
 //│    = 0
@@ -174,8 +174,8 @@ newHeadOption o
 
 newHeadOption l
 //│ res: None['A] | Some['A0] & {payload: 0}
-//│ 	where
-//│ 		'A0 :> 0
+//│   where
+//│     'A0 :> 0
 //│    = Some { payload: 0 }
 
 case res of {None -> 0 | Some -> res.payload}

@@ -44,9 +44,9 @@ class C2[A]: { a: A }
 
 r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
 //│ r: C1['A] & {a: 1} | C2['A0] & {a: (3, 4, 5, 4,)}
-//│ 	where
-//│ 		'A0 :> (3, 4, 5, 4,)
-//│ 		'A :> 1
+//│   where
+//│     'A0 :> (3, 4, 5, 4,)
+//│     'A :> 1
 //│  = C1 { a: 1 }
 
 case r of { C1 -> r.a | _ -> 0 }
@@ -299,8 +299,8 @@ tk ((1,2,3,true,false))
 //│ tk: Array['a] -> Wrapped['a]
 //│   = <missing implementation>
 //│ res: Wrapped['a]
-//│ 	where
-//│ 		'a :> 1 | 2 | 3 | false | true
+//│   where
+//│     'a :> 1 | 2 | 3 | false | true
 //│    = <no result>
 //│      tk is not implemented
 
@@ -310,15 +310,15 @@ two.fst
 tk (two.snd)
 //│ Defined class Two
 //│ two: Two['A, 'B] with {fst: (1, 2, 3,), snd: (true, false,)}
-//│ 	where
-//│ 		'B :> bool
-//│ 		'A :> 1 | 2 | 3
+//│   where
+//│     'B :> bool
+//│     'A :> 1 | 2 | 3
 //│    = Two { fst: [ 1, 2, 3 ], snd: [ true, false ] }
 //│ res: (1, 2, 3,)
 //│    = [ 1, 2, 3 ]
 //│ res: Wrapped['a]
-//│ 	where
-//│ 		'a :> bool
+//│   where
+//│     'a :> bool
 //│    = <no result>
 //│      tk is not implemented
 

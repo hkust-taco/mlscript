@@ -159,8 +159,8 @@ def foo_ty: Rec -> nothing
 
 foo_ty = foo
 //│ (C['a] as 'b) -> nothing
-//│ 	where
-//│ 		'a <: 'b
+//│   where
+//│     'a <: 'b
 //│   <:  foo_ty:
 //│ Rec -> nothing
 //│       = [Function: foo]
@@ -191,8 +191,8 @@ foo_ty2 = foo_ty
 
 foo_ty2 = foo
 //│ (C['a] as 'b) -> nothing
-//│ 	where
-//│ 		'a <: 'b
+//│   where
+//│     'a <: 'b
 //│   <:  foo_ty2:
 //│ ((C['a] as 'a) as 'r) -> nothing
 //│        = [Function: foo]
@@ -201,8 +201,8 @@ foo_ty2 = foo
 
 rec def bar = C { a = bar }
 //│ bar: (C['A] with {a: 'a}) as 'a
-//│ 	where
-//│ 		'A :> 'a
+//│   where
+//│     'A :> 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -214,8 +214,8 @@ def bar_ty: Rec2
 
 bar_ty = bar
 //│ (C['A] with {a: 'a}) as 'a
-//│ 	where
-//│ 		'A :> 'a
+//│   where
+//│     'A :> 'a
 //│   <:  bar_ty:
 //│ Rec2
 //│ Runtime error:
@@ -252,8 +252,8 @@ bar_ty2 = bar_ty
 
 bar_ty2 = bar
 //│ (C['A] with {a: 'a}) as 'a
-//│ 	where
-//│ 		'A :> 'a
+//│   where
+//│     'A :> 'a
 //│   <:  bar_ty2:
 //│ (C['a] as 'a) as 'r
 //│ Runtime error:

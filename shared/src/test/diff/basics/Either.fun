@@ -41,15 +41,15 @@ let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
 //│ l: Left['a, 'b]
-//│ 	where
-//│ 		'a :> 1
+//│   where
+//│     'a :> 1
 //│ r: Right['a, 'b]
-//│ 	where
-//│ 		'b :> "ok"
+//│   where
+//│     'b :> "ok"
 //│ e: Left['a, 'b] | Right['c, 'd]
-//│ 	where
-//│ 		'd :> "ok"
-//│ 		'a :> 1
+//│   where
+//│     'd :> "ok"
+//│     'a :> 1
 
 :e // TODO
 e as Either Int String

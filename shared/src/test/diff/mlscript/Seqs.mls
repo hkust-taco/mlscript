@@ -78,8 +78,8 @@ Nil: ListBase[anything]
 
 def c = Cons 1 Nil
 //│ c: Cons['A] with {head: 1, tail: Nil & {size: 0}}
-//│ 	where
-//│ 		'A :> 1
+//│   where
+//│     'A :> 1
 //│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c: ListBase[int]
@@ -100,8 +100,8 @@ c.size
 
 def d = Cons 2 c
 //│ d: Cons['A] with {head: 2, tail: Cons['A] with {head: 1, tail: Nil & {size: 0}}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│  = Cons {
 //│      size: 2,
 //│      head: 2,
@@ -118,8 +118,8 @@ d.size
 
 d.tail
 //│ res: Cons['A] with {head: 1, tail: Nil & {size: 0}}
-//│ 	where
-//│ 		'A :> 1 | 2
+//│   where
+//│     'A :> 1 | 2
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size

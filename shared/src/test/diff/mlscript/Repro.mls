@@ -69,8 +69,8 @@ f: { mut x: int }
 
 f = { mut x = 1 }
 //│ {mut x: 'a}
-//│ 	where
-//│ 		'a :> 1
+//│   where
+//│     'a :> 1
 //│   <:  f:
 //│ {mut x: int}
 

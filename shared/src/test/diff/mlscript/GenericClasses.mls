@@ -14,8 +14,8 @@ def Some v = Some { value = v }
 Some 42
 (Some 42).value
 //│ res: Some['A] & {value: 42}
-//│ 	where
-//│ 		'A :> 42
+//│   where
+//│     'A :> 42
 //│    = Some { value: 42 }
 //│ res: 42
 //│    = 42

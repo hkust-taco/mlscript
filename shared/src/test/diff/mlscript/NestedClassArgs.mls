@@ -55,13 +55,13 @@ mkC = mkC'
 // :ds
 rec def rc = mkC(rc)
 //│ rc: C2['a] as 'b
-//│ 	where
-//│ 		'a :> 'b
+//│   where
+//│     'a :> 'b
 
 rec def rc = mkC'(rc)
 //│ rc: (C2['A] with {a: 'a}) as 'a
-//│ 	where
-//│ 		'A :> 'a
+//│   where
+//│     'A :> 'a
 
 
 
@@ -111,15 +111,15 @@ def c: 'a -> C5['a]
 
 rec def c5 a = C5{ a = C2 { a = c5 a } }
 //│ c5: anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
-//│ 	where
-//│ 		'A0 :> 'a | C5['A]
-//│ 		    <: C5['A]
+//│   where
+//│     'A0 :> 'a | C5['A]
+//│         <: C5['A]
 
 c = c5
 //│ anything -> ((C5['A] with {a: C2['A0] with {a: 'a}}) as 'a)
-//│ 	where
-//│ 		'A0 :> 'a | C5['A]
-//│ 		    <: C5['A]
+//│   where
+//│     'A0 :> 'a | C5['A]
+//│         <: C5['A]
 //│   <:  c:
 //│ 'a -> C5['a]
 
@@ -136,9 +136,9 @@ def c: 'a -> C6['a]
 
 rec def c6 a = C6{ a = c5 (c6 a) }
 //│ c6: anything -> (C6['A] with {a: (C5[C6['A]] with {a: C2['A0] with {a: 'a}}) as 'a})
-//│ 	where
-//│ 		'A0 :> 'a | C5[C6['A]]
-//│ 		    <: C5[C6['A]]
+//│   where
+//│     'A0 :> 'a | C5[C6['A]]
+//│         <: C5[C6['A]]
 
 // FIXME SOF
 // :d
@@ -172,8 +172,8 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 def append0 ls = L { h = 0; t = S { v = ls } }
 //│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S[L['T]] with {v: 'v}})
-//│ 	where
-//│ 		'T :> 0
+//│   where
+//│     'T :> 0
 
 def appendNil elem = L { h = elem; t = N{} }
 //│ appendNil: ('h & 'T) -> (L['T] with {h: 'h, t: N})
@@ -181,6 +181,6 @@ def appendNil elem = L { h = elem; t = N{} }
 
 S{v=1}
 //│ res: S['T] & {v: 1}
-//│ 	where
-//│ 		'T :> 1
+//│   where
+//│     'T :> 1
 

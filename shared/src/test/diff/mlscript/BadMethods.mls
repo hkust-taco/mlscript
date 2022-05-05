@@ -67,8 +67,8 @@ class ImplicitCall[A]: { x: A }
 i = ImplicitCall { x = "stonks" }
 i.Fun
 //│ i: ImplicitCall['A] & {x: "stonks"}
-//│ 	where
-//│ 		'A :> "stonks"
+//│   where
+//│     'A :> "stonks"
 //│ res: "stonks"
 
 class NoMoreImplicitCall
@@ -142,8 +142,8 @@ class BadSelf[A]: { x: A }
 c = BadSelf { x = fun x -> x }
 c.F
 //│ c: BadSelf['A] with {x: 'a -> 'a}
-//│ 	where
-//│ 		'A :> 'a -> 'a
+//│   where
+//│     'A :> 'a -> 'a
 //│ res: error
 
 
@@ -224,9 +224,9 @@ class BadPair[A, B]: AbstractPair[A, B]
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ bp: BadPair['A, 'B] & {x: 42, y: true}
-//│ 	where
-//│ 		'B :> true
-//│ 		'A :> 42
+//│   where
+//│     'B :> true
+//│     'A :> 42
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.225: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -245,9 +245,9 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair['A, 'B] & {x: 42, y: 0}
-//│ 	where
-//│ 		'B :> 0
-//│ 		'A :> 42
+//│   where
+//│     'B :> 0
+//│     'A :> 42
 //│ res: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.246: 	BadPair.(BadPair.Map)

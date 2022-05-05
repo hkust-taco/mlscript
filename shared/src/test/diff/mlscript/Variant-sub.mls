@@ -21,8 +21,8 @@ flatMap f None
 //│ f: ('v & 'A) -> (Some['A] with {v: 'v})
 //│  = [Function: f]
 //│ res: Some['A] & {v: 1}
-//│ 	where
-//│ 		'A :> 1
+//│   where
+//│     'A :> 1
 //│    = Some { v: 1 }
 //│ res: None | (Some['A] with {v: nothing})
 //│    = None {}
@@ -76,15 +76,15 @@ rec def evalOpt x = case x of {
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
 //│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | Some['A0] & {v: int} | Some['A1] & {v: int})
-//│ 	where
-//│ 		'A1 :> int
-//│ 		'A0 :> int
+//│   where
+//│     'A1 :> int
+//│     'A0 :> int
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: NoneBecause | Some['A] & {v: 2 | 3} | Some['A0] & {v: int} | Some['A1] & {v: int}
-//│ 	where
-//│ 		'A1 :> int
-//│ 		'A0 :> int
-//│ 		'A :> 2 | 3
+//│   where
+//│     'A1 :> int
+//│     'A0 :> int
+//│     'A :> 2 | 3
 //│    = Some { v: 5 }

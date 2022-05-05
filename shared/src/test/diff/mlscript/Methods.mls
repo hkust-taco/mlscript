@@ -19,9 +19,9 @@ Bar.Fun
 
 f = Foo { x = 1; y = 2 }
 //│ f: Foo['A, 'B] & {x: 1, y: 2}
-//│ 	where
-//│ 		'B :> 2
-//│ 		'A :> 1
+//│   where
+//│     'B :> 2
+//│     'A :> 1
 //│  = Foo { x: 1, y: 2 }
 
 f.(Foo.Fun)
@@ -107,14 +107,14 @@ class WrapperWrapper[A]: Wrapper[Wrapper[A]]
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: WrapperWrapper['A] with {x: Psyduck['A] & {x: 0}}
-//│ 	where
-//│ 		'A :> 0
+//│   where
+//│     'A :> 0
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 res.Apply2 (fun x -> mul x 2)
 //│ res: WrapperWrapper['B]
-//│ 	where
-//│ 		'B :> int
+//│   where
+//│     'B :> int
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 Wrapper
@@ -182,9 +182,9 @@ fx = fun x -> mul x 2
 fy = fun x -> not x
 ft = fun x -> fun y -> if (y) then gt x 0 else y
 //│ p: Pair['A, 'B] & {x: 42, y: true}
-//│ 	where
-//│ 		'B :> true
-//│ 		'A :> 42
+//│   where
+//│     'B :> true
+//│     'A :> 42
 //│  = Pair { x: 42, y: true }
 //│ fx: int -> int
 //│   = [Function: fx]
@@ -197,9 +197,9 @@ p.Map fx fy
 p.Test ft
 (p.Map fx fy).Test ft
 //│ res: AbstractPair['C, 'D]
-//│ 	where
-//│ 		'D :> bool
-//│ 		'C :> int
+//│   where
+//│     'D :> bool
+//│     'C :> int
 //│    = Pair { x: 84, y: false }
 //│ res: bool
 //│    = true
@@ -209,9 +209,9 @@ p.Test ft
 t = Tru { x = "foo"; y = false }
 t.(Tru.True)
 //│ t: Tru['A, 'B] & {x: "foo", y: false}
-//│ 	where
-//│ 		'B :> false
-//│ 		'A :> "foo"
+//│   where
+//│     'B :> false
+//│     'A :> "foo"
 //│  = Tru { x: 'foo', y: false }
 //│ res: true
 //│    = undefined
@@ -219,9 +219,9 @@ t.(Tru.True)
 t = True2 { x = "bar"; y = false }
 t.(True2.True)
 //│ t: True2['A, 'B] & {x: "bar", y: false}
-//│ 	where
-//│ 		'B :> false
-//│ 		'A :> "bar"
+//│   where
+//│     'B :> false
+//│     'A :> "bar"
 //│  = True2 { x: 'bar', y: false }
 //│ res: bool
 //│    = undefined

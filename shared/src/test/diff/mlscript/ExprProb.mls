@@ -112,11 +112,11 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 
 eval1_ty_ugly // TODO simplify positive record negatins to bottom!
 //│ res: ('a -> int) -> 'b -> int
-//│ 	where
-//│ 		'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
-//│ 		   <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
-//│ 		'b :> 'c
-//│ 		   <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│   where
+//│     'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
+//│        <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│     'b :> 'c
+//│        <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
 //│    = <no result>
 //│      eval1_ty_ugly is not implemented
 
@@ -125,11 +125,11 @@ def eval1_ty_ugly = eval1
 //│ ('a -> int) -> ((Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit as 'b) -> int
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> 'b -> int
-//│ 	where
-//│ 		'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
-//│ 		   <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
-//│ 		'b :> 'c
-//│ 		   <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│   where
+//│     'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
+//│        <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│     'b :> 'c
+//│        <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
 //│              = [Function: eval1]
 //│ constrain calls  : 39
 //│ annoying  calls  : 36
@@ -160,11 +160,11 @@ eval1_ty_ugly = eval1_ty
 //│ ('a -> int) -> (('a & ~add & ~lit | Add['c] | Lit as 'c) as 'b) -> int
 //│   <:  eval1_ty_ugly:
 //│ ('a -> int) -> 'b -> int
-//│ 	where
-//│ 		'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
-//│ 		   <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
-//│ 		'b :> 'c
-//│ 		   <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│   where
+//│     'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
+//│        <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│     'b :> 'c
+//│        <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
 //│              = [Function: eval1]
 //│ constrain calls  : 12
 //│ annoying  calls  : 1
@@ -173,11 +173,11 @@ eval1_ty_ugly = eval1_ty
 :stats
 eval1_ty = eval1_ty_ugly
 //│ ('a -> int) -> 'b -> int
-//│ 	where
-//│ 		'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
-//│ 		   <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
-//│ 		'b :> 'c
-//│ 		   <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│   where
+//│     'b :> 'a & ~add & ~lit | (Add['b] as 'd) | Lit as 'c
+//│        <: (Add['b] as 'd) | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
+//│     'b :> 'c
+//│        <: 'd | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: nothing} & ~lit | ~{rhs: nothing} & ~lit)
 //│   <:  eval1_ty:
 //│ ('a -> int) -> (('a & ~add & ~lit | Add['c] | Lit as 'c) as 'b) -> int
 //│         = [Function: eval1]
@@ -1498,9 +1498,9 @@ eval1 done e1
 pretty1 done e1
 prettier1 done (eval1 done) e1
 //│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│ 	where
-//│ 		'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E0 :> Lit & {val: 2} | Lit & {val: 3}
+//│   where
+//│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E0 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -1521,9 +1521,9 @@ eval1 done e1
 pretty1 done e1
 prettier1 done (eval1 done) e1
 //│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│ 	where
-//│ 		'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E0 :> Lit & {val: 2} | Lit & {val: 3}
+//│   where
+//│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E0 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -1587,11 +1587,11 @@ eval2 done e1
 
 e2 = add (lit 1) (nega e1)
 //│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
-//│ 	where
-//│ 		'E :> Lit & {val: 1} | (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})
-//│ 		'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│ 		'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E2 :> Lit & {val: 2} | Lit & {val: 3}
+//│   where
+//│     'E :> Lit & {val: 1} | (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})
+//│     'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│     'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E2 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
@@ -1607,10 +1607,10 @@ eval2 done e2
 
 d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E] with {arg: Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}}
-//│ 	where
-//│ 		'E :> Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}
-//│ 		'E0 :> Lit & {val: 1} | (Nega['E1] with {arg: Lit & {val: 1}})
-//│ 		'E1 :> Lit & {val: 1}
+//│   where
+//│     'E :> Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}
+//│     'E0 :> Lit & {val: 1} | (Nega['E1] with {arg: Lit & {val: 1}})
+//│     'E1 :> Lit & {val: 1}
 //│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
 :stats

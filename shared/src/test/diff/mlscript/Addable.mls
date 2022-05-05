@@ -64,8 +64,8 @@ addSame n
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
 //│ addNTimes: (Addable['A] & 'a & 'A) -> int -> 'a
-//│ 	where
-//│ 		'A <: 'a
+//│   where
+//│     'A <: 'a
 //│          = [Function: addNTimes]
 
 // TODO-simplif should be able to simplify `'a & 'A` to `'A`...
@@ -94,9 +94,9 @@ rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
 //│ addNTimes: Addable['A] -> int -> (0 | 'a)
-//│ 	where
-//│ 		'A :> 0
-//│ 		   <: 'a
+//│   where
+//│     'A :> 0
+//│        <: 'a
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -112,9 +112,9 @@ rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
 //│ addNTimes: (Addable['A] & 'b) -> int -> (0 | 'c) as 'a
-//│ 	where
-//│ 		'A :> 'a
-//│ 		   <: 'b -> int -> 'c
+//│   where
+//│     'A :> 'a
+//│        <: 'b -> int -> 'c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^

@@ -11,9 +11,9 @@ let Either l r = Left l | Right r // TODO actual type parameters
 
 Either 1 2
 //│ res: Left['a] | Right['b]
-//│ 	where
-//│ 		'b :> 2
-//│ 		'a :> 1
+//│   where
+//│     'b :> 2
+//│     'a :> 1
 
 res.v
 //│ res: 1 | 2
