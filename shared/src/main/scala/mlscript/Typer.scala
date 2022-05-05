@@ -819,10 +819,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
       //   case tv: TypeVariable => tv.nameHint
       // })(0).asTypeVar)
+      // println(st, inProcess)
       if (inProcess(st_pol)) st match {
         case tv: TypeVariable if parents(tv) =>
           // if (polarity) Bot else Top
-          recursive.getOrElse(st_pol, tv.asTypeVar)
+          // recursive.getOrElse(st_pol, tv.asTypeVar)
+          recursive.getOrElse(st_pol, if (polarity) Bot else Top)
         case _ =>
           recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
             case tv: TypeVariable => tv.nameHint
@@ -892,9 +894,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // * NOTE: in these cases, we could always just pas `parents`, but this would require
             // *  more care when removing polar variables – see [test:T2]
             case ComposedType(true, l, r) =>
-              Union(go(l, polarity, parents), go(r, polarity, if (polarity) semp else parents))
+              val newParents = if (polarity) parents else semp[TV]
+              Union(go(l, polarity, newParents), go(r, polarity, newParents))
             case ComposedType(false, l, r) =>
-              Inter(go(l, polarity, parents), go(r, polarity, if (polarity) parents else semp))
+              val newParents = if (polarity) semp[TV] else parents
+              Inter(go(l, polarity, newParents), go(r, polarity, newParents))
             
             case RecordType(fs) =>
               Record(fs.mapValues(v => Field(v.lb.map(go(_, !polarity, semp)), go(v.ub, polarity, semp))))

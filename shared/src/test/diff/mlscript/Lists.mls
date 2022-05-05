@@ -34,7 +34,7 @@ def c = Cons 2 Nil
 def d = Cons 1 c
 //│ d: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
+//│ 		'A :> 1 | 2
 //│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
@@ -48,31 +48,31 @@ res: 1
 d.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 1 | 2 | 2 | 1 | 1
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 1 | 2
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
 //│ res: Cons['A] with {head: 2, tail: Nil}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
@@ -156,7 +156,7 @@ Cons 1 res
 Cons 1 (Cons 2 Nil)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
@@ -172,7 +172,7 @@ Cons 2 Nil
 Cons 1 (id res)
 //│ res: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Nil}}
 //│ 	where
-//│ 		'A :> 2 | 1 | 2 | 2 | 1 | 1
+//│ 		'A :> 1 | 2
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }

@@ -355,7 +355,7 @@ bar_ty2 = bar2_ty2
 
 
 rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
-//│ f: ('a & 'b) -> ('a | 'c\a & {a: int} as 'c)
+//│ f: 'a -> ('a | 'b\a & {a: int} as 'b)
 //│  = [Function: f]
 
 f 1
@@ -365,11 +365,11 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: ('a & (({a: 'c & 'b} as 'b) | ~{a: int} | ~{})\a & (({a: 'c & 'b} as 'b) | ~{a: int})\a & (int | ~{a: int} | ~{})\a & (int | ~{a: int})\a & ('c & ({a: 'd} as 'b) as 'd) & int & int) -> ('c | (('a | 'e)\a & {a: int} as 'e))
+//│ f: ('a & (({a: 'c & 'b} as 'b) | ~{a: int} | ~{})\a & (({a: 'c & 'b} as 'b) | ~{a: int})\a & (int | ~{a: int} | ~{})\a & (int | ~{a: int})\a & ('c & ({a: 'd} as 'b) as 'd) & int) -> ('c | (('a | 'e)\a & {a: int} as 'e))
 //│  = [Function: f1]
 
 f
-//│ res: (({a: 'a} & 'b as 'a) & 'c & 'd) -> ('b | (('c | 'e)\a & {a: int} as 'e))
+//│ res: (({a: 'a} & 'b as 'a) & 'c) -> ('b | (('c | 'd)\a & {a: int} as 'd))
 //│    = [Function: f1]
 
 // Notice how what is most likely an the error is reported in call sites,
@@ -507,7 +507,7 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: (({a: 'a} as 'a) & 'b & 'c) -> ('b | 'd\a & {a: int} as 'd)
+//│ f_manual_ns: (({a: 'a} as 'a) & 'b) -> ('b | 'c\a & {a: int} as 'c)
 //│            = <missing implementation>
 
 :e
@@ -546,7 +546,7 @@ f_manual_2 ainf
 
 
 rec def f x = if error then f (x with { a = x - 1 }) else x
-//│ f: ('a & 'b) -> ('a | 'c\a & {a: int} as 'c)
+//│ f: 'a -> ('a | 'b\a & {a: int} as 'b)
 //│  = [Function: f2]
 
 r = f 1
@@ -622,7 +622,7 @@ def fancyBottom1: 'a & ('a -> 'a) as 'a
 def fancyBottom2: 'a\x as 'a
 //│ fancyBottom1: 'a -> 'a & 'a as 'a
 //│             = <missing implementation>
-//│ fancyBottom2: 'a\x
+//│ fancyBottom2: nothing\x
 //│             = <missing implementation>
 
 fancyBottom2: nothing

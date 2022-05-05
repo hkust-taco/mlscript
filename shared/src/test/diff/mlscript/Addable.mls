@@ -30,7 +30,7 @@ n.Add
 
 
 def addTwo a0 a1 = a0.Add a1
-//│ addTwo: Addable['A] -> ('A & 'A) -> 'A
+//│ addTwo: Addable['A] -> 'A -> 'A
 //│       = [Function: addTwo]
 
 
@@ -53,7 +53,7 @@ addTwo s s
 
 
 def addSame a = a.Add a
-//│ addSame: (Addable['A] & 'A & 'A) -> 'A
+//│ addSame: (Addable['A] & 'A) -> 'A
 //│        = [Function: addSame]
 
 addSame n
@@ -63,10 +63,14 @@ addSame n
 
 rec def addNTimes a n =
   if n <= 1 then a else a.Add (addNTimes a (n - 1))
-//│ addNTimes: (Addable['A] & 'a & (('a & 'A0 as 'b) as 'A0)) -> int -> 'a
+//│ addNTimes: (Addable['A] & 'a & 'A) -> int -> 'a
 //│ 	where
-//│ 		'A <: 'a & 'A & 'b as 'b
+//│ 		'A <: 'a
 //│          = [Function: addNTimes]
+
+// TODO-simplif should be able to simplify `'a & 'A` to `'A`...
+// :ds
+// addNTimes
 
 addNTimes n 12
 //│ res: Num & {val: 1} | Num
@@ -92,7 +96,7 @@ addNTimes n 12
 //│ addNTimes: Addable['A] -> int -> (0 | 'a)
 //│ 	where
 //│ 		'A :> 0
-//│ 		   <: 'a & 'A & 'b as 'b
+//│ 		   <: 'a
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^

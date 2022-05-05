@@ -277,9 +277,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               val wty = ty.uninstantiatedBody
               if (mode.isDebugging) output(s"Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
+              typer.dbg = mode.dbgSimplif
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
-                typer.dbg = mode.dbgSimplif
+                // typer.dbg = mode.dbgSimplif
                 val rty = typer.removeIrrelevantBounds(wty)(ctx)
                 if (mode.isDebugging) output(s"Cleaned up: ${rty}")
                 if (mode.isDebugging) output(s" where: ${rty.showBounds}")

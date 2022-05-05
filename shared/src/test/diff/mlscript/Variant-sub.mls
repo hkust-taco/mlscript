@@ -86,5 +86,5 @@ evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ 	where
 //│ 		'A1 :> int
 //│ 		'A0 :> int
-//│ 		'A :> 3 | 2
+//│ 		'A :> 2 | 3
 //│    = Some { v: 5 }

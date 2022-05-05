@@ -142,7 +142,7 @@ f: (Foo2[?] & 'a) -> 'a
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A :> anything <: nothing} | ~foo2 | ~(foo2 & {Foo2#A :> anything <: nothing})) & (foo2 | ~(foo2 & {Foo2#A :> anything <: nothing}))) -> ('a | Foo2[?] & 'a)
+//│ res: (Foo2[?] & 'a & (foo2 | ~{Foo2#A :> anything <: nothing} | ~foo2 | ~(foo2 & {Foo2#A :> anything <: nothing})) & (foo2 | ~(foo2 & {Foo2#A :> anything <: nothing}))) -> (Foo2[?] & 'a0 as 'a0)
 //│    = [Function: f]
 
 f

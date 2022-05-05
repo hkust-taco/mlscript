@@ -160,7 +160,7 @@ Cons 1 (Cons 2 Nil)
 //│ 		'a :> 2
 //│ res: Cons['a]
 //│ 	where
-//│ 		'a :> 2 | 1 | 1
+//│ 		'a :> 1 | 2
 
 (Cons 3 Nil).head
 succ (Cons 3 Nil).head

@@ -116,8 +116,10 @@ trait TypeSimplifier { self: Typer =>
       recursiveVars += tv
       val nv = renew(tv)
       val newParents = parents + tv
-      nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
-      nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
+      // nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
+      // nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
+      nv.lowerBounds = tv.lowerBounds.reduceOption(_ | _).map(goDeep(_, S(true), newParents)(Set.empty)).filterNot(_ === BotType).toList
+      nv.upperBounds = tv.upperBounds.reduceOption(_ & _).map(goDeep(_, S(false), newParents)(Set.empty)).filterNot(_ === TopType).toList
       nv
     }
     

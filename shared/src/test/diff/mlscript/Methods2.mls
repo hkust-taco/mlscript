@@ -46,7 +46,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined Cons.HeadOption: Cons['A] -> (Some['a] with {payload: 'A})
 //│ 	where
 //│ 		'a :> 'A
-//│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b & 'b & 'b)) -> (Cons['b] with {head: 'a, tail: List['b]})
+//│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b)) -> (Cons['b] with {head: 'a, tail: List['b]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -68,7 +68,7 @@ Cons.HeadOption
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
 //│ l: Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Nil['A]}}
 //│ 	where
-//│ 		'A :> 1 | 0 | 1 | 1 | 0 | 1 | 1 | 0
+//│ 		'A :> 0 | 1
 //│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
@@ -154,7 +154,7 @@ v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
 //│ v: None['A] | Some['A]
 //│ 	where
-//│ 		'A :> 1 | 0
+//│ 		'A :> 0 | 1
 //│  = Some { payload: 0 }
 //│ res: 0 | 1
 //│    = 0

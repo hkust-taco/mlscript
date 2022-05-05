@@ -48,7 +48,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: (lit & anything | (add & {lhs: 'a} | anything & ~add) & ~lit as 'a) -> (1 | 'b | 0 as 'b)
+//│ eval1_stub: (lit | (add & {lhs: 'a} | ~add) & ~lit as 'a) -> (1 | 'b | 0 as 'b)
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -1492,7 +1492,7 @@ prettier1 done (eval1 done) e1
 //│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│ 	where
 //│ 		'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E0 :> Lit & {val: 3} | Lit & {val: 2}
+//│ 		'E0 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -1505,7 +1505,7 @@ prettier1 done (eval1 done) e1
 //│    = '123'
 //│ constrain calls  : 281
 //│ annoying  calls  : 240
-//│ subtyping calls  : 570
+//│ subtyping calls  : 606
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -1515,7 +1515,7 @@ prettier1 done (eval1 done) e1
 //│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│ 	where
 //│ 		'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E0 :> Lit & {val: 3} | Lit & {val: 2}
+//│ 		'E0 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -1580,10 +1580,10 @@ eval2 done e1
 e2 = add (lit 1) (nega e1)
 //│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
 //│ 	where
-//│ 		'E :> (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}) | Lit & {val: 1}
+//│ 		'E :> Lit & {val: 1} | (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})
 //│ 		'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│ 		'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│ 		'E2 :> Lit & {val: 3} | Lit & {val: 2}
+//│ 		'E2 :> Lit & {val: 2} | Lit & {val: 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
@@ -1601,7 +1601,7 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E] with {arg: Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}}
 //│ 	where
 //│ 		'E :> Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}
-//│ 		'E0 :> (Nega['E1] with {arg: Lit & {val: 1}}) | Lit & {val: 1}
+//│ 		'E0 :> Lit & {val: 1} | (Nega['E1] with {arg: Lit & {val: 1}})
 //│ 		'E1 :> Lit & {val: 1}
 //│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
 
