@@ -110,7 +110,7 @@ def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) ->
 //│ eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
 //│              = <missing implementation>
 
-eval1_ty_ugly // TODO simplify positive record negatins to bottom!
+eval1_ty_ugly
 //│ res: ('a -> int) -> 'b -> int
 //│   where
 //│     'b :> 'a & ~add & ~lit | Add['b] | Lit

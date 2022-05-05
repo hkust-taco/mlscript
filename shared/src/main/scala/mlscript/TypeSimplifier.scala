@@ -8,6 +8,7 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
+  /* 
   // TODO rm this?! not sure still useful
   // TODO inline logic
   private def mkDNF(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields, cache: MutMap[TV, Opt[Bool]]): Either[(DNF, DNF), DNF] = {
@@ -23,13 +24,15 @@ trait TypeSimplifier { self: Typer =>
         // if (dnf1.cs.exists(_.vars.nonEmpty))
         // val dnf2 = DNF.mk(ty, false)
         val dnf2 = DNF.mk(ty, true)
-        // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
-        // println(s"vars ${dnf1.cs.map(_.vars)}")
-        // if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
-        if (dnf1 === dnf2) R(dnf1)
-        else L(dnf1 -> dnf2)
+        // // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
+        // // println(s"vars ${dnf1.cs.map(_.vars)}")
+        // // if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
+        // if (dnf1 === dnf2) R(dnf1)
+        // else 
+        L(dnf1 -> dnf2)
     }
   }
+  */
   
   def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     
@@ -204,29 +207,48 @@ trait TypeSimplifier { self: Typer =>
       }
       else
       */
+      
+      /* 
       // rec(DNF.mk(ty, pol)(ctx), Set.empty)
       mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
       // mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
         case R(dnf) =>
           // println(dnf.cs.map(_.vars.isEmpty))
           // pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
-          pol.fold({
-            // R(dnf)
-            val a = rec(dnf, Set.empty, false, parents)
-            val b = rec(dnf, Set.empty, true, parents) // TODO rm for perf
-            // assert(a === b, a -> b)
-            // if (a === b) ???
-            if (a === b)
-            R(a)
-            else L(a -> b)
-            // else L(b -> a)
-          })(p => R(rec(dnf, semp, p, parents)))
+          
+          // pol.fold({
+          //   // R(dnf)
+          //   val a = rec(dnf, Set.empty, false, parents)
+          //   val b = rec(dnf, Set.empty, true, parents) // TODO rm for perf
+          //   // assert(a === b, a -> b)
+          //   // if (a === b) ???
+          //   if (a === b)
+          //   R(a)
+          //   else L(a -> b)
+          //   // else L(b -> a)
+          // })(p => R(rec(dnf, semp, p, parents)))
+          
+          R(rec(dnf, semp, pol.get, parents))
+          
           // pol.fold(R(dnf))(p => {
           //   val a = rec(dnf, Set.empty, p)
           //   val b = rec(dnf, Set.empty, !p)
           //   R(a)
           // })
         case L((dnf1, dnf2)) => L(rec(dnf1, semp, false, parents), rec(dnf2, semp, true, parents))
+      }
+      */
+      
+      pol match {
+        // case S(true) => R(DNF.mk(ty, true))
+        // case S(false) => R(DNF.mk(ty, false))
+        case S(p) => R(rec(DNF.mk(ty, p)(ctx, ptr = true, etf = false), semp, p, parents))
+        case N =>
+          val dnf1 = rec(DNF.mk(ty, false)(ctx, ptr = true, etf = false), semp, false, parents)
+          val dnf2 = rec(DNF.mk(ty, true)(ctx, ptr = true, etf = false), semp, true, parents)
+          if (dnf1 === dnf2) R(dnf1)
+          else 
+          L(dnf1 -> dnf2)
       }
       
     }(r => s"-> $r")
@@ -899,10 +921,22 @@ trait TypeSimplifier { self: Typer =>
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize
         }
+        /* 
         mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
         // mkDNF(ty, pol)(ctx, ptr = false, etf = false, cache) match {
           case R(dnf) => helper(dnf, pol)
           case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+        }
+        */
+        pol match {
+          case S(p) => helper(DNF.mk(ty, p)(ctx, ptr = true, etf = false), pol)
+          case N =>
+            val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
+            val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
+            // if (dnf1 === dnf2) R(dnf1)
+            // else 
+            // L(dnf1 -> dnf2)
+            TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
         }
         
     }
