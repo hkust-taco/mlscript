@@ -219,12 +219,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
           ))(tyTp(ty.toLoc, "tuple type"))
       case Splice(fields) => 
-        fields.foreach {
-          // currently do not support mutable splice
-          case R(r -> m) if (m) => err(msg"Mutable splice field" -> ty.toLoc :: Nil)
-          case _ => 
-        }
-        SpliceType(fields.map{ case L(l) => L(rec(l)) case R(r -> _) => R(rec(r)) })(tyTp(ty.toLoc, "splice type"))
+        SpliceType(fields.map{ 
+          case L(l) => L(rec(l))   // ! should constrain to array
+          case R(r -> false) => R(rec(r))
+          case R(r -> true) => R(err(msg"Mutable splice field" -> ty.toLoc :: Nil))
+          })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
         )(tyTp(ty.toLoc, "intersection type"))
@@ -531,11 +530,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
       case Splc(es) => 
-        // TODO: splice can only be a pattern ?
         SpliceType(es.map{
-          case L(l) => L(typeTerm(l)) 
+          case L(l) => L({
+            val t_l = typeTerm(l)
+            val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
+            con(t_l, t_a, t_a)
+          }) 
           case R(r -> false) => R(typeTerm(r))
-          case R(r -> true)  => R(err(msg"mutble splice not supported" -> prov.loco :: Nil))
+          case R(r -> true)  => R(err(msg"mutable splice not supported" -> prov.loco :: Nil))
         })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)

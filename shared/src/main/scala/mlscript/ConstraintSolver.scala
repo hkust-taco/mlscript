@@ -526,6 +526,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         TupleType(fs.mapValues(_.update(extrude(_, lvl, !pol), extrude(_, lvl, pol))))(t.prov)
       case t @ ArrayType(ar) =>
         ArrayType(ar.update(extrude(_, lvl, !pol), extrude(_, lvl, pol)))(t.prov)
+      case t @ SpliceType(fs) => 
+        t.updateElems(extrude(_, lvl, pol), extrude(_, lvl, pol), t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lvl, pol), ns)(w.prov)
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, tv.nameHint)(lvl)
@@ -622,6 +624,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case t @ RecordType(fs) => RecordType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ TupleType(fs) => TupleType(fs.mapValues(_.update(freshen, freshen)))(t.prov)
       case t @ ArrayType(ar) => ArrayType(ar.update(freshen, freshen))(t.prov)
+      case t @ SpliceType(fs) => t.updateElems(freshen, freshen, t.prov)
       case n @ NegType(neg) => NegType(freshen(neg))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(freshen(und))(p.prov)
