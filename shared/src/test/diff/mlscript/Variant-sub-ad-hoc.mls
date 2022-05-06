@@ -46,7 +46,7 @@ rec def evalOpt = fun x -> case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'b} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string} as 'a) -> (None & {err: string} | Some & {v: int} | Some & {v: 'b})
+//│ evalOpt: (Lit & {v: int} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string} as 'a) -> (None & {err: string} | Some & {v: int})
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})

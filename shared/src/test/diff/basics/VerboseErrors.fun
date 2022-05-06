@@ -57,7 +57,7 @@ let test = x => y => if x.prop then i x else y
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> ('a | int)
 
 :e
 :verbose
@@ -74,5 +74,5 @@ test arg2
 //│ ╟── from field selection:
 //│ ║  l.50: 	  x.prop
 //│ ╙──      	   ^^^^^
-//│ res: 'a -> (int | 'a) | error
+//│ res: 'a -> ('a | int) | error
 

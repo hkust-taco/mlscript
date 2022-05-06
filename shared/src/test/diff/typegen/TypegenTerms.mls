@@ -105,10 +105,10 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│ nonsense: ('a & 'b -> 'c & {a: int}) -> ('b & {b: int}) -> ('c | anything -> 'a)
 //│ g: nothing -> nothing -> nothing
 //│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: int} & c) => (arg2: {readonly b: int} & a) => ((arg3: unknown) => c) | b
+//│ export declare const nonsense<a, b, c>: (arg: a & ((arg1: b) => c) & {readonly a: int}) => (arg2: b & {readonly b: int}) => c | ((arg3: unknown) => a)
 //│ export declare const g: (arg: never) => (arg1: never) => never
 //│ // end ts
 

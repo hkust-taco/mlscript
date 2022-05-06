@@ -111,7 +111,7 @@ ty1A = ty1B
 //│ ╙──      	                  ^^^^^
 //│ constrain calls  : 24
 //│ annoying  calls  : 29
-//│ subtyping calls  : 45
+//│ subtyping calls  : 37
 
 :e
 :stats
@@ -130,7 +130,7 @@ ty1B = ty1A
 //│ ╙──      	                  ^^^^^
 //│ constrain calls  : 24
 //│ annoying  calls  : 29
-//│ subtyping calls  : 50
+//│ subtyping calls  : 42
 
 
 :e

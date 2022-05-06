@@ -6,7 +6,7 @@ foo: ~(int\x)
 //│ res: ~int\x
 
 foo: (~int)\x
-//│ res: ~int
+//│ res: ~int\x
 
 res: ~(int\x)
 //│ res: ~int\x
@@ -205,17 +205,17 @@ id (error: A) with { x = 1 } : A | { x: 'a }
 //│ res: {x: nothing} | A
 
 def negWeird: ~(~(~(A & { x: int })))
-//│ negWeird: ~A
+//│ negWeird: ~(A & {x: int})
 
 def v = negWeird with { x = 1 }
-//│ v: {x: 1} & ~a
+//│ v: {x: 1} & ~{x: int} | {x: 1} & ~a
 
 v: A | { x: 'a }
 //│ res: {x: 1} | A
 
 
 def funny = error: nothing\x
-//│ funny: nothing
+//│ funny: nothing\x
 
 // It could be agrued this should fail... but that would make constraint solving more awkward!
 funny.x
@@ -256,7 +256,7 @@ if true then id else idx
 //│ res: 'a -> 'a
 
 r =  if true then id with { x = "a"; y = "b" } else idx
-//│ r: 'a -> 'a & {x: "a" | 1}
+//│ r: 'a -> 'a & {x: "a", y: "b"}
 
 r r.x
 //│ res: "a" | 1

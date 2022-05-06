@@ -42,7 +42,7 @@ def r: {b: string; c: int}\b
 
 
 def r: int \ _1
-//│ r: int
+//│ r: int\_1
 //│  = <missing implementation>
 
 def r: (1,2,3) \ _1
@@ -65,7 +65,7 @@ def arr = (1,2)
 
 fr = f r
 fr : Array[int] & {b: int}
-//│ fr: (1, 2, 3,) & {b: 2}
+//│ fr: (1, 2, 3,)\_12345\b & {b: 2}
 //│   = <no result>
 //│     r is not implemented
 //│ res: Array[int] & {b: int}
@@ -87,7 +87,7 @@ arr._1
 //│    = undefined
 
 rr = arr with { x = 1 }
-//│ rr: Array[int] & {x: 1}
+//│ rr: Array[int]\x & {x: 1}
 //│   = [ 1, 2, x: 1 ]
 
 rr.x
@@ -299,9 +299,13 @@ rep5 1 with {_1 = 10}
 a2 = rep5 2 with {_2 = true; x = "haha"}
 a2._2
 a2.x
-//│ res: Array[1] & {_1: 10}
+//│ res: Array['a]\_1 & {_1: 10}
+//│   where
+//│     'a :> 1
 //│    = [ 1, 1, 1, 1, 1, _1: 10 ]
-//│ a2: Array[2] & {_2: true, x: "haha"}
+//│ a2: Array['a]\_2\x & {_2: true, x: "haha"}
+//│   where
+//│     'a :> 2
 //│   = [ 2, 2, 2, 2, 2, _2: true, x: 'haha' ]
 //│ res: true
 //│    = true
@@ -311,13 +315,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.312: 	a2._1
+//│ ║  l.316: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true} | ~{x: "haha"}`
 //│ ║  l.289: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true} | ~{x: "haha"}`
-//│ ║  l.312: 	a2._1
+//│ ║  l.316: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined
@@ -398,6 +402,6 @@ def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | T
-//│ p2: Array[bool | int | string] | T
+//│ p2: Array[4 | bool | int | string] | T
 //│ pf: (Array['a & ~undefined] & {_1: 'b}) -> (undefined | 'a, 'b,)
 //│ res: (1 | 2 | 3 | undefined, 1,)

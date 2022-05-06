@@ -23,7 +23,7 @@ flatMap3 (fun x -> add x.value x.payload) arg
 //│    = 65
 //│ constrain calls  : 100
 //│ annoying  calls  : 23
-//│ subtyping calls  : 44
+//│ subtyping calls  : 29
 
 
 def arg = if true then Some{value = 42} else None {}
@@ -113,5 +113,5 @@ res 1
 
 
 def funny = fun f -> case f of { Some -> f f }
-//│ funny: nothing -> nothing
+//│ funny: (Some[?] & ('a -> 'b as 'a)) -> 'b
 //│      = [Function: funny]

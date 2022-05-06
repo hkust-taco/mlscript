@@ -5,7 +5,7 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ Some: ('v & 'A) -> (Some['A] & {v: 'v})
 //│     = [Function: Some1]
 //│ None: None
 //│     = None {}
@@ -18,7 +18,7 @@ def flatMap = fun f -> fun opt ->
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
-//│ f: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ f: ('v & 'A) -> (Some['A] & {v: 'v})
 //│  = [Function: f]
 //│ res: Some['A] & {v: 1}
 //│   where
@@ -75,7 +75,7 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | Some['A0] & {v: int} | Some['A1] & {v: int})
+//│ evalOpt: (Lit & {v: 'v & int & 'A} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var as 'a) -> (NoneBecause | Some['A] & {v: 'v} | Some['A0] & {v: int} | Some['A1] & {v: int})
 //│   where
 //│     'A1 :> int
 //│     'A0 :> int

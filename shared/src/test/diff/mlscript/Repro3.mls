@@ -23,7 +23,7 @@ rec def l a = l
 // TODO-simplif
 // :ds
 fun a -> a a
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: ('b & 'a) -> 'c as 'a
 
 
 // :stdout
@@ -32,7 +32,7 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ ('a -> 'b & 'a) -> 'b
+//│ ('b & 'a) -> 'c as 'a
 //│   <:  f:
 //│ {x: 'a} as 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -50,7 +50,7 @@ rec def f a = a a
 // :d
 // :ds
 rec def g a = a a
-//│ g: ('a -> 'b & 'a) -> 'b
+//│ g: ('b & 'a) -> 'c as 'a
 
 
 
@@ -59,13 +59,16 @@ class Some[A]: { v: A }
 
 // :ds
 def Some v = Some{v}
-//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ Some: ('v & 'A) -> (Some['A] & {v: 'v})
 
 
 def foo(x: Some['a]) =
   let _ = x.v : Some[?]
   in x: Some['a & some]
-//│ foo: Some[Some[?] & 'a] -> Some[Some[?] & 'a]
+//│ foo: Some['a] -> Some[in Some[?] & 'a0 out Some[?] & 'a0]
+//│   where
+//│     'a :> Some[?] & 'a0
+//│        <: Some[?] & 'a0
 
 // :ds
 def f: Some['a]
@@ -76,7 +79,7 @@ def f: Some['a]
 // TODO MV
 
 def foo(x: 'a) = (x + 1, x)
-//│ foo: (int & 'a) -> (int, 'a,)
+//│ foo: ('a & int) -> (int, 'a,)
 
 // NOTE: currently each parameter type is typed independently – so these 'a are different!
 def foo(x: 'a, y: 'a) = (x + 1, y)

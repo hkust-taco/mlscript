@@ -284,8 +284,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val rty = typer.removeIrrelevantBounds(wty)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${rty}")
                 if (mode.isDebugging) output(s" where: ${rty.showBounds}")
-                val cty = typer.canonicalizeType(rty)(ctx)
-                // val cty = rty
+                // val cty = typer.canonicalizeType(rty)(ctx)
+                val cty = rty
                 if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
                 if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 val sim = typer.simplifyType(cty)(ctx)
@@ -294,7 +294,16 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val recons = typer.reconstructClassTypes(sim, S(true), ctx)
                 if (mode.dbgSimplif) output(s"⬤ Recons: ${recons}")
                 if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
-                val exp = typer.expandType(recons, true)
+                
+                // val exp = typer.expandType(recons, true)
+                
+                // val recons2 = typer.removeIrrelevantBounds(recons)(ctx)
+                val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(recons)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                if (mode.dbgSimplif) output(s"⬤ Resim: ${recons2}")
+                if (mode.dbgSimplif) output(s" where: ${recons2.showBounds}")
+                
+                val exp = typer.expandType(recons2, true)
+                
                 // val canon2 = typer.canonicalizeType(recons)(ctx)
                 // val exp = typer.expandType(canon2, true)
                 exp

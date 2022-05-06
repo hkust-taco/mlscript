@@ -93,9 +93,9 @@ Crazy
 //│      Crazy is not implemented
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: Crazy['a] & {age: 42, name: "Bob"} | Crazy['a] & ('a | {age: 42, name: "Bob"})
+//│ c: Crazy['a] & ('a | {name: "Bob", age: 42})
 //│   where
-//│     'a :> {age: 42, name: "Bob"}
+//│     'a :> {name: "Bob", age: 42}
 //│  = <no result>
 //│    Crazy is not implemented
 
@@ -118,7 +118,7 @@ c: nothing
 //│      c and Crazy are not implemented
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: Parent1 & {name: "Bob"} | Crazy['a] & ('a | Parent1 & {name: "Bob"})
+//│ d: Crazy['a] & ('a | Parent1 & {name: "Bob"})
 //│   where
 //│     'a :> Parent1 & {name: "Bob"}
 //│  = <no result>
@@ -279,9 +279,9 @@ class Bool
 
 "1" : String
 true : Bool
-//│ res: string
+//│ res: String
 //│    = '1'
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 

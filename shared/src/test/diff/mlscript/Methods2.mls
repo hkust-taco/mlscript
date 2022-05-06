@@ -46,7 +46,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined Cons.HeadOption: Cons['A] -> (Some['a] with {payload: 'A})
 //│   where
 //│     'a :> 'A
-//│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b)) -> (Cons['b] with {head: 'a, tail: List['b]})
+//│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -83,7 +83,7 @@ l.Map (fun x -> mul x 2)
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 //│ constrain calls  : 111
 //│ annoying  calls  : 6
-//│ subtyping calls  : 9
+//│ subtyping calls  : 7
 
 // :ds
 
@@ -103,7 +103,7 @@ Cons.HeadOption l0
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 74
 //│ annoying  calls  : 27
-//│ subtyping calls  : 93
+//│ subtyping calls  : 83
 
 
 l1 = Cons { head = 0; tail = Nil {} }
@@ -122,7 +122,7 @@ Cons.HeadOption l1
 //│   TypeError: (intermediate value).HeadOption is not a function
 //│ constrain calls  : 74
 //│ annoying  calls  : 27
-//│ subtyping calls  : 93
+//│ subtyping calls  : 83
 
 // :stats
 // Cons.HeadOption l
@@ -164,7 +164,7 @@ def newHeadOption x = case x of {
     | Cons -> Some {payload = x.head}
     | _ -> None{}
     }
-//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~cons) -> (None['A0] | (Some['A] with {payload: 'payload}))
+//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~cons) -> (None['A0] | Some['A] & {payload: 'payload})
 //│              = [Function: newHeadOption]
 
 // Note that `o` is not a list, so this takes the default case:

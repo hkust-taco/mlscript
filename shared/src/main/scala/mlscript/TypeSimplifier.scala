@@ -99,8 +99,16 @@ trait TypeSimplifier { self: Typer =>
         //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
         // val nv = renew(v)
         if (isNew) {
-          if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, S(true -> tv)))
-          if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, S(false -> tv)))//.tap(b=>println(s"${b.map(_.getClass)}"))
+          
+          // if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, S(true -> tv)))
+          // if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, S(false -> tv)))
+          // //.tap(b=>println(s"${b.map(_.getClass)}"))
+          
+          if (pols(tv).forall(_ === true)) nv.lowerBounds =
+            tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).toList
+          if (pols(tv).forall(_ === false)) nv.upperBounds =
+            tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).toList
+          
         }
         // println(tv, nv, nv.lowerBounds, nv.upperBounds)
         nv
@@ -109,7 +117,10 @@ trait TypeSimplifier { self: Typer =>
       case ComposedType(false, l, r) => process(l, parent) & process(r, parent)
       // case _: ProxyType | _: ComposedType | _: NegType => ty.map(process(_, parent))
       case NegType(ty) => process(ty, parent.map(_.mapFirst(!_))).neg(ty.prov)
-      case ProvType(ty) => ProvType(process(ty, parent))(ty.prov)
+      
+      // case ProvType(ty) => ProvType(process(ty, parent))(ty.prov)
+      case ProvType(ty) => process(ty, parent)
+      
       case _ => ty.map(process(_, N))
     }
     // }(r => s"= $r")
@@ -445,6 +456,34 @@ trait TypeSimplifier { self: Typer =>
     // val analyzed2 = MutSet.empty[TypeRef]
     val analyzed2 = MutSet.empty[ST -> Bool]
     
+    // val otherEdges = st.getVars.iterator.foreach { tv1 =>
+    //   tv1.lowerBounds.foreach {
+    //     case tv2: TV => tv1 -> L(tv2)
+    //     case _ =>
+    //   }
+    //   tv1.upperBounds.foreach {
+    //     case tv2: TV => tv1 -> R(tv2)
+    //     case _ =>
+    //   }
+    // }
+    import collection.mutable
+    // val otherLBs, otherUBs = mutable.Map.empty[TV, mutable.Buffer[TV]]
+    val otherLBs, otherUBs = mutable.Map.empty[TV, mutable.Buffer[TV]].withDefault(_ => mutable.Buffer.empty)
+    /* 
+    st.getVars.iterator.foreach { tv1 =>
+      tv1.lowerBounds.foreach {
+        // case tv2: TV => otherLBs.getOrElseUpdate(tv2, mutable.Buffer.empty) += tv1
+        case tv2: TV => otherLBs(tv2) += tv1
+        case _ =>
+      }
+      tv1.upperBounds.foreach {
+        // case tv2: TV => otherUBs.getOrElseUpdate(tv2, mutable.Buffer.empty) += tv1
+        case tv2: TV => otherUBs(tv2) += tv1
+        case _ =>
+      }
+    }
+    */
+    
     // def analyze(st: SimpleType, pol: Bool): Unit = st match {
     //   case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
     //   case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
@@ -529,7 +568,8 @@ trait TypeSimplifier { self: Typer =>
     // def process(st: SimpleType, pol: Bool, newOccs: MutSet[SimpleType]) = {
     def process(st: SimpleType, pol: Bool) = {
       val newOccs = MutSet.empty[SimpleType]
-      def go(st: SimpleType): Unit =
+      def go(st: SimpleType): Unit = goImpl(st.unwrapProvs)
+      def goImpl(st: SimpleType): Unit =
           trace(s"go $st   (${newOccs.mkString(", ")})") {
           st match {
         case ComposedType(p, l, r) =>
@@ -545,7 +585,8 @@ trait TypeSimplifier { self: Typer =>
             newOccs += st
             // processBounds(tv, pol)
             // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(process(_, pol, newOccs))
-            (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            (if (pol) tv.lowerBounds.iterator ++ otherLBs(tv) else tv.upperBounds.iterator ++ otherUBs(tv)).foreach(go)
             // analyze(tv, pol)
           }
         case _ => analyze(st, pol)
@@ -729,6 +770,8 @@ trait TypeSimplifier { self: Typer =>
       case ty @ ComposedType(true, l, r) => transform(l, pol) | transform(r, pol)
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
       case NegType(und) => transform(und, pol.map(!_)).neg()
+      case WithType(base, RecordType(fs)) => WithType(transform(base, pol), 
+        RecordType(fs.mapValues(_.update(transform(_, pol.map(!_)), transform(_, pol))))(noProv))(noProv)
       case ProxyType(underlying) => transform(underlying, pol)
       case tr @ TypeRef(defn, targs) =>
         // transform(tr.expand, pol) // FIXedME may diverge; and we should try to keep these!

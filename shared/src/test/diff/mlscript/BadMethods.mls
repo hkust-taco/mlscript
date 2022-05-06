@@ -219,7 +219,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╙──       	               ^
 //│ Defined class BadPair
 //│ Defined BadPair.Test: BadPair['A, 'B] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
+//│ Defined BadPair.Map: BadPair['A, 'B] -> ('A -> ('a & 'A0 & 'B0)) -> anything -> (BadPair['A0, 'B0] & {x: 'a, y: 'a})
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -248,11 +248,11 @@ BadPair.(BadPair.Map)
 //│   where
 //│     'B :> 0
 //│     'A :> 42
-//│ res: BadPair['A, 'B] -> ('A -> ('a & 'B0 & 'A0)) -> anything -> (BadPair['A0, 'B0] with {x: 'a, y: 'a})
+//│ res: BadPair['A, 'B] -> ('A -> ('a & 'A0 & 'B0)) -> anything -> (BadPair['A0, 'B0] & {x: 'a, y: 'a})
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.246: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
-//│ res: (42 -> ('a & 'B & 'A)) -> anything -> (BadPair['A, 'B] with {x: 'a, y: 'a})
+//│ res: (42 -> ('a & 'A & 'B)) -> anything -> (BadPair['A, 'B] & {x: 'a, y: 'a})
 
 
 class ClassA
@@ -583,7 +583,7 @@ class Dup[A, A]: { x: A }
 //│ Defined Dup.MthDup: Dup['A, 'A0] -> ('A0 -> 'a) -> 'a
 
 t = Dup { x = 42 }
-//│ t: Dup[in 'A | 'A0 out 'A & (42 | 'A0), in 'A | 'A0 out 'A & (42 | 'A0)] with {x: 42}
+//│ t: Dup[in 'A | 'A0 | 42 out 'A & 'A0, in 'A | 'A0 | 42 out 'A & 'A0] & {x: 42}
 
 :stats
 t : Dup[bool, int]
@@ -613,7 +613,7 @@ t.MthDup (fun x -> mul 2 x)
 //│ res: int
 //│ constrain calls  : 89
 //│ annoying  calls  : 27
-//│ subtyping calls  : 38
+//│ subtyping calls  : 36
 
 // TODO-simplif
 // :ds
@@ -622,7 +622,7 @@ t.MthDup id
 //│ res: 42
 //│ constrain calls  : 74
 //│ annoying  calls  : 25
-//│ subtyping calls  : 55
+//│ subtyping calls  : 37
 
 
 // We don't currently analyze forward method declarations

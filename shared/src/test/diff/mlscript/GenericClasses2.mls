@@ -5,11 +5,11 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Foo1
-//│ res: {x: 'x & 'A} -> (Foo1['A] with {x: 'x})
+//│ res: {x: 'x & 'A} -> (Foo1['A] & {x: 'x})
 //│    = [Function: res]
 
 Bar1
-//│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
+//│ res: {x: 'x & int} -> (Bar1 & {x: 'x})
 //│    = [Function: res]
 
 b = Bar1{x = 1}
@@ -64,7 +64,7 @@ Bar3
 :e
 Bar2
 Bar3
-//│ res: {x: int & 'x} -> (Bar2 with {x: 'x})
+//│ res: {x: 'x & int} -> (Bar2 & {x: 'x})
 //│    = [Function: res]
 //│ ╔══[ERROR] Instantiation of an abstract type is forbidden
 //│ ║  l.66: 	Bar3

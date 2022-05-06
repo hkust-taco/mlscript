@@ -170,7 +170,7 @@ strawman: ~{ value: anything }
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.160: 	strawman: ~{ value: anything }
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^
-//│ res: nothing
+//│ res: ~{value: anything}
 //│    = <no result>
 //│      strawman is not implemented
 

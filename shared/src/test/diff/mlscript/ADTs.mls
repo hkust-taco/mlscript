@@ -8,11 +8,11 @@ def nega arg = Nega { arg }
 //│ Defined class Lit
 //│ Defined class Add
 //│ Defined class Nega
-//│ lit: (int & 'val) -> (Lit with {val: 'val})
+//│ lit: ('val & int) -> (Lit & {val: 'val})
 //│    = [Function: lit]
-//│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
+//│ add: ('lhs & 'E) -> ('rhs & 'E) -> (Add['E] & {lhs: 'lhs, rhs: 'rhs})
 //│    = [Function: add]
-//│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
+//│ nega: ('arg & 'E) -> (Nega['E] & {arg: 'arg})
 //│     = [Function: nega]
 
 rec def eval e = case e of {
@@ -20,7 +20,7 @@ rec def eval e = case e of {
   | Add -> eval e.lhs + eval e.rhs
   | Nega -> 0 - (eval e.arg)
   }
-//│ eval: ((Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> int
+//│ eval: (Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a} as 'a) -> int
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)

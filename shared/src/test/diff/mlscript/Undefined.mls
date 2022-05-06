@@ -2,7 +2,7 @@ class Undefined2: { x: undefined }
 //│ Defined class Undefined2
 
 Undefined2
-//│ res: {x: undefined & 'x} -> (Undefined2 with {x: 'x})
+//│ res: {x: 'x & undefined} -> (Undefined2 & {x: 'x})
 //│    = [Function: res]
 
 Undefined2 { x = undefined }

@@ -23,7 +23,7 @@ let pick_an_object = b =>
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
+//│ recursive_monster: 'a -> ({thing: 'a, self: 'b} as 'b)
 
 
 
@@ -63,7 +63,7 @@ let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
-//│ produce3: bool -> {head: 123, tail: {head: int, tail: {head: int, tail: 'a}} as 'a}
+//│ produce3: bool -> {head: 123, tail: {head: int, tail: ({head: 1, tail: {head: 0, tail: 'a}} as 'a) | ({head: int, tail: 'b} as 'b)}}
 //│ res: bool -> int
 
 let consume2 =

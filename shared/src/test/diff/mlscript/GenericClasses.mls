@@ -8,7 +8,7 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
+//│ Some: ('value & 'A) -> (Some['A] & {value: 'value})
 //│     = [Function: Some1]
 
 Some 42
@@ -69,7 +69,7 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Bar1
-//│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
+//│ res: {x: 'x & int} -> (Bar1 & {x: 'x})
 //│    = [Function: res]
 
 g = Bar1 { x = 42 }
@@ -137,7 +137,7 @@ error: (Foo2[?] & 'a) -> 'a
 // TODO-simplif
 // :ds
 f: (Foo2[?] & 'a) -> 'a
-//│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
+//│ res: (Foo2[?] & 'a & (Foo2[?] | ~{Foo2#A} | ~foo2)) -> 'a
 //│    = [Function: f]
 
 :ns

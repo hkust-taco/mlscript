@@ -627,7 +627,7 @@ i arg
 //│ res: error | int
 
 let test x y = if x.prop then i x else y
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> ('a | int)
 
 :e
 test arg2
@@ -643,7 +643,7 @@ test arg2
 //│ ╟── from field selection:
 //│ ║  l.328: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: 'a -> (int | 'a) | error
+//│ res: 'a -> ('a | int) | error
 
 let mkArg = a => {prop: a}
 h / mkArg 1
