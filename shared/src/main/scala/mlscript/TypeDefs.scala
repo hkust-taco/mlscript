@@ -554,6 +554,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     * @param ctx
     */
   def computeVariances(tyDefs: List[TypeDef], ctx: Ctx): Unit = {
+    println(s"VARIANCE ANALYSIS")
     var varianceUpdated: Bool = false;
 
     /** Update variance information for all type variables belonging
@@ -577,7 +578,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           updateVariance(fieldTy.ub, curVariance)
       }
 
-      trace(s"updateVariance(ty: $ty of ${ty.getClass()}, curVariance: $curVariance)(${tyDef.nme.name}.${tyDef.tvarVariances})") {
+      trace(s"upd[$curVariance] $ty") {
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
           case TraitTag(_) | ClassTag(_, _) => ()
@@ -588,6 +589,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val newVariance = oldVariance && curVariance
             if (newVariance =/= oldVariance) {
               tyDef.tvarVariances(t) = newVariance
+              println(s"UPDATE ${tyDef.nme.name}.$t from $oldVariance to $newVariance")
               varianceUpdated = true
             }
             val (visitLB, visitUB) = (
@@ -634,7 +636,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
         }
-      } (_ => if (varianceUpdated) s"updated - ${tyDef.nme.name}.${tyDef.tvarVariances})" else "no update")
+      }()
     }
 
     // set default value for all type variables as bivariant
@@ -643,32 +645,26 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     // and hence are not set in the variance info map
     tyDefs.foreach(t => t.tparamsargs.foreach{case (_, tvar) => t.tvarVariances.put(tvar, VarianceInfo.bi)})
 
-    do {
+    var i = 1
+    do trace(s"⬤ ITERATION $i") {
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
-      tyDefs.foreach{
-        case t@TypeDef(Cls, nme, _, _, body, mthDecls, mthDefs, _, _) =>
-          updateVariance(body, VarianceInfo.co)(t, visitedSet)
-          val stores = mthDecls.foreach { mthDef => 
-            val mthBody = ctx.mthEnv.getOrElse(
-              Right(Some(nme.name), mthDef.nme.name),
-              throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
-            ).body
-            mthBody.foreach { case (_, body) => updateVariance(body, VarianceInfo.co)(t, visitedSet) }
-          }
-        case t@TypeDef(Trt, nme, _, _, body, mthDecls, mthDefs, _, _) =>
-          updateVariance(body, VarianceInfo.co)(t, visitedSet)
-          val stores = mthDecls.foreach { mthDef => 
-            val mthBody = ctx.mthEnv.getOrElse(
-              Right(Some(nme.name), mthDef.nme.name),
-              throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
-            ).body
-            mthBody.foreach { case (_, body) => updateVariance(body, VarianceInfo.co)(t, visitedSet) }
-          }
-        case t@TypeDef(Als, nme, _, _, body, mthDecls, mthDefs, _, _) =>
-          updateVariance(body, VarianceInfo.co)(t, visitedSet)
+      tyDefs.foreach {
+        case t@TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
+          trace(s"${k.str} ${nme.name}  ${t.tvarVariances.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
+            updateVariance(body, VarianceInfo.co)(t, visitedSet)
+            val stores = mthDecls.foreach { mthDef => 
+              val mthBody = ctx.mthEnv.getOrElse(
+                Right(Some(nme.name), mthDef.nme.name),
+                throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
+              ).body
+              mthBody.foreach { case (_, body) => updateVariance(body, VarianceInfo.co)(t, visitedSet) }
+            }
+          }()
       }
-    } while (varianceUpdated)
+      i += 1
+    }() while (varianceUpdated)
+    println(s"DONE")
   }
 
   case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
