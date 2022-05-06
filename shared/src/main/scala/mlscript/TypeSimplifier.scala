@@ -118,9 +118,11 @@ trait TypeSimplifier { self: Typer =>
     def preserveBounds(tv: TV, parents: Set[TV]): TV = {
       recursiveVars += tv
       val nv = renew(tv)
-      val newParents = parents + tv
+      // val newParents = parents + tv
+      val newParents = Set.single(tv)
       // nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
       // nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
+      // implicit val inProcess: Set[PolarType] = semp
       nv.lowerBounds = tv.lowerBounds.reduceOption(_ | _)
         .map(goDeep(_, S(true), newParents)(Set.empty)).filterNot(_ === BotType).toList
       nv.upperBounds = tv.upperBounds.reduceOption(_ & _)

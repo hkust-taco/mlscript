@@ -843,8 +843,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             recursive += tv -> nv
             // FIXME inProcess
             // FIXME self in bounds...
-            val lb = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, parents + tv)
-            val ub = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, parents + tv)
+            // val newParents = parents + tv
+            val newParents = Set.single(tv)
+            // implicit val inProcess: Set[ST] = semp
+            val lb = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
+            val ub = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
             // println(">>>>>>", lb, ub)
             if (lb === ub) Recursive(nv, lb)
             else {
@@ -870,6 +873,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           //   recursive.getOrElseUpdate(bound, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
           // } else {
             val boundTypes = bounds.map(go(_, polarity, parents + tv))
+            // val boundTypes = bounds.map(go(_, polarity, Set.single(tv)))
             val mrg = if (polarity) Union else Inter
             recursive.get(st_pol) match {
               case Some(variable) => // FIXME does this assume polar rec?
@@ -912,7 +916,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           def invarTV(tv: TV): Type = if (stopAtTyVars) tv.asTypeVar else {
             println(s"Invariant TV $tv")
             recursive.getOrElse(tv, invariant.getOrElseUpdate(tv, {
-              val newParents = parents + tv
+              // val newParents = parents + tv
+              val newParents = Set.single(tv)
+              // implicit val inProcess: Set[ST] = semp
               val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _), true, newParents)
               val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _), false, newParents)
               if (l === u) l else { // TODO try to rm to see what happens
