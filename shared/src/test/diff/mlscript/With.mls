@@ -172,7 +172,7 @@ res.z
 // === With and classes === //
 
 class C[A]: { x: A }
-//│ Defined class C
+//│ Defined class C[+A]
 
 c = C{x = 1}
 //│ c: C['A .. 1 | 'A] with {x: 1}

@@ -8,14 +8,14 @@ class E[T]: { fE: T }
 class F[T]: { fF: T }
 class G[T]: { fG: T }
 class H[T]: { fH: T }
-//│ Defined class A
-//│ Defined class B
-//│ Defined class C
-//│ Defined class D
-//│ Defined class E
-//│ Defined class F
-//│ Defined class G
-//│ Defined class H
+//│ Defined class A[+T]
+//│ Defined class B[+T]
+//│ Defined class C[+T]
+//│ Defined class D[+T]
+//│ Defined class E[+T]
+//│ Defined class F[+T]
+//│ Defined class G[+T]
+//│ Defined class H[+T]
 
 :stats
 def foo x = case x of {

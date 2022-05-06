@@ -6,8 +6,8 @@ def lit val = Lit { val }
 def add lhs rhs = Add { lhs; rhs }
 def nega arg = Nega { arg }
 //│ Defined class Lit
-//│ Defined class Add
-//│ Defined class Nega
+//│ Defined class Add[+E]
+//│ Defined class Nega[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
 //│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})

@@ -18,7 +18,7 @@ class Add[E]: { lhs: E; rhs: E }
 def lit val = Lit { val }
 def add lhs rhs = Add { lhs; rhs }
 //│ Defined class Lit
-//│ Defined class Add
+//│ Defined class Add[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
 //│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
@@ -160,7 +160,7 @@ eval1_ty = eval1_ty_ugly
 :ns
 type E1[A] = Lit | Add[E1[A]] | A & ~lit & ~add
 def eval1_ty: ('a -> int) -> E1['a] -> int
-//│ Defined type alias E1
+//│ Defined type alias E1[+A]
 //│ eval1_ty: ('a -> int) -> E1['a] -> int
 //│         = <missing implementation>
 
@@ -244,7 +244,7 @@ prettier1 done (eval1 done) e1
 
 class Nega[E]: { arg: E }
 def nega arg = Nega { arg }
-//│ Defined class Nega
+//│ Defined class Nega[+E]
 //│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
 //│     = [Function: nega]
 

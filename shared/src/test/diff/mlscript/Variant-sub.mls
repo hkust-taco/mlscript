@@ -1,7 +1,7 @@
 class None: {}
 class Some[A]: { v: A }
 //│ Defined class None
-//│ Defined class Some
+//│ Defined class Some[+A]
 
 def Some v = Some{v}
 def None = None{}

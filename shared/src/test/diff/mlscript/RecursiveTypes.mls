@@ -139,7 +139,7 @@ if true then l else r
 
 
 class C[A]: { a: A }
-//│ Defined class C
+//│ Defined class C[+A]
 
 
 

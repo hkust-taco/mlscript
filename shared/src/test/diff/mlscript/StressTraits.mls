@@ -8,14 +8,14 @@ trait E[T]: { fE: T }
 trait F[T]: { fF: T }
 trait G[T]: { fG: T }
 trait H[T]: { fH: T }
-//│ Defined trait A
-//│ Defined trait B
-//│ Defined trait C
-//│ Defined trait D
-//│ Defined trait E
-//│ Defined trait F
-//│ Defined trait G
-//│ Defined trait H
+//│ Defined trait A[+T]
+//│ Defined trait B[+T]
+//│ Defined trait C[+T]
+//│ Defined trait D[+T]
+//│ Defined trait E[+T]
+//│ Defined trait F[+T]
+//│ Defined trait G[+T]
+//│ Defined trait H[+T]
 
 :stats
 def foo x = case x of {

@@ -14,7 +14,7 @@ Lit
 // def eval: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
 
 type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
-//│ Defined type alias Expr
+//│ Defined type alias Expr[+A]
 
 // TODO: make sure the simplified from this commented version is corect:
 // def eval: ('b -> 'c & int) -> Expr['b] -> (int | 'c)

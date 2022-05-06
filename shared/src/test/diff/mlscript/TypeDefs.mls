@@ -210,8 +210,8 @@ error: {x: 'x -> 'x} -> nothing : Runaway2
 
 type A1[A] = A -> A -> A1[A]
 type A2[A] = A -> A2[A]
-//│ Defined type alias A1
-//│ Defined type alias A2
+//│ Defined type alias A1[-A]
+//│ Defined type alias A2[-A]
 
 def ty1: A1[anything]
 def ty2: A2[anything]
