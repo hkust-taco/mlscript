@@ -1,7 +1,7 @@
 
 class Addable[A]
   method Add: A -> A
-//│ Defined class Addable
+//│ Defined class Addable[=A]
 //│ Declared Addable.Add: Addable['A] -> 'A -> 'A
 
 class Num: Addable[Num] & { val: int }

@@ -43,7 +43,7 @@ data type Bool2 of True2 & False2
 //│ ║  l.25: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
 //│ Defined type alias Bool2
-//│ Defined class &
+//│ Defined class &[+True2, +False2]
 //│ &: 'a -> 'b -> &['a, 'b]
 
 data type Bool3 of
@@ -106,6 +106,7 @@ Tru : Boolean
 // data type List of Nil { T: Nothing }, Cons head tail { T: head | tail.T }
 
 :p
+:w
 data type List a of
   Nil
   Cons (head: a) (tail: List a)
@@ -115,9 +116,15 @@ data type List a of
 //│ Desugared: class Cons[a]: {head: a, tail: List[a]}
 //│ Desugared: def Nil: [a] -> Nil[a]
 //│ Desugared: def Cons: [a] -> (head: a,) -> (tail: List[a],) -> Cons[a]
-//│ Defined type alias List
-//│ Defined class Nil
-//│ Defined class Cons
+//│ Defined type alias List[+a]
+//│ Defined class Nil[±a]
+//│ Defined class Cons[+a]
+//│ ╔══[WARNING] Type definition Nil has bivariant type parameters:
+//│ ║  l.111: 	  Nil
+//│ ║         	  ^^^
+//│ ╟── a is irrelevant and may be removed
+//│ ║  l.110: 	data type List a of
+//│ ╙──       	               ^
 //│ Nil: Nil['a]
 //│ Cons: (head: 'a,) -> (tail: (Cons['a] with {tail: 'b}) | Nil['a] as 'b,) -> ((Cons['a] with {tail: 'c | Nil['a]}) as 'c)
 
@@ -129,10 +136,10 @@ data type Ls of LsA a
 //│ Desugared: class LsA[a]: {a: a}
 //│ Desugared: def LsA: [a] -> a -> LsA[a]
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.126: 	data type Ls of LsA a
+//│ ║  l.133: 	data type Ls of LsA a
 //│ ╙──       	                    ^
 //│ Defined type alias Ls
-//│ Defined class LsA
+//│ Defined class LsA[+a]
 //│ LsA: 'a -> LsA['a]
 
 :p
@@ -166,46 +173,46 @@ not (Cons false Nil).head
 :e
 not (Cons 42 Nil).head
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.174: 	not (Cons 42 Nil).head
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `42` does not match type `bool`
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.174: 	not (Cons 42 Nil).head
 //│ ║         	          ^^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.167: 	not (Cons 42 Nil).head
+//│ ║  l.174: 	not (Cons 42 Nil).head
 //│ ╙──       	                 ^^^^^
 //│ res: bool | error
 
 :e
 (Cons 4).head
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.180: 	(Cons 4).head
+//│ ║  l.187: 	(Cons 4).head
 //│ ║         	        ^^^^^
 //│ ╟── type `(tail: List[?a],) -> Cons[?a]` does not have field 'head'
-//│ ║  l.109: 	data type List a of
+//│ ║  l.110: 	data type List a of
 //│ ║         	               ^^^^
-//│ ║  l.110: 	  Nil
+//│ ║  l.111: 	  Nil
 //│ ║         	^^^^^
-//│ ║  l.111: 	  Cons (head: a) (tail: List a)
+//│ ║  l.112: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into receiver with expected type `{head: ?b}`
-//│ ║  l.180: 	(Cons 4).head
+//│ ║  l.187: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error
 
 :e
 Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	Cons 1 2
+//│ ║  l.204: 	Cons 1 2
 //│ ║         	^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?a]`
-//│ ║  l.197: 	Cons 1 2
+//│ ║  l.204: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.109: 	data type List a of
+//│ ║  l.110: 	data type List a of
 //│ ║         	               ^
 //│ ╟── from tuple type:
-//│ ║  l.111: 	  Cons (head: a) (tail: List a)
+//│ ║  l.112: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
 //│ res: ((Cons['b .. 1 | 'b] with {tail: 'a | Nil['b .. 1 | 'b]}) as 'a) | error
 
@@ -213,7 +220,7 @@ Cons 1 2
 :e
 let List.head = () // ...
 //│ ╔══[ERROR] Unsupported pattern shape
-//│ ║  l.214: 	let List.head = () // ...
+//│ ║  l.221: 	let List.head = () // ...
 //│ ╙──       	        ^^^^^
 //│ <error>: ()
 

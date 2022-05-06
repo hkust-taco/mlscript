@@ -3,8 +3,8 @@ class Nil: {}
 class Cons[A]: { head: A; tail: List[A] }
 type List[A] = Nil | Cons[A]
 //│ Defined class Nil
-//│ Defined class Cons
-//│ Defined type alias List
+//│ Defined class Cons[+A]
+//│ Defined type alias List[+A]
 
 def originalCons = Cons  // Note: type still seems over-complicated because we push 'b inside the union, killing a hash-consing opportunity at the outer level...
 //│ originalCons: {head: 'head & 'A, tail: 'tail & ((Cons['A] with {tail: 'a}) | Nil as 'a)} -> (Cons['A] with {head: 'head, tail: 'tail})

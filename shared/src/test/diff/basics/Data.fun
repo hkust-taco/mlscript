@@ -4,7 +4,7 @@ data Test a b
 //│ Parsed: data ((Test a) b);
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
-//│ Defined class Test
+//│ Defined class Test[+a, +b]
 //│ Test: 'a -> 'b -> Test['a, 'b]
 
 :p

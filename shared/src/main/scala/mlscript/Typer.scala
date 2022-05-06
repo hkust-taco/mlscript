@@ -22,7 +22,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
-  /** Keys of `mthEnv`:
+  /**  `env`: maps the names of all global and local bindings to their types
+    *  Keys of `mthEnv`:
     * `L` represents the inferred types of method definitions. The first value is the parent name,
     *   and the second value is the method name.
     * `R` represents the actual method types.
@@ -115,13 +116,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+      tyDef.tvarVariances += tv -> VarianceInfo.co
+      tyDef
     } ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+      tyDef.tvarVariances += tv -> VarianceInfo.in
+      tyDef
     } ::
     Nil
   val primitiveTypes: Set[Str] =

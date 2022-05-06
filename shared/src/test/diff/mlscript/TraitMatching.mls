@@ -2,7 +2,7 @@
 :AllowRuntimeErrors
 
 trait MyTrait[A]: { value: A }
-//│ Defined trait MyTrait
+//│ Defined trait MyTrait[+A]
 
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }

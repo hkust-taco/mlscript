@@ -1,24 +1,37 @@
-
+:w
 class Seq[A]: { size: int }
-//│ Defined class Seq
+//│ Defined class Seq[±A]
+//│ ╔══[WARNING] Type definition Seq has bivariant type parameters:
+//│ ║  l.2: 	class Seq[A]: { size: int }
+//│ ║       	      ^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.2: 	class Seq[A]: { size: int }
+//│ ╙──     	          ^
 
+:w
 class ListBase[A]: Seq[A]
-//│ Defined class ListBase
+//│ Defined class ListBase[±A]
+//│ ╔══[WARNING] Type definition ListBase has bivariant type parameters:
+//│ ║  l.12: 	class ListBase[A]: Seq[A]
+//│ ║        	      ^^^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.12: 	class ListBase[A]: Seq[A]
+//│ ╙──      	               ^
 
 class Nil: ListBase[nothing] & {}
 class Cons[A]: ListBase[A] & { head: A; tail: List[A] }
 type List[A] = Nil | Cons[A]
 //│ Defined class Nil
-//│ Defined class Cons
-//│ Defined type alias List
+//│ Defined class Cons[+A]
+//│ Defined type alias List[+A]
 
 :e
 Nil{}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.16: 	Nil{}
+//│ ║  l.29: 	Nil{}
 //│ ║        	^^^^^
 //│ ╟── record literal of type `anything` does not have field 'size'
-//│ ║  l.16: 	Nil{}
+//│ ║  l.29: 	Nil{}
 //│ ╙──      	   ^^
 //│ res: error | Nil & {size: nothing}
 //│    = Nil { size: undefined }
@@ -31,16 +44,16 @@ def Nil = Nil { size = 0 }
 :re
 Cons 1 Nil
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	Cons 1 Nil
+//│ ║  l.45: 	Cons 1 Nil
 //│ ║        	^^^^^^
 //│ ╟── integer literal of type `1` is not a record (expected a record with fields: size, tail, head)
-//│ ║  l.32: 	Cons 1 Nil
+//│ ║  l.45: 	Cons 1 Nil
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.32: 	Cons 1 Nil
+//│ ║  l.45: 	Cons 1 Nil
 //│ ║        	^^^^^^^^^^
 //│ ╟── application of type `Cons[?A] & {head: ?head, size: ?size, tail: ?tail}` is not a function
-//│ ║  l.32: 	Cons 1 Nil
+//│ ║  l.45: 	Cons 1 Nil
 //│ ╙──      	^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -65,14 +78,14 @@ def Cons head tail =
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.66: 	Nil: ListBase[anything]
+//│ ║  l.79: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.66: 	Nil: ListBase[anything]
+//│ ║  l.79: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.8: 	class Nil: ListBase[nothing] & {}
-//│ ╙──     	                    ^^^^^^^
+//│ ║  l.21: 	class Nil: ListBase[nothing] & {}
+//│ ╙──      	                    ^^^^^^^
 //│ res: ListBase[anything]
 //│    = Nil { size: 0 }
 

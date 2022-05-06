@@ -56,27 +56,41 @@ class C4: C3
 
 
 :e
+:w
 class C5[A]
   method F(x: A) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.60: 	  method F(x: A) = x + 1
+//│ ║  l.61: 	  method F(x: A) = x + 1
 //│ ║        	                   ^^^
 //│ ╟── reference of type `A` does not match type `int`
-//│ ║  l.60: 	  method F(x: A) = x + 1
+//│ ║  l.61: 	  method F(x: A) = x + 1
 //│ ║        	                   ^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.59: 	class C5[A]
+//│ ║  l.60: 	class C5[A]
 //│ ╙──      	         ^
-//│ Defined class C5
+//│ Defined class C5[±A]
 //│ Defined C5.F: C5['A] -> 'A -> (error | int)
+//│ ╔══[WARNING] Type definition C5 has bivariant type parameters:
+//│ ║  l.60: 	class C5[A]
+//│ ║        	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.60: 	class C5[A]
+//│ ╙──      	         ^
 
 
+:w
 class Tru[A]
     method Test f = true
     method Tru = this.Test (fun x -> error)
-//│ Defined class Tru
+//│ Defined class Tru[±A]
 //│ Defined Tru.Test: Tru['A] -> anything -> true
 //│ Defined Tru.Tru: Tru['A] -> true
+//│ ╔══[WARNING] Type definition Tru has bivariant type parameters:
+//│ ║  l.82: 	class Tru[A]
+//│ ║        	      ^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.82: 	class Tru[A]
+//│ ╙──      	          ^
 
 
 :e
@@ -85,7 +99,7 @@ class Hey
     rec method A = B
     rec method B = 1
 //│ ╔══[ERROR] identifier not found: B
-//│ ║  l.85: 	    rec method A = B
+//│ ║  l.99: 	    rec method A = B
 //│ ╙──      	                   ^
 //│ Defined class Hey
 //│ Defined Hey.A: Hey -> error

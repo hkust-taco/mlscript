@@ -7,8 +7,8 @@ data R x
 //│ Desugared: class R[x]: {x: x}
 //│ Desugared: def L: [x] -> x -> L[x]
 //│ Desugared: def R: [x] -> x -> R[x]
-//│ Defined class L
-//│ Defined class R
+//│ Defined class L[+x]
+//│ Defined class R[+x]
 //│ L: 'a -> L['a]
 //│ R: 'a -> R['a]
 

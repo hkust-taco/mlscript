@@ -39,8 +39,8 @@ t1: T2
 
 class C1[A]: { a: A }
 class C2[A]: { a: A }
-//│ Defined class C1
-//│ Defined class C2
+//│ Defined class C1[+A]
+//│ Defined class C2[+A]
 
 r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
 //│ r: (C1['A .. 1 | 'A] with {a: 1}) | (C2['A0 .. (3, 4, 5, 4,) | 'A0] with {a: (3, 4, 5, 4,)})
@@ -251,7 +251,7 @@ t2: Array[int | bool]
 //│    = [ 1, 1, 2, true ]
 
 class Wrapped[A]: {len: int; inner: Array[A]}
-//│ Defined class Wrapped
+//│ Defined class Wrapped[+A]
 
 def tk: Array['a] -> Wrapped['a]
 tk ((1,2,3,true,false))
@@ -265,7 +265,7 @@ class Two[A, B]: {fst: Array[A]; snd: Array[B]}
 two = Two {fst=(1,2,3); snd=(true,false)}
 two.fst
 tk (two.snd)
-//│ Defined class Two
+//│ Defined class Two[+A, +B]
 //│ two: Two['A .. 1 | 2 | 3 | 'A, 'B .. 'B | false | true] with {fst: (1, 2, 3,), snd: (true, false,)}
 //│    = Two { fst: [ 1, 2, 3 ], snd: [ true, false ] }
 //│ res: (1, 2, 3,)
