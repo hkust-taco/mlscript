@@ -1,4 +1,4 @@
-:NoJS
+
 type UseT[T] = T -> int
 class C[X]: { y: X }
   method Create: int -> C[X]
