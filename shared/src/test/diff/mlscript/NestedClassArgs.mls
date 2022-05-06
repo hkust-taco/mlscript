@@ -20,7 +20,9 @@ def c: C['a] as 'a
 
 // :ds
 def c: C['a] | 'a as 'a
-//│ c: 'a | C['a] as 'a
+//│ c: 'a | (C['a] as 'b)
+//│   where
+//│     'a :> 'b
 
 def c: C[C['a]] as 'a
 //│ c: C[C['a]] as 'a

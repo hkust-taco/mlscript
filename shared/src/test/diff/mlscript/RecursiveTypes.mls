@@ -622,7 +622,7 @@ r: int
 
 def fancyBottom1: 'a & ('a -> 'a) as 'a
 def fancyBottom2: 'a\x as 'a
-//│ fancyBottom1: 'a -> 'a & 'a as 'a
+//│ fancyBottom1: nothing
 //│             = <missing implementation>
 //│ fancyBottom2: nothing\x
 //│             = <missing implementation>

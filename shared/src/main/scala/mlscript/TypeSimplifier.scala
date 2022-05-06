@@ -66,26 +66,55 @@ trait TypeSimplifier { self: Typer =>
     // }
     // }(r => s"= $r")
     
-    def process(ty: ST): ST =
+    // def process(ty: ST, parents: Set[TV]): ST = // TODO mk parents an option?
+    //     // trace(s"process($ty)") {
+    //     ty match {
+    //   case tv: TypeVariable if parents(tv) => freshVar(noProv)
+    //   case tv: TypeVariable =>
+    //     var isNew = false
+    //     val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
+    //     // renewed.getOrElseUpdate(tv,
+    //     //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+    //     // val nv = renew(v)
+    //     if (isNew) {
+    //       if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, Set.single(tv)))
+    //       if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, Set.single(tv)))//.tap(b=>println(s"${b.map(_.getClass)}"))
+    //     }
+    //     // println(tv, nv, nv.lowerBounds, nv.upperBounds)
+    //     nv
+    //   // case ComposedType(_, l, r) => ty.map(process(_, parents))
+    //   case _: ProxyType | _: ComposedType | _: NegType => ty.map(process(_, parents))
+    //   case _ => ty.map(process(_, Set.empty))
+    // }
+    // // }(r => s"= $r")
+    def process(ty: ST, parent: Opt[Bool -> TV]): ST =
         // trace(s"process($ty)") {
         ty match {
+      // case tv: TypeVariable if parent.exists(_._2 === tv) => if parent.get.
       case tv: TypeVariable =>
+        parent.filter(_._2 === tv).foreach(p => return ExtrType(p._1)(noProv))
         var isNew = false
         val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
         // renewed.getOrElseUpdate(tv,
         //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
         // val nv = renew(v)
         if (isNew) {
-          if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process)
-          if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process)//.tap(b=>println(s"${b.map(_.getClass)}"))
+          if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, S(true -> tv)))
+          if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, S(false -> tv)))//.tap(b=>println(s"${b.map(_.getClass)}"))
         }
         // println(tv, nv, nv.lowerBounds, nv.upperBounds)
         nv
-      case st => st.map(process)
+      // case ComposedType(_, l, r) => ty.map(process(_, parents))
+      case ComposedType(true, l, r) => process(l, parent) | process(r, parent)
+      case ComposedType(false, l, r) => process(l, parent) & process(r, parent)
+      // case _: ProxyType | _: ComposedType | _: NegType => ty.map(process(_, parent))
+      case NegType(ty) => process(ty, parent.map(_.mapFirst(!_))).neg(ty.prov)
+      case ProvType(ty) => ProvType(process(ty, parent))(ty.prov)
+      case _ => ty.map(process(_, N))
     }
     // }(r => s"= $r")
     
-    process(ty)
+    process(ty, N)
   }
   
   def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
