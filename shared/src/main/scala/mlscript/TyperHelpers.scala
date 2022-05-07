@@ -79,9 +79,12 @@ abstract class TyperHelpers { self: Typer =>
       cache += tv -> tv
       tv
     case tv: TypeVariable => cache.getOrElse(tv, {
-      println(s">>> subst($tv) where cache is $cache")
-      // Inherit name hints so I can identify this variables
-      val v = freshVar(tv.prov, tv.nameHint)(tv.level)
+      // If name hint is "this", we reuse it.
+      val nameHint = tv.nameHint match {
+        case S("this") => tv.nameHint
+        case S(_) | N => N
+      }
+      val v = freshVar(tv.prov, nameHint)(tv.level)
       cache += tv -> v
       v.lowerBounds = tv.lowerBounds.map(subst(_, map))
       v.upperBounds = tv.upperBounds.map(subst(_, map))
