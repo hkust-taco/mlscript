@@ -33,7 +33,6 @@ b.Boom 1 // : A
 def plus1 x = x + 1
 //│ plus1: int -> int
 
-// Let's try something with type parameters.
 class JustIntBox: { value: int }
   method Get = this.value
 //│ Defined class JustIntBox
@@ -67,16 +66,16 @@ mib0.Map plus1
 :e
 mib0.Map (fun _ -> "str")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	mib0.Map (fun _ -> "str")
+//│ ║  l.67: 	mib0.Map (fun _ -> "str")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"str"` does not match type `int`
-//│ ║  l.68: 	mib0.Map (fun _ -> "str")
+//│ ║  l.67: 	mib0.Map (fun _ -> "str")
 //│ ║        	                   ^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.37: 	class JustIntBox: { value: int }
+//│ ║  l.36: 	class JustIntBox: { value: int }
 //│ ║        	                           ^^^
 //│ ╟── from application:
-//│ ║  l.50: 	  method Map f = MappableIntBox { value = f this.value }
+//│ ║  l.49: 	  method Map f = MappableIntBox { value = f this.value }
 //│ ╙──      	                                          ^^^^^^^^^^^^
 //│ res: error | (MappableIntBox with {value: "str"})
 
@@ -126,10 +125,10 @@ class Addable[A]
   method Oops = this.oops // disallowed if rigid
   method Add: A -> A
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.126: 	  method Oops = this.oops // disallowed if rigid
+//│ ║  l.125: 	  method Oops = this.oops // disallowed if rigid
 //│ ║         	                ^^^^^^^^^
 //│ ╟── reference of type `Addable[A] & this` does not have field 'oops'
-//│ ║  l.126: 	  method Oops = this.oops // disallowed if rigid
+//│ ║  l.125: 	  method Oops = this.oops // disallowed if rigid
 //│ ╙──       	                ^^^^
 //│ Defined class Addable
 //│ Declared Addable.Add: Addable['A] -> 'A -> 'A
@@ -285,10 +284,10 @@ NewDerivedDerived.NewQuz
 class NewDerivedDerivedDerived: NewDerivedDerived
   method NewQux = this.NewBar._1
 //│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
-//│ ║  l.286: 	  method NewQux = this.NewBar._1
+//│ ║  l.285: 	  method NewQux = this.NewBar._1
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.258: 	  method NewQux = this.NewBar._1
+//│ ║  l.257: 	  method NewQux = this.NewBar._1
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
 //│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)

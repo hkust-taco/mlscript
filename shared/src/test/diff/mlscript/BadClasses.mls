@@ -1,41 +1,30 @@
 :AllowTypeErrors
 
 
- class Box[T]: { inner: T }
-   method Get = this.inner
-   method Get2 = this.x
- //│ ╔══[ERROR] Type mismatch in field selection:
- //│ ║  l.6: 	  method Get2 = this.x
- //│ ║       	                ^^^^^^
- //│ ╟── reference of type `Box[?T] & this` does not have field 'x'
- //│ ║  l.6: 	  method Get2 = this.x
- //│ ╙──     	                ^^^^
- //│ Defined class Box
- //│ Defined Box.Get: (Box['T] & this) -> 'T
- //│ Defined Box.Get2: (Box['T] & this) -> error
+class Box[T]: { inner: T }
+  method Get = this.inner
+  method Get2 = this.x
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.6: 	   method Get2 = this.x
-//│ ║       	                 ^^^^^^
+//│ ║  l.6: 	  method Get2 = this.x
+//│ ║       	                ^^^^^^
 //│ ╟── reference of type `Box[T] & this` does not have field 'x'
-//│ ║  l.6: 	   method Get2 = this.x
-//│ ╙──     	                 ^^^^
+//│ ║  l.6: 	  method Get2 = this.x
+//│ ╙──     	                ^^^^
 //│ Defined class Box
 //│ Defined Box.Get: Box['T] -> 'T
 //│ Defined Box.Get2: Box['T] -> error
 
 
- class Box2[T]: { inner: T }
-   method Test = this.inner + 1
- //│ Defined class Box2
- //│ Defined Box2.Test: (Box2['T .. int & 'T] & this) -> int
+class Box2[T]: { inner: T }
+  method Test = this.inner + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.28: 	   method Test = this.inner + 1
-//│ ║        	                 ^^^^^^^^^^^^
+//│ ║  l.19: 	  method Test = this.inner + 1
+//│ ║        	                ^^^^^^^^^^^^
 //│ ╟── field selection of type `T` does not match type `int`
-//│ ║  l.28: 	   method Test = this.inner + 1
-//│ ║        	                 ^^^^^^^^^^
+//│ ║  l.19: 	  method Test = this.inner + 1
+//│ ║        	                ^^^^^^^^^^
 //│ ╟── Note: class type parameter T is defined at:
-//│ ║  l.27: 	 class Box2[T]: { inner: T }
-//│ ╙──      	            ^
+//│ ║  l.18: 	class Box2[T]: { inner: T }
+//│ ╙──      	           ^
 //│ Defined class Box2
 //│ Defined Box2.Test: Box2['T] -> (error | int)

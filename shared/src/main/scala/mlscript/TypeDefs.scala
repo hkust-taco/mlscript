@@ -557,8 +557,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             nme.name -> mthTy
           }
-          // restore `this` in type context
-          thisCtx += "this" -> tr
           // expand the type reference so that we can analyze base types
           // then process method declarations and definitions respectively
           // finally construct a MethodSet
