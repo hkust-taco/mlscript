@@ -1,34 +1,206 @@
 :NoJS
 
 class A
-  method Foo: int -> this
+  method Boom: int -> this
 //│ Defined class A
-//│ Declared A.Foo: (A & 'this) -> int -> (A & 'this)
+//│ Declared A.Boom: (A & 'this) -> int -> (A & 'this)
 
 class B: A
-  method Foo n = this
+  method Boom n = this
 //│ Defined class B
-//│ Defined B.Foo: (B & 'this) -> anything -> (B & 'this)
+//│ Defined B.Boom: (B & 'this) -> anything -> (B & 'this)
 
 a = B{}
 //│ a: B
 
-a.Foo 1 // : B
+a.Boom 1 // : B
 //│ res: B
 
 def b: A
 b = a
-b.Foo 1 // : A
+b.Boom 1 // : A
 //│ b: A
 //│ B
 //│   <:  b:
 //│ A
 //│ res: A
 
-class Box[T]: { inner: T }
-  method Get = this.inner // Used to be Box.Get: Box['T] -> 'T
+// ==============
+// From Repro.mls
+// ==============
+
+// Preamble
+def plus1 x = x + 1
+//│ plus1: int -> int
+
+// Let's try something with type parameters.
+class JustIntBox: { value: int }
+  method Get = this.value
+//│ Defined class JustIntBox
+//│ Defined JustIntBox.Get: JustIntBox -> int
+
+ib0 = JustIntBox { value = 0 }
+//│ ib0: JustIntBox & {value: 0}
+
+ib0.Get
+//│ res: int
+
+// Extend with some function.
+class MappableIntBox: JustIntBox
+  method Map f = MappableIntBox { value = f this.value }
+//│ Defined class MappableIntBox
+//│ Defined MappableIntBox.Map: MappableIntBox -> (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
+
+mib0 = MappableIntBox { value = 0 }
+//│ mib0: MappableIntBox & {value: 0}
+
+mib0.Get
+//│ res: int
+
+mib0.Map
+//│ res: (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
+
+mib0.Map plus1
+//│ res: MappableIntBox
+
+// Naughty map...
+:e
+mib0.Map (fun _ -> "str")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.68: 	mib0.Map (fun _ -> "str")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"str"` does not match type `int`
+//│ ║  l.68: 	mib0.Map (fun _ -> "str")
+//│ ║        	                   ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.37: 	class JustIntBox: { value: int }
+//│ ║        	                           ^^^
+//│ ╟── from application:
+//│ ║  l.50: 	  method Map f = MappableIntBox { value = f this.value }
+//│ ╙──      	                                          ^^^^^^^^^^^^
+//│ res: error | (MappableIntBox with {value: "str"})
+
+// What if without the derivation?
+// Oh it's the same.
+class BetterIntBox: { value: int }
+  method Get = this.value
+  method Map f = BetterIntBox { value = f this.value }
+//│ Defined class BetterIntBox
+//│ Defined BetterIntBox.Get: BetterIntBox -> int
+//│ Defined BetterIntBox.Map: BetterIntBox -> (int -> (int & 'a)) -> (BetterIntBox with {value: 'a})
+
+// I think the return type should be BetterIntBox & {value: int & 'b}
+
+// Some examples from TypeClasses.mls
+class Monoid[A]
+  method Empty: A
+//│ Defined class Monoid
+//│ Declared Monoid.Empty: Monoid['A] -> 'A
+
+// Some more interesting case. Are they valid at the main branch?
+// Yeah... The result are the same.
+class Myself[A]
+  method Me = this
+//│ Defined class Myself
+//│ Defined Myself.Me: (Myself['A] & 'this) -> (Myself['A] & 'this)
+
+m0 = Myself {}
+//│ m0: Myself['A]
+
+m0.Me
+//│ res: Myself['A]
+
+// Make box generic!
+// Looks fine.
+class SomeBox[A]: { value: A }
+  method Get = this.value
+//│ Defined class SomeBox
+//│ Defined SomeBox.Get: SomeBox['A] -> 'A
+
+// More test cases from Addable.mls!
+// It seems some type variables leaked from the context...
+
+:e
+class Addable[A]
+  method Me = this
+  method Oops = this.oops // disallowed if rigid
+  method Add: A -> A
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.126: 	  method Oops = this.oops // disallowed if rigid
+//│ ║         	                ^^^^^^^^^
+//│ ╟── reference of type `Addable[A] & this` does not have field 'oops'
+//│ ║  l.126: 	  method Oops = this.oops // disallowed if rigid
+//│ ╙──       	                ^^^^
+//│ Defined class Addable
+//│ Declared Addable.Add: Addable['A] -> 'A -> 'A
+//│ Defined Addable.Me: (Addable['A] & 'this) -> (Addable['A] & 'this)
+//│ Defined Addable.Oops: Addable['A] -> error
+
+class Num: Addable[Num] & { val: int }
+  method Add that = Num { val = this.val + that.val }
+//│ Defined class Num
+//│ Defined Num.Add: Num -> {val: int} -> Num
+
+class Str: Addable[Str] & { val: string }
+  method Add that = Str { val = concat this.val that.val }
+//│ Defined class Str
+//│ Defined Str.Add: Str -> {val: string} -> Str
+
+n = Num { val = 1 }
+//│ n: Num & {val: 1}
+
+n.Add n
+//│ res: Num
+
+s = Str { val = "hey" }
+//│ s: Str & {val: "hey"}
+
+s.Add
+//│ res: (Str & 'A) -> ('A | Str)
+
+// Make inherited methods agree with the current this.
+// Import more examples from the old branch!
+
+
+// ===============
+// From Repro2.mls
+// ===============
+
+class Box[A]: { value: A }
+  method Get = this.value
 //│ Defined class Box
-//│ Defined Box.Get: Box['T] -> 'T
+//│ Defined Box.Get: Box['A] -> 'A
+
+Box.Get
+//│ res: Box['A] -> 'A
+
+class IntBox: Box[int]
+//│ Defined class IntBox
+
+IntBox.Get
+//│ res: IntBox -> int
+
+ib0 = IntBox { value = 0 }
+//│ ib0: IntBox & {value: 0}
+
+ib0.(IntBox.Get)
+//│ res: int
+
+
+// ===============
+// From Repro3.mls
+// ===============
+
+class Base0
+  method Foo0: this
+//│ Defined class Base0
+//│ Declared Base0.Foo0: (Base0 & 'this) -> (Base0 & 'this)
+
+class Derived0: Base0
+//│ Defined class Derived0
+
+Derived0.Foo0
+//│ res: (Derived0 & 'this) -> (Base0 & 'this)
 
 class Base
   method Foo: this
@@ -40,5 +212,111 @@ class Base
 class Derived: Base
 //│ Defined class Derived
 
+Base.Foo
+//│ res: (Base & 'this) -> (Base & 'this)
+
 Derived.Foo
 //│ res: (Derived & 'this) -> (Base & 'this)
+
+res (Derived{})
+//│ res: Derived
+
+(error: Derived).Foo
+//│ res: Derived
+
+class Base2
+  method Foo2: this
+class Derived2: Base2
+  method Foo3 = (this.Foo2,)
+class DerivedDerived2: Derived2
+  method Foo2 = this.Foo3._1
+//│ Defined class Base2
+//│ Declared Base2.Foo2: (Base2 & 'this) -> (Base2 & 'this)
+//│ Defined class Derived2
+//│ Defined Derived2.Foo3: (Derived2 & 'this) -> (Derived2 & 'this,)
+//│ Defined class DerivedDerived2
+//│ Defined DerivedDerived2.Foo2: (DerivedDerived2 & 'this) -> (DerivedDerived2 & 'this)
+
+Derived2.Foo3
+//│ res: (Derived2 & 'this) -> (Derived2 & 'this,)
+
+DerivedDerived2.Foo3
+//│ res: (DerivedDerived2 & 'this) -> (Derived2 & 'this,)
+
+// ===============
+// From Repro4.mls
+// ===============
+
+class NewBase
+  method NewFoo: this
+  method NewBar = (this.NewFoo,)
+//│ Defined class NewBase
+//│ Declared NewBase.NewFoo: (NewBase & 'this) -> (NewBase & 'this)
+//│ Defined NewBase.NewBar: (NewBase & 'this) -> (NewBase & 'this,)
+
+class NewDerived: NewBase
+  method NewQux = this.NewBar._1
+//│ Defined class NewDerived
+//│ Defined NewDerived.NewQux: (NewDerived & 'this) -> (NewDerived & 'this)
+
+// Test methods of NewDerived.
+NewDerived.NewFoo
+NewDerived.NewBar
+NewDerived.NewQux
+//│ res: (NewDerived & 'this) -> (NewBase & 'this)
+//│ res: (NewDerived & 'this) -> (NewBase & 'this,)
+//│ res: (NewDerived & 'this) -> (NewDerived & 'this)
+
+class NewDerivedDerived: NewDerived
+  method NewQuz = (this.NewQux)
+//│ Defined class NewDerivedDerived
+//│ Defined NewDerivedDerived.NewQuz: (NewDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
+
+NewDerivedDerived.NewFoo
+NewDerivedDerived.NewBar
+NewDerivedDerived.NewQux
+NewDerivedDerived.NewQuz
+//│ res: (NewDerivedDerived & 'this) -> (NewBase & 'this)
+//│ res: (NewDerivedDerived & 'this) -> (NewBase & 'this,)
+//│ res: (NewDerivedDerived & 'this) -> (NewDerived & 'this)
+//│ res: (NewDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
+
+:e
+class NewDerivedDerivedDerived: NewDerivedDerived
+  method NewQux = this.NewBar._1
+//│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
+//│ ║  l.286: 	  method NewQux = this.NewBar._1
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: method definition inherited from
+//│ ║  l.258: 	  method NewQux = this.NewBar._1
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ Defined class NewDerivedDerivedDerived
+//│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
+
+// Test methods of NewDerivedDerivedDerived
+NewDerivedDerivedDerived.NewBar
+NewDerivedDerivedDerived.NewFoo
+NewDerivedDerivedDerived.NewQuz
+NewDerivedDerivedDerived.NewQux
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this,)
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewBase & 'this)
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
+//│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
+
+// ===============
+// From Repro5.mls
+// ===============
+
+class Animal
+  method Eat = this
+//│ Defined class Animal
+//│ Defined Animal.Eat: (Animal & 'this) -> (Animal & 'this)
+
+class Cat: Animal
+//│ Defined class Cat
+
+Animal.Eat
+//│ res: (Animal & 'this) -> (Animal & 'this)
+
+Cat.Eat
+//│ res: (Cat & 'this) -> (Animal & 'this)
