@@ -8,13 +8,13 @@ class Some[A]: Option[A] & { payload: A }
 class None[A]: Option[A]
     method Get = error
     method Destruct = this
-//│ Defined class Option
+//│ Defined class Option[+A]
 //│ Declared Option.Get: Option['A] -> 'A
 //│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
-//│ Defined class Some
+//│ Defined class Some[+A]
 //│ Defined Some.Get: Some['A] -> 'A
 //│ Defined Some.Destruct: (Some['A] & 'this) -> (Some['A] & 'this)
-//│ Defined class None
+//│ Defined class None[+A]
 //│ Defined None.Get: None['A] -> nothing
 //│ Defined None.Destruct: (None['A] & 'this) -> (None['A] & 'this)
 
@@ -23,7 +23,7 @@ class List[A]
     method Size: int
     method HeadOption: Option[A]
     method Map[B]: (A -> B) -> List[B]
-//│ Defined class List
+//│ Defined class List[+A]
 //│ Declared List.Size: List['A] -> int
 //│ Declared List.HeadOption: List['A] -> Option['A]
 //│ Declared List.Map: List['A] -> ('A -> 'B) -> List['B]
@@ -32,7 +32,7 @@ class Nil[A]: List[A]
     method Size = 0
     method HeadOption = None {}
     method Map[B] f = Nil {}
-//│ Defined class Nil
+//│ Defined class Nil[+A]
 //│ Defined Nil.Size: Nil['A] -> 0
 //│ Defined Nil.HeadOption: Nil['A] -> None['A0]
 //│ Defined Nil.Map: Nil['A] -> anything -> Nil['A0]
@@ -41,7 +41,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Size = succ this.tail.Size
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
-//│ Defined class Cons
+//│ Defined class Cons[+A]
 //│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
 //│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
 //│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})

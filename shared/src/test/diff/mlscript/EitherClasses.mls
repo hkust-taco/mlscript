@@ -1,12 +1,12 @@
 class Left[A]: { value: A }
 def Left value = Left{ value }
-//│ Defined class Left
+//│ Defined class Left[+A]
 //│ Left: ('value & 'A) -> (Left['A] with {value: 'value})
 //│     = [Function: Left1]
 
 class Right[A]: { value: A }
 def Right value = Right{ value }
-//│ Defined class Right
+//│ Defined class Right[+A]
 //│ Right: ('value & 'A) -> (Right['A] with {value: 'value})
 //│      = [Function: Right1]
 

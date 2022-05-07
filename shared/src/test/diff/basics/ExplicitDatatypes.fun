@@ -1,8 +1,8 @@
 
 data Left v
 data Right v
-//│ Defined class Left
-//│ Defined class Right
+//│ Defined class Left[+v]
+//│ Defined class Right[+v]
 //│ Left: 'a -> Left['a]
 //│ Right: 'a -> Right['a]
 

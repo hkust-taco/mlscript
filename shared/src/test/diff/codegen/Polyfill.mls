@@ -77,6 +77,9 @@ n = 123 with { x = 1 }
 //│     }
 //│     return clone;
 //│   }
+//│   if (target == null) {
+//│     return Object.assign({}, {}, fields);
+//│   }
 //│   const copy = Object.assign({}, target, fields);
 //│   Object.setPrototypeOf(copy, Object.getPrototypeOf(target));
 //│   return copy;

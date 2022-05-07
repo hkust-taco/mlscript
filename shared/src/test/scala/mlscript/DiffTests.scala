@@ -4,8 +4,8 @@ import fastparse._
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
-import ammonite.ops._
 import scala.collection.mutable
+import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.JSTestBackend.IllFormedCode
@@ -33,7 +33,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val diffMidMarker = "======="
     val diffEndMarker = ">>>>>>>"
     
-    val fileContents = read(file)
+    val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
@@ -68,6 +68,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       noGeneration: Bool = false,
       showGeneratedJS: Bool = false,
       generateTsDeclarations: Bool = false,
+      debugVariance: Bool = false,
       expectRuntimeErrors: Bool = false,
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
@@ -110,6 +111,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(generateTsDeclarations = true)
+          case "dv" => mode.copy(debugVariance = true)
           case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
@@ -282,33 +284,97 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 exp
               }
             }
-            // initialize ts typegen code builder
+            // initialize ts typegen code builder and
+            // declare all type definitions for current block
             val tsTypegenCodeBuilder = new TsTypegenCodeBuilder()
-            
+            if (mode.generateTsDeclarations) {
+              typeDefs.iterator.filter(td =>
+                ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
+              ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
+            }
+
+            val curBlockTypeDefs = typeDefs
+              // add check from process type def block below
+              .flatMap(typeDef => if (!oldCtx.tyDefs.contains(typeDef.nme.name)) ctx.tyDefs.get(typeDef.nme.name) else None)
+            // activate typer tracing if variance debugging is on and then set it back
+            // this makes it possible to debug variance in isolation
+            var temp = typer.dbg
+            typer.dbg = mode.debugVariance
+            typer.computeVariances(curBlockTypeDefs, ctx)
+            typer.dbg = temp
+            val varianceWarnings: MutMap[TypeName, Ls[TypeName]] = MutMap()
+
             // process type definitions first
             typeDefs.foreach(td =>
               // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
+
                 val tn = td.nme.name
-                output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
+
+                // generate warnings for bivariant type variables
+                val bivariantTypeVars = ttd.tparamsargs.iterator.filter{ case (tname, tvar) =>
+                  ttd.tvarVariances.get(tvar).contains(typer.VarianceInfo.bi)
+                }.map(_._1).toList
+                if (!bivariantTypeVars.isEmpty) {
+                  varianceWarnings.put(td.nme, bivariantTypeVars)
+                }
                 
-                // pretty print method definitions
-                (ttd.mthDecls ++ ttd.mthDefs).foreach {
-                  case MethodDef(_, _, Var(mn), _, rhs) =>
+                val params = if (!ttd.tparamsargs.isEmpty)
+                    SourceCode.horizontalArray(ttd.tparamsargs.map{ case (tname, tvar) =>
+                      val tvarVariance = ttd.tvarVariances.getOrElse(tvar, throw new Exception(s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
+                      SourceCode(s"$tvarVariance${tname.name}")
+                    }.toList).toString()
+                  else
+                    SourceCode("")
+                output(s"Defined " + td.kind.str + " " + tn + params)
+
+                // calculate types for all method definitions and declarations
+                // only once and reuse for pretty printing and type generation
+                val methodsAndTypes = (ttd.mthDecls ++ ttd.mthDefs).flatMap {
+                  case m@MethodDef(_, _, Var(mn), _, rhs) =>
                     rhs.fold(
-                      _ => ctx.getMthDefn(tn, mn),
-                      _ => ctx.getMth(S(tn), mn)
-                    ).foreach(res => output(s"${rhs.fold(
+                      _ => ctx.getMthDefn(tn, mn).map(mthTy => (m, getType(mthTy.toPT))),
+                      _ => ctx.getMth(S(tn), mn).map(mthTy => (m, getType(mthTy.toPT)))
+                    )
+                }
+
+                // pretty print method definitions
+                methodsAndTypes.foreach {
+                  case (MethodDef(_, _, Var(mn), _, rhs), res) =>
+                    output(s"${rhs.fold(
                       _ => "Defined",  // the method has been defined
                       _ => "Declared"  // the method type has just been declared
-                    )} ${tn}.${mn}: ${getType(res.toPT).show}"))
+                    )} ${tn}.${mn}: ${res.show}")
+                }
+
+                // start typegen, declare methods if any and complete typegen block
+                if (mode.generateTsDeclarations) {
+                  val mthDeclSet = ttd.mthDecls.iterator.map(_.nme.name).toSet
+                  val methods = methodsAndTypes
+                    // filter method declarations and definitions
+                    // without declarations
+                    .withFilter { case (mthd, _) =>
+                      mthd.rhs.isRight || !mthDeclSet.contains(mthd.nme.name)
+                    }
+                    .map { case (mthd, mthdTy) => (mthd.nme.name, mthdTy) }
+
+                  tsTypegenCodeBuilder.addTypeDef(td, methods)
                 }
               }
             )
             
+            if (!varianceWarnings.isEmpty) {
+              import Message._
+              val diags = varianceWarnings.map{ case (tname, biVars) =>
+                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
+                Warning(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+              }.toList
+              report(diags)
+            }
+
             final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
               def showFirst(prefixLength: Int): Unit = replies match {
                 case ReplHost.Error(err) :: rest =>
@@ -556,7 +622,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
       buf ++= s"! Updated $file\n"
-      write.over(file, result)
+      os.write.over(file, result)
     }
     print(buf.mkString)
     if (testFailed)
@@ -569,9 +635,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
 object DiffTests {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
-  private val allFiles = ls.rec(dir).filter(_.isFile)
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
@@ -581,7 +647,7 @@ object DiffTests {
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
+      val fileName = os.RelPath(filePath).baseName
       if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)

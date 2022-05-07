@@ -93,15 +93,23 @@ class BetterIntBox: { value: int }
 // Some examples from TypeClasses.mls
 class Monoid[A]
   method Empty: A
-//│ Defined class Monoid
+//│ Defined class Monoid[+A]
 //│ Declared Monoid.Empty: Monoid['A] -> 'A
 
 // Some more interesting case. Are they valid at the main branch?
 // Yeah... The result are the same.
+
+:w
 class Myself[A]
   method Me = this
-//│ Defined class Myself
+//│ Defined class Myself[±A]
 //│ Defined Myself.Me: (Myself['A] & 'this) -> (Myself['A] & 'this)
+//│ ╔══[WARNING] Type definition Myself has bivariant type parameters:
+//│ ║  l.103: 	class Myself[A]
+//│ ║         	      ^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.103: 	class Myself[A]
+//│ ╙──       	             ^
 
 m0 = Myself {}
 //│ m0: Myself['A]
@@ -113,7 +121,7 @@ m0.Me
 // Looks fine.
 class SomeBox[A]: { value: A }
   method Get = this.value
-//│ Defined class SomeBox
+//│ Defined class SomeBox[+A]
 //│ Defined SomeBox.Get: SomeBox['A] -> 'A
 
 // More test cases from Addable.mls!
@@ -125,12 +133,12 @@ class Addable[A]
   method Oops = this.oops // disallowed if rigid
   method Add: A -> A
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.125: 	  method Oops = this.oops // disallowed if rigid
+//│ ║  l.133: 	  method Oops = this.oops // disallowed if rigid
 //│ ║         	                ^^^^^^^^^
 //│ ╟── reference of type `Addable[A] & this` does not have field 'oops'
-//│ ║  l.125: 	  method Oops = this.oops // disallowed if rigid
+//│ ║  l.133: 	  method Oops = this.oops // disallowed if rigid
 //│ ╙──       	                ^^^^
-//│ Defined class Addable
+//│ Defined class Addable[=A]
 //│ Declared Addable.Add: Addable['A] -> 'A -> 'A
 //│ Defined Addable.Me: (Addable['A] & 'this) -> (Addable['A] & 'this)
 //│ Defined Addable.Oops: Addable['A] -> error
@@ -167,7 +175,7 @@ s.Add
 
 class Box[A]: { value: A }
   method Get = this.value
-//│ Defined class Box
+//│ Defined class Box[+A]
 //│ Defined Box.Get: Box['A] -> 'A
 
 Box.Get
@@ -284,10 +292,10 @@ NewDerivedDerived.NewQuz
 class NewDerivedDerivedDerived: NewDerivedDerived
   method NewQux = this.NewBar._1
 //│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
-//│ ║  l.285: 	  method NewQux = this.NewBar._1
+//│ ║  l.293: 	  method NewQux = this.NewBar._1
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.257: 	  method NewQux = this.NewBar._1
+//│ ║  l.265: 	  method NewQux = this.NewBar._1
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
 //│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)

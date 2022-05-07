@@ -12,6 +12,19 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
+  /**
+   * TypeDef holds information about declarations like classes, interfaces, and type aliases
+   *
+   * @param kind tells if it's a class, interface or alias
+   * @param nme name of the defined type
+   * @param tparamsargs list of type parameter names and their corresponding type variable names used in the definition of the type
+   * @param tvars
+   * @param bodyTy type of the body, this means the fields of a class or interface or the type that is being aliased
+   * @param mthDecls method type declarations in a class or interface, not relevant for type alias
+   * @param mthDefs method definitions in a class or interface, not relevant for type alias
+   * @param baseClasses base class if the class or interface inherits from any
+   * @param toLoc source location related information
+   */
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
@@ -30,6 +43,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     def thisTy(prov: TypeProvenance): ST = thisTv
     val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
+    val tvarVariances: VarianceStore = MutMap()
   }
   
   /** Represent a set of methods belonging to some owner type.
@@ -113,13 +127,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, FieldType] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
-      case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
+      case tr @ TypeRef(td, targs) =>
+        fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
-        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
@@ -260,24 +275,36 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
               val isTraitWithMethods = (k is Trt) && defns.nonEmpty
+              val fields = fieldsOf(td.bodyTy, true)
+              fields.foreach {
+                // * Make sure the LB/UB of all inherited type args are consistent.
+                // * This is not actually necessary for soundness
+                // *  (if they aren't, the object type just won't be instantiable),
+                // *  but will help report inheritance errors earlier (see test BadInherit2).
+                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case _ => ()
+              }
               (decls -- defns) match {
                 case absMths if absMths.nonEmpty || isTraitWithMethods =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
-                  val fields = fieldsOf(td.bodyTy, true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
-                        else f._1 ->
-                          freshVar(noProv,
+                        else {
+                          val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2)
-                        ).toList
+                          )(1).tap(_.upperBounds ::= f._2.ub)
+                          f._1 -> (
+                            if (f._2.lb.isDefined) FieldType(Some(fv), fv)(f._2.prov)
+                            else fv.toUpper(f._2.prov)
+                          )
+                        }).toList
                       PolymorphicType(0, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
@@ -520,5 +547,156 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, mthEnv = allMthEnv, tyDefs = allDefs)))
   }
   
-  
+  /**
+    * Finds the variances of all type variables in the given type definitions with the given
+    * context using a fixed point computation. The algorithm starts with each type variable
+    * as bivariant by default and each type defintion position as covariant and
+    * then keeps updating the position variance based on the types it encounters.
+    * 
+    * It uses the results to update variance info in the type defintions
+    *
+    * @param tyDefs
+    * @param ctx
+    */
+  def computeVariances(tyDefs: List[TypeDef], ctx: Ctx): Unit = {
+    println(s"VARIANCE ANALYSIS")
+    var varianceUpdated: Bool = false;
+
+    /** Update variance information for all type variables belonging
+      * to a type definition.
+      *
+      * @param ty
+      *   type tree to check variance for
+      * @param curVariance
+      *   variance of current position where the type tree has been found
+      * @param tyDef
+      *   type definition which is currently being processed
+      * @param visited
+      *   set of type variables visited along with the variance
+      *   true polarity if covariant position visit
+      *   false polarity if contravariant position visit
+      *   both if invariant position visit
+      */
+    def updateVariance(ty: SimpleType, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
+      def fieldVarianceHelper(fieldTy: FieldType): Unit = {
+          fieldTy.lb.foreach(lb => updateVariance(lb, curVariance.flip))
+          updateVariance(fieldTy.ub, curVariance)
+      }
+
+      trace(s"upd[$curVariance] $ty") {
+        ty match {
+          case ProxyType(underlying) => updateVariance(underlying, curVariance)
+          case TraitTag(_) | ClassTag(_, _) => ()
+          case ExtrType(pol) => ()
+          case t: TypeVariable =>
+            // update the variance information for the type variable
+            val oldVariance = tyDef.tvarVariances.getOrElseUpdate(t, VarianceInfo.bi)
+            val newVariance = oldVariance && curVariance
+            if (newVariance =/= oldVariance) {
+              tyDef.tvarVariances(t) = newVariance
+              println(s"UPDATE ${tyDef.nme.name}.$t from $oldVariance to $newVariance")
+              varianceUpdated = true
+            }
+            val (visitLB, visitUB) = (
+              !curVariance.isContravariant && !visited(true -> t),
+              !curVariance.isCovariant && !visited(false -> t),
+            )
+            if (visitLB) visited += true -> t
+            if (visitUB) visited += false -> t
+            if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
+            if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+          case RecordType(fields) => fields.foreach {
+            case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
+          }
+          case NegType(negated) =>
+            updateVariance(negated, curVariance.flip)
+          case TypeRef(defn, targs) =>
+            // it's possible that the type definition may not exist in the
+            // context because it is malformed or incorrect. Do nothing in
+            // such cases
+            ctx.tyDefs.get(defn.name).foreach(typeRefDef => {
+              // variance for all type parameters of type definitions has been preset
+              // do nothing if variance for the parameter does not exist
+              targs.zip(typeRefDef.tparamsargs).foreach { case (targ, (_, tvar)) =>
+                typeRefDef.tvarVariances.get(tvar).foreach {
+                  case in @ VarianceInfo(false, false) => updateVariance(targ, in)
+                  case VarianceInfo(true, false) => updateVariance(targ, curVariance)
+                  case VarianceInfo(false, true) => updateVariance(targ, curVariance.flip)
+                  case VarianceInfo(true, true) => ()
+                }
+              }
+            })
+          case ComposedType(pol, lhs, rhs) =>
+            updateVariance(lhs, curVariance)
+            updateVariance(rhs, curVariance)
+          case TypeBounds(lb, ub) =>
+            updateVariance(lb, VarianceInfo.contra)
+            updateVariance(ub, VarianceInfo.co)
+          case ArrayType(inner) => fieldVarianceHelper(inner)
+          case TupleType(fields) => fields.foreach {
+              case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
+            }
+          case FunctionType(lhs, rhs) =>
+            updateVariance(lhs, curVariance.flip)
+            updateVariance(rhs, curVariance)
+          case Without(base, names) => updateVariance(base, curVariance.flip)
+        }
+      }()
+    }
+
+    // set default value for all type variables as bivariant
+    // this prevents errors when printing type defintions in
+    // DiffTests for type variables that are not used at all
+    // and hence are not set in the variance info map
+    tyDefs.foreach(t => t.tparamsargs.foreach{case (_, tvar) => t.tvarVariances.put(tvar, VarianceInfo.bi)})
+
+    var i = 1
+    do trace(s"⬤ ITERATION $i") {
+      val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
+      varianceUpdated = false;
+      tyDefs.foreach {
+        case t@TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
+          trace(s"${k.str} ${nme.name}  ${t.tvarVariances.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
+            updateVariance(body, VarianceInfo.co)(t, visitedSet)
+            val stores = mthDecls.foreach { mthDef => 
+              val mthBody = ctx.mthEnv.getOrElse(
+                Right(Some(nme.name), mthDef.nme.name),
+                throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
+              ).body
+              mthBody.foreach { case (_, body) => updateVariance(body, VarianceInfo.co)(t, visitedSet) }
+            }
+          }()
+      }
+      i += 1
+    }() while (varianceUpdated)
+    println(s"DONE")
+  }
+
+  case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
+
+    /** Combine two pieces of variance information together
+     */
+    def &&(that: VarianceInfo): VarianceInfo =
+      VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
+
+    /*  Flip the current variance if it encounters a contravariant position
+     */
+    def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
+
+    override def toString(): String = this match {
+      case (VarianceInfo(true, true)) => "±"
+      case (VarianceInfo(false, true)) => "-"
+      case (VarianceInfo(true, false)) => "+"
+      case (VarianceInfo(false, false)) => "="
+    }
+  }
+
+  object VarianceInfo {
+    val bi: VarianceInfo = VarianceInfo(true, true)
+    val co: VarianceInfo = VarianceInfo(true, false)
+    val contra: VarianceInfo = VarianceInfo(false, true)
+    val in: VarianceInfo = VarianceInfo(false, false)
+  }
+
+  type VarianceStore = MutMap[TypeVariable, VarianceInfo]
 }

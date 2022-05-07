@@ -1,6 +1,6 @@
 class Some[A]: { value: A }
 class None: {}
-//│ Defined class Some
+//│ Defined class Some[+A]
 //│ Defined class None
 
 
@@ -19,9 +19,9 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = 65
-//│ constrain calls  : 97
+//│ constrain calls  : 100
 //│ annoying  calls  : 23
-//│ subtyping calls  : 42
+//│ subtyping calls  : 44
 
 
 def arg = if true then Some{value = 42} else None {}

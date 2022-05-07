@@ -164,7 +164,7 @@ class BBB: AAA
 //│ ╟── Note: method definition inherited from
 //│ ║  l.151: 	  method G x = x
 //│ ╙──       	         ^^^^^^^
-//│ Defined type alias Id
+//│ Defined type alias Id[+X]
 //│ Defined class AAA
 //│ Declared AAA.F: AAA -> int
 //│ Declared AAA.G: AAA -> 'a -> 'a

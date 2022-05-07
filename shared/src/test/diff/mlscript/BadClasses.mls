@@ -10,7 +10,7 @@ class Box[T]: { inner: T }
 //│ ╟── reference of type `Box[T] & this` does not have field 'x'
 //│ ║  l.6: 	  method Get2 = this.x
 //│ ╙──     	                ^^^^
-//│ Defined class Box
+//│ Defined class Box[+T]
 //│ Defined Box.Get: Box['T] -> 'T
 //│ Defined Box.Get2: Box['T] -> error
 
@@ -26,5 +26,5 @@ class Box2[T]: { inner: T }
 //│ ╟── Note: class type parameter T is defined at:
 //│ ║  l.18: 	class Box2[T]: { inner: T }
 //│ ╙──      	           ^
-//│ Defined class Box2
+//│ Defined class Box2[+T]
 //│ Defined Box2.Test: Box2['T] -> (error | int)

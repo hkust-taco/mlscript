@@ -53,8 +53,8 @@ sealed abstract class Lit                                            extends Sim
 final case class Var(name: Str)                                      extends SimpleTerm with VarImpl
 final case class Lam(lhs: Term, rhs: Term)                           extends Term
 final case class App(lhs: Term, rhs: Term)                           extends Term
-final case class Tup(fields: Ls[Opt[Var] -> Term])                   extends Term
-final case class Rcd(fields: Ls[Var -> Term])                        extends Term
+final case class Tup(fields: Ls[Opt[Var] -> (Term -> Bool)])         extends Term
+final case class Rcd(fields: Ls[Var -> (Term -> Bool)])              extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl
@@ -65,15 +65,17 @@ final case class Test(trm: Term, ty: Term)                           extends Ter
 final case class With(trm: Term, fields: Rcd)                        extends Term
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
+final case class Assign(lhs: Term, rhs: Term)                        extends Term
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
 final case object NoCases extends CaseBranches
 
-final case class IntLit(value: BigInt)      extends Lit
-final case class DecLit(value: BigDecimal)  extends Lit
-final case class StrLit(value: Str)         extends Lit
+final case class IntLit(value: BigInt)            extends Lit
+final case class DecLit(value: BigDecimal)        extends Lit
+final case class StrLit(value: Str)               extends Lit
+final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
 sealed abstract class SimpleTerm extends Term with SimpleTermImpl
 
@@ -94,15 +96,16 @@ sealed abstract class Type extends TypeImpl
 final case class Union(lhs: Type, rhs: Type)             extends Type
 final case class Inter(lhs: Type, rhs: Type)             extends Type
 final case class Function(lhs: Type, rhs: Type)          extends Type
-final case class Record(fields: Ls[Var -> Type])         extends Type
-final case class Tuple(fields: Ls[Opt[Var] -> Type])     extends Type
-final case class Arr(inner: Type)                        extends Type
+final case class Record(fields: Ls[Var -> Field])        extends Type
+final case class Tuple(fields: Ls[Opt[Var] -> Field])    extends Type
 final case class Recursive(uv: TypeVar, body: Type)      extends Type
 final case class AppliedType(base: TypeName, targs: List[Type]) extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
+
+final case class Field(in: Opt[Type], out: Type)         extends FieldImpl
 
 sealed abstract class NullaryType                        extends Type
 
@@ -117,7 +120,7 @@ final case class Literal(lit: Lit)                       extends NullaryType
 // reference an existing type with the given name
 final case class TypeName(name: Str)                    extends NullaryType
 
-final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType {
+final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)
   // ^ The better data structure to represent this would be an EitherOrBoth
   override def toString: Str = identifier.fold("α" + _, identity)

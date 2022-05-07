@@ -7,7 +7,7 @@ def None = None{}
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
-//│ Defined class Some
+//│ Defined class Some[+A]
 //│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
 //│     = [Function: Some1]
 
@@ -19,7 +19,7 @@ Some 42
 //│    = 42
 
 type Option[A] = Some[A] | None
-//│ Defined type alias Option
+//│ Defined type alias Option[+A]
 
 None: Option[int]
 Some 42 : Option[int]
@@ -63,7 +63,7 @@ res.value
 
 class Foo1[A]: { x: A }
 class Bar1: Foo1[int]
-//│ Defined class Foo1
+//│ Defined class Foo1[+A]
 //│ Defined class Bar1
 
 Bar1
@@ -105,8 +105,15 @@ g: Foo1['a]: Foo1[string]
 //│    = Bar1 { x: 42 }
 
 
+:w
 class Foo2[A]
-//│ Defined class Foo2
+//│ Defined class Foo2[±A]
+//│ ╔══[WARNING] Type definition Foo2 has bivariant type parameters:
+//│ ║  l.109: 	class Foo2[A]
+//│ ║         	      ^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.109: 	class Foo2[A]
+//│ ╙──       	           ^
 
 Foo2
 //│ res: anything -> Foo2['A]

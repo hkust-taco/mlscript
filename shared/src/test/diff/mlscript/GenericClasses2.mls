@@ -1,7 +1,7 @@
 
 class Foo1[A]: { x: A }
 class Bar1: Foo1[int]
-//│ Defined class Foo1
+//│ Defined class Foo1[+A]
 //│ Defined class Bar1
 
 Foo1
@@ -35,7 +35,7 @@ class Foo2[A]
   method M2: A
 class Bar2: Foo2[int] & { x: int }
   method M2 = 1
-//│ Defined class Foo2
+//│ Defined class Foo2[+A]
 //│ Declared Foo2.M2: Foo2['A] -> 'A
 //│ Defined class Bar2
 //│ Defined Bar2.M2: Bar2 -> 1
@@ -83,7 +83,7 @@ Bar3
 //│ ╔══[ERROR] Field identifiers must start with a small letter
 //│ ║  l.82: 	{A = 1}
 //│ ╙──      	^^^^^^^
-//│ res: {A: 1}
+//│ res: {A <: 1}
 //│    = { A: 1 }
 
 :e
@@ -91,7 +91,7 @@ error: {A: 1}
 //│ ╔══[ERROR] Field identifiers must start with a small letter
 //│ ║  l.90: 	error: {A: 1}
 //│ ╙──      	        ^
-//│ res: {A: 1}
+//│ res: {A <: 1}
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

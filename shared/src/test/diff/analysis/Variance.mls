@@ -1,0 +1,39 @@
+
+type UseT[T] = T -> int
+class C[X]: { y: X }
+  method Create: int -> C[X]
+  method MapWrap: (int -> int) -> int -> D[C[X]]
+class D[R]: { z: R }
+  method Produce: string -> D[R]
+  method Producer: int -> C[R] -> D[R]
+  method Unwrap: D[R] -> R
+//│ Defined type alias UseT[-T]
+//│ Defined class C[=X]
+//│ Declared C.Create: C['X] -> int -> C['X]
+//│ Declared C.MapWrap: C['X] -> (int -> int) -> int -> D[c & {C#X = 'X, y: 'X}]
+//│ Defined class D[=R]
+//│ Declared D.Produce: D['R] -> string -> D['R]
+//│ Declared D.Producer: D['R] -> int -> C['R] -> D['R]
+//│ Declared D.Unwrap: D['R] -> D['R] -> 'R
+
+:w
+class F[S, T]: E[T]
+  method Create: S -> T
+class E[G]
+  method Id: G -> G
+class Z[X, R]
+  method Phantom: C[X]
+//│ Defined class F[-S, =T]
+//│ Declared F.Create: F['S, 'T] -> 'S -> 'T
+//│ Defined class E[=G]
+//│ Declared E.Id: E['G] -> 'G -> 'G
+//│ Defined class Z[=X, ±R]
+//│ Declared Z.Phantom: Z['X, 'R] -> C['X]
+//│ ╔══[WARNING] Type definition Z has bivariant type parameters:
+//│ ║  l.24: 	class Z[X, R]
+//│ ║        	      ^
+//│ ╟── R is irrelevant and may be removed
+//│ ║  l.24: 	class Z[X, R]
+//│ ╙──      	           ^
+
+
