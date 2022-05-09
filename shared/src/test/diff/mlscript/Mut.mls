@@ -156,7 +156,7 @@ rc2
 def g r = (fun x -> r) (r.x <- 3)
 g rc1
 g rc2
-//│ g: ({x: 3 | 'x .. 'x} & 'a) -> 'a
+//│ g: ({x: 3 ..} & 'a) -> 'a
 //│  = [Function: g]
 //│ res: {x: int .. int}
 //│    = { x: 3 }
@@ -274,7 +274,7 @@ b1.Foo <- 0
 //│ ╟── type `B` does not have field 'Foo'
 //│ ║  l.253: 	def b1 : B
 //│ ║         	         ^
-//│ ╟── but it flows into reference with expected type `{Foo = ?Foo}`
+//│ ╟── but it flows into reference with expected type `{Foo :> ?Foo}`
 //│ ║  l.270: 	b1.Foo <- 0
 //│ ║         	^^
 //│ ╟── Note: constraint arises from assigned selection:
@@ -334,7 +334,7 @@ def h : B -> int -> int
 def h b i = (fun _ -> b.x) (b.x <- i) 
 //│ h: B -> int -> int
 //│  = <missing implementation>
-//│ {x: 'x .. 'x & 'a} -> 'x -> 'a
+//│ {x: 'x .. 'a} -> 'x -> 'a
 //│   <:  h:
 //│ B -> int -> int
 //│  = [Function: h]
@@ -549,7 +549,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╟── type `B` does not have field 't'
 //│ ║  l.253: 	def b1 : B
 //│ ║         	         ^
-//│ ╟── but it flows into reference with expected type `{t: ?t .. ?t}`
+//│ ╟── but it flows into reference with expected type `{t: ?t ..}`
 //│ ║  l.516: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^
 //│ ╟── Note: constraint arises from assigned selection:
@@ -591,7 +591,7 @@ def g : (mut int, bool) -> int -> unit
 //│  = <missing implementation>
 
 def f a n = a._1 <- n
-//│ {_1: 'a .. 'a} -> 'a -> unit
+//│ {_1: 'a ..} -> 'a -> unit
 //│   <:  f:
 //│ {_1: int .. int} -> int -> unit
 //│  = [Function: f]
@@ -781,15 +781,15 @@ x
 
 
 fun x -> (x.a <- 0, x.a + 1)
-//│ res: {a: 0 | 'a .. int & 'a} -> (unit, int,)
+//│ res: {a: 0 .. int} -> (unit, int,)
 //│    = [Function: res]
 
 def foo x y = (x.a <- 0, x.a + 1, x.a, x.a <- y)
-//│ foo: {a: 0 | 'a .. int & 'a & 'a0} -> 'a -> (unit, int, 'a0, unit,)
+//│ foo: {a: 0 | 'a .. int & 'a0} -> 'a -> (unit, int, 'a0, unit,)
 //│    = [Function: foo]
 
 def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
-//│ foo: {a: 0 | 'a .. int & 'a & 'a0 & 'a1} -> 'a -> ('a1 -> 'b) -> (unit, int, 'a0, unit, 'b,)
+//│ foo: {a: 0 | 'a .. int & 'a0} -> 'a -> ('a0 -> 'b) -> (unit, int, 'a0, unit, 'b,)
 //│    = [Function: foo1]
 
 foo { mut a = 1 } 2 add

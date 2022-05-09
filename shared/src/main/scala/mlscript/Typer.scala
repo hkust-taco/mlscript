@@ -519,7 +519,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val obj_ty =
           // Note: this proxy does not seem to make any difference:
           mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), fieldType)(
+        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), TopType)(
           tp(f.toLoc, "assigned field")
         )) :: Nil)(sprov), fieldType)
         val vl = typeTerm(rhs)
@@ -531,7 +531,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val arr_ty =
             // Note: this proxy does not seem to make any difference:
             mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
-        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), elemType)
+        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), TopType)
         val i_ty = typeTerm(i)
         con(i_ty, IntType, TopType)
         val vl = typeTerm(rhs)
