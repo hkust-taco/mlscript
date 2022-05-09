@@ -148,6 +148,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
 
   case class SpliceType(elems: Ls[Either[SimpleType, SimpleType]])(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = elems.map{ case L(l) => l.level case R(r) => r.level }.max
+
+    // splice can be used with array subscript
+    def toArray: ArrayType = ???
+
     def updateElems(f: SimpleType => SimpleType, g: SimpleType => SimpleType, newProv: TypeProvenance = prov): SpliceType =
       SpliceType(elems.map{case L(l) => L(f(l)) case R(r) => R(g(r))})(newProv)
   }

@@ -220,7 +220,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           ))(tyTp(ty.toLoc, "tuple type"))
       case Splice(fields) => 
         SpliceType(fields.map{ 
-          case L(l) => L(rec(l))   // ! should constrain to array
+          case L(l) => {
+            val t = rec(l)
+            constrain(t, ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov))(raise, t.prov, ctx)
+            L(t)
+          }
           case R(r -> false) => R(rec(r))
           case R(r -> true) => R(err(msg"Mutable splice field" -> ty.toLoc :: Nil))
           })(tyTp(ty.toLoc, "splice type"))
@@ -534,7 +538,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case L(l) => L({
             val t_l = typeTerm(l)
             val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
-            con(t_l, t_a, t_a)
+            con(t_l, t_a, t_l)
           }) 
           case R(r -> false) => R(typeTerm(r))
           case R(r -> true)  => R(err(msg"mutable splice not supported" -> prov.loco :: Nil))
