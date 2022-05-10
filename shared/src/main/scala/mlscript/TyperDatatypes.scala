@@ -58,7 +58,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class MethodType(
     level: Int,
     body: Opt[(SimpleType, SimpleType)],
-    parents: List[TypeName], // -> multiple this TV
+    parents: List[TypeName],
     isInherited: Bool,
   )(val prov: TypeProvenance) {
     def &(that: MethodType): MethodType = {

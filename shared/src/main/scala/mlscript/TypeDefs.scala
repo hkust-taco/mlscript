@@ -41,7 +41,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    def thisTy(prov: TypeProvenance): ST = thisTv
     val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
     val tvarVariances: VarianceStore = MutMap()
   }
@@ -84,7 +83,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       def addParent(mt: MethodSet): MethodSet = {
         val td = ctx.tyDefs(ownerType.name)
         def addThis(mt: MethodType): MethodType =
-          mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTy(mt.prov))))(mt.prov)
+          mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTv)))(mt.prov)
         def add(mt: MethodType): MethodType =
           mt.copy(parents = ownerType :: mt.parents)(mt.prov)
         mt.copy(decls = mt.decls.view.mapValues(addThis).mapValues(add).toMap, defns = mt.defns.view.mapValues(addThis).toMap)
@@ -458,7 +457,6 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
         def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
           implicit val thisCtx: Ctx = ctx.nest
-          thisCtx += "this" -> tr
           val td2 = ctx.tyDefs(tr.defn.name)
           val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
@@ -505,16 +503,20 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val dummyTargs2 = tparams.map(p =>
               TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
-            var reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) + (thisTag -> td.thisTv) + (td.thisTv -> td.thisTv)
+            val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
+              freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
+                (thisTag -> td.thisTv) +
+                (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
             val bodyTy = subst(rhs.fold(term =>
               ctx.getMthDefn(prt.name, nme.name)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt => {
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2)) { mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  val targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST] + (td2.thisTv -> td.thisTv) + (td.thisTv -> td.thisTv)
+                  val targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST] +
+                    (td2.thisTv -> td.thisTv) +
+                    (td.thisTv -> td.thisTv)
                   // Subsitute parent this TVs to current this TV.
                   PolymorphicType(mt.bodyPT.level, subst(mt.bodyPT.body, targsMap3) match {
                     // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
@@ -522,13 +524,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                     case ProvType(underlying) => underlying
                     case pt => pt
                   })
-                }),
+                },
               ty => PolymorphicType(thisCtx.lvl,
-                  typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
-                  // ^ Note: we need to go to the next level here,
-                  //    which is also done automatically by `typeLetRhs` in the case above
+                typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
+                // ^ Note: we need to go to the next level here,
+                //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
-            val mthTy = MethodType(bodyTy.level, S((td.thisTy(noProv), bodyTy.body)), td2.nme :: Nil, false)(prov)
+            val mthTy = MethodType(bodyTy.level, S((td.thisTv, bodyTy.body)), td2.nme :: Nil, false)(prov)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
               thisCtx.addMth(N, nme.name, mthTy)
