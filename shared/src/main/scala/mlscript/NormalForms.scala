@@ -70,14 +70,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (S(ArrayType(i1)), ArrayType(i2)) =>
             // Array[p] & Array[q] => Array[p & q]
             S(ArrayType(i1 && i2)(noProv))
+            
           case (S(w1 @ Without(b1, ns1)), w2 @ Without(b2, ns2)) if ns1 === ns2 =>
-            // This case is quite hacky... if we find two incompatible Without types,
-            //  just make a new dummy Without type to merge them.
-            // The workaround is due to the fact that unlike other types, we can't fully
-            //  reduce Without types away, so they are "unduly" treated as `BaseType`s.
             S(Without(b1 & b2, ns1)(w1.prov & w2.prov))
+          // The following cases are quite hacky... if we find two incompatible Without types,
+          //  just make a new dummy Without type to merge them.
+          // The workaround is due to the fact that unlike other types, we can't fully
+          //  reduce Without types away, so they are "unduly" treated as `BaseType`s.
           case (S(b), w: Without) => S(Without(b & w, ssEmp)(noProv))
           case (S(w: Without), b) => S(Without(w & b, ssEmp)(noProv))
+            
           case (S(_), _) => N
           case (N, tup: TupleType) =>
             if (expandTupleFields)

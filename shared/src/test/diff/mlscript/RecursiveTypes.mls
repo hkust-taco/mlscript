@@ -357,17 +357,8 @@ bar_ty2 = bar2_ty2
 
 
 rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:308)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:306)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:76)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:322)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:306)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:76)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$mkType$2(NormalForms.scala:28)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.NormalForms$LhsNf.mkType(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying$lzycompute(NormalForms.scala:33)
+//│ f: ('a & (int | ~{a: int})\a & int) -> ('b\a & {a: int} as 'b)
+//│  = [Function: f]
 
 f 1
 //│ res: 1 | 'a\a & {a: int} as 'a
@@ -380,17 +371,8 @@ rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│  = [Function: f1]
 
 f
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.NormalForms$LhsNf.mkType(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying$lzycompute(NormalForms.scala:33)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:33)
-//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:23)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:263)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$20(NormalForms.scala:394)
-//│ 	at: scala.collection.immutable.List.flatMap(List.scala:293)
-//│ 	at: mlscript.NormalForms$DNF.$amp(NormalForms.scala:394)
-//│ 	at: mlscript.NormalForms$DNF.$anonfun$$amp$18(NormalForms.scala:391)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ res: ('a & (int & ({a: 'c & 'b} as 'b) | ~{a: int})\a & int & (({a: 'd} as 'b) as 'd)) -> ((('a | 'e)\a & {a: int} as 'e) as 'd)
+//│    = [Function: f1]
 
 // Notice how what is most likely an the error is reported in call sites,
 //    due to the delaying effect of the field removal type...
@@ -401,13 +383,13 @@ f
 :e
 f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.402: 	f 1
+//│ ║  l.384: 	f 1
 //│ ║         	^^^
 //│ ╟── operator application of type `int` does not have field 'a'
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | ((1 | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
@@ -416,13 +398,13 @@ f 1
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.417: 	f { a = 1 }
+//│ ║  l.399: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│    = { a: 1 }
@@ -440,13 +422,13 @@ f ainf
 //│ Runtime error:
 //│   ReferenceError: ainf is not defined
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.438: 	f ainf
+//│ ║  l.420: 	f ainf
 //│ ║         	^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
 //│ Runtime error:
@@ -459,13 +441,13 @@ f infina
 //│ Runtime error:
 //│   ReferenceError: infina is not defined
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.457: 	f infina
+//│ ║  l.439: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ║         	                                             ^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.378: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
+//│ ║  l.369: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | (((0 & {a: 'b} as 'b) | 'a)\a & {a: int} as 'a)
 //│ Runtime error:
@@ -479,16 +461,16 @@ def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as
 :e
 f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.480: 	f_manual 1
+//│ ║  l.462: 	f_manual 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.480: 	f_manual 1
+//│ ║  l.462: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.475: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.457: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.475: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.457: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: ('e\a & {a: int} | 1 as 'e) | error
 //│    = <no result>
@@ -497,16 +479,16 @@ f_manual 1
 :e
 f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.498: 	f_manual { a = 1 }
+//│ ║  l.480: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.498: 	f_manual { a = 1 }
+//│ ║  l.480: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.475: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.457: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.475: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.457: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
 //│ res: ('e\a & {a: int} | {a: 1} as 'e) | 1 | error
 //│    = <no result>
@@ -535,13 +517,13 @@ def f_manual_ns: anything
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.536: 	f_manual_ns ainf
+//│ ║  l.518: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not a function
-//│ ║  l.531: 	def f_manual_ns: anything
+//│ ║  l.513: 	def f_manual_ns: anything
 //│ ║         	                 ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
-//│ ║  l.536: 	f_manual_ns ainf
+//│ ║  l.518: 	f_manual_ns ainf
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error
 //│    = <no result>
@@ -565,17 +547,8 @@ f_manual_2 ainf
 
 
 rec def f x = if error then f (x with { a = x - 1 }) else x
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp(TyperHelpers.scala:308)
-//│ 	at: mlscript.TyperHelpers$SimpleTypeImpl.$amp$(TyperHelpers.scala:306)
-//│ 	at: mlscript.TyperDatatypes$SimpleType.$amp(TyperDatatypes.scala:76)
-//│ 	at: mlscript.NormalForms$LhsNf.$anonfun$mkType$2(NormalForms.scala:28)
-//│ 	at: scala.Option.fold(Option.scala:263)
-//│ 	at: mlscript.NormalForms$LhsNf.mkType(NormalForms.scala:28)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying$lzycompute(NormalForms.scala:33)
-//│ 	at: mlscript.NormalForms$LhsNf.underlying(NormalForms.scala:33)
-//│ 	at: mlscript.NormalForms$LhsNf.toType(NormalForms.scala:23)
-//│ 	at: mlscript.NormalForms$Conjunct.$amp(NormalForms.scala:263)
+//│ f: ('a & (int | ~{a: int})\a & int) -> ('b\a & {a: int} as 'b)
+//│  = [Function: f2]
 
 r = f 1
 //│ r: 1 | 'a\a & {a: int} as 'a
@@ -590,13 +563,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.591: 	r.a
+//│ ║  l.564: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.580: 	r = f 1
+//│ ║  l.553: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.591: 	r.a
+//│ ║  l.564: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:

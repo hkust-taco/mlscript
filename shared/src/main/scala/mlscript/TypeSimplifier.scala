@@ -842,6 +842,7 @@ trait TypeSimplifier { self: Typer =>
       case ProxyType(underlying) => go(underlying, pol)
       case wo @ Without(base, names) =>
         if (pol === S(true)) go(base, pol).withoutPos(names)
+        else if (names.isEmpty) { assert(base.isInstanceOf[ComposedType]); base.map(go(_, pol)) } // FIXME very hacky
         else go(base, pol).without(names)
       case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
           // TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
@@ -973,6 +974,7 @@ trait TypeSimplifier { self: Typer =>
                     // case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
                     case S(at @ ArrayType(inner)) =>
                       S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
+                    case S(wt @ Without(b: ComposedType, ns @ empty())) => S(Without(b.map(go(_, pol)), ns)(wt.prov)) -> nFields // FIXME very hacky
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
                     case N => N -> nFields
                   }
