@@ -149,7 +149,7 @@ t.x
 //│ ╟── type `s` does not have field 'x'
 //│ ║  l.140: 	t = s: s
 //│ ║         	       ^
-//│ ╟── but it flows into reference with expected type `{x: ?a}`
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
 //│ ║  l.145: 	t.x
 //│ ╙──       	^
 //│ res: error

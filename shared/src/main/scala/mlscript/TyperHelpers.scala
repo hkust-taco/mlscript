@@ -79,7 +79,7 @@ abstract class TyperHelpers { self: Typer =>
       cache += tv -> tv
       tv
     case tv: TypeVariable => cache.getOrElse(tv, {
-      val v = freshVar(tv.prov)(tv.level)
+      val v = freshVar(tv.prov, tv.nameHint)(tv.level)
       cache += tv -> v
       v.lowerBounds = tv.lowerBounds.map(subst(_, map))
       v.upperBounds = tv.upperBounds.map(subst(_, map))

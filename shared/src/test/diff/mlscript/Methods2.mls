@@ -43,8 +43,8 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons[+A]
 //│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
-//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
-//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
+//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['A0 .. 'A | 'A0] with {payload: 'A})
+//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('B & 'head)) -> (Cons['B] with {head: 'head, tail: List['B]})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -58,7 +58,7 @@ List.HeadOption
 //│    = undefined
 
 Cons.HeadOption
-//│ res: (Cons['A] with {tail: List['A]}) -> (Some['a .. 'A | 'a] with {payload: 'A})
+//│ res: (Cons['A] with {tail: List['A]}) -> (Some['A0 .. 'A | 'A0] with {payload: 'A})
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
@@ -74,7 +74,7 @@ l.Map (fun x -> mul x 2)
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
 
 o = l.(Cons.HeadOption)
-//│ o: Some['a .. 0 | 1 | 'a] with {payload: 0 | 1}
+//│ o: Some['A .. 0 | 1 | 'A] with {payload: 0 | 1}
 //│  = undefined
 
 o = l.HeadOption

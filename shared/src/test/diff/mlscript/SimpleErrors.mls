@@ -37,7 +37,7 @@ trait MyTrait: { value: anything }
 //│ Defined trait MyTrait
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'a} & myTrait | ~myTrait) -> (0 | 'a)
+//│ test1: ({value: 'value} & myTrait | ~myTrait) -> (0 | 'value)
 
 :e
 test1 1

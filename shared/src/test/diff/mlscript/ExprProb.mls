@@ -46,7 +46,7 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: (lit & 'b | (add & {lhs: 'a} | 'c & ~add) & ~lit as 'a) -> (1 | 'd | 0 as 'd)
+//│ eval1_stub: (lit & 'a | (add & {lhs: 'lhs} | 'b & ~add) & ~lit as 'lhs) -> (1 | 'c | 0 as 'c)
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -68,7 +68,7 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: ('a -> int) -> (lit & {val: int} | (add & {rhs: 'b} & {lhs: 'b} | 'a & ~add) & ~lit as 'b) -> ('c | int | 'd)
+//│ res: ('a -> int) -> (lit & {val: int} | (add & {rhs: 'rhs} & {lhs: 'rhs} | 'a & ~add) & ~lit as 'rhs) -> ('val | int | 'b)
 //│    = [Function: eval1]
 
 :re
@@ -367,7 +367,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val
@@ -428,7 +428,7 @@ prettier2 done eval2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val
@@ -454,7 +454,7 @@ prettier2 done eval2 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val
@@ -495,7 +495,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val
@@ -536,7 +536,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val
@@ -574,7 +574,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?b | ?c | ?d)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b | ?c)` does not match type `int`
 //│ ║  l.58: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.59: 	  | Lit -> e.val

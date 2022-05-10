@@ -291,7 +291,7 @@ rec def x = add x
 //│ ╟── [info] flowing from application of type `?a`
 //│ ║  l.278: 	rec def x = add x
 //│ ║         	            ^^^^^
-//│ ╟── [info] flowing into expression of type `?b`
+//│ ╟── [info] flowing into expression of type `?x`
 //│ ╟── [info] flowing into reference of type `int`
 //│ ║  l.278: 	rec def x = add x
 //│ ║         	                ^

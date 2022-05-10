@@ -72,7 +72,7 @@ res.tail.head
 //│ ╟── application of type `Nil` does not have field 'tail'
 //│ ║  l.13: 	def Nil = Nil {}
 //│ ║        	          ^^^^^^
-//│ ╟── but it flows into reference with expected type `{tail: ?a}`
+//│ ╟── but it flows into reference with expected type `{tail: ?tail}`
 //│ ║  l.68: 	res.tail.head
 //│ ║        	^^^
 //│ ╟── Note: class Nil is defined at:

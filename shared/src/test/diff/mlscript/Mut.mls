@@ -62,7 +62,7 @@ def rc1 : { mut x : int}
 rc1 = {mut x = 1}
 //│ rc1: {x: int .. int}
 //│    = <missing implementation>
-//│ {x: 'a .. 1 | 'a}
+//│ {x: 'x .. 1 | 'x}
 //│   <:  rc1:
 //│ {x: int .. int}
 //│    = { x: 1 }
@@ -114,7 +114,7 @@ immtpl[0] <- 0
 //│ ╟── record field of type `int` is not mutable
 //│ ║  l.90: 	immrcd = { x = 1: int }
 //│ ║        	           ^^^^^
-//│ ╟── but it flows into assigned field with expected type `?a`
+//│ ╟── but it flows into assigned field with expected type `?x`
 //│ ║  l.108: 	immrcd.x <- 0
 //│ ╙──       	       ^
 //│ = []
@@ -143,24 +143,24 @@ immtpl[0] <- 0
 rc2 = {mut x = 1}
 rc2.x <- true
 rc2.x <- "hello"
-//│ rc2: {x: 'a .. 1 | 'a}
+//│ rc2: {x: 'x .. 1 | 'x}
 //│    = { x: 1 }
 //│ = []
 //│ = []
 
 // TODO let-bound values should be treated as monomorphic – see mismatch in:
 rc2
-//│ res: {x: 'a .. 1 | 'a}
+//│ res: {x: 'x .. 1 | 'x}
 //│    = { x: 'hello' }
 
 def g r = (fun x -> r) (r.x <- 3)
 g rc1
 g rc2
-//│ g: ({x: 3 | 'a .. 'a} & 'b) -> 'b
+//│ g: ({x: 3 | 'x .. 'x} & 'a) -> 'a
 //│  = [Function: g]
 //│ res: {x: int .. int}
 //│    = { x: 3 }
-//│ res: {x: 'a .. 1 | 3 | 'a}
+//│ res: {x: 'x .. 1 | 3 | 'x}
 //│    = { x: 3 }
 
 :e 
@@ -211,7 +211,7 @@ t1 = T {mut x = 2; y = false}
 t2 = T {x = 2}
 //│ t1: {x: int .. int, y: bool} & t
 //│   = <missing implementation>
-//│ {x: 'a .. 2 | 'a, y: false} & t
+//│ {x: 'x .. 2 | 'x, y: false} & t
 //│   <:  t1:
 //│ {x: int .. int, y: bool} & t
 //│   = { x: 2, y: false }
@@ -230,7 +230,7 @@ t2.x <- 3
 //│ ╟── record field of type `bool` is not mutable
 //│ ║  l.209: 	def t1 : T & {mut x : int; y : bool}
 //│ ║         	                           ^^^^^^^^
-//│ ╟── but it flows into assigned field with expected type `?a`
+//│ ╟── but it flows into assigned field with expected type `?y`
 //│ ║  l.225: 	t1.y <- true
 //│ ╙──       	   ^
 //│ = []
@@ -240,7 +240,7 @@ t2.x <- 3
 //│ ╟── record field of type `2` is not mutable
 //│ ║  l.211: 	t2 = T {x = 2}
 //│ ║         	        ^^^^^
-//│ ╟── but it flows into assigned field with expected type `?a`
+//│ ╟── but it flows into assigned field with expected type `?x`
 //│ ║  l.226: 	t2.x <- 3
 //│ ╙──       	   ^
 //│ = []
@@ -274,7 +274,7 @@ b1.Foo <- 0
 //│ ╟── type `B` does not have field 'Foo'
 //│ ║  l.253: 	def b1 : B
 //│ ║         	         ^
-//│ ╟── but it flows into reference with expected type `{Foo = ?a}`
+//│ ╟── but it flows into reference with expected type `{Foo = ?Foo}`
 //│ ║  l.270: 	b1.Foo <- 0
 //│ ║         	^^
 //│ ╟── Note: constraint arises from assigned selection:
@@ -301,7 +301,7 @@ b2.y <- b1.y
 //│ ╟── record field of type `?y` is not mutable
 //│ ║  l.248: 	class B: { mut x: int; y: bool }
 //│ ║         	                       ^^^^^^^
-//│ ╟── but it flows into assigned field with expected type `?a`
+//│ ╟── but it flows into assigned field with expected type `?y0`
 //│ ║  l.297: 	b2.y <- b1.y
 //│ ╙──       	   ^
 //│ = []
@@ -334,7 +334,7 @@ def h : B -> int -> int
 def h b i = (fun _ -> b.x) (b.x <- i) 
 //│ h: B -> int -> int
 //│  = <missing implementation>
-//│ {x: 'a .. 'a & 'b} -> 'a -> 'b
+//│ {x: 'x .. 'x & 'a} -> 'x -> 'a
 //│   <:  h:
 //│ B -> int -> int
 //│  = [Function: h]
@@ -348,7 +348,7 @@ h {mut x = 4} 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.347: 	h {mut x = 4} 2
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── record literal of type `{x: ?a .. ?a}` is not an instance of type B
+//│ ╟── record literal of type `{x: ?x .. ?x}` is not an instance of type B
 //│ ║  l.347: 	h {mut x = 4} 2
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -549,7 +549,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╟── type `B` does not have field 't'
 //│ ║  l.253: 	def b1 : B
 //│ ║         	         ^
-//│ ╟── but it flows into reference with expected type `{t: ?a .. ?a}`
+//│ ╟── but it flows into reference with expected type `{t: ?t .. ?t}`
 //│ ║  l.516: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^
 //│ ╟── Note: constraint arises from assigned selection:
@@ -625,7 +625,7 @@ g (1, true) 2
 
 w1 = 3 with {mut x = 4}
 w1.x <- 3
-//│ w1: 3 & {x: 'a .. 4 | 'a}
+//│ w1: 3 & {x: 'x .. 4 | 'x}
 //│   = [Number: 3] { x: 4 }
 //│ = []
 
@@ -785,11 +785,11 @@ fun x -> (x.a <- 0, x.a + 1)
 //│    = [Function: res]
 
 def foo x y = (x.a <- 0, x.a + 1, x.a, x.a <- y)
-//│ foo: {a: 0 | 'a .. int & 'a & 'b} -> 'a -> (unit, int, 'b, unit,)
+//│ foo: {a: 0 | 'a .. int & 'a & 'a0} -> 'a -> (unit, int, 'a0, unit,)
 //│    = [Function: foo]
 
 def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
-//│ foo: {a: 0 | 'a .. int & 'a & 'b & 'c} -> 'a -> ('c -> 'd) -> (unit, int, 'b, unit, 'd,)
+//│ foo: {a: 0 | 'a .. int & 'a & 'a0 & 'a1} -> 'a -> ('a1 -> 'b) -> (unit, int, 'a0, unit, 'b,)
 //│    = [Function: foo1]
 
 foo { mut a = 1 } 2 add

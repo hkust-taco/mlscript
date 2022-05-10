@@ -55,7 +55,7 @@ def test: (int & { f: 'a } | { x: 'a } | { y: 'a }) -> 'a
 
 :e
 def test x = case x of { int -> x.f | _ -> x.x }
-//│ (int & {f: 'a} | {x: 'a} & ~int) -> 'a
+//│ (int & {f: 'f} | {x: 'f} & ~int) -> 'f
 //│   <:  test:
 //│ anything -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -247,7 +247,7 @@ idx idx.x
 //│ res: 1
 
 def indirect i = i i.x
-//│ indirect: ('a -> 'b & {x: 'a}) -> 'b
+//│ indirect: ('x -> 'a & {x: 'x}) -> 'a
 
 indirect idx
 //│ res: 1

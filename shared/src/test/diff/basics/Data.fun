@@ -20,12 +20,12 @@ let p = Person("Bob", 42)
 
 let foo q = q.age
 foo p
-//│ foo: {age: 'a} -> 'a
+//│ foo: {age: 'age} -> 'age
 //│ res: int
 
 // TODO properly check pattern types!
 let bar (q: Person _) = q.age
-//│ bar: (q: {age: 'a},) -> 'a
+//│ bar: (q: {age: 'age},) -> 'age
 
 bar p
 //│ res: int

@@ -117,7 +117,7 @@ f htx
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
-//│ g: ({x: 'a} & hey | ~hey) -> (() | 'a)
+//│ g: ({x: 'x} & hey | ~hey) -> (() | 'x)
 //│  = [Function: g]
 
 g htx
@@ -129,7 +129,7 @@ g tx
 
 // TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ g: ({x: 'a} & hey | {y: 'a} & ~hey) -> 'a
+//│ g: ({x: 'x} & hey | {y: 'x} & ~hey) -> 'x
 //│  = [Function: g1]
 
 g htx

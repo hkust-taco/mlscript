@@ -11,7 +11,7 @@ class A: { x: number }
 //│ Defined class A
 
 def f v = v.x
-//│ f: {x: 'a} -> 'a
+//│ f: {x: 'x} -> 'x
 //│  = [Function: f]
 
 // def f: (A & {x: int} | anything) -> int
@@ -107,7 +107,7 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ eval: ((IntLit with {value: 'b}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) as 'a) -> (('c, 'c,) | 'b as 'c)
+//│ eval: ((IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) as 'a) -> (('b, 'b,) | 'value as 'b)
 //│     = [Function: eval]
 
 rec def eval(e) = case e of
@@ -115,7 +115,7 @@ rec def eval(e) = case e of
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ eval: ((IntLit with {value: 'b}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair as 'a) -> (('c, 'c,) | 'b as 'c)
+//│ eval: ((IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair as 'a) -> (('b, 'b,) | 'value as 'b)
 //│     = [Function: eval1]
 
 eval (IntLit { value = 1 })
@@ -268,7 +268,7 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ ((IntLit with {value: 'b}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) as 'a) -> (('c, 'c,) | 'b as 'c)
+//│ ((IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) as 'a) -> (('b, 'b,) | 'value as 'b)
 //│   <:  eval:
 //│ Expr['a] -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -355,7 +355,7 @@ rec def eval(e) = case e of
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ ((IntLit with {value: 'b}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair as 'a) -> (('c, 'c,) | 'b as 'c)
+//│ ((IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair as 'a) -> (('b, 'b,) | 'value as 'b)
 //│   <:  eval:
 //│ Expr['a] -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:

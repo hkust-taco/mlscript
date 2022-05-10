@@ -488,7 +488,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
             stmts.foreach {
-              // statement only declares a new term with it's type
+              // statement only declares a new term with its type
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 val ty_sch = typer.PolymorphicType(0,
