@@ -1,0 +1,82 @@
+
+def f x = (x 1, x "ok")
+//│ f: ("ok" -> 'a & 1 -> 'b) -> ('b, 'a,)
+//│  = [Function: f]
+
+f (fun x -> (x, x))
+//│ res: ((1, 1,), ("ok", "ok",),)
+//│    = [ [ 1, 1 ], [ 'ok', 'ok' ] ]
+
+(fun id -> id id 0) (fun x -> x)
+//│ res: 0
+//│    = 0
+
+fun id -> id id 0
+//│ res: ('a -> 0 -> 'b & 'a) -> 'b
+//│    = [Function: res]
+
+fun x -> x
+//│ res: 'a -> 'a
+//│    = [Function: res]
+
+// forall 'a. 'a -> 'a  <:  'a1 -> 0 -> 'b1 & 'a1
+// i.e.
+//    forall 'a. 'a -> 'a  <:  'a1 -> 0 -> 'b1
+//    forall 'a. 'a -> 'a  <:  'a1
+// i.e.
+//    'a2 -> 'a2  <:  'a1 -> 0 -> 'b1
+//    'a3 -> 'a3  <:  'a1
+
+
+def g x = x (fun x -> x)
+//│ g: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│  = [Function: g]
+
+
+def g x y = x (fun x -> y x)
+//│ g: (('a -> 'b) -> 'c) -> ('a -> 'b) -> 'c
+//│  = [Function: g1]
+
+
+self x = x x
+//│ self: ('a -> 'b & 'a) -> 'b
+//│     = [Function: self]
+
+:e
+self self
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (100)
+//│ ║  l.46: 	self self
+//│ ║        	^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α87
+//│ ╟── while constraining:  α85  <!<  α87
+//│ ╟── while constraining:  (α85,)  <!<  (α87,)
+//│ ╟── while constraining:  ((α87,) -> α88)  <!<  ((α85,) -> α86)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((α85,) -> α86)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α85
+//│ ╟── while constraining:  α83  <!<  α85
+//│ ╟── while constraining:  (α83,)  <!<  (α85,)
+//│ ╟── while constraining:  ((α85,) -> α86)  <!<  ((α83,) -> α84)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((α83,) -> α84)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α83
+//│ ╟── while constraining:  α81  <!<  α83
+//│ ╟── while constraining:  (α81,)  <!<  (α83,)
+//│ ╟── while constraining:  ((α83,) -> α84)  <!<  ((α81,) -> α82)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((α81,) -> α82)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α81
+//│ ╟── while constraining:  α79  <!<  α81
+//│ ╟── while constraining:  (α79,)  <!<  (α81,)
+//│ ╟── while constraining:  ((α81,) -> α82)  <!<  ((α79,) -> α80)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((α79,) -> α80)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α79
+//│ ╟── while constraining:  α77  <!<  α79
+//│ ╟── while constraining:  (α77,)  <!<  (α79,)
+//│ ╟── while constraining:  ((α79,) -> α80)  <!<  ((α77,) -> α78)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((α77,) -> α78)
+//│ ╟── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  α77
+//│ ╟── while constraining:  (∀ 0. ((α70',) -> α71'),)  <!<  (α77,)
+//│ ╟── while constraining:  ((α77,) -> α78)  <!<  ((∀ 0. ((α70',) -> α71'),) -> α76)
+//│ ╙── while constraining:  ∀ 0. ((α70',) -> α71')  <!<  ((∀ 0. ((α70',) -> α71'),) -> α76)
+//│ res: error
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
