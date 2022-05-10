@@ -25,79 +25,7 @@ b.Boom 1 // : A
 //│ A
 //│ res: A
 
-// ==============
-// From Repro.mls
-// ==============
 
-// Preamble
-def plus1 x = x + 1
-//│ plus1: int -> int
-
-class JustIntBox: { value: int }
-  method Get = this.value
-//│ Defined class JustIntBox
-//│ Defined JustIntBox.Get: JustIntBox -> int
-
-ib0 = JustIntBox { value = 0 }
-//│ ib0: JustIntBox & {value: 0}
-
-ib0.Get
-//│ res: int
-
-// Extend with some function.
-class MappableIntBox: JustIntBox
-  method Map f = MappableIntBox { value = f this.value }
-//│ Defined class MappableIntBox
-//│ Defined MappableIntBox.Map: MappableIntBox -> (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
-
-mib0 = MappableIntBox { value = 0 }
-//│ mib0: MappableIntBox & {value: 0}
-
-mib0.Get
-//│ res: int
-
-mib0.Map
-//│ res: (int -> (int & 'a)) -> (MappableIntBox with {value: 'a})
-
-mib0.Map plus1
-//│ res: MappableIntBox
-
-// Naughty map...
-:e
-mib0.Map (fun _ -> "str")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	mib0.Map (fun _ -> "str")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"str"` does not match type `int`
-//│ ║  l.67: 	mib0.Map (fun _ -> "str")
-//│ ║        	                   ^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.36: 	class JustIntBox: { value: int }
-//│ ║        	                           ^^^
-//│ ╟── from application:
-//│ ║  l.49: 	  method Map f = MappableIntBox { value = f this.value }
-//│ ╙──      	                                          ^^^^^^^^^^^^
-//│ res: error | (MappableIntBox with {value: "str"})
-
-// What if without the derivation?
-// Oh it's the same.
-class BetterIntBox: { value: int }
-  method Get = this.value
-  method Map f = BetterIntBox { value = f this.value }
-//│ Defined class BetterIntBox
-//│ Defined BetterIntBox.Get: BetterIntBox -> int
-//│ Defined BetterIntBox.Map: BetterIntBox -> (int -> (int & 'a)) -> (BetterIntBox with {value: 'a})
-
-// I think the return type should be BetterIntBox & {value: int & 'b}
-
-// Some examples from TypeClasses.mls
-class Monoid[A]
-  method Empty: A
-//│ Defined class Monoid[+A]
-//│ Declared Monoid.Empty: Monoid['A] -> 'A
-
-// Some more interesting case. Are they valid at the main branch?
-// Yeah... The result are the same.
 
 :w
 class Myself[A]
@@ -105,11 +33,11 @@ class Myself[A]
 //│ Defined class Myself[±A]
 //│ Defined Myself.Me: (Myself['A] & 'this) -> (Myself['A] & 'this)
 //│ ╔══[WARNING] Type definition Myself has bivariant type parameters:
-//│ ║  l.103: 	class Myself[A]
-//│ ║         	      ^^^^^^
+//│ ║  l.31: 	class Myself[A]
+//│ ║        	      ^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.103: 	class Myself[A]
-//│ ╙──       	             ^
+//│ ║  l.31: 	class Myself[A]
+//│ ╙──      	             ^
 
 m0 = Myself {}
 //│ m0: Myself['A]
@@ -117,86 +45,25 @@ m0 = Myself {}
 m0.Me
 //│ res: Myself['A]
 
-// Make box generic!
-// Looks fine.
-class SomeBox[A]: { value: A }
-  method Get = this.value
-//│ Defined class SomeBox[+A]
-//│ Defined SomeBox.Get: SomeBox['A] -> 'A
 
-// More test cases from Addable.mls!
-// It seems some type variables leaked from the context...
 
 :e
 class Addable[A]
   method Me = this
-  method Oops = this.oops // disallowed if rigid
+  method Oops = this.oops // disallowed if `this` is rigid
   method Add: A -> A
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.133: 	  method Oops = this.oops // disallowed if rigid
-//│ ║         	                ^^^^^^^^^
+//│ ║  l.53: 	  method Oops = this.oops // disallowed if `this` is rigid
+//│ ║        	                ^^^^^^^^^
 //│ ╟── reference of type `Addable[A] & this` does not have field 'oops'
-//│ ║  l.133: 	  method Oops = this.oops // disallowed if rigid
-//│ ╙──       	                ^^^^
+//│ ║  l.53: 	  method Oops = this.oops // disallowed if `this` is rigid
+//│ ╙──      	                ^^^^
 //│ Defined class Addable[=A]
 //│ Declared Addable.Add: Addable['A] -> 'A -> 'A
 //│ Defined Addable.Me: (Addable['A] & 'this) -> (Addable['A] & 'this)
 //│ Defined Addable.Oops: Addable['A] -> error
 
-class Num: Addable[Num] & { val: int }
-  method Add that = Num { val = this.val + that.val }
-//│ Defined class Num
-//│ Defined Num.Add: Num -> {val: int} -> Num
 
-class Str: Addable[Str] & { val: string }
-  method Add that = Str { val = concat this.val that.val }
-//│ Defined class Str
-//│ Defined Str.Add: Str -> {val: string} -> Str
-
-n = Num { val = 1 }
-//│ n: Num & {val: 1}
-
-n.Add n
-//│ res: Num
-
-s = Str { val = "hey" }
-//│ s: Str & {val: "hey"}
-
-s.Add
-//│ res: (Str & 'A) -> ('A | Str)
-
-// Make inherited methods agree with the current this.
-// Import more examples from the old branch!
-
-
-// ===============
-// From Repro2.mls
-// ===============
-
-class Box[A]: { value: A }
-  method Get = this.value
-//│ Defined class Box[+A]
-//│ Defined Box.Get: Box['A] -> 'A
-
-Box.Get
-//│ res: Box['A] -> 'A
-
-class IntBox: Box[int]
-//│ Defined class IntBox
-
-IntBox.Get
-//│ res: IntBox -> int
-
-ib0 = IntBox { value = 0 }
-//│ ib0: IntBox & {value: 0}
-
-ib0.(IntBox.Get)
-//│ res: int
-
-
-// ===============
-// From Repro3.mls
-// ===============
 
 class Base0
   method Foo0: this
@@ -250,9 +117,7 @@ Derived2.Foo3
 DerivedDerived2.Foo3
 //│ res: (DerivedDerived2 & 'this) -> (Derived2 & 'this,)
 
-// ===============
-// From Repro4.mls
-// ===============
+
 
 class NewBase
   method NewFoo: this
@@ -292,10 +157,10 @@ NewDerivedDerived.NewQuz
 class NewDerivedDerivedDerived: NewDerivedDerived
   method NewQux = this.NewBar._1
 //│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
-//│ ║  l.293: 	  method NewQux = this.NewBar._1
+//│ ║  l.158: 	  method NewQux = this.NewBar._1
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.265: 	  method NewQux = this.NewBar._1
+//│ ║  l.130: 	  method NewQux = this.NewBar._1
 //│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
 //│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
@@ -310,9 +175,7 @@ NewDerivedDerivedDerived.NewQux
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerived & 'this)
 //│ res: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & 'this)
 
-// ===============
-// From Repro5.mls
-// ===============
+
 
 class Animal
   method Eat = this
@@ -327,3 +190,4 @@ Animal.Eat
 
 Cat.Eat
 //│ res: (Cat & 'this) -> (Animal & 'this)
+
