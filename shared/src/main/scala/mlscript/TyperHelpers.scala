@@ -278,6 +278,21 @@ abstract class TyperHelpers { self: Typer =>
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
+    def mapPol(pol: Opt[Bool])(f: (Opt[Bool], SimpleType) => SimpleType): SimpleType = this match {
+      case TypeBounds(lb, ub) => TypeBounds(f(S(false), lb), f(S(true), ub))(prov)
+      case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(prov)
+      case RecordType(fields) => RecordType(fields.mapValues(_.update(f(S(false), _), f(S(true), _))))(prov)
+      case TupleType(fields) => TupleType(fields.mapValues(_.update(f(S(false), _), f(S(true), _))))(prov)
+      case ArrayType(inner) => ArrayType(inner.update(f(S(false), _), f(S(true), _)))(prov)
+      case ComposedType(kind, lhs, rhs) => ComposedType(kind, f(pol, lhs), f(pol, rhs))(prov)
+      case NegType(negated) => NegType(f(pol.map(!_), negated))(prov)
+      case Without(base, names) => Without(f(pol, base), names)(prov)
+      case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
+      case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(S(false), _), f(S(true), _))))(rcd.prov))(prov)
+      case ProxyType(underlying) => f(pol, underlying) // TODO different?
+      case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(N, _)))(prov)
+      case _: TypeVariable | _: ObjectTag | _: ExtrType => this
+    }
     
     def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)

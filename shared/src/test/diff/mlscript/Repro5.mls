@@ -53,7 +53,7 @@ g y = f y
 // :ds
 // :s
 g
-//│ res: anything -> anything -> 'a
+//│ res: 'a
 //│   where
 //│     'a :> anything -> 'a
 //│    = [Function: g]
@@ -70,7 +70,7 @@ h y = (f y, y)
 //│  = [Function: h]
 
 h
-//│ res: 'a -> (anything -> 'b, 'a,)
+//│ res: 'a -> ('b, 'a,)
 //│   where
 //│     'b :> anything -> 'b
 //│    = [Function: h]

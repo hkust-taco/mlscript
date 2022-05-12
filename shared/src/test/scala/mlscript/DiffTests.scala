@@ -280,37 +280,43 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               typer.dbg = mode.dbgSimplif
               if (mode.noSimplification) typer.expandType(wty, true)
               else {
+                var cur = wty
+                
                 // typer.dbg = mode.dbgSimplif
-                val rty = typer.removeIrrelevantBounds(wty)(ctx)
-                if (mode.isDebugging) output(s"⬤ Cleaned up: ${rty}")
-                if (mode.isDebugging) output(s" where: ${rty.showBounds}")
-                val cty = rty
+                cur = typer.removeIrrelevantBounds(wty)(ctx)
+                if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
+                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
+                // val cty = rty
                 // val cty = typer.canonicalizeType(rty)(ctx)
                 // if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
                 // if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
-                val sim = typer.simplifyType(cty)(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${sim}")
-                if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
-                val recons = typer.reconstructClassTypes(sim, S(true), ctx)
-                if (mode.dbgSimplif) output(s"⬤ Recons: ${recons}")
-                if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
+                cur = typer.simplifyType(cur)(ctx)
+                if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                cur = typer.reconstructClassTypes(cur, S(true), ctx)
+                if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                // val exp = typer.expandType(recons, true)
+                // val exp = typer.expandType(cur, true)
                 
-                // // val recons2 = typer.removeIrrelevantBounds(recons)(ctx)
-                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(recons)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                // // val recons2 = typer.removeIrrelevantBounds(cur)(ctx)
+                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(cur)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
                 
-                val clean2 = typer.removeIrrelevantBounds(recons)(ctx)
-                if (mode.isDebugging) output(s"⬤ Cleaned up: ${clean2}")
-                if (mode.isDebugging) output(s" where: ${clean2.showBounds}")
+                cur = typer.removeIrrelevantBounds(cur)(ctx)
+                if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
+                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
-                val recons2 = typer.simplifyType(clean2)(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
-                // val recons2 = typer.simplifyType(typer.simplifyType(clean2)(ctx))(ctx)
+                cur = typer.simplifyType(cur)(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                // val cur = typer.simplifyType(typer.simplifyType(cur)(ctx))(ctx)
                 
-                if (mode.dbgSimplif) output(s"⬤ Resim: ${recons2}")
-                if (mode.dbgSimplif) output(s" where: ${recons2.showBounds}")
+                if (mode.dbgSimplif) output(s"⬤ Resim: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                val exp = typer.expandType(recons2, true)
+                cur = typer.unskidTypes_!(cur)(ctx)
+                cur = typer.unskidTypes_!(cur)(ctx)
+                
+                // val exp = typer.expandType(cur, true)
+                val exp = typer.expandType(cur, true)
                 
                 // val canon2 = typer.canonicalizeType(recons)(ctx)
                 // val exp = typer.expandType(canon2, true)

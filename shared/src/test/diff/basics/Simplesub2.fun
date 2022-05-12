@@ -23,7 +23,7 @@ let pick_an_object = b =>
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> {thing: 'a, self: 'b}
+//│ recursive_monster: 'a -> 'b
 //│   where
 //│     'b :> {thing: 'a, self: 'b}
 
@@ -45,7 +45,7 @@ let ab = {u: id 0, v: id true}
 
 let rec produce = arg => { head: arg, tail: produce (succ arg) }
 let rec consume = strm => add strm.head (consume strm.tail)
-//│ produce: int -> {head: int, tail: 'a}
+//│ produce: int -> 'a
 //│   where
 //│     'a :> {head: int, tail: 'a}
 //│ consume: 'a -> int
@@ -54,7 +54,7 @@ let rec consume = strm => add strm.head (consume strm.tail)
 
 let codata = produce 42
 let res = consume codata
-//│ codata: {head: int, tail: 'a}
+//│ codata: 'a
 //│   where
 //│     'a :> {head: int, tail: 'a}
 //│ res: int
@@ -85,7 +85,7 @@ let consume2 =
   // go
 // let rec consume2 = strm => add strm.head (add strm.tail.head (consume2 strm.tail.tail))
 let res = consume2 codata2
-//│ consume2: {head: int, tail: 'a} -> int
+//│ consume2: 'a -> int
 //│   where
 //│     'a <: {head: int, tail: 'a}
 //│ res: int

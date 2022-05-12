@@ -213,7 +213,7 @@ x => {l: x x, r: x }
 
 // Function that takes arbitrarily many arguments:
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ res: anything -> anything -> 'a
+//│ res: 'a
 //│   where
 //│     'a :> anything -> 'a
 
@@ -265,7 +265,7 @@ let rec f = x => f x.u
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> {thing: 'a, self: 'b}
+//│ recursive_monster: 'a -> 'b
 //│   where
 //│     'b :> {thing: 'a, self: 'b}
 
@@ -280,10 +280,10 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 //│     'a :> {a: 'a, b: 'a}
 
 (let rec x = v => {a: x v, b: x v}; x)
-//│ res: anything -> {a: 'a, b: 'b}
+//│ res: anything -> 'a
 //│   where
-//│     'a :> {a: 'a, b: 'b}
-//│     'b :> {a: 'a, b: 'b}
+//│     'a :> {a: 'b, b: 'a}
+//│     'b :> 'a
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
@@ -342,15 +342,15 @@ x => (y => (x (y y)))
 //│     'a :> 'a -> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'a -> {u: 'a, v: 'b}
+//│ res: 'a -> 'b
 //│   where
-//│     'a :> 'a -> {u: 'a, v: 'b}
+//│     'a :> 'a -> 'b
 //│     'b :> {u: 'a, v: 'b}
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'a -> {u: 'b, v: 'a}
+//│ res: 'a -> 'b
 //│   where
-//│     'a :> 'a -> {u: 'b, v: 'a}
+//│     'a :> 'a -> 'b
 //│     'b :> {u: 'b, v: 'a}
 
 (let rec x = (y => (let z = (y x); y)); x)

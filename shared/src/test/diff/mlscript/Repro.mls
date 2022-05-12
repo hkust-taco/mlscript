@@ -29,7 +29,7 @@ def g: G['a] & {a: 'a} as 'a
 // :re
 // :ds
 rec def g2 = G { a = g2 }
-//│ g2: G['A] with {a: 'a}
+//│ g2: 'a
 //│   where
 //│     'a :> G['A] with {a: 'a}
 
