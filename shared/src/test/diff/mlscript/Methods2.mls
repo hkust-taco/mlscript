@@ -13,10 +13,10 @@ class None[A]: Option[A]
 //│ Declared Option.Destruct: Option['A] -> (None['A] | Some['A])
 //│ Defined class Some[+A]
 //│ Defined Some.Get: Some['A] -> 'A
-//│ Defined Some.Destruct: Some['A] -> Some['A]
+//│ Defined Some.Destruct: (Some['A] & 'this) -> (Some['A] & 'this)
 //│ Defined class None[+A]
 //│ Defined None.Get: None['A] -> nothing
-//│ Defined None.Destruct: None['A] -> None['A]
+//│ Defined None.Destruct: (None['A] & 'this) -> (None['A] & 'this)
 
 
 class List[A]

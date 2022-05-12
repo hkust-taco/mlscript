@@ -153,10 +153,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                                                               ^^^^^^^^^^^^^^
-//│ ╟── type definition of type `ComplexMonoid_bad_1[A]` does not have field 'imaginary'
-//│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{imaginary: ?imaginary}`
+//│ ╟── reference of type `ComplexMonoid_bad_1[A] & this` does not have field 'imaginary'
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ╙──      	                                                               ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:

@@ -253,6 +253,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
+      case TypeName("this") =>
+        ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
+          case AbstractConstructor(_, _) => die
+          case t: TypeScheme => t.instantiate
+        }
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
