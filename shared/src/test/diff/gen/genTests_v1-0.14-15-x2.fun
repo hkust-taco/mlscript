@@ -122,7 +122,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ║        	 ^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?v}` does not match type `int`
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
@@ -137,7 +137,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?v}` does not match type `int`
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ╙──      	     ^^^^^^^^^^
 //│ res: int -> int | error
@@ -620,7 +620,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?u}` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
@@ -635,7 +635,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?u}` does not match type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ╙──      	                      ^^^^^^^^^^
 //│ res: int -> int | error
@@ -788,7 +788,7 @@ add
 //│ ╟── function of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
@@ -800,7 +800,7 @@ add
 //│ ╟── function of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ║        	                        ^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int
@@ -812,7 +812,7 @@ add
 //│ ╟── function of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
@@ -1037,7 +1037,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                ^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
+//│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -1055,7 +1055,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                ^^^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
+//│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                    ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -1214,7 +1214,7 @@ add
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
 //│ ║        	                   ^^
-//│ ╟── record of type `{v: ?a}` does not have field 'u'
+//│ ╟── record of type `{v: ?x}` does not have field 'u'
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
 //│ ╙──      	             ^^^^^^
 //│ res: error
@@ -2492,7 +2492,7 @@ add
 //│ res: {u: error}
 
 (x => {u: x.v})
-//│ res: {v: 'a} -> {u: 'a}
+//│ res: {v: 'v} -> {u: 'v}
 
 (let x = 0; {u: x.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2501,7 +2501,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
 //│ ╙──      	                ^
 //│ res: {u: error}
@@ -2513,7 +2513,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ║        	         ^^^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ╙──      	                  ^
 //│ res: {u: error}
@@ -2873,7 +2873,7 @@ add
 //│ res: error
 
 (x => x.v)
-//│ res: {v: 'a} -> 'a
+//│ res: {v: 'v} -> 'v
 
 (let x = 0; x.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2882,7 +2882,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; x.v)
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = 0; x.v)
 //│ ╙──      	            ^
 //│ res: error
@@ -2894,7 +2894,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ║        	         ^^^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ╙──      	              ^
 //│ res: error
@@ -3107,7 +3107,7 @@ add.v.u
 //│ ╟── function of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3119,7 +3119,7 @@ add.v.u
 //│ ╟── function of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ║        	             ^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ╙──      	            ^^^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3131,7 +3131,7 @@ add.v.u
 //│ ╟── function of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3254,7 +3254,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: anything -> error}
 
 {u: {u: 0}, v: (x => x.u)}
-//│ res: {u: {u: 0}, v: {u: 'a} -> 'a}
+//│ res: {u: {u: 0}, v: {u: 'u} -> 'u}
 
 {u: {u: 0}, v: 0.v}
 //│ ╔══[ERROR] Type mismatch in field selection:

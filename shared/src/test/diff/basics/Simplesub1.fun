@@ -112,7 +112,7 @@ x => succ (not x)
 
 
 x => x.f
-//│ res: {f: 'a} -> 'a
+//│ res: {f: 'f} -> 'f
 
 // note: MLsub returns "⊤" (equivalent)
 {}
@@ -128,7 +128,7 @@ x => x.f
 //│ res: 42
 
 f => { x: f 42 }.x
-//│ res: (42 -> 'a) -> 'a
+//│ res: (42 -> 'x) -> 'x
 
 f => { x: f 42, y: 123 }.y
 //│ res: (42 -> anything) -> 123
@@ -300,9 +300,9 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & 'b) -> 'b as 'a
 
 (x => (let y = (x x.v); 0))
-//│ res: ('a -> anything & {v: 'a}) -> 0
+//│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u))
 //│ x: 'b -> ('a | 'b) as 'a
-//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> 'c | 'a | 'b as 'c) | 'b
+//│ res: ({u: 'u} & 'a) -> (({u: 'u} & 'a) -> 'b | 'u | 'a as 'b) | 'a
 

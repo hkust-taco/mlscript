@@ -28,7 +28,7 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a}) | (H[?] with {fH: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
 //│ subtyping calls  : 387
@@ -59,7 +59,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA})) -> 'fA
 //│ arg: A[int] | B[int]
 //│ res: int
 //│ constrain calls  : 37
@@ -77,7 +77,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
 //│ constrain calls  : 50
@@ -96,7 +96,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
 //│ constrain calls  : 63
@@ -130,7 +130,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ res: int
 //│ constrain calls  : 76
@@ -151,7 +151,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ res: int
 //│ constrain calls  : 89
@@ -173,7 +173,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ res: int
 //│ constrain calls  : 102
@@ -196,7 +196,7 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'a}) | (B[?] with {fB: 'a}) | (C[?] with {fC: 'a}) | (D[?] with {fD: 'a}) | (E[?] with {fE: 'a}) | (F[?] with {fF: 'a}) | (G[?] with {fG: 'a}) | (H[?] with {fH: 'a})) -> 'a
+//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ res: int
 //│ constrain calls  : 115

@@ -161,7 +161,7 @@ res.z
 //│ ╟── `with` extension of type `{x: 1, y: 2}` does not have field 'z'
 //│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{z: ?a}`
+//│ ╟── but it flows into reference with expected type `{z: ?z}`
 //│ ║  l.157: 	res.z
 //│ ╙──       	^^^
 //│ res: error
@@ -200,6 +200,6 @@ res.x
 
 
 def f x = (x with { a = 1 }).b
-//│ f: ({b: 'a} | ~{a: 1})\a -> 'a
+//│ f: ({b: 'b} | ~{a: 1})\a -> 'b
 //│  = [Function: f4]
 

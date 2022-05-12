@@ -195,7 +195,7 @@ not (Cons 42 Nil).head
 //│ ║         	^^^^^
 //│ ║  l.112: 	  Cons (head: a) (tail: List a)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{head: ?b}`
+//│ ╟── but it flows into receiver with expected type `{head: ?head}`
 //│ ║  l.187: 	(Cons 4).head
 //│ ╙──       	^^^^^^^^
 //│ res: error

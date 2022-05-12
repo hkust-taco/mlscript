@@ -318,7 +318,7 @@ def getx p = p.x
 def a123: Array[int]
 a123 = (1,2,3)
 getx (a123 with {x=('hello', a123)})
-//│ getx: {x: 'a} -> 'a
+//│ getx: {x: 'x} -> 'x
 //│     = [Function: getx]
 //│ a123: Array[int]
 //│     = <missing implementation>
@@ -791,7 +791,7 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│ res: int
 //│    = <no result>
 //│      arb is not implemented
-//│ s4: {x: Array[{_3: Array[Array[{_h: {hello: 'a}} & ~undefined]]} & ~undefined]} -> 'a
+//│ s4: {x: Array[{_3: Array[Array[{_h: {hello: 'hello}} & ~undefined]]} & ~undefined]} -> 'hello
 //│   = [Function: s4]
 
 def at1 xs = (defined xs[0])._1

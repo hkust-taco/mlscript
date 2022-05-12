@@ -11,7 +11,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> x.fC
   }
-//│ foo: ((A with {fA: 'a}) | (B with {fB: 'a}) | (C with {fC: 'a})) -> 'a
+//│ foo: ((A with {fA: 'fA}) | (B with {fB: 'fA}) | (C with {fC: 'fA})) -> 'fA
 //│    = [Function: foo]
 
 
@@ -55,7 +55,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: (A & {payload: int} | (B with {fB: 'a}) | (C with {fC: 'b, payload: 'c})) -> (int | {l: 'b, r: 'c} | 'a)
+//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> ('fB | int | {l: 'fC, r: 'payload})
 //│    = [Function: foo1]
 
 :e
@@ -67,7 +67,7 @@ foo arg
 //│ ╟── type `A` does not have field 'payload'
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{payload: ?a}`
+//│ ╟── but it flows into reference with expected type `{payload: ?payload}`
 //│ ║  l.63: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:

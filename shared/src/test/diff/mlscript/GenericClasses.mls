@@ -36,7 +36,7 @@ res.value
 //│ ╟── type `None` does not have field 'value'
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
-//│ ╟── but it flows into reference with expected type `{value: ?a}`
+//│ ╟── but it flows into reference with expected type `{value: ?value}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int

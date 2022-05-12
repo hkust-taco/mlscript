@@ -18,7 +18,7 @@ class Hidden[A]
 //│ ║  l.8: 	  method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
 //│ ╙──     	                      ^
 //│ Defined class Hidden[±A]
-//│ Defined Hidden.Foo: Hidden['A] -> ((Class1 with {payload: 'a}) | ~class1) -> (123 | 'a)
+//│ Defined Hidden.Foo: Hidden['A] -> ((Class1 with {payload: 'payload}) | ~class1) -> (123 | 'payload)
 //│ Defined Hidden.Main: Hidden['A] -> 'A -> (123 | error)
 //│ ╔══[WARNING] Type definition Hidden has bivariant type parameters:
 //│ ║  l.7: 	class Hidden[A]
@@ -32,7 +32,7 @@ class Hidden2[A]
   method Foo s = case s of { Class1 -> s.payload | _ -> 123 }
   method Main (a: A) = this.Foo (a with { payload = 1 })
 //│ Defined class Hidden2[±A]
-//│ Defined Hidden2.Foo: Hidden2['A] -> ((Class1 with {payload: 'a}) | ~class1) -> (123 | 'a)
+//│ Defined Hidden2.Foo: Hidden2['A] -> ((Class1 with {payload: 'payload}) | ~class1) -> (123 | 'payload)
 //│ Defined Hidden2.Main: Hidden2['A] -> 'A -> (123 | 1)
 //│ ╔══[WARNING] Type definition Hidden2 has bivariant type parameters:
 //│ ║  l.31: 	class Hidden2[A]

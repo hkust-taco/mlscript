@@ -64,7 +64,7 @@ r.w
 //│ ╟── tuple of type `anything` does not have field 'w'
 //│ ║  l.2: 	let empty = {}
 //│ ║       	            ^^
-//│ ╟── but it flows into reference with expected type `{w: ?a}`
+//│ ╟── but it flows into reference with expected type `{w: ?w}`
 //│ ║  l.59: 	empty.w
 //│ ╙──      	^^^^^
 //│ res: error
@@ -74,7 +74,7 @@ r.w
 //│ ╟── record of type `{u: 1, v: 2}` does not have field 'w'
 //│ ║  l.41: 	let r = { u: 1,v: 2 }
 //│ ║        	        ^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{w: ?a}`
+//│ ╟── but it flows into reference with expected type `{w: ?w}`
 //│ ║  l.60: 	r.w
 //│ ╙──      	^
 //│ res: error
