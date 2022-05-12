@@ -221,8 +221,7 @@ x => {l: x x, r: x }
 let rec trutru = g => trutru (g true)
 //│ trutru: 'a -> nothing
 //│   where
-//│     'a <: true -> 'b
-//│     'b <: 'a
+//│     'a <: true -> 'a
 
 i => if ((i i) true) then true else true
 //│ res: 'a -> true
@@ -261,8 +260,7 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 let rec f = x => f x.u
 //│ f: 'a -> nothing
 //│   where
-//│     'a <: {u: 'b}
-//│     'b <: 'a
+//│     'a <: {u: 'a}
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
@@ -326,8 +324,7 @@ next => 0
 (let rec x = (y => (x (y y))); x)
 //│ res: 'a -> nothing
 //│   where
-//│     'a <: 'a -> 'b
-//│     'b <: 'a
+//│     'a <: 'a -> 'a
 
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> 'c -> 'b
@@ -372,4 +369,14 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│ res: 'a
 //│   where
 //│     'a :> ({u: 'b} & 'a) -> ('a | 'b)
+
+:ns
+let rec x = (let y = (x x); (z => z))
+//│ x: 'a
+//│   where
+//│     'a :> 'b -> 'b
+//│        <: 'b & 'a -> 'c
+//│     'b :> 'b -> 'b
+//│        <: 'c
+//│     'c :> 'b -> 'b
 

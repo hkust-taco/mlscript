@@ -83,12 +83,7 @@ rec def evalOpt x = case x of {
 //│   where
 //│     'A1 :> int
 //│     'A0 :> int
-//│     'a <: Lit & {v: 'v} | Neg & 'b | Plus & 'c | Var
-//│     'c <: {lhs: 'd, rhs: 'e}
-//│     'e <: 'a
-//│     'd <: 'a
-//│     'b <: {sub: 'f}
-//│     'f <: 'a
+//│     'a <: Lit & {v: 'v} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│     'v <: int & 'A
 //│        = [Function: evalOpt]
 

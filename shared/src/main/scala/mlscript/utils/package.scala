@@ -156,6 +156,12 @@ package object utils {
         thunk
       }
     }
+    def setAnd[R](x: A)(ifSet: => R)(ifUnset: => R): R = {
+      if (self.contains(x)) ifSet else {
+        self += x
+        ifUnset
+      }
+    }
   }
   
   implicit class SetObjectHelpers(self: Set.type) {

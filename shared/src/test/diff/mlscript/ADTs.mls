@@ -29,12 +29,7 @@ rec def eval e = case e of {
   }
 //│ eval: 'a -> int
 //│   where
-//│     'a <: Add[?] & 'b | Lit | Nega[?] & 'c
-//│     'c <: {arg: 'd}
-//│     'd <: 'a
-//│     'b <: {lhs: 'e, rhs: 'f}
-//│     'f <: 'a
-//│     'e <: 'a
+//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a})
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)
@@ -127,7 +122,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.62: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.57: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)

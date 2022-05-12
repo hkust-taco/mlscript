@@ -20,6 +20,5 @@ x => x x
 let rec consume = strm => add strm.head (consume strm.tail)
 //│ consume: 'a -> int
 //│   where
-//│     'a <: {head: int, tail: 'b}
-//│     'b <: 'a
+//│     'a <: {head: int, tail: 'a}
 

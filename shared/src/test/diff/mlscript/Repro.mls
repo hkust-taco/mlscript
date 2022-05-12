@@ -27,6 +27,7 @@ def g: G['a] & {a: 'a} as 'a
 
 // rec def g2 a = G { a }
 // :re
+// :ds
 rec def g2 = G { a = g2 }
 //│ g2: G['A] with {a: 'a}
 //│   where
@@ -53,13 +54,13 @@ def manual: 'a -> nothing as 'a
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	manual id
+//│ ║  l.55: 	manual id
 //│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.48: 	def manual: 'a -> nothing as 'a
+//│ ║  l.49: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.48: 	def manual: 'a -> nothing as 'a
+//│ ║  l.49: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
 //│ res: ('a & 'b) -> 'b | error
 //│   where

@@ -50,8 +50,7 @@ let rec consume = strm => add strm.head (consume strm.tail)
 //│     'a :> {head: int, tail: 'a}
 //│ consume: 'a -> int
 //│   where
-//│     'a <: {head: int, tail: 'b}
-//│     'b <: 'a
+//│     'a <: {head: int, tail: 'a}
 
 let codata = produce 42
 let res = consume codata
@@ -70,7 +69,7 @@ let res = consume codata2
 // TODO better parser error
 :pe
 let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let rec pr" at l.72:1: let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
+//│ /!\ Parse error: Expected let binding:1:1, found "let rec pr" at l.71:1: let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
@@ -88,7 +87,6 @@ let consume2 =
 let res = consume2 codata2
 //│ consume2: {head: int, tail: 'a} -> int
 //│   where
-//│     'a <: {head: int, tail: 'b}
-//│     'b <: 'a
+//│     'a <: {head: int, tail: 'a}
 //│ res: int
 

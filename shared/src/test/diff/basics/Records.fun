@@ -82,8 +82,7 @@ r.w
 let rec sumHeads = x => x.head + sumHeads x.tail
 //│ sumHeads: 'a -> int
 //│   where
-//│     'a <: {head: int, tail: 'b}
-//│     'b <: 'a
+//│     'a <: {head: int, tail: 'a}
 
 let rec ouroboros = {head: 0, tail: ouroboros, eyes: {l: 1, r: 2}}
 //│ ouroboros: 'a
@@ -127,7 +126,7 @@ let r = {
   u: 1;
   v: 2;
 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.126:1: let r = {
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.125:1: let r = {
 
 let r = {
   u:
@@ -171,7 +170,7 @@ let r = {
 let r = { u:
   1, v: 2 }
 //│ ╔══[WARNING] Missing name for record field
-//│ ║  l.172: 	  1, v: 2 }
+//│ ║  l.171: 	  1, v: 2 }
 //│ ╙──       	  ^
 //│ r: {u: {_1: 1, v: 2}}
 
@@ -246,7 +245,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.240:1: let r = (
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.239:1: let r = (
 
 a:
   b:
@@ -287,11 +286,11 @@ a: {
   3
 }
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.283: 	  3
+//│ ║  l.282: 	  3
 //│ ╙──       	  ^
 //│ res: (a: 3,)
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.287: 	  3
+//│ ║  l.286: 	  3
 //│ ╙──       	  ^
 //│ res: (a: 3,)
 
@@ -315,7 +314,7 @@ let r =
   y: 2
   log y
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.316: 	  log y
+//│ ║  l.315: 	  log y
 //│ ╙──       	  ^^^^^
 //│ r: unit
 
@@ -326,7 +325,7 @@ let res =
   arg: 0
   arg + 1
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.327: 	  arg + 1
+//│ ║  l.326: 	  arg + 1
 //│ ╙──       	  ^^^^^^^
 //│ res: int
 

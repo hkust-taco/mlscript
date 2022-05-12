@@ -129,16 +129,14 @@ def c: 'a -> C5['a]
 rec def c5 a = C5{ a = C2 { a = c5 a } }
 //│ c5: anything -> (C5['A] with {a: 'a})
 //│   where
-//│     'a :> C2['A0] with {a: 'a0}
-//│     'a0 :> C5['A] with {a: 'a}
+//│     'a :> C2['A0] with {a: C5['A] with {a: 'a}}
 //│     'A0 :> (C5['A] with {a: 'a}) | C5['A]
 //│         <: C5['A]
 
 c = c5
 //│ anything -> (C5['A] with {a: 'a})
 //│   where
-//│     'a :> C2['A0] with {a: 'a0}
-//│     'a0 :> C5['A] with {a: 'a}
+//│     'a :> C2['A0] with {a: C5['A] with {a: 'a}}
 //│     'A0 :> (C5['A] with {a: 'a}) | C5['A]
 //│         <: C5['A]
 //│   <:  c:
@@ -158,8 +156,7 @@ def c: 'a -> C6['a]
 rec def c6 a = C6{ a = c5 (c6 a) }
 //│ c6: anything -> (C6['A] with {a: C5[C6['A]] with {a: 'a}})
 //│   where
-//│     'a :> C2['A0] with {a: 'a0}
-//│     'a0 :> C5[C6['A]] with {a: 'a}
+//│     'a :> C2['A0] with {a: C5[C6['A]] with {a: 'a}}
 //│     'A0 :> (C5[C6['A]] with {a: 'a}) | C5[C6['A]]
 //│         <: C5[C6['A]]
 

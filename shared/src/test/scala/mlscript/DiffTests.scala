@@ -284,10 +284,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 val rty = typer.removeIrrelevantBounds(wty)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${rty}")
                 if (mode.isDebugging) output(s" where: ${rty.showBounds}")
-                // val cty = typer.canonicalizeType(rty)(ctx)
                 val cty = rty
-                if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
-                if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
+                // val cty = typer.canonicalizeType(rty)(ctx)
+                // if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
+                // if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 val sim = typer.simplifyType(cty)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${sim}")
                 if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
@@ -297,8 +297,16 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 
                 // val exp = typer.expandType(recons, true)
                 
-                // val recons2 = typer.removeIrrelevantBounds(recons)(ctx)
-                val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(recons)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                // // val recons2 = typer.removeIrrelevantBounds(recons)(ctx)
+                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(recons)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                
+                val clean2 = typer.removeIrrelevantBounds(recons)(ctx)
+                if (mode.isDebugging) output(s"⬤ Cleaned up: ${clean2}")
+                if (mode.isDebugging) output(s" where: ${clean2.showBounds}")
+                
+                val recons2 = typer.simplifyType(clean2)(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                // val recons2 = typer.simplifyType(typer.simplifyType(clean2)(ctx))(ctx)
+                
                 if (mode.dbgSimplif) output(s"⬤ Resim: ${recons2}")
                 if (mode.dbgSimplif) output(s" where: ${recons2.showBounds}")
                 

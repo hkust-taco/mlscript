@@ -450,12 +450,43 @@ trait TypeSimplifier { self: Typer =>
   def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    val occNums: MutMap[(Bool, TypeVariable), Int] = LinkedHashMap.empty[(Bool, TypeVariable), Int].withDefaultValue(0)
     
     // val analyzed = MutSet.empty[PolarVariable]
     // val analyzed2 = MutSet.empty[TypeRef -> Bool]
     // val analyzed2 = MutSet.empty[TypeRef]
     val analyzed2 = MutSet.empty[ST -> Bool]
     
+    
+    val analyzed0 = MutSet.empty[PolarVariable]
+    def analyze0(pol: Bool, st: SimpleType): Unit = trace(s"analyze0[${printPol(S(pol))}] $st") { st match {
+      case tv: TV =>
+        // analyzed0.setAnd(tv -> pol) { occNums(pol -> tv) += 1 } {
+        occNums(pol -> tv) += 1
+        analyzed0.setAndIfUnset(tv -> pol) {
+          // tv.lowerBounds.foreach(analyze0(true, _))
+          // tv.upperBounds.foreach(analyze0(false, _))
+          if (pol) tv.lowerBounds.foreach(analyze0(true, _))
+          else tv.upperBounds.foreach(analyze0(false, _))
+        }
+      case _ =>
+        st.childrenPol(S(pol)).foreach {
+          case (S(pol), st) => analyze0(pol, st)
+          case (N, st) => analyze0(true, st); analyze0(false, st)
+        }
+    }
+    }()
+    // analyze0(pol, st)
+    if (pol =/= S(false)) analyze0(true, st)
+    if (pol =/= S(true)) analyze0(false, st)
+    
+    println(s"[nums] ${occNums.iterator
+      .map(occ => s"${printPol(S(occ._1._1))}${occ._1._2} ${occ._2}")
+      .mkString(" ; ")
+    }")
+    
+    
+    // === TODO RM ===
     // val otherEdges = st.getVars.iterator.foreach { tv1 =>
     //   tv1.lowerBounds.foreach {
     //     case tv2: TV => tv1 -> L(tv2)
@@ -498,6 +529,12 @@ trait TypeSimplifier { self: Typer =>
         // trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
         // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
           analyzed2.setAndIfUnset(st -> pol) {
+          // analyzed2.setAnd(st -> pol) {
+          //   st match {
+          //     case tv: TV => occNums(pol -> tv) += 1
+          //     case _ =>
+          //   }
+          // } {
             st match {
       // case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
       // case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
@@ -516,6 +553,8 @@ trait TypeSimplifier { self: Typer =>
           // analyzed(tv -> pol) = true
           process(tv, pol)
         // }
+        // analyzed.setAndIfUnset(tv -> pol) { process(tv, pol) }
+        // analyzed.setAnd(tv -> pol) { occNums(pol -> tv) += 1 } { process(tv, pol) }
       case _: ObjectTag | ExtrType(_) => ()
       case ct: ComposedType =>
         // val newOccs = MutSet.empty[SimpleType]
@@ -556,7 +595,8 @@ trait TypeSimplifier { self: Typer =>
       case Without(base, names) => analyze(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze(ub, true) else analyze(lb, false)
-    }}
+    }
+    }
     }()
     // }(_ => s"~> ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}")
     // def processBounds(tv: TV, pol: Bool) = {
@@ -580,6 +620,9 @@ trait TypeSimplifier { self: Typer =>
         // TODO simple TypeRefs
         case tv: TypeVariable =>
           // println(s"$tv ${newOccs.contains(tv)}")
+          // occNums(pol -> tv) += 1
+          // if (!analyzed.contains(tv -> pol)) 
+          // occNums(pol -> tv) += 1
           if (!newOccs.contains(tv)) {
             // analyzed(tv -> pol) = true
             newOccs += st
@@ -598,6 +641,7 @@ trait TypeSimplifier { self: Typer =>
       newOccs.foreach {
         case tv: TypeVariable =>
           println(s">>>> $tv $newOccs ${coOccurrences.get(pol -> tv)}")
+          // occNums(pol -> tv) += 1
           coOccurrences.get(pol -> tv) match {
             case Some(os) => os.filterInPlace(newOccs) // computes the intersection
             case None => coOccurrences(pol -> tv) = newOccs.clone()
@@ -630,6 +674,14 @@ trait TypeSimplifier { self: Typer =>
     println(s"[vars] ${allVars}")
     println(s"[bounds] ${st.showBounds}")
     println(s"[rec] ${recVars}")
+    
+    occNums.iterator.foreach { case (k @ (pol, tv), num) =>
+      assert(num > 0)
+      if (num === 1 && !occNums.contains(!pol -> tv)) {
+        println(s"[1] $tv")
+        varSubst += tv -> None
+      }
+    }
     
     // Simplify away those non-recursive variables that only occur in positive or negative positions:
     allVars.foreach { case v0 => if (!recVars.contains(v0)) {

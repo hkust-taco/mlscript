@@ -11,42 +11,30 @@ let rec f = x => y => add (f x.tail x) (f y.tail y)
 let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│ f: 'a -> anything -> int
 //│   where
-//│     'a <: {tail: 'b}
-//│     'b <: 'a
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'a -> int
 //│   where
-//│     'a <: {tail: 'b}
-//│     'b <: 'a
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'b -> int
 //│   where
-//│     'b <: {tail: 'c}
-//│     'c <: 'b
-//│     'a <: {tail: 'd}
-//│     'd <: 'a
+//│     'b <: {tail: 'b}
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'b -> int
 //│   where
-//│     'b <: {tail: 'c}
-//│     'c <: 'b
-//│     'a <: {tail: 'd}
-//│     'd <: 'a
+//│     'b <: {tail: 'b}
+//│     'a <: {tail: 'a}
 //│ f: 'a -> 'b -> int
 //│   where
-//│     'a <: {tail: 'c}
-//│     'c <: 'a & 'b
-//│     'b <: {tail: 'd}
-//│     'd <: 'a & 'b
+//│     'a <: {tail: 'a & 'b}
+//│     'b <: {tail: 'a & 'b}
 //│ f: 'a -> 'b -> int
 //│   where
-//│     'a <: {tail: 'c} & 'b
-//│     'b <: {tail: 'd}
-//│     'd <: 'a
-//│     'c <: 'a
+//│     'a <: {tail: 'a} & 'b
+//│     'b <: {tail: 'a}
 //│ f: 'a -> 'b -> int
 //│   where
-//│     'a <: {tail: 'c} & 'b
-//│     'b <: {tail: 'd}
-//│     'd <: 'a
-//│     'c <: 'a
+//│     'a <: {tail: 'a} & 'b
+//│     'b <: {tail: 'a}
 
 let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 //│ f: 'a -> 'a -> {l: 'a, r: 'a}
@@ -57,10 +45,8 @@ let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 let rec f = x => y => if true then x else { t: f x.t y.t }
 //│ f: 'a -> 'b -> 'a
 //│   where
-//│     'b <: {t: 'c}
-//│     'c <: 'b
+//│     'b <: {t: 'b}
 //│     'a :> {t: 'a}
-//│        <: 'a & {t: 'd}
-//│     'd <: 'a
+//│        <: 'a & {t: 'a}
 
 
