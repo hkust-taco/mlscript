@@ -194,16 +194,20 @@ def f: (int & 'a) -> 'a
 //│  = <missing implementation>
 
 def impl a = a a
-//│ impl: ('b & 'a) -> 'c as 'a
+//│ impl: 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│     = [Function: impl]
 
 :e
 def f = impl
-//│ ('b & 'a) -> 'c as 'a
+//│ 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│   <:  f:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.201: 	def f = impl
+//│ ║  l.203: 	def f = impl
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int & 'a` is not a function
 //│ ║  l.192: 	def f: (int & 'a) -> 'a
@@ -233,7 +237,9 @@ def f a b = if gt a b then a else b
 //│  = [Function: f3]
 
 f 1 
-//│ res: (int & 'a) -> ('a | 1)
+//│ res: (int & 'a) -> 'a
+//│   where
+//│     'a :> 1
 //│    = [Function (anonymous)]
 
 :e
@@ -242,21 +248,23 @@ def f a b = if gt a b then a else b b // mistake!
 //│   <:  f:
 //│ (int & 'a) -> (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.246: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int & 'a` is not a function
-//│ ║  l.226: 	def f: (int & 'a) -> (int & 'a) -> 'a 
+//│ ║  l.230: 	def f: (int & 'a) -> (int & 'a) -> 'a 
 //│ ║         	                     ^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.246: 	def f a b = if gt a b then a else b b // mistake!
 //│ ║         	                                  ^^^
 //│ ╟── from reference:
-//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║  l.246: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^
 //│  = [Function: f4]
 
 f 1 
-//│ res: (int & 'a) -> ('a | 1)
+//│ res: (int & 'a) -> 'a
+//│   where
+//│     'a :> 1
 //│    = [Function (anonymous)]
 
 :re
@@ -275,13 +283,13 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.271: 	def g a = add a 1
+//│ ║  l.279: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `int` is not an instance of type 'a
-//│ ║  l.271: 	def g a = add a 1
+//│ ║  l.279: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.270: 	def g: (int & 'a) -> 'a
+//│ ║  l.278: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
 //│  = [Function: g]
 
@@ -336,30 +344,40 @@ def self1: ('a -> 'b & 'a) -> 'b
 //│      = <missing implementation>
 
 def self1 a = a a
-//│ ('b & 'a) -> 'c as 'a
+//│ 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│      = [Function: self1]
 
 // :ds
 fun a -> a a
-//│ res: ('b & 'a) -> 'c as 'a
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│    = [Function: res]
 
 self1 = res
-//│ ('b & 'a) -> 'c as 'a
+//│ 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│      = [Function: res]
 
 def self2: 'a -> 'b as 'a
-//│ self2: 'a -> 'b as 'a
+//│ self2: 'a
+//│   where
+//│     'a := 'a -> 'b
 //│      = <missing implementation>
 
 def self2 = self1
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self2:
-//│ 'a -> 'b as 'a
+//│ 'a
+//│   where
+//│     'a := 'a -> 'b
 //│      = [Function: res]
 
 

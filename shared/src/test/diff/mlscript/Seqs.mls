@@ -47,28 +47,38 @@ Cons 1 Nil
 //│   TypeError: (intermediate value) is not a function
 
 Cons
-//│ res: {size: 'size & int, tail: 'tail & List['A], head: 'head & 'A} -> (Cons['A] & {head: 'head, size: 'size, tail: 'tail})
+//│ res: {size: 'size, tail: 'tail, head: 'head} -> (Cons['A] & {head: 'head, size: 'size, tail: 'tail})
+//│   where
+//│     'head <: 'A
+//│     'tail <: List['A]
+//│     'size <: int
 //│    = [Function: res]
 
 // In the old inheritance semantics, this used to be required:
 def Cons_old head tail =
   Cons (ListBase (Seq { size = succ tail.size }) with { head; tail })
-//│ Cons_old: ('head & 'A) -> ({size: int} & 'tail & List['A]) -> (Cons['A] & {head: 'head, tail: 'tail})
+//│ Cons_old: 'head -> ({size: int} & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
+//│   where
+//│     'tail <: List['A]
+//│     'head <: 'A
 //│         = [Function: Cons_old]
 
 def Cons head tail =
   Cons { size = succ tail.size; head; tail }
-//│ Cons: ('head & 'A) -> ({size: int} & 'tail & List['A]) -> (Cons['A] & {head: 'head, tail: 'tail})
+//│ Cons: 'head -> ({size: int} & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
+//│   where
+//│     'tail <: List['A]
+//│     'head <: 'A
 //│     = [Function: Cons1]
 
 // We do not yet perform variance analysis
 :e
 Nil: ListBase[anything]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.66: 	Nil: ListBase[anything]
+//│ ║  l.76: 	Nil: ListBase[anything]
 //│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.66: 	Nil: ListBase[anything]
+//│ ║  l.76: 	Nil: ListBase[anything]
 //│ ║        	              ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.8: 	class Nil: ListBase[nothing] & {}

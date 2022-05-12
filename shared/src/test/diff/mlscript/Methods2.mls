@@ -47,6 +47,8 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│   where
 //│     'a :> 'A
 //│ Defined Cons.Map: Cons['A] -> ('A -> ('a & 'b)) -> (Cons['a] with {head: 'b, tail: List['a]})
+//│   where
+//│     'b <: 'a
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
@@ -139,13 +141,13 @@ o = l.HeadOption
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.140: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.142: 	case o of {None -> 0 | Some -> o.payload}
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.140: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║  l.142: 	case o of {None -> 0 | Some -> o.payload}
 //│ ╙──       	     ^
 //│ res: 0
 //│    = 0
@@ -164,7 +166,9 @@ def newHeadOption x = case x of {
     | Cons -> Some {payload = x.head}
     | _ -> None{}
     }
-//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~cons) -> (None['A0] | Some['A] & {payload: 'payload})
+//│ newHeadOption: ((Cons[?]\tail with {head: 'payload}) | ~cons) -> (None['A] | Some['A0] & {payload: 'payload})
+//│   where
+//│     'payload <: 'A0
 //│              = [Function: newHeadOption]
 
 // Note that `o` is not a list, so this takes the default case:
@@ -188,15 +192,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.188: 	case o of {
+//│ ║  l.192: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.189: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.193: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.188: 	case o of {
+//│ ║  l.192: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0

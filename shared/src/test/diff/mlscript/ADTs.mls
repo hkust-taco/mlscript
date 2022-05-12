@@ -8,11 +8,18 @@ def nega arg = Nega { arg }
 //│ Defined class Lit
 //│ Defined class Add
 //│ Defined class Nega
-//│ lit: ('val & int) -> (Lit & {val: 'val})
+//│ lit: 'val -> (Lit & {val: 'val})
+//│   where
+//│     'val <: int
 //│    = [Function: lit]
-//│ add: ('lhs & 'E) -> ('rhs & 'E) -> (Add['E] & {lhs: 'lhs, rhs: 'rhs})
+//│ add: 'lhs -> 'rhs -> (Add['E] & {lhs: 'lhs, rhs: 'rhs})
+//│   where
+//│     'rhs <: 'E
+//│     'lhs <: 'E
 //│    = [Function: add]
-//│ nega: ('arg & 'E) -> (Nega['E] & {arg: 'arg})
+//│ nega: 'arg -> (Nega['E] & {arg: 'arg})
+//│   where
+//│     'arg <: 'E
 //│     = [Function: nega]
 
 rec def eval e = case e of {
@@ -20,7 +27,14 @@ rec def eval e = case e of {
   | Add -> eval e.lhs + eval e.rhs
   | Nega -> 0 - (eval e.arg)
   }
-//│ eval: (Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a} as 'a) -> int
+//│ eval: 'a -> int
+//│   where
+//│     'a <: Add[?] & 'b | Lit | Nega[?] & 'c
+//│     'c <: {arg: 'd}
+//│     'd <: 'a
+//│     'b <: {lhs: 'e, rhs: 'f}
+//│     'f <: 'a
+//│     'e <: 'a
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)
@@ -34,15 +48,21 @@ eval ex
 //│    = 4
 
 def e: Add['e] as 'e
-//│ e: Add['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e := Add['e]
 //│  = <missing implementation>
 
 def e: Lit | Add['e] as 'e
-//│ e: Add['e] | Lit as 'e
+//│ e: 'e
+//│   where
+//│     'e := Add['e] | Lit
 //│  = <missing implementation>
 
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: Add['e] | Lit | Nega['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e := Add['e] | Lit | Nega['e]
 //│  = <missing implementation>
 
 def e = ex
@@ -50,7 +70,9 @@ def e = ex
 //│   where
 //│     'E :> Lit & {val: 2}
 //│   <:  e:
-//│ Add['e] | Lit | Nega['e] as 'e
+//│ 'e
+//│   where
+//│     'e := Add['e] | Lit | Nega['e]
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -89,7 +111,7 @@ eval exp
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.25: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 
@@ -105,7 +127,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.44: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.62: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
@@ -117,7 +139,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.25: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 

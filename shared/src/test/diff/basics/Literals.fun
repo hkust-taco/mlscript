@@ -75,7 +75,9 @@ let pred = n => 0 < n
 //│ pred: int -> bool
 
 let g = x => if pred x then x else f false
-//│ g: (int & 'a) -> ('a | 0 | 1)
+//│ g: (int & 'a) -> 'a
+//│   where
+//│     'a :> 0 | 1
 
 g 3
 //│ res: 0 | 1 | 3
@@ -84,7 +86,9 @@ g / succ 3
 //│ res: 1 | int
 
 x => if x then x else f false
-//│ res: (bool & 'a) -> ('a | 0 | 1)
+//│ res: (bool & 'a) -> 'a
+//│   where
+//│     'a :> 0 | 1
 
 res false
 //│ res: 0 | 1 | false
@@ -103,13 +107,13 @@ x => if pred x then x else f x
 :e
 f false
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.104: 	f false
+//│ ║  l.108: 	f false
 //│ ║         	^^^^^^^
 //│ ╟── reference of type `false` does not match type `int`
-//│ ║  l.104: 	f false
+//│ ║  l.108: 	f false
 //│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.93: 	  if pred n then n else f (n + 1)
+//│ ║  l.97: 	  if pred n then n else f (n + 1)
 //│ ╙──      	                           ^
 //│ res: error | false | int
 

@@ -134,7 +134,9 @@ error: BadRec
 //│   Error: unexpected runtime error
 
 def someRec: { y: 'a } as 'a
-//│ someRec: {y: 'a} as 'a
+//│ someRec: 'a
+//│   where
+//│     'a :> {y: 'a}
 //│        = <missing implementation>
 
 // // FIXME: causes SOF in type simplifier

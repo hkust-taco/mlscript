@@ -9,7 +9,9 @@
 // :d
 // :ds
 def f: { x: 'a } as 'a
-//│ f: {x: 'a} as 'a
+//│ f: 'a
+//│   where
+//│     'a :> {x: 'a}
 
 
 // :stdout
@@ -17,13 +19,17 @@ def f: { x: 'a } as 'a
 // :d
 // :ds
 rec def l a = l
-//│ l: anything -> 'a as 'a
+//│ l: 'a
+//│   where
+//│     'a :> anything -> 'a
 
 
 // TODO-simplif
 // :ds
 fun a -> a a
-//│ res: ('b & 'a) -> 'c as 'a
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 
 
 // :stdout
@@ -32,14 +38,18 @@ fun a -> a a
 // :ds
 :e
 rec def f a = a a
-//│ ('b & 'a) -> 'c as 'a
+//│ 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│   <:  f:
-//│ {x: 'a} as 'a
+//│ 'a
+//│   where
+//│     'a :> {x: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.34: 	rec def f a = a a
+//│ ║  l.40: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
-//│ ║  l.34: 	rec def f a = a a
+//│ ║  l.40: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
 //│ ║  l.11: 	def f: { x: 'a } as 'a
@@ -50,7 +60,9 @@ rec def f a = a a
 // :d
 // :ds
 rec def g a = a a
-//│ g: ('b & 'a) -> 'c as 'a
+//│ g: 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 
 
 
@@ -59,16 +71,17 @@ class Some[A]: { v: A }
 
 // :ds
 def Some v = Some{v}
-//│ Some: ('v & 'A) -> (Some['A] & {v: 'v})
+//│ Some: 'v -> (Some['A] & {v: 'v})
+//│   where
+//│     'v <: 'A
 
 
 def foo(x: Some['a]) =
   let _ = x.v : Some[?]
   in x: Some['a & some]
-//│ foo: Some['a] -> Some[in Some[?] & 'a0 out Some[?] & 'a0]
+//│ foo: Some['a] -> Some[Some[?] & 'a0]
 //│   where
-//│     'a :> Some[?] & 'a0
-//│        <: Some[?] & 'a0
+//│     'a := Some[?] & 'a0
 
 // :ds
 def f: Some['a]
@@ -79,7 +92,9 @@ def f: Some['a]
 // TODO MV
 
 def foo(x: 'a) = (x + 1, x)
-//│ foo: ('a & int) -> (int, 'a,)
+//│ foo: 'a -> (int, 'a,)
+//│   where
+//│     'a <: int
 
 // NOTE: currently each parameter type is typed independently – so these 'a are different!
 def foo(x: 'a, y: 'a) = (x + 1, y)

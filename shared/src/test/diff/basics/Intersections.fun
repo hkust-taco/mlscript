@@ -7,15 +7,17 @@ let foo = _ as (_: (Int => Int) & (Bool => Bool))
 :ns
 let foo = _ as (_: (Int => Int) & (Bool => Bool))
 let foo = (_ as (_: (Int => Int) & (Bool => Bool)))._1
-//│ foo: (_: nothing,)
-//│ foo: nothing
+//│ foo: (_: 'a,)
+//│   where
+//│     'a <: (int | bool) -> (int & bool)
+//│ foo: 'a
 
 foo(1)
 //│ res: nothing
 
 :ns
 foo(1)
-//│ res: nothing
+//│ res: 'a
 
 succ / foo(1)
 //│ res: int
@@ -41,26 +43,26 @@ foo(1) as Nothing
 :e
 foo as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.42: 	foo as Nothing
+//│ ║  l.44: 	foo as Nothing
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type intersection of type `(bool | int) -> nothing` does not match type `nothing`
-//│ ║  l.24: 	let foo = (Int => Int) & (Bool => Bool)
+//│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.42: 	foo as Nothing
+//│ ║  l.44: 	foo as Nothing
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.42: 	foo as Nothing
+//│ ║  l.44: 	foo as Nothing
 //│ ╙──      	       ^^^^^^^
 //│ res: nothing
 
 :e
 let oops = (&)
 //│ ╔══[ERROR] Illegal use of operator: &
-//│ ║  l.58: 	let oops = (&)
+//│ ║  l.60: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.58: 	let oops = (&)
+//│ ║  l.60: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ oops: error
 

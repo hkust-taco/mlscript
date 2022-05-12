@@ -93,7 +93,7 @@ Crazy
 //│      Crazy is not implemented
 
 def c = Crazy({ name = "Bob"; age = 42 })
-//│ c: Crazy['a] & ('a | {name: "Bob", age: 42})
+//│ c: Crazy['a] & 'a
 //│   where
 //│     'a :> {name: "Bob", age: 42}
 //│  = <no result>
@@ -118,7 +118,7 @@ c: nothing
 //│      c and Crazy are not implemented
 
 def d = Crazy(Parent1{name = "Bob"})
-//│ d: Crazy['a] & ('a | Parent1 & {name: "Bob"})
+//│ d: Crazy['a] & 'a
 //│   where
 //│     'a :> Parent1 & {name: "Bob"}
 //│  = <no result>

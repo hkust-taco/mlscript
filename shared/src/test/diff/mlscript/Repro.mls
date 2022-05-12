@@ -18,7 +18,9 @@ class G[A]: { a: G[A] }
 //│ Defined class G
 
 def g: G['a] & {a: 'a} as 'a
-//│ g: G['a] & {a: 'a} as 'a
+//│ g: 'a
+//│   where
+//│     'a := G['a] & {a: 'a}
 //│  = <missing implementation>
 
 :NoJS
@@ -26,39 +28,51 @@ def g: G['a] & {a: 'a} as 'a
 // rec def g2 a = G { a }
 // :re
 rec def g2 = G { a = g2 }
-//│ g2: (G['A] with {a: 'a}) as 'a
+//│ g2: G['A] with {a: 'a}
+//│   where
+//│     'a :> G['A] with {a: 'a}
 
 // g = g2
 // :d
 // :re
 g = g
-//│ G['a] & {a: 'a} as 'a
+//│ 'a
+//│   where
+//│     'a := G['a] & {a: 'a}
 //│   <:  g:
-//│ G['a] & {a: 'a} as 'a
+//│ 'a
+//│   where
+//│     'a := G['a] & {a: 'a}
 
 
 def manual: 'a -> nothing as 'a
-//│ manual: 'a -> nothing as 'a
+//│ manual: 'a
+//│   where
+//│     'a := 'a -> nothing
 
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.44: 	manual id
+//│ ║  l.54: 	manual id
 //│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.40: 	def manual: 'a -> nothing as 'a
+//│ ║  l.48: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.40: 	def manual: 'a -> nothing as 'a
+//│ ║  l.48: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
-//│ res: (('a & 'c & nothing) -> ('c | 'b) as 'b) | error
+//│ res: ('a & 'b) -> 'b | error
 //│   where
-//│     'a :> 'b
-//│        <: ('a | ('c & nothing) -> ('c | 'b)) -> nothing & 'c & nothing
+//│     'a :> ('a & 'b) -> 'b
+//│        <: ('a | 'b -> 'b) -> nothing & 'b
+//│     'b :> ('a & 'b) -> 'b
+//│        <: nothing
 
 // :ds
 def manual: 'a -> anything as 'a
-//│ manual: 'a -> anything as 'a
+//│ manual: 'a
+//│   where
+//│     'a := 'a -> anything
 
 manual id
 //│ res: anything

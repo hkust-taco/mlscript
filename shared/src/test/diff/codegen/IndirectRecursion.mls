@@ -27,7 +27,9 @@ pow1 3 4
 def pow pow n x =
     if n > 0 then pow (n - 1) x * x
     else 1
-//│ pow: (int -> 'a -> int) -> int -> ('a & int) -> int
+//│ pow: (int -> 'a -> int) -> int -> 'a -> int
+//│   where
+//│     'a <: int
 //│    = [Function: pow]
 
 def pow = z pow

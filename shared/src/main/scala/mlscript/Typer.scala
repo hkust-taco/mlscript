@@ -779,9 +779,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       } else TupleType(fields.reverseIterator.mapValues(_.toUpper(noProv)).toList)(prov)
   }
   
-  
+  /* 
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
+  def expandTypeOld(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
     val expandType = ()
     
     import Set.{empty => semp}
@@ -1046,6 +1046,75 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }}
     
     val res = go(st, polarity, semp)(semp)
+    if (bounds.isEmpty) res
+    else Constrained(res, bounds)
+  }
+  */
+  
+  /** Convert an inferred SimpleType into the immutable Type representation. */
+  def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
+    val expandType = ()
+    
+    import Set.{empty => semp}
+    
+    var bounds: Ls[TypeVar -> Bounds] = Nil
+    
+    // For type vars used as invariant TypeRef arguments (and other invariant places in the future?)
+    // val invariant = mutable.Map.empty[TV, Type]
+    val seenVars = mutable.Set.empty[TV]
+    
+    def field(ft: FieldType): Field = ft match {
+      case FieldType(S(l: TV), u: TV) if l === u =>
+        val res = go(u)
+        Field(S(res), res) // TODO improve Field
+      case f =>
+        Field(f.lb.map(go), go(f.ub))
+    }
+    
+    // def go(st: SimpleType): Type = goImpl(st.unwrapProvs)
+    // def goImpl(st: SimpleType): Type = {
+    def go(st: SimpleType): Type = st.unwrapProvs match {
+        case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
+        case tv: TypeVariable =>
+          val nv = tv.asTypeVar
+          if (!seenVars(tv)) {
+            seenVars += tv
+            val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
+            val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
+            // if (l === u) l else { // TODO try to rm to see what happens
+            //   if (l =/= Bot || u =/= Top)
+            //     bounds ::= nv -> Bounds(l, u) // FIXME no dup?
+            // }
+            if (l =/= Bot || u =/= Top)
+              bounds ::= nv -> Bounds(l, u)
+          }
+          nv
+        case FunctionType(l, r) => Function(go(l), go(r))
+        case ComposedType(true, l, r) => Union(go(l), go(r))
+        case ComposedType(false, l, r) => Inter(go(l), go(r))
+        case RecordType(fs) => Record(fs.mapValues(field))
+        case TupleType(fs) => Tuple(fs.mapValues(field))
+        case ArrayType(FieldType(None, ub)) => AppliedType(TypeName("Array"), go(ub) :: Nil)
+        case ArrayType(f) =>
+          val f2 = field(f)
+          AppliedType(TypeName("MutArray"), Bounds(f2.in.get, f2.out) :: Nil)
+        case NegType(t) => Neg(go(t))
+        case ExtrType(true) => Bot
+        case ExtrType(false) => Top
+        case WithType(base, rcd) =>
+          WithExtension(go(base), Record(rcd.fields.mapValues(field)))
+        case ProxyType(und) => go(und)
+        case tag: ObjectTag => tag.id match {
+          case Var(n) => TypeName(n)
+          case lit: Lit => Literal(lit)
+        }
+        case TypeRef(td, Nil) => td
+        case TypeRef(td, targs) => AppliedType(td, targs.map(go))
+        case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
+        case Without(base, names) => Rem(go(base), names.toList)
+    }
+    
+    val res = go(st)
     if (bounds.isEmpty) res
     else Constrained(res, bounds)
   }

@@ -627,7 +627,9 @@ i arg
 //│ res: error | int
 
 let test x y = if x.prop then i x else y
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> ('a | int)
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> 'a
+//│   where
+//│     'a :> int
 
 :e
 test arg2
@@ -643,7 +645,9 @@ test arg2
 //│ ╟── from field selection:
 //│ ║  l.328: 	  x.prop
 //│ ╙──       	   ^^^^^
-//│ res: 'a -> ('a | int) | error
+//│ res: 'a -> 'a | error
+//│   where
+//│     'a :> int
 
 let mkArg = a => {prop: a}
 h / mkArg 1
@@ -661,7 +665,7 @@ i / mkArg 1
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── record of type `{prop: ?a}` does not match type `int`
-//│ ║  l.648: 	let mkArg = a => {prop: a}
+//│ ║  l.652: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+1: 	g { fld: mkArg 1 } // TODO multi-step flow message?
@@ -703,7 +707,7 @@ i / mkArg 1
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── record of type `{prop: ?a}` does not have field 'fld'
-//│ ║  l.648: 	let mkArg = a => {prop: a}
+//│ ║  l.652: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{fld: ?b}`
 //│ ║  l.+4: 	i / mkArg 1
@@ -724,4 +728,4 @@ i / mkArg 1
 foo
 ba)r
 baz
-//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.725:3: ba)r
+//│ /!\ Parse error: Expected end-of-input:2:3, found ")r\nbaz\n" at l.729:3: ba)r

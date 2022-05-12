@@ -29,7 +29,12 @@ rec def eval f e = case e of {
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ ('a -> int) -> (Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & 'c | Lit & {val: int} | 'a & ~add & ~lit
+//│     'c <: {lhs: 'd, rhs: 'e}
+//│     'e <: 'b
+//│     'd <: 'b
 //│   <:  eval:
 //│ ('b -> int) -> Expr['b] -> int
 //│     = [Function: eval]
@@ -37,10 +42,10 @@ rec def eval f e = case e of {
 :e
 eval {} (Lit{} with { val = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.43: 	eval {} (Lit{} with { val = 1 })
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.38: 	eval {} (Lit{} with { val = 1 })
+//│ ║  l.43: 	eval {} (Lit{} with { val = 1 })
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
@@ -63,10 +68,10 @@ eval (fun x -> x.hello) (Const{} with {hello=1})
 :e
 eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.69: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~add & ~lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
-//│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
+//│ ║  l.69: 	eval (fun x -> x.hello) {hello=1}
 //│ ║        	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.16: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A

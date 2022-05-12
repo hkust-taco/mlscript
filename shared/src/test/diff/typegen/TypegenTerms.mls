@@ -59,41 +59,45 @@ def g x y = if x.b == 1 then x else x.a
 //│ export declare const g<a>: (arg: {readonly a: a, readonly b: int} & a) => (arg1: unknown) => a
 //│ // end ts
 
+// FIXME
 :ts
 rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 def f: ('c -> 'a as 'a) -> 'c -> int
 // recursion type functions
-//│ l: int -> 'a as 'a
-//│ m: int -> int -> 'a as 'a
-//│ f: ('c -> 'a as 'a) -> 'c -> int
-//│ // start ts
-//│ export type a = (arg: int) => a
-//│ export declare const l: a
-//│ export type a = (arg: int) => (arg1: int) => a
-//│ export declare const m: a
-//│ export type a<c> = (arg: c) => a<c>
-//│ export declare const f<c>: (arg: a<c>) => (arg1: c) => int
-//│ // end ts
+//│ l: 'a
+//│   where
+//│     'a :> int -> 'a
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α105,List((α105,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α105),Top)))) (of class mlscript.Constrained)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:506)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:478)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:478)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:605)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
 
 :ts
 :e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.81: 	1: ?
+//│ ║  l.85: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.81: 	1: ?
+//│ ║  l.85: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.86: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.86: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -101,16 +105,27 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ export declare const res: {readonly a: string, readonly b: int}
 //│ // end ts
 
+// FIXME
 :ts
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ('a & 'b -> 'c & {a: int}) -> ('b & {b: int}) -> ('c | anything -> 'a)
-//│ g: nothing -> nothing -> nothing
-//│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg: a & ((arg1: b) => c) & {readonly a: int}) => (arg2: b & {readonly b: int}) => c | ((arg3: unknown) => a)
-//│ export declare const g: (arg: never) => (arg1: never) => never
-//│ // end ts
+//│ nonsense: 'a -> 'b -> 'c
+//│   where
+//│     'a <: 'b -> 'c & {a: int}
+//│     'c :> anything -> 'a
+//│     'b <: {b: int}
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(Function(Tuple(List((None,Field(None,α135)))),Function(Tuple(List((None,Field(None,α136)))),α137)),List((α135,Bounds(Bot,Inter(Function(Tuple(List((None,Field(None,α136)))),α137),Record(List((a,Field(None,TypeName(int)))))))), (α137,Bounds(Function(Tuple(List((None,Field(None,Top)))),α135),Top)), (α136,Bounds(Bot,Record(List((b,Field(None,TypeName(int))))))))) (of class mlscript.Constrained)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:506)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:478)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:478)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:605)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
 
 :ts
 def x: int | ~string
@@ -154,23 +169,25 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ // end ts
 
 
+// FIXME
 :ts
 def weird: ((int, int) -> 'a) as 'a
 def weird: ('a -> (int, int)) as 'a
 def weird: ((int, 'a) as 'a) -> int
 def weird: ((int, bool) | 'a) -> 'a
-//│ weird: (int, int,) -> 'a as 'a
-//│ weird: 'a -> (int, int,) as 'a
-//│ weird: ((int, 'a,) as 'a) -> int
-//│ weird: ('a | (int, bool,)) -> 'a
-//│ // start ts
-//│ export type a = (arg: int, arg1: int) => a
-//│ export declare const weird: a
-//│ export type a = (arg: a) => readonly [int, int]
-//│ export declare const weird: a
-//│ export type a = readonly [int, a]
-//│ export declare const weird: (arg: a) => int
-//│ export declare const weird<a>: (arg: a | readonly [int, bool]) => a
-//│ // end ts
+//│ weird: 'a
+//│   where
+//│     'a :> (int, int,) -> 'a
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α223,List((α223,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α223),Top)))) (of class mlscript.Constrained)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
+//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:491)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:478)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:478)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:605)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
 
 

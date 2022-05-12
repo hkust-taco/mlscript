@@ -824,15 +824,21 @@ x
 
 
 fun x -> (x.a <- 0, x.a + 1)
-//│ res: {mut a: in 'a | 0 out int & 'a} -> (unit, int,)
+//│ res: {mut a: in 'a out int & 'a} -> (unit, int,)
+//│   where
+//│     'a :> 0
 //│    = [Function: res]
 
 def foo x y = (x.a <- 0, x.a + 1, x.a, x.a <- y)
-//│ foo: {mut a: in 'a | 0 out int & 'b & 'a} -> 'a -> (unit, int, 'b, unit,)
+//│ foo: {mut a: in 'a out int & 'b & 'a} -> 'a -> (unit, int, 'b, unit,)
+//│   where
+//│     'a :> 0
 //│    = [Function: foo]
 
 def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
-//│ foo: {mut a: in 'a | 'b | 0 out int & 'a & 'b} -> 'a -> (('b | 0) -> 'c) -> (unit, int, 'b | 0, unit, 'c,)
+//│ foo: {mut a: in 'a | 'b out int & 'a & 'b} -> 'a -> ('b -> 'c) -> (unit, int, 'b, unit, 'c,)
+//│   where
+//│     'b :> 0
 //│    = [Function: foo1]
 
 foo { mut a = 1 } 2 add
@@ -842,16 +848,16 @@ foo { mut a = 1 } 2 add
 :e
 foo { mut a = 1 } 2 3
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.843: 	foo { mut a = 1 } 2 3
+//│ ║  l.849: 	foo { mut a = 1 } 2 3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `3` is not a function
-//│ ║  l.843: 	foo { mut a = 1 } 2 3
+//│ ║  l.849: 	foo { mut a = 1 } 2 3
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.834: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.838: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ║         	                                                   ^^^^^
 //│ ╟── from reference:
-//│ ║  l.834: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.838: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
 //│ res: (unit, int, 0 | 1 | 2, unit, nothing,) | error
 //│ Runtime error:
@@ -861,24 +867,24 @@ foo { mut a = 1 } 2 3
 foo { mut a = "oops" } 2
 foo { a = 1 } 2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.861: 	foo { mut a = "oops" } 2
+//│ ║  l.867: 	foo { mut a = "oops" } 2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.861: 	foo { mut a = "oops" } 2
+//│ ║  l.867: 	foo { mut a = "oops" } 2
 //│ ║         	              ^^^^^^
 //│ ╟── but it flows into mutable record field with expected type `int`
-//│ ║  l.861: 	foo { mut a = "oops" } 2
+//│ ║  l.867: 	foo { mut a = "oops" } 2
 //│ ║         	          ^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.834: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
+//│ ║  l.838: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                           ^^^
 //│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.862: 	foo { a = 1 } 2
+//│ ║  l.868: 	foo { a = 1 } 2
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── record field of type `1` is not mutable
-//│ ║  l.862: 	foo { a = 1 } 2
+//│ ║  l.868: 	foo { a = 1 } 2
 //│ ╙──       	      ^^^^^
 //│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
 //│    = [Function (anonymous)]

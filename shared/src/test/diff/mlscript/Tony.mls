@@ -113,5 +113,7 @@ res 1
 
 
 def funny = fun f -> case f of { Some -> f f }
-//│ funny: (Some[?] & ('a -> 'b as 'a)) -> 'b
+//│ funny: (Some[?] & 'a) -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 //│      = [Function: funny]

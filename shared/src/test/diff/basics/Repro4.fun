@@ -2,16 +2,24 @@
 
 // :ds
 x => x x
-//│ res: ('b & 'a) -> 'c as 'a
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'a -> 'b
 
 
 // TODO-simplif
 // :ds
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('b & 'a) as 'a) -> 'b
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'b -> 'b
+//│     'b <: 'a
 
 
 // :ds
 let rec consume = strm => add strm.head (consume strm.tail)
-//│ consume: ({head: int, tail: 'a} as 'a) -> int
+//│ consume: 'a -> int
+//│   where
+//│     'a <: {head: int, tail: 'b}
+//│     'b <: 'a
 

@@ -116,16 +116,18 @@ def foo x =
 def foo x =
   let xf = x with { f = 42 }
   in { l = getf xf; r = getf x; s = x }
-//│ foo: ('a & ({f: 'b} | ~{f: 42})\f & {f: 'c}) -> {l: 'b, r: 'c, s: 'a}
+//│ foo: 'a -> {l: 'b, r: 'c, s: 'a}
+//│   where
+//│     'a <: ({f: 'b} | ~{f: 42})\f & {f: 'c}
 //│    = [Function: foo2]
 
 :e
 foo 42
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	foo 42
+//│ ║  l.125: 	foo 42
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `42` does not have field 'f'
-//│ ║  l.123: 	foo 42
+//│ ║  l.125: 	foo 42
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from record literal:
 //│ ║  l.87: 	def getf { f } = f
@@ -156,13 +158,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.159: 	res.z
 //│ ║         	^^^^^
 //│ ╟── `with` extension of type `{x: 1, y: 2}` does not have field 'z'
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.154: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?a}`
-//│ ║  l.157: 	res.z
+//│ ║  l.159: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined

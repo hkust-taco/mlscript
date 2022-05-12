@@ -403,5 +403,7 @@ def pf t = (t[1], t._1)
 pf((1,2,3))
 //│ p1: Array[bool | int | string] | T
 //│ p2: Array[4 | bool | int | string] | T
-//│ pf: (Array['a & ~undefined] & {_1: 'b}) -> (undefined | 'a, 'b,)
+//│ pf: (Array['a] & {_1: 'b}) -> (undefined | 'a, 'b,)
+//│   where
+//│     'a <: ~undefined
 //│ res: (1 | 2 | 3 | undefined, 1,)

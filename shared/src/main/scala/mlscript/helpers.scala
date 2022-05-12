@@ -120,6 +120,8 @@ abstract class TypeImpl extends Located { self: Type =>
         s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
       case (uv, Bounds(lb, Top)) =>
         s"\n    ${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, ub)) if lb === ub =>
+        s"\n    ${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
       case (uv, Bounds(lb, ub)) =>
         val vstr = ctx.vs(uv)
         s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
