@@ -5,9 +5,7 @@ class Some[A]: { v: A }
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: 'v -> (Some['A] & {v: 'v})
-//│   where
-//│     'v <: 'A
+//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
 //│     = [Function: Some1]
 //│ None: None
 //│     = None {}
@@ -20,9 +18,7 @@ def flatMap = fun f -> fun opt ->
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
-//│ f: 'v -> (Some['A] & {v: 'v})
-//│   where
-//│     'v <: 'A
+//│ f: ('v & 'A) -> (Some['A] with {v: 'v})
 //│  = [Function: f]
 //│ res: Some['A] & {v: 1}
 //│   where
@@ -34,13 +30,13 @@ flatMap f None
 :e
 flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.35: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `None & ?a | Some[?] & ?b`
-//│ ║  l.35: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.16: 	  case opt of { Some -> f opt.v | None -> opt }
+//│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
 //│ res: error | (Some['A] with {v: nothing})
 //│ Runtime error:
@@ -79,12 +75,11 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (NoneBecause | Some['A] & {v: 'v} | Some['A0] & {v: int} | Some['A1] & {v: int})
+//│ evalOpt: 'a -> (NoneBecause | (Some['A] with {v: 'v}) | Some['A0] & {v: int} | Some['A1] & {v: int})
 //│   where
 //│     'A1 :> int
 //│     'A0 :> int
-//│     'a <: Lit & {v: 'v} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
-//│     'v <: int & 'A
+//│     'a <: Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})

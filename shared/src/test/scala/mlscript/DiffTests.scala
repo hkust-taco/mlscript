@@ -304,6 +304,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
+                // TODO should just have reconstruction always do DNF, and remove pass above? – and do rec type simpl too...?
+                
                 cur = typer.reconstructClassTypes(cur, S(true), ctx)
                 if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")

@@ -57,15 +57,13 @@ let test = x => y => if x.prop then i x else y
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> 'a
-//│   where
-//│     'a :> int
+//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
 
 :e
 :verbose
 test arg2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.66: 	test arg2
+//│ ║  l.64: 	test arg2
 //│ ║        	^^^^^^^^^
 //│ ╟── application of type `bool` does not match type `int`
 //│ ║  l.51: 	let arg = {prop: not true}
@@ -76,7 +74,5 @@ test arg2
 //│ ╟── from field selection:
 //│ ║  l.50: 	  x.prop
 //│ ╙──      	   ^^^^^
-//│ res: 'a -> 'a | error
-//│   where
-//│     'a :> int
+//│ res: 'a -> (int | 'a) | error
 

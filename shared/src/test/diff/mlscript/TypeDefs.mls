@@ -3,9 +3,7 @@ class Test1: { x: int }
 //│ Defined class Test1
 
 Test1
-//│ res: {x: 'x} -> (Test1 & {x: 'x})
-//│   where
-//│     'x <: int
+//│ res: {x: int & 'x} -> (Test1 with {x: 'x})
 //│    = [Function: res]
 
 Test1 { x = 123 }
@@ -15,10 +13,10 @@ Test1 { x = 123 }
 :e
 Test1 { x = "oops" }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.16: 	Test1 { x = "oops" }
+//│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `int`
-//│ ║  l.16: 	Test1 { x = "oops" }
+//│ ║  l.14: 	Test1 { x = "oops" }
 //│ ║        	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.2: 	class Test1: { x: int }
@@ -27,24 +25,20 @@ Test1 { x = "oops" }
 //│    = Test1 { x: 'oops' }
 
 def Test1 = fun x -> Test1 { x = x }
-//│ Test1: 'x -> (Test1 & {x: 'x})
-//│   where
-//│     'x <: int
+//│ Test1: (int & 'x) -> (Test1 with {x: 'x})
 //│      = [Function: Test11]
 
 class Test11: { x: int }
 def Test11 x = Test11 { x }
 //│ Defined class Test11
-//│ Test11: 'x -> (Test11 & {x: 'x})
-//│   where
-//│     'x <: int
+//│ Test11: (int & 'x) -> (Test11 with {x: 'x})
 //│       = [Function: Test112]
 
 
 :e
 type Test1 = { x: int }
 //│ ╔══[ERROR] Type 'Test1' is already defined.
-//│ ║  l.45: 	type Test1 = { x: int }
+//│ ║  l.39: 	type Test1 = { x: int }
 //│ ╙──      	     ^^^^^
 
 type Test2 = { x: int }
@@ -52,11 +46,11 @@ type Test2 = { x: int }
 
 :pe
 class Test = { x: int }
-//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.54:12: class Test = { x: int }
+//│ /!\ Parse error: Expected end-of-input:1:12, found "= { x: int" at l.48:12: class Test = { x: int }
 
 :pe
 type Test: { x: int }
-//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.58:10: type Test: { x: int }
+//│ /!\ Parse error: Expected "=":1:10, found ": { x: int" at l.52:10: type Test: { x: int }
 
 type Test3 = int -> int
 //│ Defined type alias Test3
@@ -75,10 +69,10 @@ type T = int
 type T = int
 type T = int
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.75: 	type T = int
+//│ ║  l.69: 	type T = int
 //│ ╙──      	     ^
 //│ ╔══[ERROR] Type 'T' is already defined.
-//│ ║  l.76: 	type T = int
+//│ ║  l.70: 	type T = int
 //│ ╙──      	     ^
 
 :e
@@ -89,18 +83,18 @@ def foo = 1
 foo 42
 //│ Defined type alias TypeA
 //│ ╔══[ERROR] identifier not found: foo
-//│ ║  l.87: 	foo 42
+//│ ║  l.81: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ foo: 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	foo 42
+//│ ║  l.83: 	foo 42
 //│ ║        	^^^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.88: 	def foo = 1
+//│ ║  l.82: 	def foo = 1
 //│ ║        	          ^
 //│ ╟── but it flows into reference with expected type `42 -> ?a`
-//│ ║  l.89: 	foo 42
+//│ ║  l.83: 	foo 42
 //│ ╙──      	^^^
 //│ res: error
 //│ Code generation encountered an error:
@@ -117,7 +111,7 @@ def test = fun x -> (x: TypeB)
 test 42
 type TypeC = TypeA
 //│ ╔══[ERROR] illegal cycle involving type TypeOops
-//│ ║  l.114: 	type TypeOops = TypeOops
+//│ ║  l.108: 	type TypeOops = TypeOops
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^
 //│ Defined type alias TypeB
 //│ Defined type alias TypeC
@@ -153,13 +147,13 @@ error: Lol -> Lol
 :e
 type Runaway[A] = Runaway['a]
 //│ ╔══[ERROR] illegal cycle involving type Runaway
-//│ ║  l.154: 	type Runaway[A] = Runaway['a]
+//│ ║  l.148: 	type Runaway[A] = Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 type Runaway[A] = 'a -> Runaway['a]
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as Runaway['a], but is defined as Runaway['A]
-//│ ║  l.160: 	type Runaway[A] = 'a -> Runaway['a]
+//│ ║  l.154: 	type Runaway[A] = 'a -> Runaway['a]
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -169,16 +163,16 @@ type Runaway2 = Lol -> Runaway2
 :e
 id: Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.170: 	id: Runaway2
+//│ ║  l.164: 	id: Runaway2
 //│ ║         	^^
 //│ ╟── type `{x: ?a -> ?a}` is not a function
-//│ ║  l.139: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.166: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
 //│ ║         	                ^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.166: 	type Runaway2 = Lol -> Runaway2
+//│ ║  l.160: 	type Runaway2 = Lol -> Runaway2
 //│ ╙──       	                       ^^^^^^^^
 //│ res: Runaway2
 //│    = [Function: id]
@@ -193,13 +187,13 @@ error: Runaway2
 :re
 error: {x: int} -> nothing : Runaway2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.194: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
 //│ ║         	^^^^^
 //│ ╟── type `?a -> ?a` does not match type `int`
-//│ ║  l.139: 	type Lol = { x: 'a -> 'a }
+//│ ║  l.133: 	type Lol = { x: 'a -> 'a }
 //│ ║         	                ^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.194: 	error: {x: int} -> nothing : Runaway2
+//│ ║  l.188: 	error: {x: int} -> nothing : Runaway2
 //│ ╙──       	           ^^^
 //│ res: Runaway2
 //│ Runtime error:

@@ -8,9 +8,7 @@ def None = None{}
 class Some[A]: { value: A }
 def Some v = Some { value = v }
 //│ Defined class Some
-//│ Some: 'value -> (Some['A] & {value: 'value})
-//│   where
-//│     'value <: 'A
+//│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
 //│     = [Function: Some1]
 
 Some 42
@@ -35,13 +33,13 @@ Some 42 : Option[int]
 :e
 res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.36: 	res.value
+//│ ║  l.34: 	res.value
 //│ ║        	^^^^^^^^^
 //│ ╟── type `None` does not have field 'value'
-//│ ║  l.25: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?a}`
-//│ ║  l.36: 	res.value
+//│ ║  l.34: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
 //│    = 42
@@ -49,17 +47,17 @@ res.value
 :e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.50: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.50: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── integer literal of type `42` does not match type `None | Some[int]`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.25: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.50: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ res: Option[int]
 //│    = 42
@@ -71,9 +69,7 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Bar1
-//│ res: {x: 'x} -> (Bar1 & {x: 'x})
-//│   where
-//│     'x <: int
+//│ res: {x: int & 'x} -> (Bar1 with {x: 'x})
 //│    = [Function: res]
 
 g = Bar1 { x = 42 }
@@ -99,14 +95,14 @@ res.x
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.100: 	g: Foo1['a]: Foo1[string]
-//│ ║         	^
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
+//│ ║        	^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.69: 	class Bar1: Foo1[int]
+//│ ║  l.67: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.100: 	g: Foo1['a]: Foo1[string]
-//│ ╙──       	                  ^^^^^^
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
+//│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
 
@@ -141,9 +137,7 @@ error: (Foo2[?] & 'a) -> 'a
 // TODO-simplif
 // :ds
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & 'a) -> 'a
-//│   where
-//│     'a <: Foo2[?] | ~{Foo2#A} | ~foo2
+//│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
 //│    = [Function: f]
 
 :ns
@@ -174,25 +168,25 @@ mrg = Foo2{}
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.172: 	mrg = Foo2{}
+//│ ║  l.166: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.162: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.162: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.114: 	class Foo2[A]
+//│ ║  l.110: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.172: 	mrg = Foo2{}
+//│ ║  l.166: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.162: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.162: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 

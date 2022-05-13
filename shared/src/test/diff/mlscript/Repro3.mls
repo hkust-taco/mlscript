@@ -71,9 +71,7 @@ class Some[A]: { v: A }
 
 // :ds
 def Some v = Some{v}
-//│ Some: 'v -> (Some['A] & {v: 'v})
-//│   where
-//│     'v <: 'A
+//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
 
 
 def foo(x: Some['a]) =
@@ -92,9 +90,7 @@ def f: Some['a]
 // TODO MV
 
 def foo(x: 'a) = (x + 1, x)
-//│ foo: 'a -> (int, 'a,)
-//│   where
-//│     'a <: int
+//│ foo: (int & 'a) -> (int, 'a,)
 
 // NOTE: currently each parameter type is typed independently – so these 'a are different!
 def foo(x: 'a, y: 'a) = (x + 1, y)

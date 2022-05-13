@@ -71,11 +71,11 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ /!!!\ Uncaught error: scala.MatchError: Constrained(α105,List((α105,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α105),Top)))) (of class mlscript.Constrained)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:531)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:503)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:533)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:505)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:503)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:630)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:505)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:632)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
@@ -105,27 +105,16 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ export declare const res: {readonly a: string, readonly b: int}
 //│ // end ts
 
-// FIXME
 :ts
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: 'a -> 'b -> 'c
-//│   where
-//│     'a <: 'b -> 'c & {a: int}
-//│     'c :> anything -> 'a
-//│     'b <: {b: int}
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(Function(Tuple(List((None,Field(None,α135)))),Function(Tuple(List((None,Field(None,α136)))),α137)),List((α135,Bounds(Bot,Inter(Function(Tuple(List((None,Field(None,α136)))),α137),Record(List((a,Field(None,TypeName(int)))))))), (α137,Bounds(Function(Tuple(List((None,Field(None,Top)))),α135),Top)), (α136,Bounds(Bot,Record(List((b,Field(None,TypeName(int))))))))) (of class mlscript.Constrained)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:531)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:503)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:503)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:630)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
+//│ g: nothing -> nothing -> nothing
+//│ // start ts
+//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: int} & c) => (arg2: {readonly b: int} & a) => ((arg3: unknown) => c) | b
+//│ export declare const g: (arg: never) => (arg1: never) => never
+//│ // end ts
 
 :ts
 def x: int | ~string
@@ -178,14 +167,14 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: 'a
 //│   where
 //│     'a :> (int, int,) -> 'a
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α223,List((α223,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α223),Top)))) (of class mlscript.Constrained)
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α236,List((α236,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α236),Top)))) (of class mlscript.Constrained)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:516)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:503)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:518)
+//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:505)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:503)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:630)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:505)
+//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:632)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
 //│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)

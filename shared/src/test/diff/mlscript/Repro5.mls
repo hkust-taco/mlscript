@@ -8,6 +8,11 @@ class Add[E]: { lhs: E; rhs: E }
 //│ Defined class Lit
 //│ Defined class Add
 
+// :ds
+Lit
+//│ res: {val: int & 'val} -> (Lit with {val: 'val})
+//│    = [Function: res]
+
 // :s
 // :ds
 rec def eval1_stub k e = case e of {

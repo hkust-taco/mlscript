@@ -36,11 +36,10 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> 'value) -> 'b -> (None | 'c)
+//│ map2: ('a -> ('value & 'A)) -> 'b -> (None | 'c)
 //│   where
 //│     'c :> Cons['A] with {tail: None | 'c, value: 'value}
 //│     'b <: (Cons[?] with {tail: 'b, value: 'a}) | None
-//│     'value <: 'A
 //│     = [Function: map2]
 
 
@@ -49,13 +48,13 @@ rec def map2 f ls = case ls of {
 :e
 def safeDiv x (y: ~0) = div x y
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.50: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                        ^^^^^^^
 //│ ╟── type `~0` does not match type `int`
-//│ ║  l.50: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                  ^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.50: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
 //│ ╙──      	                              ^
 //│ safeDiv: int -> ~0 -> (error | int)
 //│        = [Function: safeDiv]
@@ -67,16 +66,16 @@ def safeDiv x (y: int & ~0) = div x y
 :e
 safeDiv 1 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	safeDiv 1 0
+//│ ║  l.67: 	safeDiv 1 0
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `0` does not match type `~0`
-//│ ║  l.68: 	safeDiv 1 0
+//│ ║  l.67: 	safeDiv 1 0
 //│ ║        	          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.63: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.63: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: error | int
 //│    = Infinity
@@ -92,19 +91,19 @@ fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
 :e // we no longer refine x's type here, as that was rather unexpected
 fun (x: int) -> safeDiv 1 x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.93: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                ^^^^^^^^^^^
 //│ ╟── type `int` does not match type `~0`
-//│ ║  l.93: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `~0`
-//│ ║  l.93: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.63: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.63: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> (error | int)
 //│    = [Function: res]

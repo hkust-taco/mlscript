@@ -108,11 +108,11 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: 'a -> int -> 'b
+//│ addNTimes: 'a -> int -> (0 | 'b)
 //│   where
 //│     'a <: Addable['A]
-//│     'A := 'a -> int -> 'b
-//│     'b :> 0
+//│     'A :> 'a -> int -> (0 | 'b)
+//│        <: 'a -> int -> 'b
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^

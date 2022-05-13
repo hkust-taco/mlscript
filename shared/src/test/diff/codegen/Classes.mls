@@ -11,9 +11,7 @@ class Box[T]: { inner: T }
   method Get = this.inner
 //│ Defined class Box
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: Box['T] -> ('T -> 'a) -> (Box['T0] & {inner: 'a})
-//│   where
-//│     'a <: 'T0
+//│ Defined Box.Map: Box['T] -> ('T -> ('a & 'T0)) -> (Box['T0] with {inner: 'a})
 //│ Defined Box.Get: Box['T] -> 'T
 //│ // Prelude
 //│ class Box {
@@ -37,9 +35,7 @@ def Box value = Box { inner = value }
 //│ };
 //│ res = Box1;
 //│ // End of generated code
-//│ Box: 'inner -> (Box['T] & {inner: 'inner})
-//│   where
-//│     'inner <: 'T
+//│ Box: ('inner & 'T) -> (Box['T] with {inner: 'inner})
 //│    = [Function: Box1]
 
 :js
@@ -75,9 +71,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (int -> 'a) -> (Box['T] & {info: string, inner: 'a})
-//│   where
-//│     'a <: 'T
+//│ Defined MyBox.Map: MyBox -> (int -> ('a & 'T)) -> (Box['T] with {info: string, inner: 'a})
 //│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {
@@ -104,10 +98,7 @@ def MyBox inner info = MyBox { inner; info }
 //│ };
 //│ res = MyBox1;
 //│ // End of generated code
-//│ MyBox: 'inner -> 'info -> (MyBox & {info: 'info, inner: 'inner})
-//│   where
-//│     'info <: string
-//│     'inner <: int
+//│ MyBox: (int & 'inner) -> (string & 'info) -> (MyBox with {info: 'info, inner: 'inner})
 //│      = [Function: MyBox1]
 
 :js

@@ -396,10 +396,7 @@ a1.x
 //│ // Query 3
 //│ res = a1.x;
 //│ // End of generated code
-//│ a1: M with {mut x: 'x}
-//│   where
-//│     'x :> 233
-//│        <: int
+//│ a1: M with {mut x: in int & 'x out 233 | 'x}
 //│   = M { x: 233 }
 //│ = []
 //│ res: 233

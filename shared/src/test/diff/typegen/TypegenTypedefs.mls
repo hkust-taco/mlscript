@@ -44,28 +44,32 @@ def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined Lock.Map: Lock['T] -> ('T -> 'a) -> (Lock['T0] & {pins: 'a})
-//│   where
-//│     'a <: 'T0
+//│ Defined Lock.Map: Lock['T] -> ('T -> ('a & 'T0)) -> (Lock['T0] with {pins: 'a})
 //│ Defined class Bank
 //│ Declared Bank.Potential: Bank -> int
 //│ Declared Bank.Better: Bank -> Bank -> bool
 //│ Defined Bank.Potential: Bank -> int
 //│ Defined Bank.Better: Bank -> Bank -> bool
-//│ Lock: 'pins -> (Lock['T] & {pins: 'pins})
-//│   where
-//│     'pins <: 'T
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(Function(Tuple(List((None,Field(None,α105)))),Inter(AppliedType(TypeName(Lock),List(α106)),Record(List((pins,Field(None,α105)))))),List((α105,Bounds(Bot,α106)))) (of class mlscript.Constrained)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:531)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:503)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:503)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:630)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ Lock: ('pins & 'T) -> (Lock['T] with {pins: 'pins})
+//│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
+//│ res: bool
+//│ // start ts
+//│ export declare class Lock<T> {
+//│     pins: T
+//│     constructor(fields: {pins: T})
+//│     Map<a>(arg: (arg1: T) => a): Lock<a>
+//│ }
+//│ export declare class Bank {
+//│     lock: Lock<int>
+//│     cash: int
+//│     constructor(fields: {lock: Lock<int>, cash: int})
+//│     readonly Potential: int
+//│     Better(arg: Bank): bool
+//│ }
+//│ export declare const Lock<pins, T>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {readonly pins: pins}
+//│ export declare const Bank<lock, cash>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
+//│ export declare const res: bool
+//│ // end ts
 
 
 // FIXME
@@ -83,24 +87,27 @@ def Some v = Some { value = v }
 //│ Defined type alias Option
 //│ Defined class LinkedList
 //│ Declared LinkedList.Append: LinkedList['T] -> 'T -> LinkedList['T]
-//│ Defined LinkedList.Append: LinkedList['T] -> 'a -> (LinkedList['T] with {head: 'a, tail: Some[LinkedList['T]]})
-//│   where
-//│     'a <: 'T
+//│ Defined LinkedList.Append: LinkedList['T] -> ('T & 'a) -> (LinkedList['T] with {head: 'a, tail: Some[LinkedList['T]]})
 //│ None: None
-//│ Some: 'value -> (Some['T] & {value: 'value})
-//│   where
-//│     'value <: 'T
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(Function(Tuple(List((None,Field(None,α176)))),Inter(AppliedType(TypeName(Some),List(α177)),Record(List((value,Field(None,α176)))))),List((α176,Bounds(Bot,α177)))) (of class mlscript.Constrained)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:531)
-//│ 	at: mlscript.DiffTests.$anonfun$new$45$adapted(DiffTests.scala:503)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:333)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:503)
-//│ 	at: mlscript.DiffTests.$anonfun$new$2(DiffTests.scala:630)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ Some: ('value & 'T) -> (Some['T] with {value: 'value})
+//│ // start ts
+//│ export declare class None {
+//│     constructor(fields: {})
+//│ }
+//│ export declare class Some<T> {
+//│     value: T
+//│     constructor(fields: {value: T})
+//│ }
+//│ export type Option = Some<T> | None
+//│ export declare class LinkedList<T> {
+//│     head: T
+//│     tail: Option<LinkedList<T>>
+//│     constructor(fields: {head: T, tail: Option<LinkedList<T>>})
+//│     Append(arg: T): LinkedList<T>
+//│ }
+//│ export declare const None: None
+//│ export declare const Some<value, T>: (arg: value & T) => Omit<Some<T>, "value"> & {readonly value: value}
+//│ // end ts
 
 :ts
 trait A: { x: int }
@@ -183,10 +190,10 @@ class Arg[T]: (T, T)
 class Prog[T]
   method Run: Arg[T] -> number
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.182: 	class Arg[T]: (T, T)
+//│ ║  l.189: 	class Arg[T]: (T, T)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Arg
-//│ ║  l.184: 	  method Run: Arg[T] -> number
+//│ ║  l.191: 	  method Run: Arg[T] -> number
 //│ ╙──       	              ^^^^^^
 //│ Defined class Prog
 //│ Declared Prog.Run: Prog['T] -> error -> number
