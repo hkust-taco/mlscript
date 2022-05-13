@@ -60,7 +60,7 @@ ty3A = ty3A
 //│     'a := MyArray['a]
 //│ constrain calls  : 50
 //│ annoying  calls  : 44
-//│ subtyping calls  : 55
+//│ subtyping calls  : 63
 
 def ty3B: MyArray[MyArray['a]] as 'a
 //│ ty3B: 'a
@@ -78,7 +78,7 @@ ty3B = ty3A
 //│     'a := MyArray[MyArray['a]]
 //│ constrain calls  : 142
 //│ annoying  calls  : 127
-//│ subtyping calls  : 201
+//│ subtyping calls  : 209
 
 :stats
 ty3A = ty3B
@@ -91,7 +91,7 @@ ty3A = ty3B
 //│     'a := MyArray['a]
 //│ constrain calls  : 137
 //│ annoying  calls  : 127
-//│ subtyping calls  : 187
+//│ subtyping calls  : 195
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
 //│ ty4B: 'a
@@ -109,7 +109,7 @@ ty4B = ty4B
 //│     'a := MyArray[MyArray[MyArray['a]]]
 //│ constrain calls  : 116
 //│ annoying  calls  : 136
-//│ subtyping calls  : 150
+//│ subtyping calls  : 158
 
 
 

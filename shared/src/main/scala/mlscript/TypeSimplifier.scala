@@ -105,9 +105,9 @@ trait TypeSimplifier { self: Typer =>
           // //.tap(b=>println(s"${b.map(_.getClass)}"))
           
           if (pols(tv).forall(_ === true)) nv.lowerBounds =
-            tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).toList
+            tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).filterNot(_.isBot).toList
           if (pols(tv).forall(_ === false)) nv.upperBounds =
-            tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).toList
+            tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).filterNot(_.isTop).toList
           
         }
         // println(tv, nv, nv.lowerBounds, nv.upperBounds)

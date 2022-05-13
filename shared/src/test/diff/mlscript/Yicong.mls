@@ -165,7 +165,7 @@ q = if true then (1,1) else (1,1,1)
 //│ Array[int]
 //│  = [ 1, 1 ]
 
-// FIXME function with non-tuple domain
+// Note: function with non-tuple domain
 def h f = (f (1,2,false), f (1,true))
 //│ h: ((Array[1 | 2 | false | true] & {_1: 1, _2: 2 | true}) -> 'a) -> ('a, 'a,)
 //│  = [Function: h]
