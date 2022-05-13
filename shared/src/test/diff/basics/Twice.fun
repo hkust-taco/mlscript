@@ -19,27 +19,29 @@ let f = x => 1, x
 // TODO-simplif // FIXME 'c does not occur!
 // :ds
 twice f
-//│ res: 'a -> (1, 'a,)
+//│ res: 'a -> 'b
 //│   where
-//│     'a :> (1, 'a,)
+//│     'a :> 'b
+//│     'b :> (1, 'a,)
 
 // TODO-simplif
 // :ds
 twice / x => x, x
-//│ res: 'a -> ('a, 'a,)
+//│ res: 'a -> 'b
 //│   where
-//│     'a :> ('a, 'a,)
+//│     'a :> 'b
+//│     'b :> ('a, 'a,)
 
 :e
 let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'x'
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	                                     ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.34: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╙──      	                       ^^
 //│ one: 1 | error | {x: 1}
 

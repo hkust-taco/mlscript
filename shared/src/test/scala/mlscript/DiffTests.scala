@@ -287,6 +287,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
+                cur = typer.unskidTypes_!(cur)(ctx)
+                if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
                 // TODO after we do impl coalescing, try to do this here again
                 // cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
                 // if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
@@ -313,19 +317,24 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 // val exp = typer.expandType(cur, true)
                 
                 // // val recons2 = typer.removeIrrelevantBounds(cur)(ctx)
-                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(cur)(ctx))(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
+                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(cur)(ctx))(ctx)
+                
+                // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
                 
                 cur = typer.removeIrrelevantBounds(cur)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
+                cur = typer.unskidTypes_!(cur)(ctx)
+                if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
                 cur = typer.simplifyType(cur)(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
                 // val cur = typer.simplifyType(typer.simplifyType(cur)(ctx))(ctx)
-                
                 if (mode.dbgSimplif) output(s"⬤ Resim: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                cur = typer.unskidTypes_!(cur)(ctx)
+                // cur = typer.unskidTypes_!(cur)(ctx)
                 // cur = typer.unskidTypes_!(cur)(ctx)
                 
                 // val exp = typer.expandType(cur, true)

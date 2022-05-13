@@ -618,13 +618,13 @@ ra: (Array['a], Array['a]) as 'a
 //│   = <missing implementation>
 //│ res: 'a
 //│   where
-//│     'a :> Array['a0 | Array['a]]
+//│     'a :> 'a0 | Array[Array['a]]
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
 //│ res: 'a
 //│   where
-//│     'a :> Array['a0 | ('a, 'a,)]
+//│     'a :> 'a0 | Array[('a, 'a,)]
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
@@ -652,7 +652,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ res: 'a
 //│   where
-//│     'a :> Array['a | 'a0] & {_1: 'a | 'a0, _2: 'a | 'a0} | error
+//│     'a :> 'a0 | ('a, 'a, 'a,) | error
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
@@ -670,7 +670,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'a
 //│   where
-//│     'a :> Array['a0 | Array['a]] & {_1: 'a0 | Array['a], _2: 'a0 | Array['a]} | error
+//│     'a :> 'a0 | (Array['a], Array['a], Array['a],) | error
 //│     'a0 :> ('a0, 'a0,)
 //│    = <no result>
 //│      ra is not implemented
@@ -680,7 +680,7 @@ ra: (Array['a], Array['a], Array['a]) as 'a
 res
 //│ res: 'a
 //│   where
-//│     'a :> Array['a0 | Array['a]] & {_1: 'a0 | Array['a], _2: 'a0 | Array['a]} | error
+//│     'a :> 'a0 | (Array['a], Array['a], Array['a],) | error
 //│     'a0 :> ('a0, 'a0,)
 //│    = [ 1, 2, 3, 'hello' ]
 

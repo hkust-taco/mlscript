@@ -23,18 +23,18 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│   where
 //│     'b <: {tail: 'b}
 //│     'a <: {tail: 'a}
-//│ f: 'a -> 'b -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'a <: 'b
-//│     'b <: {tail: 'a & 'b}
-//│ f: 'a -> 'b -> int
+//│     'a <: {tail: 'b & 'a}
+//│     'b <: 'a
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'a <: 'b
-//│     'b <: {tail: 'a}
-//│ f: 'a -> 'b -> int
+//│     'a <: {tail: 'b}
+//│     'b <: 'a
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'a <: 'b
-//│     'b <: {tail: 'a}
+//│     'a <: {tail: 'b}
+//│     'b <: 'a
 
 let f = x => y => if true then { l: x; r: y } else { l: y; r: x } // 2-crown
 //│ f: 'a -> 'a -> {l: 'a, r: 'a}

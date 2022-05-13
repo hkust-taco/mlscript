@@ -11,7 +11,7 @@ let join a b = if true then a else b
 
 // "Lateral" hash consing
 let s = join r r
-//│ s: anything -> ('a | 'b)
+//│ s: 'a | 'b
 //│   where
 //│     'b :> anything -> 'b
 //│     'a :> anything -> 'a

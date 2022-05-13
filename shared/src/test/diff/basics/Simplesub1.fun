@@ -282,8 +282,7 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 (let rec x = v => {a: x v, b: x v}; x)
 //│ res: anything -> 'a
 //│   where
-//│     'a :> {a: 'b, b: 'a}
-//│     'b :> 'a
+//│     'a :> {a: 'a, b: 'a}
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
@@ -332,26 +331,30 @@ x => (y => (x (y y)))
 //│     'c <: 'c -> 'a
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'a -> 'a
+//│ res: 'a
 //│   where
-//│     'a :> 'a -> 'a
+//│     'a :> 'b -> 'b
+//│     'b :> 'a
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'a -> 'a
+//│ res: 'a
 //│   where
-//│     'a :> 'a -> 'a
+//│     'a :> 'b -> 'b
+//│     'b :> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'a -> 'b
+//│ res: 'a
 //│   where
-//│     'a :> 'a -> 'b
-//│     'b :> {u: 'a, v: 'b}
+//│     'a :> 'b -> 'c
+//│     'c :> {u: 'b, v: 'c}
+//│     'b :> 'a
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'a -> 'b
+//│ res: 'a
 //│   where
-//│     'a :> 'a -> 'b
-//│     'b :> {u: 'b, v: 'a}
+//│     'a :> 'b -> 'c
+//│     'c :> {u: 'c, v: 'b}
+//│     'b :> 'a
 
 (let rec x = (y => (let z = (y x); y)); x)
 //│ res: 'a
@@ -363,9 +366,10 @@ x => (y => (x (y y)))
 //│ res: ('a -> anything & {v: 'a}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'a -> 'a
+//│ x: 'a
 //│   where
-//│     'a :> 'a -> 'a
+//│     'a :> 'b -> 'b
+//│     'b :> 'a
 //│ res: 'a
 //│   where
 //│     'a :> ({u: 'b} & 'a) -> ('a | 'b)
