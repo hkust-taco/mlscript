@@ -201,7 +201,7 @@ f 0
 //│   z: z
 //│ };
 //│ // End of generated code
-//│ res: {x: {y: {a: 0, b: "s"}}, w: 0, a: (0, 0,), z: 2}
+//│ res: {a: (0, 0,), w: 0, x: {y: {a: 0, b: "s"}}, z: 2}
 //│    = { x: { y: { a: 0, b: 's' } }, w: 0, a: [ 0, 0 ], z: 2 }
 
 // Sel: Select an immediate record

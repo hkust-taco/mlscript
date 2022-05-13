@@ -63,7 +63,7 @@ bar {age: 1} // TODO B/E
 //│ res: 1
 
 let fake-p = { name: "Bob", age: 42 }
-//│ fake-p: {name: "Bob", age: 42}
+//│ fake-p: {age: 42, name: "Bob"}
 
 // :e // TODO B/E
 bar fake-p

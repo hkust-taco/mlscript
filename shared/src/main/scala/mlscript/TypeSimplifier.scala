@@ -128,6 +128,67 @@ trait TypeSimplifier { self: Typer =>
     process(ty, N)
   }
   
+  
+  
+  
+  
+  
+  
+  
+  
+  def coalesceTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+    
+    // implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    val allVarPols = st.getVarsPol(pol)
+    println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
+    val processed = MutSet.empty[TV]
+    // val consed = allVarPols.iterator.filter(_._2.isDefined).map { case (tv, pol) =>
+    
+    val recVars = MutSet.from(
+      // TODOne rm/update logic?
+      // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
+      allVarPols.keysIterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
+    println(s"recVars: $recVars")
+    
+    // def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
+    def process(pol: Opt[Bool], st: ST): ST =
+    // st.unwrapProvs match {
+    //   case tv: TV =>
+    //     processed.setAndIfUnset(tv) {
+    //       tv.lowerBounds = tv.lowerBounds.map(process(S(true), _, S(tv)))
+    //       tv.upperBounds = tv.upperBounds.map(process(S(false), _, S(tv)))
+    //     }
+    //     tv
+    //   case _ =>
+    //     st
+    // }
+    trace(s"coal[${printPol(pol)}] $st") {
+      
+      pol match {
+        case N => st.mapPol(pol)(process)
+        
+        case S(p) =>
+          
+          val dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
+          
+          
+          
+          // dnf.toType(sort = true)
+          dnf.toType(sort = true).mapPol(pol)(process)
+        
+      }
+      
+    }(r => s"~> $r")
+    process(pol, st)
+  }
+  
+  
+  
+  
+  
+  
+  
+  
   def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     // type PolarType = (DNF, Bool)
     // type PolarType = DNF

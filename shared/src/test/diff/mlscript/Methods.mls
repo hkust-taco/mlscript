@@ -49,10 +49,10 @@ f.Fun
 
 // :d
 Bar
-//│ res: {y: 'y, x: 'x} -> (Bar & {x: 'x, y: 'y})
+//│ res: {x: 'x, y: 'y} -> (Bar & {x: 'x, y: 'y})
 //│   where
-//│     'x <: int
 //│     'y <: bool
+//│     'x <: int
 //│    = [Function: res]
 
 g = Bar { x = 42; y = true }

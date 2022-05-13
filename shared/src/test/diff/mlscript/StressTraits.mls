@@ -63,7 +63,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 42
 //│ annoying  calls  : 32
-//│ subtyping calls  : 150
+//│ subtyping calls  : 154
 
 :stats
 :e
@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 94
 //│ annoying  calls  : 84
-//│ subtyping calls  : 501
+//│ subtyping calls  : 521
 
 :stats
 :e
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 111
 //│ annoying  calls  : 109
-//│ subtyping calls  : 1221
+//│ subtyping calls  : 1241
 
 
 // ====== 2 ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 50
 //│ annoying  calls  : 32
-//│ subtyping calls  : 89
+//│ subtyping calls  : 93
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 105
 //│ annoying  calls  : 84
-//│ subtyping calls  : 423
+//│ subtyping calls  : 443
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 116
 //│ annoying  calls  : 97
-//│ subtyping calls  : 474
+//│ subtyping calls  : 534
 
 :stats
 :e
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 120
 //│ annoying  calls  : 97
-//│ subtyping calls  : 523
+//│ subtyping calls  : 663
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 124
 //│ annoying  calls  : 97
-//│ subtyping calls  : 583
+//│ subtyping calls  : 863
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 128
 //│ annoying  calls  : 97
-//│ subtyping calls  : 654
+//│ subtyping calls  : 1158
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
@@ -354,7 +354,7 @@ foo_manual = foo
 //│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
 //│ constrain calls  : 96
 //│ annoying  calls  : 183
-//│ subtyping calls  : 631
+//│ subtyping calls  : 1277
 
 
 // ====== 8 ====== //
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 132
 //│ annoying  calls  : 97
-//│ subtyping calls  : 736
+//│ subtyping calls  : 1576
 
 

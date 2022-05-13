@@ -29,10 +29,10 @@ class D: C & A & B
 //│ Defined class D
 
 D
-//│ res: {y: 'y, x: 'x} -> (D with {x: 'x, y: 'y})
+//│ res: {x: 'x, y: 'y} -> (D with {x: 'x, y: 'y})
 //│   where
-//│     'x <: 0 | 1
 //│     'y <: string
+//│     'x <: 0 | 1
 //│    = [Function: res]
 
 :re

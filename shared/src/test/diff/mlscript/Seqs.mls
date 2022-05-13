@@ -47,11 +47,11 @@ Cons 1 Nil
 //│   TypeError: (intermediate value) is not a function
 
 Cons
-//│ res: {size: 'size, tail: 'tail, head: 'head} -> (Cons['A] & {head: 'head, size: 'size, tail: 'tail})
+//│ res: {head: 'head, size: 'size, tail: 'tail} -> (Cons['A] & {head: 'head, size: 'size, tail: 'tail})
 //│   where
-//│     'head <: 'A
 //│     'tail <: List['A]
 //│     'size <: int
+//│     'head <: 'A
 //│    = [Function: res]
 
 // In the old inheritance semantics, this used to be required:

@@ -383,7 +383,7 @@ getx (a123 with {x=('hello', a123)})
 
 def append: Array['a] -> Array['b] -> Array['a | 'b]
 append ((1,2,false)) (((), 'hi'))
-//│ append: Array['a] -> Array['b] -> Array['a | 'b]
+//│ append: Array['a] -> Array['a] -> Array['a]
 //│       = <missing implementation>
 //│ res: Array['a]
 //│   where
@@ -755,7 +755,7 @@ ta3[1-2]
 //│    = 3
 //│ ta2: ((1, 2, 4,), (true, false,),)
 //│    = [ [ 1, 2, 4 ], [ true, false ] ]
-//│ res: 1 | 2 | false | int | null | true | undefined
+//│ res: false | int | null | true | undefined
 //│    = null
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│    = [ [ 1, 2, 3 ], 'hello', false ]

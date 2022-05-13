@@ -121,7 +121,7 @@ error: ~Add[?]
 
 :re
 error: ('a & ~Lit) -> 'a
-//│ res: ('a & (~{val: int} | ~lit)) -> 'a
+//│ res: ('a & ~lit) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -135,7 +135,7 @@ error: ('a & ~Add[?]) -> 'a
 //│ res: 'a -> ('a & ~add)
 //│ Runtime error:
 //│   Error: unexpected runtime error
-//│ res: ('a & (~{Add#E :> anything <: nothing} | ~{lhs: nothing} | ~{rhs: nothing} | ~add)) -> 'a
+//│ res: ('a & ~add) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 

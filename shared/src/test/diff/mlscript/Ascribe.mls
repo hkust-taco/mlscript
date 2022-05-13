@@ -43,7 +43,7 @@ def foo(f: Foo['a]) = f.field
 
 
 def foo({ a; b }: { a: int; b: string}) = { b; a }
-//│ foo: {a: int, b: string} -> {b: string, a: int}
+//│ foo: {a: int, b: string} -> {a: int, b: string}
 //│    = [Function: foo3]
 
 :e

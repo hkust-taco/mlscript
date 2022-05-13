@@ -286,6 +286,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 cur = typer.removeIrrelevantBounds(wty)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
+                
+                cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
+                if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
+                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
+                
                 // val cty = rty
                 // val cty = typer.canonicalizeType(rty)(ctx)
                 // if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
