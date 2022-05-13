@@ -287,9 +287,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
-                cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
-                if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
-                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
+                // TODO after we do impl coalescing, try to do this here again
+                // cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
+                // if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
+                // if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
                 // val cty = rty
                 // val cty = typer.canonicalizeType(rty)(ctx)
@@ -298,6 +299,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 cur = typer.simplifyType(cur)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
+                cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
+                if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
+                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
+                
                 cur = typer.reconstructClassTypes(cur, S(true), ctx)
                 if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")

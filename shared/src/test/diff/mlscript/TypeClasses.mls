@@ -75,14 +75,14 @@ cmi.Empty.real
 //│    = 0
 
 cmi.Add (Complex 1 2) (Complex 3 4)
-//│ res: Complex[in int | 2 out int] & {imaginary: 2, real: 1} | Complex[in int | 2 out int] & {imaginary: 4, real: 3} | Complex[in int | 2 out int]
+//│ res: Complex[int] & {imaginary: 2, real: 1} | Complex[int] & {imaginary: 4, real: 3} | Complex[int]
 //│    = Complex { real: 4, imaginary: 6 }
 
 // TODO-simplif >: int <: int... (comes out due to `.distinctComponents`)
 // TODO-simplif `| Complex['A]` simplif
 // :ds
 res
-//│ res: Complex[in int | 2 out int] & {imaginary: 2, real: 1} | Complex[in int | 2 out int] & {imaginary: 4, real: 3} | Complex[in int | 2 out int]
+//│ res: Complex[int] & {imaginary: 2, real: 1} | Complex[int] & {imaginary: 4, real: 3} | Complex[int]
 //│    = Complex { real: 4, imaginary: 6 }
 
 
@@ -220,9 +220,9 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.4: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1
-//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'a -> (Complex['b] with {imaginary: 'a, real: {real: 'A, imaginary: error}})
+//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'a -> (Complex['b] with {imaginary: 'a, real: {imaginary: error, real: 'A}})
 //│   where
 //│     'a <: 'b
-//│     'b :> {real: 'A, imaginary: error}
+//│     'b :> {imaginary: error, real: 'A}
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 

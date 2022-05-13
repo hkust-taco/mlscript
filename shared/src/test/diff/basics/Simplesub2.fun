@@ -25,7 +25,7 @@ let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }
 //│ recursive_monster: 'a -> 'b
 //│   where
-//│     'b :> {thing: 'a, self: 'b}
+//│     'b :> {self: 'b, thing: 'a}
 
 
 

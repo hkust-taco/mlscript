@@ -43,6 +43,6 @@ Cons.HeadOption l0
 //│     'a :> 1
 //│ constrain calls  : 74
 //│ annoying  calls  : 27
-//│ subtyping calls  : 83
+//│ subtyping calls  : 84
 
 

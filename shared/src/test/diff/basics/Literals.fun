@@ -83,7 +83,7 @@ g 3
 //│ res: 0 | 1 | 3
 
 g / succ 3
-//│ res: 1 | int
+//│ res: int
 
 x => if x then x else f false
 //│ res: (bool & 'a) -> 'a
@@ -99,7 +99,7 @@ let rec f = n =>
 
 let g = n =>
   if pred n then 0 else if not (pred n) then 1 else f n
-//│ g: int -> (1 | int)
+//│ g: int -> int
 
 x => if pred x then x else f x
 //│ res: int -> int

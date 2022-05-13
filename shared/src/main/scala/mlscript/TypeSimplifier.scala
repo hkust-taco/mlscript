@@ -170,8 +170,16 @@ trait TypeSimplifier { self: Typer =>
         case S(p) =>
           
           val dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
+          println(s"dnf = $dnf")
           
-          
+          dnf.cs.foreach { c =>
+            (c.vars.iterator ++ c.nvars).foreach { tv =>
+              processed.setAndIfUnset(tv) {
+                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
+                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
+              }
+            }
+          }
           
           // dnf.toType(sort = true)
           dnf.toType(sort = true).mapPol(pol)(process)

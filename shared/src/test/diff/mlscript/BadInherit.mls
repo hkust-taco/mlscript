@@ -95,7 +95,7 @@ Crazy
 def c = Crazy({ name = "Bob"; age = 42 })
 //│ c: Crazy['a] & 'a
 //│   where
-//│     'a :> {name: "Bob", age: 42}
+//│     'a :> {age: 42, name: "Bob"}
 //│  = <no result>
 //│    Crazy is not implemented
 

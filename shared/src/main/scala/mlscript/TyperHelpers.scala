@@ -286,6 +286,7 @@ abstract class TyperHelpers { self: Typer =>
       case ArrayType(inner) => ArrayType(inner.update(f(S(false), _), f(S(true), _)))(prov)
       case ComposedType(kind, lhs, rhs) => ComposedType(kind, f(pol, lhs), f(pol, rhs))(prov)
       case NegType(negated) => NegType(f(pol.map(!_), negated))(prov)
+      case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
       case Without(base, names) => Without(f(pol, base), names)(prov)
       case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(S(false), _), f(S(true), _))))(rcd.prov))(prov)
