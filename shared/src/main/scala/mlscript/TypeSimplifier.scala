@@ -445,8 +445,6 @@ trait TypeSimplifier { self: Typer =>
   }
   
   
-  /** Precondition: we assume that the type has been through canonicalizeType,
-    * so that all type variables that still have bounds are recursive ones... */
   def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true)(implicit ctx: Ctx): SimpleType = {
     
     val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
@@ -890,6 +888,43 @@ trait TypeSimplifier { self: Typer =>
     if (pol) ts.foldLeft(BotType: ST)(_ | _)
     else ts.foldLeft(TopType: ST)(_ & _)
   
+  
+  def unskidTypes_!(st: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
+    // implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    val allVarPols = st.getVarsPol(S(pol))
+    println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
+    val processed = MutSet.empty[TV]
+    // val consed = allVarPols.iterator.filter(_._2.isDefined).map { case (tv, pol) =>
+    
+    // FIXME values should actually be lists as several TVs may have the same bound
+    val consed = allVarPols.iterator.collect { case (tv, S(pol)) =>
+      if (pol) (true, tv.lowerBounds.foldLeft(BotType: ST)(_ | _)) -> tv
+      else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv
+    }.toMap
+    
+    // def process(st: ST, pol: Opt[Bool]): ST = st match {
+    def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST = st.unwrapProvs match {
+      case tv: TV =>
+        processed.setAndIfUnset(tv) {
+          tv.lowerBounds = tv.lowerBounds.map(process(S(true), _, S(tv)))
+          tv.upperBounds = tv.upperBounds.map(process(S(false), _, S(tv)))
+        }
+        tv
+      case _ =>
+        // val found = 
+        pol match {
+          case S(p) =>
+            consed.get(p -> st) match {
+              case S(tv) if parent.forall(_ isnt tv) =>
+                tv
+              case _ => st.mapPol(pol)(process(_, _, parent))
+            }
+          case N => st.mapPol(pol)(process(_, _, parent))
+        }
+    }
+    process(S(pol), st, N)
+    // st
+  }
   
   def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
     

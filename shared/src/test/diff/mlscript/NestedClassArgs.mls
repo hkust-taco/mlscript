@@ -73,10 +73,10 @@ rec def rc = mkC(rc)
 //│     'a :> C2['a]
 
 rec def rc = mkC'(rc)
-//│ rc: C2['A] with {a: 'a}
+//│ rc: 'a
 //│   where
-//│     'A :> C2['A] with {a: 'a}
 //│     'a :> C2['A] with {a: 'a}
+//│     'A :> 'a
 
 
 
@@ -87,7 +87,7 @@ def c: 'a -> C3['a]
 //│ c: 'a -> C3['a]
 
 rec def c a = C3 { a = c a }
-//│ anything -> (C3['A] with {a: 'a})
+//│ anything -> 'a
 //│   where
 //│     'a :> C3['A] with {a: 'a}
 //│   <:  c:

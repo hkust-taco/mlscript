@@ -65,7 +65,7 @@ let rec x = { f = x } in x
 
 :ge
 let x = { f = x } in x
-//│ res: {f: 'a}
+//│ res: 'a
 //│   where
 //│     'a :> {f: 'a}
 //│ Code generation encountered an error:

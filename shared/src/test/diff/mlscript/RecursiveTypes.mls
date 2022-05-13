@@ -274,10 +274,10 @@ foo_ty2 = foo
 
 
 rec def bar = C { a = bar }
-//│ bar: C['A] with {a: 'a}
+//│ bar: 'a
 //│   where
-//│     'A :> C['A] with {a: 'a}
 //│     'a :> C['A] with {a: 'a}
+//│     'A :> 'a
 //│ Runtime error:
 //│   ReferenceError: bar is not defined
 
@@ -288,10 +288,10 @@ def bar_ty: Rec2
 //│       = <missing implementation>
 
 bar_ty = bar
-//│ C['A] with {a: 'a}
+//│ 'a
 //│   where
-//│     'A :> C['A] with {a: 'a}
 //│     'a :> C['A] with {a: 'a}
+//│     'A :> 'a
 //│   <:  bar_ty:
 //│ Rec2
 //│ Runtime error:
@@ -337,10 +337,10 @@ bar_ty2 = bar_ty
 //│          bar_ty and bar_ty2 are not implemented
 
 bar_ty2 = bar
-//│ C['A] with {a: 'a}
+//│ 'a
 //│   where
-//│     'A :> C['A] with {a: 'a}
 //│     'a :> C['A] with {a: 'a}
+//│     'A :> 'a
 //│   <:  bar_ty2:
 //│ 'r
 //│   where
@@ -467,7 +467,7 @@ rec def f x = if x > 0 then f (x with { a = x - 1 }) else x
 //│  = [Function: f]
 
 f 1
-//│ res: 1 | 'a\a & {a: int}
+//│ res: 'a
 //│   where
 //│     'a :> 1 | 'a\a & {a: int}
 //│ Runtime error:
@@ -538,7 +538,7 @@ f { a = 1 }
 //│    = { a: 1 }
 
 f error
-//│ res: 'a\a & {a: int}
+//│ res: 'a
 //│   where
 //│     'a :> 'a\a & {a: int}
 //│ Runtime error:
@@ -585,7 +585,7 @@ f infina
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | int | 'a\a & {a: int}
 //│   where
-//│     'a :> 0 & {a: 'b} | 'a\a & {a: int}
+//│     'a :> 'b | 'a\a & {a: int}
 //│     'b :> 0 & {a: 'b}
 //│ Runtime error:
 //│   ReferenceError: infina is not defined
@@ -649,9 +649,9 @@ f_manual error
 //    It looks like a simplification error (I copy-pasted the simplified type for f_manual)
 //    since `f_manual_ns ainf` gets the same error as `f ainf`.
 f_manual ainf
-//│ res: 'e | {a: 'a}
+//│ res: 'e | 'a
 //│   where
-//│     'e :> 'e\a & {a: int} | {a: 'a}
+//│     'e :> 'e\a & {a: int} | 'a
 //│     'a :> {a: 'a}
 //│    = <no result>
 //│      f_manual is not implemented
@@ -695,9 +695,9 @@ f_manual_2 // [test:T2]
 //│      f_manual_2 is not implemented
 
 f_manual_2 ainf
-//│ res: 'c\a & {a: int} | {a: 'a}
+//│ res: 'c
 //│   where
-//│     'c :> 'c\a & {a: int} | {a: 'a}
+//│     'c :> 'c\a & {a: int} | 'a
 //│     'a :> {a: 'a}
 //│    = <no result>
 //│      f_manual_2 is not implemented
@@ -712,7 +712,7 @@ rec def f x = if error then f (x with { a = x - 1 }) else x
 //│  = [Function: f2]
 
 r = f 1
-//│ r: 1 | 'a\a & {a: int}
+//│ r: 'a
 //│   where
 //│     'a :> 1 | 'a\a & {a: int}
 //│ Runtime error:
@@ -772,7 +772,7 @@ rec def f x = if error then f (x with { a = 1 }) else x
 //│  = [Function: f3]
 
 r = f 1
-//│ r: 1 | 'a\a & {a: 1}
+//│ r: 'a
 //│   where
 //│     'a :> 1 | 'a\a & {a: 1}
 //│ Runtime error:
