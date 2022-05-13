@@ -121,7 +121,7 @@ error: ~Add[?]
 
 :re
 error: ('a & ~Lit) -> 'a
-//│ res: ('a & ~lit) -> 'a
+//│ res: ('a & (~{val: int} | ~lit)) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -135,7 +135,7 @@ error: ('a & ~Add[?]) -> 'a
 //│ res: 'a -> ('a & ~add)
 //│ Runtime error:
 //│   Error: unexpected runtime error
-//│ res: ('a & ~add) -> 'a
+//│ res: ('a & (~{Add#E} | ~{lhs: anything} | ~{rhs: anything} | ~add)) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -287,10 +287,10 @@ rec def prettier1 k ev e = case e of {
   }
 //│ prettier1: ('a -> string) -> ('b -> int) -> (Add[?] & 'b | Lit | 'a & ~add & ~lit) -> string
 //│   where
-//│     'b <: {lhs: Add[?] & 'c | Lit | 'a & ~add & ~lit, rhs: 'd}
+//│     'b <: {lhs: 'c, rhs: 'd}
 //│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit
-//│     'c <: {lhs: 'e, rhs: 'e}
-//│     'e <: Add[?] & 'c | Lit | 'a & ~add & ~lit
+//│     'c <: Add[?] & 'e | Lit | 'a & ~add & ~lit
+//│     'e <: {lhs: 'c, rhs: 'c}
 //│          = [Function: prettier1]
 //│ constrain calls  : 88
 //│ annoying  calls  : 0
@@ -304,10 +304,10 @@ rec def prettier1 k ev e = case e of {
 prettier1
 //│ res: ('a -> string) -> ('b -> int) -> (Add[?] & 'b | Lit | 'a & ~add & ~lit) -> string
 //│   where
-//│     'b <: {lhs: Add[?] & 'c | Lit | 'a & ~add & ~lit, rhs: 'd}
+//│     'b <: {lhs: 'c, rhs: 'd}
 //│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit
-//│     'c <: {lhs: 'e, rhs: 'e}
-//│     'e <: Add[?] & 'c | Lit | 'a & ~add & ~lit
+//│     'c <: Add[?] & 'e | Lit | 'a & ~add & ~lit
+//│     'e <: {lhs: 'c, rhs: 'c}
 //│    = [Function: prettier1]
 //│ constrain calls  : 0
 //│ annoying  calls  : 0
@@ -387,12 +387,12 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   }) ev
 //│ prettier2: ('a -> string) -> ('b -> int) -> 'c -> string
 //│   where
-//│     'b <: {lhs: Add[?] & 'd | Lit | 'e & ~add & ~lit, rhs: 'f}
-//│     'f <: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | 'e & ~add & ~lit
-//│     'd <: {lhs: 'g, rhs: 'g}
-//│     'g <: Add[?] & 'd | Lit | 'e & ~add & ~lit
-//│     'e <: (Nega[?] with {arg: 'c}) | 'a & ~nega
-//│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
+//│     'b <: {lhs: 'd, rhs: 'e}
+//│     'e <: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | 'f & ~add & ~lit
+//│     'd <: Add[?] & 'g | Lit | 'f & ~add & ~lit
+//│     'f <: (Nega[?] with {arg: 'c}) | 'a & ~nega
+//│     'c <: Add[?] & 'b | Lit | 'f & ~add & ~lit
+//│     'g <: {lhs: 'd, rhs: 'd}
 //│          = [Function: prettier2]
 //│ constrain calls  : 86
 //│ annoying  calls  : 0
@@ -403,12 +403,12 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 prettier2
 //│ res: ('a -> string) -> ('b -> int) -> 'c -> string
 //│   where
-//│     'b <: {lhs: Add[?] & 'd | Lit | 'e & ~add & ~lit, rhs: 'f}
-//│     'f <: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | 'e & ~add & ~lit
-//│     'd <: {lhs: 'g, rhs: 'g}
-//│     'g <: Add[?] & 'd | Lit | 'e & ~add & ~lit
-//│     'e <: (Nega[?] with {arg: 'c}) | 'a & ~nega
-//│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
+//│     'b <: {lhs: 'd, rhs: 'e}
+//│     'e <: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | 'f & ~add & ~lit
+//│     'd <: Add[?] & 'g | Lit | 'f & ~add & ~lit
+//│     'f <: (Nega[?] with {arg: 'c}) | 'a & ~nega
+//│     'c <: Add[?] & 'b | Lit | 'f & ~add & ~lit
+//│     'g <: {lhs: 'd, rhs: 'd}
 //│    = [Function: prettier2]
 //│ constrain calls  : 0
 //│ annoying  calls  : 0
@@ -464,24 +464,24 @@ eval2 done d2
 prettier2 done
 //│ res: ('a -> int) -> 'b -> string
 //│   where
-//│     'a <: {lhs: Add[?] & 'c | Lit | 'd & ~add & ~lit, rhs: 'e}
-//│     'e <: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | 'd & ~add & ~lit
-//│     'c <: {lhs: 'f, rhs: 'f}
-//│     'f <: Add[?] & 'c | Lit | 'd & ~add & ~lit
-//│     'd <: Nega[?] with {arg: 'b}
-//│     'b <: Add[?] & 'a | Lit | 'd & ~add & ~lit
+//│     'a <: {lhs: 'c, rhs: 'd}
+//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'e & ~add & ~lit
+//│     'c <: Add[?] & 'f | Lit | 'e & ~add & ~lit
+//│     'e <: Nega[?] with {arg: 'b}
+//│     'b <: Add[?] & 'a | Lit | 'e & ~add & ~lit
+//│     'f <: {lhs: 'c, rhs: 'c}
 //│    = [Function (anonymous)]
 
 :stats
 prettier2 done (eval1 done)
 //│ res: 'a -> string
 //│   where
-//│     'a <: (Add[?] with {lhs: Add[?] & 'b | Lit | 'c & ~add & ~lit, rhs: 'd}) & 'e | Lit | 'c & ~add & ~lit
-//│     'e <: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit
-//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'c & ~add & ~lit
-//│     'b <: {lhs: 'f, rhs: 'f}
-//│     'f <: Add[?] & 'b | Lit | 'c & ~add & ~lit
-//│     'c <: Nega[?] with {arg: 'a}
+//│     'a <: (Add[?] with {lhs: 'b, rhs: 'c}) & 'd | Lit | 'e & ~add & ~lit
+//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'e & ~add & ~lit
+//│     'b <: Add[?] & 'f | Lit | 'e & ~add & ~lit
+//│     'e <: Nega[?] with {arg: 'a}
+//│     'f <: {lhs: 'b, rhs: 'b}
 //│    = [Function (anonymous)]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
@@ -493,12 +493,12 @@ prettier2 done (eval2 done) e2
 prettier2 done (eval2 done) d2
 //│ res: 'a -> string
 //│   where
-//│     'a <: (Add[?] with {lhs: Add[?] & 'b | Lit | 'c & ~add & ~lit, rhs: 'd}) & 'e | Lit | 'c & ~add & ~lit
-//│     'e <: (Add[?] with {lhs: 'e, rhs: 'e}) | Lit | (Nega[?] with {arg: 'e})
-//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'c & ~add & ~lit
-//│     'b <: {lhs: 'f, rhs: 'f}
-//│     'f <: Add[?] & 'b | Lit | 'c & ~add & ~lit
-//│     'c <: Nega[?] with {arg: 'a}
+//│     'a <: (Add[?] with {lhs: 'b, rhs: 'c}) & 'd | Lit | 'e & ~add & ~lit
+//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | (Nega[?] with {arg: 'd})
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'e & ~add & ~lit
+//│     'b <: Add[?] & 'f | Lit | 'e & ~add & ~lit
+//│     'e <: Nega[?] with {arg: 'a}
+//│     'f <: {lhs: 'b, rhs: 'b}
 //│    = [Function (anonymous)]
 //│ res: string
 //│    = '1-123'

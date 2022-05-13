@@ -974,7 +974,9 @@ trait TypeSimplifier { self: Typer =>
     println(s"consed: $consed")
     
     // def process(st: ST, pol: Opt[Bool]): ST = st match {
-    def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST = st.unwrapProvs match {
+    def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
+        // trace(s"cons[${printPol(pol)}] $st") {
+          st.unwrapProvs match {
       case tv: TV =>
         processed.setAndIfUnset(tv) {
           tv.lowerBounds = tv.lowerBounds.map(process(S(true), _, S(tv)))
@@ -1007,11 +1009,13 @@ trait TypeSimplifier { self: Typer =>
         lazy val mapped = st.mapPol(pol)(process(_, _, parent))
         pol match {
           case S(p) =>
+            // println(s"!1! ${st} ${consed.get(p -> st)}")
             consed.get(p -> st) match {
               case S(tv) if parent.forall(_ isnt tv) =>
                 // tv
                 process(pol, tv, parent)
               case _ =>
+                // println(s"!2! ${mapped} ${consed.get(p -> mapped)}")
                 consed.get(p -> mapped) match {
                   case S(tv) if parent.forall(_ isnt tv) =>
                     // tv
@@ -1022,6 +1026,7 @@ trait TypeSimplifier { self: Typer =>
           case N => mapped
         }
     }
+    // }(r => s"~> $r")
     process(S(pol), st, N)
     // st
   }

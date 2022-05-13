@@ -91,7 +91,7 @@ def getf { f } = f
 def foo x =
   let xf = x with { f = 42 }
   in getf xf
-//│ foo: anything -> nothing
+//│ foo: ({f: 'a} | ~{f: 42})\f -> 'a
 //│    = [Function: foo]
 
 foo 123
@@ -99,7 +99,7 @@ foo 123
 //│    = 42
 
 def fooManual: (~{f: 42} | {f: 'a})\f -> 'a
-//│ fooManual: anything -> nothing
+//│ fooManual: ({f: 'a} | ~{f: 42})\f -> 'a
 //│          = <missing implementation>
 
 fooManual 123
@@ -110,7 +110,7 @@ fooManual 123
 def foo x =
   let xf = x with { f = 42 }
   in add (getf xf) (getf x)
-//│ foo: {f: int} -> int
+//│ foo: (({f: int} | ~{f: 42})\f & {f: int}) -> int
 //│    = [Function: foo1]
 
 def foo x =
@@ -208,6 +208,6 @@ res.x
 
 
 def f x = (x with { a = 1 }).b
-//│ f: {b: 'a} -> 'a
+//│ f: ({b: 'a} | ~{a: 1})\a -> 'a
 //│  = [Function: f4]
 
