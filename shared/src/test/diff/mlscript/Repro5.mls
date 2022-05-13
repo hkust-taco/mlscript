@@ -77,3 +77,8 @@ h
 
 
 
+// :ds
+def f x y z = if x then y else z
+//│ f: bool -> 'a -> 'a -> 'a
+//│  = [Function: f1]
+

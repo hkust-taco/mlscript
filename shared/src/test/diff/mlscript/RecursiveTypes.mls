@@ -495,10 +495,9 @@ f
 //│ res: 'a -> 'b
 //│   where
 //│     'a :> 'a\a & {a: int}
-//│        <: (int & {a: 'c} | ~{a: int})\a & int & 'b
-//│     'c <: 'b
+//│        <: (int & {a: 'b} | ~{a: int})\a & int & 'b
 //│     'b :> 'a\a & {a: int}
-//│        <: {a: 'c}
+//│        <: {a: 'b}
 //│    = [Function: f1]
 
 // Notice how what is most likely an the error is reported in call sites,
@@ -510,7 +509,7 @@ f
 :e
 f 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.511: 	f 1
+//│ ║  l.510: 	f 1
 //│ ║         	^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.477: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -527,7 +526,7 @@ f 1
 :e
 f { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.528: 	f { a = 1 }
+//│ ║  l.527: 	f { a = 1 }
 //│ ║         	^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.477: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -555,7 +554,7 @@ f ainf
 //│ Runtime error:
 //│   ReferenceError: ainf is not defined
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.551: 	f ainf
+//│ ║  l.550: 	f ainf
 //│ ║         	^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.477: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -576,7 +575,7 @@ f infina
 //│ Runtime error:
 //│   ReferenceError: infina is not defined
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.572: 	f infina
+//│ ║  l.571: 	f infina
 //│ ║         	^^^^^^^^
 //│ ╟── operator application of type `int` does not have field 'a'
 //│ ║  l.477: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
@@ -593,25 +592,25 @@ f infina
 
 
 def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
-//│ f_manual: ('d & 'a) -> ('c | 'e)
+//│ f_manual: ('a & 'd) -> ('c | 'd)
 //│   where
-//│     'e :> 'd | 'e\a & {a: int}
+//│     'd :> 'd\a & {a: int}
 //│     'a <: {a: 'c & 'a}
 //│         = <missing implementation>
 
 :e
 f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.603: 	f_manual 1
+//│ ║  l.602: 	f_manual 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.603: 	f_manual 1
+//│ ║  l.602: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.595: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.594: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.595: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.594: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: 'e | error
 //│   where
@@ -622,16 +621,16 @@ f_manual 1
 :e
 f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.623: 	f_manual { a = 1 }
+//│ ║  l.622: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.623: 	f_manual { a = 1 }
+//│ ║  l.622: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.595: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.594: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.595: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.594: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
 //│ res: 'e | 1 | error
 //│   where
@@ -667,30 +666,30 @@ def f_manual_ns: anything
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.668: 	f_manual_ns ainf
+//│ ║  l.667: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not a function
-//│ ║  l.663: 	def f_manual_ns: anything
+//│ ║  l.662: 	def f_manual_ns: anything
 //│ ║         	                 ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `?a -> ?b`
-//│ ║  l.668: 	f_manual_ns ainf
+//│ ║  l.667: 	f_manual_ns ainf
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error
 //│    = <no result>
 //│      f_manual_ns is not implemented
 
 def f_manual_2: (({a: 'a} as 'a) & 'b) -> ('b | 'c\a & {a: int} as 'c)
-//│ f_manual_2: ('b & 'a) -> 'c
+//│ f_manual_2: ('a & 'b) -> 'b
 //│   where
-//│     'c :> 'b | 'c\a & {a: int}
+//│     'b :> 'b\a & {a: int}
 //│     'a <: {a: 'a}
 //│           = <missing implementation>
 
 // :ds
 f_manual_2 // [test:T2]
-//│ res: ('b & 'a) -> 'c
+//│ res: ('a & 'b) -> 'b
 //│   where
-//│     'c :> 'b | 'c\a & {a: int}
+//│     'b :> 'b\a & {a: int}
 //│     'a <: {a: 'a}
 //│    = <no result>
 //│      f_manual_2 is not implemented
@@ -727,13 +726,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.728: 	r.a
+//│ ║  l.727: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.715: 	r = f 1
+//│ ║  l.714: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.728: 	r.a
+//│ ║  l.727: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:

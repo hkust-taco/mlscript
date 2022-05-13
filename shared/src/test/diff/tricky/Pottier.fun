@@ -46,7 +46,6 @@ let rec f = x => y => if true then x else { t: f x.t y.t }
 //│ f: 'a -> 'b -> 'a
 //│   where
 //│     'b <: {t: 'b}
-//│     'a :> {t: 'a}
-//│        <: 'a & {t: 'a}
+//│     'a := {t: 'a}
 
 

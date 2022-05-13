@@ -414,7 +414,7 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╙──       	                             ^^^^^^^^^^^^
 //│ res: MutArray['a] | error
 //│   where
-//│     'a :> 1 | 2 | false
+//│     'a :> "hi" | () | 1 | 2 | false
 //│    = <no result>
 //│      append2 is not implemented
 

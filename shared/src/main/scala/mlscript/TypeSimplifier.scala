@@ -672,14 +672,23 @@ trait TypeSimplifier { self: Typer =>
       allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
     
     println(s"[vars] ${allVars}")
-    println(s"[bounds] ${st.showBounds}")
+    // println(s"[bounds] ${st.showBounds}")
     println(s"[rec] ${recVars}")
     
     occNums.iterator.foreach { case (k @ (pol, tv), num) =>
       assert(num > 0)
-      if (num === 1 && !occNums.contains(!pol -> tv)) {
-        println(s"[1] $tv")
-        varSubst += tv -> None
+      // if (num === 1 && !occNums.contains(!pol -> tv)) {
+      if (!occNums.contains(!pol -> tv)) {
+        if (num === 1) {
+          println(s"[1] $tv")
+          varSubst += tv -> None
+        } /* else (if (pol) tv.lowerBounds else tv.upperBounds) match {
+          case (tv2: TV) :: Nil if !varSubst.contains(tv2) =>
+            println(s"[n] $tv -> $tv2")
+            // varSubst += tv -> S(tv2)
+            varSubst += tv -> N
+          case _ =>
+        } */
       }
     }
     
@@ -701,12 +710,12 @@ trait TypeSimplifier { self: Typer =>
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
           case w: TypeVariable if !(w is v) && !varSubst.contains(w)
-              && (recVars.contains(v) === recVars.contains(w))
+              // && (recVars.contains(v) === recVars.contains(w))
+              // ^ Note: We avoid merging rec and non-rec vars, because the non-rec one may not be strictly polar
+              //       As an example of this, see [test:T1].
               && (v.nameHint.nonEmpty || w.nameHint.isEmpty)
               // ^ Don't merge in this direction if that would override a nameHint
             =>
-            // Note: We avoid merging rec and non-rec vars, because the non-rec one may not be strictly polar ^
-            //       As an example of this, see [test:T1].
             println(s"[w] $w ${coOccurrences.get(pol -> w)}")
             if (coOccurrences.get(pol -> w).forall(_(v))) {
               println(s"[U] $w := $v") // we unify w into v
@@ -732,7 +741,8 @@ trait TypeSimplifier { self: Typer =>
                 val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
                 // and record the new recursive bound for v:
                 // recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
-                if (pol) v.lowerBounds :::= b_w
+                if (pol) v.lowerBounds ::
+                 b_w
                 else v.upperBounds :::= b_w
               } else { // `w` is NOT recursive
               */
@@ -745,11 +755,19 @@ trait TypeSimplifier { self: Typer =>
                 recVars -= w
                 v.lowerBounds :::= w.lowerBounds
                 v.upperBounds :::= w.upperBounds
+                
                 // When removePolarVars is enabled, wCoOcss/vCoOcss may not be defined:
-                for {
-                  wCoOcss <- coOccurrences.get((!pol) -> w)
-                  vCoOcss <- coOccurrences.get((!pol) -> v)
-                } vCoOcss.filterInPlace(t => t === v || wCoOcss(t))
+                // for {
+                //   wCoOccs <- coOccurrences.get((!pol) -> w)
+                //   vCoOccs <- coOccurrences.get((!pol) -> v)
+                // } vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
+                coOccurrences.get((!pol) -> w).foreach { wCoOccs =>
+                  coOccurrences.get((!pol) -> v) match {
+                    case S(vCoOccs) => vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
+                    case N => coOccurrences((!pol) -> v) = wCoOccs
+                  }
+                }
+                
               // }
             }; ()
           // case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
@@ -770,14 +788,17 @@ trait TypeSimplifier { self: Typer =>
     }}
     println(s"[sub] ${varSubst.map(k => k._1.toString + " -> " + k._2).mkString(", ")}")
     
+    println(s"[bounds] ${st.showBounds}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     
-    def merge(pol: Bool, ts: Ls[ST]): ST =
+    def mergeTransform(pol: Bool, ts: Ls[ST]): ST =
       if (pol) transform(ts.foldLeft(BotType: ST)(_ | _), S(pol))
       else transform(ts.foldLeft(TopType: ST)(_ & _), S(pol))
     
-    def transform(st: SimpleType, pol: Opt[Bool]): SimpleType = st match {
+    def transform(st: SimpleType, pol: Opt[Bool]): SimpleType =
+          trace(s"transform[${printPol(pol)}] $st") {
+        st match {
       // case RecordType(fs) => RecordType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       // case TupleType(fs) => TupleType(fs.map(f => f._1 -> transform(f._2, pol)))(st.prov)
       // case ArrayType(inner) => ArrayType(transform(inner, pol))(st.prov)
@@ -795,16 +816,22 @@ trait TypeSimplifier { self: Typer =>
       
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
+        // println(s"transform[${printPol(pol)}] $tv")
+        println(s"tv $tv ${tv.upperBounds}")
         varSubst.get(tv) match {
-          case S(S(ty)) => transform(ty, pol)
+          case S(S(ty)) =>
+            // println(s"-> $ty"); 
+            transform(ty, pol)
           // case S(N) => pol.fold(die)(pol => ExtrType(pol)(noProv))
           // case S(N) => pol.fold(TypeBounds(BotType, TopType)(noProv):ST)(pol => ExtrType(pol)(noProv))
-          case S(N) => pol.fold(
-            TypeBounds(merge(true, tv.lowerBounds), merge(false, tv.upperBounds))(noProv): ST
+          case S(N) =>
+            // println(s"-> bound");
+            pol.fold(
+            TypeBounds(mergeTransform(true, tv.lowerBounds), mergeTransform(false, tv.upperBounds))(noProv): ST
           )(pol =>
             // (if (pol) tv.lowerBounds else tv.upperBounds).foldLeft(ExtrType(pol)(noProv)))
-            // merge(pol, tv))
-            merge(pol, if (pol) tv.lowerBounds else tv.upperBounds))
+            // mergeTransform(pol, tv))
+            mergeTransform(pol, if (pol) tv.lowerBounds else tv.upperBounds))
           case N =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
@@ -816,8 +843,27 @@ trait TypeSimplifier { self: Typer =>
             if (!wasDefined) {
               res.lowerBounds = tv.lowerBounds.map(transform(_, S(true)))
               res.upperBounds = tv.upperBounds.map(transform(_, S(false)))
-            }
-            res
+              
+              res
+              
+              // It used to be that pol/coOcc info was no longer be valid here, but that should be fixed
+              // /* 
+              // (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match { // TODO dedup
+              //   case (Some(_), None) | (None, Some(_)) =>
+              if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
+                val allBounds = res.lowerBounds ++ res.upperBounds
+                // assert(allBounds.size === res.lowerBounds.size)
+                assert(res.lowerBounds.isEmpty || res.upperBounds.isEmpty)
+                println(s"$tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
+                if (allBounds.forall { case tv2: TV => true; case _ => false }) { // Q: filter out same as tv?
+                  println(s"NEW SUBS $tv -> N")
+                  varSubst += tv -> N
+                  merge(pol.get, allBounds)
+                } else res
+              }
+              else res
+              // */
+            } else res
         }
       case ty @ ComposedType(true, l, r) => transform(l, pol) | transform(r, pol)
       case ty @ ComposedType(false, l, r) => transform(l, pol) & transform(r, pol)
@@ -836,9 +882,14 @@ trait TypeSimplifier { self: Typer =>
         pol.fold[ST](TypeBounds.mk(transform(lb, S(false)), transform(ub, S(true)), noProv))(pol =>
           if (pol) transform(ub, S(true)) else transform(lb, S(false)))
     }
+    }(r => s"~> $r")
     transform(st, pol)
     
   }
+  def merge(pol: Bool, ts: Ls[ST]): ST =
+    if (pol) ts.foldLeft(BotType: ST)(_ | _)
+    else ts.foldLeft(TopType: ST)(_ & _)
+  
   
   def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
     
