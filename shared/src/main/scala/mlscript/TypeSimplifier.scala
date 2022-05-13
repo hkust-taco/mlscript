@@ -902,6 +902,8 @@ trait TypeSimplifier { self: Typer =>
       else (false, tv.upperBounds.foldLeft(TopType: ST)(_ & _)) -> tv
     }.toMap
     
+    println(s"consed: $consed")
+    
     // def process(st: ST, pol: Opt[Bool]): ST = st match {
     def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST = st.unwrapProvs match {
       case tv: TV =>
@@ -911,15 +913,44 @@ trait TypeSimplifier { self: Typer =>
         }
         tv
       case _ =>
-        // val found = 
+        // // val found = 
+        // pol match {
+        //   case S(p) =>
+        //     consed.get(p -> st) match {
+        //       case S(tv) if parent.forall(_ isnt tv) =>
+        //         tv
+        //       case _ => st.mapPol(pol)(process(_, _, parent))
+        //     }
+        //   case N => st.mapPol(pol)(process(_, _, parent))
+        // }
+        /* 
+        val mapped = st.mapPol(pol)(process(_, _, parent))
+        pol match {
+          case S(p) =>
+            consed.get(p -> mapped) match {
+              case S(tv) if parent.forall(_ isnt tv) =>
+                tv
+              case _ => mapped
+            }
+          case N => mapped
+        }
+        */
+        lazy val mapped = st.mapPol(pol)(process(_, _, parent))
         pol match {
           case S(p) =>
             consed.get(p -> st) match {
               case S(tv) if parent.forall(_ isnt tv) =>
-                tv
-              case _ => st.mapPol(pol)(process(_, _, parent))
+                // tv
+                process(pol, tv, parent)
+              case _ =>
+                consed.get(p -> mapped) match {
+                  case S(tv) if parent.forall(_ isnt tv) =>
+                    // tv
+                    process(pol, tv, parent)
+                  case _ => mapped
+                }
             }
-          case N => st.mapPol(pol)(process(_, _, parent))
+          case N => mapped
         }
     }
     process(S(pol), st, N)
