@@ -335,6 +335,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
                 // cur = typer.unskidTypes_!(cur)(ctx)
+                // cur = typer.simplifyType(cur)(ctx)
                 // cur = typer.unskidTypes_!(cur)(ctx)
                 
                 // val exp = typer.expandType(cur, true)

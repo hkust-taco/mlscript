@@ -166,7 +166,7 @@ trait TypeSimplifier { self: Typer =>
       
       pol match {
         case N =>
-          st.mapPol(pol)(process)
+          st.mapPol(pol, smart = true)(process)
           
           // * Doesn't seem to change anything:
           /* 
@@ -199,7 +199,7 @@ trait TypeSimplifier { self: Typer =>
           }
           
           // dnf.toType(sort = true)
-          dnf.toType(sort = true).mapPol(pol)(process)
+          dnf.toType(sort = true).mapPol(pol, smart = true)(process)
         // */
         /* 
         case S(p) =>
@@ -1072,6 +1072,7 @@ trait TypeSimplifier { self: Typer =>
               else mergeTransform(false, tv.upperBounds, S(tv)) & res
             } else 
             if (!wasDefined) {
+              /* 
               println(s"Setting bounds of $res")
               res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
               res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
@@ -1091,10 +1092,37 @@ trait TypeSimplifier { self: Typer =>
                   println(s"NEW SUBS $tv -> N")
                   varSubst += tv -> N
                   merge(pol.get, allBounds)
+                  // merge(pol.get, allBounds.filterNot(_ === tv))
+                  // merge(pol.get, allBounds.filterNot(parent.contains))
                 } else res
               }
               else res
               // */
+              */
+              
+              def setBounds = {
+                println(s"Setting bounds of $res")
+                res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
+                res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
+                res
+              }
+              
+              if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
+                val allBounds = tv.lowerBounds ++ tv.upperBounds
+                // assert(allBounds.size === tv.lowerBounds.size)
+                assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty)
+                println(s">?> $tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
+                if (allBounds.forall { case tv2: TV => varSubst.get(tv2).forall(_.isDefined); case _ => false }) { // Q: filter out same as tv?
+                  println(s"NEW SUBS $tv -> N")
+                  varSubst += tv -> N
+                  mergeTransform(pol.get, allBounds, parent)
+                  // merge(pol.get, allBounds)
+                  // merge(pol.get, allBounds.filterNot(_ === tv))
+                  // merge(pol.get, allBounds.filterNot(parent.contains))
+                } else setBounds
+              }
+              else setBounds
+              
             } else res
         }
       case ty @ ComposedType(true, l, r) => transform(l, pol, parent) | transform(r, pol, parent)
@@ -1171,18 +1199,20 @@ trait TypeSimplifier { self: Typer =>
           case N => mapped
         }
         */
-        lazy val mapped = st.mapPol(pol)(process(_, _, parent))
+        lazy val mapped = st.mapPol(pol, smart = true)(process(_, _, parent))
         pol match {
           case S(p) =>
             // println(s"!1! ${st} ${consed.get(p -> st)}")
             consed.get(p -> st) match {
               case S(tv) if parent.forall(_ isnt tv) =>
+                println(s"!unskid-1! ${st} -> $tv")
                 // tv
                 process(pol, tv, parent)
               case _ =>
                 // println(s"!2! ${mapped} ${consed.get(p -> mapped)}")
                 consed.get(p -> mapped) match {
                   case S(tv) if parent.forall(_ isnt tv) =>
+                    println(s"!unskid-2! ${mapped} -> $tv")
                     // tv
                     process(pol, tv, parent)
                   case _ => mapped

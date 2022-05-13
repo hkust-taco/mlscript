@@ -278,15 +278,21 @@ abstract class TyperHelpers { self: Typer =>
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
-    def mapPol(pol: Opt[Bool])(f: (Opt[Bool], SimpleType) => SimpleType): SimpleType = this match {
+    def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType): SimpleType = this match {
+      case TypeBounds(lb, ub) if smart && pol.isDefined => if (pol.get) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds(f(S(false), lb), f(S(true), ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(prov)
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(prov)
       case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(prov)
       case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(prov)
+      case ComposedType(kind, lhs, rhs) if smart =>
+        if (kind) f(pol, lhs) | f(pol, rhs)
+        else f(pol, lhs) & f(pol, rhs)
       case ComposedType(kind, lhs, rhs) => ComposedType(kind, f(pol, lhs), f(pol, rhs))(prov)
+      case NegType(negated) if smart => f(pol.map(!_), negated).neg(prov)
       case NegType(negated) => NegType(f(pol.map(!_), negated))(prov)
       case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
+      case Without(base, names) if smart => f(pol, base).without(names)
       case Without(base, names) => Without(f(pol, base), names)(prov)
       case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
