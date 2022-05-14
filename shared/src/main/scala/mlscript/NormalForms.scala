@@ -298,7 +298,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         //   })
         val rcdU = RecordType(recordUnion(
           if (expandTupleFields) rcd1.fields else bse1.map(_.toRecord.fields).fold(rcd1.fields)(recordIntersection(rcd1.fields, _)),
-          if (expandTupleFields) rcd2.fields else bse2.map(_.toRecord.fields).fold(rcd2.fields)(recordIntersection(rcd1.fields, _)),
+          if (expandTupleFields) rcd2.fields else bse2.map(_.toRecord.fields).fold(rcd2.fields)(recordIntersection(rcd2.fields, _)),
         ))(noProv)
         
         // Example:

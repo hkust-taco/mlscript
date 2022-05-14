@@ -256,7 +256,7 @@ if true then id else idx
 //│ res: 'a -> 'a
 
 r =  if true then id with { x = "a"; y = "b" } else idx
-//│ r: 'a -> 'a & {x: "a", y: "b"}
+//│ r: 'a -> 'a & {x: "a" | 1}
 
 r r.x
 //│ res: "a" | 1

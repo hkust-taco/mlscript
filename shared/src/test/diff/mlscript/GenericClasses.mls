@@ -134,7 +134,7 @@ error: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-// TODO-simplif
+// TODO simplifify by better handling of neg constraints (treat it as tv & S <: T, not tv <: T | ~S)
 // :ds
 f: (Foo2[?] & 'a) -> 'a
 //│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a

@@ -1014,8 +1014,8 @@ trait TypeSimplifier { self: Typer =>
           // case (S(S(false)), _) => false
           // case (_, S(S(true))) => false
           // case (N, N) => false
-          case (S(S(false)), _) | (_, S(S(true))) | (N, N) => false
-          // case _ => true
+          // case (S(S(false)), _) | (_, S(S(true))) | (N, N) => false
+          case _ => false
         }
       ))
     println(s"[real rec] ${recVars}")

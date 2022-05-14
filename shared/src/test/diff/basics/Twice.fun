@@ -16,7 +16,8 @@ let f = x => 1, x
 // Note: but then the pretty-printed type of `twice` should not be simplified to ('a | 'b -> 'a) -> 'b -> 'a
 //  because function types would effectively become non-mergeable without losing precsion...
 // (I found this example while reading the HN thread: https://news.ycombinator.com/item?id=13783237)
-// TODO-simplif // FIXME 'c does not occur!
+// 
+// TODO simplifify more
 // :ds
 twice f
 //│ res: 'a -> 'b
@@ -24,7 +25,7 @@ twice f
 //│     'a :> 'b
 //│     'b :> (1, 'a,)
 
-// TODO-simplif
+// TODO simplifify more
 // :ds
 twice / x => x, x
 //│ res: 'a -> 'b
@@ -35,13 +36,13 @@ twice / x => x, x
 :e
 let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.37: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'x'
-//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.37: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ║        	                                     ^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.36: 	let one = twice (o => o.x) { x: { x: 1 } }
+//│ ║  l.37: 	let one = twice (o => o.x) { x: { x: 1 } }
 //│ ╙──      	                       ^^
 //│ one: 1 | error | {x: 1}
 

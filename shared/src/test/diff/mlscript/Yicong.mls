@@ -135,13 +135,13 @@ gwx.x with {y = gwx}
 //│    = [ 1, 2, 3, 'hello' ]
 //│ hhh: Array["bye" | 345 | 3 | 45 | false | true] & {_1: 45 | false, _2: 345 | 3}
 //│    = [ false, 3 ]
-//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | false | true] & {_1: 1 | true, _2: 2 | 4, _3: 3 | false}
+//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | false | true] & {_1: 1 | 45 | false | true, _2: 2 | 345 | 3 | 4}
 //│  = [ false, 3 ]
-//│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6, _2: 2 | 6, _3: 3 | 6}
+//│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false}
 //│  = [ 6, 6, 6 ]
-//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6, _2: 2 | 6, _3: 3 | 6, x: 123}
+//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}
 //│    = [ 6, 6, 6, x: 123 ]
-//│ res: 123 & {y: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6, _2: 2 | 6, _3: 3 | 6, x: 123}}
+//│ res: 123 & {y: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {_1: 1 | 6 | true, _2: 2 | 4 | 6, _3: 3 | 6 | false, x: 123}}
 //│    = [Number: 123] { y: [ 6, 6, 6, x: 123 ] }
 
 def f: (int, bool) -> int

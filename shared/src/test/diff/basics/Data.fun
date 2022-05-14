@@ -81,8 +81,6 @@ bar (q: w)
 //│ res: int
 //│ res: int
 
-// TODO simplify: `{age: int}` is included in `Person _`!
-// TODO in fact, maybe we shouldn't infer more than user annotations in parameter types...
 let bar2 (q: Person _) = succ q.age
 //│ bar2: (q: {age: int},) -> int
 
@@ -92,13 +90,13 @@ let nested x =
   data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
   Foo x
 //│ ╔══[ERROR] Illegal position for this type declaration statement.
-//│ ║  l.92: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ║  l.90: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
 //│ ╙──      	       ^^^^^
 //│ ╔══[ERROR] Illegal position for this definition statement.
-//│ ║  l.92: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
+//│ ║  l.90: 	  data Foo a // Note: we get one error for the synthetic class, and one for the synthetic def...
 //│ ╙──      	       ^^^^^
 //│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.93: 	  Foo x
+//│ ║  l.91: 	  Foo x
 //│ ╙──      	  ^^^
 //│ nested: error -> error
 
