@@ -1073,7 +1073,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     // def go(st: SimpleType): Type = goImpl(st.unwrapProvs)
     // def goImpl(st: SimpleType): Type = {
-    def go(st: SimpleType): Type = st.unwrapProvs match {
+    def go(st: SimpleType): Type =
+            // trace(s"expand $st") {
+          st.unwrapProvs match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable =>
           val nv = tv.asTypeVar
@@ -1113,6 +1115,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
         case Without(base, names) => Rem(go(base), names.toList)
     }
+    // }(r => s"~> $r")
     
     val res = go(st)
     if (bounds.isEmpty) res

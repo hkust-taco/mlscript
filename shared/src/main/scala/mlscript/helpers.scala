@@ -226,10 +226,14 @@ object ShowCtx {
       // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet
+    
     // generate names for unnamed variables
+    val numLetters = 'z' - 'a' + 1
     val names = Iterator.unfold(0) { idx =>
-      S(('a' + idx % ('z' - 'a')).toChar.toString, idx + 1)
+      val postfix = idx/numLetters
+      S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
+    
     ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
   }
 }

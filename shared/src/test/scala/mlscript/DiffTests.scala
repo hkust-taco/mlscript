@@ -334,9 +334,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Resim: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
+                // // TODO fixed point? or do that in unskidTypes_! itself
                 // cur = typer.unskidTypes_!(cur)(ctx)
                 // cur = typer.simplifyType(cur)(ctx)
                 // cur = typer.unskidTypes_!(cur)(ctx)
+                
+                cur = typer.factorRecursiveTypes_!(cur, approximateRecTypes = false)(ctx)
+                if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
+                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
                 
                 // val exp = typer.expandType(cur, true)
                 val exp = typer.expandType(cur, true)
@@ -513,7 +519,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
             stmts.foreach {
-              // statement only declares a new term with it's type
+              // statement only declares a new term with its type
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 typer.dbg = mode.dbg

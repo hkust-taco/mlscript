@@ -2406,15 +2406,13 @@ add
 //│ res: {u: {u: int -> int -> int}, v: {u: int -> int -> int}}
 
 (let rec x = {u: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'b}
+//│ res: {u: 'a, v: 'a}
 //│   where
-//│     'b :> {u: 'b}
 //│     'a :> {u: 'a}
 
 (let rec x = {u: x, v: 0}; {u: x, v: x})
-//│ res: {u: 'a, v: 'b}
+//│ res: {u: 'a, v: 'a}
 //│   where
-//│     'b :> {u: 'b, v: 0}
 //│     'a :> {u: 'a, v: 0}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
@@ -2424,9 +2422,8 @@ add
 //│     'a :> {u: 'a, v: int -> int -> int}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'b}
+//│ res: {u: 'a, v: 'a}
 //│   where
-//│     'b :> {u: 'b, v: 'b}
 //│     'a :> {u: 'a, v: 'a}
 
 (let x = {v: 0}; {u: x, v: x})
@@ -2436,9 +2433,8 @@ add
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'b}
+//│ res: {u: 'a, v: 'a}
 //│   where
-//│     'b :> {v: 'b}
 //│     'a :> {v: 'a}
 
 (x => {u: 0.v})

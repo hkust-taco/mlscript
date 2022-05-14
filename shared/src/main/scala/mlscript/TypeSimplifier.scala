@@ -1459,5 +1459,135 @@ trait TypeSimplifier { self: Typer =>
     go(st, pol)
     
   }
+  
+  
+  
+  
+  def factorRecursiveTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+    
+    // implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
+    val allVarPols = st.getVarsPol(pol)
+    println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
+    val processed = MutSet.empty[TV]
+    // val consed = allVarPols.iterator.filter(_._2.isDefined).map { case (tv, pol) =>
+    
+    val recVars = MutSet.from(
+      // TODOne rm/update logic?
+      // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
+      allVarPols.keysIterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
+    println(s"recVars: $recVars")
+    
+    
+    val varSubst = MutMap.empty[TV, TV]
+    
+    allVarPols.foreach {
+      case (tv1, S(p1)) =>
+        println(s"Consider $tv1")
+        // val b1 = if (p1) tv1.lowerBounds.head
+        (if (p1) tv1.lowerBounds else tv1.upperBounds) match {
+          case b1 :: Nil => 
+            // println(s"b $b")
+            allVarPols.foreach {
+              case (tv2, S(p2)) if p2 === p1 && (tv2 isnt tv1) && !varSubst.contains(tv1) && !varSubst.contains(tv2) =>
+                (if (p2) tv2.lowerBounds else tv2.upperBounds) match {
+                  case b2 :: Nil => 
+                    // val b1 = if (p1)
+                    def unify(ty1: ST, ty2: ST): Bool = {
+                      def nope: false = { println(s"Nope(${ty1.getClass.getSimpleName}): $ty1 ~ $ty2"); false }
+                      def unifyF(f1: FieldType, f2: FieldType): Bool = (f1, f2) match {
+                        case (FieldType(S(l1), u1), FieldType(S(l2), u2)) => unify(l1, l2) && unify(u1, u2)
+                        case (FieldType(N, u1), FieldType(N, u2)) => unify(u1, u2)
+                        case _ => nope
+                      }
+                      (ty1, ty2) match {
+                        case (`tv1`, `tv2`) => true
+                        case (v1: TypeVariable, v2: TypeVariable) => (v1 is v2) || nope
+                        case (NegType(negated1), NegType(negated2)) => unify(negated1, negated2)
+                        case (ClassTag(id1, parents1), ClassTag(id2, parents2)) => id1 === id2 || nope
+                        case (ArrayType(inner1), ArrayType(inner2)) => nope // TODO
+                        case (TupleType(fields1), TupleType(fields2)) => nope // TODO
+                        case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => nope // TODO
+                        case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
+                        case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
+                        case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
+                        case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
+                          unify(lb1, lb2) && unify(ub1, ub2)
+                        case (ComposedType(pol1, lhs1, rhs1), ComposedType(pol2, lhs2, rhs2)) =>
+                          (pol1 === pol2 || nope) && unify(lhs1, lhs2) && unify(rhs1, rhs2)
+                        case (RecordType(fields1), RecordType(fields2)) =>
+                          fields1.size === fields2.size && fields1.lazyZip(fields2).forall((f1, f2) =>
+                            (f1._1 === f2._1 || nope) && unifyF(f1._2, f2._2))
+                        case (ProvType(underlying1), ProvType(underlying2)) => nope // TODO
+                        case (WithType(base1, rcd1), WithType(base2, rcd2)) =>
+                          unify(base1, base2) && unify(rcd1, rcd2)
+                        case (TypeRef(defn1, targs1), TypeRef(defn2, targs2)) =>
+                          (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall(unify)
+                        // case (NegTrait(tt1), NegTrait(tt2)) =>
+                        // case (NegVar(tv1), NegVar(tv2)) =>
+                        case _ => nope
+                      }
+                    }
+                    println(s"Consider $tv1 ~ $tv2")
+                    if (unify(b1, b2)) {
+                      println(s"Yes! $tv2 := $tv1")
+                      varSubst += tv2 -> tv1
+                    }
+                  case _ => ()
+                }
+              // case tv2 => 
+              //   println(s"Not considered $tv1 ~ $tv2")
+              case _ => ()
+            }
+          case _ => ()
+        }
+      case _ => ()
+    }
+    
+    println(s"[subs] ${varSubst}")
+    
+    
+    /* 
+    def analyze(pol: Opt[Bool], st: ST): Unit = st match {
+      case tv: TV =>
+        
+      case _ =>
+        st.childrenPol(pol)(analyze)
+    }
+    */
+    /* 
+    def process(pol: Opt[Bool], st: ST): ST =
+    trace(s"factor[${printPol(pol)}] $st") {
+      
+      pol match {
+        case N =>
+          st.mapPol(pol, smart = true)(process)
+        case S(p) =>
+          
+          val dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
+          println(s"dnf = $dnf")
+          
+          dnf.cs.foreach { c =>
+            (c.vars.iterator ++ c.nvars).foreach { tv =>
+              processed.setAndIfUnset(tv) {
+                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
+                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
+              }
+            }
+          }
+          
+          // dnf.toType(sort = true)
+          dnf.toType(sort = true).mapPol(pol, smart = true)(process)
+      }
+      
+    }(r => s"~> $r")
+    process(pol, st)
+    */
+    // def transform(pol: Opt[Bool], st: ST): ST =
+    
+    if (varSubst.nonEmpty) subst(st, varSubst.toMap, substInMap = true) else st
+    
+  }
+  
+  
     
 }

@@ -15,13 +15,11 @@ let rec f = x => y => add (f x.tail y) (f y.tail x)
 //│ f: 'a -> 'a -> int
 //│   where
 //│     'a <: {tail: 'a}
-//│ f: 'a -> 'b -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'b <: {tail: 'b}
 //│     'a <: {tail: 'a}
-//│ f: 'a -> 'b -> int
+//│ f: 'a -> 'a -> int
 //│   where
-//│     'b <: {tail: 'b}
 //│     'a <: {tail: 'a}
 //│ f: 'a -> 'a -> int
 //│   where

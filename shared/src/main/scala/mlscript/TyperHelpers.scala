@@ -73,9 +73,13 @@ abstract class TyperHelpers { self: Typer =>
     PolymorphicType(ts.level, subst(ts.body, map))
 
   // TODO use ts.map
+  /* 
   def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])
-        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType = ts match {
-    case _ if map.isDefinedAt(ts) => map(ts)
+        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty, substInMap: Bool = false): SimpleType =
+            trace(s"subst($ts)") {
+              (if (substInMap) map.get(ts).map(subst(_, map)) else map.get(ts)).getOrElse(
+              ts match {
+    // case _ if map.isDefinedAt(ts) => map(ts)
     case TypeBounds(lb, ub) => TypeBounds(subst(lb, map), subst(ub, map))(ts.prov)
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
@@ -83,6 +87,9 @@ abstract class TyperHelpers { self: Typer =>
     case ArrayType(inner) => ArrayType(inner.update(subst(_, map), subst(_, map)))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
+    case WithType(base, rcd) => WithType(subst(base, map),
+      RecordType(rcd.fields.mapValues(_.update(subst(_, map), subst(_, map))))(rcd.prov)
+    )(ts.prov)
     case Without(base, names) => Without(subst(base, map), names)(ts.prov)
     case ProvType(underlying) => ProvType(subst(underlying, map))(ts.prov)
     case ProxyType(underlying) => subst(underlying, map)
@@ -98,7 +105,47 @@ abstract class TyperHelpers { self: Typer =>
       v
     })
     case _: ObjectTag | _: ExtrType => ts
-  }
+  })
+  }(r => s"= $r")
+  */
+  def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
+        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
+            trace(s"subst($st)") {
+    map.get(st) match {
+      case S(res) =>
+        // println(s"")
+        if (substInMap) subst(res, map, substInMap)
+        else res
+      case N =>
+        st match {
+          case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
+            cache += tv -> tv
+            tv
+          case tv: TypeVariable => cache.getOrElse(tv, {
+            val v = freshVar(tv.prov)(tv.level)
+            cache += tv -> v
+            v.lowerBounds = tv.lowerBounds.map(subst(_, map, substInMap))
+            v.upperBounds = tv.upperBounds.map(subst(_, map, substInMap))
+            v
+          })
+          case _ => st.map(subst(_, map, substInMap))
+        }
+    }
+    }(r => s"= $r")
+    // map.getOrElse(st, st match {
+    //   case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
+    //     cache += tv -> tv
+    //     tv
+    //   case tv: TypeVariable => cache.getOrElse(tv, {
+    //     val v = freshVar(tv.prov)(tv.level)
+    //     cache += tv -> v
+    //     v.lowerBounds = tv.lowerBounds.map(subst(_, map))
+    //     v.upperBounds = tv.upperBounds.map(subst(_, map))
+    //     v
+    //   })
+    //   case _ => st.map(subst(_, map))
+    // })
+  
   
   /** Substitutes only at the syntactic level, without updating type variables nor traversing their bounds. */
   // def substSyntax(st: SimpleType, map: Map[SimpleType, SimpleType]): SimpleType =
