@@ -2416,9 +2416,8 @@ add
 //│     'a :> {u: 'a, v: 0}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
-//│ res: {u: 'a, v: 'b}
+//│ res: {u: 'a, v: 'a}
 //│   where
-//│     'b :> {u: 'b, v: int -> int -> int}
 //│     'a :> {u: 'a, v: int -> int -> int}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})

@@ -1541,9 +1541,10 @@ trait TypeSimplifier { self: Typer =>
                         case (v1: TypeVariable, v2: TypeVariable) => (v1 is v2) || nope
                         case (NegType(negated1), NegType(negated2)) => unify(negated1, negated2)
                         case (ClassTag(id1, parents1), ClassTag(id2, parents2)) => id1 === id2 || nope
-                        case (ArrayType(inner1), ArrayType(inner2)) => nope // TODO
-                        case (TupleType(fields1), TupleType(fields2)) => nope // TODO
-                        case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => nope // TODO
+                        case (ArrayType(inner1), ArrayType(inner2)) => unifyF(inner1, inner2)
+                        case (TupleType(fields1), TupleType(fields2)) =>
+                          (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
+                        case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
                         case (TraitTag(id1), TraitTag(id2)) => id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
@@ -1554,9 +1555,12 @@ trait TypeSimplifier { self: Typer =>
                         case (RecordType(fields1), RecordType(fields2)) =>
                           fields1.size === fields2.size && fields1.lazyZip(fields2).forall((f1, f2) =>
                             (f1._1 === f2._1 || nope) && unifyF(f1._2, f2._2))
-                        case (ProvType(underlying1), ProvType(underlying2)) => nope // TODO
+                        // case (ProvType(underlying1), ProvType(underlying2)) => nope // TODO
+                        // case (ProxyType(underlying1), ProxyType(underlying2)) => unify(underlying1, underlying2)
                         case (WithType(base1, rcd1), WithType(base2, rcd2)) =>
                           unify(base1, base2) && unify(rcd1, rcd2)
+                        case (ProxyType(underlying1), _) => unify(underlying1, ty2)
+                        case (_, ProxyType(underlying2)) => unify(ty1, underlying2)
                         case (TypeRef(defn1, targs1), TypeRef(defn2, targs2)) =>
                           (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall(unify)
                         // case (NegTrait(tt1), NegTrait(tt2)) =>
