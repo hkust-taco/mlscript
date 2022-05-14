@@ -1,31 +1,5 @@
 :NoProvs
 
-// ExprProb.mls
-
-
-class Lit: { val: int }
-class Add[E]: { lhs: E; rhs: E }
-//│ Defined class Lit
-//│ Defined class Add
-
-// :ds
-Lit
-//│ res: {val: int & 'val} -> (Lit with {val: 'val})
-//│    = [Function: res]
-
-// :s
-// :ds
-rec def eval1_stub k e = case e of {
-  | Add -> eval1_stub k e.lhs + eval1_stub k e.rhs
-  | _ -> k e
-  }
-//│ eval1_stub: ('a -> int) -> 'b -> int
-//│   where
-//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | 'a & ~add
-//│           = [Function: eval1_stub]
-
-
-// –––––––––––––––––
 
 // // def eval1_eta k e = eval1_stub k e
 // def eval1_eta k e = (fun f -> f k e) eval1_stub

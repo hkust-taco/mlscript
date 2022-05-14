@@ -25,9 +25,9 @@ def g: G['a] & {a: 'a} as 'a
 
 :NoJS
 
-// rec def g2 a = G { a }
-// :re
-// :ds
+rec def g2 a = G { a }
+//│ g2: (G['A] & 'a) -> (G['A] with {a: 'a})
+
 rec def g2 = G { a = g2 }
 //│ g2: 'a
 //│   where
@@ -69,7 +69,6 @@ manual id
 //│     'b :> ('a & 'b) -> 'b
 //│        <: nothing
 
-// :ds
 def manual: 'a -> anything as 'a
 //│ manual: 'a
 //│   where

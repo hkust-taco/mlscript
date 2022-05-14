@@ -101,7 +101,6 @@ res.tail.head
 
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
-// :ds
 def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ Cons: ('A & 'head) -> (List['A] & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
 //│     = [Function: Cons2]
@@ -126,19 +125,19 @@ res.head
 :e
 Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	Cons 1 res
+//│ ║  l.126: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
-//│ ║  l.116: 	Cons 2 Nil
+//│ ║  l.115: 	Cons 2 Nil
 //│ ║         	     ^
 //│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
-//│ ║  l.127: 	Cons 1 res
+//│ ║  l.126: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.4: 	type List[A] = Nil | Cons[A]
 //│ ║       	               ^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.105: 	def Cons head tail = originalCons { head; tail } with { head; tail }
+//│ ║  l.104: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──       	                                          ^^^^
 //│ res: (Cons['A] with {head: 1, tail: 2}) | error
 //│   where

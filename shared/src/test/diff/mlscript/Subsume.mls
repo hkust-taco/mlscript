@@ -341,7 +341,6 @@ def self1 a = a a
 //│ ('a -> 'b & 'a) -> 'b
 //│      = [Function: self1]
 
-// :ds
 fun a -> a a
 //│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]

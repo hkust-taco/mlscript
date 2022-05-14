@@ -1,5 +1,3 @@
-:NoProvs // TODO rm
-
 
 def intToString: int -> string
 def intToString x = toString x
@@ -79,7 +77,7 @@ rec def eval1 k e = case e of {
 //│   where
 //│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
 //│      = [Function: eval1]
-//│ constrain calls  : 44
+//│ constrain calls  : 83
 //│ annoying  calls  : 0
 //│ subtyping calls  : 87
 
@@ -88,7 +86,7 @@ eval1
 //│ res: 'a
 //│   where
 //│     'a :> 'b -> 'c -> ('d | 'e | 'f)
-//│        <: 'b -> ('g & 'h)
+//│        <: 'b -> 'g & 'b -> 'h
 //│     'h :> 'c -> ('d | 'e | 'f)
 //│        <: 'i -> 'j
 //│     'j :> 'd | 'e | 'f
@@ -99,9 +97,9 @@ eval1
 //│        <: int
 //│     'e := int
 //│     'c <: lit & 'm | (add & 'n | 'o & ~add) & ~lit
-//│     'n <: {lhs: 'i, rhs: 'k}
-//│     'k <: 'c
+//│     'n <: {rhs: 'k} & {lhs: 'i}
 //│     'i <: 'c
+//│     'k <: 'c
 //│     'm <: {val: 'd}
 //│     'd <: int
 //│     'b <: 'o -> 'f
@@ -166,9 +164,9 @@ def eval1_ty_ugly = eval1
 //│     'b :> 'a & ~add & ~lit | Add['b] | Lit
 //│        <: Add['b] | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)
 //│              = [Function: eval1]
-//│ constrain calls  : 39
+//│ constrain calls  : 81
 //│ annoying  calls  : 36
-//│ subtyping calls  : 1196
+//│ subtyping calls  : 1185
 
 :ns
 def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
@@ -194,9 +192,9 @@ def eval1_ty = eval1
 //│   where
 //│     'b := 'a & ~add & ~lit | Add['b] | Lit
 //│         = [Function: eval1]
-//│ constrain calls  : 39
+//│ constrain calls  : 81
 //│ annoying  calls  : 36
-//│ subtyping calls  : 331
+//│ subtyping calls  : 320
 
 :stats
 eval1_ty_ugly = eval1_ty
@@ -209,7 +207,7 @@ eval1_ty_ugly = eval1_ty
 //│     'b :> 'a & ~add & ~lit | Add['b] | Lit
 //│        <: Add['b] | Lit | 'a & (~{val: int} & ~add | ~add & ~lit | ~{Add#E} & ~lit | ~{lhs: anything} & ~lit | ~{rhs: anything} & ~lit)
 //│              = [Function: eval1]
-//│ constrain calls  : 12
+//│ constrain calls  : 15
 //│ annoying  calls  : 1
 //│ subtyping calls  : 1212
 
@@ -224,7 +222,7 @@ eval1_ty = eval1_ty_ugly
 //│   where
 //│     'b := 'a & ~add & ~lit | Add['b] | Lit
 //│         = [Function: eval1]
-//│ constrain calls  : 12
+//│ constrain calls  : 15
 //│ annoying  calls  : 1
 //│ subtyping calls  : 1388
 
@@ -250,10 +248,9 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> E1['a] -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 43
+//│ constrain calls  : 85
 //│ annoying  calls  : 38
 //│ subtyping calls  : 139
-// :ds
 
 
 :stats
@@ -266,7 +263,7 @@ rec def pretty1 k e = case e of {
 //│   where
 //│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
 //│        = [Function: pretty1]
-//│ constrain calls  : 50
+//│ constrain calls  : 94
 //│ annoying  calls  : 0
 //│ subtyping calls  : 91
 
@@ -284,7 +281,7 @@ rec def prettier1 k ev e = case e of {
 //│   where
 //│     'c <: (Add[?] with {lhs: 'b & 'c, rhs: 'b & 'c}) | Lit | 'a & ~add & ~lit
 //│          = [Function: prettier1]
-//│ constrain calls  : 146
+//│ constrain calls  : 305
 //│ annoying  calls  : 0
 //│ subtyping calls  : 110
 
@@ -301,7 +298,7 @@ rec def prettier11 k ev e = case e of {
 //│     'c <: (Add[?] with {lhs: 'd, rhs: 'b & 'c}) | Lit | 'a & ~add & ~lit
 //│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit
 //│           = [Function: prettier11]
-//│ constrain calls  : 100
+//│ constrain calls  : 194
 //│ annoying  calls  : 0
 //│ subtyping calls  : 201
 
@@ -318,7 +315,7 @@ rec def prettier12 k ev e = case e of {
 //│   where
 //│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit
 //│           = [Function: prettier12]
-//│ constrain calls  : 88
+//│ constrain calls  : 167
 //│ annoying  calls  : 0
 //│ subtyping calls  : 295
 
@@ -348,9 +345,9 @@ prettier12 done (eval1 done) e1
 //│    = '123'
 //│ res: string
 //│    = '123'
-//│ constrain calls  : 549
+//│ constrain calls  : 1385
 //│ annoying  calls  : 490
-//│ subtyping calls  : 1059
+//│ subtyping calls  : 1144
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -407,7 +404,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│   where
 //│     'c <: (Add[?] with {lhs: 'b & 'c, rhs: 'b & 'c}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega
 //│          = [Function: prettier2]
-//│ constrain calls  : 62
+//│ constrain calls  : 123
 //│ annoying  calls  : 0
 //│ subtyping calls  : 208
 
@@ -423,7 +420,7 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│     'e <: (Nega[?] with {arg: 'c}) | 'a & ~nega
 //│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
 //│           = [Function: prettier22]
-//│ constrain calls  : 86
+//│ constrain calls  : 181
 //│ annoying  calls  : 0
 //│ subtyping calls  : 313
 
@@ -433,9 +430,9 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 eval2 done e1
 //│ res: int
 //│    = 6
-//│ constrain calls  : 57
+//│ constrain calls  : 197
 //│ annoying  calls  : 60
-//│ subtyping calls  : 95
+//│ subtyping calls  : 113
 
 e2 = add (lit 1) (nega e1)
 //│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
@@ -453,9 +450,9 @@ e2 = add (lit 1) (nega e1)
 eval2 done e2
 //│ res: int
 //│    = -5
-//│ constrain calls  : 81
+//│ constrain calls  : 280
 //│ annoying  calls  : 103
-//│ subtyping calls  : 142
+//│ subtyping calls  : 178
 
 d2 = nega (add (lit 1) (nega (lit 1)))
 //│ d2: Nega['E] with {arg: Add['E0] with {lhs: Lit & {val: 1}, rhs: Nega['E1] with {arg: Lit & {val: 1}}}}
@@ -469,9 +466,9 @@ d2 = nega (add (lit 1) (nega (lit 1)))
 eval2 done d2
 //│ res: int
 //│    = 0
-//│ constrain calls  : 56
+//│ constrain calls  : 178
 //│ annoying  calls  : 71
-//│ subtyping calls  : 78
+//│ subtyping calls  : 84
 
 
 prettier2 done
@@ -496,7 +493,7 @@ prettier2 done (eval1 done)
 //│     'a <: (Add[?] with {lhs: 'a & 'b, rhs: 'a & 'b}) | Lit | (Nega[?] with {arg: 'a})
 //│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit
 //│    = [Function (anonymous)]
-//│ constrain calls  : 45
+//│ constrain calls  : 92
 //│ annoying  calls  : 0
 //│ subtyping calls  : 224
 
@@ -518,7 +515,7 @@ prettier2 done (eval2 done)
 //│     'a <: (Add[?] with {lhs: 'a & 'b, rhs: 'a & 'b}) | Lit | (Nega[?] with {arg: 'a})
 //│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | (Nega[?] with {arg: 'b})
 //│    = [Function (anonymous)]
-//│ constrain calls  : 50
+//│ constrain calls  : 103
 //│ annoying  calls  : 0
 //│ subtyping calls  : 289
 
@@ -544,9 +541,9 @@ prettier22 done (eval2 done) d2
 //│    = '1-123'
 //│ res: string
 //│    = '-1'
-//│ constrain calls  : 343
+//│ constrain calls  : 1039
 //│ annoying  calls  : 335
-//│ subtyping calls  : 984
+//│ subtyping calls  : 1124
 
 
 
@@ -562,12 +559,14 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── expression of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
-//│ ╟── Note: constraint arises from wildcard pattern:
-//│ ║  l.76: 	  | _ -> k e
-//│ ║        	         ^^^
+//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ║  l.381: 	def nega arg = Nega { arg }
+//│ ║         	               ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.4: 	def done x = case x of {}
+//│ ║       	                  ^
 //│ ╟── from field selection:
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ╙──      	                                   ^^^^^
 //│ res: error | int
 //│ Runtime error:
@@ -580,28 +579,30 @@ prettier2 done eval1 e1
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Lit & {val: ?val}` is not a function
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '123'
@@ -613,19 +614,21 @@ prettier2 done (eval1 done) e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
-//│ ╟── Note: constraint arises from wildcard pattern:
-//│ ║  l.76: 	  | _ -> k e
-//│ ║        	         ^^^
+//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ║  l.381: 	def nega arg = Nega { arg }
+//│ ║         	               ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.4: 	def done x = case x of {}
+//│ ║       	                  ^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error | string
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
-//│ constrain calls  : 205
+//│ constrain calls  : 676
 //│ annoying  calls  : 228
-//│ subtyping calls  : 1649
+//│ subtyping calls  : 4057
 
 :e
 :stats
@@ -634,26 +637,26 @@ prettier2 done eval2
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ res: 'a -> string | error
 //│   where
 //│     'a <: (Add[?] with {lhs: nothing -> int & 'a, rhs: nothing -> int & 'a}) | Lit | (Nega[?] with {arg: 'a})
 //│    = [Function (anonymous)]
-//│ constrain calls  : 30
+//│ constrain calls  : 70
 //│ annoying  calls  : 0
-//│ subtyping calls  : 257
+//│ subtyping calls  : 297
 
 :e
 :stats
@@ -662,34 +665,36 @@ prettier2 done eval2 e1
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Lit & {val: ?val}` is not a function
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.393: 	  | _ -> k x
+//│ ║  l.390: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '123'
-//│ constrain calls  : 113
+//│ constrain calls  : 376
 //│ annoying  calls  : 108
-//│ subtyping calls  : 841
+//│ subtyping calls  : 1903
 
 :e
 :stats
@@ -698,34 +703,36 @@ prettier2 done eval2 e2
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Lit & {val: ?val}` is not a function
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.393: 	  | _ -> k x
+//│ ║  l.390: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 128
+//│ constrain calls  : 427
 //│ annoying  calls  : 131
-//│ subtyping calls  : 1141
+//│ subtyping calls  : 2736
 
 :e
 :stats
@@ -734,34 +741,36 @@ prettier2 done eval2 d2
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Nega[?E] with {arg: ?arg}` is not a function
+//│ ╟── application of type `Nega[?E] with {arg: ?arg}` is not a function
+//│ ║  l.381: 	def nega arg = Nega { arg }
+//│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.393: 	  | _ -> k x
+//│ ║  l.390: 	  | _ -> k x
 //│ ║         	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error | string
 //│    = '-1-1'
-//│ constrain calls  : 98
+//│ constrain calls  : 301
 //│ annoying  calls  : 95
-//│ subtyping calls  : 834
+//│ subtyping calls  : 1851
 
 :e
 :stats
@@ -770,32 +779,34 @@ prettier2 done eval1 e2
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `int`
-//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  | Lit -> e.val
+//│ ║  l.72: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║  l.73: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.77: 	  }
+//│ ║  l.75: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	              ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Lit & {val: ?val}` is not a function
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.18: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.76: 	  | _ -> k e
+//│ ║  l.74: 	  | _ -> k e
 //│ ║        	         ^^^
 //│ ╟── from field selection:
-//│ ║  l.279: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ║  l.276: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
 //│ ╙──       	                 ^^^^^
 //│ res: error
 //│    = '1-123'
-//│ constrain calls  : 126
+//│ constrain calls  : 421
 //│ annoying  calls  : 131
-//│ subtyping calls  : 1113
+//│ subtyping calls  : 2684
 

@@ -14,13 +14,11 @@ def c: 'a -> C[C['a]]
 def c: C[C['a]] -> 'a
 //│ c: C[C['a]] -> 'a
 
-// :ds
 def c: C['a] as 'a
 //│ c: 'a
 //│   where
 //│     'a := C['a]
 
-// :ds
 def c: C['a] | 'a as 'a
 //│ c: 'a
 //│   where
@@ -31,7 +29,6 @@ def c: C[C['a]] as 'a
 //│   where
 //│     'a := C[C['a]]
 
-// :ds
 def c: C[C['a] & 'a] as 'a
 //│ c: 'a
 //│   where
@@ -100,12 +97,9 @@ class C4[A]: { a: C[C4[A]] }
 def c: 'a -> C4['a]
 //│ c: 'a -> C4['a]
 
-// :d
-// :ds
 C{}
 //│ res: C['A]
 
-// :ds
 def c4 a = C4{ a = C{} }
 //│ c4: anything -> (C4['A] with {a: C[C4['A]]})
 

@@ -698,7 +698,6 @@ def f_manual_2: (({a: 'a} as 'a) & 'b) -> ('b | 'c\a & {a: int} as 'c)
 //│     'a <: {a: 'a}
 //│           = <missing implementation>
 
-// :ds
 f_manual_2 // [test:T2]
 //│ res: ('a & 'b) -> 'b
 //│   where
@@ -739,13 +738,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.740: 	r.a
+//│ ║  l.739: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.727: 	r = f 1
+//│ ║  l.726: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.740: 	r.a
+//│ ║  l.739: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:
