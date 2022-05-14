@@ -18,10 +18,8 @@ n = Num { val = 1 }
 //│ n: Num & {val: 1}
 //│  = Num { val: 1 }
 
-// TODO-simplif
-// :ds
 n.Add n
-//│ res: Num & {val: 1} | Num
+//│ res: Num
 //│    = Num { val: 2 }
 
 n.Add
@@ -35,7 +33,7 @@ def addTwo a0 a1 = a0.Add a1
 
 
 addTwo n n
-//│ res: Num & {val: 1} | Num
+//│ res: Num
 //│    = Num { val: 2 }
 
 s = Str { val = "hey" }
@@ -43,11 +41,11 @@ s = Str { val = "hey" }
 //│  = Str { val: 'hey' }
 
 s.Add s
-//│ res: Str & {val: "hey"} | Str
+//│ res: Str
 //│    = Str { val: 'heyhey' }
 
 addTwo s s
-//│ res: Str & {val: "hey"} | Str
+//│ res: Str
 //│    = Str { val: 'heyhey' }
 
 
@@ -57,7 +55,7 @@ def addSame a = a.Add a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: Num & {val: 1} | Num
+//│ res: Num
 //│    = Num { val: 2 }
 
 
@@ -67,11 +65,11 @@ rec def addNTimes a n =
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: Num & {val: 1} | Num
+//│ res: Num
 //│    = Num { val: 12 }
 
 addNTimes s 5
-//│ res: Str & {val: "hey"} | Str
+//│ res: Str
 //│    = Str { val: 'heyheyheyheyhey' }
 
 
@@ -149,7 +147,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.32: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.30: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 

@@ -1314,7 +1314,8 @@ trait TypeSimplifier { self: Typer =>
           // TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
           go(targ, N)
         })(tr.prov)
-      case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
+      // case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
+      case ty @ (ComposedType(_, _, _) | _: ObjectTag | _: WithType) =>
         
         def helper(dnf: DNF, pol: Opt[Bool]): ST = {
         println(s"DNF: $dnf")
@@ -1469,7 +1470,7 @@ trait TypeSimplifier { self: Typer =>
               }
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
-        }.foldLeft(BotType: ST)(_ | _) |> factorize
+        }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
         }
         /* 
         mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {

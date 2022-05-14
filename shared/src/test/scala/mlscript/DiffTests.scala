@@ -343,6 +343,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
+                // cur = typer.reconstructClassTypes(cur, S(true), ctx)
+                // if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
+                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
                 
                 // val exp = typer.expandType(cur, true)
                 val exp = typer.expandType(cur, true)

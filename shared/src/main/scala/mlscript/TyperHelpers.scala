@@ -223,10 +223,23 @@ abstract class TyperHelpers { self: Typer =>
     }
   }
   
-  def factorize(ty: ST): ST = {
-    val cs = ty.components(true)
-    if (cs.sizeCompare(1) <= 0) ty
-    else factorizeImpl(cs.map(_.components(false)))
+  private def cleanupUnion(tys: Ls[ST])(implicit ctx: Ctx): Ls[ST] = {
+    var res: Ls[ST] = Nil
+    tys.reverseIterator.foreach { ty =>
+      if (!res.exists(ty <:< _)) res ::= ty
+    }
+    res
+  }
+  // def factorize(ty: ST): ST = {
+  def factorize(ctx: Ctx)(ty: ST): ST = {
+    // val cs = cleanupUnion(ty.components(true))(ctx)
+    // if (cs.sizeCompare(1) <= 0) ty
+    // else factorizeImpl(cs.map(_.components(false)))
+    cleanupUnion(ty.components(true))(ctx) match {
+      case Nil => BotType
+      case ty :: Nil => ty
+      case cs => factorizeImpl(cs.map(_.components(false)))
+    }
   }
   def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize? ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
     def rebuild(cs: Ls[Ls[ST]]): ST =
