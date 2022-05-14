@@ -320,6 +320,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     //   println(s"isRecursive($this) = $vars  —  ${vars.get(this)}")
     //   vars.get(this).map(_.isDefined)
     // })
+    def lbRecOccs = TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true)).get(this)
+    def ubRecOccs = TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
     /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
     def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElseUpdate(this, {
       // val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))

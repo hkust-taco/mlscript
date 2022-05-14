@@ -872,10 +872,15 @@ trait TypeSimplifier { self: Typer =>
       // TODOne rm/update logic?
       // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
       allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
+    // var badRecVars = MutSet.from(
+    //   allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).contains(false)))
+    // var badRecVars = recVars.map { tv =>
+    // }
     
     println(s"[vars] ${allVars}")
     // println(s"[bounds] ${st.showBounds}")
     println(s"[rec] ${recVars}")
+    // println(s"[bad rec] ${badRecVars}")
     
     occNums.iterator.foreach { case (k @ (pol, tv), num) =>
       assert(num > 0)
@@ -980,7 +985,7 @@ trait TypeSimplifier { self: Typer =>
             println(s"[..] $v ${atom}")
             varSubst += v -> None; ()
           
-          // TODO try to preserve name hints?
+          // TODO-simplif rm: // TODO try to preserve name hints?
           case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(!pol -> v).exists(_(w)) =>
             println(s"[..] $v := ${w}")
             varSubst += v -> S(w); ()
@@ -993,11 +998,27 @@ trait TypeSimplifier { self: Typer =>
     println(s"[bounds] ${st.showBounds}")
     
     // The rec vars may have changed!
+    
+    // TODO filter out varSubst keys?
+    
+    // recVars = MutSet.from(
+    //   // TODOne rm/update logic?
+    //   // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
+    //   allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
     recVars = MutSet.from(
-      // TODOne rm/update logic?
-      // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
-      allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
-    println(s"[rec] ${recVars}")
+      allVars.iterator.filter(tv =>
+        // tv.lbRecOccs.forall(_ =/= S(false)) && tv.ubRecOccs.forall(_ =/= S(true))
+        (tv.lbRecOccs, tv.ubRecOccs) match {
+          // case (S(N), _) | (_, S(N)) => true
+          case (S(N | S(true)), _) | (_, S(N | S(false))) => true
+          // case (S(S(false)), _) => false
+          // case (_, S(S(true))) => false
+          // case (N, N) => false
+          case (S(S(false)), _) | (_, S(S(true))) | (N, N) => false
+          // case _ => true
+        }
+      ))
+    println(s"[real rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
     

@@ -163,9 +163,7 @@ x => { a: x }.b
 
 // :ds
 x => x x
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 
 res id
 //│ res: 'a
@@ -178,28 +176,20 @@ let f = (x => x + 1); {a: f; b: f 2}
 //│ res: {a: int -> int, b: int}
 
 x => x x x
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'a -> 'b
+//│ res: ('a -> 'a -> 'b & 'a) -> 'b
 
 x => y => x y x
-//│ res: 'a -> 'b -> 'c
-//│   where
-//│     'a <: 'b -> 'a -> 'c
+//│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
 
 x => y => x x y
-//│ res: 'a -> 'b -> 'c
-//│   where
-//│     'a <: 'a -> 'b -> 'c
+//│ res: ('a -> 'b -> 'c & 'a) -> 'b -> 'c
 
 (x => x x) (x => x x)
 //│ res: nothing
 
 
 x => {l: x x, r: x }
-//│ res: 'a -> {l: 'b, r: 'a}
-//│   where
-//│     'a <: 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> {l: 'b, r: 'a}
 
 
 // From https://github.com/stedolan/mlsub
@@ -224,9 +214,7 @@ let rec trutru = g => trutru (g true)
 //│     'a <: true -> 'a
 
 i => if ((i i) true) then true else true
-//│ res: 'a -> true
-//│   where
-//│     'a <: 'a -> true -> bool
+//│ res: ('a -> true -> bool & 'a) -> true
 // ^ for: λi. if ((i i) true) then true else true,
 //    Dolan's thesis says MLsub infers: (α → ((bool → bool) ⊓ α)) → bool
 //    which does seem equivalent, despite being quite syntactically different
@@ -302,9 +290,7 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ res: 0
 
 (x => (let y = (x x); 0))
-//│ res: 'a -> 0
-//│   where
-//│     'a <: 'a -> anything
+//│ res: ('a -> anything & 'a) -> 0
 
 (let rec x = (y => (y (x x))); x)
 //│ res: 'a -> 'b
@@ -326,9 +312,7 @@ next => 0
 //│     'a <: 'a -> 'a
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> 'c -> 'b
-//│   where
-//│     'c <: 'c -> 'a
+//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
 //│ res: 'a

@@ -2,12 +2,10 @@
 
 // :ds
 x => x x
-//│ res: 'a -> 'b
-//│   where
-//│     'a <: 'a -> 'b
+//│ res: ('a -> 'b & 'a) -> 'b
 
 
-// TODO-simplif
+// TODO simplifify more
 // :ds
 (let rec x = (y => (y (x x))); x)
 //│ res: 'a -> 'b
