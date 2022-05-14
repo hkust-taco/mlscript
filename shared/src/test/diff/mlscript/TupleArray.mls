@@ -170,7 +170,7 @@ class A: { x: int }
 //│ Defined class A
 
 def myval: A & { x: anything }
-//│ myval: A & {x: anything}
+//│ myval: A
 //│      = <missing implementation>
 
 // def myval: a & { x: string }

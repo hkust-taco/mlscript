@@ -134,10 +134,8 @@ error: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
-// TODO simplifify by better handling of neg constraints (treat it as tv & S <: T, not tv <: T | ~S)
-// :ds
 f: (Foo2[?] & 'a) -> 'a
-//│ res: ('a & (Foo2[?] | Foo2[?] & ~{Foo2#A} | Foo2[?] & ~foo2)) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│    = [Function: f]
 
 :ns
@@ -168,25 +166,25 @@ mrg = Foo2{}
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.166: 	mrg = Foo2{}
+//│ ║  l.164: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `string` does not match type `int`
-//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.154: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.154: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.110: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.166: 	mrg = Foo2{}
+//│ ║  l.164: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.154: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.156: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║  l.154: 	def mrg: Foo2[int] & Foo2[string]
 //│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 

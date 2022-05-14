@@ -213,7 +213,7 @@ Cons 1 2
 //│ ╟── from tuple type:
 //│ ║  l.111: 	  Cons (head: a) (tail: List a)
 //│ ╙──       	                        ^^^^^^
-//│ res: error | Cons['a]
+//│ res: Cons['a] | error
 //│   where
 //│     'a :> 1
 

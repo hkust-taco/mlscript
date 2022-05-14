@@ -434,9 +434,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case ProxyType(underlying) => mk(underlying, pol)
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
-        if (preserveTypeRefs && !primitiveTypes.contains(defn.name))
-          of(LhsRefined(N, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-        else mk(tr.expand, pol)
+        if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
+          val base = ctx.tyDefs.get(defn.name) match {
+            case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
+            case _ => N
+          }
+          of(LhsRefined(base, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+        } else mk(tr.expand, pol)
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
     // }(r => s"= $r")

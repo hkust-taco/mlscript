@@ -38,17 +38,15 @@ c: Parent
 //│ res: Parent
 //│    = Child {}
 
-// TODO-simplif
-// :ds
 c: Parent & Child
-//│ res: Child & Parent
+//│ res: Child
 //│    = Child {}
 
 c: Parent & Child & {}
-//│ res: Child & Parent
+//│ res: Child
 //│    = Child {}
 
 c: Parent & anything & Child & {}
-//│ res: Child & Parent
+//│ res: Child
 //│    = Child {}
 

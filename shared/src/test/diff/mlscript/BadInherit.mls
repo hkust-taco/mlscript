@@ -17,7 +17,7 @@ class Child: Parent1 & Parent2
 type Child = Parent1 & Parent2
 def Child: (Parent1 & Parent2) -> Child
 //│ Defined type alias Child
-//│ Child: (Parent1 & Parent2) -> Child
+//│ Child: nothing -> Child
 //│      = <missing implementation>
 
 def f(x:Child) = x.name

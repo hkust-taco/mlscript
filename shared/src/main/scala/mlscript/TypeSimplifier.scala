@@ -199,7 +199,14 @@ trait TypeSimplifier { self: Typer =>
           }
           
           // dnf.toType(sort = true)
-          dnf.toType(sort = true).mapPol(pol, smart = true)(process)
+          
+          // dnf.toType(sort = true).mapPol(pol, smart = true)(process)
+          val newTy = dnf.toType(sort = true)
+          newTy.mapPol(pol, smart = true)((pol, ty) =>
+            // if (ty === st) ty // Sometimes the DNF of T will include T itself, such as when T is a class type ref
+            if (ty === st) ty.mapPol(pol, smart = true)(process) // Sometimes the DNF of T will include T itself, such as when T is a class type ref
+            else process(pol, ty))
+          
         // */
         /* 
         case S(p) =>
@@ -1340,27 +1347,35 @@ trait TypeSimplifier { self: Typer =>
               bo match {
                 case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
                   val clsNme = tagNme.capitalize
+                  val clsTyNme = TypeName(tagNme.capitalize)
                   val td = ctx.tyDefs(clsNme)
-                  val typeRef = TypeRef(td.nme, td.tparams.map { tp =>
-                    val fieldTagNme = tparamField(TypeName(clsNme), tp)
+                  val typeRef = TypeRef(td.nme, td.tparams.zipWithIndex.map { case (tp, tpidx) =>
+                    // val fieldTagNme = tparamField(TypeName(clsNme), tp)
+                    val fieldTagNme = tparamField(clsTyNme, tp)
                     // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
                     //   case (_, FunctionType(lb, ub)) =>
                     //     TypeBounds.mk(go(lb, false), go(ub, true))
                     // }.foldLeft(TypeBounds(BotType, TopType)(noProv): ST)(_ & _)
                     
+                    /* 
                     rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
                       case (_, FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
                       case (_, FieldType(lb, ub)) =>
                         TypeBounds.mk(go(lb.getOrElse(BotType), S(false)), go(ub, S(true)))
                     }.getOrElse(TypeBounds(BotType, TopType)(noProv))
+                    */
                     
-                    rcd.fields.iterator.filter(_._1 === fieldTagNme).foldLeft((BotType: ST, TopType: ST)) {
+                    // val fromTyRef = trs2.get(clsTyNme).map(tr => FieldType(tr.targs(tpidx)))
+                    val fromTyRef = trs.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                    
+                    (fromTyRef ++ rcd.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
                       // case ((acc_lb, acc_ub), (_, FunctionType(lb, ub))) => (acc_lb | lb, acc_ub & ub)
                       // // case ((acc_lb, acc_ub), (_, _)) => die
                       // case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
                       
                       // case ((acc_lb, acc_ub), FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
-                      case ((acc_lb, acc_ub), (_, FieldType(lb, ub))) =>
+                      // case ((acc_lb, acc_ub), (_, FieldType(lb, ub))) =>
+                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
                         // // TypeBounds.mk(go(lb.getOrElse(BotType), false), go(ub, true))
                         // (acc_lb.fold(lb)(_ | lb.getOrElse(BotType)), acc_ub & ub)
                         (acc_lb | lb.getOrElse(BotType), acc_ub & ub)

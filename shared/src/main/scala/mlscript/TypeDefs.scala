@@ -102,11 +102,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
     Var(clsNme.name + "#" + tparamNme.name)
   
-  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require(td.kind is Cls)
     ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
-  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
     TraitTag(Var(td.nme.name.decapitalize))(prov)
   }

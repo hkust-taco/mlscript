@@ -153,7 +153,7 @@ test (error: A & { x: int })
 
 
 def test: (A & { xA: 'a; yA: 'b } | B & { xB: 'a; yB: 'b } | C & { xC: 'a; yC: 'b }) -> { l: 'a; r: 'b }
-//│ test: (B & {xB: 'a, yB: 'b} | A & {xA: 'a, yA: 'b} | C & {xC: 'a, yC: 'b}) -> {l: 'a, r: 'b}
+//│ test: (A & {xA: 'a, yA: 'b} | B & {xB: 'a, yB: 'b} | C & {xC: 'a, yC: 'b}) -> {l: 'a, r: 'b}
 
 test (error: A & { xA: int; yA: string })
 test (error: B & { xB: int; yB: string })
@@ -180,29 +180,29 @@ negInt: A | { x: 'a }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.179: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
-//│ ╟── type `~int` does not match type `{x: ?a} | A`
+//│ ╟── type `~int` does not match type `A | {x: ?a}`
 //│ ║  l.166: 	def negInt: ~int
 //│ ║         	            ^^^^
-//│ ╟── but it flows into reference with expected type `{x: ?a} | A`
+//│ ╟── but it flows into reference with expected type `A | {x: ?a}`
 //│ ║  l.179: 	negInt: A | { x: 'a }
 //│ ║         	^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.179: 	negInt: A | { x: 'a }
 //│ ╙──       	        ^^^^^^^^^^^^^
-//│ res: {x: nothing} | A
+//│ res: A | {x: nothing}
 
 v: A | { x: 'a }
-//│ res: {x: 1} | A
+//│ res: A | {x: 1}
 
 (error: A) with { x = 1 }
-//│ res: A\x & {x: 1}
+//│ res: A\x & A & {x: 1}
 
 // Note that we get {x: nothing} because the LHS is a subtype of A so 'a is not constrained
 (error: A) with { x = 1 } : A | { x: 'a }
-//│ res: {x: nothing} | A
+//│ res: A | {x: nothing}
 
 id (error: A) with { x = 1 } : A | { x: 'a }
-//│ res: {x: nothing} | A
+//│ res: A | {x: nothing}
 
 def negWeird: ~(~(~(A & { x: int })))
 //│ negWeird: ~A
@@ -211,7 +211,7 @@ def v = negWeird with { x = 1 }
 //│ v: {x: 1} & ~a
 
 v: A | { x: 'a }
-//│ res: {x: 1} | A
+//│ res: A | {x: 1}
 
 
 def funny = error: nothing\x

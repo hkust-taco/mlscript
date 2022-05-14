@@ -110,7 +110,7 @@ abstract class TyperHelpers { self: Typer =>
   */
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
-            trace(s"subst($st)") {
+            // trace(s"subst($st)") {
     map.get(st) match {
       case S(res) =>
         // println(s"")
@@ -131,7 +131,8 @@ abstract class TyperHelpers { self: Typer =>
           case _ => st.map(subst(_, map, substInMap))
         }
     }
-    }(r => s"= $r")
+    // }(r => s"= $r")
+    
     // map.getOrElse(st, st match {
     //   case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
     //     cache += tv -> tv
@@ -452,7 +453,13 @@ abstract class TyperHelpers { self: Typer =>
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
         case (tr: TypeRef, _) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
         case (_, tr: TypeRef) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
-        case (_: TypeRef, _) | (_, _: TypeRef) =>
+        case (tr: TypeRef, _) =>
+          ctx.tyDefs.get(tr.defn.name) match {
+            case S(td) if td.kind is Cls => clsNameToNomTag(td)(noProv, ctx) <:< that
+            case _ => false
+          }
+        // case (_: TypeRef, _) | (_, _: TypeRef) =>
+        case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
