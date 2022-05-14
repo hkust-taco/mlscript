@@ -61,8 +61,6 @@ mkC = mkC'
 //│   <:  mkC:
 //│ 'a -> C2['a]
 
-// TODOne-simplif
-// :ds
 rec def rc = mkC(rc)
 //│ rc: 'b
 //│   where

@@ -71,8 +71,7 @@ cmi.Add (Complex 1 2) (Complex 3 4)
 //│ res: Complex[int] & {imaginary: 2, real: 1} | Complex[int] & {imaginary: 4, real: 3} | Complex[int]
 //│    = Complex { real: 4, imaginary: 6 }
 
-// TODO-simplif >: int <: int... (comes out due to `.distinctComponents`)
-// TODO-simplif `| Complex['A]` simplif
+// TODO-simplif `| Complex[int]` simplif
 // :ds
 res
 //│ res: Complex[int] & {imaginary: 2, real: 1} | Complex[int] & {imaginary: 4, real: 3} | Complex[int]
