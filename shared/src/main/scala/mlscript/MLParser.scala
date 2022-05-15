@@ -255,7 +255,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           case (l, Right(t -> true)) => l -> Field(Some(t), t)
           case _ => ??? // unreachable
         })
-      else Splice(fs.map{ _._2 match { case L(l) => L(l) case R(r) => R(r) } })
+      else Splice(fs.map{ _._2 match { 
+        case L(l) => L(l) 
+        case R(r -> true) => R(Field(Some(r), r))
+        case R(r -> false) => R(Field(None, r))
+      } })
   })
   def litTy[_: P]: P[Type] = P( lit.map(l => Literal(l).withLocOf(l)) )
   

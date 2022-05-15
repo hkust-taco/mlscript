@@ -69,7 +69,7 @@ trait TypeSimplifier { self: Typer =>
                     case ar @ ArrayType(inner) =>
                       ArrayType(inner.update(goDeep(_, !pol), goDeep(_, pol)))(noProv)
                     case sp @ SpliceType(elems) =>
-                      sp.updateElems(goDeep(_, pol), goDeep(_, pol), noProv)
+                      sp.updateElems(goDeep(_, pol), goDeep(_, !pol), goDeep(_, pol), noProv)
                     case pt: ClassTag => pt
                   },
                   ts,
@@ -128,7 +128,9 @@ trait TypeSimplifier { self: Typer =>
         analyze(inner.ub, pol)
       case SpliceType(elems) => elems.foreach {
         case L(l) => analyze(l, pol)
-        case R(r) => analyze(r, pol)
+        case R(r) => 
+          r.lb.foreach(analyze(_, !pol))
+          analyze(r.ub, pol)
       }
       case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
       case tv: TypeVariable =>
@@ -265,7 +267,7 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => RecordType(fs.mapValues(_.update(transform(_, !pol), transform(_, pol))))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(_.update(transform(_, !pol), transform(_, pol))))(st.prov)
       case ArrayType(inner) => ArrayType(inner.update(transform(_, !pol), transform(_, pol)))(st.prov)
-      case sp @ SpliceType(elems) => sp.updateElems(transform(_, pol), transform(_, pol), st.prov)
+      case sp @ SpliceType(elems) => sp.updateElems(transform(_, pol),transform(_, !pol), transform(_, pol), st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, !pol), transform(r, pol))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable =>
@@ -328,7 +330,7 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => RecordType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
       case ArrayType(inner) => ArrayType(inner.update(go(_, !pol), go(_, pol)))(st.prov)
-      case sp @ SpliceType(elems) => sp.updateElems(go(_, pol), go(_, pol), st.prov)
+      case sp @ SpliceType(elems) => sp.updateElems(go(_, pol), go(_, !pol), go(_, pol), st.prov)
       case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
       case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
       case ProxyType(underlying) => go(underlying, pol)
@@ -422,7 +424,7 @@ trait TypeSimplifier { self: Typer =>
                     case S(at @ ArrayType(inner)) =>
                       S(ArrayType(inner.update(go(_, !pol), go(_, pol)))(at.prov)) -> nFields
                     case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
-                    case S(sp @ SpliceType(fs)) => S(sp.updateElems(go(_, pol), go(_, pol))) -> nFields
+                    case S(sp @ SpliceType(fs)) => S(sp.updateElems(go(_, pol), go(_, !pol) ,go(_, pol))) -> nFields
                     case N => N -> nFields
                   }
                   LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted).toType(sort = true)

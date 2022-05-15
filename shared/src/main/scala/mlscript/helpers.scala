@@ -66,7 +66,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Tuple(fs) =>
       fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Splice(fs) =>
-      fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r -> _) => s"${r.showIn(ctx, 0)}"}.mkString("(", ", ", ")")
+      fs.map{case L(l) => s"...${l.showIn(ctx, 0)}" case R(r) => s"${showField(r, ctx)}"}.mkString("(", ", ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
@@ -95,7 +95,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
-    case Splice(fs) => fs.map{ case L(l) => l case R(r -> _) => r }
+    case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
   }
 
   /**

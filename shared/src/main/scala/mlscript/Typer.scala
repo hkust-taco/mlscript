@@ -222,11 +222,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         SpliceType(fields.map{ 
           case L(l) => {
             val t = rec(l)
-            constrain(t, ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov))(raise, t.prov, ctx)
-            L(t)
+            val res = ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov)
+            constrain(t, res)(raise, t.prov, ctx)
+            L(res)
           }
-          case R(r -> false) => R(rec(r))
-          case R(r -> true) => R(err(msg"Mutable splice field" -> ty.toLoc :: Nil))
+          case R(f) => {
+            R(FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "splice field")))
+          }
           })(tyTp(ty.toLoc, "splice type"))
       case Inter(lhs, rhs) => (if (simplify) rec(lhs) & (rec(rhs), _: TypeProvenance)
           else ComposedType(false, rec(lhs), rec(rhs)) _
@@ -540,8 +542,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val t_a = ArrayType(freshVar(prov).toUpper(prov))(prov)
             con(t_l, t_a, t_l)
           }) 
-          case R(r -> false) => R(typeTerm(r))
-          case R(r -> true)  => R(err(msg"mutable splice not supported" -> prov.loco :: Nil))
+          case R(r -> mt) => {
+            val t = typeTerm(r)
+            if (mt) { R(FieldType(Some(t), t)(t.prov)) } else {R(t.toUpper(t.prov))}
+          }
         })(prov)
       case Bra(false, trm: Blk) => typeTerm(trm)
       case Bra(rcd, trm @ (_: Tup | _: Blk)) if funkyTuples => typeTerms(trm :: Nil, rcd, Nil)
@@ -846,7 +850,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
             case ArrayType(FieldType(Some(lb), ub)) =>
               AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
-            case SpliceType(elems) => Splice(elems.map { case L(l) => L(go(l, polarity)) case R(r) => R(go(r, polarity) -> false) })
+            case SpliceType(elems) => Splice(elems.map { 
+              case L(l) => L(go(l, polarity)) 
+              case R(v) => R(Field(v.lb.map(go(_, !polarity)), go(v.ub, polarity))) })
             case NegType(t) => Neg(go(t, !polarity))
             case ExtrType(true) => Bot
             case ExtrType(false) => Top

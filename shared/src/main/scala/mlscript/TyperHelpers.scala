@@ -68,7 +68,9 @@ abstract class TyperHelpers { self: Typer =>
     case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
     case RecordType(fields) => RecordType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
-    case SpliceType(elems) => SpliceType(elems.map{ case L(l) => L(subst(l, map)) case R(r) => R(subst(r, map)) })(ts.prov)
+    case SpliceType(elems) => SpliceType(elems.map{ 
+      case L(l) => L(subst(l, map))
+      case R(r) => R(r.update(subst(_, map), subst(_, map))) })(ts.prov)
     case ArrayType(inner) => ArrayType(inner.update(subst(_, map), subst(_, map)))(ts.prov)
     case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
     case NegType(negated) => NegType(subst(negated, map))(ts.prov)
@@ -476,7 +478,7 @@ abstract class TyperHelpers { self: Typer =>
       case TypeRef(d, ts) => ts
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
-      case SpliceType(fs) => fs.map{ case L(l) => l case R(r) => r }
+      case SpliceType(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.lb.toList ::: r.ub :: Nil}
     }
     
     def getVars: Set[TypeVariable] = {

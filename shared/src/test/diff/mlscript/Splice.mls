@@ -3,7 +3,7 @@ def t1 : (int, ...Array[int], bool)
 //│   = <missing implementation>
 
 def t2 : (int, ...(bool, int))
-//│ t2: (int, ...(bool, int,))
+//│ t2: (int, ...Array[bool | int])
 //│   = <missing implementation>
 
 :e
@@ -12,34 +12,31 @@ def t3 : (int, ...bool, mut int)
 //│ ║  l.10: 	def t3 : (int, ...bool, mut int)
 //│ ║        	                  ^^^^
 //│ ╙── type `bool` does not match type `Array[?a]`
-//│ ╔══[ERROR] Mutable splice field
-//│ ║  l.10: 	def t3 : (int, ...bool, mut int)
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^^
-//│ t3: (int, ...bool, error)
+//│ t3: (int, ...Array[nothing], int .. int)
 //│   = <missing implementation>
 
 :e
 def t4 : (int, ...int, bool)
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.22: 	def t4 : (int, ...int, bool)
+//│ ║  l.19: 	def t4 : (int, ...int, bool)
 //│ ║        	                  ^^^
 //│ ╙── type `int` does not match type `Array[?a]`
-//│ t4: (int, ...int, bool)
+//│ t4: (int, ...Array[nothing], bool)
 //│   = <missing implementation>
 
 :d
 def f1 : ('a, ...Array[int]) -> 'a
-//│ 1. Typing type Function(Tuple(List((None,Field(None,Splice(List(Right(('a,false)), Left(AppliedType(TypeName(Array),List(TypeName(int)))))))))),'a)
+//│ 1. Typing type Function(Tuple(List((None,Field(None,Splice(List(Right(Field(None,'a)), Left(AppliedType(TypeName(Array),List(TypeName(int)))))))))),'a)
 //│ | vars=Map() newDefsInfo=Map()
 //│ | CONSTRAIN Array[Int] <! Array[None..α1']
 //│ |   where 
 //│ | C Array[Int] <! Array[None..α1']
 //│ | | C Array[None..Int] <! Array[None..α1']
 //│ | | | C Int <! α1'
-//│ => ((None..SpliceType(List(Right(['a0']), Left(Array[Int]))),) -> ['a0']) | 'a0'
-//│ Typed as: ((None..SpliceType(List(Right(['a0']), Left(Array[Int]))),) -> ['a0'])
-//│  where: 
-//│ f1: ('a, ...Array[int]) -> 'a
+//│ => ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0']) | 'a0'
+//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0'])
+//│  where: α1' :> [[Int]]
+//│ f1: ('a, ...Array[anything]) -> 'a
 //│   = <missing implementation>
 
 :d
@@ -54,26 +51,26 @@ def f1 (x, ...y) = x
 //│ | | | CONSTRAIN α1' <! Array[None..α2']
 //│ | | |   where 
 //│ | | | C α1' <! Array[None..α2']
-//│ | | 1. : SpliceType(List(Right(α0'), Left(α1')))
-//│ | 1. : (None..SpliceType(List(Right(α0'), Left(α1'))),)
+//│ | | 1. : SpliceType(List(Right(None..α0'), Left(α1')))
+//│ | 1. : (None..SpliceType(List(Right(None..α0'), Left(α1'))),)
 //│ | 1. Typing term x
 //│ | 1. : [α0']
-//│ 1. : ((None..SpliceType(List(Right(α0'), Left(α1'))),) -> [α0'])
-//│ Typed as: ((None..SpliceType(List(Right(α0'), Left(α1'))),) -> [α0'])
+//│ 1. : ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
+//│ Typed as: ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
 //│  where: α1' <: [[Array[None..α2']]]
-//│ Typed as: ((None..SpliceType(List(Right(['a0']), Left(Array[Int]))),) -> ['a0'])
-//│  where: 
+//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0'])
+//│  where: α1' :> [[Int]]
 //│ ('a, ...Array[anything]) -> 'a
 //│   <:  f1:
-//│ ('a, ...Array[int]) -> 'a
+//│ ('a, ...Array[anything]) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.46: 	def f1 (x, ...y) = x
+//│ ║  l.43: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `('a, ...Array[int])` does not match type `(?a, ...?b)`
-//│ ║  l.31: 	def f1 : ('a, ...Array[int]) -> 'a
+//│ ╟── type `('a, ...Array[?a])` does not match type `(?b, ...?c)`
+//│ ║  l.28: 	def f1 : ('a, ...Array[int]) -> 'a
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from splice:
-//│ ║  l.46: 	def f1 (x, ...y) = x
+//│ ║  l.43: 	def f1 (x, ...y) = x
 //│ ╙──      	       ^^^^^^^^^
 //│ Code generation crashed:
 //│   scala.MatchError: (x, ...y) (of class mlscript.Splc)
@@ -81,10 +78,10 @@ def f1 (x, ...y) = x
 :e
 errt = (1, ...2, 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.82: 	errt = (1, ...2, 3)
+//│ ║  l.79: 	errt = (1, ...2, 3)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Array[?a]`
-//│ ║  l.82: 	errt = (1, ...2, 3)
+//│ ║  l.79: 	errt = (1, ...2, 3)
 //│ ╙──      	              ^
 //│ errt: (1, ...2, 3)
 //│ Code generation crashed:
@@ -93,15 +90,12 @@ errt = (1, ...2, 3)
 :e
 wrerr = (1, ...true, mut 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.94: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.91: 	wrerr = (1, ...true, mut 3)
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.94: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.91: 	wrerr = (1, ...true, mut 3)
 //│ ╙──      	               ^^^^
-//│ ╔══[ERROR] mutable splice not supported
-//│ ║  l.94: 	wrerr = (1, ...true, mut 3)
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^
-//│ wrerr: (1, ...true, error)
+//│ wrerr: (1, ...true, 3 .. 3)
 //│ Code generation crashed:
 //│   scala.MatchError: (1, ...true, mut 3) (of class mlscript.Splc)
 
@@ -111,16 +105,7 @@ gt1 = (1, ...(1,2,3), 2)
 //│   scala.MatchError: (1, ...(1, 2, 3,), 2) (of class mlscript.Splc)
 
 gt1[0]
-//│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.113: 	gt1[0]
-//│ ║         	^^^^^^
-//│ ╟── splice of type `(1, ...(1, 2, 3,), 2)` does not match type `Array[?a]`
-//│ ║  l.108: 	gt1 = (1, ...(1,2,3), 2)
-//│ ║         	      ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Array[?a]`
-//│ ║  l.113: 	gt1[0]
-//│ ╙──       	^^^
-//│ res: error
+//│ res: 1 | 2 | 3
 //│ Code generation encountered an error:
 //│   unresolved symbol gt1
 
@@ -130,3 +115,38 @@ gt2 = (...arr1)
 //│ gt2: (...Array[int])
 //│ Code generation crashed:
 //│   scala.MatchError: (...arr1) (of class mlscript.Splc)
+
+:e
+(1, ...(true, false), "hi") : Array[int | bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hi"` does not match type `bool | int`
+//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║         	                      ^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ╙──       	                                    ^^^^^^^^^^
+//│ res: Array[bool | int]
+//│ Code generation crashed:
+//│   scala.MatchError: (1, ...(true, false,), "hi") (of class mlscript.Splc)
+
+a1 = (1,2,3,4,5)
+a2 = (1,2, ...a1, 4,5)
+//│ a1: (1, 2, 3, 4, 5,)
+//│ a2: (1, 2, ...(1, 2, 3, 4, 5,), 4, 5)
+//│ Code generation crashed:
+//│   scala.MatchError: (1, 2, ...a1, 4, 5) (of class mlscript.Splc)
+
+a2 : Array[int]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$SpliceType.$anonfun$inner$3(TyperDatatypes.scala:152)
+//│ 	at: scala.collection.immutable.List.map(List.scala:250)
+//│ 	at: mlscript.TyperDatatypes$SpliceType.inner$lzycompute(TyperDatatypes.scala:151)
+//│ 	at: mlscript.TyperDatatypes$SpliceType.inner(TyperDatatypes.scala:151)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrain$50(ConstraintSolver.scala:326)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:260)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:250)
