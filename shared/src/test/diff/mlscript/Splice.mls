@@ -3,7 +3,7 @@ def t1 : (int, ...Array[int], bool)
 //│   = <missing implementation>
 
 def t2 : (int, ...(bool, int))
-//│ t2: (int, ...Array[bool | int])
+//│ t2: (int, ...(bool, int,))
 //│   = <missing implementation>
 
 :e
@@ -12,7 +12,7 @@ def t3 : (int, ...bool, mut int)
 //│ ║  l.10: 	def t3 : (int, ...bool, mut int)
 //│ ║        	                  ^^^^
 //│ ╙── type `bool` does not match type `Array[?a]`
-//│ t3: (int, ...Array[nothing], int .. int)
+//│ t3: (int, ...bool, int .. int)
 //│   = <missing implementation>
 
 :e
@@ -21,7 +21,7 @@ def t4 : (int, ...int, bool)
 //│ ║  l.19: 	def t4 : (int, ...int, bool)
 //│ ║        	                  ^^^
 //│ ╙── type `int` does not match type `Array[?a]`
-//│ t4: (int, ...Array[nothing], bool)
+//│ t4: (int, ...int, bool)
 //│   = <missing implementation>
 
 :d
@@ -33,10 +33,10 @@ def f1 : ('a, ...Array[int]) -> 'a
 //│ | C Array[Int] <! Array[None..α1']
 //│ | | C Array[None..Int] <! Array[None..α1']
 //│ | | | C Int <! α1'
-//│ => ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0']) | 'a0'
-//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0'])
-//│  where: α1' :> [[Int]]
-//│ f1: ('a, ...Array[anything]) -> 'a
+//│ => ((None..SpliceType(List(Right(None..['a0']), Left(Array[Int]))),) -> ['a0']) | 'a0'
+//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[Int]))),) -> ['a0'])
+//│  where: 
+//│ f1: ('a, ...Array[int]) -> 'a
 //│   = <missing implementation>
 
 :d
@@ -58,15 +58,15 @@ def f1 (x, ...y) = x
 //│ 1. : ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
 //│ Typed as: ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
 //│  where: α1' <: [[Array[None..α2']]]
-//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[None..α1']))),) -> ['a0'])
-//│  where: α1' :> [[Int]]
+//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[Int]))),) -> ['a0'])
+//│  where: 
 //│ ('a, ...Array[anything]) -> 'a
 //│   <:  f1:
-//│ ('a, ...Array[anything]) -> 'a
+//│ ('a, ...Array[int]) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.43: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `('a, ...Array[?a])` does not match type `(?b, ...?c)`
+//│ ╟── type `('a, ...Array[int])` does not match type `(?a, ...?b)`
 //│ ║  l.28: 	def f1 : ('a, ...Array[int]) -> 'a
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from splice:

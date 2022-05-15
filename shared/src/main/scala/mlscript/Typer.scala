@@ -224,7 +224,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val t = rec(l)
             val res = ArrayType(freshVar(t.prov).toUpper(t.prov))(t.prov)
             constrain(t, res)(raise, t.prov, ctx)
-            L(res)
+            L(t)
           }
           case R(f) => {
             R(FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "splice field")))
