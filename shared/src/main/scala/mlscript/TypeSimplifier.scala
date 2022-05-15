@@ -1537,7 +1537,7 @@ trait TypeSimplifier { self: Typer =>
                         case _ => nope
                       }
                       (ty1, ty2) match {
-                        case (`tv1`, `tv2`) => true
+                        case (`tv1`, `tv2`) | (`tv2`, `tv1`) => true
                         case (v1: TypeVariable, v2: TypeVariable) => (v1 is v2) || nope
                         case (NegType(negated1), NegType(negated2)) => unify(negated1, negated2)
                         case (ClassTag(id1, parents1), ClassTag(id2, parents2)) => id1 === id2 || nope
