@@ -184,9 +184,14 @@ rec def c6 a = C6{ a = c5 (c6 a) }
 //│     'A0 :> 'a | C5[C6['A]]
 //│         <: C5[C6['A]]
 
-// FIXME SOF
-// :d
-// c = c6
+c = c6
+//│ anything -> (C6['A] with {a: 'a})
+//│   where
+//│     'a :> C5[C6['A]] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5[C6['A]]
+//│         <: C5[C6['A]]
+//│   <:  c:
+//│ 'a -> C6['a]
 
 
 

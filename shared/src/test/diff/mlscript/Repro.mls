@@ -13,8 +13,8 @@ def n: C{}
 //│    = {}
 
 
-// class G[A]: { a: G[A] & A & G[A] }
 :w
+// class G[A]: { a: G[A] & A & G[A] }
 class G[A]: { a: G[A] }
 //│ Defined class G[±A]
 //│ ╔══[WARNING] Type definition G has bivariant type parameters:

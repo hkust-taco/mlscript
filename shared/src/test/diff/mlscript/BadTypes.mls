@@ -139,9 +139,35 @@ def someRec: { y: 'a } as 'a
 //│     'a :> {y: 'a}
 //│        = <missing implementation>
 
-// // FIXME: causes SOF in type simplifier
-// :d
-// :s
-// someRec: BadRec
+:e
+someRec: BadRec
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	someRec: BadRec
+//│ ║        	^^^^^^^
+//│ ╟── type `{y: ?a}` does not have field 'x'
+//│ ║  l.136: 	def someRec: { y: 'a } as 'a
+//│ ║         	             ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{x: ?a0, y: BadRec}`
+//│ ║  l.+1: 	someRec: BadRec
+//│ ║        	^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.121: 	type BadRec = { x: 'a; y: BadRec }
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.+1: 	someRec: BadRec
+//│ ╙──      	         ^^^^^^
+//│ res: BadRec
+//│    = <no result>
+//│      someRec is not implemented
 
+def someRec: { x: 'a; y: 'a } as 'a
+//│ someRec: 'a
+//│   where
+//│     'a :> {x: 'a, y: 'a}
+//│        = <missing implementation>
+
+someRec: BadRec
+//│ res: BadRec
+//│    = <no result>
+//│      someRec is not implemented
 
