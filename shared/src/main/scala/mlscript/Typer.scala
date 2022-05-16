@@ -24,7 +24,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
-  /** Keys of `mthEnv`:
+  /**  `env`: maps the names of all global and local bindings to their types
+    *  Keys of `mthEnv`:
     * `L` represents the inferred types of method definitions. The first value is the parent name,
     *   and the second value is the method name.
     * `R` represents the actual method types.
@@ -117,13 +118,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+      tyDef.tvarVariances += tv -> VarianceInfo.co
+      tyDef
     } ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+      tyDef.tvarVariances += tv -> VarianceInfo.in
+      tyDef
     } ::
     Nil
   val primitiveTypes: Set[Str] =
@@ -251,6 +256,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
+      case TypeName("this") =>
+        ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
+          case AbstractConstructor(_, _) => die
+          case t: TypeScheme => t.instantiate
+        }
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
@@ -350,8 +360,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // It turns out it is better to NOT store a provenance here,
         //    or it will obscure the true provenance of constraints causing errors
         //    across recursive references.
-        noProv
-        // TypeProvenance(rhs.toLoc, "let-bound value")
+        noProv,
+        // TypeProvenance(rhs.toLoc, "let-bound value"),
+        S(nme)
       )(lvl + 1)
       ctx += nme -> e_ty
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
@@ -477,7 +488,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(App(n, t).toLoc, (if (mut) "mutable " else "") + "record field")
           if (mut) {
-            val res = freshVar(fprov)
+            val res = freshVar(fprov, S(n.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -489,7 +500,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
-            val res = freshVar(fprov)
+            val res = freshVar(fprov, n.map(_.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -514,11 +525,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
-        val fieldType = freshVar(sprov)
+        val fieldType = freshVar(sprov, Opt.when(!f.name.startsWith("_"))(f.name))
         val obj_ty =
           // Note: this proxy does not seem to make any difference:
           mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), fieldType)(
+        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), TopType)(
           tp(f.toLoc, "assigned field")
         )) :: Nil)(sprov), fieldType)
         val vl = typeTerm(rhs)
@@ -530,7 +541,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val arr_ty =
             // Note: this proxy does not seem to make any difference:
             mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
-        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), elemType)
+        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), TopType)
         val i_ty = typeTerm(i)
         con(i_ty, IntType, TopType)
         val vl = typeTerm(rhs)
@@ -581,7 +592,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //   Returns a function expecting an additional argument of type `Class` before the method arguments
         def rcdSel(obj: Term, fieldName: Var) = {
           val o_ty = typeTerm(obj)
-          val res = freshVar(prov)
+          val res = freshVar(prov, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           val rcd_ty = RecordType.mk(
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)
@@ -694,7 +705,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
-          val tv = freshVar(tp(v.toLoc, "refined scrutinee"))
+          val tv = freshVar(tp(v.toLoc, "refined scrutinee"),
+            // S(v.name), // this one seems a bit excessive
+          )
           newCtx += v.name -> tv
           val bod_ty = typeTerm(bod)(newCtx, raise)
           (patTy -> tv, bod_ty, typeArms(scrutVar, rest))

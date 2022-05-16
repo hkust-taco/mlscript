@@ -4,7 +4,7 @@ data Test a b
 //│ Parsed: data ((Test a) b);
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: [a, b] -> a -> b -> Test[a, b]
-//│ Defined class Test
+//│ Defined class Test[+a, +b]
 //│ Test: 'a -> 'b -> Test['a, 'b]
 
 :p
@@ -20,12 +20,12 @@ let p = Person("Bob", 42)
 
 let foo q = q.age
 foo p
-//│ foo: {age: 'a} -> 'a
+//│ foo: {age: 'age} -> 'age
 //│ res: int
 
 // TODO properly check pattern types!
 let bar (q: Person _) = q.age
-//│ bar: (q: {age: 'a},) -> 'a
+//│ bar: (q: {age: 'age},) -> 'age
 
 bar p
 //│ res: int

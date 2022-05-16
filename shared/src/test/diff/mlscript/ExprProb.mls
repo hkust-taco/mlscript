@@ -18,7 +18,7 @@ class Add[E]: { lhs: E; rhs: E }
 def lit val = Lit { val }
 def add lhs rhs = Add { lhs; rhs }
 //│ Defined class Lit
-//│ Defined class Add
+//│ Defined class Add[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
 //│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
@@ -50,14 +50,14 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: 'a
+//│ eval1_stub: 'eval1_stub
 //│   where
-//│     'a :> 'b -> (1 | 'c | 0)
-//│        <: 'd -> 'c
-//│     'c :> 1 | 'c | 0
-//│     'b <: lit & 'e | (add & 'f | 'g & ~add) & ~lit
-//│     'f <: {lhs: 'd}
-//│     'd <: 'b
+//│     'eval1_stub :> 'a -> (1 | 'b | 0)
+//│                 <: 'lhs -> 'b
+//│     'b :> 1 | 'b | 0
+//│     'a <: lit & 'c | (add & 'd | 'e & ~add) & ~lit
+//│     'd <: {lhs: 'lhs}
+//│     'lhs <: 'a
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -83,27 +83,27 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: 'a
+//│ res: 'eval1
 //│   where
-//│     'a :> 'b -> 'c -> ('d | 'e | 'f)
-//│        <: 'b -> 'g & 'b -> 'h
-//│     'h :> 'c -> ('d | 'e | 'f)
-//│        <: 'i -> 'j
-//│     'j :> 'd | 'e | 'f
+//│     'eval1 :> 'a -> 'b -> ('val | 'c | 'd)
+//│            <: 'a -> 'e & 'a -> 'f
+//│     'f :> 'b -> ('val | 'c | 'd)
+//│        <: 'lhs -> 'g
+//│     'g :> 'val | 'c | 'd
 //│        <: int
-//│     'g :> 'c -> ('d | 'e | 'f)
-//│        <: 'k -> 'l
-//│     'l :> 'd | 'e | 'f
+//│     'e :> 'b -> ('val | 'c | 'd)
+//│        <: 'rhs -> 'h
+//│     'h :> 'val | 'c | 'd
 //│        <: int
-//│     'e := int
-//│     'c <: lit & 'm | (add & 'n | 'o & ~add) & ~lit
-//│     'n <: {rhs: 'k} & {lhs: 'i}
-//│     'i <: 'c
-//│     'k <: 'c
-//│     'm <: {val: 'd}
+//│     'c := int
+//│     'b <: lit & 'i | (add & 'j | 'k & ~add) & ~lit
+//│     'j <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'b
+//│     'rhs <: 'b
+//│     'i <: {val: 'val}
+//│     'val <: int
+//│     'a <: 'k -> 'd
 //│     'd <: int
-//│     'b <: 'o -> 'f
-//│     'f <: int
 //│    = [Function: eval1]
 
 :re
@@ -227,7 +227,7 @@ eval1_ty = eval1_ty_ugly
 :ns
 type E1[A] = Lit | Add[E1[A]] | A & ~lit & ~add
 def eval1_ty: ('a -> int) -> E1['a] -> int
-//│ Defined type alias E1
+//│ Defined type alias E1[+A]
 //│ eval1_ty: ('a -> int) -> E1['a] -> int
 //│         = <missing implementation>
 
@@ -273,9 +273,9 @@ rec def prettier1 k ev e = case e of {
       else concat (prettier1 k ev e.lhs) (prettier1 k ev e.rhs)
   | _ -> k e
   }
-//│ prettier1: ('a -> string) -> ('b -> int) -> 'c -> string
+//│ prettier1: ('a -> string) -> ('rhs -> int) -> 'b -> string
 //│   where
-//│     'c <: (Add[?] with {lhs: 'b & 'c, rhs: 'b & 'c}) | Lit | 'a & ~add & ~lit
+//│     'b <: (Add[?] with {lhs: 'rhs & 'b, rhs: 'rhs & 'b}) | Lit | 'a & ~add & ~lit
 //│          = [Function: prettier1]
 //│ constrain calls  : 305
 //│ annoying  calls  : 0
@@ -289,10 +289,10 @@ rec def prettier11 k ev e = case e of {
       in if ev e.rhs == 0 then tmp else concat tmp (prettier11 k ev e.rhs)
   | _ -> k e
   }
-//│ prettier11: ('a -> string) -> ('b -> int) -> 'c -> string
+//│ prettier11: ('a -> string) -> ('rhs -> int) -> 'b -> string
 //│   where
-//│     'c <: (Add[?] with {lhs: 'd, rhs: 'b & 'c}) | Lit | 'a & ~add & ~lit
-//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'a & ~add & ~lit
+//│     'b <: (Add[?] with {lhs: 'c, rhs: 'rhs & 'b}) | Lit | 'a & ~add & ~lit
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | 'a & ~add & ~lit
 //│           = [Function: prettier11]
 //│ constrain calls  : 194
 //│ annoying  calls  : 0
@@ -375,7 +375,7 @@ prettier12 done (eval1 done) e1
 
 class Nega[E]: { arg: E }
 def nega arg = Nega { arg }
-//│ Defined class Nega
+//│ Defined class Nega[+E]
 //│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
 //│     = [Function: nega]
 
@@ -396,9 +396,9 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
   | Nega -> concat "-" (prettier2 k ev x.arg)
   | _ -> k x
   }) ev
-//│ prettier2: ('a -> string) -> ('b -> int) -> 'c -> string
+//│ prettier2: ('a -> string) -> ('rhs -> int) -> 'b -> string
 //│   where
-//│     'c <: (Add[?] with {lhs: 'b & 'c, rhs: 'b & 'c}) | Lit | (Nega[?] with {arg: 'c}) | 'a & ~add & ~lit & ~nega
+//│     'b <: (Add[?] with {lhs: 'rhs & 'b, rhs: 'rhs & 'b}) | Lit | (Nega[?] with {arg: 'b}) | 'a & ~add & ~lit & ~nega
 //│          = [Function: prettier2]
 //│ constrain calls  : 123
 //│ annoying  calls  : 0
@@ -468,9 +468,9 @@ eval2 done d2
 
 
 prettier2 done
-//│ res: ('a -> int) -> 'b -> string
+//│ res: ('rhs -> int) -> 'a -> string
 //│   where
-//│     'b <: (Add[?] with {lhs: 'a & 'b, rhs: 'a & 'b}) | Lit | (Nega[?] with {arg: 'b})
+//│     'a <: (Add[?] with {lhs: 'rhs & 'a, rhs: 'rhs & 'a}) | Lit | (Nega[?] with {arg: 'a})
 //│    = [Function (anonymous)]
 
 prettier22 done

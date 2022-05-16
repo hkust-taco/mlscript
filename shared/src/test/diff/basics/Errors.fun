@@ -327,7 +327,7 @@ let f = x =>
   log / succ x.prop
   x.prop
 f { prop: 42 }
-//│ f: {prop: int & 'a} -> 'a
+//│ f: {prop: int & 'prop} -> 'prop
 //│ res: 42
 
 // FIXME 'prop' requirement is added twice
@@ -387,7 +387,7 @@ f arg
 //│ ╟── integer literal of type `0` does not have field 'prop'
 //│ ║  l.+1: 	let arg = 0
 //│ ║        	          ^
-//│ ╟── but it flows into reference with expected type `{prop: ?a}`
+//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
 //│ ║  l.+2: 	f arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -480,7 +480,7 @@ f arg2
 //│ ╟── record of type `{fld: ?a}` does not have field 'prop'
 //│ ║  l.+1: 	let arg1 = {fld: not true}
 //│ ║        	           ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{prop: ?b}`
+//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
 //│ ║  l.+3: 	f arg1
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -496,7 +496,7 @@ f arg2
 //│ ╟── record of type `{fld: {prop: ?a}}` does not have field 'prop'
 //│ ║  l.+2: 	let arg2 = {fld: arg}
 //│ ║        	           ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{prop: ?b}`
+//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
 //│ ║  l.+4: 	f arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -524,7 +524,7 @@ x => h / succ x
 //│ ╟── record of type `{fld: {prop: ?a}}` does not have field 'prop'
 //│ ║  l.472: 	let arg2 = {fld: arg}
 //│ ║         	           ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{prop: ?b}`
+//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
 //│ ║  l.+1: 	h arg2
 //│ ║        	  ^^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -615,7 +615,7 @@ i arg
 //│ ╟── record of type `{prop: ?a}` does not have field 'fld'
 //│ ║  l.402: 	let arg = {prop: not true}
 //│ ║         	          ^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{fld: ?b}`
+//│ ╟── but it flows into reference with expected type `{fld: ?fld}`
 //│ ║  l.+2: 	i arg
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -705,7 +705,7 @@ i / mkArg 1
 //│ ╟── record of type `{prop: ?a}` does not have field 'fld'
 //│ ║  l.648: 	let mkArg = a => {prop: a}
 //│ ║         	                 ^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{fld: ?b}`
+//│ ╟── but it flows into application with expected type `{fld: ?fld}`
 //│ ║  l.+4: 	i / mkArg 1
 //│ ║        	    ^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

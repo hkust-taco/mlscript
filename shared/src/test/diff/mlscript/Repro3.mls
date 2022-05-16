@@ -19,9 +19,9 @@ def f: { x: 'a } as 'a
 // :d
 // :ds
 rec def l a = l
-//│ l: 'a
+//│ l: 'l
 //│   where
-//│     'a :> anything -> 'a
+//│     'l :> anything -> 'l
 
 
 fun a -> a a
@@ -59,7 +59,7 @@ rec def g a = a a
 
 
 class Some[A]: { v: A }
-//│ Defined class Some
+//│ Defined class Some[+A]
 
 // :ds
 def Some v = Some{v}

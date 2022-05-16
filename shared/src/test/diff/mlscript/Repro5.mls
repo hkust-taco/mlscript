@@ -8,23 +8,23 @@
 
 :ns
 rec def f x = f
-//│ f: 'a
+//│ f: 'f
 //│   where
-//│     'a :> 'b -> 'a
+//│     'f :> 'a -> 'f
 //│  = [Function: f]
 
 f
-//│ res: 'a
+//│ res: 'f
 //│   where
-//│     'a :> anything -> 'a
+//│     'f :> anything -> 'f
 //│    = [Function: f]
 
 :ns
 g y = f y
 //│ g: 'a -> 'b
 //│   where
-//│     'b :> 'c -> 'd
-//│     'd :> 'c -> 'd
+//│     'b :> 'c -> 'f
+//│     'f :> 'c -> 'f
 //│        <: 'b & 'a -> 'b
 //│     'a <: 'c
 //│  = [Function: g]
@@ -32,9 +32,9 @@ g y = f y
 // :ds
 // :s
 g
-//│ res: 'a
+//│ res: 'f
 //│   where
-//│     'a :> anything -> 'a
+//│     'f :> anything -> 'f
 //│    = [Function: g]
 
 
@@ -42,16 +42,16 @@ g
 h y = (f y, y)
 //│ h: 'a -> ('b, 'a,)
 //│   where
-//│     'b :> 'c -> 'd
-//│     'd :> 'c -> 'd
+//│     'b :> 'c -> 'f
+//│     'f :> 'c -> 'f
 //│        <: 'b & 'a -> 'b
 //│     'a <: 'c
 //│  = [Function: h]
 
 h
-//│ res: 'a -> ('b, 'a,)
+//│ res: 'a -> ('f, 'a,)
 //│   where
-//│     'b :> anything -> 'b
+//│     'f :> anything -> 'f
 //│    = [Function: h]
 
 

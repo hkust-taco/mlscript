@@ -6,9 +6,9 @@
 trait S0[A]
   method Foo0: A
 trait T0[B]: S0[B]
-//│ Defined trait S0
+//│ Defined trait S0[+A]
 //│ Declared S0.Foo0: S0['A] -> 'A
-//│ Defined trait T0
+//│ Defined trait T0[+B]
 
 :e
 class A0: S0[int] & T0[string]
@@ -93,7 +93,7 @@ class A0_2: S0[int] & T0[string]
 
 trait R1[A]
   method Foo1: A
-//│ Defined trait R1
+//│ Defined trait R1[+A]
 //│ Declared R1.Foo1: R1['A] -> 'A
 
 trait S1: R1[int]

@@ -2,7 +2,7 @@
 class Monoid[A]
   method Empty: A
   method Add: A -> A -> A
-//│ Defined class Monoid
+//│ Defined class Monoid[=A]
 //│ Declared Monoid.Empty: Monoid['A] -> 'A
 //│ Declared Monoid.Add: Monoid['A] -> 'A -> 'A -> 'A
 
@@ -29,7 +29,7 @@ class NumMonoid: Monoid[Num]
 class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
 def Complex real imaginary = Complex { real; imaginary }
-//│ Defined class Complex
+//│ Defined class Complex[+A]
 //│ Defined Complex.Map: Complex['A] -> ('A -> ('a & 'A0)) -> (Complex['A0] with {imaginary: 'a, real: 'a})
 //│ Complex: ('real & 'A) -> ('A & 'imaginary) -> (Complex['A] with {imaginary: 'imaginary, real: 'real})
 //│        = [Function: Complex1]
@@ -38,7 +38,7 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
   method Empty = Complex this.base.Empty this.base.Empty
   method Add self that =
     Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
-//│ Defined class ComplexMonoid
+//│ Defined class ComplexMonoid[=A]
 //│ Defined ComplexMonoid.Empty: ComplexMonoid['A] -> (Complex['a] with {imaginary: 'A, real: 'A})
 //│   where
 //│     'a :> 'A
@@ -145,7 +145,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── from inherited method declaration:
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
-//│ Defined class ComplexMonoid_bad_0
+//│ Defined class ComplexMonoid_bad_0[=A]
 //│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {real: Monoid['A]}})
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
 
@@ -156,10 +156,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                                                               ^^^^^^^^^^^^^^
-//│ ╟── type definition of type `ComplexMonoid_bad_1[A]` does not have field 'imaginary'
-//│ ║  l.+1: 	class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{imaginary: ?a}`
+//│ ╟── reference of type `ComplexMonoid_bad_1[A] & this` does not have field 'imaginary'
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ╙──      	                                                               ^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
@@ -207,7 +204,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── from inherited method declaration:
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
-//│ Defined class ComplexMonoid_bad_1
+//│ Defined class ComplexMonoid_bad_1[=A]
 //│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> ('a & 'b) -> (Complex['b] with {imaginary: 'a, real: {imaginary: error, real: 'A}})
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 

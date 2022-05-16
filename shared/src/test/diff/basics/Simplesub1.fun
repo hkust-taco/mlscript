@@ -112,7 +112,7 @@ x => succ (not x)
 
 
 x => x.f
-//│ res: {f: 'a} -> 'a
+//│ res: {f: 'f} -> 'f
 
 // note: MLsub returns "⊤" (equivalent)
 {}
@@ -128,7 +128,7 @@ x => x.f
 //│ res: 42
 
 f => { x: f 42 }.x
-//│ res: (42 -> 'a) -> 'a
+//│ res: (42 -> 'x) -> 'x
 
 f => { x: f 42, y: 123 }.y
 //│ res: (42 -> anything) -> 123
@@ -262,9 +262,9 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 
 
 (let rec x = {a: x, b: x}; x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> {a: 'a, b: 'a}
+//│     'x :> {a: 'x, b: 'x}
 
 (let rec x = v => {a: x v, b: x v}; x)
 //│ res: anything -> 'a
@@ -315,56 +315,56 @@ x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> 'b -> 'b
-//│     'b :> 'a
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> 'b -> 'b
-//│     'b :> 'a
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> 'b -> 'c
-//│     'c :> {u: 'b, v: 'c}
-//│     'b :> 'a
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'a, v: 'b}
+//│     'a :> 'x
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> 'b -> 'c
-//│     'c :> {u: 'c, v: 'b}
-//│     'b :> 'a
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'b, v: 'a}
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: 'a
+//│ res: 'x
 //│   where
-//│     'a :> 'b -> 'b
-//│     'b <: 'a -> anything
+//│     'x :> 'a -> 'a
+//│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))
-//│ res: ('a -> anything & {v: 'a}) -> 0
+//│ res: ('v -> anything & {v: 'v}) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'a
+//│ x: 'x
 //│   where
-//│     'a :> 'b -> 'b
-//│     'b :> 'a
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 //│ res: 'a
 //│   where
-//│     'a :> ({u: 'b} & 'a) -> ('a | 'b)
+//│     'a :> ({u: 'u} & 'a) -> ('u | 'a)
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: 'a
+//│ x: 'x
 //│   where
-//│     'a :> 'b -> 'b
-//│        <: 'b & 'a -> 'c
-//│     'b :> 'b -> 'b
-//│        <: 'c
-//│     'c :> 'b -> 'b
+//│     'x :> 'a -> 'a
+//│        <: 'a & 'x -> 'b
+//│     'a :> 'a -> 'a
+//│        <: 'b
+//│     'b :> 'a -> 'a
 

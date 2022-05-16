@@ -68,7 +68,7 @@ class Child2: Sly2[Parent1] & Parent2
 //│ ╔══[ERROR] cannot inherit from a type alias
 //│ ║  l.67: 	class Child2: Sly2[Parent1] & Parent2
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type alias Sly2
+//│ Defined type alias Sly2[+A]
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Sly2
 
@@ -83,7 +83,7 @@ class Crazy[A]: A & { name: A }
 
 class Crazy[A]: { name: A }
 def Crazy: 'a -> (Crazy['a] & 'a)
-//│ Defined class Crazy
+//│ Defined class Crazy[+A]
 //│ Crazy: 'a -> (Crazy['a] & 'a)
 //│      = <missing implementation>
 
@@ -181,7 +181,7 @@ c: Cycle1
 
 
 type N[A] = ~A
-//│ Defined type alias N
+//│ Defined type alias N[-A]
 
 :e
 :ge
@@ -301,7 +301,7 @@ class B: Id[A]
 //│ ║  l.299: 	class B: Id[A]
 //│ ╙──       	      ^^^^^^^^
 //│ Defined class A
-//│ Defined type alias Id
+//│ Defined type alias Id[+T]
 //│ Code generation encountered an error:
 //│   cannot inherit from type alias Id
 

@@ -14,8 +14,15 @@ def n: C{}
 
 
 // class G[A]: { a: G[A] & A & G[A] }
+:w
 class G[A]: { a: G[A] }
-//│ Defined class G
+//│ Defined class G[±A]
+//│ ╔══[WARNING] Type definition G has bivariant type parameters:
+//│ ║  l.18: 	class G[A]: { a: G[A] }
+//│ ║        	      ^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.18: 	class G[A]: { a: G[A] }
+//│ ╙──      	        ^
 
 def g: G['a] & {a: 'a} as 'a
 //│ g: 'a
@@ -54,13 +61,13 @@ def manual: 'a -> nothing as 'a
 :e
 manual id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	manual id
+//│ ║  l.62: 	manual id
 //│ ║        	^^^^^^^^^
 //│ ╟── type `?a -> nothing` does not match type `nothing`
-//│ ║  l.49: 	def manual: 'a -> nothing as 'a
+//│ ║  l.56: 	def manual: 'a -> nothing as 'a
 //│ ║        	            ^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.49: 	def manual: 'a -> nothing as 'a
+//│ ║  l.56: 	def manual: 'a -> nothing as 'a
 //│ ╙──      	                  ^^^^^^^
 //│ res: ('a & 'b) -> 'b | error
 //│   where
@@ -85,9 +92,9 @@ f: { mut x: int }
 //│ res: {mut x: int}
 
 f = { mut x = 1 }
-//│ {mut x: 'a}
+//│ {mut x: 'x}
 //│   where
-//│     'a :> 1
+//│     'x :> 1
 //│   <:  f:
 //│ {mut x: int}
 

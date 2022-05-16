@@ -2,7 +2,7 @@
 :NoJS
 
 class MyArray[A]: { size: int; set: (int, A) -> (); get: int -> A }
-//│ Defined class MyArray
+//│ Defined class MyArray[=A]
 
 dummy = MyArray {
     size = 0;

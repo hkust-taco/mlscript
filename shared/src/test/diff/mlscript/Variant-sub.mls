@@ -1,7 +1,7 @@
 class None: {}
 class Some[A]: { v: A }
 //│ Defined class None
-//│ Defined class Some
+//│ Defined class Some[+A]
 
 def Some v = Some{v}
 def None = None{}
@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
+//│ flatMap: ('v -> 'a) -> (None & 'a | (Some[?] with {v: 'v})) -> 'a
 //│        = [Function: flatMap]
 
 f x = Some x

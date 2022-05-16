@@ -1,6 +1,6 @@
 class Some[A]: { value: A }
 class None: {}
-//│ Defined class Some
+//│ Defined class Some[+A]
 //│ Defined class None
 
 

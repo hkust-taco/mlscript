@@ -6,7 +6,7 @@ let f = x =>
 let h = y =>
   succ / f y
 let mkArg = a => {prop: a}
-//│ f: {prop: int & 'a} -> 'a
+//│ f: {prop: int & 'prop} -> 'prop
 //│ h: {prop: int} -> int
 //│ mkArg: 'a -> {prop: 'a}
 
@@ -53,7 +53,7 @@ let arg2 = {fld: arg}
 let i = y =>
   succ / f y.fld
 let test = x => y => if x.prop then i x else y
-//│ f: {prop: int & 'a} -> 'a
+//│ f: {prop: int & 'prop} -> 'prop
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int

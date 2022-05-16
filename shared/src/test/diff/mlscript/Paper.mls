@@ -3,19 +3,19 @@ class None: {}
 class Some[A]: { value: A }
 type Option[A] = Some[A] | None
 //│ Defined class None
-//│ Defined class Some
-//│ Defined type alias Option
+//│ Defined class Some[+A]
+//│ Defined type alias Option[+A]
 
 
 def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ('a -> 'b) -> (None | (Some[?] with {value: 'a})) -> (None | 'b)
+//│ flatMap: ('value -> 'a) -> (None | (Some[?] with {value: 'value})) -> (None | 'a)
 //│        = [Function: flatMap]
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ('a -> 'b) -> ((Some[?] with {value: 'a}) | 'b & ~some) -> 'b
+//│ flatMap2: ('value -> 'a) -> ((Some[?] with {value: 'value}) | 'a & ~some) -> 'a
 //│         = [Function: flatMap2]
 
 def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
@@ -26,8 +26,8 @@ def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
 
 type List[A] = Cons[A] | None
 class Cons[A]: Some[A] & { tail: List[A] }
-//│ Defined type alias List
-//│ Defined class Cons
+//│ Defined type alias List[+A]
+//│ Defined class Cons[+A]
 
 // Note – no longer needed with the new class ctor semantics:
 // def Cons{value; tail} = Cons(Some{value} with {tail})
@@ -36,10 +36,10 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('a -> ('value & 'A)) -> 'b -> 'tail
+//│ map2: ('value -> ('value0 & 'A)) -> 'a -> 'tail
 //│   where
-//│     'tail :> (Cons['A] with {tail: 'tail, value: 'value}) | None
-//│     'b <: (Cons[?] with {tail: 'b, value: 'a}) | None
+//│     'tail :> (Cons['A] with {tail: 'tail, value: 'value0}) | None
+//│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
 //│     = [Function: map2]
 
 

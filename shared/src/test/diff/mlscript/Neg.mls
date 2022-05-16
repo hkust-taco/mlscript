@@ -110,8 +110,15 @@ def f: ~Lit & ~Lit
 //│ f: ~Lit
 //│  = <missing implementation>
 
+:w
 class Foo[A]
-//│ Defined class Foo
+//│ Defined class Foo[±A]
+//│ ╔══[WARNING] Type definition Foo has bivariant type parameters:
+//│ ║  l.114: 	class Foo[A]
+//│ ║         	      ^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.114: 	class Foo[A]
+//│ ╙──       	          ^
 
 def f: ~Foo[1 | 2] | ~Foo[2 | 3]
 //│ f: ~Foo[in 1 | 2 | 3 out 2]

@@ -52,8 +52,8 @@ t1: T2
 
 class C1[A]: { a: A }
 class C2[A]: { a: A }
-//│ Defined class C1
-//│ Defined class C2
+//│ Defined class C1[+A]
+//│ Defined class C2[+A]
 
 r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
 //│ r: C1['A] & {a: 1} | C2['A0] & {a: (3, 4, 5, 4,)}
@@ -307,7 +307,7 @@ t2: Array[int | bool]
 //│    = [ 1, 1, 2, true ]
 
 class Wrapped[A]: {len: int; inner: Array[A]}
-//│ Defined class Wrapped
+//│ Defined class Wrapped[+A]
 
 def tk: Array['a] -> Wrapped['a]
 tk ((1,2,3,true,false))
@@ -323,7 +323,7 @@ class Two[A, B]: {fst: Array[A]; snd: Array[B]}
 two = Two {fst=(1,2,3); snd=(true,false)}
 two.fst
 tk (two.snd)
-//│ Defined class Two
+//│ Defined class Two[+A, +B]
 //│ two: Two['A, 'B] with {fst: (1, 2, 3,), snd: (true, false,)}
 //│   where
 //│     'B :> bool
@@ -381,7 +381,7 @@ def getx p = p.x
 def a123: Array[int]
 a123 = (1,2,3)
 getx (a123 with {x=('hello', a123)})
-//│ getx: {x: 'a} -> 'a
+//│ getx: {x: 'x} -> 'x
 //│     = [Function: getx]
 //│ a123: Array[int]
 //│     = <missing implementation>
@@ -423,7 +423,7 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╙──       	                             ^^^^^^^^^^^^
 //│ res: MutArray['a] | error
 //│   where
-//│     'a :> "hi" | () | 1 | 2 | false
+//│     'a :> 1 | 2 | false | "hi" | ()
 //│    = <no result>
 //│      append2 is not implemented
 
@@ -898,7 +898,7 @@ def s4 arr = (defined (defined (defined arr.x[0])._3[6])[7])._h.hello
 //│ res: int
 //│    = <no result>
 //│      arb is not implemented
-//│ s4: {x: Array[{_3: Array[Array[{_h: {hello: 'a}} & ~undefined]]} & ~undefined]} -> 'a
+//│ s4: {x: Array[{_3: Array[Array[{_h: {hello: 'hello}} & ~undefined]]} & ~undefined]} -> 'hello
 //│   = [Function: s4]
 
 def at1 xs = (defined xs[0])._1

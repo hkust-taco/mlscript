@@ -5,6 +5,7 @@ import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
 import scala.collection.mutable
+import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.JSTestBackend.IllFormedCode
@@ -73,6 +74,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       noGeneration: Bool = false,
       showGeneratedJS: Bool = false,
       generateTsDeclarations: Bool = false,
+      debugVariance: Bool = false,
       expectRuntimeErrors: Bool = false,
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
@@ -118,6 +120,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(generateTsDeclarations = true)
+          case "dv" => mode.copy(debugVariance = true)
           case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
@@ -187,7 +190,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectParseErrors)
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
-            if (mode.isDebugging) typer.resetState()
+            // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
             // typer.recordProvenances = !mode.dbg && !mode.dbgSimplif
@@ -364,16 +367,44 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
               ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
             }
-            
+
+            val curBlockTypeDefs = typeDefs
+              // add check from process type def block below
+              .flatMap(typeDef => if (!oldCtx.tyDefs.contains(typeDef.nme.name)) ctx.tyDefs.get(typeDef.nme.name) else None)
+            // activate typer tracing if variance debugging is on and then set it back
+            // this makes it possible to debug variance in isolation
+            var temp = typer.dbg
+            typer.dbg = mode.debugVariance
+            typer.computeVariances(curBlockTypeDefs, ctx)
+            typer.dbg = temp
+            val varianceWarnings: MutMap[TypeName, Ls[TypeName]] = MutMap()
+
             // process type definitions first
             typeDefs.foreach(td =>
               // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
+
                 val tn = td.nme.name
-                output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
+
+                // generate warnings for bivariant type variables
+                val bivariantTypeVars = ttd.tparamsargs.iterator.filter{ case (tname, tvar) =>
+                  ttd.tvarVariances.get(tvar).contains(typer.VarianceInfo.bi)
+                }.map(_._1).toList
+                if (!bivariantTypeVars.isEmpty) {
+                  varianceWarnings.put(td.nme, bivariantTypeVars)
+                }
+                
+                val params = if (!ttd.tparamsargs.isEmpty)
+                    SourceCode.horizontalArray(ttd.tparamsargs.map{ case (tname, tvar) =>
+                      val tvarVariance = ttd.tvarVariances.getOrElse(tvar, throw new Exception(s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
+                      SourceCode(s"$tvarVariance${tname.name}")
+                    }.toList).toString()
+                  else
+                    SourceCode("")
+                output(s"Defined " + td.kind.str + " " + tn + params)
 
                 // calculate types for all method definitions and declarations
                 // only once and reuse for pretty printing and type generation
@@ -410,6 +441,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             )
             
+            if (!varianceWarnings.isEmpty) {
+              import Message._
+              val diags = varianceWarnings.map{ case (tname, biVars) =>
+                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
+                Warning(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+              }.toList
+              report(diags)
+            }
+
             final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
               def showFirst(prefixLength: Int): Unit = replies match {
                 case ReplHost.Error(err) :: rest =>

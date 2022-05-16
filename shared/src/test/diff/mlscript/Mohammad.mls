@@ -28,7 +28,7 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│ };
 //│ res = useCls;
 //│ // End of generated code
-//│ useCls: ((Class with {x: 'a}) | int) -> ("oops" | 'a)
+//│ useCls: ((Class with {x: 'x}) | int) -> ("oops" | 'x)
 //│       = [Function: useCls]
 
 useCls c
@@ -95,7 +95,7 @@ class D: T & {z: int}
 //│ // End of generated code
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ useTrt: ((Class with {x: 'a}) & ~t | {y: 'a} & t) -> 'a
+//│ useTrt: ((Class with {x: 'y}) & ~t | {y: 'y} & t) -> 'y
 //│       = [Function: useTrt]
 
 :e

@@ -9,7 +9,7 @@ class Box[T]: { inner: T }
   method Map: (T -> 'a) -> Box['a]
   method Map f = Box { inner = f this.inner }
   method Get = this.inner
-//│ Defined class Box
+//│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
 //│ Defined Box.Map: Box['T] -> ('T -> ('a & 'T0)) -> (Box['T0] with {inner: 'a})
 //│ Defined Box.Get: Box['T] -> 'T

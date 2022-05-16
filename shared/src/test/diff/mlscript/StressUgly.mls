@@ -2,7 +2,7 @@
 class Lit: { val: int }
 class Add[E]: { lhs: E; rhs: E }
 //│ Defined class Lit
-//│ Defined class Add
+//│ Defined class Add[+E]
 
 
 
