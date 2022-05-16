@@ -149,24 +149,45 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       if (sort) mkType(true) else underlying
     private def mkType(sort: Bool): SimpleType = this match {
       case RhsField(n, t) => RecordType(n -> t :: Nil)(noProv) // FIXME prov
-      case RhsBases(ps, bf) =>
-        (if (sort) ps.sorted else ps).foldLeft(bf.fold(BotType: ST)(_.fold(identity, _.toType(sort))))(_ | _)
+      case RhsBases(ps, bf, trs) =>
+        val sr = bf.fold(BotType: ST)(_.fold(identity, _.toType(sort)))
+        val trsBase = trs.valuesIterator.foldRight(sr)(_ | _)
+        (if (sort) ps.sorted else ps).foldLeft(trsBase)(_ | _)
       case RhsBot => BotType
     }
     lazy val underlying: SimpleType = mkType(false)
     def level: Int = underlying.level
     def hasTag(ttg: TraitTag): Bool = this match {
-      case RhsBases(ts, _) => ts.contains(ttg)
+      case RhsBases(ts, _, trs) => ts.contains(ttg)
       case RhsBot | _: RhsField => false
     }
-    def size: Int = this match {
-      case RhsBases(ts, r) => ts.size + 1
-      case _: RhsField => 1
-      case RhsBot => 0
+    // def size: Int = this match {
+    //   case RhsBases(ts, r, trs) => ts.size + 1 + ???
+    //   case _: RhsField => 1
+    //   case RhsBot => 0
+    // }
+    def | (that: TypeRef): Opt[RhsNf] = this match {
+    // def | (that: TypeRef): RhsNf = this match {
+      case RhsBot => S(RhsBases(Nil, N, SortedMap.single(that.defn -> that)))
+      case RhsField(name, ty) => this | name -> ty
+      case RhsBases(prims, bf, trs) =>
+        val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
+          assert(that.targs.sizeCompare(other.targs) === 0)
+          TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
+            case (ta1, ta2) => TypeBounds(ta1 & ta2, ta1 | ta2)(noProv)
+          }.toList)(that.prov)
+        })
+        S(RhsBases(prims, bf, trs2))
     }
     def | (that: RhsNf): Opt[RhsNf] = that match {
-      case RhsBases(prims, bf) =>
-        val tmp = prims.foldLeft(this)(_ | _ getOrElse (return N))
+      case RhsBases(prims, bf, trs) =>
+        // val thisWithTrs = this match {
+        //   case RhsBases(tags, rest, trefs) => 
+        // }
+        val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _ getOrElse (return N))
+        // println(s"thisWithTrs $thisWithTrs")
+        // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _)
+        val tmp = prims.foldLeft(thisWithTrs)(_ | _ getOrElse (return N))
         S(bf.fold(tmp)(_.fold(tmp | _ getOrElse (return N),
           tmp | _.name_ty getOrElse (return N))))
       case RhsField(name, ty) => this | name -> ty
@@ -174,29 +195,29 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     // TODO use inheritance hierarchy to better merge these
     def | (that: BaseTypeOrTag): Opt[RhsNf] = (this, that) match {
-      case (RhsBot, p: ObjectTag) => S(RhsBases(p::Nil,N))
-      case (RhsBot, that: MiscBaseType) => S(RhsBases(Nil,S(L(that))))
-      case (RhsBases(ps, bf), p: ClassTag) =>
-        S(RhsBases(if (ps.contains(p)) ps else p :: ps , bf))
-      case (RhsBases(ps, N), that: MiscBaseType) => S(RhsBases(ps, S(L(that))))
-      case (RhsBases(ps, S(L(t1@TupleType(fs1)))), t2@TupleType(fs2)) =>
+      case (RhsBot, p: ObjectTag) => S(RhsBases(p::Nil,N,smEmp))
+      case (RhsBot, that: MiscBaseType) => S(RhsBases(Nil,S(L(that)),smEmp))
+      case (RhsBases(ps, bf, trs), p: ClassTag) =>
+        S(RhsBases(if (ps.contains(p)) ps else p :: ps , bf, trs))
+      case (RhsBases(ps, N, trs), that: MiscBaseType) => S(RhsBases(ps, S(L(that)), trs))
+      case (RhsBases(ps, S(L(t1@TupleType(fs1))), trs), t2@TupleType(fs2)) =>
         if (fs1.size =/= fs2.size) 
-          RhsBases(ps, S(L(t1.toArray))) | t2.toArray // upcast tuples of different sizes to array
+          RhsBases(ps, S(L(t1.toArray)), trs) | t2.toArray // upcast tuples of different sizes to array
         else S(RhsBases(ps, S(L(TupleType(fs1.lazyZip(fs2).map {
           case ((S(n1), ty1), (S(n2), ty2)) => (if (n1 === n2) S(n1) else N, ty1 || ty2)
           case ((n1o, ty1), (n2o, ty2)) => (n1o orElse n2o, ty1 || ty2)
-        })(noProv)))))
-      case (RhsBases(ps, S(L(ArrayType(_)))), t@TupleType(_)) => this | t.toArray
-      case (RhsBases(ps, S(L(t@TupleType(_)))), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray))) | ar
-      case (RhsBases(ps, S(L(ArrayType(ar1)))), ArrayType(ar2)) => 
-        S(RhsBases(ps, S(L(ArrayType(ar1 || ar2)(noProv)))))
-      case (RhsBases(_, S(L(_: Without))), _) | (_, _: Without) => die // Without should be handled elsewhere
-      case (RhsBases(ps, S(L(bt))), _) if (that === bt) => S(this)
-      case (RhsBases(ps, S(L(FunctionType(l0, r0)))), FunctionType(l1, r1)) =>
-        S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv)))))
-      case (RhsBases(ps, bf), tt: TraitTag) =>
-        S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf))
-      case (f @ RhsField(_, _), p: ObjectTag) => S(RhsBases(p::Nil, S(R(f))))
+        })(noProv))), trs))
+      case (RhsBases(ps, S(L(ArrayType(_))), trs), t@TupleType(_)) => this | t.toArray
+      case (RhsBases(ps, S(L(t@TupleType(_))), trs), ar@ArrayType(_)) => RhsBases(ps, S(L(t.toArray)), trs) | ar
+      case (RhsBases(ps, S(L(ArrayType(ar1))), trs), ArrayType(ar2)) => 
+        S(RhsBases(ps, S(L(ArrayType(ar1 || ar2)(noProv))), trs))
+      case (RhsBases(_, S(L(_: Without)), _), _) | (_, _: Without) => die // Without should be handled elsewhere
+      case (RhsBases(ps, S(L(bt)), trs), _) if (that === bt) => S(this)
+      case (RhsBases(ps, S(L(FunctionType(l0, r0))), trs), FunctionType(l1, r1)) =>
+        S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv))), trs))
+      case (RhsBases(ps, bf, trs), tt: TraitTag) =>
+        S(RhsBases(if (ps.contains(tt)) ps else tt :: ps, bf, trs))
+      case (f @ RhsField(_, _), p: ObjectTag) => S(RhsBases(p::Nil, S(R(f)), smEmp))
       case (f @ RhsField(_, _), _: FunctionType | _: ArrayBase) =>
         // S(RhsBases(Nil, S(that), S(f)))
         N // can't merge a record and a function or a tuple -> it's the same as Top
@@ -205,17 +226,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         //    as it is currently and in TypeScript arrays),
         //  we will want to revisit this...
       case
-          (RhsBases(_, S(L(_: FunctionType))), _: ArrayBase)
-        | (RhsBases(_, S(L(_: ArrayBase))), _: FunctionType)
-        | (RhsBases(_, S(R(_))), _: FunctionType | _: ArrayBase)
+          (RhsBases(_, S(L(_: FunctionType)), _), _: ArrayBase)
+        | (RhsBases(_, S(L(_: ArrayBase)), _), _: FunctionType)
+        | (RhsBases(_, S(R(_)), _), _: FunctionType | _: ArrayBase)
         => N
     }
     def | (that: (Var, FieldType)): Opt[RhsNf] = this match {
       case RhsBot => S(RhsField(that._1, that._2))
       case RhsField(n1, t1) if n1 === that._1 => S(RhsField(n1, t1 || that._2))
-      case RhsBases(p, N) => S(RhsBases(p, S(R(RhsField(that._1, that._2)))))
-      case RhsBases(p, S(R(RhsField(n1, t1)))) if n1 === that._1 =>
-        S(RhsBases(p, S(R(RhsField(n1, t1 || that._2)))))
+      case RhsBases(p, N, trs) => S(RhsBases(p, S(R(RhsField(that._1, that._2))), trs))
+      case RhsBases(p, S(R(RhsField(n1, t1))), trs) if n1 === that._1 =>
+        S(RhsBases(p, S(R(RhsField(n1, t1 || that._2))), trs))
       case _: RhsField | _: RhsBases => N
     }
     def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
@@ -223,8 +244,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   case class RhsField(name: Var, ty: FieldType) extends RhsNf
     { def name_ty: Var -> FieldType = name -> ty }
-  case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField]) extends RhsNf {
-    override def toString: Str = s"${tags.mkString("|")}|$rest"
+  case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
+    // override def toString: Str = s"${tags.mkString("|")}|$rest"
+    override def toString: Str = s"${tags.mkString("|")}${rest.fold("")("|" + _)}${trefs.valuesIterator.map("|"+_).mkString}"
   }
   case object RhsBot extends RhsNf {
     override def toString: Str = "⊥"
@@ -248,11 +270,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case LhsTop => this
       }
       case NegTrait(tt) => rnf match {
-        case RhsBases(tts, r) => copy(rnf = RhsBases(tts.filterNot(_ === tt), r))
+        case RhsBases(tts, r, trs) => copy(rnf = RhsBases(tts.filterNot(_ === tt), r, trs))
         case RhsBot | _: RhsField => this
       }
     }
-    lazy val interSize: Int = vars.size + nvars.size + lnf.size + rnf.size
+    // lazy val interSize: Int = vars.size + nvars.size + lnf.size + rnf.size
     def <:< (that: Conjunct): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&
@@ -356,11 +378,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def mk(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable])(implicit etf: ExpandTupleFields): Conjunct = {
       Conjunct(lnf, vars, rnf match {
         case RhsField(name, ty) => RhsField(name, ty)
-        case RhsBases(prims, bf) =>
+        case RhsBases(prims, bf, trs) =>
           RhsBases(prims.filter(lnf & _ pipe (_.isDefined)), bf.filter {
             case L(b) => lnf & b pipe (_.isDefined)
             case R(r) => true
-          })
+          }, trs)
         case RhsBot => RhsBot
       }, nvars)
     }
@@ -422,7 +444,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
-        // trace(s"DNF[$pol,$ptr,$etf](${ty})") {
+        trace(s"DNF[$pol,$ptr,$etf](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => of(bt)
       case bt: TraitTag => of(bt)
@@ -443,7 +465,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         } else mk(tr.expand, pol)
       case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
     }
-    // }(r => s"= $r")
+    }(r => s"= $r")
     
     // // TODO inline logic
     // def mk(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): Either[(DNF, DNF), DNF] = {
@@ -482,21 +504,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), ssEmp, LhsTop, ssEmp)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF)(implicit etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, preserveTypeRefs: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
-      // trace(s"?C $ty") {
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
+      trace(s"?CNF $ty") {
       ty match {
         case bt: BaseType => of(bt)
-        case tt: TraitTag => of(RhsBases(tt :: Nil, N))
+        case tt: TraitTag => of(RhsBases(tt :: Nil, N, smEmp))
         case rt @ RecordType(fs) => of(rt)
         case ExtrType(pol) => extr(!pol)
         case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))
         case NegType(und) => CNF(DNF.mk(und, !pol).cs.map(_.neg))
         case tv: TypeVariable => of(SortedSet.single(tv))
         case ProxyType(underlying) => mk(underlying, pol)
-        case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
+        // case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
+        case tr @ TypeRef(defn, targs) =>
+          if (preserveTypeRefs && !primitiveTypes.contains(defn.name))
+            CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
+          else mk(tr.expand, pol)
         case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
       }
-      // }(r => s"!C $r")
+      }(r => s"!CNF $r")
   }
   
   

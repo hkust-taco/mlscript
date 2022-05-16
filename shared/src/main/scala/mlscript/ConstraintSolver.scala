@@ -73,10 +73,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               
               // println(s"Possible? $r ${lnf & r.lnf}")
               !vars.exists(r.nvars) && ((lnf & r.lnf)(etf = false)).isDefined && ((lnf, r.rnf) match {
-                case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest))
+                case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
                   if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
                   => false
-                case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest))
+                case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
                   => !objTags.contains(ot)
                 // TODO use TRs
                 case _ => true
@@ -191,34 +191,37 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //   reportError()
             // case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
               reportError()
-            case (LhsRefined(_, ts, _, trs), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
+            case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
               // val (d, tr) = trs.head
               // annoying(tr.expand :: Nil, LhsRefined(bo, ts, r, trs - d), Nil, done_rs)
               annoying(trs.valuesIterator.map(_.expand).toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
+            case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
+              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
+            
             // From this point on, trs should be empty!
             
-            case (_, RhsBot) | (_, RhsBases(Nil, N)) =>
+            case (_, RhsBot) | (_, RhsBases(Nil, N, _)) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
               reportError()
             
             // case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
-                , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
+                , RhsBases(_, S(L(f1@FunctionType(l1, r1))), _)) =>
               rec(f0, f1, true)
-            case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _)) =>
+            case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-            case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf)) =>
+            case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf))
+              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
-              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf))))
-            case (LhsRefined(bo, ts, r, _), RhsBases(ots, S(R(RhsField(n, t2))))) =>
+              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
+            case (LhsRefined(bo, ts, r, _), RhsBases(ots, S(R(RhsField(n, t2))), trs)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) =>
                   recLb(t2, nt1._2)
@@ -226,19 +229,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case N =>
                   bo match {
                     case S(Without(b, ns)) =>
-                      if (ns(n)) rec(b, RhsBases(ots, N).toType(), true)
+                      if (ns(n)) rec(b, RhsBases(ots, N, trs).toType(), true)
                       else rec(b, done_rs.toType(), true)
                     case _ => reportError()
                   }
               }
             // case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
             //   reportError()
-            case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
+            case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)), _)) =>
               reportError()
             // case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType))))
             //   if b.fields.size === ty.fields.size =>
             //     (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
-            case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType))))
+            case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
@@ -246,15 +249,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 }
             // case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)))) =>
             //   rec(b.inner, ar.inner, false)
-            case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)))) =>
+            case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)), _)) =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
             // case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError()
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
             // case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
-            case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)))) =>
+            case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
-            case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
+            case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
               // rec((pts.map(_.neg()).foldLeft(done_ls.toType())(_ & _)).without(ns), base)
               // ^ This less efficient version creates a slightly different error message
               //    (see test in Annoying.mls)

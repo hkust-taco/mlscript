@@ -191,7 +191,7 @@ abstract class TyperHelpers { self: Typer =>
       }
       c.rnf match {
         case RhsBot | _: RhsField => ()
-        case RhsBases(ps, _) =>
+        case RhsBases(ps, _, _) =>
           ps.foreach {
             case ttg: TraitTag =>
               val nt = NegTrait(ttg)
@@ -538,12 +538,13 @@ abstract class TyperHelpers { self: Typer =>
       case tr: TypeRef => tr.expand.unwrapAll
       case u => u
     }
-    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)(implicit ctx: Ctx): SimpleType = unwrapAll match {
+    def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)
+          (implicit ctx: Ctx, ptr: PreserveTypeRefs): SimpleType = (if (preserveTypeRefs) this else unwrapAll) match {
       case ExtrType(b) => ExtrType(!b)(noProv)
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
-      case tr: TypeRef => tr.expand.negNormPos(f, p)
+      case tr: TypeRef if !preserveTypeRefs => tr.expand.negNormPos(f, p)
       case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.

@@ -208,7 +208,7 @@ def negWeird: ~(~(~(A & { x: int })))
 //│ negWeird: ~A
 
 def v = negWeird with { x = 1 }
-//│ v: {x: 1} & ~a
+//│ v: {x: 1} & ~a | ~A\x & {x: 1}
 
 v: A | { x: 'a }
 //│ res: A | {x: 1}

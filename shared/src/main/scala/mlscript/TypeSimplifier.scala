@@ -565,7 +565,7 @@ trait TypeSimplifier { self: Typer =>
                 // case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
                 // case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))
                 case RhsField(name, ty) => RhsField(name, processField(ty))
-                case RhsBases(prims, bf) =>
+                case RhsBases(prims, bf, trs) =>
                   // TODO refactor to handle goDeep returning something else...
                   RhsBases(prims, bf match {
                     case N => N
@@ -577,7 +577,7 @@ trait TypeSimplifier { self: Typer =>
                     case S(R(r)) =>
                       // S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))))
                       S(R(RhsField(r.name, processField(r.ty))))
-                  })
+                  }, ???)
                 case RhsBot => RhsBot
               }
               Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(pol.map(!_))(rnf), nvars.map(renew))
@@ -1459,7 +1459,7 @@ trait TypeSimplifier { self: Typer =>
           }, {
             case RhsBot => BotType
             case RhsField(n, t) => RecordType(n -> t.update(go(_, pol.map(!_)), go(_, pol)) :: Nil)(noProv)
-            case RhsBases(ots, rest) =>
+            case RhsBases(ots, rest, trs) =>
               // Note: could recosntruct class tags for these, but it would be pretty verbose,
               //    as in showing `T & ~C[?] & ~D[?, ?]` instead of just `T & ~c & ~d`
               // ots.map { case t @ (_: ClassTag | _: TraitTag) => ... }
@@ -1468,6 +1468,7 @@ trait TypeSimplifier { self: Typer =>
                 case v @ S(L(bty)) => go(bty, pol)
                 case N => BotType
               }
+              trs.valuesIterator.map(go(_, pol)).foldLeft(BotType: ST)(_ | _) |
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
