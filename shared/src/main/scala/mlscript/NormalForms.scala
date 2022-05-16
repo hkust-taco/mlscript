@@ -193,6 +193,38 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsField(name, ty) => this | name -> ty
       case RhsBot => S(this)
     }
+    def & (that: RhsNf): Opt[RhsNf] = (this, that) match {
+      case (RhsBot, _) | (_, RhsBot) => S(RhsBot)
+      case (RhsField(name1, ty1), RhsField(name2, ty2)) if name1 === name2 => S(RhsField(name1, ty1 && ty2))
+      // case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2)) if bf1 === bf2 && trs1 === trs2=>
+      //   S(RhsBases((prims1 ::: prims2).distinct, bf1, trs1))
+        // S(RhsBases((prims1.toSet ++ prims2.toSet).toList, bf1, trs1))
+      case (RhsBases(prims1, S(R(r1)), trs1), RhsBases(prims2, S(R(r2)), trs2))
+        if prims1 === prims2 && trs1 === trs2 && r1.name === r2.name
+        // => (r1 & r2).map(r => RhsBases(prims1, S(R(r)), trs1))
+        => S(RhsBases(prims1, S(R(RhsField(r1.name, r1.ty && r2.ty))), trs1))
+      case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2))
+        if prims1 === prims2 && bf1 === bf2 && trs1.keySet === trs2.keySet
+        => // * eg for merging `~Foo[S] & ~Foo[T]`:
+          // TODO dedup...
+          val trs = mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
+            assert(tr1.defn === tr2.defn)
+            assert(tr1.targs.size === tr2.targs.size)
+            TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
+              TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
+          }
+          S(RhsBases(prims1, bf1, trs))
+      case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2)) =>
+        // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _ getOrElse (return N))
+        // // println(s"thisWithTrs $thisWithTrs")
+        // // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _)
+        // val tmp = prims.foldLeft(thisWithTrs)(_ | _ getOrElse (return N))
+        // S(bf.fold(tmp)(_.fold(tmp | _ getOrElse (return N),
+        //   tmp | _.name_ty getOrElse (return N))))
+        
+        N // TODO could do some more merging here – for the possible base types
+      case _ => N
+    }
     // TODO use inheritance hierarchy to better merge these
     def | (that: BaseTypeOrTag): Opt[RhsNf] = (this, that) match {
       case (RhsBot, p: ObjectTag) => S(RhsBases(p::Nil,N,smEmp))
@@ -242,11 +274,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def <:< (that: RhsNf): Bool = (this.toType() <:< that.toType())(Ctx.empty) // TODO less inefficient! (uncached calls to toType)
     def isBot: Bool = isInstanceOf[RhsBot.type]
   }
-  case class RhsField(name: Var, ty: FieldType) extends RhsNf
-    { def name_ty: Var -> FieldType = name -> ty }
+  case class RhsField(name: Var, ty: FieldType) extends RhsNf {
+    def name_ty: Var -> FieldType = name -> ty
+    override def toString: Str = s"{$name:$ty}"
+  }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
     // override def toString: Str = s"${tags.mkString("|")}|$rest"
-    override def toString: Str = s"${tags.mkString("|")}${rest.fold("")("|" + _)}${trefs.valuesIterator.map("|"+_).mkString}"
+    override def toString: Str = s"${tags.mkString("|")}${rest.fold("")("|" + _.fold(_.toString, _.toString))}${trefs.valuesIterator.map("|"+_).mkString}"
   }
   case object RhsBot extends RhsNf {
     override def toString: Str = "⊥"
@@ -296,6 +330,22 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       *   {x: int} | {y: int} ~> anything
       *   (A -> B) | {x: C}   ~> anything  */
     def tryMerge(that: Conjunct)(implicit etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
+      // case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
+      //   if r1 === r2 && nvs1 === nvs2
+      // => S(Conjunct(LhsTop, vs1 & vs2, r1, nvs1))
+      case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
+        if vs1 === vs2 && r1 === r2 && nvs1 === nvs2
+      => S(Conjunct(LhsTop, vs1, r1, nvs1))
+      case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
+        if vs1 === vs2 && nvs1 === nvs2
+      =>
+        S(Conjunct(LhsTop, vs1,
+          r1 & r2 getOrElse (return N), // * conceputally this case is bottom, bt conjuncts cannot represent bottom...
+          nvs1))
+      // case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
+      //   if vs1 === vs2 && r1 === r2
+      // =>
+      //   S(Conjunct(LhsTop, vs1, r1, nvs1 | nvs2))
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2, trs2), vs2, r2, nvs2))
         if bse1 === bse2 && ts1 === ts2 && vs1 === vs2 && r1 === r2 && nvs1 === nvs2
@@ -311,7 +361,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         S(Conjunct(LhsRefined(bse1, ts1, rcd, trs), vs1, r1, nvs1))
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2, trs2), vs2, r2, nvs2))
-        if vs1 === vs2 && r1 === r2 && nvs1 === nvs2 && ts1 === ts2
+        if ts1 === ts2 && vs1 === vs2 && r1 === r2 && nvs1 === nvs2
         && trs1 === trs2 // TODO!!
       =>
         val ts = ts1
@@ -383,7 +433,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       }
     override def toString: Str =
       (Iterator(lnf).filter(_ =/= LhsTop) ++ vars
-        ++ (Iterator(rnf).filter(_ =/= RhsBot) ++ nvars).map("~"+_)).mkString("∧")
+        ++ (Iterator(rnf).filter(_ =/= RhsBot) ++ nvars).map("~("+_+")")).mkString("∧")
   }
   
   object Conjunct {

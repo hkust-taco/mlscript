@@ -106,3 +106,26 @@ def f: (~Lit & ~Add & 'b) -> 'b
 //│ f: ('b & ~Add & ~Lit) -> 'b
 //│  = <missing implementation>
 
+def f: ~Lit & ~Lit
+//│ f: ~Lit
+//│  = <missing implementation>
+
+class Foo[A]
+//│ Defined class Foo
+
+def f: ~Foo[1 | 2] | ~Foo[2 | 3]
+//│ f: ~Foo[in 1 | 2 | 3 out 2]
+//│  = <missing implementation>
+
+def f: (~Foo[1 | 2] & 'a | ~Foo[2 | 3] & 'a) -> 'a
+//│ f: ('a & ~Foo[in 1 | 2 | 3 out 2]) -> 'a
+//│  = <missing implementation>
+
+def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
+//│ f: ('a & ~{x: 2}) -> 'a
+//│  = <missing implementation>
+
+def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
+//│ f: ('a & ~{x: 2} & ~lit) -> 'a
+//│  = <missing implementation>
+
