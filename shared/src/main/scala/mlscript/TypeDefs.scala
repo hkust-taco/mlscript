@@ -42,7 +42,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
     val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
-    val tvarVariances: VarianceStore = MutMap()
+    var tvarVariances: Opt[VarianceStore] = N
   }
   
   /** Represent a set of methods belonging to some owner type.
@@ -596,10 +596,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable
-            val oldVariance = tyDef.tvarVariances.getOrElseUpdate(t, VarianceInfo.bi)
+            val oldVariance = tyDef.tvarVariances.get.getOrElseUpdate(t, VarianceInfo.bi)
             val newVariance = oldVariance && curVariance
             if (newVariance =/= oldVariance) {
-              tyDef.tvarVariances(t) = newVariance
+              tyDef.tvarVariances.get(t) = newVariance
               println(s"UPDATE ${tyDef.nme.name}.$t from $oldVariance to $newVariance")
               varianceUpdated = true
             }
@@ -624,7 +624,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               // variance for all type parameters of type definitions has been preset
               // do nothing if variance for the parameter does not exist
               targs.zip(typeRefDef.tparamsargs).foreach { case (targ, (_, tvar)) =>
-                typeRefDef.tvarVariances.get(tvar).foreach {
+                typeRefDef.tvarVariances.get.get(tvar).foreach {
                   case in @ VarianceInfo(false, false) => updateVariance(targ, in)
                   case VarianceInfo(true, false) => updateVariance(targ, curVariance)
                   case VarianceInfo(false, true) => updateVariance(targ, curVariance.flip)
@@ -654,7 +654,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     // this prevents errors when printing type defintions in
     // DiffTests for type variables that are not used at all
     // and hence are not set in the variance info map
-    tyDefs.foreach(t => t.tparamsargs.foreach{case (_, tvar) => t.tvarVariances.put(tvar, VarianceInfo.bi)})
+    tyDefs.foreach { t =>
+      assert(t.tvarVariances.isEmpty)
+      t.tvarVariances = S(MutMap.empty)
+      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.get.put(tvar, VarianceInfo.bi) }
+    }
     
     var i = 1
     do trace(s"⬤ ITERATION $i") {
@@ -662,7 +666,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       varianceUpdated = false;
       tyDefs.foreach {
         case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
-          trace(s"${k.str} ${nme.name}  ${t.tvarVariances.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
+          trace(s"${k.str} ${nme.name}  ${t.tvarVariances.get.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)
             val stores = (mthDecls ++ mthDefs).foreach { mthDef => 
               val mthBody = ctx.mthEnv.getOrElse(
@@ -689,7 +693,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
      */
     def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
     
-    override def toString(): String = this match {
+    override def toString: Str = show
+    
+    def show: Str = this match {
       case (VarianceInfo(true, true)) => "±"
       case (VarianceInfo(false, true)) => "-"
       case (VarianceInfo(true, false)) => "+"
