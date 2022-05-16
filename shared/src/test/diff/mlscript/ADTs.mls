@@ -15,6 +15,20 @@ def nega arg = Nega { arg }
 //│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
 //│     = [Function: nega]
 
+rec def evalStub1 e = case e of {
+  Lit -> e.val
+  }
+//│ evalStub1: (Lit with {val: 'a}) -> 'a
+//│          = [Function: evalStub1]
+
+rec def evalStub2 e = case e of {
+  Lit -> e.val | Nega -> 0 - (evalStub2 e.arg)
+  }
+//│ evalStub2: 'a -> int
+//│   where
+//│     'a <: Lit | (Nega[?] with {arg: 'a})
+//│          = [Function: evalStub2]
+
 rec def eval e = case e of {
   | Lit -> e.val
   | Add -> eval e.lhs + eval e.rhs
@@ -99,7 +113,7 @@ eval exp
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 
@@ -115,7 +129,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.50: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.64: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
@@ -127,7 +141,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 

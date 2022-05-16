@@ -446,7 +446,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
       mkWith(ty, pol, (_, st) => st)
     def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
-        trace(s"DNF[$pol,$ptr,$etf](${ty})") {
+        // trace(s"DNF[$pol,$ptr,$etf](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
       case bt: TraitTag => of(bt)
@@ -469,7 +469,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         } else mkWith(tr.expand, pol, f)
       case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
     }
-    }(r => s"= $r")
+    // }(r => s"= $r")
     
     // // TODO inline logic
     // def mk(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): Either[(DNF, DNF), DNF] = {
@@ -510,7 +510,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def merge(pol: Bool)(l: CNF, r: CNF)(implicit etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF = mkWith(ty, pol, (_, st) => st)
     def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
-      trace(s"?CNF $ty") {
+      // trace(s"?CNF $ty") {
       ty match {
         case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
         case tt: TraitTag => of(RhsBases(tt :: Nil, N, smEmp))
@@ -529,7 +529,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           } else mkWith(tr.expand, pol, f)
         case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
       }
-      }(r => s"!CNF $r")
+      // }(r => s"!CNF $r")
   }
   
   

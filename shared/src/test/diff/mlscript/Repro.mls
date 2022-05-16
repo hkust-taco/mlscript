@@ -20,7 +20,7 @@ class G[A]: { a: G[A] }
 def g: G['a] & {a: 'a} as 'a
 //│ g: 'a
 //│   where
-//│     'a := G['a] with {a: 'a}
+//│     'a := G['a] & {a: 'a}
 //│  = <missing implementation>
 
 :NoJS
@@ -39,11 +39,11 @@ rec def g2 = G { a = g2 }
 g = g
 //│ 'a
 //│   where
-//│     'a := G['a] with {a: 'a}
+//│     'a := G['a] & {a: 'a}
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a := G['a] with {a: 'a}
+//│     'a := G['a] & {a: 'a}
 
 
 def manual: 'a -> nothing as 'a

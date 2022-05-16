@@ -68,7 +68,7 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ l: 'a
 //│   where
 //│     'a :> int -> 'a
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α105,List((α105,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α105),Top)))) (of class mlscript.Constrained)
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α104,List((α104,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α104),Top)))) (of class mlscript.Constrained)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
 //│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:553)
@@ -167,7 +167,7 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: 'a
 //│   where
 //│     'a :> (int, int,) -> 'a
-//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α236,List((α236,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α236),Top)))) (of class mlscript.Constrained)
+//│ /!!!\ Uncaught error: scala.MatchError: Constrained(α234,List((α234,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α234),Top)))) (of class mlscript.Constrained)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:386)
 //│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.addTypeGenTermDefinition(TsTypegen.scala:353)
 //│ 	at: mlscript.DiffTests.$anonfun$new$45(DiffTests.scala:538)

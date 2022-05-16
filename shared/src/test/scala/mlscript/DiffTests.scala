@@ -304,15 +304,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
+                cur = typer.normalizeTypes_!(cur, approximateRecTypes = true)(ctx)
                 if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
                 // TODO should just have reconstruction always do DNF, and remove pass above? – and do rec type simpl too...?
                 
-                cur = typer.reconstructClassTypes(cur, S(true), ctx)
-                if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                // cur = typer.reconstructClassTypes(cur, S(true), ctx)
+                // if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
+                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
                 // val exp = typer.expandType(cur, true)
                 

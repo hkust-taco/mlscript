@@ -107,7 +107,7 @@ def Cons head tail = originalCons { head; tail } with { head; tail }
 
 
 Cons 2
-//│ res: (List['A] & 'tail) -> (Cons['A] with {head: 2, tail: 'tail})
+//│ res: (List['A] & 'tail) -> (Cons['A] & {head: 2, tail: 'tail})
 //│   where
 //│     'A :> 2
 //│    = [Function (anonymous)]

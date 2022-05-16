@@ -136,7 +136,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   
-  def coalesceTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+  def normalizeTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     
     // implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
     val allVarPols = st.getVarsPol(pol)
@@ -150,6 +150,212 @@ trait TypeSimplifier { self: Typer =>
       allVarPols.keysIterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
     println(s"recVars: $recVars")
     
+    def helper(dnf: DNF, pol: Opt[Bool]): ST = {
+        println(s"DNF: $dnf")
+        // val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
+        val cs = dnf.cs
+        cs.sorted.map { c =>
+          // c.vars.foreach(go(pol, _))
+          // c.nvars.foreach(go(pol.map(!_), _))
+          c.vars.foreach(processVar)
+          c.nvars.foreach(processVar)
+          // c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
+          c.toTypeWith(_ match {
+            
+            case LhsRefined(bo, tts, rcd, trs) =>
+              // The handling of type parameter fields is currently a little wrong here,
+              //  because we remove:
+              //    - type parameter fields of parent classes,
+              //        whereas they could _in principle_ be refined and
+              //        not correspond exactly to these of the currenly-reconstructed class;
+              //        and
+              //    - type parameter fields of the current trait tags
+              //        whereas we don't actually reconstruct applied trait types...
+              //        it would be better to just reconstruct them (TODO)
+              
+              val trs2 = trs.map {
+                case (d, tr @ TypeRef(defn, targs)) =>
+                  // TODOne actually make polarity optional and recurse with None
+                  // d -> TypeRef(defn, targs.map(targ =>
+                  //   TypeBounds(go(targ, false), go(targ, true))(noProv)))(tr.prov)
+                  d -> TypeRef(defn, targs.map(go(_, N)))(tr.prov) // TODO improve with variance analysis
+              }
+              
+              val traitPrefixes =
+                tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
+              bo match {
+                case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
+                  val clsNme = tagNme.capitalize
+                  val clsTyNme = TypeName(tagNme.capitalize)
+                  val td = ctx.tyDefs(clsNme)
+                  val typeRef = TypeRef(td.nme, td.tparams.zipWithIndex.map { case (tp, tpidx) =>
+                    // val fieldTagNme = tparamField(TypeName(clsNme), tp)
+                    val fieldTagNme = tparamField(clsTyNme, tp)
+                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
+                    //   case (_, FunctionType(lb, ub)) =>
+                    //     TypeBounds.mk(go(lb, false), go(ub, true))
+                    // }.foldLeft(TypeBounds(BotType, TopType)(noProv): ST)(_ & _)
+                    
+                    /* 
+                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
+                      case (_, FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
+                      case (_, FieldType(lb, ub)) =>
+                        TypeBounds.mk(go(lb.getOrElse(BotType), S(false)), go(ub, S(true)))
+                    }.getOrElse(TypeBounds(BotType, TopType)(noProv))
+                    */
+                    
+                    // val fromTyRef = trs2.get(clsTyNme).map(tr => FieldType(tr.targs(tpidx)))
+                    val fromTyRef = trs.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                    
+                    (fromTyRef ++ rcd.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
+                      // case ((acc_lb, acc_ub), (_, FunctionType(lb, ub))) => (acc_lb | lb, acc_ub & ub)
+                      // // case ((acc_lb, acc_ub), (_, _)) => die
+                      // case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
+                      
+                      // case ((acc_lb, acc_ub), FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
+                      // case ((acc_lb, acc_ub), (_, FieldType(lb, ub))) =>
+                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
+                        // // TypeBounds.mk(go(lb.getOrElse(BotType), false), go(ub, true))
+                        // (acc_lb.fold(lb)(_ | lb.getOrElse(BotType)), acc_ub & ub)
+                        (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
+                    }.pipe {
+                      // case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
+                      case (lb, ub) => TypeBounds.mk(go(lb, S(false)), go(ub, S(true)))
+                    }
+                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
+                    //   case (_, ft: FunctionType) => ft
+                    //   case _ => die
+                    // }.foldLeft(FunctionType(BotType, TopType)(noProv): ST)(_ & _)
+                  })(noProv)
+                  val clsFields = fieldsOf(
+                    typeRef.expandWith(paramTags = false), paramTags = false)
+                  val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme ++ traitPrefixes
+                  val cleanedRcd = rcd.copy(
+                    rcd.fields.filterNot { case (field, fty) =>
+                      // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
+                      cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
+                        clsFields.get(field).exists(_ <:< fty)
+                    }.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
+                  )(rcd.prov)
+                  val removedFields = clsFields.keysIterator
+                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSortedSet
+                  val needsWith = !rcd.fields.forall {
+                    case (field, fty) =>
+                      // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
+                      clsFields.get(field).forall(fty <:< _)
+                  }
+                  val withoutType = if (removedFields.isEmpty) typeRef
+                    // else Without(typeRef, removedFields)(noProv)
+                    else typeRef.without(removedFields)
+                  println(s"!! ${withoutType}")
+                  val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
+                    else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
+                  
+                  val withTrs =
+                    // TODO merge these with reconstructed ones...
+                    trs2.valuesIterator.foldLeft(withType)(_ & _)
+                  
+                  tts.toArray.sorted // TODO also filter out tts that are inherited by the class
+                    .foldLeft(withType: ST)(_ & _)
+                case _ =>
+                  lazy val nFields = rcd.fields
+                    .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
+                    .mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
+                  val (res, nfs) = bo match {
+                    case S(tt @ TupleType(fs)) =>
+                      val arity = fs.size
+                      val (componentFields, rcdFields) = rcd.fields
+                        .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
+                        .partitionMap(f =>
+                          if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
+                            val namePostfix = f._1.name.tail
+                            if (namePostfix.forall(_.isDigit)) {
+                              val index = namePostfix.toInt
+                              if (index <= arity && index > 0) L(index -> f._2)
+                              else R(f)
+                            }
+                            else R(f)
+                          } else R(f)
+                        )
+                      val componentFieldsMap = componentFields.toMap
+                      val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
+                        nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
+                      }.toList
+                      S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
+                    case S(ct: ClassTag) => S(ct) -> nFields
+                    case S(ft @ FunctionType(l, r)) =>
+                      // S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
+                      S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
+                    // case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
+                    case S(at @ ArrayType(inner)) =>
+                      S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
+                    case S(wt @ Without(b: ComposedType, ns @ empty())) => S(Without(b.map(go(_, pol)), ns)(wt.prov)) -> nFields // FIXME very hacky
+                    case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
+                    // case S(wt @ Without(b, ns)) => S(go(b, pol).without(ns)) -> nFields
+                    case N => N -> nFields
+                  }
+                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted, trs2).toType(sort = true)
+              }
+            case LhsTop => TopType
+          }, {
+            case RhsBot => BotType
+            case RhsField(n, t) => RecordType(n -> t.update(go(_, pol.map(!_)), go(_, pol)) :: Nil)(noProv)
+            case RhsBases(ots, rest, trs) =>
+              // Note: could recosntruct class tags for these, but it would be pretty verbose,
+              //    as in showing `T & ~C[?] & ~D[?, ?]` instead of just `T & ~c & ~d`
+              // ots.map { case t @ (_: ClassTag | _: TraitTag) => ... }
+              val r = rest match {
+                case v @ S(R(RhsField(n, t))) => RhsField(n, t.update(go(_, pol.map(!_)), go(_, pol))).toType(sort = true)
+                case v @ S(L(bty)) => go(bty, pol)
+                case N => BotType
+              }
+              trs.valuesIterator.map(go(_, pol)).foldLeft(BotType: ST)(_ | _) |
+              ots.sorted.foldLeft(r)(_ | _)
+          }, sort = true)
+        }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
+        }
+        
+        // /* 
+        // mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
+        // // mkDNF(ty, pol)(ctx, ptr = false, etf = false, cache) match {
+        //   case R(dnf) => helper(dnf, pol)
+        //   case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+        // }
+        // */
+        // pol match {
+        //   case S(p) => helper(DNF.mk(ty, p)(ctx, ptr = true, etf = false), pol)
+        //   case N =>
+        //     val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
+        //     val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
+        //     // if (dnf1 === dnf2) R(dnf1)
+        //     // else 
+        //     // L(dnf1 -> dnf2)
+        //     TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+        // }
+        
+    def go(ty: ST, pol: Opt[Bool]): ST =
+    trace(s"norm[${printPol(pol)}] $ty") {
+      // process(pol, ty)
+      pol match {
+        case S(p) => helper(DNF.mk(ty, p)(ctx, ptr = true, etf = false), pol)
+        case N =>
+          val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
+          val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
+          // if (dnf1 === dnf2) R(dnf1)
+          // else 
+          // L(dnf1 -> dnf2)
+          TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+      }
+    }(r => s"~> $r")
+    
+    def processVar(tv: TV): Unit = {
+      processed.setAndIfUnset(tv) {
+        tv.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
+        tv.upperBounds = tv.upperBounds.map(go(_, S(false)))
+      }
+    }
+    
+    /* 
     // def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
     def process(pol: Opt[Bool], st: ST): ST =
     // st.unwrapProvs match {
@@ -300,7 +506,10 @@ trait TypeSimplifier { self: Typer =>
       }
       
     }(r => s"~> $r")
-    process(pol, st)
+    */
+    // process(pol, st)
+    go(st, pol)
+    
   }
   
   
@@ -1168,7 +1377,9 @@ trait TypeSimplifier { self: Typer =>
         TypeRef(defn, targs.map(transform(_, N, N)))(tr.prov) // TODO improve with variance analysis
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol, N)
-        else Without(transform(base, pol, N), names)(wo.prov)
+        // else Without(transform(base, pol, N), names)(wo.prov)
+        else if (pol === S(true)) transform(base, pol, N).withoutPos(names)
+        else transform(base, pol, N).without(names)
       case tb @ TypeBounds(lb, ub) =>
         pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parent), transform(ub, S(true), parent), noProv))(pol =>
           if (pol) transform(ub, S(true), parent) else transform(lb, S(false), parent))
