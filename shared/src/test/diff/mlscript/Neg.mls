@@ -87,22 +87,22 @@ def f: (~lit & {x:int}) -> int
 
 // :ds
 def f: (~Lit & {x:int}) -> int
-//│ f: ({x: int} & ~lit | {x: int} & ~Lit) -> int
+//│ f: ({x: int} & ~Lit) -> int
 //│  = <missing implementation>
 
 def f: ~Lit & 'b -> 'b
-//│ f: 'b -> 'b
+//│ f: 'b -> 'b & ~Lit
 //│  = <missing implementation>
 
 def f: ~Lit & ~Add & 'b -> 'b
-//│ f: 'b -> 'b | 'b -> 'b & ~Add
+//│ f: 'b -> 'b & ~Add & ~Lit
 //│  = <missing implementation>
 
 def f: (~Lit & 'b) -> 'b
-//│ f: ('b & (~lit | ~Lit)) -> 'b
+//│ f: ('b & ~Lit) -> 'b
 //│  = <missing implementation>
 
 def f: (~Lit & ~Add & 'b) -> 'b
-//│ f: ('b & (~Lit & ~add | ~add & ~lit | ~Add & ~lit | ~Add & ~Lit)) -> 'b
+//│ f: ('b & ~Add & ~Lit) -> 'b
 //│  = <missing implementation>
 

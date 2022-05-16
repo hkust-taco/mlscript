@@ -444,16 +444,19 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
+      mkWith(ty, pol, (_, st) => st)
+    def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
         trace(s"DNF[$pol,$ptr,$etf](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
-      case bt: BaseType => of(bt)
+      case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
       case bt: TraitTag => of(bt)
-      case rt @ RecordType(fs) => of(rt)
+      // case rt @ RecordType(fs) => of(rt.mapPol(S(pol))(f).asInstanceOf[RecordType])
+      case rt @ RecordType(fs) => of(mapPol(rt, S(pol), smart = false)(f))
       case ExtrType(pol) => extr(!pol)
-      case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))
-      case NegType(und) => DNF(CNF.mk(und, !pol).ds.map(_.neg))
+      case ty @ ComposedType(p, l, r) => merge(p)(mkWith(l, pol, f), mkWith(r, pol, f))
+      case NegType(und) => DNF(CNF.mkWith(und, !pol, f).ds.map(_.neg))
       case tv: TypeVariable => of(SortedSet.single(tv))
-      case ProxyType(underlying) => mk(underlying, pol)
+      case ProxyType(underlying) => mkWith(underlying, pol, f)
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
         if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
@@ -461,9 +464,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
             case _ => N
           }
+          val tr2 = TypeRef(defn, targs.map(st => f(N, st)))(tr.prov)
           of(LhsRefined(base, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-        } else mk(tr.expand, pol)
-      case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
+        } else mkWith(tr.expand, pol, f)
+      case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
     }
     }(r => s"= $r")
     
@@ -504,23 +508,26 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), ssEmp, LhsTop, ssEmp)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF)(implicit etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
-    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
+    def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF = mkWith(ty, pol, (_, st) => st)
+    def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
       trace(s"?CNF $ty") {
       ty match {
-        case bt: BaseType => of(bt)
+        case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
         case tt: TraitTag => of(RhsBases(tt :: Nil, N, smEmp))
-        case rt @ RecordType(fs) => of(rt)
+        // case rt @ RecordType(fs) => of(rt)
+        case rt @ RecordType(fs) => of(mapPol(rt, S(pol), smart = false)(f))
         case ExtrType(pol) => extr(!pol)
-        case ty @ ComposedType(p, l, r) => merge(p)(mk(l, pol), mk(r, pol))
-        case NegType(und) => CNF(DNF.mk(und, !pol).cs.map(_.neg))
+        case ty @ ComposedType(p, l, r) => merge(p)(mkWith(l, pol, f), mkWith(r, pol, f))
+        case NegType(und) => CNF(DNF.mkWith(und, !pol, f).cs.map(_.neg))
         case tv: TypeVariable => of(SortedSet.single(tv))
-        case ProxyType(underlying) => mk(underlying, pol)
-        // case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
+        case ProxyType(underlying) => mkWith(underlying, pol, f)
+        // case tr @ TypeRef(defn, targs) => mkWith(tr.expand, pol) // TODO try to keep them?
         case tr @ TypeRef(defn, targs) =>
-          if (preserveTypeRefs && !primitiveTypes.contains(defn.name))
-            CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
-          else mk(tr.expand, pol)
-        case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
+          if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
+            val tr2 = TypeRef(defn, targs.map(st => f(N, st)))(tr.prov)
+            CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr2)), ssEmp, LhsTop, ssEmp) :: Nil)
+          } else mkWith(tr.expand, pol, f)
+        case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
       }
       }(r => s"!CNF $r")
   }

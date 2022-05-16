@@ -186,7 +186,7 @@ trait TypeSimplifier { self: Typer =>
         // /* 
         case S(p) =>
           
-          val dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
+          val dnf = DNF.mkWith(st, p, process)(ctx, ptr = true, etf = false)
           println(s"dnf = $dnf")
           
           dnf.cs.foreach { c =>
@@ -200,12 +200,15 @@ trait TypeSimplifier { self: Typer =>
           
           // dnf.toType(sort = true)
           
+          /* 
           // dnf.toType(sort = true).mapPol(pol, smart = true)(process)
           val newTy = dnf.toType(sort = true)
           newTy.mapPol(pol, smart = true)((pol, ty) =>
             // if (ty === st) ty // Sometimes the DNF of T will include T itself, such as when T is a class type ref
             if (ty === st) ty.mapPol(pol, smart = true)(process) // Sometimes the DNF of T will include T itself, such as when T is a class type ref
             else process(pol, ty))
+          */
+          dnf.toType(sort = true)
           
         // */
         /* 
