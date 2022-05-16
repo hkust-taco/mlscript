@@ -75,17 +75,11 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (NoneBecause | (Some['A] with {v: 'v}) | Some['A0] & {v: int} | Some['A1] & {v: int})
+//│ evalOpt: 'a -> (NoneBecause | (Some[in 'A out int | 'A] with {v: int}))
 //│   where
-//│     'A1 :> int
-//│     'A0 :> int
-//│     'a <: Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
+//│     'a <: Lit & {v: int & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | Some['A] & {v: 2 | 3} | Some['A0] & {v: int} | Some['A1] & {v: int}
-//│   where
-//│     'A1 :> int
-//│     'A0 :> int
-//│     'A :> 2 | 3
+//│ res: NoneBecause | (Some[in 'A out int | 2 | 3 | 'A] with {v: int})
 //│    = Some { v: 5 }

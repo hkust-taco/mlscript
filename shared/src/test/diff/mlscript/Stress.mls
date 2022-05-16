@@ -64,7 +64,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 37
 //│ annoying  calls  : 20
-//│ subtyping calls  : 73
+//│ subtyping calls  : 81
 
 
 // ====== 3 ====== //
@@ -82,7 +82,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 50
 //│ annoying  calls  : 30
-//│ subtyping calls  : 148
+//│ subtyping calls  : 160
 
 
 // ====== 4 ====== //
@@ -101,7 +101,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 63
 //│ annoying  calls  : 40
-//│ subtyping calls  : 258
+//│ subtyping calls  : 274
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
@@ -135,7 +135,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 76
 //│ annoying  calls  : 50
-//│ subtyping calls  : 410
+//│ subtyping calls  : 430
 
 
 // ====== 6 ====== //
@@ -156,7 +156,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 89
 //│ annoying  calls  : 60
-//│ subtyping calls  : 611
+//│ subtyping calls  : 635
 
 
 // ====== 7 ====== //
@@ -178,7 +178,7 @@ foo arg
 //│ res: int
 //│ constrain calls  : 102
 //│ annoying  calls  : 70
-//│ subtyping calls  : 868
+//│ subtyping calls  : 896
 
 
 // ====== 8 ====== //
@@ -201,6 +201,6 @@ foo arg
 //│ res: int
 //│ constrain calls  : 115
 //│ annoying  calls  : 80
-//│ subtyping calls  : 1188
+//│ subtyping calls  : 1220
 
 

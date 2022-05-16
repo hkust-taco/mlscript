@@ -267,8 +267,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
+    // def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+    //   if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
     def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
-      if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
+      if (lb <:< ub && ub <:< lb) lb else mk2(lb, ub, prov)
+    def mk2(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
+      case (TypeBounds(lb, _), ub) => mk2(lb, ub, prov)
+      case (lb, TypeBounds(_, ub)) => mk2(lb, ub, prov)
+      case _ =>
+        if ((lb is ub) || lb === ub) lb else TypeBounds(lb, ub)(prov)
+    }
   }
   
   case class FieldType(lb: Option[SimpleType], ub: SimpleType)(val prov: TypeProvenance) {

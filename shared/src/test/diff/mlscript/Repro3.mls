@@ -72,6 +72,7 @@ def foo(x: Some['a]) =
 //│ foo: Some['a] -> Some[Some[?] & 'a0]
 //│   where
 //│     'a := Some[?] & 'a0
+//│     'a0 <: {Some#A :> anything <: nothing, v: nothing} | ~some
 
 // :ds
 def f: Some['a]

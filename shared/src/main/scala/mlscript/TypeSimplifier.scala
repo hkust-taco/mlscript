@@ -247,7 +247,7 @@ trait TypeSimplifier { self: Typer =>
                   val withoutType = if (removedFields.isEmpty) typeRef
                     // else Without(typeRef, removedFields)(noProv)
                     else typeRef.without(removedFields)
-                  println(s"!! ${withoutType}")
+                  // println(s"!! ${withoutType}")
                   val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
                     else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
                   
@@ -1699,10 +1699,10 @@ trait TypeSimplifier { self: Typer =>
           case N =>
             val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
             val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
-            // if (dnf1 === dnf2) R(dnf1)
+            if (dnf1 === dnf2) helper(dnf2, S(true))
             // else 
             // L(dnf1 -> dnf2)
-            TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
+            else TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
         }
         
     }

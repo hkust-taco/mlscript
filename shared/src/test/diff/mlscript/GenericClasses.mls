@@ -189,6 +189,6 @@ mrg = Foo2{}
 //│    = Foo2 {}
 
 def mrg: Foo2[int] | Foo2[string]
-//│ mrg: Foo2[int] | Foo2[string]
+//│ mrg: Foo2[in int | string out nothing]
 //│    = <missing implementation>
 

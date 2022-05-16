@@ -41,7 +41,7 @@ e1 = add (lit 1) (add (lit 2) (lit 3))
 //│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│   where
 //│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│     'E0 :> Lit & {val: 2} | Lit & {val: 3}
+//│     'E0 :> Lit & {val: 2 | 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -120,7 +120,7 @@ e2 = add (lit 1) (nega e1)
 //│     'E :> Lit & {val: 1} | (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})
 //│     'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│     'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│     'E2 :> Lit & {val: 2} | Lit & {val: 3}
+//│     'E2 :> Lit & {val: 2 | 3}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }

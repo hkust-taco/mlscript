@@ -102,7 +102,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
           assert(that.targs.sizeCompare(other.targs) === 0)
           TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds(ta1 | ta2, ta1 & ta2)(noProv)
+            case (ta1, ta2) => TypeBounds.mk2(ta1 | ta2, ta1 & ta2)
           }.toList)(that.prov)
         })
         S(LhsRefined(b, ts, rt, trs2))
@@ -174,7 +174,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
           assert(that.targs.sizeCompare(other.targs) === 0)
           TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds(ta1 & ta2, ta1 | ta2)(noProv)
+            case (ta1, ta2) => TypeBounds.mk2(ta1 & ta2, ta1 | ta2)
           }.toList)(that.prov)
         })
         S(RhsBases(prims, bf, trs2))
@@ -296,6 +296,19 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       *   {x: int} | {y: int} ~> anything
       *   (A -> B) | {x: C}   ~> anything  */
     def tryMerge(that: Conjunct)(implicit etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
+      case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
+          , Conjunct(LhsRefined(bse2, ts2, rcd2, trs2), vs2, r2, nvs2))
+        if bse1 === bse2 && ts1 === ts2 && vs1 === vs2 && r1 === r2 && nvs1 === nvs2
+        && trs1.keySet === trs2.keySet
+      =>
+        val trs = mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
+          assert(tr1.defn === tr2.defn)
+          assert(tr1.targs.size === tr2.targs.size)
+          TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
+            TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
+        }
+        val rcd = RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)
+        S(Conjunct(LhsRefined(bse1, ts1, rcd, trs), vs1, r1, nvs1))
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2, trs2), vs2, r2, nvs2))
         if vs1 === vs2 && r1 === r2 && nvs1 === nvs2 && ts1 === ts2
