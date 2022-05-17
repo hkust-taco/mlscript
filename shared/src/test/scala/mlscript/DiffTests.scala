@@ -285,7 +285,6 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               else {
                 var cur = wty
                 
-                // typer.dbg = mode.dbgSimplif
                 cur = typer.removeIrrelevantBounds(wty, inPlace = false)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
@@ -294,35 +293,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                // TODO after we do impl coalescing, try to do this here again
-                // cur = typer.coalesceTypes_!(cur, approximateRecTypes = true)(ctx)
-                // if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
-                // if (mode.isDebugging) output(s" where: ${cur.showBounds}")
-                
-                // val cty = rty
-                // val cty = typer.canonicalizeType(rty)(ctx)
-                // if (mode.dbgSimplif) output(s"⬤ Canon: ${cty}")
-                // if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
                 cur = typer.simplifyType(cur)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
                 cur = typer.normalizeTypes_!(cur)(ctx)
-                if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
+                if (mode.isDebugging) output(s"⬤ Normalized: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
-                
-                // TODO should just have reconstruction always do DNF, and remove pass above? – and do rec type simpl too...?
-                
-                // cur = typer.reconstructClassTypes(cur, S(true), ctx)
-                // if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
-                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                // val exp = typer.expandType(cur, true)
-                
-                // // val recons2 = typer.removeIrrelevantBounds(cur)(ctx)
-                // val recons2 = typer.simplifyType(typer.removeIrrelevantBounds(cur)(ctx))(ctx)
-                
-                // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
                 
                 cur = typer.removeIrrelevantBounds(cur, inPlace = true)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
@@ -332,32 +309,20 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                cur = typer.simplifyType(cur)(ctx) // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
-                // val cur = typer.simplifyType(typer.simplifyType(cur)(ctx))(ctx)
+                // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
+                // *  by merging things like function types together...
+                // * So we need another pass of simplification!
+                cur = typer.simplifyType(cur)(ctx)
+                // cur = typer.simplifyType(typer.simplifyType(cur)(ctx))(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Resim: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                // // TODO fixed point? or do that in unskidTypes_! itself
-                // cur = typer.unskidTypes_!(cur)(ctx)
-                // cur = typer.simplifyType(cur)(ctx)
-                // cur = typer.unskidTypes_!(cur)(ctx)
                 
                 cur = typer.factorRecursiveTypes_!(cur, approximateRecTypes = false)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                // cur = typer.reconstructClassTypes(cur, S(true), ctx)
-                // if (mode.dbgSimplif) output(s"⬤ Recons: ${cur}")
-                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                
-                // val exp = typer.expandType(cur, true)
                 val exp = typer.expandType(cur, true)
-                
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
-                
-                // val canon2 = typer.canonicalizeType(recons)(ctx)
-                // val exp = typer.expandType(canon2, true)
                 exp
               }
             }

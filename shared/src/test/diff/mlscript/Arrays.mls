@@ -202,6 +202,6 @@ ty2A = ty2B
 //│ ╙──      	                  ^^
 //│ constrain calls  : 29
 //│ annoying  calls  : 28
-//│ subtyping calls  : 70
+//│ subtyping calls  : 74
 
 

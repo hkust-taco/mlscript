@@ -200,6 +200,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class WithType(base: SimpleType, rcd: RecordType)(val prov: TypeProvenance) extends ProxyType {
     lazy val underlying: ST =
       base.without(rcd.fields.iterator.map(_._1).toSortedSet) & rcd
+    override def toString = s"${base} w/ ${rcd}"
   }
   
   // /** A proxy type, `T as 'a` is equivalent to `['a -> (T as 'a))']T` and also `'a where 'a =:= T`. */
@@ -290,7 +291,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
     // override def toString = s"${lb.mkString}..$ub"
-    override def toString = lb.filterNot(_ === BotType).fold(ub.toString)(lb => s"$lb..$ub")
+    // override def toString = lb.filterNot(_ === BotType).fold(ub.toString)(lb => s"$lb..$ub")
+    override def toString = lb.filterNot(_ === BotType).fold(s"$ub")(lb => s"mut $lb..$ub")
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
@@ -331,7 +333,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def lbRecOccs = TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true)).get(this)
     def ubRecOccs = TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
     /** None: not recursive; Some(true): polarly-recursive; Some(false): nonpolarly-recursive; */
-    def isBadlyRecursive(implicit cache: MutMap[TV, Opt[Bool]]): Opt[Bool] = cache.getOrElseUpdate(this, {
+    def isBadlyRecursive_$: Opt[Bool] = {
       // val vars = TupleType((lowerBounds.iterator ++ upperBounds.iterator).map(N -> _.toUpper(noProv)).toList)(noProv).getVarsPol(S(true))
       // // println(s"isRecursive $vars ${vars.get(this)}")
       // vars.get(this).map(_.isDefined)
@@ -358,7 +360,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         
       ))
       else N
-    })
+    }
   }
   type TV = TypeVariable
   private var freshCount = 0
