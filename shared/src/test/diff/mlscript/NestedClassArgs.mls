@@ -122,10 +122,10 @@ C{}
 //│ res: C['A]
 
 def c4 a = C4{ a = C{} }
-//│ c4: anything -> (C4['A] with {a: C[C4['A]]})
+//│ c4: anything -> C4['A]
 
 def c = c4
-//│ anything -> (C4['A] with {a: C[C4['A]]})
+//│ anything -> C4['A]
 //│   <:  c:
 //│ 'a -> C4['a]
 

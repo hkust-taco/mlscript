@@ -23,7 +23,7 @@ def eval1 eval1 e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 49
+//│ subtyping calls  : 62
 
 :stats
 def eval1f eval1 e = case e of {
@@ -34,7 +34,7 @@ def eval1f eval1 e = case e of {
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
 //│ annoying  calls  : 0
-//│ subtyping calls  : 45
+//│ subtyping calls  : 58
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -115,9 +115,9 @@ def eval2f eval2 e = case e of {
 
 
 e2 = add (lit 1) (nega e1)
-//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
+//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] & {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
 //│   where
-//│     'E :> Lit & {val: 1} | (Nega['E0] with {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}})
+//│     'E :> Lit & {val: 1} | Nega['E0] & {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}
 //│     'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│     'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
 //│     'E2 :> Lit & {val: 2 | 3}

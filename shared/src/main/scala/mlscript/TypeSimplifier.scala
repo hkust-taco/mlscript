@@ -120,6 +120,18 @@ trait TypeSimplifier { self: Typer =>
                 val clsNme = tagNme.capitalize
                 val clsTyNme = TypeName(tagNme.capitalize)
                 val td = ctx.tyDefs(clsNme)
+                
+                val rcdMap  = rcd.fields.toMap
+                
+                // TODO rm?
+                val rcd2  = rcd.copy(rcd.fields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
+                
+                println(s"rcd2 ${rcd2}")
+                
+                // val rcdKeys = rcd.fields.unzip._1.toSet
+                // val rcd2  = rcd.copy(
+                //   trs.get(clsTyNme).fold(rcd.fields)(tr => recordIntersection(fieldsOf(tr, paramTags = true).iterator.filter(_._1 |> rcdKeys).toList, rcd.fields)).mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
+                
                 val typeRef = TypeRef(td.nme, td.tparams.zipWithIndex.map { case (tp, tpidx) =>
                   // val fieldTagNme = tparamField(TypeName(clsNme), tp)
                   val fieldTagNme = tparamField(clsTyNme, tp)
@@ -137,9 +149,11 @@ trait TypeSimplifier { self: Typer =>
                   */
                   
                   // val fromTyRef = trs2.get(clsTyNme).map(tr => FieldType(tr.targs(tpidx)))
-                  val fromTyRef = trs.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  // val fromTyRef = trs.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   
-                  (fromTyRef ++ rcd.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
+                  // (fromTyRef ++ rcd.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
+                  (fromTyRef ++ rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
                     // case ((acc_lb, acc_ub), (_, FunctionType(lb, ub))) => (acc_lb | lb, acc_ub & ub)
                     // // case ((acc_lb, acc_ub), (_, _)) => die
                     // case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
@@ -152,7 +166,8 @@ trait TypeSimplifier { self: Typer =>
                       (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
                   }.pipe {
                     // case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
-                    case (lb, ub) => TypeBounds.mk(go(lb, S(false)), go(ub, S(true)))
+                    // case (lb, ub) => TypeBounds.mk(go(lb, S(false)), go(ub, S(true)))
+                    case (lb, ub) => TypeBounds.mk(lb, ub)
                   }
                   // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
                   //   case (_, ft: FunctionType) => ft
@@ -161,25 +176,49 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 // val clsFields = fieldsOf(
                 //   typeRef.expandWith(paramTags = false), paramTags = false)
-                val clsFields = fieldsOf(
-                  typeRef.expandWith(paramTags = true), paramTags = true)
+                
+                println(s"typeRef ${typeRef}")
+                
+                def thoughDNF(st: ST, pol: Opt[Bool]): ST =
+                  DNF.mk(st, pol.getOrElse(true))(ctx, ptr = false, etf = false).toType(sort = true)
+                
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                  // .mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
+                  // .view.mapValues(_.update(thoughDNF(_, pol.map(!_)), thoughDNF(_, pol))).toMap
                 
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme ++ traitPrefixes
-                val cleanedRcd = rcd.copy(
-                  rcd.fields.filterNot { case (field, fty) =>
+                
+                // val rcd2 = rcd.copy(rcd.fiel ds.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
+                
+                // val cleanedRcd = rcd.copy(
+                //   rcd.fields.filterNot { case (field, fty) =>
+                //     // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
+                //     // cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
+                //       clsFields.get(field).exists(_ <:< fty)
+                //   }.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
+                // )(rcd.prov)
+                val cleanedRcd = RecordType(
+                  rcd2.fields.filterNot { case (field, fty) =>
                     // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
                     // cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
-                      clsFields.get(field).exists(_ <:< fty)
-                  }.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
-                )(rcd.prov)
+                    // 
+                      // clsFields.get(field).exists(_ <:< fty) || 
+                      //   clsFields.get(field).exists(f1 => rcd.fields.toMap.get(field).exists(f1 <:< _))
+                    // 
+                    clsFields.get(field).exists(cf => cf <:< fty ||
+                      rcdMap.get(field).exists(cf <:< _))
+                  }
+                )(rcd2.prov)
                 val removedFields = clsFields.keysIterator
-                  .filterNot(field => field.name.isCapitalized || rcd.fields.exists(_._1 === field)).toSortedSet
-                val needsWith = !rcd.fields.forall {
+                  .filterNot(field => field.name.isCapitalized || rcd2.fields.exists(_._1 === field)).toSortedSet
+                val needsWith = !rcd2.fields.forall {
                   case (field, fty) =>
                     // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
-                    clsFields.get(field).forall(fty <:< _)
+                    // 
+                    // clsFields.get(field).forall(fty <:< _)
+                    clsFields.get(field).forall(cf => fty <:< cf || rcdMap.get(field).exists(_ <:< cf))
                 }
                 val withoutType = if (removedFields.isEmpty) typeRef
                   // else Without(typeRef, removedFields)(noProv)
