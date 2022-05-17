@@ -8,31 +8,6 @@ import mlscript.utils._, shorthands._
 trait TypeSimplifier { self: Typer =>
   
   
-  /* 
-  // TODO rm this?! not sure still useful
-  // TODO inline logic
-  private def mkDNF(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields, cache: MutMap[TV, Opt[Bool]]): Either[(DNF, DNF), DNF] = {
-    // implicit val preserveTypeRefs: Bool = true
-    // println(s"mk[${printPol(pol)}] ${ty}")
-    pol match {
-      case S(true) => R(DNF.mk(ty, true))
-      case S(false) => R(DNF.mk(ty, false))
-      case N =>
-        // TODO less inefficient! don't recompute
-        // val dnf1 = DNF.mk(ty, true)
-        val dnf1 = DNF.mk(ty, false)
-        // if (dnf1.cs.exists(_.vars.nonEmpty))
-        // val dnf2 = DNF.mk(ty, false)
-        val dnf2 = DNF.mk(ty, true)
-        // // if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
-        // // println(s"vars ${dnf1.cs.map(_.vars)}")
-        // // if (dnf1.cs.forall(_.vars.forall(_.isBadlyRecursive =/= S(false))) && dnf1 === dnf2) R(dnf1)
-        // if (dnf1 === dnf2) R(dnf1)
-        // else 
-        L(dnf1 -> dnf2)
-    }
-  }
-  */
   
   def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     
@@ -46,47 +21,6 @@ trait TypeSimplifier { self: Typer =>
       renewed.getOrElseUpdate(tv,
         freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
-    // def process(ty: ST): ST =
-    //     // trace(s"process($ty)") {
-    //     trace(s"process($ty)  ${renewed}") {
-    //     ty.map {
-    //   case tv: TypeVariable =>
-    //     var isNew = false
-    //     val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
-    //     // renewed.getOrElseUpdate(tv,
-    //     //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
-    //     // val nv = renew(v)
-    //     if (isNew) {
-    //       if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process)
-    //       if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process).tap(b=>println(s"${b.map(_.getClass)}"))
-    //     }
-    //     println(tv, nv, nv.lowerBounds, nv.upperBounds)
-    //     nv
-    //   case st => process(st)
-    // }
-    // }(r => s"= $r")
-    
-    // def process(ty: ST, parents: Set[TV]): ST = // TODO mk parents an option?
-    //     // trace(s"process($ty)") {
-    //     ty match {
-    //   case tv: TypeVariable if parents(tv) => freshVar(noProv)
-    //   case tv: TypeVariable =>
-    //     var isNew = false
-    //     val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
-    //     // renewed.getOrElseUpdate(tv,
-    //     //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
-    //     // val nv = renew(v)
-    //     if (isNew) {
-    //       if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, Set.single(tv)))
-    //       if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, Set.single(tv)))//.tap(b=>println(s"${b.map(_.getClass)}"))
-    //     }
-    //     // println(tv, nv, nv.lowerBounds, nv.upperBounds)
-    //     nv
-    //   // case ComposedType(_, l, r) => ty.map(process(_, parents))
-    //   case _: ProxyType | _: ComposedType | _: NegType => ty.map(process(_, parents))
-    //   case _ => ty.map(process(_, Set.empty))
-    // }
-    // // }(r => s"= $r")
     def process(ty: ST, parent: Opt[Bool -> TV]): ST =
         // trace(s"process($ty)") {
         ty match {
@@ -130,13 +64,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   
-  
-  
-  
-  
-  
-  
-  def normalizeTypes_!(st: SimpleType, approximateRecTypes: Bool, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+  def normalizeTypes_!(st: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
     
     // implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
     val allVarPols = st.getVarsPol(pol)
@@ -355,485 +283,10 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
-    /* 
-    // def process(pol: Opt[Bool], st: ST, parent: Opt[TV]): ST =
-    def process(pol: Opt[Bool], st: ST): ST =
-    // st.unwrapProvs match {
-    //   case tv: TV =>
-    //     processed.setAndIfUnset(tv) {
-    //       tv.lowerBounds = tv.lowerBounds.map(process(S(true), _, S(tv)))
-    //       tv.upperBounds = tv.upperBounds.map(process(S(false), _, S(tv)))
-    //     }
-    //     tv
-    //   case _ =>
-    //     st
-    // }
-    trace(s"coal[${printPol(pol)}] $st") {
-      
-      pol match {
-        case N =>
-          st.mapPol(pol, smart = true)(process)
-          
-          // * Doesn't seem to change anything:
-          /* 
-          val dnf1 = DNF.mk(st, false)(ctx, ptr = true, etf = false)
-          println(s"dnf1 = $dnf1")
-          val dnf2 = DNF.mk(st, true)(ctx, ptr = true, etf = false)
-          println(s"dnf2 = $dnf2")
-          if (dnf1 === dnf2)
-            dnf1.toType(sort = true).mapPol(pol)(process)
-          else TypeBounds.mk(
-            dnf1.toType(sort = true).mapPol(pol)(process),
-            dnf2.toType(sort = true).mapPol(pol)(process),
-            noProv
-          )
-          */
-        
-        // /* 
-        case S(p) =>
-          
-          val dnf = DNF.mkWith(st, p, process)(ctx, ptr = true, etf = false)
-          println(s"dnf = $dnf")
-          
-          dnf.cs.foreach { c =>
-            (c.vars.iterator ++ c.nvars).foreach { tv =>
-              processed.setAndIfUnset(tv) {
-                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
-                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
-              }
-            }
-          }
-          
-          // dnf.toType(sort = true)
-          
-          /* 
-          // dnf.toType(sort = true).mapPol(pol, smart = true)(process)
-          val newTy = dnf.toType(sort = true)
-          newTy.mapPol(pol, smart = true)((pol, ty) =>
-            // if (ty === st) ty // Sometimes the DNF of T will include T itself, such as when T is a class type ref
-            if (ty === st) ty.mapPol(pol, smart = true)(process) // Sometimes the DNF of T will include T itself, such as when T is a class type ref
-            else process(pol, ty))
-          */
-          dnf.toType(sort = true)
-          
-        // */
-        /* 
-        case S(p) =>
-          
-          var dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
-          println(s"dnf = $dnf")
-          
-          // var vars = 
-          
-          dnf.cs.foreach { c =>
-            (c.vars.iterator ++ c.nvars).foreach { tv =>
-            // c.nvars.foreach { tv =>
-              processed.setAndIfUnset(tv) {
-                println(s"Processing $tv")
-                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
-                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
-              }
-            }
-          }
-          
-          implicit val etf: ExpandTupleFields = false
-          def rec(dnf: DNF, done: Set[TV], pol: Bool, parents: Set[TV]): DNF = dnf.cs.iterator.map { c =>
-            // val vs = c.vars.filterNot(done)
-            // val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
-            //   recursiveVars += v
-            //   val nv = renew(v)
-            //   nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
-            //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
-            //   true
-            // } || done(v))
-            // val vs = c.vars.filterNot(parents).filterNot(tv => recVars.contains(tv) || allVarPols(tv).isEmpty && {
-            val vs = c.vars.filterNot(parents).filterNot(tv => recVars.contains(tv) && {
-              // println(s"$tv is badly recursive...")
-              println(s"let's not coalesce $tv...")
-              // // recursiveVars += tv
-              // // val nv = renew(tv)
-              // // val newParents = parents + tv
-              // // nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents))
-              // // nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents))
-              // preserveBounds(tv, parents)
-              /* 
-              // TODO dedup
-              processed.setAndIfUnset(tv) {
-                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
-                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
-              }
-              */
-              true
-            // } || done(tv))
-            } || done(tv) && {println(s"Done $tv"); true})
-            vs.iterator.map { tv =>
-            // vs.iterator.filter(_.isRecursive =/= S(false)).map { tv =>
-              // println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
-              val b =
-                if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
-                else tv.upperBounds.foldLeft(tv:ST)(_ & _)
-              // val b =
-              //   if (pol) tv.lowerBounds.foldLeft(BotType:ST)(_ | _)
-              //   else tv.upperBounds.foldLeft(TopType:ST)(_ & _)
-              // println(s"b $b")
-              // val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents + tv)
-              // val bd = rec(DNF.mk(b, pol)(ctx, ptr = true, etf = false), done + tv, pol, parents ++ vs)
-              val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents ++ vs)
-              // println(s"bd $bd")
-              bd
-            }
-            .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
-          }.foldLeft(DNF.extr(false))(_ | _)
-          
-          dnf = rec(dnf, Set.empty, p, Set.empty)
-          println(s"dnf := $dnf")
-          
-          // TODO coalesce neg vars?
-          
-          // dnf.cs.foreach { c =>
-          //   // (c.vars.iterator ++ c.nvars).foreach { tv =>
-          //   c.nvars.foreach { tv =>
-          //     processed.setAndIfUnset(tv) {
-          //       tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
-          //       tv.upperBounds = tv.upperBounds.map(process(S(false), _))
-          //     }
-          //   }
-          // }
-          
-          dnf.toType(sort = true)
-          // dnf.toType(sort = true).mapPol(pol)(process)
-        */
-      }
-      
-    }(r => s"~> $r")
-    */
-    // process(pol, st)
     go(st, pol)
     
   }
   
-  
-  
-  
-  
-  
-  
-  
-  def canonicalizeType(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
-    // type PolarType = (DNF, Bool)
-    // type PolarType = DNF
-    type PolarType = (DNF, Opt[Bool])
-    
-    import Set.{empty => semp}
-    
-    // val r = removeIrrelevantBounds(ty, pol)
-    // println(r)
-    // println(r.showBounds)
-    
-    val recursive = MutMap.empty[PolarType, TypeVariable]
-    
-    // TODO rename (no longer just rec vars)
-    val recursiveVars = MutSet.empty[TypeVariable] // For rec nonpolar vars
-    
-    val renewed = MutMap.empty[TypeVariable, TypeVariable]
-    
-    implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
-    
-    val allVars = ty.getVars
-    def renew(tv: TypeVariable): TypeVariable =
-      renewed.getOrElseUpdate(tv,
-        freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
-    
-    // def preserveBoudns(tv: TV, parents: Set[TV])(implicit inProcess: Set[PolarType]): TV = {
-    // def preserveBoudns(tv: TV, parents: Set[TV], inProcess: Set[PolarType] = Set.empty): TV = {
-    def preserveBounds(tv: TV, parents: Set[TV]): TV = {
-      recursiveVars += tv
-      val nv = renew(tv)
-      // val newParents = parents + tv
-      val newParents = Set.single(tv)
-      // nv.lowerBounds = tv.lowerBounds.map(goDeep(_, S(true), newParents)(Set.empty))
-      // nv.upperBounds = tv.upperBounds.map(goDeep(_, S(false), newParents)(Set.empty))
-      // implicit val inProcess: Set[PolarType] = semp
-      nv.lowerBounds = tv.lowerBounds.reduceOption(_ | _)
-        .map(goDeep(_, S(true), newParents)(Set.empty)).filterNot(_ === BotType).toList
-      nv.upperBounds = tv.upperBounds.reduceOption(_ & _)
-        .map(goDeep(_, S(false), newParents)(Set.empty)).filterNot(_ === TopType).toList
-      nv
-    }
-    
-    def goDeep(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): SimpleType = ty.unwrapProvs match {
-        case v: TV if parents(v) =>
-          ??? // uh? // TODO rm parents?
-          if (pol.getOrElse(die)) // doesn't really make sense to have a parent in invariant pos
-            BotType else TopType
-        case tv: TV if recursiveVars.contains(tv) => renew(tv)
-        case v: TV if pol.isEmpty =>
-          println(s"$v is in a bad place...")
-          // recursiveVars += v
-          // val nv = renew(v)
-          // val newParents = parents + v
-          // nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
-          // nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
-          // nv
-          preserveBounds(v, parents)
-        case _ =>
-      // go1(go0(ty, pol), pol)
-      go0(ty, pol, parents) match {
-        case R(dnf) => go1(dnf, pol, parents)
-        case L((dnf1, dnf2)) =>
-          TypeBounds.mk(go1(dnf1, S(false), parents), go1(dnf2, S(true), parents), noProv)
-      }
-    }
-    
-    // Turn the outermost layer of a SimpleType into a DNF, leaving type variables untransformed
-    def go0(ty: SimpleType, pol: Opt[Bool], parents: Set[TV])(implicit inProcess: Set[PolarType]): Either[(DNF, DNF), DNF] = 
-    trace(s"ty[${printPol(pol)}] $ty") {
-      
-      implicit val etf: ExpandTupleFields = false
-      
-      // TODO should we also coalesce nvars? is it bad if we don't? -> probably, yes...
-      def rec(dnf: DNF, done: Set[TV], pol: Bool, parents: Set[TV]): DNF = dnf.cs.iterator.map { c =>
-        // val vs = c.vars.filterNot(done)
-        // val vs = c.vars.filterNot(v => recursiveVars.contains(v) || v.isRecursive === S(false) && {
-        //   recursiveVars += v
-        //   val nv = renew(v)
-        //   nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
-        //   nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
-        //   true
-        // } || done(v))
-        val vs = c.vars.filterNot(parents).filterNot(v => recursiveVars.contains(v) || v.isBadlyRecursive === S(false) && {
-          println(s"$v is badly recursive...")
-          // recursiveVars += v
-          // val nv = renew(v)
-          // val newParents = parents + v
-          // nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true), newParents))
-          // nv.upperBounds = v.upperBounds.map(goDeep(_, S(false), newParents))
-          preserveBounds(v, parents)
-          true
-        // } || done(v))
-        } || done(v) && {println(s"Done $v"); true})
-        vs.iterator.map { tv =>
-        // vs.iterator.filter(_.isRecursive =/= S(false)).map { tv =>
-          // println(s"Consider $tv ${tv.lowerBounds} ${tv.upperBounds}")
-          val b =
-            if (pol) tv.lowerBounds.foldLeft(tv:ST)(_ | _)
-            else tv.upperBounds.foldLeft(tv:ST)(_ & _)
-          // println(s"b $b")
-          // val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents + tv)
-          val bd = rec(DNF.mk(b, pol)(ctx, ptr = true), done + tv, pol, parents ++ vs)
-          // println(s"bd $bd")
-          bd
-        }
-        .foldLeft(DNF(c.copy(vars = c.vars.filterNot(vs))::Nil))(_ & _)
-      }.foldLeft(DNF.extr(false))(_ | _)
-      
-      /* 
-      if (pol.isEmpty && ty.isInstanceOf[TV]) {
-        val v = ty.asInstanceOf[TV]
-        ???
-        println(s"$v is in a bad place...")
-        recursiveVars += v
-        val nv = renew(v)
-        nv.lowerBounds = v.lowerBounds.map(goDeep(_, S(true)))
-        nv.upperBounds = v.upperBounds.map(goDeep(_, S(false)))
-        R(DNF.mk(nv, true))
-      }
-      else
-      */
-      
-      /* 
-      // rec(DNF.mk(ty, pol)(ctx), Set.empty)
-      mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
-      // mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
-        case R(dnf) =>
-          // println(dnf.cs.map(_.vars.isEmpty))
-          // pol.fold(R(dnf))(p => R(rec(dnf, Set.empty, p)))
-          
-          // pol.fold({
-          //   // R(dnf)
-          //   val a = rec(dnf, Set.empty, false, parents)
-          //   val b = rec(dnf, Set.empty, true, parents) // TODO rm for perf
-          //   // assert(a === b, a -> b)
-          //   // if (a === b) ???
-          //   if (a === b)
-          //   R(a)
-          //   else L(a -> b)
-          //   // else L(b -> a)
-          // })(p => R(rec(dnf, semp, p, parents)))
-          
-          R(rec(dnf, semp, pol.get, parents))
-          
-          // pol.fold(R(dnf))(p => {
-          //   val a = rec(dnf, Set.empty, p)
-          //   val b = rec(dnf, Set.empty, !p)
-          //   R(a)
-          // })
-        case L((dnf1, dnf2)) => L(rec(dnf1, semp, false, parents), rec(dnf2, semp, true, parents))
-      }
-      */
-      
-      pol match {
-        // case S(true) => R(DNF.mk(ty, true))
-        // case S(false) => R(DNF.mk(ty, false))
-        case S(p) => R(rec(DNF.mk(ty, p)(ctx, ptr = true, etf = false), semp, p, parents))
-        case N =>
-          val dnf1 = rec(DNF.mk(ty, false)(ctx, ptr = true, etf = false), semp, false, parents)
-          val dnf2 = rec(DNF.mk(ty, true)(ctx, ptr = true, etf = false), semp, true, parents)
-          if (dnf1 === dnf2) R(dnf1)
-          else 
-          L(dnf1 -> dnf2)
-      }
-      
-    }(r => s"-> $r")
-    
-    // Merge the bounds of all type variables of the given DNF, and traverse the result
-    def go1(ty: DNF, pol: Opt[Bool], parents: Set[TV])
-        (implicit inProcess: Set[PolarType]): SimpleType = trace(s"DNF[${printPol(pol)}] $ty") {
-      if (ty.isBot) ty.toType(sort = true) else {
-        val pty = ty -> pol
-        // val pty = ty
-        if (inProcess.contains(pty))
-          recursive.getOrElseUpdate(pty,
-            freshVar(noProv)(ty.level) tap { fv => println(s"Fresh rec $pty ~> $fv") })
-        else {
-          (inProcess + pty) pipe { implicit inProcess =>
-            def processField(f: FieldType): FieldType = f match {
-              case fty @ FieldType(S(lb), ub) if lb === ub =>
-                val res = goDeep(ub, N, semp)
-                FieldType(S(res), res)(fty.prov)
-              case fty @ FieldType(lb, ub) =>
-                FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
-            }
-            val res = DNF(ty.cs.map { case Conjunct(lnf, vars, rnf, nvars) =>
-              def adapt(pol: Opt[Bool])(l: LhsNf): LhsNf = l match {
-                case LhsRefined(b, ts, RecordType(fs), trs) => LhsRefined(
-                  b.map {
-                    case ft @ FunctionType(l, r) =>
-                      FunctionType(goDeep(l, pol.map(!_), semp), goDeep(r, pol, semp))(noProv)
-                    // case wo @ Without(b, ns) if ns.isEmpty =>
-                    // case wo @ Without(tr @ TypeRef(defn, targs), ns) if ns.isEmpty =>
-                    //   // FIXME hacky!!
-                    //   // FIXedME recurse in type args!!! not sound otherwise
-                    //   // TODO actually make polarity optional and recurse with None
-                    //   Without(TypeRef(defn, targs.map(targ =>
-                    //     TypeBounds(goDeep(targ, false), goDeep(targ, true))(noProv)))(tr.prov), ns)(wo.prov)
-                    case wo @ Without(b, ns) =>
-                      Without(goDeep(b, pol, parents), ns)(noProv)
-                    case ft @ TupleType(fs) =>
-                      // TupleType(fs.mapValues(_.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))))(noProv)
-                      // TupleType(fs.mapValues {
-                      //   case fty @ FieldType(S(lb), ub) if lb === ub =>
-                      //     val res = goDeep(ub, N, semp)
-                      //     FieldType(S(res), res)(fty.prov)
-                      //   case f => f.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp))
-                      // })(noProv)
-                      TupleType(fs.mapValues(processField))(noProv)
-                    // case ar @ ArrayType(fty @ FieldType(S(lb), ub)) if lb === ub =>
-                    //   val res = goDeep(ub, N, semp)
-                    //   ArrayType(FieldType(S(res), res)(fty.prov))(noProv)
-                    // case ar @ ArrayType(inner) =>
-                    //   ArrayType(inner.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))(noProv)
-                    case ar @ ArrayType(inner) =>
-                      ArrayType(processField(inner))(noProv)
-                    case pt: ClassTag => pt
-                  },
-                  ts,
-                  // RecordType(fs.map(f => f._1 -> goDeep(f._2, pol)))(noProv)
-                  // RecordType(fs.map {
-                  //   // case (nme, ty) if nme.name.isCapitalized && nme.name.contains('#') =>
-                  //   //   ty match {
-                  //   //     // case FunctionType(lb, ub) =>
-                  //   //     //   nme -> FunctionType(goDeep(lb, pol.map(!_)), goDeep(ub, pol))(ty.prov)
-                  //   //     // case _ => lastWords(s"$nme: $ty")
-                  //   //     case FieldType(lb, ub) =>
-                  //   //       nme -> FieldType(lb.map(goDeep(_, pol.map(!_))), goDeep(ub, pol))(ty.prov)
-                  //   //   }
-                  //   // case (nme, ty) => nme -> goDeep(ty, pol)
-                  //   case (nme, fty @ FieldType(S(lb), ub)) if lb === ub =>
-                  //     val res = goDeep(ub, N, semp)
-                  //     nme -> FieldType(S(res), res)(fty.prov)
-                  //   case (nme, fty @ FieldType(lb, ub)) =>
-                  //     nme -> FieldType(lb.map(goDeep(_, pol.map(!_), semp)), goDeep(ub, pol, semp))(fty.prov)
-                  // })(noProv),
-                  RecordType(fs.mapValues(processField))(noProv),
-                  trs.map {
-                    case (d, tr @ TypeRef(defn, targs)) =>
-                      // TODO actually make polarity optional and recurse with None
-                      // d -> TypeRef(defn, targs.map(targ =>
-                      //   TypeBounds.mk(goDeep(targ, S(false)), goDeep(targ, S(true)), noProv)))(tr.prov)
-                      d -> TypeRef(defn, targs.map(targ =>
-                        goDeep(targ, N, semp)))(tr.prov)
-                  }
-                )
-                case LhsTop => LhsTop
-              }
-              //     RecordType(fs.mapValues(_.update(goDeep(_, !pol), goDeep(_, pol))))(noProv)
-              //   )
-              //   case LhsTop => LhsTop
-              // }
-              // def adapt2(pol: Bool)(l: RhsNf): RhsNf = l match {
-              //   case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, !pol), goDeep(_, pol)))
-              def adapt2(pol: Opt[Bool])(l: RhsNf): RhsNf = l match {
-                // case RhsField(name, ty) => RhsField(name, goDeep(ty, pol))
-                // case RhsField(name, ty) => RhsField(name, ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))
-                case RhsField(name, ty) => RhsField(name, processField(ty))
-                case RhsBases(prims, bf, trs) =>
-                  // TODO refactor to handle goDeep returning something else...
-                  RhsBases(prims, bf match {
-                    case N => N
-                    case S(L(bt)) => goDeep(bt, pol, parents) match {
-                      case bt: MiscBaseType => S(L(bt))
-                      case ExtrType(true) => N
-                      case _ => ???
-                    }
-                    case S(R(r)) =>
-                      // S(R(RhsField(r.name, r.ty.update(goDeep(_, pol.map(!_), semp), goDeep(_, pol, semp)))))
-                      S(R(RhsField(r.name, processField(r.ty))))
-                  }, ???)
-                case RhsBot => RhsBot
-              }
-              Conjunct(adapt(pol)(lnf), vars.map(renew), adapt2(pol.map(!_))(rnf), nvars.map(renew))
-            })
-            val adapted = res.toType(sort = true)
-            recursive.get(pty) match {
-              case Some(v) =>
-                println(s"!!!")
-                // pol match {
-                //   // case S(pol) =>
-                //   //   val bs = if (pol) v.lowerBounds else v.upperBounds
-                //   //   if (bs.isEmpty) { // it's possible we have already set the bounds in a sibling call
-                //   //     if (pol) v.lowerBounds ::= adapted else v.upperBounds ::= adapted
-                //   //   }
-                //   case S(true) =>
-                //     // it's possible we have already set the bounds in a sibling call
-                //     if (v.lowerBounds.isEmpty) {
-                //       v.lowerBounds ::= adapted
-                //     }
-                //   case N =>
-                //     v.lowerBounds ::= adapted
-                //     v.upperBounds ::= adapted
-                // }
-                if (v.lowerBounds.isEmpty && pol =/= S(false)) {
-                // if (v.lowerBounds.isEmpty) {
-                  v.lowerBounds ::= adapted
-                }
-                if (v.upperBounds.isEmpty && pol =/= S(true)) {
-                // if (v.upperBounds.isEmpty) {
-                  v.upperBounds ::= adapted
-                }
-                v
-              case None =>
-                // println(s"!??")
-                adapted
-            }
-          }
-        }
-      }
-    }(r => s"~> $r")
-    
-    goDeep(ty, pol, semp)(semp)
-    
-  }
   
   
   def simplifyType(st: SimpleType, pol: Opt[Bool] = S(true), removePolarVars: Bool = true, inlineBounds: Bool = true)(implicit ctx: Ctx): SimpleType = {
@@ -849,29 +302,8 @@ trait TypeSimplifier { self: Typer =>
     val occursInvariantly = MutSet.empty[TV]
     
     val analyzed0 = MutSet.empty[PolarVariable]
-    /* 
-    def analyze0(pol: Bool, st: SimpleType): Unit = trace(s"analyze0[${printPol(S(pol))}] $st") { st match {
-      case tv: TV =>
-        // analyzed0.setAnd(tv -> pol) { occNums(pol -> tv) += 1 } {
-        occNums(pol -> tv) += 1
-        analyzed0.setAndIfUnset(tv -> pol) {
-          // tv.lowerBounds.foreach(analyze0(true, _))
-          // tv.upperBounds.foreach(analyze0(false, _))
-          if (pol) tv.lowerBounds.foreach(analyze0(true, _))
-          else tv.upperBounds.foreach(analyze0(false, _))
-        }
-      case _ =>
-        st.childrenPol(S(pol)).foreach {
-          case (S(pol), st) => analyze0(pol, st)
-          case (N, st) => analyze0(true, st); analyze0(false, st)
-        }
-    }
-    }()
-    // analyze0(pol, st)
-    if (pol =/= S(false)) analyze0(true, st)
-    if (pol =/= S(true)) analyze0(false, st)
-    */
-    def analyze0(pol: Opt[Bool], st: SimpleType): Unit = trace(s"analyze0[${printPol(pol)}] $st") { st match {
+    
+    def analyze1(pol: Opt[Bool], st: SimpleType): Unit = trace(s"analyze1[${printPol(pol)}] $st") { st match {
       case tv: TV =>
         if (pol.isEmpty) occursInvariantly += tv
         // analyzed0.setAnd(tv -> pol) { occNums(pol -> tv) += 1 } {
@@ -883,22 +315,22 @@ trait TypeSimplifier { self: Typer =>
           occNums(pol -> tv) += 1
         }
         if (pol =/= S(false)) analyzed0.setAndIfUnset(tv -> true) {
-          tv.lowerBounds.foreach(analyze0(S(true), _))
+          tv.lowerBounds.foreach(analyze1(S(true), _))
         }
         if (pol =/= S(true)) analyzed0.setAndIfUnset(tv -> false) {
-          tv.upperBounds.foreach(analyze0(S(false), _))
+          tv.upperBounds.foreach(analyze1(S(false), _))
         }
       case _ =>
         st.childrenPol(pol).foreach {
-          // case (S(pol), st) => analyze0(pol, st)
-          // case (N, st) => analyze0(true, st); analyze0(false, st)
-          case (pol, st) => analyze0(pol, st)
+          // case (S(pol), st) => analyze1(pol, st)
+          // case (N, st) => analyze1(true, st); analyze1(false, st)
+          case (pol, st) => analyze1(pol, st)
         }
     }
     }()
-    analyze0(pol, st)
-    // if (pol =/= S(false)) analyze0(true, st)
-    // if (pol =/= S(true)) analyze0(false, st)
+    analyze1(pol, st)
+    // if (pol =/= S(false)) analyze1(true, st)
+    // if (pol =/= S(true)) analyze1(false, st)
     
     println(s"[inv] ${occursInvariantly.iterator.mkString(", ")}")
     println(s"[nums] ${occNums.iterator
@@ -907,48 +339,13 @@ trait TypeSimplifier { self: Typer =>
     }")
     
     
-    // === TODO RM ===
-    // val otherEdges = st.getVars.iterator.foreach { tv1 =>
-    //   tv1.lowerBounds.foreach {
-    //     case tv2: TV => tv1 -> L(tv2)
-    //     case _ =>
-    //   }
-    //   tv1.upperBounds.foreach {
-    //     case tv2: TV => tv1 -> R(tv2)
-    //     case _ =>
-    //   }
-    // }
-    import collection.mutable
-    // val otherLBs, otherUBs = mutable.Map.empty[TV, mutable.Buffer[TV]]
-    val otherLBs, otherUBs = mutable.Map.empty[TV, mutable.Buffer[TV]].withDefault(_ => mutable.Buffer.empty)
-    /* 
-    st.getVars.iterator.foreach { tv1 =>
-      tv1.lowerBounds.foreach {
-        // case tv2: TV => otherLBs.getOrElseUpdate(tv2, mutable.Buffer.empty) += tv1
-        case tv2: TV => otherLBs(tv2) += tv1
-        case _ =>
-      }
-      tv1.upperBounds.foreach {
-        // case tv2: TV => otherUBs.getOrElseUpdate(tv2, mutable.Buffer.empty) += tv1
-        case tv2: TV => otherUBs(tv2) += tv1
-        case _ =>
-      }
-    }
-    */
-    
-    // def analyze(st: SimpleType, pol: Bool): Unit = st match {
-    //   case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
-    //   case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
-    //   case ArrayType(inner) =>
-    //     inner.lb.foreach(analyze(_, !pol))
-    //     analyze(inner.ub, pol)
-    def analyze(st: SimpleType, pol: Bool): Unit =
+    def analyze2(st: SimpleType, pol: Bool): Unit =
       // analyzeImpl(st.unwrapProxies, pol)
       analyzeImpl(st.unwrapProvs, pol)
     def analyzeImpl(st: SimpleType, pol: Bool): Unit =
-        trace(s"analyze[${printPol(S(pol))}] $st") {
-        // trace(s"analyze[${printPol(S(pol))}] $st       ${analyzed2}") {
-        // trace(s"analyze[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
+        trace(s"analyze2[${printPol(S(pol))}] $st") {
+        // trace(s"analyze2[${printPol(S(pol))}] $st       ${analyzed2}") {
+        // trace(s"analyze2[${printPol(S(pol))}] $st       ${coOccurrences.filter(_._1._2.nameHint.contains("head"))}") {
           analyzed2.setAndIfUnset(st -> pol) {
           // analyzed2.setAnd(st -> pol) {
           //   st match {
@@ -957,15 +354,15 @@ trait TypeSimplifier { self: Typer =>
           //   }
           // } {
             st match {
-      // case RecordType(fs) => fs.foreach(f => analyze(f._2, pol))
-      // case TupleType(fs) => fs.foreach(f => analyze(f._2, pol))
-      // case ArrayType(inner) => analyze(inner, pol)
-      case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
-      case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze(_, !pol)); analyze(f._2.ub, pol) }
+      // case RecordType(fs) => fs.foreach(f => analyze2(f._2, pol))
+      // case TupleType(fs) => fs.foreach(f => analyze2(f._2, pol))
+      // case ArrayType(inner) => analyze2(inner, pol)
+      case RecordType(fs) => fs.foreach { f => f._2.lb.foreach(analyze2(_, !pol)); analyze2(f._2.ub, pol) }
+      case TupleType(fs) => fs.foreach { f => f._2.lb.foreach(analyze2(_, !pol)); analyze2(f._2.ub, pol) }
       case ArrayType(inner) =>
-        inner.lb.foreach(analyze(_, !pol))
-        analyze(inner.ub, pol)
-      case FunctionType(l, r) => analyze(l, !pol); analyze(r, pol)
+        inner.lb.foreach(analyze2(_, !pol))
+        analyze2(inner.ub, pol)
+      case FunctionType(l, r) => analyze2(l, !pol); analyze2(r, pol)
       case tv: TypeVariable =>
         // println(s"! $pol $tv ${coOccurrences.get(pol -> tv)}")
         // coOccurrences(pol -> tv) = MutSet(tv)
@@ -983,10 +380,10 @@ trait TypeSimplifier { self: Typer =>
         //   case ComposedType(p, l, r) =>
         //     // println(s">> $pol $l $r")
         //     if (p === pol) { go(l); go(r) }
-        //     else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
-        //   case _: BaseType => newOccs += st; analyze(st, pol)
+        //     else { analyze2(l, pol); analyze2(r, pol) } // TODO compute intersection if p =/= pol
+        //   case _: BaseType => newOccs += st; analyze2(st, pol)
         //   case tv: TypeVariable => newOccs += st; processBounds(tv, pol)
-        //   case _ => analyze(st, pol)
+        //   case _ => analyze2(st, pol)
         // }
         // go(ct)
         // // println(s"newOccs ${newOccs}")
@@ -1000,22 +397,22 @@ trait TypeSimplifier { self: Typer =>
         //   case _ => ()
         // }
         process(ct, pol)
-      case NegType(und) => analyze(und, !pol)
-      case ProxyType(underlying) => analyze(underlying, pol)
+      case NegType(und) => analyze2(und, !pol)
+      case ProxyType(underlying) => analyze2(underlying, pol)
       // case tr @ TypeRef(defn, targs) =>
-      //   // analyze(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
+      //   // analyze2(tr.expand, pol) // FIXME this may diverge; use variance-analysis-based targ traversal instead
       //   if (analyzed2.contains(tr -> pol)) ()
       //   else {
       //     analyzed2 += tr -> pol
-      //     analyze(tr.expand, pol)
+      //     analyze2(tr.expand, pol)
       //   }
       case tr @ TypeRef(defn, targs) =>
         // TODO improve with variance analysis
-        targs.foreach(analyze(_, true))
-        targs.foreach(analyze(_, false))
-      case Without(base, names) => analyze(base, pol)
+        targs.foreach(analyze2(_, true))
+        targs.foreach(analyze2(_, false))
+      case Without(base, names) => analyze2(base, pol)
       case TypeBounds(lb, ub) =>
-        if (pol) analyze(ub, true) else analyze(lb, false)
+        if (pol) analyze2(ub, true) else analyze2(lb, false)
     }
     }
     }()
@@ -1023,7 +420,7 @@ trait TypeSimplifier { self: Typer =>
     // def processBounds(tv: TV, pol: Bool) = {
     //   if (!analyzed(tv -> pol)) {
     //     analyzed(tv -> pol) = true
-    //     (if (pol) tv.lowerBounds else tv.upperBounds).foreach(analyze(_, pol))
+    //     (if (pol) tv.lowerBounds else tv.upperBounds).foreach(analyze2(_, pol))
     //   }
     // }
     // def process(st: SimpleType, pol: Bool, newOccs: MutSet[SimpleType]) = {
@@ -1036,8 +433,8 @@ trait TypeSimplifier { self: Typer =>
         case ComposedType(p, l, r) =>
           // println(s">> $pol $l $r")
           if (p === pol) { go(l); go(r) }
-          else { analyze(l, pol); analyze(r, pol) } // TODO compute intersection if p =/= pol
-        case _: BaseType | _: TypeRef => newOccs += st; analyze(st, pol)
+          else { analyze2(l, pol); analyze2(r, pol) } // TODO compute intersection if p =/= pol
+        case _: BaseType | _: TypeRef => newOccs += st; analyze2(st, pol)
         // TODO simple TypeRefs
         case tv: TypeVariable =>
           // println(s"$tv ${newOccs.contains(tv)}")
@@ -1050,10 +447,11 @@ trait TypeSimplifier { self: Typer =>
             // processBounds(tv, pol)
             // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(process(_, pol, newOccs))
             // (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
-            (if (pol) tv.lowerBounds.iterator ++ otherLBs(tv) else tv.upperBounds.iterator ++ otherUBs(tv)).foreach(go)
-            // analyze(tv, pol)
+            // (if (pol) tv.lowerBounds.iterator ++ otherLBs(tv) else tv.upperBounds.iterator ++ otherUBs(tv)).foreach(go)
+            (if (pol) tv.lowerBounds else tv.upperBounds).foreach(go)
+            // analyze2(tv, pol)
           }
-        case _ => analyze(st, pol)
+        case _ => analyze2(st, pol)
       }
       }()
       go(st)
@@ -1072,8 +470,8 @@ trait TypeSimplifier { self: Typer =>
       }
     }
     
-    if (pol =/= S(false)) analyze(st, true)
-    if (pol =/= S(true)) analyze(st, false)
+    if (pol =/= S(false)) analyze2(st, true)
+    if (pol =/= S(true)) analyze2(st, false)
     
     // println(s"[occs] ${coOccurrences}")
     println(s"[occs] ${coOccurrences.iterator
@@ -1104,7 +502,7 @@ trait TypeSimplifier { self: Typer =>
     occNums.iterator.foreach { case (k @ (pol, tv), num) =>
       assert(num > 0)
       // if (num === 1 && !occNums.contains(!pol -> tv)) {
-      if (!occNums.contains(!pol -> tv)) {
+      if (inlineBounds && !occNums.contains(!pol -> tv)) {
         if (num === 1) {
           println(s"0[1] $tv")
           varSubst += tv -> None

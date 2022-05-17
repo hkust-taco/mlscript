@@ -400,7 +400,7 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.392: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `C[?r] with {a: ?r}` does not match type `{x: ?r0} | 'r`
+//│ ╟── type `C[?r]` does not match type `{x: ?r0} | 'r`
 //│ ║  l.307: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
 //│ ╟── but it flows into reference with expected type `{x: ?r1} | 'r`

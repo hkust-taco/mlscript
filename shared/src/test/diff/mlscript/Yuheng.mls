@@ -236,7 +236,7 @@ eval (Pair {
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	    rhs = IntLit { value = 3 } } } })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Pair[?A, ?B] with {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
+//│ ╟── application of type `Pair[?A, ?B] & {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
 //│ ║  l.+3: 	  rhs = IntLit { value = Pair {
 //│ ║        	                         ^^^^^^
 //│ ║  l.+4: 	    lhs = IntLit { value = 2 };

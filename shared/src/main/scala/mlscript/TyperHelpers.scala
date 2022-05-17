@@ -714,19 +714,30 @@ abstract class TyperHelpers { Typer: Typer =>
       this.pushPosWithout(ctx, ptr = true)
       // this.normalize(true)
       // |> (canonicalizeType(_, true))
-      // |> (simplifyType(_, true, removePolarVars = false))
-      |> (reconstructClassTypes(_, S(true), ctx))
+      // |> (simplifyType(_, S(true), removePolarVars = false, inlineBounds = false))
+      // |> (shallowCopy)
+      |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
+      // |> (reconstructClassTypes(_, S(true), ctx))
+      |> (normalizeTypes_!(_, S(true))(ctx))
       |> (expandType(_, true, stopAtTyVars = true))
     )
     def expNeg(implicit ctx: Ctx): Type = (
       this
       // this.normalize(false)
       // |> (canonicalizeType(_, false))
-      // |> (simplifyType(_, false, removePolarVars = false))
-      |> (reconstructClassTypes(_, S(false), ctx))
+      // |> (simplifyType(_, S(false), removePolarVars = false, inlineBounds = false))
+      // |> (shallowCopy)
+      |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
+      // |> (reconstructClassTypes(_, S(false), ctx))
+      |> (normalizeTypes_!(_, S(false))(ctx))
       |> (expandType(_, false, stopAtTyVars = true))
     )
     
+  }
+  
+  def shallowCopy(st: ST)(implicit cache: MutMap[TV, TV] = MutMap.empty): ST = st match {
+    case tv: TV => cache.getOrElseUpdate(tv, freshVar(tv.prov, tv.nameHint, Nil, Nil)(tv.level))
+    case _ => st.map(shallowCopy)
   }
   
 }

@@ -555,7 +555,7 @@ eval1 done e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval1 done e2
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
 //│ ║  l.377: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -574,7 +574,7 @@ prettier2 done eval1 e1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c)` does not match type `int`
 //│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.72: 	  | Lit -> e.val
@@ -610,7 +610,7 @@ prettier2 done (eval1 done) e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done (eval1 done) e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] with {arg: ?arg}` does not match type `nothing`
+//│ ╟── application of type `Nega[?E] & {arg: ?arg}` does not match type `nothing`
 //│ ║  l.377: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -624,7 +624,7 @@ prettier2 done (eval1 done) e2
 //│   Error: non-exhaustive case expression
 //│ constrain calls  : 676
 //│ annoying  calls  : 228
-//│ subtyping calls  : 4111
+//│ subtyping calls  : 4944
 
 :e
 :stats
@@ -652,7 +652,7 @@ prettier2 done eval2
 //│    = [Function (anonymous)]
 //│ constrain calls  : 70
 //│ annoying  calls  : 0
-//│ subtyping calls  : 274
+//│ subtyping calls  : 238
 
 :e
 :stats
@@ -690,7 +690,7 @@ prettier2 done eval2 e1
 //│    = '123'
 //│ constrain calls  : 376
 //│ annoying  calls  : 108
-//│ subtyping calls  : 1923
+//│ subtyping calls  : 1716
 
 :e
 :stats
@@ -728,7 +728,7 @@ prettier2 done eval2 e2
 //│    = '1-123'
 //│ constrain calls  : 427
 //│ annoying  calls  : 131
-//│ subtyping calls  : 2780
+//│ subtyping calls  : 2300
 
 :e
 :stats
@@ -753,7 +753,7 @@ prettier2 done eval2 d2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 d2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Nega[?E] with {arg: ?arg}` is not a function
+//│ ╟── application of type `Nega[?E] & {arg: ?arg}` is not a function
 //│ ║  l.377: 	def nega arg = Nega { arg }
 //│ ║         	               ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
@@ -766,7 +766,7 @@ prettier2 done eval2 d2
 //│    = '-1-1'
 //│ constrain calls  : 301
 //│ annoying  calls  : 95
-//│ subtyping calls  : 1887
+//│ subtyping calls  : 1254
 
 :e
 :stats
@@ -774,7 +774,7 @@ prettier2 done eval1 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval1 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` does not match type `int`
+//│ ╟── function of type `?a -> (?b | ?c)` does not match type `int`
 //│ ║  l.71: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.72: 	  | Lit -> e.val
@@ -804,5 +804,5 @@ prettier2 done eval1 e2
 //│    = '1-123'
 //│ constrain calls  : 421
 //│ annoying  calls  : 131
-//│ subtyping calls  : 2728
+//│ subtyping calls  : 2266
 

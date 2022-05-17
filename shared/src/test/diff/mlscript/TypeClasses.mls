@@ -125,7 +125,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{real: A, imaginary: A}`
+//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:
@@ -184,7 +184,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` is not a record (expected a record with fields: real, imaginary)
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{real: A, imaginary: A}`
+//│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from record type:

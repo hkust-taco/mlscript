@@ -289,7 +289,7 @@ eval2_broken eval2_broken e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] with {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
+//│ ╟── application of type `Add[?E] & {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
 //│ ║  l.8: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║       	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:

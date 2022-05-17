@@ -307,7 +307,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                cur = typer.normalizeTypes_!(cur, approximateRecTypes = true)(ctx)
+                cur = typer.normalizeTypes_!(cur)(ctx)
                 if (mode.isDebugging) output(s"⬤ Coalesced: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
