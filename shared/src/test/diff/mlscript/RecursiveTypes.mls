@@ -32,9 +32,9 @@ rec def l a = l
 //│  = [Function: l]
 
 if true then l else l
-//│ res: 'a
+//│ res: 'l
 //│   where
-//│     'a :> anything -> 'a
+//│     'l :> anything -> 'l
 //│    = [Function: l]
 
 

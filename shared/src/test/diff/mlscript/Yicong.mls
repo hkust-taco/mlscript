@@ -400,9 +400,9 @@ append ((1,2,false)) (((), 'hi'))
 //│    = <no result>
 //│      append is not implemented
 
-def append2: MutArray['a] -> MutArray['b] -> MutArray['a | 'b]
+def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
 append2 ((mut 1, mut 2, mut false)) ((mut (), mut 'hi'))
-//│ append2: MutArray['a] -> MutArray['b] -> MutArray['a | 'b]
+//│ append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
 //│        = <missing implementation>
 //│ res: MutArray['a]
 //│   where
@@ -415,15 +415,15 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.414: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray[?b]`
+//│ ╟── tuple literal of type `(mut ?a, "hi",)` does not match type `MutArray[?bb]`
 //│ ║  l.414: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	                                     ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.403: 	def append2: MutArray['a] -> MutArray['b] -> MutArray['a | 'b]
-//│ ╙──       	                             ^^^^^^^^^^^^
-//│ res: MutArray['a] | error
+//│ ║  l.403: 	def append2: MutArray['aa] -> MutArray['bb] -> MutArray['aa | 'bb]
+//│ ╙──       	                              ^^^^^^^^^^^^^
+//│ res: MutArray['bb] | error
 //│   where
-//│     'a :> 1 | 2 | false | "hi" | ()
+//│     'bb :> 1 | 2 | false | "hi" | ()
 //│    = <no result>
 //│      append2 is not implemented
 

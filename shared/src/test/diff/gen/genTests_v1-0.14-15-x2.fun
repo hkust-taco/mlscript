@@ -2406,24 +2406,24 @@ add
 //│ res: {u: {u: int -> int -> int}, v: {u: int -> int -> int}}
 
 (let rec x = {u: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a}
+//│ res: {u: 'x, v: 'x}
 //│   where
-//│     'a :> {u: 'a}
+//│     'x :> {u: 'x}
 
 (let rec x = {u: x, v: 0}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a}
+//│ res: {u: 'x, v: 'x}
 //│   where
-//│     'a :> {u: 'a, v: 0}
+//│     'x :> {u: 'x, v: 0}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a}
+//│ res: {u: 'x, v: 'x}
 //│   where
-//│     'a :> {u: 'a, v: int -> int -> int}
+//│     'x :> {u: 'x, v: int -> int -> int}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a}
+//│ res: {u: 'x, v: 'x}
 //│   where
-//│     'a :> {u: 'a, v: 'a}
+//│     'x :> {u: 'x, v: 'x}
 
 (let x = {v: 0}; {u: x, v: x})
 //│ res: {u: {v: 0}, v: {v: 0}}
@@ -2432,9 +2432,9 @@ add
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a}
+//│ res: {u: 'x, v: 'x}
 //│   where
-//│     'a :> {v: 'a}
+//│     'x :> {v: 'x}
 
 (x => {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:

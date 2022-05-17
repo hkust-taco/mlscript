@@ -354,6 +354,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 // val exp = typer.expandType(cur, true)
                 val exp = typer.expandType(cur, true)
                 
+                if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
+                
                 // val canon2 = typer.canonicalizeType(recons)(ctx)
                 // val exp = typer.expandType(canon2, true)
                 exp

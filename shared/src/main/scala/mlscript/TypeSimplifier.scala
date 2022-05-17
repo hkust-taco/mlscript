@@ -1106,7 +1106,7 @@ trait TypeSimplifier { self: Typer =>
       // if (num === 1 && !occNums.contains(!pol -> tv)) {
       if (!occNums.contains(!pol -> tv)) {
         if (num === 1) {
-          println(s"[1] $tv")
+          println(s"0[1] $tv")
           varSubst += tv -> None
         } /* else (if (pol) tv.lowerBounds else tv.upperBounds) match {
           case (tv2: TV) :: Nil if !varSubst.contains(tv2) =>
@@ -1123,16 +1123,66 @@ trait TypeSimplifier { self: Typer =>
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
         case (Some(_), None) | (None, Some(_)) =>
           if (removePolarVars) {
-            println(s"[!] $v0")
+            println(s"1[!] $v0")
             varSubst += v0 -> None
           }; ()
         case occ => assert(occ =/= (None, None), s"$v0 has no occurrences...")
       }
     }}
+    
+    allVars.foreach { case v => if (!varSubst.contains(v)) {
+      println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
+      coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
+        // case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+        case atom @ (_: BaseType | _: TypeRef)
+          if !recVars(v) // can't reduce recursive sandwiches, obviously
+          && coOccurrences.get(false -> v).exists(_(atom)) =>
+        // case atom @ (_: BaseType | _: TypeRef | _: TV) if !recVars(v) && coOccurrences.get(false -> v).exists(_(atom)) =>
+          println(s"  [..] $v ${atom}")
+          varSubst += v -> None; ()
+        
+        // TODO-simplif rm: // TODO try to preserve name hints?
+        /* 
+        case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(false -> v).exists(_(w)) =>
+          println(s"  [..] $v := ${w}")
+          varSubst += v -> S(w); ()
+        */
+        /* 
+        // case w: TV if !(w is v) && !varSubst.contains(w) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
+        case w: TV if !(w is v) && !varSubst.contains(v) && !varSubst.contains(w) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
+          println(s"  [..] $w := ${v}")
+          varSubst += w -> S(v)
+          recVars -= w
+          v.lowerBounds :::= w.lowerBounds
+          v.upperBounds :::= w.upperBounds
+        */
+        // case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
+        case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
+          && coOccurrences.get(false -> v).exists(_(w))
+        =>
+          // * Here we know that v is 'dominated' by w, so v can be inlined.
+          // * Note that we don't want to unify the two variables here
+          // *  – if v has bounds and does not dominate w, then doing so would be wrong.
+          
+          // * Logic to preserve name hints, but seems overkill and did not seem to have any effect so far:
+          // if (coOccurrences.get(true -> w).exists(_(v)) && coOccurrences.get(false -> w).exists(_(v)) && v.nameHint.nonEmpty && !recVars(w)) {
+          //   println(s"  [..] $w ${v}")
+          //   varSubst += w -> N
+          // } else {
+          
+          println(s"  [..] $v ${w}")
+          varSubst += v -> N
+          
+          // }
+          
+        case _ =>
+      }
+    }}
+    
     // Unify equivalent variables based on polar co-occurrence analysis:
     val pols = true :: false :: Nil
     allVars.foreach { case v => if (!varSubst.contains(v)) {
-      println(s"[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
+      println(s"3[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       pols.foreach { pol =>
         coOccurrences.get(pol -> v).iterator.flatMap(_.iterator).foreach {
           case w: TypeVariable if !(w is v) && !varSubst.contains(w)
@@ -1142,10 +1192,10 @@ trait TypeSimplifier { self: Typer =>
               && (v.nameHint.nonEmpty || w.nameHint.isEmpty)
               // ^ Don't merge in this direction if that would override a nameHint
             =>
-            println(s"[w] $w ${coOccurrences.get(pol -> w)}")
+            println(s"  [w] $w ${coOccurrences.get(pol -> w)}")
             if (coOccurrences.get(pol -> w).forall(_(v))) {
-              println(s"[U] $w := $v") // we unify w into v
-              varSubst += w -> Some(v)
+              println(s"  [U] $w := $v") // we unify w into v
+              varSubst += w -> S(v)
               // Since w gets unified with v, we need to merge their bounds if they are recursive,
               // and otherwise merge the other co-occurrences of v and w from the other polarity (!pol).
               // For instance,
@@ -1203,15 +1253,18 @@ trait TypeSimplifier { self: Typer =>
           // case atom @ (_: BaseType | _: TypeRef | _: TV) if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
             println(s"[..] $v ${atom}")
             varSubst += v -> None; ()
+            ???
           
           // TODO-simplif rm: // TODO try to preserve name hints?
           case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(!pol -> v).exists(_(w)) =>
             println(s"[..] $v := ${w}")
             varSubst += v -> S(w); ()
+            ???
           case _ =>
         }
       }
     }}
+    
     println(s"[sub] ${varSubst.map(k => k._1.toString + " -> " + k._2).mkString(", ")}")
     
     println(s"[bounds] ${st.showBounds}")
@@ -1290,7 +1343,7 @@ trait TypeSimplifier { self: Typer =>
           case S(N) =>
             println(s"-> bound");
             pol.fold(
-            TypeBounds(mergeTransform(true, tv.lowerBounds, parent), mergeTransform(false, tv.upperBounds, parent))(noProv): ST
+            TypeBounds.mk(mergeTransform(true, tv.lowerBounds, parent), mergeTransform(false, tv.upperBounds, parent)): ST
           )(pol =>
             // (if (pol) tv.lowerBounds else tv.upperBounds).foldLeft(ExtrType(pol)(noProv)))
             // mergeTransform(pol, tv))

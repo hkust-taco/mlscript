@@ -51,9 +51,9 @@ class Nil[A]: List[A]
 class Cons[A]: List[A] & { head: A; tail: List[A] }
     method HeadOption = Some { payload = error: A }
 //│ Defined class Cons[+A]
-//│ Defined Cons.HeadOption: Cons['A] -> (Some['a] with {payload: 'A})
+//│ Defined Cons.HeadOption: Cons['A] -> (Some['A0] with {payload: 'A})
 //│   where
-//│     'a :> 'A
+//│     'A0 :> 'A
 
 // l0 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
 
@@ -65,9 +65,9 @@ l0 = Cons { head = 1; tail = Nil {} }
 // :d
 :stats
 Cons.HeadOption l0
-//│ res: Some['a] & {payload: 1}
+//│ res: Some['A] & {payload: 1}
 //│   where
-//│     'a :> 1
+//│     'A :> 1
 //│ constrain calls  : 75
 //│ annoying  calls  : 27
 //│ subtyping calls  : 92
