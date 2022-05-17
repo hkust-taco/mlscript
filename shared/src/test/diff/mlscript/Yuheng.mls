@@ -427,7 +427,7 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `IntLit | Pair[?, ?] & ~pair | Pair[?, ?] & ~?a | ~?b & (Expr['a] & ~pair | Expr['a] & ~?a)` does not have field 'value'
+//│ ╟── expression of type `Expr['a] & ~pair & ~?a | IntLit | Pair[?, ?] & ~pair | ~?b & (Expr['a] & ~?a | Pair[?, ?])` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+2: 	  { IntLit -> e.value
 //│ ║        	              ^^^^^^^

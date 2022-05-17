@@ -286,7 +286,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 var cur = wty
                 
                 // typer.dbg = mode.dbgSimplif
-                cur = typer.removeIrrelevantBounds(wty)(ctx)
+                cur = typer.removeIrrelevantBounds(wty, inPlace = false)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 
@@ -324,7 +324,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 
                 // the DNFs introduced by reconstr may lead more coocc info to arise by merging things like function types
                 
-                cur = typer.removeIrrelevantBounds(cur)(ctx)
+                cur = typer.removeIrrelevantBounds(cur, inPlace = true)(ctx)
                 if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
                 if (mode.isDebugging) output(s" where: ${cur.showBounds}")
                 

@@ -735,9 +735,15 @@ abstract class TyperHelpers { Typer: Typer =>
     
   }
   
+  
   def shallowCopy(st: ST)(implicit cache: MutMap[TV, TV] = MutMap.empty): ST = st match {
     case tv: TV => cache.getOrElseUpdate(tv, freshVar(tv.prov, tv.nameHint, Nil, Nil)(tv.level))
     case _ => st.map(shallowCopy)
   }
+  
+  def merge(pol: Bool, ts: Ls[ST]): ST =
+    if (pol) ts.foldLeft(BotType: ST)(_ | _)
+    else ts.foldLeft(TopType: ST)(_ & _)
+  
   
 }

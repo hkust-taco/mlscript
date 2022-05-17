@@ -9,7 +9,7 @@ trait TypeSimplifier { self: Typer =>
   
   
   
-  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true))(implicit ctx: Ctx): SimpleType = {
+  def removeIrrelevantBounds(ty: SimpleType, pol: Opt[Bool] = S(true), inPlace: Bool = false)(implicit ctx: Ctx): SimpleType = {
     
     val pols = ty.getVarsPol(S(true))
     
@@ -19,47 +19,48 @@ trait TypeSimplifier { self: Typer =>
     
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
-        freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+        if (inPlace) tv
+        else freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
     def process(ty: ST, parent: Opt[Bool -> TV]): ST =
         // trace(s"process($ty)") {
         ty match {
-      // case tv: TypeVariable if parent.exists(_._2 === tv) => if parent.get.
+      
       case tv: TypeVariable =>
         parent.filter(_._2 === tv).foreach(p => return ExtrType(p._1)(noProv))
+        
         var isNew = false
-        val nv = renewed.getOrElseUpdate(tv, {isNew = true; renew(tv)})
-        // renewed.getOrElseUpdate(tv,
-        //   freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
-        // val nv = renew(v)
+        val nv = renewed.getOrElseUpdate(tv, { isNew = true; renew(tv) })
+        
         if (isNew) {
           
-          // if (pols(tv).forall(_ === true)) nv.lowerBounds = tv.lowerBounds.map(process(_, S(true -> tv)))
-          // if (pols(tv).forall(_ === false)) nv.upperBounds = tv.upperBounds.map(process(_, S(false -> tv)))
-          // //.tap(b=>println(s"${b.map(_.getClass)}"))
-          
-          if (pols(tv).forall(_ === true)) nv.lowerBounds =
-            tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).filterNot(_.isBot).toList
-          if (pols(tv).forall(_ === false)) nv.upperBounds =
-            tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).filterNot(_.isTop).toList
+          nv.lowerBounds = if (pols(tv).forall(_ === true))
+              tv.lowerBounds.iterator.map(process(_, S(true -> tv))).reduceOption(_ | _).filterNot(_.isBot).toList
+            else Nil
+          nv.upperBounds = if (pols(tv).forall(_ === false))
+              tv.upperBounds.iterator.map(process(_, S(false -> tv))).reduceOption(_ & _).filterNot(_.isTop).toList
+            else Nil
           
         }
-        // println(tv, nv, nv.lowerBounds, nv.upperBounds)
+        
         nv
-      // case ComposedType(_, l, r) => ty.map(process(_, parents))
+        
       case ComposedType(true, l, r) => process(l, parent) | process(r, parent)
       case ComposedType(false, l, r) => process(l, parent) & process(r, parent)
-      // case _: ProxyType | _: ComposedType | _: NegType => ty.map(process(_, parent))
       case NegType(ty) => process(ty, parent.map(_.mapFirst(!_))).neg(ty.prov)
-      
-      // case ProvType(ty) => ProvType(process(ty, parent))(ty.prov)
+
+      case ProvType(ty) if inPlace => ProvType(process(ty, parent))(ty.prov)
       case ProvType(ty) => process(ty, parent)
       
+      case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
+      
       case _ => ty.map(process(_, N))
+      
     }
     // }(r => s"= $r")
     
     process(ty, N)
+    
   }
   
   
@@ -545,33 +546,19 @@ trait TypeSimplifier { self: Typer =>
       }
     }}
     
+    // * Remove variables that are 'dominated' by another type or variable
+    // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
     allVars.foreach { case v => if (!varSubst.contains(v)) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
-        // case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
+        
         case atom @ (_: BaseType | _: TypeRef)
           if !recVars(v) // can't reduce recursive sandwiches, obviously
-          && coOccurrences.get(false -> v).exists(_(atom)) =>
-        // case atom @ (_: BaseType | _: TypeRef | _: TV) if !recVars(v) && coOccurrences.get(false -> v).exists(_(atom)) =>
+          && coOccurrences.get(false -> v).exists(_(atom))
+        =>
           println(s"  [..] $v ${atom}")
           varSubst += v -> None; ()
         
-        // TODO-simplif rm: // TODO try to preserve name hints?
-        /* 
-        case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(false -> v).exists(_(w)) =>
-          println(s"  [..] $v := ${w}")
-          varSubst += v -> S(w); ()
-        */
-        /* 
-        // case w: TV if !(w is v) && !varSubst.contains(w) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
-        case w: TV if !(w is v) && !varSubst.contains(v) && !varSubst.contains(w) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
-          println(s"  [..] $w := ${v}")
-          varSubst += w -> S(v)
-          recVars -= w
-          v.lowerBounds :::= w.lowerBounds
-          v.upperBounds :::= w.upperBounds
-        */
-        // case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) /* && !recVars(v) */ && coOccurrences.get(false -> v).exists(_(w)) =>
         case w: TV if !(w is v) && !varSubst.contains(w) && !varSubst.contains(v) && !recVars(v)
           && coOccurrences.get(false -> v).exists(_(w))
         =>
@@ -611,70 +598,29 @@ trait TypeSimplifier { self: Typer =>
             if (coOccurrences.get(pol -> w).forall(_(v))) {
               println(s"  [U] $w := $v") // we unify w into v
               varSubst += w -> S(v)
-              // Since w gets unified with v, we need to merge their bounds if they are recursive,
-              // and otherwise merge the other co-occurrences of v and w from the other polarity (!pol).
-              // For instance,
-              //  consider that if we merge v and w in `(v & w) -> v & x -> w -> x`
-              //  we get `v -> v & x -> v -> x`
-              //  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
-              // recVars.get(w) match {
-              //   case Some(b_w) => // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
-              /* 
-              if (false && recVars.contains(w)) { // `w` is a recursive variable, so `v` is too (see `recVars.contains` guard above)
-                assert(w.lowerBounds.isEmpty || w.upperBounds.isEmpty)
-                val (pol, b_w) = (w.lowerBounds, w.upperBounds) match {
-                  case (Nil, b) => false -> b
-                  case (b, Nil) => true -> b
-                  case _ => die
+              // * Since w gets unified with v, we need to merge their bounds,
+              // * and also merge the other co-occurrences of v and w from the other polarity (!pol).
+              // * For instance,
+              // *  consider that if we merge v and w in `(v & w) -> v & x -> w -> x`
+              // *  we get `v -> v & x -> v -> x`
+              // *  and the old positive co-occ of v, {v,x} should be changed to just {v,x} & {w,v} == {v}!
+              recVars -= w
+              v.lowerBounds :::= w.lowerBounds
+              v.upperBounds :::= w.upperBounds
+              
+              // When removePolarVars is enabled, wCoOcss/vCoOcss may not be defined:
+              // for {
+              //   wCoOccs <- coOccurrences.get((!pol) -> w)
+              //   vCoOccs <- coOccurrences.get((!pol) -> v)
+              // } vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
+              coOccurrences.get((!pol) -> w).foreach { wCoOccs =>
+                coOccurrences.get((!pol) -> v) match {
+                  case S(vCoOccs) => vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
+                  case N => coOccurrences((!pol) -> v) = wCoOccs
                 }
-                assert(!coOccurrences.contains((!pol) -> w)) // recursive types have strict polarity
-                recVars -= w // w is merged into v, so we forget about it
-                val b_v = recVars(v) // `v` is recursive so `recVars(v)` is defined
-                // and record the new recursive bound for v:
-                // recVars += v -> (() => CompactType.merge(pol)(b_v(), b_w()))
-                if (pol) v.lowerBounds ::
-                 b_w
-                else v.upperBounds :::= b_w
-              } else { // `w` is NOT recursive
-              */
-                /* 
-                val wCoOcss = coOccurrences((!pol) -> w)
-                // ^ this must be defined otherwise we'd already have simplified away the non-rec variable
-                coOccurrences((!pol) -> v).filterInPlace(t => t === v || wCoOcss(t))
-                // ^ `w` is not recursive, so `v` is not either, and the same reasoning applies
-                */
-                recVars -= w
-                v.lowerBounds :::= w.lowerBounds
-                v.upperBounds :::= w.upperBounds
-                
-                // When removePolarVars is enabled, wCoOcss/vCoOcss may not be defined:
-                // for {
-                //   wCoOccs <- coOccurrences.get((!pol) -> w)
-                //   vCoOccs <- coOccurrences.get((!pol) -> v)
-                // } vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
-                coOccurrences.get((!pol) -> w).foreach { wCoOccs =>
-                  coOccurrences.get((!pol) -> v) match {
-                    case S(vCoOccs) => vCoOccs.filterInPlace(t => t === v || wCoOccs(t))
-                    case N => coOccurrences((!pol) -> v) = wCoOccs
-                  }
-                }
-                
-              // }
-            }; ()
-          // case atom: BaseType if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
-          case atom @ (_: BaseType | _: TypeRef)
-            if !recVars(v) // can't reduce recursive sandwiches, obviously
-            && coOccurrences.get(!pol -> v).exists(_(atom)) =>
-          // case atom @ (_: BaseType | _: TypeRef | _: TV) if !recVars(v) && coOccurrences.get(!pol -> v).exists(_(atom)) =>
-            println(s"[..] $v ${atom}")
-            varSubst += v -> None; ()
-            ???
-          
-          // TODO-simplif rm: // TODO try to preserve name hints?
-          case w: TV if !(w is v) && !varSubst.contains(w) && !recVars(v) && coOccurrences.get(!pol -> v).exists(_(w)) =>
-            println(s"[..] $v := ${w}")
-            varSubst += v -> S(w); ()
-            ???
+              }
+              
+            }
           case _ =>
         }
       }
@@ -816,9 +762,12 @@ trait TypeSimplifier { self: Typer =>
               }
               
               if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
-                val allBounds = tv.lowerBounds ++ tv.upperBounds
-                // assert(allBounds.size === tv.lowerBounds.size)
-                assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty)
+                // val allBounds = tv.lowerBounds ++ tv.upperBounds
+                val allBounds = if (pol.get) tv.lowerBounds else tv.upperBounds
+                
+                // * only true if we do a pass of `removeIrrelevantBounds` before calling `simplifyType`:
+                // assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty, (tv, tv.lowerBounds, tv.upperBounds))
+                
                 println(s">?> $tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
                 if (allBounds.forall { case tv2: TV => varSubst.get(tv2).forall(_.isDefined); case _ => false }) { // Q: filter out same as tv?
                   println(s"NEW SUBS $tv -> N")
@@ -856,9 +805,7 @@ trait TypeSimplifier { self: Typer =>
     transform(st, pol, N)
     
   }
-  def merge(pol: Bool, ts: Ls[ST]): ST =
-    if (pol) ts.foldLeft(BotType: ST)(_ | _)
-    else ts.foldLeft(TopType: ST)(_ & _)
+  
   
   
   def unskidTypes_!(st: SimpleType, pol: Bool = true)(implicit ctx: Ctx): SimpleType = {
@@ -935,251 +882,6 @@ trait TypeSimplifier { self: Typer =>
     process(S(pol), st, N)
     // st
   }
-  
-  def reconstructClassTypes(st: SimpleType, pol: Opt[Bool], ctx: Ctx): SimpleType = {
-    
-    implicit val cache: MutMap[TV, Opt[Bool]] = MutMap.empty
-    
-    if (dbg) {
-      val allVarPols = st.getVarsPol(pol)
-      println(s"allVarPols: ${allVarPols.iterator.map(e => s"${printPol(e._2)}${e._1}").mkString(", ")}")
-    }
-    
-    implicit val ctxi: Ctx = ctx
-    val renewed = MutMap.empty[TypeVariable, TypeVariable]
-    
-    def renew(tv: TypeVariable): TypeVariable =
-      if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
-      else renewed.get(tv) match {
-        case S(tv2) => tv2
-        case N =>
-          val tv2 = freshVar(tv.prov, tv.nameHint)(tv.level)
-          renewed += tv -> tv2
-          tv2.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
-          tv2.upperBounds = tv.upperBounds.map(go(_, S(false)))
-          tv2
-      }
-    
-    def go(st: SimpleType, pol: Opt[Bool]): SimpleType =
-        trace(s"recons[${printPol(pol)}] $st  (${st.getClass.getSimpleName})") {
-        st match {
-      case ExtrType(_) => st
-      case tv: TypeVariable => renew(tv)
-      // case NegType(und) => go(und, !pol).neg()
-      // case TypeBounds(lb, ub) => if (pol) go(ub, true) else go(lb, false)
-      case NegType(und) => go(und, pol.map(!_)).neg()
-      case TypeBounds(lb, ub) =>
-        pol.fold[ST](TypeBounds.mk(go(lb, S(false)), go(ub, S(true)), noProv))(pol =>
-          if (pol) go(ub, S(true)) else go(lb, S(false)))
-      
-      // case RecordType(fs) => RecordType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
-      // case TupleType(fs) => TupleType(fs.mapValues(_.update(go(_, !pol), go(_, pol))))(st.prov)
-      // case ArrayType(inner) => ArrayType(inner.update(go(_, !pol), go(_, pol)))(st.prov)
-      // 
-      // case RecordType(fs) => RecordType(fs.mapValues(go(_, pol)))(st.prov)
-      // case TupleType(fs) => TupleType(fs.mapValues(go(_, pol)))(st.prov)
-      // case ArrayType(inner) => ArrayType(go(inner, pol))(st.prov)
-      // 
-      case RecordType(fs) => RecordType(fs.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(st.prov)
-      case TupleType(fs) => TupleType(fs.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(st.prov)
-      case ArrayType(inner) => ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(st.prov)
-      
-      // case FunctionType(l, r) => FunctionType(go(l, !pol), go(r, pol))(st.prov)
-      case FunctionType(l, r) => FunctionType(go(l, pol.map(!_)), go(r, pol))(st.prov)
-      case ProvType(underlying) => ProvType(go(underlying, pol))(st.prov)
-      case ProxyType(underlying) => go(underlying, pol)
-      case wo @ Without(base, names) =>
-        if (pol === S(true)) go(base, pol).withoutPos(names)
-        else if (names.isEmpty) { assert(base.isInstanceOf[ComposedType]); base.map(go(_, pol)) } // FIXME very hacky
-        else go(base, pol).without(names)
-      case tr @ TypeRef(defn, targs) => tr.copy(targs = targs.map { targ =>
-          // TypeBounds.mk(go(targ, false), go(targ, true), targ.prov)
-          go(targ, N)
-        })(tr.prov)
-      // case ty @ (ComposedType(_, _, _) | _: ObjectTag) =>
-      case ty @ (ComposedType(_, _, _) | _: ObjectTag | _: WithType) =>
-        
-        def helper(dnf: DNF, pol: Opt[Bool]): ST = {
-        println(s"DNF: $dnf")
-        // val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
-        val cs = dnf.cs
-        cs.sorted.map { c =>
-          c.copy(vars = c.vars.map(renew), nvars = c.nvars.map(renew)).toTypeWith(_ match {
-            
-            case LhsRefined(bo, tts, rcd, trs) =>
-              // The handling of type parameter fields is currently a little wrong here,
-              //  because we remove:
-              //    - type parameter fields of parent classes,
-              //        whereas they could _in principle_ be refined and
-              //        not correspond exactly to these of the currenly-reconstructed class;
-              //        and
-              //    - type parameter fields of the current trait tags
-              //        whereas we don't actually reconstruct applied trait types...
-              //        it would be better to just reconstruct them (TODO)
-              
-              val trs2 = trs.map {
-                case (d, tr @ TypeRef(defn, targs)) =>
-                  // TODOne actually make polarity optional and recurse with None
-                  // d -> TypeRef(defn, targs.map(targ =>
-                  //   TypeBounds(go(targ, false), go(targ, true))(noProv)))(tr.prov)
-                  d -> TypeRef(defn, targs.map(go(_, N)))(tr.prov) // TODO improve with variance analysis
-              }
-              
-              val traitPrefixes =
-                tts.iterator.collect{ case TraitTag(Var(tagNme)) => tagNme.capitalize }.toSet
-              bo match {
-                case S(cls @ ClassTag(Var(tagNme), ps)) if !primitiveTypes.contains(tagNme) =>
-                  val clsNme = tagNme.capitalize
-                  val clsTyNme = TypeName(tagNme.capitalize)
-                  val td = ctx.tyDefs(clsNme)
-                  val typeRef = TypeRef(td.nme, td.tparams.zipWithIndex.map { case (tp, tpidx) =>
-                    // val fieldTagNme = tparamField(TypeName(clsNme), tp)
-                    val fieldTagNme = tparamField(clsTyNme, tp)
-                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
-                    //   case (_, FunctionType(lb, ub)) =>
-                    //     TypeBounds.mk(go(lb, false), go(ub, true))
-                    // }.foldLeft(TypeBounds(BotType, TopType)(noProv): ST)(_ & _)
-                    
-                    /* 
-                    rcd.fields.iterator.filter(_._1 === fieldTagNme).collectFirst {
-                      case (_, FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
-                      case (_, FieldType(lb, ub)) =>
-                        TypeBounds.mk(go(lb.getOrElse(BotType), S(false)), go(ub, S(true)))
-                    }.getOrElse(TypeBounds(BotType, TopType)(noProv))
-                    */
-                    
-                    // val fromTyRef = trs2.get(clsTyNme).map(tr => FieldType(tr.targs(tpidx)))
-                    val fromTyRef = trs.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
-                    
-                    (fromTyRef ++ rcd.fields.iterator.filter(_._1 === fieldTagNme).map(_._2)).foldLeft((BotType: ST, TopType: ST)) {
-                      // case ((acc_lb, acc_ub), (_, FunctionType(lb, ub))) => (acc_lb | lb, acc_ub & ub)
-                      // // case ((acc_lb, acc_ub), (_, _)) => die
-                      // case ((acc_lb, acc_ub), (_, ty)) => lastWords(s"$fieldTagNme = $ty")
-                      
-                      // case ((acc_lb, acc_ub), FieldType(lb, ub)) if lb.exists(ub >:< _) => ub
-                      // case ((acc_lb, acc_ub), (_, FieldType(lb, ub))) =>
-                      case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
-                        // // TypeBounds.mk(go(lb.getOrElse(BotType), false), go(ub, true))
-                        // (acc_lb.fold(lb)(_ | lb.getOrElse(BotType)), acc_ub & ub)
-                        (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
-                    }.pipe {
-                      // case (lb, ub) => TypeBounds.mk(go(lb, false), go(ub, true))
-                      case (lb, ub) => TypeBounds.mk(go(lb, S(false)), go(ub, S(true)))
-                    }
-                    // rcd.fields.iterator.filter(_._1 === fieldTagNme).map {
-                    //   case (_, ft: FunctionType) => ft
-                    //   case _ => die
-                    // }.foldLeft(FunctionType(BotType, TopType)(noProv): ST)(_ & _)
-                  })(noProv)
-                  val clsFields = fieldsOf(
-                    typeRef.expandWith(paramTags = false), paramTags = false)
-                  val cleanPrefixes = ps.map(v => v.name.capitalize) + clsNme ++ traitPrefixes
-                  val cleanedRcd = rcd.copy(
-                    rcd.fields.filterNot { case (field, fty) =>
-                      // println(s"F1 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
-                      cleanPrefixes.contains(field.name.takeWhile(_ != '#')) ||
-                        clsFields.get(field).exists(_ <:< fty)
-                    }.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
-                  )(rcd.prov)
-                  val removedFields = clsFields.keysIterator
-                    .filterNot(field => rcd.fields.exists(_._1 === field)).toSortedSet
-                  val needsWith = !rcd.fields.forall {
-                    case (field, fty) =>
-                      // println(s"F2 $field $fty ${clsFields.get(field)} ${clsFields.get(field).map(_ <:< fty)}")
-                      clsFields.get(field).forall(fty <:< _)
-                  }
-                  val withoutType = if (removedFields.isEmpty) typeRef
-                    else Without(typeRef, removedFields)(noProv)
-                  val withType = if (needsWith) if (cleanedRcd.fields.isEmpty) withoutType
-                    else WithType(withoutType, cleanedRcd.sorted)(noProv) else typeRef & cleanedRcd.sorted
-                  
-                  val withTrs =
-                    // TODO merge these with reconstructed ones...
-                    trs2.valuesIterator.foldLeft(withType)(_ & _)
-                  
-                  tts.toArray.sorted // TODO also filter out tts that are inherited by the class
-                    .foldLeft(withType: ST)(_ & _)
-                case _ =>
-                  lazy val nFields = rcd.fields
-                    .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
-                    .mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
-                  val (res, nfs) = bo match {
-                    case S(tt @ TupleType(fs)) =>
-                      val arity = fs.size
-                      val (componentFields, rcdFields) = rcd.fields
-                        .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
-                        .partitionMap(f =>
-                          if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
-                            val namePostfix = f._1.name.tail
-                            if (namePostfix.forall(_.isDigit)) {
-                              val index = namePostfix.toInt
-                              if (index <= arity && index > 0) L(index -> f._2)
-                              else R(f)
-                            }
-                            else R(f)
-                          } else R(f)
-                        )
-                      val componentFieldsMap = componentFields.toMap
-                      val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
-                        nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
-                      }.toList
-                      S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
-                    case S(ct: ClassTag) => S(ct) -> nFields
-                    case S(ft @ FunctionType(l, r)) =>
-                      // S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
-                      S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
-                    // case S(at @ ArrayType(inner)) => S(ArrayType(go(inner, pol))(at.prov)) -> nFields
-                    case S(at @ ArrayType(inner)) =>
-                      S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
-                    case S(wt @ Without(b: ComposedType, ns @ empty())) => S(Without(b.map(go(_, pol)), ns)(wt.prov)) -> nFields // FIXME very hacky
-                    case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
-                    case N => N -> nFields
-                  }
-                  LhsRefined(res, tts, rcd.copy(nfs)(rcd.prov).sorted, trs2).toType(sort = true)
-              }
-            case LhsTop => TopType
-          }, {
-            case RhsBot => BotType
-            case RhsField(n, t) => RecordType(n -> t.update(go(_, pol.map(!_)), go(_, pol)) :: Nil)(noProv)
-            case RhsBases(ots, rest, trs) =>
-              // Note: could recosntruct class tags for these, but it would be pretty verbose,
-              //    as in showing `T & ~C[?] & ~D[?, ?]` instead of just `T & ~c & ~d`
-              // ots.map { case t @ (_: ClassTag | _: TraitTag) => ... }
-              val r = rest match {
-                case v @ S(R(RhsField(n, t))) => RhsField(n, t.update(go(_, pol.map(!_)), go(_, pol))).toType(sort = true)
-                case v @ S(L(bty)) => go(bty, pol)
-                case N => BotType
-              }
-              trs.valuesIterator.map(go(_, pol)).foldLeft(BotType: ST)(_ | _) |
-              ots.sorted.foldLeft(r)(_ | _)
-          }, sort = true)
-        }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
-        }
-        /* 
-        mkDNF(ty, pol)(ctx, ptr = true, etf = false, cache) match {
-        // mkDNF(ty, pol)(ctx, ptr = false, etf = false, cache) match {
-          case R(dnf) => helper(dnf, pol)
-          case L((dnf1, dnf2)) => TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
-        }
-        */
-        pol match {
-          case S(p) => helper(DNF.mk(ty, p)(ctx, ptr = true, etf = false), pol)
-          case N =>
-            val dnf1 = DNF.mk(ty, false)(ctx, ptr = true, etf = false)
-            val dnf2 = DNF.mk(ty, true)(ctx, ptr = true, etf = false)
-            if (dnf1 === dnf2) helper(dnf2, S(true))
-            // else 
-            // L(dnf1 -> dnf2)
-            else TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
-        }
-        
-    }
-    }(r => s"=> $r")
-    
-    go(st, pol)
-    
-  }
-  
   
   
   
@@ -1268,45 +970,6 @@ trait TypeSimplifier { self: Typer =>
     }
     
     println(s"[subs] ${varSubst}")
-    
-    
-    /* 
-    def analyze(pol: Opt[Bool], st: ST): Unit = st match {
-      case tv: TV =>
-        
-      case _ =>
-        st.childrenPol(pol)(analyze)
-    }
-    */
-    /* 
-    def process(pol: Opt[Bool], st: ST): ST =
-    trace(s"factor[${printPol(pol)}] $st") {
-      
-      pol match {
-        case N =>
-          st.mapPol(pol, smart = true)(process)
-        case S(p) =>
-          
-          val dnf = DNF.mk(st, p)(ctx, ptr = true, etf = false)
-          println(s"dnf = $dnf")
-          
-          dnf.cs.foreach { c =>
-            (c.vars.iterator ++ c.nvars).foreach { tv =>
-              processed.setAndIfUnset(tv) {
-                tv.lowerBounds = tv.lowerBounds.map(process(S(true), _))
-                tv.upperBounds = tv.upperBounds.map(process(S(false), _))
-              }
-            }
-          }
-          
-          // dnf.toType(sort = true)
-          dnf.toType(sort = true).mapPol(pol, smart = true)(process)
-      }
-      
-    }(r => s"~> $r")
-    process(pol, st)
-    */
-    // def transform(pol: Opt[Bool], st: ST): ST =
     
     if (varSubst.nonEmpty) subst(st, varSubst.toMap, substInMap = true) else st
     
