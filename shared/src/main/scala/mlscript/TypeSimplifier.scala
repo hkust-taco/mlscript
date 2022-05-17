@@ -82,7 +82,22 @@ trait TypeSimplifier { self: Typer =>
         println(s"DNF: $dnf")
         // val dnf @ DNF(cs) = DNF.mk(ty, pol)(ctx, preserveTypeRefs = true)
         val cs = dnf.cs
-        cs.sorted.map { c =>
+        val (csNegs, otherCs) = cs.partitionMap {
+          case c @ Conjunct(l, vs, r, nvs) if l.isTop && vs.isEmpty && !(r.isBot && nvs.isEmpty) =>
+            // L(r, nvs)
+            L(c)
+          case c => R(c)
+        }
+        // val csNegs2 = csNegs.sorted.map { c =>
+        //  
+        // }
+        val csNegs2 = if (csNegs.isEmpty) BotType else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg()
+        // val csNegs2 = if (csNegs.isEmpty) TopType else helper(DNF.mk(csNegs.foldLeft(TopType: ST)(_ & _.toType()), pol.map(!_))(ctx, ptr = true, etf = false), pol.map(!_))
+        // val csNegs2 = DNF.mk(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), true)(ctx, ptr = true, etf = false).toType().neg()
+        // val csNegs2 = csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()).neg()
+        // val csNegs2 = csNegs.foldLeft(TopType: ST)(_ & _.neg.toType()).neg()
+        // val otherCs2 = cs.sorted.map { c =>
+        val otherCs2 = otherCs.sorted.map { c =>
           // c.vars.foreach(go(pol, _))
           // c.nvars.foreach(go(pol.map(!_), _))
           c.vars.foreach(processVar)
@@ -241,6 +256,8 @@ trait TypeSimplifier { self: Typer =>
               ots.sorted.foldLeft(r)(_ | _)
           }, sort = true)
         }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
+        // (otherCs2 ++ csNegs2).foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
+        otherCs2 | csNegs2
         }
         
         // /* 

@@ -20,7 +20,7 @@ def f v = case v of {
     A -> (v.x : int)
   | _ -> 0
  }
-//│ f: (A & {x: int} | ~a) -> int
+//│ f: (A & {x: int} | ~A) -> int
 //│  = [Function: f1]
 
 a1 = A { x = 0 }
@@ -120,7 +120,7 @@ rec def eval(e) = case e of
   }
 //│ eval: 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
 //│     'value :> ('value, 'value,)
 //│     = [Function: eval1]
 
@@ -376,7 +376,7 @@ rec def eval(e) = case e of
   }
 //│ 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~intLit & ~pair
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
 //│     'value :> ('value, 'value,)
 //│   <:  eval:
 //│ Expr['a] -> 'a

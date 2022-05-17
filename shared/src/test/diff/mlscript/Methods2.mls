@@ -184,7 +184,7 @@ def newHeadOption x = case x of {
     | Cons -> Some {payload = x.head}
     | _ -> None{}
     }
-//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~cons) -> (None['A0] | (Some['A] with {payload: 'payload}))
+//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~Cons[?]) -> (None['A0] | (Some['A] with {payload: 'payload}))
 //│              = [Function: newHeadOption]
 
 // Note that `o` is not a list, so this takes the default case:

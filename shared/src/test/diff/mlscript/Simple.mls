@@ -59,7 +59,7 @@ test (Foo { field = 2 })
 //│    = 2
 
 def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: ((Foo[?] with {field: 'field}) | ~foo) -> (1 | 'field)
+//│ test: ((Foo[?] with {field: 'field}) | ~Foo[?]) -> (1 | 'field)
 //│     = [Function: test2]
 
 

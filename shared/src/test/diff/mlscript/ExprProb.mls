@@ -63,7 +63,7 @@ rec def eval1_stub e = case e of {
 eval1_stub
 //│ res: 'a -> (0 | 1)
 //│   where
-//│     'a <: (Add[?]\rhs with {lhs: 'a}) | Lit | ~add & ~lit
+//│     'a <: (Add[?]\rhs with {lhs: 'a}) | Lit | ~Add[?] & ~Lit
 //│    = [Function: eval1_stub2]
 
 // def eval1: ('b -> int) -> Expr['b] -> int
