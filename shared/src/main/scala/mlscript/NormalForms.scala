@@ -17,6 +17,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   def preserveTypeRefs(implicit ptr: PreserveTypeRefs): Bool = ptr === true
   def expandTupleFields(implicit etf: ExpandTupleFields): Bool = etf === true
   
+  
+  private def mergeTypeRefs(trs1: SortedMap[TN, TR], trs2: SortedMap[TN, TR]): SortedMap[TN, TR] =
+    mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
+      assert(tr1.defn === tr2.defn)
+      assert(tr1.targs.size === tr2.targs.size)
+      TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
+        TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
+    }
+  
+  
   sealed abstract class LhsNf {
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
@@ -24,10 +34,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     private def mkType(sort: Bool): SimpleType = this match {
       case LhsRefined(bo, ts, r, trs) =>
         val sr = if (sort) r.sorted else r
-        // (trs.valuesIterator ++ ts.toArray.sorted).foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _)
         val trsBase = trs.valuesIterator.foldRight(bo.fold[ST](sr)(_ & sr))(_ & _)
         (if (sort) ts.toArray.sorted else ts.toArray).foldLeft(trsBase)(_ & _)
-        // ts.toArray.sorted.foldLeft(trs.valuesIterator.foldLeft(bo.fold[ST](sr)(_ & sr))(_ & _))(_ & _)
       case LhsTop => TopType
     }
     lazy val underlying: SimpleType = mkType(false)
@@ -77,6 +85,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           //  just make a new dummy Without type to merge them.
           // The workaround is due to the fact that unlike other types, we can't fully
           //  reduce Without types away, so they are "unduly" treated as `BaseType`s.
+          // This will be fixed whe we support proper TV bounds for homomorphic type computations
           case (S(b), w: Without) => S(Without(b & w, ssEmp)(noProv))
           case (S(w: Without), b) => S(Without(w & b, ssEmp)(noProv))
             
@@ -92,8 +101,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case LhsTop => LhsRefined(N, ssEmp, that, smEmp)
       case LhsRefined(b1, ts, r1, trs) =>
         LhsRefined(b1, ts,
-          // // RecordType(mergeMap(r1.fields, that.fields)(_ & _).toList)(noProv/*TODO*/), trs)
-          // RecordType(mergeMap(r1.fields, that.fields)(_ && _).toList)(noProv/*TODO*/))
           RecordType(recordIntersection(r1.fields, that.fields))(noProv/*TODO*/), trs)
     }
     def & (that: TypeRef)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[LhsNf] = this match {
@@ -115,13 +122,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         ts.iterator.foldLeft(
           trs.valuesIterator.foldLeft((bo.fold(some(this & rt))(this & rt & _)))(_.getOrElse(return N) & _)
         )(_.getOrElse(return N) & _)
-      // case (_, LhsRefined(S(b), ts, rt, trs)) =>
-      //   // (ts.iterator ++ trs.valuesIterator).foldLeft(this & rt & b)(_.getOrElse(return N) & _)
-      //   ts.iterator.foldLeft(
-      //     trs.valuesIterator.foldLeft(this & rt & b)(_.getOrElse(return N) & _)
-      //   )(_.getOrElse(return N) & _)
-      // case (_, LhsRefined(N, ts, rt, trs)) =>
-      //   S(ts.foldLeft(this & rt)(_ & _ getOrElse (return N)))
     }
     def <:< (that: LhsNf): Bool = (this, that) match {
       case (_, LhsTop) => true
@@ -162,13 +162,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsBases(ts, _, trs) => ts.contains(ttg)
       case RhsBot | _: RhsField => false
     }
-    // def size: Int = this match {
-    //   case RhsBases(ts, r, trs) => ts.size + 1 + ???
-    //   case _: RhsField => 1
-    //   case RhsBot => 0
-    // }
     def | (that: TypeRef): Opt[RhsNf] = this match {
-    // def | (that: TypeRef): RhsNf = this match {
       case RhsBot => S(RhsBases(Nil, N, SortedMap.single(that.defn -> that)))
       case RhsField(name, ty) => this | name -> ty
       case RhsBases(prims, bf, trs) =>
@@ -182,47 +176,24 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     }
     def | (that: RhsNf): Opt[RhsNf] = that match {
       case RhsBases(prims, bf, trs) =>
-        // val thisWithTrs = this match {
-        //   case RhsBases(tags, rest, trefs) => 
-        // }
         val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _ getOrElse (return N))
-        // println(s"thisWithTrs $thisWithTrs")
-        // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _)
         val tmp = prims.foldLeft(thisWithTrs)(_ | _ getOrElse (return N))
         S(bf.fold(tmp)(_.fold(tmp | _ getOrElse (return N),
           tmp | _.name_ty getOrElse (return N))))
       case RhsField(name, ty) => this | name -> ty
       case RhsBot => S(this)
     }
-    def & (that: RhsNf): Opt[RhsNf] = (this, that) match {
+    def tryMergeInter (that: RhsNf): Opt[RhsNf] = (this, that) match {
       case (RhsBot, _) | (_, RhsBot) => S(RhsBot)
       case (RhsField(name1, ty1), RhsField(name2, ty2)) if name1 === name2 => S(RhsField(name1, ty1 && ty2))
-      // case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2)) if bf1 === bf2 && trs1 === trs2=>
-      //   S(RhsBases((prims1 ::: prims2).distinct, bf1, trs1))
-        // S(RhsBases((prims1.toSet ++ prims2.toSet).toList, bf1, trs1))
       case (RhsBases(prims1, S(R(r1)), trs1), RhsBases(prims2, S(R(r2)), trs2))
         if prims1 === prims2 && trs1 === trs2 && r1.name === r2.name
-        // => (r1 & r2).map(r => RhsBases(prims1, S(R(r)), trs1))
         => S(RhsBases(prims1, S(R(RhsField(r1.name, r1.ty && r2.ty))), trs1))
       case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2))
         if prims1 === prims2 && bf1 === bf2 && trs1.keySet === trs2.keySet
         => // * eg for merging `~Foo[S] & ~Foo[T]`:
-          // TODO dedup...
-          val trs = mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
-            assert(tr1.defn === tr2.defn)
-            assert(tr1.targs.size === tr2.targs.size)
-            TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
-              TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
-          }
-          S(RhsBases(prims1, bf1, trs))
+          S(RhsBases(prims1, bf1, mergeTypeRefs(trs1, trs2)))
       case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2)) =>
-        // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _ getOrElse (return N))
-        // // println(s"thisWithTrs $thisWithTrs")
-        // // val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _)
-        // val tmp = prims.foldLeft(thisWithTrs)(_ | _ getOrElse (return N))
-        // S(bf.fold(tmp)(_.fold(tmp | _ getOrElse (return N),
-        //   tmp | _.name_ty getOrElse (return N))))
-        
         N // TODO could do some more merging here – for the possible base types
       case _ => N
     }
@@ -280,8 +251,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     override def toString: Str = s"{$name:$ty}"
   }
   case class RhsBases(tags: Ls[ObjectTag], rest: Opt[MiscBaseType \/ RhsField], trefs: SortedMap[TypeName, TypeRef]) extends RhsNf {
-    // override def toString: Str = s"${tags.mkString("|")}|$rest"
-    override def toString: Str = s"${tags.mkString("|")}${rest.fold("")("|" + _.fold(_.toString, _.toString))}${trefs.valuesIterator.map("|"+_).mkString}"
+    override def toString: Str =
+      s"${tags.mkString("|")}${rest.fold("")("|" + _.fold(""+_, ""+_))}${trefs.valuesIterator.map("|"+_).mkString}"
   }
   case object RhsBot extends RhsNf {
     override def toString: Str = "⊥"
@@ -309,7 +280,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case RhsBot | _: RhsField => this
       }
     }
-    // lazy val interSize: Int = vars.size + nvars.size + lnf.size + rnf.size
     def <:< (that: Conjunct): Bool =
       // trace(s"?? $this <:< $that") {
       that.vars.forall(vars) &&
@@ -331,33 +301,20 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       *   {x: int} | {y: int} ~> anything
       *   (A -> B) | {x: C}   ~> anything  */
     def tryMerge(that: Conjunct)(implicit etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
-      // case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
-      //   if r1 === r2 && nvs1 === nvs2
-      // => S(Conjunct(LhsTop, vs1 & vs2, r1, nvs1))
-      case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
-        if vs1 === vs2 && r1 === r2 && nvs1 === nvs2
-      => S(Conjunct(LhsTop, vs1, r1, nvs1))
+      case _ if this <:< that => S(that)
+      case _ if that <:< this => S(this)
       case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
         if vs1 === vs2 && nvs1 === nvs2
       =>
-        S(Conjunct(LhsTop, vs1,
-          r1 & r2 getOrElse (return N), // * conceputally this case is bottom, bt conjuncts cannot represent bottom...
-          nvs1))
-      // case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
-      //   if vs1 === vs2 && r1 === r2
-      // =>
-      //   S(Conjunct(LhsTop, vs1, r1, nvs1 | nvs2))
+        S(Conjunct(LhsTop, vs1, r1 tryMergeInter r2 getOrElse (return N), nvs1))
+        // * Conceptually, `tryMergeInter` could return None either because the ThsNfs cannot be merged
+        // *  or because merging them would return bottom... but conjuncts cannot represent bottom.
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
           , Conjunct(LhsRefined(bse2, ts2, rcd2, trs2), vs2, r2, nvs2))
         if bse1 === bse2 && ts1 === ts2 && vs1 === vs2 && r1 === r2 && nvs1 === nvs2
         && trs1.keySet === trs2.keySet
       =>
-        val trs = mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
-          assert(tr1.defn === tr2.defn)
-          assert(tr1.targs.size === tr2.targs.size)
-          TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
-            TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
-        }
+        val trs = mergeTypeRefs(trs1, trs2)
         val rcd = RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)
         S(Conjunct(LhsRefined(bse1, ts1, rcd, trs), vs1, r1, nvs1))
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
@@ -366,25 +323,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         && trs1 === trs2 // TODO!!
       =>
         val ts = ts1
-        // val rcdU_ = recordUnion(rcd1.fields, rcd2.fields)
-        // val rcdU = RecordType(
-        //   if (expandTupleFields) rcdU_
-        //   else bse1.fold(bse2.map(_.toRecord.fields).fold(rcdU_)(recordUnion(rcdU_, _))) { b1 =>
-        //     val u = recordUnion(rcdU_, b1.toRecord.fields)
-        //     bse2.map(_.toRecord.fields).fold(u)(recordUnion(u, _))
-        //   }
-        // )(noProv)
         
-        // println(">>>>>>>"+expandTupleFields, rcd1, rcd2, rcdU_, rcdU)
-        // println(">>>>>>>", bse1.map(_.toRecord), bse2.map(_.toRecord))
-        // println(">>>>>>>", bse1.fold(bse2.map(_.toRecord.fields).fold(rcdU_)(recordUnion(rcdU_, _))) { b1 =>
-        //     val u = recordUnion(rcdU_, b1.toRecord.fields)
-        //     println(rcdU_, u)
-        //     bse2.map(_.toRecord.fields).fold(u)(recordUnion(u, _))
-        //   })
         val rcdU = RecordType(recordUnion(
-          if (expandTupleFields) rcd1.fields else bse1.map(_.toRecord.fields).fold(rcd1.fields)(recordIntersection(rcd1.fields, _)),
-          if (expandTupleFields) rcd2.fields else bse2.map(_.toRecord.fields).fold(rcd2.fields)(recordIntersection(rcd2.fields, _)),
+          if (expandTupleFields) rcd1.fields
+            else bse1.map(_.toRecord.fields).fold(rcd1.fields)(recordIntersection(rcd1.fields, _)),
+          if (expandTupleFields) rcd2.fields
+            else bse2.map(_.toRecord.fields).fold(rcd2.fields)(recordIntersection(rcd2.fields, _)),
         ))(noProv)
         
         // Example:
@@ -399,29 +343,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
               LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(tup1 @ TupleType(fs1)), S(tup2 @ TupleType(fs2))) => // TODO Q: records ok here?!
             if (fs1.size =/= fs2.size) S(Conjunct(
-              // LhsRefined(S(ArrayType(tup1.inner | tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
-              // LhsRefined(S(ArrayType(tup1.inner || tup2.inner)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
               LhsRefined(S(ArrayType(tup1.inner || tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
             else S(Conjunct(
               LhsRefined(S(TupleType(tupleUnion(fs1, fs2))(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(tup @ TupleType(fs)), S(ArrayType(ar))) =>
-            S(Conjunct(
-              // LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-              // LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
-              LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
-          // case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
-          //   S(Conjunct(
-          //     LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
-          // case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
-          //   S(Conjunct(
-          //     LhsRefined(S(ArrayType(tup.inner | ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+            S(Conjunct(LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar)), S(tup @ TupleType(fs))) =>
             S(Conjunct(
               LhsRefined(S(ArrayType(tup.inner || ar)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
-          // case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
-          //   S(Conjunct(LhsRefined(S(ArrayType(ar1 | ar2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
-          // case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
-          //   S(Conjunct(LhsRefined(S(ArrayType(ar1 || ar2)(noProv)), ts, rcdU), vs1, RhsBot, nvs1))
           case (S(ArrayType(ar1)), S(ArrayType(ar2))) =>
             S(Conjunct(LhsRefined(S(ArrayType(ar1 || ar2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (N, N)
@@ -514,7 +443,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         (if (pol) ty.pushPosWithout else ty) match {
       case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
       case bt: TraitTag => of(bt)
-      // case rt @ RecordType(fs) => of(rt.mapPol(S(pol))(f).asInstanceOf[RecordType])
       case rt @ RecordType(fs) => of(mapPol(rt, S(pol), smart = false)(f))
       case ExtrType(pol) => extr(!pol)
       case ty @ ComposedType(p, l, r) => merge(p)(mkWith(l, pol, f), mkWith(r, pol, f))
@@ -530,22 +458,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
     }
     // }(r => s"= $r")
-    
-    // // TODO inline logic
-    // def mk(ty: SimpleType, pol: Opt[Bool])(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): Either[(DNF, DNF), DNF] = {
-    //   // implicit val preserveTypeRefs: Bool = true
-    //   pol match {
-    //     case S(true) => R(mk(ty, true))
-    //     case S(false) => R(mk(ty, false))
-    //     case N =>
-    //       // TODO less inefficient! don't recompute
-    //       val dnf1 = mk(ty, true)
-    //       // if (dnf1.cs.exists(_.vars.nonEmpty))
-    //       val dnf2 = mk(ty, false)
-    //       if (dnf1.cs.forall(_.vars.isEmpty) && dnf1 === dnf2) R(dnf1)
-    //       else L(dnf1 -> dnf2)
-    //   }
-    // }
   }
   
   
@@ -574,14 +486,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       ty match {
         case bt: BaseType => of(mapPol(bt, S(pol), smart = false)(f))
         case tt: TraitTag => of(RhsBases(tt :: Nil, N, smEmp))
-        // case rt @ RecordType(fs) => of(rt)
         case rt @ RecordType(fs) => of(mapPol(rt, S(pol), smart = false)(f))
         case ExtrType(pol) => extr(!pol)
         case ty @ ComposedType(p, l, r) => merge(p)(mkWith(l, pol, f), mkWith(r, pol, f))
         case NegType(und) => CNF(DNF.mkWith(und, !pol, f).cs.map(_.neg))
         case tv: TypeVariable => of(SortedSet.single(tv))
         case ProxyType(underlying) => mkWith(underlying, pol, f)
-        // case tr @ TypeRef(defn, targs) => mkWith(tr.expand, pol) // TODO try to keep them?
         case tr @ TypeRef(defn, targs) =>
           if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
             val tr2 = TypeRef(defn, targs.map(st => f(N, st)))(tr.prov)

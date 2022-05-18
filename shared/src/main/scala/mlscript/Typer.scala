@@ -308,6 +308,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv
         // RecType(bod, tv)(tyTp(ty.toLoc, "recursive type"))
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
+      case Constrained(base, where) =>
+        val res = rec(base)
+        where.foreach { case (tv, Bounds(lb, ub)) =>
+          constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx)
+          constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
+        }
+        res
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
   }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
@@ -841,7 +848,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         case ArrayType(FieldType(None, ub)) => AppliedType(TypeName("Array"), go(ub) :: Nil)
         case ArrayType(f) =>
           val f2 = field(f)
-          AppliedType(TypeName("MutArray"), Bounds(f2.in.get, f2.out) :: Nil)
+          AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
         case NegType(t) => Neg(go(t))
         case ExtrType(true) => Bot
         case ExtrType(false) => Top

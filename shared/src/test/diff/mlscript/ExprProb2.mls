@@ -23,7 +23,7 @@ def eval1 eval1 e = case e of {
 //│      = [Function: eval1]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 62
+//│ subtyping calls  : 64
 
 :stats
 def eval1f eval1 e = case e of {
@@ -34,7 +34,7 @@ def eval1f eval1 e = case e of {
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
 //│ annoying  calls  : 0
-//│ subtyping calls  : 58
+//│ subtyping calls  : 60
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))

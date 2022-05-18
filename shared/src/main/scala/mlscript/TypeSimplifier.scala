@@ -654,7 +654,7 @@ trait TypeSimplifier { self: Typer =>
     recVars = MutSet.from(
       allVars.iterator.filter(tv =>
         // tv.lbRecOccs.forall(_ =/= S(false)) && tv.ubRecOccs.forall(_ =/= S(true))
-        (tv.lbRecOccs, tv.ubRecOccs) match {
+        (tv.lbRecOccs_$, tv.ubRecOccs_$) match {
           // case (S(N), _) | (_, S(N)) => true
           case (S(N | S(true)), _) | (_, S(N | S(false))) => true
           // case (S(S(false)), _) => false
@@ -704,7 +704,9 @@ trait TypeSimplifier { self: Typer =>
       case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), N), transform(r, pol, N))(st.prov)
       
       case _: ObjectTag | ExtrType(_) => st
-      case tv: TypeVariable if parent.exists(_ === tv) => if (pol.get) BotType else TopType
+      case tv: TypeVariable if parent.exists(_ === tv) =>
+        if (pol.getOrElse(lastWords(s"parent in invariant position $tv $parent")))
+          BotType else TopType
       case tv: TypeVariable =>
         // println(s"transform[${printPol(pol)}] $tv")
         // println(s"tv $tv ${tv.upperBounds}")
@@ -731,69 +733,92 @@ trait TypeSimplifier { self: Typer =>
               nv
             })
             // if (inlineBounds(tv))
-            if (inlineBounds && pol.isDefined && !occursInvariantly(tv) && !recVars.contains(tv)) { // inline the bounds of non-rec vars
-              // mergeTransform(pol.get, tv :: (if (pol.get) tv.lowerBounds else tv.upperBounds))
-              // mergeTransform(pol.get, if (pol.get) tv.lowerBounds else tv.upperBounds)
-              println(s"Inlining bounds of $tv (~> $res)")
-              if (pol.get) mergeTransform(true, tv.lowerBounds, S(tv)) | res
-              else mergeTransform(false, tv.upperBounds, S(tv)) & res
-            } else 
-            if (!wasDefined) {
-              /* 
-              println(s"Setting bounds of $res")
-              res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
-              res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
-              
-              // res
-              
-              // It used to be that pol/coOcc info was no longer be valid here, but that should be fixed
-              // /* 
-              // (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match { // TODO dedup
-              //   case (Some(_), None) | (None, Some(_)) =>
-              if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
-                val allBounds = res.lowerBounds ++ res.upperBounds
-                // assert(allBounds.size === res.lowerBounds.size)
-                assert(res.lowerBounds.isEmpty || res.upperBounds.isEmpty)
-                println(s"$tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
-                if (allBounds.forall { case tv2: TV => true; case _ => false }) { // Q: filter out same as tv?
-                  println(s"NEW SUBS $tv -> N")
-                  varSubst += tv -> N
-                  merge(pol.get, allBounds)
-                  // merge(pol.get, allBounds.filterNot(_ === tv))
-                  // merge(pol.get, allBounds.filterNot(parent.contains))
-                } else res
-              }
-              else res
-              // */
-              */
-              
-              def setBounds = {
+            // if (inlineBounds && pol.isDefined && !occursInvariantly(tv) && !recVars.contains(tv)) { // inline the bounds of non-rec vars
+            pol match {
+              case S(pol) if inlineBounds && !occursInvariantly(tv) && !recVars.contains(tv) => // inline the bounds of non-rec vars
+                // mergeTransform(pol.get, tv :: (if (pol.get) tv.lowerBounds else tv.upperBounds))
+                // mergeTransform(pol.get, if (pol.get) tv.lowerBounds else tv.upperBounds)
+                println(s"Inlining bounds of $tv (~> $res)")
+                if (pol) mergeTransform(true, tv.lowerBounds, S(tv)) | res
+                else mergeTransform(false, tv.upperBounds, S(tv)) & res
+              case _ if (!wasDefined) =>
+                /* 
                 println(s"Setting bounds of $res")
                 res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
                 res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
-                res
-              }
-              
-              if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
-                // val allBounds = tv.lowerBounds ++ tv.upperBounds
-                val allBounds = if (pol.get) tv.lowerBounds else tv.upperBounds
                 
-                // * only true if we do a pass of `removeIrrelevantBounds` before calling `simplifyType`:
-                // assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty, (tv, tv.lowerBounds, tv.upperBounds))
+                // res
                 
-                println(s">?> $tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
-                if (allBounds.forall { case tv2: TV => varSubst.get(tv2).forall(_.isDefined); case _ => false }) { // Q: filter out same as tv?
-                  println(s"NEW SUBS $tv -> N")
-                  varSubst += tv -> N
-                  mergeTransform(pol.get, allBounds, parent)
-                  // merge(pol.get, allBounds)
-                  // merge(pol.get, allBounds.filterNot(_ === tv))
-                  // merge(pol.get, allBounds.filterNot(parent.contains))
-                } else setBounds
-              }
-              else setBounds
+                // It used to be that pol/coOcc info was no longer be valid here, but that should be fixed
+                // /* 
+                // (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match { // TODO dedup
+                //   case (Some(_), None) | (None, Some(_)) =>
+                if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
+                  val allBounds = res.lowerBounds ++ res.upperBounds
+                  // assert(allBounds.size === res.lowerBounds.size)
+                  assert(res.lowerBounds.isEmpty || res.upperBounds.isEmpty)
+                  println(s"$tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
+                  if (allBounds.forall { case tv2: TV => true; case _ => false }) { // Q: filter out same as tv?
+                    println(s"NEW SUBS $tv -> N")
+                    varSubst += tv -> N
+                    merge(pol.get, allBounds)
+                    // merge(pol.get, allBounds.filterNot(_ === tv))
+                    // merge(pol.get, allBounds.filterNot(parent.contains))
+                  } else res
+                }
+                else res
+                // */
+                */
+                
+                def setBounds = {
+                  println(s"Setting bounds of $res")
+                  res.lowerBounds = tv.lowerBounds.map(transform(_, S(true), S(tv)))
+                  res.upperBounds = tv.upperBounds.map(transform(_, S(false), S(tv)))
+                  res
+                }
+                
+                // if (pol.isDefined && coOccurrences.get(!pol.get -> tv).isEmpty) { // if the variable is polar
+                //   // val allBounds = tv.lowerBounds ++ tv.upperBounds
+                //   val allBounds = if (pol.get) tv.lowerBounds else tv.upperBounds
+                  
+                //   // * only true if we do a pass of `removeIrrelevantBounds` before calling `simplifyType`:
+                //   // assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty, (tv, tv.lowerBounds, tv.upperBounds))
+                  
+                //   println(s">?> $tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
+                //   if (allBounds.forall { case tv2: TV => varSubst.get(tv2).forall(_.isDefined); case _ => false }) { // Q: filter out same as tv?
+                //     println(s"NEW SUBS $tv -> N")
+                //     varSubst += tv -> N
+                //     mergeTransform(pol.get, allBounds, parent)
+                //     // merge(pol.get, allBounds)
+                //     // merge(pol.get, allBounds.filterNot(_ === tv))
+                //     // merge(pol.get, allBounds.filterNot(parent.contains))
+                //   } else setBounds
+                // }
+                // else setBounds
+                pol match {
+                  case S(pol)
+                    if coOccurrences.get(!pol -> tv).isEmpty // * If the variable is polar...
+                  =>
+                    // val allBounds = tv.lowerBounds ++ tv.upperBounds
+                    val allBounds = if (pol) tv.lowerBounds else tv.upperBounds
+                    
+                    // * only true if we do a pass of `removeIrrelevantBounds` before calling `simplifyType`:
+                    // assert(tv.lowerBounds.isEmpty || tv.upperBounds.isEmpty, (tv, tv.lowerBounds, tv.upperBounds))
+                    
+                    println(s">?> $tv $res $allBounds ${tv.lowerBounds} ${tv.upperBounds}")
+                    if (allBounds.forall { case tv2: TV => varSubst.get(tv2).forall(_.isDefined); case _ => false }) { // Q: filter out same as tv?
+                      println(s"NEW SUBS $tv -> N")
+                      varSubst += tv -> N
+                      mergeTransform(pol, allBounds, parent)
+                      // merge(pol.get, allBounds)
+                      // merge(pol.get, allBounds.filterNot(_ === tv))
+                      // merge(pol.get, allBounds.filterNot(parent.contains))
+                    } else setBounds
+                  case _ => setBounds
+                }
               
-            } else res
+              case _ => res
+            }
         }
       case ty @ ComposedType(true, l, r) => transform(l, pol, parent) | transform(r, pol, parent)
       case ty @ ComposedType(false, l, r) => transform(l, pol, parent) & transform(r, pol, parent)

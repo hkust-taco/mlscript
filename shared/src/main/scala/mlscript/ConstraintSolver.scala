@@ -183,32 +183,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           //    the original constraining context!
           (done_ls, done_rs) match {
             case (LhsRefined(S(Without(b, _)), _, _, _), RhsBot) => rec(b, BotType, true)
-            // case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _)
-            //   | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
-            //   // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
-            //   reportError
             case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
-            //   reportError()
-            // case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
               reportError()
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
-              // val (d, tr) = trs.head
-              // annoying(tr.expand :: Nil, LhsRefined(bo, ts, r, trs - d), Nil, done_rs)
               annoying(trs.valuesIterator.map(_.expand).toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
               annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
             
             // From this point on, trs should be empty!
+            case (LhsRefined(_, _, _, trs), _) if trs.nonEmpty => die
+            case (_, RhsBases(_, _, trs)) if trs.nonEmpty => die
             
             case (_, RhsBot) | (_, RhsBases(Nil, N, _)) =>
-              // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
               reportError()
             
-            // case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
             case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))), _)) =>
               rec(f0, f1, true)
@@ -235,27 +227,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => reportError()
                   }
               }
-            // case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
-            //   reportError()
             case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)), _)) =>
               reportError()
-            // case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType))))
-            //   if b.fields.size === ty.fields.size =>
-            //     (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach(rec(_, _, false))
             case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
                   recLb(r, l)
                 }
-            // case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)))) =>
-            //   rec(b.inner, ar.inner, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)), _)) =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
-            // case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError()
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
-            // case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
@@ -268,7 +251,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }()
     
-    /** Helper function to constrain Field lower bounds */
+    /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
@@ -394,9 +377,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2.ub, false))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
-            // fs1.foreach(f => rec(f._2, err, false))
             fs1.foreach(f => rec(f._2.ub, err, false))
-          
+            
           case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)

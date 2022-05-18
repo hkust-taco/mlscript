@@ -288,11 +288,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
-                  val fields = fieldsOf(td.bodyTy, true)
-                  // val fields = fieldsOf(td.bodyTy, false)
-                  // val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                  //   tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
-                  // // val tref = 
+                  val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
                     tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
