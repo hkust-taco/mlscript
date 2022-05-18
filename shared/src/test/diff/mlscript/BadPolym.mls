@@ -23,7 +23,7 @@ foo id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	foo id
 //│ ║        	^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.7: 	def foo: (int -> int & string -> string) -> ()
 //│ ║       	          ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -46,7 +46,7 @@ fooImpl2 id
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.45: 	fooImpl2 id
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.40: 	fooImpl2 (f: int -> int & string -> string) = f 1
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:

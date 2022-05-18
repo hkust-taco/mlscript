@@ -221,25 +221,27 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	             ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A]` is not an instance of type ComplexMonoid_bad_2
+//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
-//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?]`
+//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ╙──      	             ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	                                                 ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A]` is not an instance of type ComplexMonoid_bad_2
+//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
-//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?]`
+//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ╙──      	                                                 ^^^^^^^^^
 //│ Defined class ComplexMonoid_bad_2[=A]
 //│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A & 'A0, real: 'A & 'A0} -> {imaginary: 'A & 'A0, real: 'A & 'A0} -> (Complex['A0] with {imaginary: 'A, real: 'A})
-//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex['_] -> Complex['_0] -> (Complex['A0] & {imaginary: error, real: error})
+//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex['_] -> Complex['_0] -> (Complex['A0] with {imaginary: (Complex['A1] with {imaginary: 'A2, real: 'A2}) | error, real: (Complex['A3] with {imaginary: 'A2, real: 'A2}) | error})
 //│   where
-//│     'A0 :> error
+//│     'A0 :> (Complex[in 'A1 & 'A3 out 'A1 | 'A3] with {imaginary: 'A2, real: 'A2}) | error
+//│     '_0 <: {imaginary: 'A1 & 'A2 & 'A3, real: 'A1 & 'A2 & 'A3}
+//│     '_ <: {imaginary: 'A1 & 'A2 & 'A3, real: 'A1 & 'A2 & 'A3}
 
 

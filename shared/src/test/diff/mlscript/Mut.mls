@@ -323,7 +323,7 @@ b2.x <- b1.y
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.322: 	b2.x <- b1.y
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `bool` does not match type `int`
+//│ ╟── type `bool` is not an instance of `int`
 //│ ║  l.260: 	class B: { mut x: int; y: bool }
 //│ ║         	                          ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
@@ -478,7 +478,7 @@ mt4[3] <- true
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.465: 	mt1[0] <- mt2._1
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `bool`
+//│ ╟── type `int` is not an instance of `bool`
 //│ ║  l.372: 	def mt1: (mut int, mut bool)
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -490,7 +490,7 @@ mt4[3] <- true
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.465: 	mt1[0] <- mt2._1
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `bool`
+//│ ╟── type `int` is not an instance of `bool`
 //│ ║  l.373: 	def mt2: (int, int)
 //│ ║         	          ^^^
 //│ ╟── but it flows into field selection with expected type `bool`
@@ -539,7 +539,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.534: 	mt1._1 <- mt1._2
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── type `bool` does not match type `int`
+//│ ╟── type `bool` is not an instance of `int`
 //│ ║  l.372: 	def mt1: (mut int, mut bool)
 //│ ║         	                       ^^^^
 //│ ╟── but it flows into field selection with expected type `int`

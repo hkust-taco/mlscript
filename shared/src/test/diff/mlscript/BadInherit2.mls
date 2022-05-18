@@ -16,7 +16,7 @@ class A0: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.14: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.14: 	class A0: S0[int] & T0[string]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -25,7 +25,7 @@ class A0: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.14: 	class A0: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of `int`
 //│ ║  l.14: 	class A0: S0[int] & T0[string]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -50,7 +50,7 @@ class A0_2: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	               ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -59,7 +59,7 @@ class A0_2: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of `int`
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	                         ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -110,7 +110,7 @@ class A1: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.109: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.99: 	trait S1: R1[int]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -119,7 +119,7 @@ class A1: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.109: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of `int`
 //│ ║  l.101: 	trait T1: R1[string]
 //│ ║         	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -176,7 +176,7 @@ class A1_2: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.174: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `string`
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.99: 	trait S1: R1[int]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -185,7 +185,7 @@ class A1_2: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.174: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of `int`
 //│ ║  l.101: 	trait T1: R1[string]
 //│ ║         	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

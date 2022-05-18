@@ -226,6 +226,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
       }, td.targs.lazyZip(targs).toMap)
     }
+    private var tag: Opt[Opt[ClassTag]] = N
+    def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
+      val res = ctx.tyDefs.get(defn.name) match {
+        case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
+        case _ => N
+      }
+      tag = S(res)
+      res
+    }
     override def toString = showProvOver(false) {
       val displayName =
         if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name

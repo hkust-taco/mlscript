@@ -96,7 +96,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           // RecordType(mergeMap(r1.fields, that.fields)(_ && _).toList)(noProv/*TODO*/))
           RecordType(recordIntersection(r1.fields, that.fields))(noProv/*TODO*/), trs)
     }
-    def & (that: TypeRef): Opt[LhsNf] = this match {
+    def & (that: TypeRef)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[LhsNf] = this match {
       case LhsTop => S(LhsRefined(N, ssEmp, RecordType.empty, SortedMap.single(that.defn -> that)))
       case LhsRefined(b, ts, rt, trs) =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
@@ -105,9 +105,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             case (ta1, ta2) => TypeBounds.mk2(ta1 | ta2, ta1 & ta2)
           }.toList)(that.prov)
         })
-        S(LhsRefined(b, ts, rt, trs2))
+        val res = LhsRefined(b, ts, rt, trs2)
+        that.mkTag.fold(S(res): Opt[LhsNf])(res & _)
     }
-    def & (that: LhsNf)(implicit etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
+    def & (that: LhsNf)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[LhsNf] = (this, that) match {
       case (_, LhsTop) => S(this)
       case (LhsTop, _) => S(that)
       case (_, LhsRefined(bo, ts, rt, trs)) =>
@@ -316,7 +317,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         that.rnf <:< rnf &&
         that.nvars.forall(nvars)
       // }(r => s"!! $r")
-    def & (that: Conjunct)(implicit etf: ExpandTupleFields): Opt[Conjunct] =
+    def & (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Conjunct] =
       // trace(s"?? $this & $that ${lnf & that.lnf} ${rnf | that.rnf}") {
       if ((lnf.toType() <:< that.rnf.toType())(Ctx.empty)) N // TODO support <:< on any Nf? // TODO less inefficient! (uncached calls to toType)
       else S(Conjunct.mk(lnf & that.lnf getOrElse (return N), vars | that.vars
@@ -454,7 +455,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   case class Disjunct(rnf: RhsNf, vars: SortedSet[TypeVariable], lnf: LhsNf, nvars: SortedSet[TypeVariable]) {
     def neg: Conjunct = Conjunct(lnf, nvars, rnf, vars)
-    def | (that: Disjunct)(implicit etf: ExpandTupleFields): Opt[Disjunct] =
+    def | (that: Disjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Disjunct] =
       S(Disjunct(rnf | that.rnf getOrElse (return N), vars | that.vars,
         lnf & that.lnf getOrElse (return N), nvars | that.nvars))
     override def toString: Str =
@@ -474,10 +475,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case t :: ts => t.toType(sort) | DNF(ts).toType(sort)
     }
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
-    def & (that: DNF)(implicit etf: ExpandTupleFields): DNF =
+    def & (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)
     def | (that: DNF)(implicit etf: ExpandTupleFields): DNF = that.cs.foldLeft(this)(_ | _)
-    def & (that: Conjunct)(implicit etf: ExpandTupleFields): DNF =
+    def & (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       DNF(cs.flatMap(_ & that)) // TODO may need further simplif afterward
     def | (that: Conjunct)(implicit etf: ExpandTupleFields): DNF = {
       def go(cs: Ls[Conjunct], acc: Ls[Conjunct], toMerge: Conjunct): Ls[Conjunct] = 
@@ -505,7 +506,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(rcd: RecordType): DNF = DNF.of(LhsRefined(N, ssEmp, rcd, smEmp))
     def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
-    def merge(pol: Bool)(l: DNF, r: DNF)(implicit etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
+    def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
       mkWith(ty, pol, (_, st) => st)
     def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
@@ -523,12 +524,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
         if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
-          val base = ctx.tyDefs.get(defn.name) match {
-            case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
-            case _ => N
-          }
           val tr2 = TypeRef(defn, targs.map(st => f(N, st)))(tr.prov)
-          of(LhsRefined(base, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+          of(LhsRefined(tr.mkTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mkWith(tr.expand, pol, f)
       case TypeBounds(lb, ub) => mkWith(if (pol) ub else lb, pol, f)
     }
@@ -554,11 +551,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   case class CNF(ds: Ls[Disjunct]) {
     def & (that: CNF): CNF = that.ds.foldLeft(this)(_ & _)
-    def | (that: CNF)(implicit etf: ExpandTupleFields): CNF = that.ds.map(this | _).foldLeft(CNF.extr(false))(_ & _)
+    def | (that: CNF)(implicit ctx: Ctx, etf: ExpandTupleFields): CNF = that.ds.map(this | _).foldLeft(CNF.extr(false))(_ & _)
     def & (that: Disjunct): CNF =
       // TODO try to merge it with the others if possible
       CNF(that :: ds)
-    def | (that: Disjunct)(implicit etf: ExpandTupleFields): CNF = CNF(ds.flatMap(_ | that))
+    def | (that: Disjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): CNF = CNF(ds.flatMap(_ | that))
     override def toString: Str = s"CNF(${ds.mkString(" & ")})"
   }
   
@@ -570,7 +567,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(rcd: RecordType): CNF = CNF(rcd.fields.iterator.map(f =>
       Disjunct(RhsField(f._1, f._2), ssEmp, LhsTop, ssEmp)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
-    def merge(pol: Bool)(l: CNF, r: CNF)(implicit etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
+    def merge(pol: Bool)(l: CNF, r: CNF)(implicit ctx: Ctx, etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF = mkWith(ty, pol, (_, st) => st)
     def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
       // trace(s"?CNF $ty") {

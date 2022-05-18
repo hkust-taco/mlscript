@@ -32,7 +32,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.26: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Add[?b]` does not match type `int`
+//│ ╟── type `Add[?b]` is not an instance of `int`
 //│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
 //│ ║       	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -41,31 +41,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.26: 	eval1_ty = eval1_ty_ugly
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type Add
-//│ ║  l.16: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.16: 	def eval1_ty: Add[int] // ~500
-//│ ║        	              ^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.26: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not a record (expected a record with fields: lhs, rhs)
-//│ ║  l.16: 	def eval1_ty: Add[int] // ~500
-//│ ║        	                  ^^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.3: 	class Add[E]: { lhs: E; rhs: E }
-//│ ║       	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── from local type binding:
-//│ ║  l.9: 	def eval1_ty_ugly: Add['b] | 'a & ~Lit as 'b
-//│ ╙──     	                   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.26: 	eval1_ty = eval1_ty_ugly
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not have field 'Add#E'
+//│ ╟── type `int` is not an instance of `Add[int]`
 //│ ║  l.16: 	def eval1_ty: Add[int] // ~500
 //│ ║        	                  ^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -130,7 +106,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	              ^^^^^^^^
 //│         = <no result>
 //│           eval1_ty_ugly is not implemented
-//│ constrain calls  : 61
-//│ annoying  calls  : 53
-//│ subtyping calls  : 193
+//│ constrain calls  : 45
+//│ annoying  calls  : 32
+//│ subtyping calls  : 146
 

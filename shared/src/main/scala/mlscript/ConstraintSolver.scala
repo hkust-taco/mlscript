@@ -72,13 +72,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
               
               // println(s"Possible? $r ${lnf & r.lnf}")
-              !vars.exists(r.nvars) && ((lnf & r.lnf)(etf = false)).isDefined && ((lnf, r.rnf) match {
+              !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
                 case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
                   if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
                   => false
                 case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
                   => !objTags.contains(ot)
-                // TODO use TRs
                 case _ => true
               })
             }
@@ -120,6 +119,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
         tys.reduceOption(_ & _).getOrElse(TopType)
       }
+      implicit val etf: ExpandTupleFields = false
       (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
@@ -147,12 +147,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
           
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, done_ls & tr getOrElse
-        //   (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
+        // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, (done_ls & tr) getOrElse
+          (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
         
-        // TODO
         // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | tr getOrElse
+          (return println(s"OK  $done_rs & $tr  =:=  ${TopType}")))
         
         /*
         // This logic is now in `constrainDNF`... and even if we got here,
@@ -396,7 +397,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // fs1.foreach(f => rec(f._2, err, false))
             fs1.foreach(f => rec(f._2.ub, err, false))
           
-          // TODO
+          case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
+            if (tr1.defn === tr2.defn) {
+              assert(tr1.targs.sizeCompare(tr2.targs) === 0)
+              tr1.targs.lazyZip(tr2.targs).foreach { (targ1, targ2) =>
+                // TODO use variance info
+                rec(targ1, targ2, false)
+                rec(targ2, targ1, false)
+              }
+            } else {
+              (tr1.mkTag, tr2.mkTag) match {
+                case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
+                  reportError()
+                case _ =>
+                  rec(tr1.expand, tr2.expand, true)
+              }
+            }
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
           
@@ -435,6 +451,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           if obj.id.isInstanceOf[Var]
           && !primitiveTypes(obj.id.idStr)
           => msg"is not an instance of type ${obj.id.idStr.capitalize}"
+        case (lunw, obj: TypeRef)
+          => msg"is not an instance of `${obj.expNeg}`"
         case (lunw, TupleType(fs))
           if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
         case (lunw, FunctionType(_, _))
