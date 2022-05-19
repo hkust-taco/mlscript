@@ -562,7 +562,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
     }}
     
-    def getVarsPol(pol: Opt[Bool]): Map[TypeVariable, Opt[Bool]] = {
+    def getVarsPol(pol: Opt[Bool]): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TypeVariable, Opt[Bool]]
       @tailrec
       def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =
@@ -606,7 +606,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) => lb :: ub :: Nil
     }
     
-    def getVars: Set[TypeVariable] = {
+    def getVars: SortedSet[TypeVariable] = {
       val res = MutSet.empty[TypeVariable]
       @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
         case (tv: TypeVariable) :: tys =>
