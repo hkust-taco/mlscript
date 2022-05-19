@@ -13,28 +13,28 @@ class G[A]: { a: G[A] }
 def g: G['a] & {a: 'a} as 'a
 //│ g: 'a
 //│   where
-//│     'a := G['a] & {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 //│  = <missing implementation>
 
 :NoJS
 
 rec def g2 a = G { a }
-//│ g2: (G['A] & 'a) -> (G['A] with {a: 'a})
+//│ g2: (G[anything] & 'a) -> (G[anything] with {a: 'a})
 
 :e
 g = g2
-//│ (G['A] & 'a) -> (G['A] with {a: 'a})
+//│ (G[anything] & 'a) -> (G[anything] with {a: 'a})
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a := G['a] & {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `(G[?a] with {a: ?a}) | 'a`
+//│ ╟── function of type `?b -> ?c` does not match type `(G[anything] with {a: ?a}) | 'a`
 //│ ║  l.21: 	rec def g2 a = G { a }
 //│ ║        	           ^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(G[?a0] with {a: ?a0}) | 'a`
+//│ ╟── but it flows into reference with expected type `(G[anything] with {a: ?a0}) | 'a`
 //│ ║  l.25: 	g = g2
 //│ ║        	    ^^
 //│ ╟── Note: constraint arises from local type binding:
@@ -44,25 +44,25 @@ g = g2
 rec def g2 = G { a = g2 }
 //│ g2: 'a
 //│   where
-//│     'a :> G['A] with {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 
 g = g2
 //│ 'a
 //│   where
-//│     'a :> G['A] with {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a := G['a] & {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 
 g = g
 //│ 'a
 //│   where
-//│     'a := G['a] & {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a := G['a] & {a: 'a}
+//│     'a :> G[anything] with {a: 'a}
 
 
 def manual: 'a -> nothing as 'a

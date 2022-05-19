@@ -21,7 +21,7 @@ class Covar[A]
 //│ ║  l.12: 	    let tmp = (error : Covar[{ x: int }]) : Covar[{}]
 //│ ╙──      	                             ^^^^^^^^^^
 //│ Defined class Covar[±A]
-//│ Defined Covar.CovarMtd: Covar['A] -> ()
+//│ Defined Covar.CovarMtd: Covar[anything] -> ()
 //│ ╔══[WARNING] Type definition Covar has bivariant type parameters:
 //│ ║  l.10: 	class Covar[A]
 //│ ║        	      ^^^^^

@@ -19,29 +19,26 @@ def eval1 eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
   }
-//│ eval1: ('a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1: ('a -> 'rhs -> int & 'a) -> ((Add[nothing] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│      = [Function: eval1]
 //│ constrain calls  : 36
 //│ annoying  calls  : 0
-//│ subtyping calls  : 64
+//│ subtyping calls  : 62
 
 :stats
 def eval1f eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 e.lhs + eval1 e.rhs
   }
-//│ eval1f: ('rhs -> int) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1f: ('rhs -> int) -> ((Add[nothing] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
 //│ constrain calls  : 32
 //│ annoying  calls  : 0
-//│ subtyping calls  : 60
+//│ subtyping calls  : 58
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
-//│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│   where
-//│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│     'E0 :> Lit & {val: 2 | 3}
+//│ e1: Add[(Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
@@ -53,9 +50,9 @@ eval1 eval1 e1
 //│    = 6
 
 def eval1_fixed_1 = eval1 eval1
-//│ eval1_fixed_1: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1_fixed_1: ((Add[nothing] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit
 //│              = [Function (anonymous)]
 
 eval1_fixed_1 e1
@@ -66,7 +63,7 @@ eval1_fixed_1 e1
 rec def eval1_fixed_2 = eval1f (fun x -> eval1f eval1_fixed_2 x)
 //│ eval1_fixed_2: 'a -> int
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit
 //│              = [Function (anonymous)]
 
 eval1_fixed_2 e1
@@ -78,9 +75,9 @@ eval1_fixed_2 e1
 def eval1_fixed_3 =
   let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
   in fixed fixed
-//│ eval1_fixed_3: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1_fixed_3: ((Add[nothing] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit
 //│              = [Function (anonymous)]
 
 eval1_fixed_3 e1
@@ -95,7 +92,7 @@ eval1_fixed_3 e1
 class Nega[E]: { arg: E }
 def nega arg = Nega { arg }
 //│ Defined class Nega[+E]
-//│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
+//│ nega: 'arg -> Nega['arg]
 //│     = [Function: nega]
 
 
@@ -103,24 +100,19 @@ def eval2 eval2 e = case e of {
   | Nega -> 0 - (eval2 eval2 e.arg)
   | _ -> eval1 eval2 e
   }
-//│ eval2: ('a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'rhs})) -> (int | 'val)
+//│ eval2: ('a -> 'rhs -> int & 'a) -> ((Add[nothing] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[nothing] with {arg: 'rhs})) -> (int | 'val)
 //│      = [Function: eval2]
 
 def eval2f eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1f eval2 e
   }
-//│ eval2f: ('rhs -> int) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'rhs})) -> (int | 'val)
+//│ eval2f: ('rhs -> int) -> ((Add[nothing] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[nothing] with {arg: 'rhs})) -> (int | 'val)
 //│       = [Function: eval2f]
 
 
 e2 = add (lit 1) (nega e1)
-//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega['E0] & {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}}
-//│   where
-//│     'E :> Lit & {val: 1} | Nega['E0] & {arg: Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}}
-//│     'E0 :> Add['E1] with {lhs: Lit & {val: 1}, rhs: Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
-//│     'E1 :> (Add['E2] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
-//│     'E2 :> Lit & {val: 2 | 3}
+//│ e2: Add[Lit & {val: 1} | Nega[Add[(Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]] with {lhs: Lit & {val: 1}, rhs: Nega[Add[(Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
 //│   = Add {
 //│       lhs: Lit { val: 1 },
 //│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
@@ -128,9 +120,9 @@ e2 = add (lit 1) (nega e1)
 
 
 def eval2_fixed_1 = eval2 eval2
-//│ eval2_fixed_1: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'a})) -> (int | 'val)
+//│ eval2_fixed_1: ((Add[nothing] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val}) | (Nega[nothing] with {arg: 'a})) -> (int | 'val)
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a})
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[nothing] with {arg: 'a})
 //│              = [Function (anonymous)]
 
 eval2_fixed_1 e1
@@ -147,7 +139,7 @@ def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 def eval2_fixed_2 = fix eval2f
 //│ eval2_fixed_2: 'a -> int
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a})
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[nothing] with {arg: 'a})
 //│              = [Function (anonymous)]
 
 eval2_fixed_2 e1
@@ -169,14 +161,14 @@ eval2_fixed_2 e2
 rec def eval1_fixed = eval1f (eval1f eval1_fixed)
 //│ eval1_fixed: 'a -> int
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit
 //│ Runtime error:
 //│   ReferenceError: eval1_fixed is not defined
 
 rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
 //│ eval1_fixed: () -> 'a -> int
 //│   where
-//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: (Add[nothing] with {lhs: 'a, rhs: 'a}) | Lit
 //│            = [Function: eval1_fixed1]
 
 :re
@@ -208,7 +200,7 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ╙──      	                         ^^^^^^^^^^^
-//│ eval1_fixed: ((Add[?] with {lhs: (Add[?] with {lhs: nothing -> int, rhs: nothing -> int}) | Lit, rhs: (Add[?] with {lhs: nothing -> int, rhs: nothing -> int}) | Lit}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1_fixed: ((Add[nothing] with {lhs: (Add[nothing] with {lhs: nothing -> int, rhs: nothing -> int}) | Lit, rhs: (Add[nothing] with {lhs: nothing -> int, rhs: nothing -> int}) | Lit}) | (Lit with {val: 'val})) -> (int | 'val)
 
 rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╔══[ERROR] Type mismatch in binding of application:
@@ -241,7 +233,7 @@ rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╟── from application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^^^^^^
-//│ eval1_fixed: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'a -> int & 'val})) -> (int | 'val)
+//│ eval1_fixed: ((Add[nothing] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'a -> int & 'val})) -> (int | 'val)
 
 :e
 rec def eval1_fixed = eval1f eval1_fixed e1
@@ -282,7 +274,7 @@ def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
   }
-//│ eval2_broken: ('a -> 'rhs -> int & 'a) -> ((Add[?] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[?] with {arg: 'arg})) -> ('arg | int)
+//│ eval2_broken: ('a -> 'rhs -> int & 'a) -> ((Add[nothing] with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[nothing] with {arg: 'arg})) -> ('arg | int)
 
 :e
 eval2_broken eval2_broken e2
@@ -296,7 +288,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.282: 	  | Nega -> e.arg
+//│ ║  l.274: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -305,7 +297,7 @@ def eval2f_oops eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1 eval2 e // should be: eval1f eval2 e
   }
-//│ eval2f_oops: ('arg -> nothing & 'arg) -> ((Add[?] with {lhs: anything, rhs: anything}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│ eval2f_oops: ('arg -> nothing & 'arg) -> ((Add[nothing] with {lhs: anything, rhs: anything}) | (Lit with {val: 'val}) | (Nega[nothing] with {arg: 'arg})) -> (int | 'val)
 
 :e
 fix eval2f_oops e2
@@ -313,13 +305,13 @@ fix eval2f_oops e2
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` does not match type `Add[?] & ?c | Lit & ?d`
-//│ ║  l.143: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║  l.135: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ║         	                                    ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.18: 	def eval1 eval1 e = case e of {
 //│ ║        	                         ^
 //│ ╟── from reference:
-//│ ║  l.304: 	def eval2f_oops eval2 e = case e of {
+//│ ║  l.296: 	def eval2f_oops eval2 e = case e of {
 //│ ╙──       	                               ^
 //│ res: error
 

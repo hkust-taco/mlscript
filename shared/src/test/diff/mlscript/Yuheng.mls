@@ -109,7 +109,7 @@ rec def eval(e) = case e of
   }
 //│ eval: 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
+//│     'a <: (IntLit with {value: 'value}) | (Pair[anything, anything] with {lhs: 'a, rhs: 'a})
 //│     'value :> ('value, 'value,)
 //│     = [Function: eval]
 
@@ -120,7 +120,7 @@ rec def eval(e) = case e of
   }
 //│ eval: 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
+//│     'a <: (IntLit with {value: 'value}) | (Pair[anything, anything] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[anything, anything]
 //│     'value :> ('value, 'value,)
 //│     = [Function: eval1]
 
@@ -143,7 +143,7 @@ p = Pair {
   rhs = Pair {
     lhs = IntLit { value = 2 };
     rhs = IntLit { value = 3 } } }
-//│ p: Pair[int, (int, int,)] with {lhs: IntLit & {value: 1}, rhs: Pair[int, int] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}}
+//│ p: Pair[anything, anything] with {lhs: IntLit & {value: 1}, rhs: Pair[anything, anything] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}}
 //│  = Pair {
 //│      lhs: IntLit { value: 1 },
 //│      rhs: Pair { lhs: IntLit { value: 2 }, rhs: IntLit { value: 3 } }
@@ -236,7 +236,7 @@ eval (Pair {
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+5: 	    rhs = IntLit { value = 3 } } } })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Pair[?A, ?B] & {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
+//│ ╟── application of type `Pair[?A, ?B] with {lhs: ?lhs, rhs: ?rhs}` does not match type `int`
 //│ ║  l.+3: 	  rhs = IntLit { value = Pair {
 //│ ║        	                         ^^^^^^
 //│ ║  l.+4: 	    lhs = IntLit { value = 2 };
@@ -248,7 +248,7 @@ eval (Pair {
 //│ ╙──      	                                   ^^^
 //│ res: 'a
 //│   where
-//│     'a :> ('a, 'a,) | 1 | (Pair[int, int] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}})
+//│     'a :> ('a, 'a,) | 1 | (Pair[anything, anything] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}})
 
 
 p = Pair2 {
@@ -273,12 +273,12 @@ p = Pair2 {
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.181: 	class Pair2[A, B]: Expr[(A, B)] & { lhs: Expr[A]; rhs: Expr[A] }
 //│ ╙──       	                        ^^^^^^
-//│ p: error | (Pair2[in (int, 'B,) | int out nothing, 'B0] with {Expr#A :> ((int, 'B,) | int, 'B0,) <: (nothing, 'B0,), lhs: IntLit & {value: 1}, rhs: Pair2[int, 'B] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}})
+//│ p: error | (Pair2[anything, anything] with {lhs: IntLit & {value: 1}, rhs: Pair2[anything, anything] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}})
 
 
 
 def eval: Expr['a] -> 'a
-//│ eval: Expr['a] -> 'a
+//│ eval: Expr[anything] -> nothing
 
 rec def eval(e) = case e of
   { IntLit -> e.value
@@ -286,10 +286,10 @@ rec def eval(e) = case e of
   }
 //│ 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
+//│     'a <: (IntLit with {value: 'value}) | (Pair[anything, anything] with {lhs: 'a, rhs: 'a})
 //│     'value :> ('value, 'value,)
 //│   <:  eval:
-//│ Expr['a] -> 'a
+//│ Expr[anything] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -376,10 +376,10 @@ rec def eval(e) = case e of
   }
 //│ 'a -> 'value
 //│   where
-//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
+//│     'a <: (IntLit with {value: 'value}) | (Pair[anything, anything] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[anything, anything]
 //│     'value :> ('value, 'value,)
 //│   <:  eval:
-//│ Expr['a] -> 'a
+//│ Expr[anything] -> nothing
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -136,7 +136,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         rec(ls, mode.copy(fixme = true))
       case line :: ls if line.startsWith(outputMarker) //|| line.startsWith(oldOutputMarker)
         => rec(ls, defaultMode)
-      case line :: ls if line.isEmpty || line.startsWith("//") =>
+      case line :: ls if line.isEmpty =>
+        out.println(line)
+        rec(ls, defaultMode)
+      case line :: ls if line.startsWith("//") =>
         out.println(line)
         rec(ls, mode)
       case line :: ls if line.startsWith(diffBegMarker) => // Check if there are unmerged git conflicts

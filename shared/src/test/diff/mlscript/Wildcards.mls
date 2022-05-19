@@ -47,16 +47,16 @@ E{} : E[?]
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.40: 	E{} : E[?]
 //│ ╙──      	        ^
-//│ res: E[?]
+//│ res: E[anything]
 //│    = E {}
 
 def e: E[?]
 def e = E{}
-//│ e: E[?]
+//│ e: E[anything]
 //│  = <missing implementation>
-//│ E['A]
+//│ E[anything]
 //│   <:  e:
-//│ E[?]
+//│ E[anything]
 //│  = E {}
 
 
@@ -72,16 +72,16 @@ add 1 : Als1[?]
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.67: 	add 1 : Als1[?]
 //│ ╙──      	             ^
-//│ res: Als1[?]
+//│ res: Als1[anything]
 //│    = [Function (anonymous)]
 
 def a1: Als1[?]
 a1 = add 1
-//│ a1: Als1[?]
+//│ a1: Als1[anything]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a1:
-//│ Als1[?]
+//│ Als1[anything]
 //│   = [Function (anonymous)]
 
 
@@ -96,16 +96,16 @@ add 1 : Als2[?]
 //│ ╟── type `anything` does not match type `int`
 //│ ║  l.92: 	add 1 : Als2[?]
 //│ ╙──      	             ^
-//│ res: Als2[?]
+//│ res: Als2[nothing]
 //│    = [Function (anonymous)]
 
 def a2: Als2[?]
 a2 = add 1
-//│ a2: Als2[?]
+//│ a2: Als2[nothing]
 //│   = <missing implementation>
 //│ int -> int
 //│   <:  a2:
-//│ Als2[?]
+//│ Als2[nothing]
 //│   = [Function (anonymous)]
 
 

@@ -11,7 +11,7 @@ class Box[T]: { inner: T }
   method Get = this.inner
 //│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: Box['T] -> ('T -> ('inner & 'T0)) -> (Box['T0] with {inner: 'inner})
+//│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
 //│ Defined Box.Get: Box['T] -> 'T
 //│ // Prelude
 //│ class Box {
@@ -35,7 +35,7 @@ def Box value = Box { inner = value }
 //│ };
 //│ res = Box1;
 //│ // End of generated code
-//│ Box: ('inner & 'T) -> (Box['T] with {inner: 'inner})
+//│ Box: 'inner -> Box['inner]
 //│    = [Function: Box1]
 
 :js
@@ -48,13 +48,9 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ globalThis.box2 = box1.Map((x) => add(x)(1));
 //│ res = box2;
 //│ // End of generated code
-//│ box1: Box['T] & {inner: 1}
-//│   where
-//│     'T :> 1
+//│ box1: Box[1]
 //│     = Box { inner: 1 }
-//│ box2: Box['a]
-//│   where
-//│     'a :> int
+//│ box2: Box[int]
 //│     = Box { inner: 2 }
 
 :js
@@ -71,7 +67,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (int -> ('inner & 'T)) -> (Box['T] with {info: string, inner: 'inner})
+//│ Defined MyBox.Map: MyBox -> (int -> 'inner) -> (Box['inner] with {info: string})
 //│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {
@@ -121,15 +117,13 @@ mb2.Get
 //│ // Query 5
 //│ res = mb2.Get;
 //│ // End of generated code
-//│ mb: MyBox & {info: "hello", inner: 1}
+//│ mb: MyBox with {info: "hello", inner: 1}
 //│   = MyBox { inner: 1, info: 'hello' }
 //│ mb: MyBox
 //│   = MyBox { inner: 2, info: 'hello' }
 //│ res: int
 //│    = 2
-//│ mb2: Box['a]
-//│   where
-//│     'a :> int
+//│ mb2: Box[int]
 //│    = Box { inner: 6, info: 'hello' }
 //│ res: int
 //│    = 6
@@ -143,14 +137,10 @@ MyBox.Map mb (fun x -> x * 3)
 //│ // Query 2
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
-//│ res: Box['T] & {info: string, inner: int}
-//│   where
-//│     'T :> int
+//│ res: Box[int] with {info: string}
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
-//│ res: Box['T] & {info: string, inner: int}
-//│   where
-//│     'T :> int
+//│ res: Box[int] with {info: string}
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
 
@@ -170,10 +160,10 @@ error : Box[int] & ~box
 //│ res: nothing
 
 error : Box[?] | Box[?] & {x: '_}
-//│ res: Box[?]
+//│ res: Box[anything]
 
 error : ((Box[?] | Box[?] & {x: 'a -> int}) & 'a) -> 'a
-//│ res: (Box[?] & 'a) -> 'a
+//│ res: (Box[nothing] & 'a) -> 'a
 
 error: "" | string
 //│ res: string

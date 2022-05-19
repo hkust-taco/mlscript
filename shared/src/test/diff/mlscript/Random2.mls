@@ -84,19 +84,16 @@ class Some[A]: { v: A }
 //│ Defined class Some[+A]
 
 def Some v = Some{v}
-//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ Some: 'v -> Some['v]
 
 
 def foo(x: Some['a]) =
   let _ = x.v : Some[?]
   in x: Some['a & some]
-//│ foo: Some['a] -> Some[Some[?] & 'a0]
-//│   where
-//│     'a := Some[?] & 'a0
-//│     'a0 <: {Some#A :> anything <: nothing, v: nothing} | ~Some[?]
+//│ foo: Some['a & (Some[nothing] | Some[nothing] & ~some)] -> Some[Some[anything] & 'a]
 
 def f: Some['a]
-//│ f: Some['a]
+//│ f: Some[nothing]
 
 
 
@@ -110,6 +107,6 @@ def foo(x: 'a, y: 'a) = (x + 1, y)
 def foo(f: 'a -> 'a, x: 'a) =
   let _ = x + 1
   in error: Some['a & some]
-//│ foo: ('a -> 'a, int,) -> Some[Some[?] & 'a0]
+//│ foo: ('a -> 'a, int,) -> Some[nothing]
 
 

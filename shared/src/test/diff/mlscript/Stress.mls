@@ -28,10 +28,10 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA}) | (E[nothing] with {fE: 'fA}) | (F[nothing] with {fF: 'fA}) | (G[nothing] with {fG: 'fA}) | (H[nothing] with {fH: 'fA})) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 1042
+//│ subtyping calls  : 1026
 
 
 // ====== 1 & all ====== //
@@ -59,12 +59,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA})) -> 'fA
 //│ arg: A[int] | B[int]
 //│ res: int
 //│ constrain calls  : 37
 //│ annoying  calls  : 20
-//│ subtyping calls  : 89
+//│ subtyping calls  : 85
 
 
 // ====== 3 ====== //
@@ -77,12 +77,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
 //│ constrain calls  : 50
 //│ annoying  calls  : 30
-//│ subtyping calls  : 182
+//│ subtyping calls  : 176
 
 
 // ====== 4 ====== //
@@ -96,12 +96,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
 //│ constrain calls  : 63
 //│ annoying  calls  : 40
-//│ subtyping calls  : 322
+//│ subtyping calls  : 314
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
@@ -130,12 +130,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA}) | (E[nothing] with {fE: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ res: int
 //│ constrain calls  : 76
 //│ annoying  calls  : 50
-//│ subtyping calls  : 520
+//│ subtyping calls  : 510
 
 
 // ====== 6 ====== //
@@ -151,12 +151,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA}) | (E[nothing] with {fE: 'fA}) | (F[nothing] with {fF: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ res: int
 //│ constrain calls  : 89
 //│ annoying  calls  : 60
-//│ subtyping calls  : 787
+//│ subtyping calls  : 775
 
 
 // ====== 7 ====== //
@@ -173,12 +173,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA}) | (E[nothing] with {fE: 'fA}) | (F[nothing] with {fF: 'fA}) | (G[nothing] with {fG: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ res: int
 //│ constrain calls  : 102
 //│ annoying  calls  : 70
-//│ subtyping calls  : 1134
+//│ subtyping calls  : 1120
 
 
 // ====== 8 ====== //
@@ -196,11 +196,11 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
-//│ foo: ((A[?] with {fA: 'fA}) | (B[?] with {fB: 'fA}) | (C[?] with {fC: 'fA}) | (D[?] with {fD: 'fA}) | (E[?] with {fE: 'fA}) | (F[?] with {fF: 'fA}) | (G[?] with {fG: 'fA}) | (H[?] with {fH: 'fA})) -> 'fA
+//│ foo: ((A[nothing] with {fA: 'fA}) | (B[nothing] with {fB: 'fA}) | (C[nothing] with {fC: 'fA}) | (D[nothing] with {fD: 'fA}) | (E[nothing] with {fE: 'fA}) | (F[nothing] with {fF: 'fA}) | (G[nothing] with {fG: 'fA}) | (H[nothing] with {fH: 'fA})) -> 'fA
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ res: int
 //│ constrain calls  : 115
 //│ annoying  calls  : 80
-//│ subtyping calls  : 1572
+//│ subtyping calls  : 1556
 
 

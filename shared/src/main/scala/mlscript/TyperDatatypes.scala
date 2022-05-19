@@ -232,6 +232,19 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       tag = S(res)
       res
     }
+    def mapTargs[R](pol: Opt[Bool])(f: (Opt[Bool], ST) => R)(implicit ctx: Ctx): Ls[R] = {
+      val td = ctx.tyDefs(defn.name)
+      td.tvarVariances.fold(targs.map(f(N, _))) { tvv =>
+        assert(td.tparamsargs.sizeCompare(targs) === 0)
+        (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
+          tvv(tv) match {
+            case VarianceInfo(true, true) =>
+              f(S(true), TypeBounds(BotType, TopType)(noProv))
+            case VarianceInfo(co, contra) =>
+              f(if (co) pol else if (contra) pol.map(!_) else N, ta)
+          }
+      }}
+    }
     override def toString = showProvOver(false) {
       val displayName =
         if (primitiveTypes.contains(defn.name)) defn.name.capitalize else defn.name
@@ -307,16 +320,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
     
-    def isRecursive_$ : Bool = (lbRecOccs_$, ubRecOccs_$) match {
+    def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true
       case _ => false
     } 
     /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
       * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
       *   and its bounds can actually be inlined. */
-    private final def lbRecOccs_$: Opt[Opt[Bool]] =
+    private final def lbRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
       TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true)).get(this)
-    private final def ubRecOccs_$: Opt[Opt[Bool]] =
+    private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
       TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
     
     override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + "'" * level)

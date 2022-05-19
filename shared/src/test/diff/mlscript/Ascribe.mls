@@ -31,7 +31,7 @@ class Foo[A]: { field: A }
 //│ Defined class Foo[+A]
 
 def foo(f: Foo['a]) = f.field
-//│ foo: Foo['a] -> 'a
+//│ foo: Foo['field] -> 'field
 //│    = [Function: foo2]
 
 

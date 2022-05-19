@@ -1,4 +1,5 @@
 :NoJS
+
 :ts
 { a = "hello"; b = "world" }
 1 + 2 - 5
@@ -75,19 +76,19 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.75: 	1: ?
+//│ ║  l.76: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.75: 	1: ?
+//│ ║  l.76: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.76: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.77: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.76: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.77: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts

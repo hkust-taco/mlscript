@@ -175,9 +175,7 @@ class C[A]: { x: A }
 //│ Defined class C[+A]
 
 c = C{x = 1}
-//│ c: C['A] & {x: 1}
-//│   where
-//│     'A :> 1
+//│ c: C[1]
 //│  = C { x: 1 }
 
 c.x
@@ -185,9 +183,7 @@ c.x
 //│    = 1
 
 d = c with { x = "hi"; y = 2 }
-//│ d: C['A] with {x: "hi", y: 2}
-//│   where
-//│     'A :> 1
+//│ d: C[1] with {x: "hi", y: 2}
 //│  = C { x: 'hi', y: 2 }
 
 d.x
@@ -195,9 +191,7 @@ d.x
 //│    = 'hi'
 
 d: C['a]
-//│ res: C['a]
-//│   where
-//│     'a :> "hi" | 1
+//│ res: C["hi" | 1]
 //│    = C { x: 'hi', y: 2 }
 
 res.x

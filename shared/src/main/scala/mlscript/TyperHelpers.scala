@@ -290,7 +290,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
-    def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType): SimpleType = this match {
+    def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
+          (implicit ctx: Ctx): SimpleType = this match {
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds(f(S(false), lb), f(S(true), ub))(prov)
@@ -306,7 +307,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
       case ProxyType(underlying) => f(pol, underlying) // TODO different?
-      case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(N, _)))(prov)
+      case tr @ TypeRef(defn, targs) =>
+        // TypeRef(defn, targs.map(f(N, _)))(prov)
+        TypeRef(defn, tr.mapTargs(pol)(f))(prov)
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -541,7 +544,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
-    def childrenPol(pol: Opt[Bool]): List[Opt[Bool] -> SimpleType] = {
+    def childrenPol(pol: Opt[Bool])(implicit ctx: Ctx): List[Opt[Bool] -> SimpleType] = {
       def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
         fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
       this match {
@@ -557,12 +560,12 @@ abstract class TyperHelpers { Typer: Typer =>
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
         case _: ObjectTag => Nil
-        case TypeRef(d, ts) => ts.map(N -> _)
+        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
     }}
     
-    def getVarsPol(pol: Opt[Bool]): SortedMap[TypeVariable, Opt[Bool]] = {
+    def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
       val res = MutMap.empty[TypeVariable, Opt[Bool]]
       @tailrec
       def rec(queue: List[Opt[Bool] -> SimpleType]): Unit =

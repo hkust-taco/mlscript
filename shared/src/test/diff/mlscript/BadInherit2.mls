@@ -155,9 +155,7 @@ a1: R1['_]
 //│    = A1 {}
 //│ res: R1[string]
 //│    = A1 {}
-//│ res: R1['_]
-//│   where
-//│     '_ <: int | string
+//│ res: R1[nothing]
 //│    = A1 {}
 
 :ns
@@ -174,7 +172,7 @@ a1: R1['_]
 class A1_2: S1 & T1
   method Foo1 = error
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.174: 	class A1_2: S1 & T1
+//│ ║  l.172: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
 //│ ║  l.99: 	trait S1: R1[int]
@@ -183,7 +181,7 @@ class A1_2: S1 & T1
 //│ ║  l.101: 	trait T1: R1[string]
 //│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.174: 	class A1_2: S1 & T1
+//│ ║  l.172: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
 //│ ║  l.101: 	trait T1: R1[string]

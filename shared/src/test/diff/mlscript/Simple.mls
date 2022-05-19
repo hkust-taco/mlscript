@@ -23,9 +23,7 @@ class Bar: {}
 //│ Defined class Bar
 
 def foo = Foo { field = id 1 }
-//│ foo: Foo['A] & {field: 1}
-//│   where
-//│     'A :> 1
+//│ foo: Foo[1]
 //│    = Foo { field: 1 }
 
 (if true then foo else { field = 2 }).field
@@ -33,13 +31,11 @@ def foo = Foo { field = id 1 }
 //│    = 1
 
 Foo { field = id 1 }
-//│ res: Foo['A] & {field: 1}
-//│   where
-//│     'A :> 1
+//│ res: Foo[1]
 //│    = Foo { field: 1 }
 
 def test x = case x of { Bar -> 1 | Foo -> 2 }
-//│ test: (Bar | Foo[?]) -> (1 | 2)
+//│ test: (Bar | Foo[nothing]) -> (1 | 2)
 //│     = [Function: test]
 
 test foo
@@ -47,7 +43,7 @@ test foo
 //│    = 2
 
 def test x = case x of { Bar -> 1 | Foo -> x.field }
-//│ test: (Bar | (Foo[?] with {field: 'field})) -> (1 | 'field)
+//│ test: (Bar | (Foo[nothing] with {field: 'field})) -> (1 | 'field)
 //│     = [Function: test1]
 
 test foo
@@ -59,7 +55,7 @@ test (Foo { field = 2 })
 //│    = 2
 
 def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: ((Foo[?] with {field: 'field}) | ~Foo[?]) -> (1 | 'field)
+//│ test: ((Foo[nothing] with {field: 'field}) | ~Foo[anything]) -> (1 | 'field)
 //│     = [Function: test2]
 
 

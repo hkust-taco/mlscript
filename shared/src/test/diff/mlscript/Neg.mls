@@ -121,11 +121,11 @@ class Foo[A]
 //│ ╙──       	          ^
 
 def f: ~Foo[1 | 2] | ~Foo[2 | 3]
-//│ f: ~Foo[in 1 | 2 | 3 out 2]
+//│ f: ~Foo[anything]
 //│  = <missing implementation>
 
 def f: (~Foo[1 | 2] & 'a | ~Foo[2 | 3] & 'a) -> 'a
-//│ f: ('a & ~Foo[in 1 | 2 | 3 out 2]) -> 'a
+//│ f: ('a & ~Foo[anything]) -> 'a
 //│  = <missing implementation>
 
 def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a

@@ -90,13 +90,11 @@ Nil: ListBase[anything]
 //│    = Nil { size: 0 }
 
 def c = Cons 1 Nil
-//│ c: Cons['A] with {head: 1, tail: Nil & {size: 0}}
-//│   where
-//│     'A :> 1
+//│ c: Cons[1] with {tail: Nil & {size: 0}}
 //│  = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c: ListBase[int]
-//│ res: ListBase[int]
+//│ res: ListBase[anything]
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 c.head
@@ -112,9 +110,7 @@ c.size
 //│    = 1
 
 def d = Cons 2 c
-//│ d: Cons['A] with {head: 2, tail: Cons['A] with {head: 1, tail: Nil & {size: 0}}}
-//│   where
-//│     'A :> 1 | 2
+//│ d: Cons[1 | 2] with {head: 2, tail: Cons[1 | 2] with {head: 1, tail: Nil & {size: 0}}}
 //│  = Cons {
 //│      size: 2,
 //│      head: 2,
@@ -130,9 +126,7 @@ d.size
 //│    = 2
 
 d.tail
-//│ res: Cons['A] with {head: 1, tail: Nil & {size: 0}}
-//│   where
-//│     'A :> 1 | 2
+//│ res: Cons[1 | 2] with {head: 1, tail: Nil & {size: 0}}
 //│    = Cons { size: 1, head: 1, tail: Nil { size: 0 } }
 
 d.tail.size
