@@ -195,7 +195,7 @@ class Prog[T]
 //│ ║  l.190: 	  method Run: Arg[T] -> number
 //│ ╙──       	              ^^^^^^
 //│ Defined class Prog[±T]
-//│ Declared Prog.Run: Prog[anything] -> error -> number
+//│ Declared Prog.Run: Prog[?] -> error -> number
 //│ ╔══[WARNING] Type definition Prog has bivariant type parameters:
 //│ ║  l.189: 	class Prog[T]
 //│ ║         	      ^^^^

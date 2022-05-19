@@ -79,12 +79,12 @@ def bar0 = foo
 def bar1: Type1[int] -> int -> Type1[int]
 bar1 d1
 bar1 d1 0
-//│ bar1: Type1[anything] -> int -> Type1[anything]
+//│ bar1: Type1[?] -> int -> Type1[?]
 //│     = <missing implementation>
-//│ res: int -> Type1[anything]
+//│ res: int -> Type1[?]
 //│    = <no result>
 //│      bar1 is not implemented
-//│ res: Type1[anything]
+//│ res: Type1[?]
 //│    = <no result>
 //│      bar1 is not implemented
 
@@ -92,7 +92,7 @@ bar1 d1 0
 def bar1 = foo
 //│ (Base1['A] & ~derived1 | Derived1) -> 'A -> (Base1['A] | Derived1)
 //│   <:  bar1:
-//│ Type1[anything] -> int -> Type1[anything]
+//│ Type1[?] -> int -> Type1[?]
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.92: 	def bar1 = foo
 //│ ║        	^^^^^^^^^^^^^^

@@ -244,7 +244,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
           tvv(tv) match {
             case VarianceInfo(true, true) =>
-              f(S(true), TypeBounds(BotType, TopType)(noProv))
+              // f(S(true), TypeBounds(BotType, TopType)(noProv))
+              f(N, TypeBounds(BotType, TopType)(noProv))
             case VarianceInfo(co, contra) =>
               f(if (co) pol else if (contra) pol.map(!_) else N, ta)
           }

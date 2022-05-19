@@ -76,8 +76,8 @@ class Tru[A]
     method Test f = true
     method Tru = this.Test (fun x -> error)
 //│ Defined class Tru[±A]
-//│ Defined Tru.Test: Tru[anything] -> anything -> true
-//│ Defined Tru.Tru: Tru[anything] -> true
+//│ Defined Tru.Test: Tru[?] -> anything -> true
+//│ Defined Tru.Tru: Tru[?] -> true
 //│ ╔══[WARNING] Type definition Tru has bivariant type parameters:
 //│ ║  l.75: 	class Tru[A]
 //│ ║        	      ^^^

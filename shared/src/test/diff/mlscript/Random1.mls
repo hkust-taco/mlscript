@@ -13,21 +13,21 @@ class G[A]: { a: G[A] }
 def g: G['a] & {a: 'a} as 'a
 //│ g: 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 //│  = <missing implementation>
 
 :NoJS
 
 rec def g2 a = G { a }
-//│ g2: (G[anything] & 'a) -> (G[anything] with {a: 'a})
+//│ g2: (G[?] & 'a) -> (G[?] with {a: 'a})
 
 :e
 g = g2
-//│ (G[anything] & 'a) -> (G[anything] with {a: 'a})
+//│ (G[?] & 'a) -> (G[?] with {a: 'a})
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.25: 	g = g2
 //│ ║        	^^^^^^
@@ -44,25 +44,25 @@ g = g2
 rec def g2 = G { a = g2 }
 //│ g2: 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 
 g = g2
 //│ 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 
 g = g
 //│ 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 //│   <:  g:
 //│ 'a
 //│   where
-//│     'a :> G[anything] with {a: 'a}
+//│     'a :> G[?] with {a: 'a}
 
 
 def manual: 'a -> nothing as 'a

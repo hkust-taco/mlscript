@@ -25,8 +25,8 @@ data type Either l r of
 //│ ╟── l is irrelevant and may be removed
 //│ ║  l.4: 	data type Either l r of
 //│ ╙──     	                 ^
-//│ Left: 'a -> Left['a, anything]
-//│ Right: 'a -> Right[anything, 'a]
+//│ Left: 'a -> Left['a, ?]
+//│ Right: 'a -> Right[?, 'a]
 
 :e
 data type Either2 (l: _) (r: _) of
@@ -53,9 +53,9 @@ data type Either2 (l: _) (r: _) of
 let l = Left 1
 let r = Right "ok"
 let e = if _ then l else r
-//│ l: Left[1, anything]
-//│ r: Right[anything, "ok"]
-//│ e: Left[1, anything] | Right[anything, "ok"]
+//│ l: Left[1, ?]
+//│ r: Right[?, "ok"]
+//│ e: Left[1, ?] | Right[?, "ok"]
 
 :e // TODO
 e as Either Int String

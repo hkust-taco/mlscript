@@ -278,31 +278,31 @@ class Foo2_Bi[A]
 //│ ╙──       	              ^
 
 Foo2_Bi
-//│ res: anything -> Foo2_Bi[anything]
+//│ res: anything -> Foo2_Bi[?]
 //│    = [Function: res]
 
 :re
 error: Foo2_Bi[int]
-//│ res: Foo2_Bi[anything]
+//│ res: Foo2_Bi[?]
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 f = fun x -> case x of { Foo2_Bi -> x }
-//│ f: (Foo2_Bi[anything] & 'a) -> 'a
+//│ f: (Foo2_Bi[?] & 'a) -> 'a
 //│  = [Function: f2]
 
 f (Foo2_Bi {})
-//│ res: Foo2_Bi[anything]
+//│ res: Foo2_Bi[?]
 //│    = Foo2_Bi {}
 
 :re
 error: (Foo2_Bi[?] & 'a) -> 'a
-//│ res: (Foo2_Bi[anything] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 f: (Foo2_Bi[?] & 'a) -> 'a
-//│ res: (Foo2_Bi[anything] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
 //│    = [Function: f2]
 
 :ns
@@ -314,26 +314,26 @@ f: (Foo2_Bi[?] & 'a) -> 'a
 //│    = [Function: f2]
 
 f
-//│ res: (Foo2_Bi[anything] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
 //│    = [Function: f2]
 
 
 def mrg: Foo2_Bi[int] & Foo2_Bi[string]
-//│ mrg: Foo2_Bi[anything]
+//│ mrg: Foo2_Bi[?]
 //│    = <missing implementation>
 
 mrg: Foo2_Bi[int]
-//│ res: Foo2_Bi[anything]
+//│ res: Foo2_Bi[?]
 //│    = <no result>
 //│      mrg is not implemented
 
 mrg = Foo2_Bi{}
-//│ Foo2_Bi[anything]
+//│ Foo2_Bi[?]
 //│   <:  mrg:
-//│ Foo2_Bi[anything]
+//│ Foo2_Bi[?]
 //│    = Foo2_Bi {}
 
 def mrg: Foo2_Bi[int] | Foo2_Bi[string]
-//│ mrg: Foo2_Bi[anything]
+//│ mrg: Foo2_Bi[?]
 //│    = <missing implementation>
 

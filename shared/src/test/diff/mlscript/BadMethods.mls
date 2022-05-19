@@ -565,8 +565,8 @@ class Dup[A, A]: { x: A }
 //│ ║  l.545: 	        B]: (A -> B) -> B
 //│ ╙──       	        ^
 //│ Defined class Dup[±A, +A]
-//│ Declared Dup.MthDup: Dup[anything, 'A] -> ('A -> 'B) -> 'B
-//│ Defined Dup.MthDup: Dup[anything, 'A] -> ('A -> 'a) -> 'a
+//│ Declared Dup.MthDup: Dup[?, 'A] -> ('A -> 'B) -> 'B
+//│ Defined Dup.MthDup: Dup[?, 'A] -> ('A -> 'a) -> 'a
 //│ ╔══[WARNING] Type definition Dup has bivariant type parameters:
 //│ ║  l.543: 	class Dup[A, A]: { x: A }
 //│ ║         	      ^^^
@@ -575,14 +575,14 @@ class Dup[A, A]: { x: A }
 //│ ╙──       	          ^
 
 t = Dup { x = 42 }
-//│ t: Dup[anything, anything] & {x: 42}
+//│ t: Dup[?, anything] & {x: 42}
 
 :stats
 t : Dup[bool, int]
-//│ res: Dup[anything, int]
+//│ res: Dup[?, int]
 //│ constrain calls  : 22
 //│ annoying  calls  : 21
-//│ subtyping calls  : 27
+//│ subtyping calls  : 33
 
 :stats
 t : Dup[int, bool]
@@ -595,10 +595,10 @@ t : Dup[int, bool]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.588: 	t : Dup[int, bool]
 //│ ╙──       	             ^^^^
-//│ res: Dup[anything, bool]
+//│ res: Dup[?, bool]
 //│ constrain calls  : 33
 //│ annoying  calls  : 23
-//│ subtyping calls  : 26
+//│ subtyping calls  : 32
 
 :stats
 t.MthDup (fun x -> mul 2 x)

@@ -25,7 +25,7 @@ class None[A]: Option[A]
 class List[A]
     method HeadOption: Option[A]
 //│ Defined class List[±A]
-//│ Declared List.HeadOption: List[anything] -> Option[anything]
+//│ Declared List.HeadOption: List[?] -> Option[?]
 //│ ╔══[WARNING] Type definition List has bivariant type parameters:
 //│ ║  l.25: 	class List[A]
 //│ ║        	      ^^^^
@@ -37,7 +37,7 @@ class List[A]
 class Nil[A]: List[A]
     method HeadOption = None {}
 //│ Defined class Nil[±A]
-//│ Defined Nil.HeadOption: Nil[anything] -> None[anything]
+//│ Defined Nil.HeadOption: Nil[?] -> None[?]
 //│ ╔══[WARNING] Type definition Nil has bivariant type parameters:
 //│ ║  l.37: 	class Nil[A]: List[A]
 //│ ║        	      ^^^
@@ -57,10 +57,10 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 
 :stats
 l0 = Cons { head = 1; tail = Nil {} }
-//│ l0: Cons[1] with {tail: Nil[anything]}
+//│ l0: Cons[1] with {tail: Nil[?]}
 //│ constrain calls  : 21
 //│ annoying  calls  : 2
-//│ subtyping calls  : 36
+//│ subtyping calls  : 38
 
 :stats
 Cons.HeadOption l0
@@ -71,10 +71,10 @@ Cons.HeadOption l0
 
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
-//│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}
+//│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}
 //│ constrain calls  : 53
 //│ annoying  calls  : 6
-//│ subtyping calls  : 116
+//│ subtyping calls  : 118
 
 :stats
 Cons.HeadOption l1
@@ -85,10 +85,10 @@ Cons.HeadOption l1
 
 :stats
 l2 = Cons { head = 0; tail = l1 }
-//│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}}
+//│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ constrain calls  : 17
 //│ annoying  calls  : 2
-//│ subtyping calls  : 132
+//│ subtyping calls  : 134
 
 :stats
 Cons.HeadOption l2
@@ -99,10 +99,10 @@ Cons.HeadOption l2
 
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
-//│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}}}
+//│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
 //│ constrain calls  : 35
 //│ annoying  calls  : 2
-//│ subtyping calls  : 164
+//│ subtyping calls  : 166
 
 :stats
 Cons.HeadOption l3

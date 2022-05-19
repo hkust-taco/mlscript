@@ -125,7 +125,7 @@ data type List a of
 //│ ╟── a is irrelevant and may be removed
 //│ ║  l.110: 	data type List a of
 //│ ╙──       	               ^
-//│ Nil: Nil[anything]
+//│ Nil: Nil[?]
 //│ Cons: (head: 'a,) -> (tail: List['a],) -> Cons['a]
 
 // TODO interpret as free type variable?
@@ -157,7 +157,7 @@ Cons
 Cons 1
 Cons 2 Nil
 Cons 1 (Cons 2 Nil)
-//│ res: Nil[anything]
+//│ res: Nil[?]
 //│ res: (head: 'a,) -> (tail: List['a],) -> Cons['a]
 //│ res: (tail: List['a],) -> Cons[1 | 'a]
 //│ res: Cons[2]

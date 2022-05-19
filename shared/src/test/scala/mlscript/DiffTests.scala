@@ -283,14 +283,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               typer.dbg = mode.dbgSimplif
-              if (mode.noSimplification) typer.expandType(wty)
+              if (mode.noSimplification) typer.expandType(wty)(ctx)
               else {
                 object SimplifyPipeline extends typer.SimplifyPipeline {
                   def debugOutput(msg: => Str): Unit =
                     if (mode.dbgSimplif) output(msg)
                 }
                 val sim = SimplifyPipeline(wty)(ctx)
-                val exp = typer.expandType(sim)
+                val exp = typer.expandType(sim)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 exp
               }

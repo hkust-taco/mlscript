@@ -28,7 +28,7 @@ class Z[X, R]
 //│ Defined class E[=G]
 //│ Declared E.Id: E['G] -> 'G -> 'G
 //│ Defined class Z[=X, ±R]
-//│ Declared Z.Phantom: Z['X, anything] -> C['X]
+//│ Declared Z.Phantom: Z['X, ?] -> C['X]
 //│ ╔══[WARNING] Type definition Z has bivariant type parameters:
 //│ ║  l.24: 	class Z[X, R]
 //│ ║        	      ^
