@@ -214,7 +214,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-            tparamField(defn, tp) -> FieldType(Some(tv), tv)(prov)
+            // val tvv = td.tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
+            val tvv = td.getVariancesOrDefault
+            tparamField(defn, tp) -> FieldType(
+              // if (tvv(tv).isCovariant) N else Some(tv),
+              Some(if (tvv(tv).isCovariant) BotType else tv),
+              if (tvv(tv).isContravariant) TopType else tv)(prov)
           }.toList)(noProv)
         else TopType
       subst(td.kind match {
@@ -305,7 +310,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
-    override def toString = lb.filterNot(_ === BotType).fold(s"$ub")(lb => s"mut $lb..$ub")
+    override def toString =
+      // lb.filterNot(_ === BotType).fold(s"$ub")(lb => s"mut $lb..$ub")
+      lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.

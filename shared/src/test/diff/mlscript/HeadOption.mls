@@ -58,58 +58,58 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 :stats
 l0 = Cons { head = 1; tail = Nil {} }
 //│ l0: Cons[1] with {tail: Nil[anything]}
-//│ constrain calls  : 32
-//│ annoying  calls  : 6
-//│ subtyping calls  : 52
+//│ constrain calls  : 21
+//│ annoying  calls  : 2
+//│ subtyping calls  : 36
 
 :stats
 Cons.HeadOption l0
 //│ res: Some[1]
-//│ constrain calls  : 75
-//│ annoying  calls  : 27
-//│ subtyping calls  : 97
+//│ constrain calls  : 37
+//│ annoying  calls  : 23
+//│ subtyping calls  : 47
 
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
-//│ l1: Cons[1 | 2 | 3] with {head: 1, tail: Cons[1 | 2 | 3] with {head: 2, tail: Cons[1 | 2 | 3] with {head: 3, tail: Nil[anything]}}}
-//│ constrain calls  : 164
-//│ annoying  calls  : 18
-//│ subtyping calls  : 315
+//│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}
+//│ constrain calls  : 53
+//│ annoying  calls  : 6
+//│ subtyping calls  : 116
 
 :stats
 Cons.HeadOption l1
-//│ res: Some[1 | 2 | 3]
-//│ constrain calls  : 234
-//│ annoying  calls  : 27
-//│ subtyping calls  : 299
+//│ res: Some[1]
+//│ constrain calls  : 37
+//│ annoying  calls  : 23
+//│ subtyping calls  : 47
 
 :stats
 l2 = Cons { head = 0; tail = l1 }
-//│ l2: Cons[0 | 1 | 2 | 3] with {head: 0, tail: Cons[0 | 1 | 2 | 3] with {head: 1, tail: Cons[0 | 1 | 2 | 3] with {head: 2, tail: Cons[0 | 1 | 2 | 3] with {head: 3, tail: Nil[anything]}}}}
-//│ constrain calls  : 136
-//│ annoying  calls  : 6
-//│ subtyping calls  : 548
+//│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}}
+//│ constrain calls  : 17
+//│ annoying  calls  : 2
+//│ subtyping calls  : 132
 
 :stats
 Cons.HeadOption l2
-//│ res: Some[0 | 1 | 2 | 3]
-//│ constrain calls  : 355
-//│ annoying  calls  : 27
-//│ subtyping calls  : 451
+//│ res: Some[0]
+//│ constrain calls  : 38
+//│ annoying  calls  : 23
+//│ subtyping calls  : 47
 
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
-//│ l3: Cons[int] with {head: int, tail: Cons[int] with {head: 0, tail: Cons[int] with {head: 1, tail: Cons[int] with {head: 2, tail: Cons[int] with {head: 3, tail: Nil[anything]}}}}}
-//│ constrain calls  : 226
-//│ annoying  calls  : 6
-//│ subtyping calls  : 781
+//│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[anything]}}}}}
+//│ constrain calls  : 35
+//│ annoying  calls  : 2
+//│ subtyping calls  : 164
 
 :stats
 Cons.HeadOption l3
 //│ res: Some[int]
-//│ constrain calls  : 517
-//│ annoying  calls  : 27
-//│ subtyping calls  : 553
+//│ constrain calls  : 44
+//│ annoying  calls  : 23
+//│ subtyping calls  : 50
 
 
 :stats
@@ -119,30 +119,30 @@ rec def lr1 = Cons { head = 0; tail = lr1 }
 //│     'tail :> Cons[0] with {tail: 'tail}
 //│ constrain calls  : 20
 //│ annoying  calls  : 2
-//│ subtyping calls  : 44
+//│ subtyping calls  : 43
 
 :stats
 Cons.HeadOption lr1
 //│ res: Some[0]
-//│ constrain calls  : 42
+//│ constrain calls  : 36
 //│ annoying  calls  : 21
-//│ subtyping calls  : 46
+//│ subtyping calls  : 39
 
 :stats
 rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
 //│ lr2: 'tail
 //│   where
-//│     'tail :> Cons[0 | 1 | 3] with {head: 0, tail: Cons[0 | 1 | 3] with {head: 1, tail: Cons[0 | 1 | 3] with {head: 3, tail: 'tail}}}
-//│ constrain calls  : 286
-//│ annoying  calls  : 18
-//│ subtyping calls  : 336
+//│     'tail :> Cons[0] with {tail: Cons[1] with {tail: Cons[3] with {tail: 'tail}}}
+//│ constrain calls  : 52
+//│ annoying  calls  : 6
+//│ subtyping calls  : 123
 
 :stats
 Cons.HeadOption lr2
-//│ res: Some[0 | 1 | 3]
-//│ constrain calls  : 397
-//│ annoying  calls  : 27
-//│ subtyping calls  : 317
+//│ res: Some[0]
+//│ constrain calls  : 38
+//│ annoying  calls  : 23
+//│ subtyping calls  : 47
 
 
 // FIXME

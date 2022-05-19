@@ -103,10 +103,10 @@ class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper[+A]
 //│ Declared WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> WrapperWrapper['B]
-//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> (WrapperWrapper['B] with {Wrapper#A <: Wrapper['B], x: Wrapper['B]})
+//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> WrapperWrapper['B]
 
 WrapperWrapper { x = Psyduck { x = 0 } }
-//│ res: WrapperWrapper[0] with {Wrapper#A <: Wrapper[0], x: Psyduck[0] with {x: 0}}
+//│ res: WrapperWrapper[0] with {x: Psyduck[0]}
 //│    = WrapperWrapper { x: Psyduck { x: 0 } }
 
 res.Apply2 (fun x -> mul x 2)

@@ -13,7 +13,7 @@ Bar1
 //│    = [Function: res]
 
 b = Bar1{x = 1}
-//│ b: Bar1 with {x: 1}
+//│ b: Bar1 & {x: 1}
 //│  = Bar1 { x: 1 }
 
 :e
@@ -98,7 +98,7 @@ error: {A: 1}
 //│   Error: unexpected runtime error
 
 b = Bar2{x = 1}
-//│ b: Bar2 with {x: 1}
+//│ b: Bar2 & {x: 1}
 //│  = Bar2 { x: 1 }
 
 :e
@@ -106,12 +106,12 @@ c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.105: 	c = b: Foo2[string]
 //│ ║         	    ^
-//│ ╟── type `string` is not an instance of `int`
-//│ ║  l.105: 	c = b: Foo2[string]
-//│ ║         	            ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
-//│ ╙──      	                 ^^^
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.105: 	c = b: Foo2[string]
+//│ ╙──       	            ^^^^^^
 //│ c: Foo2[string]
 //│  = Bar2 { x: 1 }
 
@@ -136,12 +136,12 @@ d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.135: 	d: Foo2[string]
 //│ ║         	^
-//│ ╟── type `string` is not an instance of `int`
-//│ ║  l.135: 	d: Foo2[string]
-//│ ║         	        ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
-//│ ╙──      	                 ^^^
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.135: 	d: Foo2[string]
+//│ ╙──       	        ^^^^^^
 //│ res: Foo2[string]
 //│    = Bar2 { x: 1 }
 

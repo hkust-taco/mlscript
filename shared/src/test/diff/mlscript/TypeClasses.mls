@@ -66,7 +66,7 @@ cmi.Empty.real
 //│    = 0
 
 cmi.Add (Complex 1 2) (Complex 3 4)
-//│ res: (Complex[int] with {imaginary: 2 | 4, real: 1 | 3}) | Complex[int]
+//│ res: Complex[1 | 2 | 3 | 4] & {imaginary: 2 | 4, real: 1 | 3} | Complex[int]
 //│    = Complex { real: 4, imaginary: 6 }
 
 
@@ -105,7 +105,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` is not an instance of type Complex
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `Complex[?]`
+//│ ╟── but it flows into application with expected type `Complex[anything]`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -135,7 +135,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A = A}`
+//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -145,7 +145,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0[=A]
-//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'imaginary -> (Complex['imaginary | {real: Monoid['A]}] with {real: {real: Monoid['A]}})
+//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'imaginary -> (Complex['imaginary | {real: Monoid['A]}] & {real: {real: Monoid['A]}})
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
 
 
@@ -164,7 +164,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` is not an instance of type Complex
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `Complex[?]`
+//│ ╟── but it flows into application with expected type `Complex[anything]`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -194,7 +194,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╟── function of type `?a -> ?b` does not have field 'Complex#A'
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `{Complex#A = A}`
+//│ ╟── but it flows into application with expected type `{Complex#A <: A}`
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base.Empty; imaginary = this.imaginary.Empty }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -204,7 +204,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1[=A]
-//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'imaginary -> (Complex['imaginary | {imaginary: error, real: 'A}] with {real: {imaginary: error, real: 'A}})
+//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'imaginary -> (Complex['imaginary | {imaginary: error, real: 'A}] & {real: {imaginary: error, real: 'A}})
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 
 

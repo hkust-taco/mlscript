@@ -28,7 +28,7 @@ def c = Cons 2 Nil
 //│  = Cons { head: 2, tail: Nil {} }
 
 def d = Cons 1 c
-//│ d: Cons[1 | 2] with {head: 1, tail: Cons[1 | 2] with {head: 2, tail: Nil}}
+//│ d: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
 //│  = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 d.head
@@ -40,23 +40,23 @@ res: 1
 //│    = 1
 
 d.tail
-//│ res: Cons[1 | 2] with {head: 2, tail: Nil}
+//│ res: Cons[2] with {tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 res
-//│ res: Cons[1 | 2] with {head: 1, tail: Cons[1 | 2] with {head: 2, tail: Nil}}
+//│ res: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
-//│ res: Cons[1 | 2] with {head: 2, tail: Nil}
+//│ res: Cons[2] with {tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (Cons 2 Nil)
-//│ res: Cons[1 | 2] with {head: 1, tail: Cons[1 | 2] with {head: 2, tail: Nil}}
+//│ res: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 res.tail
-//│ res: Cons[1 | 2] with {head: 2, tail: Nil}
+//│ res: Cons[2] with {tail: Nil}
 //│    = Cons { head: 2, tail: Nil {} }
 
 // We can now access the tail's tail, thanks to the refined type
@@ -86,7 +86,7 @@ res.tail.head
 
 // This used to yield a more precise Cons constructor, but it's no longer necessary in the new class semantics
 def Cons head tail = originalCons { head; tail } with { head; tail }
-//│ Cons: ('A & 'head) -> (List['A] & 'tail) -> (Cons['A] with {head: 'head, tail: 'tail})
+//│ Cons: ('A & 'head) -> (List['A] & 'tail) -> (Cons['A] & {head: 'head, tail: 'tail})
 //│     = [Function: Cons2]
 
 
@@ -132,7 +132,7 @@ Cons 1 res
 // But then I reverted to the use of simple field-hiding types, as they are simpler!
 // 
 Cons 1 (Cons 2 Nil)
-//│ res: Cons[1 | 2] with {head: 1, tail: Cons[1 | 2] with {head: 2, tail: Nil}}
+//│ res: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }
@@ -144,7 +144,7 @@ Cons 2 Nil
 //│    = Cons { head: 2, tail: Nil {} }
 
 Cons 1 (id res)
-//│ res: Cons[1 | 2] with {head: 1, tail: Cons[1 | 2] with {head: 2, tail: Nil}}
+//│ res: Cons[1 | 2] with {head: 1, tail: Cons[2] with {tail: Nil}}
 //│    = Cons { head: 1, tail: Cons { head: 2, tail: Nil {} } }
 
 { a = res.head; b = res.tail.head; c = res.tail.tail }

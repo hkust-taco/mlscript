@@ -67,7 +67,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (int -> 'inner) -> (Box['inner] with {info: string})
+//│ Defined MyBox.Map: MyBox -> (int -> 'inner) -> (Box['inner] & {info: string})
 //│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {
@@ -117,7 +117,7 @@ mb2.Get
 //│ // Query 5
 //│ res = mb2.Get;
 //│ // End of generated code
-//│ mb: MyBox with {info: "hello", inner: 1}
+//│ mb: MyBox & {info: "hello", inner: 1}
 //│   = MyBox { inner: 1, info: 'hello' }
 //│ mb: MyBox
 //│   = MyBox { inner: 2, info: 'hello' }
@@ -137,10 +137,10 @@ MyBox.Map mb (fun x -> x * 3)
 //│ // Query 2
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
-//│ res: Box[int] with {info: string}
+//│ res: Box[int] & {info: string}
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
-//│ res: Box[int] with {info: string}
+//│ res: Box[int] & {info: string}
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
 

@@ -29,18 +29,8 @@ class Covar[A]
 //│ ║  l.10: 	class Covar[A]
 //│ ╙──      	            ^
 
-// TODO this should work when variance analysis is implemented and taken into account 
-:e
+:re
 (error : Covar[{ x: int }]) : Covar[{}]
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.34: 	(error : Covar[{ x: int }]) : Covar[{}]
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not have field 'x'
-//│ ║  l.34: 	(error : Covar[{ x: int }]) : Covar[{}]
-//│ ║        	                                    ^^
-//│ ╟── Note: constraint arises from record type:
-//│ ║  l.34: 	(error : Covar[{ x: int }]) : Covar[{}]
-//│ ╙──      	               ^^^^^^^^^^
 //│ res: Covar[anything]
 //│ Runtime error:
 //│   Error: unexpected runtime error

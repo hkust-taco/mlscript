@@ -205,7 +205,7 @@ Cons 1 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.204: 	Cons 1 2
 //│ ║         	^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[anything]`
+//│ ╟── integer literal of type `2` does not match type `Cons[?a] | Nil[?]`
 //│ ║  l.204: 	Cons 1 2
 //│ ║         	       ^
 //│ ╟── Note: constraint arises from union type:

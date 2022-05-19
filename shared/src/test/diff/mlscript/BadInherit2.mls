@@ -4,11 +4,11 @@
 
 
 trait S0[A]
-  method Foo0: A
+  method Foo0: A -> A
 trait T0[B]: S0[B]
-//│ Defined trait S0[+A]
-//│ Declared S0.Foo0: S0['A] -> 'A
-//│ Defined trait T0[+B]
+//│ Defined trait S0[=A]
+//│ Declared S0.Foo0: S0['A] -> 'A -> 'A
+//│ Defined trait T0[=B]
 
 :e
 class A0: S0[int] & T0[string]
@@ -41,12 +41,12 @@ class A0: S0[int] & T0[string]
 //│ ╟── Hint: method Foo0 is abstract
 //│ ║  l.14: 	class A0: S0[int] & T0[string]
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error
+//│ res: 'A -> ('A | error)
 //│    = undefined
 
 :e
 class A0_2: S0[int] & T0[string]
-  method Foo0 = 1
+  method Foo0 x = 1
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -66,97 +66,93 @@ class A0_2: S0[int] & T0[string]
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
 //│ ╙──      	               ^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.49: 	  method Foo0 = 1
-//│ ║        	         ^^^^^^^^
+//│ ║  l.49: 	  method Foo0 x = 1
+//│ ║        	         ^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `string`
-//│ ║  l.49: 	  method Foo0 = 1
-//│ ║        	                ^
-//│ ╟── but it flows into method definition with expected type `string`
-//│ ║  l.49: 	  method Foo0 = 1
-//│ ║        	         ^^^^^^^^
+//│ ║  l.49: 	  method Foo0 x = 1
+//│ ║        	                  ^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.48: 	class A0_2: S0[int] & T0[string]
-//│ ║        	                         ^^^^^^
-//│ ╟── from inherited method declaration:
-//│ ║  l.7: 	  method Foo0: A
-//│ ╙──     	         ^^^^^^^
+//│ ╙──      	                         ^^^^^^
 //│ Defined class A0_2
-//│ Defined A0_2.Foo0: A0_2 -> 1
+//│ Defined A0_2.Foo0: A0_2 -> anything -> 1
 
 (A0_2{}).Foo0
-//│ res: nothing
-//│    = 1
+//│ res: ('A & (int | string)) -> 'A
+//│    = [Function: Foo0]
 
 
 // ———
 
 
 trait R1[A]
-  method Foo1: A
-//│ Defined trait R1[+A]
-//│ Declared R1.Foo1: R1['A] -> 'A
+  method Foo1: A -> A
+//│ Defined trait R1[=A]
+//│ Declared R1.Foo1: R1['A] -> 'A -> 'A
 
 trait S1: R1[int]
-  method Foo1 = 1
+  method Foo1 x = 1
 trait T1: R1[string]
-  method Foo1 = "a"
+  method Foo1 x = "a"
 //│ Defined trait S1
-//│ Defined S1.Foo1: S1 -> 1
+//│ Defined S1.Foo1: S1 -> anything -> 1
 //│ Defined trait T1
-//│ Defined T1.Foo1: T1 -> "a"
+//│ Defined T1.Foo1: T1 -> anything -> "a"
 
 :e
 class A1: S1 & T1
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.109: 	class A1: S1 & T1
+//│ ║  l.103: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.99: 	trait S1: R1[int]
+//│ ║  l.93: 	trait S1: R1[int]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.101: 	trait T1: R1[string]
-//│ ╙──       	             ^^^^^^
+//│ ║  l.95: 	trait T1: R1[string]
+//│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.109: 	class A1: S1 & T1
+//│ ║  l.103: 	class A1: S1 & T1
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.101: 	trait T1: R1[string]
-//│ ║         	             ^^^^^^
+//│ ║  l.95: 	trait T1: R1[string]
+//│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	trait S1: R1[int]
+//│ ║  l.93: 	trait S1: R1[int]
 //│ ╙──      	             ^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.109: 	class A1: S1 & T1
+//│ ║  l.103: 	class A1: S1 & T1
 //│ ║         	      ^^
 //│ ╟── Definitions of method Foo1 inherited from:
 //│ ╟── • S1
-//│ ║  l.100: 	  method Foo1 = 1
-//│ ║         	         ^^^^^^^^
+//│ ║  l.94: 	  method Foo1 x = 1
+//│ ║        	         ^^^^^^^^^^
 //│ ╟── • T1
-//│ ║  l.102: 	  method Foo1 = "a"
-//│ ╙──       	         ^^^^^^^^^^
+//│ ║  l.96: 	  method Foo1 x = "a"
+//│ ╙──      	         ^^^^^^^^^^^^
 //│ Defined class A1
 
 a1 = A1{}
 //│ a1: A1
-//│   = A1 {}
+//│   = A1 { Foo1: [Function (anonymous)] }
 
 a1.Foo1
-//│ res: nothing
-//│    = 1
+//│ res: ('A & (int | string)) -> 'A
+//│    = [Function (anonymous)]
 
 a1: S1
 a1: R1[int]
 a1: R1[string]
 a1: R1['_]
 //│ res: S1
-//│    = A1 {}
+//│    = A1 { Foo1: [Function (anonymous)] }
 //│ res: R1[int]
-//│    = A1 {}
+//│    = A1 { Foo1: [Function (anonymous)] }
 //│ res: R1[string]
-//│    = A1 {}
-//│ res: R1[nothing]
-//│    = A1 {}
+//│    = A1 { Foo1: [Function (anonymous)] }
+//│ res: R1['_]
+//│   where
+//│     '_ <: int | string
+//│    = A1 { Foo1: [Function (anonymous)] }
 
 :ns
 a1: R1['_]
@@ -164,7 +160,7 @@ a1: R1['_]
 //│   where
 //│     '_ :> int & string
 //│        <: int | string
-//│    = A1 {}
+//│    = A1 { Foo1: [Function (anonymous)] }
 
 
 :e
@@ -172,22 +168,22 @@ a1: R1['_]
 class A1_2: S1 & T1
   method Foo1 = error
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.172: 	class A1_2: S1 & T1
+//│ ║  l.168: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
-//│ ║  l.99: 	trait S1: R1[int]
+//│ ║  l.93: 	trait S1: R1[int]
 //│ ║        	             ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.101: 	trait T1: R1[string]
-//│ ╙──       	             ^^^^^^
+//│ ║  l.95: 	trait T1: R1[string]
+//│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.172: 	class A1_2: S1 & T1
+//│ ║  l.168: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
-//│ ║  l.101: 	trait T1: R1[string]
-//│ ║         	             ^^^^^^
+//│ ║  l.95: 	trait T1: R1[string]
+//│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.99: 	trait S1: R1[int]
+//│ ║  l.93: 	trait S1: R1[int]
 //│ ╙──      	             ^^^
 //│ Defined class A1_2
 //│ Defined A1_2.Foo1: A1_2 -> nothing
@@ -208,7 +204,7 @@ class A1_2: S1 & T1
 
 :re
 (A1_2{}).Foo1
-//│ res: nothing
+//│ res: ('A & (int | string)) -> 'A
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
