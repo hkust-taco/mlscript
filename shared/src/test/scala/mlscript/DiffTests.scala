@@ -282,50 +282,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               typer.dbg = mode.dbgSimplif
               if (mode.noSimplification) typer.expandType(wty)
               else {
-                var cur = wty
-                
-                cur = typer.removeIrrelevantBounds(wty, inPlace = false)(ctx)
-                if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
-                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.unskidTypes_!(cur)(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.simplifyType(cur)(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                // * Has a very small (not worth it?) positive effect here:
-                // cur = typer.factorRecursiveTypes_!(cur, approximateRecTypes = false)(ctx)
-                // if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
-                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.normalizeTypes_!(cur)(ctx)
-                if (mode.isDebugging) output(s"⬤ Normalized: ${cur}")
-                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.removeIrrelevantBounds(cur, inPlace = true)(ctx)
-                if (mode.isDebugging) output(s"⬤ Cleaned up: ${cur}")
-                if (mode.isDebugging) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.unskidTypes_!(cur)(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Unskid: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
-                // *  by merging things like function types together...
-                // * So we need another pass of simplification!
-                cur = typer.simplifyType(cur)(ctx)
-                // cur = typer.simplifyType(typer.simplifyType(cur)(ctx))(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Resim: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                cur = typer.factorRecursiveTypes_!(cur, approximateRecTypes = false)(ctx)
-                if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
-                if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
-                
-                val exp = typer.expandType(cur)
+                object SimplifyPipeline extends typer.SimplifyPipeline {
+                  def debugOutput(msg: => Str): Unit =
+                    if (mode.dbgSimplif) output(msg)
+                }
+                val sim = SimplifyPipeline(wty)(ctx)
+                val exp = typer.expandType(sim)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 exp
               }

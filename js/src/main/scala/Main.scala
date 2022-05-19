@@ -197,24 +197,11 @@ object Main {
     
     def getType(ty: typer.TypeScheme): Type = {
       val wty = ty.uninstantiatedBody
-      println(s"Typed as: $wty")
-      println(s" where: ${wty.showBounds}")
-      val cty = typer.canonicalizeType(wty)
-      println(s"Canon: ${cty}")
-      println(s" where: ${cty.showBounds}")
-      val sim = typer.simplifyType(cty)
-      println(s"Type after simplification: ${sim}")
-      println(s" where: ${sim.showBounds}")
-      val reca = typer.canonicalizeType(sim)
-      println(s"Recanon: ${reca}")
-      println(s" where: ${reca.showBounds}")
-      val resim = typer.simplifyType(reca)
-      println(s"Resimplified: ${resim}")
-      println(s" where: ${resim.showBounds}")
-      // val exp = typer.expandType(resim, true)
-      val recons = typer.reconstructClassTypes(resim, S(true), ctx)
-      println(s"Recons: ${recons}")
-      val exp = typer.expandType(recons, true)
+      object SimplifyPipeline extends typer.SimplifyPipeline {
+        def debugOutput(msg: => Str): Unit = println(msg)
+      }
+      val sim = SimplifyPipeline(wty)(ctx)
+      val exp = typer.expandType(sim, true)
       exp
     }
     def formatBinding(nme: Str, ty: TypeScheme): Str = {

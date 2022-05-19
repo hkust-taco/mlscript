@@ -765,4 +765,55 @@ trait TypeSimplifier { self: Typer =>
   
   
   
+  abstract class SimplifyPipeline {
+    def debugOutput(msg: => Str): Unit
+    
+    def apply(st: ST)(implicit ctx: Ctx): ST = {
+      var cur = st
+      
+      cur = removeIrrelevantBounds(cur, inPlace = false)
+      debugOutput(s"⬤ Cleaned up: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = unskidTypes_!(cur)
+      debugOutput(s"⬤ Unskid: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = simplifyType(cur)
+      debugOutput(s"⬤ Type after simplification: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      // * Has a very small (not worth it?) positive effect here:
+      // cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
+      // debugOutput(s"⬤ Factored: ${cur}")
+      // debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = normalizeTypes_!(cur)
+      debugOutput(s"⬤ Normalized: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = removeIrrelevantBounds(cur, inPlace = true)
+      debugOutput(s"⬤ Cleaned up: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = unskidTypes_!(cur)
+      debugOutput(s"⬤ Unskid: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      // * The DNFs introduced by `normalizeTypes_!` may lead more coocc info to arise
+      // *  by merging things like function types together...
+      // * So we need another pass of simplification!
+      cur = simplifyType(cur)
+      // cur = simplifyType(simplifyType(cur)(ct)
+      debugOutput(s"⬤ Resim: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur = factorRecursiveTypes_!(cur, approximateRecTypes = false)
+      debugOutput(s"⬤ Factored: ${cur}")
+      debugOutput(s" where: ${cur.showBounds}")
+      
+      cur
+    }
+  }
+  
 }
