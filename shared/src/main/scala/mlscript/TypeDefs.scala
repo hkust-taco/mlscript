@@ -310,6 +310,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
                         )(noProv)
+                        // * TODO try later:
                         // TypeRef(td.nme, td.tparamsargs.unzip._2)(noProv) & RecordType.mk(fieldsRefined)(noProv)
                       )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
@@ -337,9 +338,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr, true).show
+                  expandType(tr).show
                 }, but is defined as ${
-                  expandType(TypeRef(defn, td.targs)(noProv), true).show
+                  expandType(TypeRef(defn, td.targs)(noProv)).show
                 }", td.toLoc)(raise)
                 false
               } else true

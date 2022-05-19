@@ -193,9 +193,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
-            // typer.recordProvenances = !mode.dbg && !mode.dbgSimplif
-            // typer.recordProvenances = mode.noProvs
-            typer.recordProvenances = !noProvs
+            // typer.recordProvenances = !noProvs
+            typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
@@ -281,7 +280,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
               typer.dbg = mode.dbgSimplif
-              if (mode.noSimplification) typer.expandType(wty, true)
+              if (mode.noSimplification) typer.expandType(wty)
               else {
                 var cur = wty
                 
@@ -296,6 +295,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 cur = typer.simplifyType(cur)(ctx)
                 if (mode.dbgSimplif) output(s"⬤ Type after simplification: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
+                
+                // * Has a very small (not worth it?) positive effect here:
+                // cur = typer.factorRecursiveTypes_!(cur, approximateRecTypes = false)(ctx)
+                // if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
+                // if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
                 cur = typer.normalizeTypes_!(cur)(ctx)
                 if (mode.isDebugging) output(s"⬤ Normalized: ${cur}")
@@ -321,7 +325,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 if (mode.dbgSimplif) output(s"⬤ Factored: ${cur}")
                 if (mode.dbgSimplif) output(s" where: ${cur.showBounds}")
                 
-                val exp = typer.expandType(cur, true)
+                val exp = typer.expandType(cur)
                 if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 exp
               }

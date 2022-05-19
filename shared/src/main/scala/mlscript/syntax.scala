@@ -93,7 +93,6 @@ sealed trait Terms extends DesugaredStatement
 
 sealed abstract class Type extends TypeImpl
 
-// sealed abstract class Composed(pol: Bool) extends Type with ComposedImpl
 sealed abstract class Composed(val pol: Bool) extends Type with ComposedImpl
 
 final case class Union(lhs: Type, rhs: Type)             extends Composed(true)
@@ -116,13 +115,11 @@ sealed abstract class NullaryType                        extends Type
 case object Top                                          extends NullaryType
 case object Bot                                          extends NullaryType
 
-// Literal type or singleton type i.e.
-// type `0` is a type with only one possible value
-// which is the literal integer 0 itself
+/** Literal type type, e.g. type `0` is a type with only one possible value `0`. */
 final case class Literal(lit: Lit)                       extends NullaryType
 
-// reference an existing type with the given name
-final case class TypeName(name: Str)                    extends NullaryType with TypeNameImpl
+/** Reference to an existing type with the given name. */
+final case class TypeName(name: Str)                     extends NullaryType with TypeNameImpl
 
 final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
   require(nameHint.isEmpty || identifier.isLeft)

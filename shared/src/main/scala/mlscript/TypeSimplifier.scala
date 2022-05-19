@@ -519,7 +519,8 @@ trait TypeSimplifier { self: Typer =>
     
     var recVars = MutSet.from(
       // TODOne rm/update logic?
-      allVars.iterator.filter(tv => tv.isBadlyRecursive_$.isDefined))
+      // allVars.iterator.filter(tv => tv.isBadlyRecursive_$.isDefined))
+      allVars.iterator.filter(_.isRecursive_$))
     // var badRecVars = MutSet.from(
     //   allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).contains(false)))
     // var badRecVars = recVars.map { tv =>
@@ -651,19 +652,7 @@ trait TypeSimplifier { self: Typer =>
     //   // TODOne rm/update logic?
     //   // allVars.iterator.filter(tv => tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty))
     //   allVars.iterator.filter(tv => tv.isBadlyRecursive(MutMap.empty[TV, Opt[Bool]]).isDefined))
-    recVars = MutSet.from(
-      allVars.iterator.filter(tv =>
-        // tv.lbRecOccs.forall(_ =/= S(false)) && tv.ubRecOccs.forall(_ =/= S(true))
-        (tv.lbRecOccs_$, tv.ubRecOccs_$) match {
-          // case (S(N), _) | (_, S(N)) => true
-          case (S(N | S(true)), _) | (_, S(N | S(false))) => true
-          // case (S(S(false)), _) => false
-          // case (_, S(S(true))) => false
-          // case (N, N) => false
-          // case (S(S(false)), _) | (_, S(S(true))) | (N, N) => false
-          case _ => false
-        }
-      ))
+    recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
     println(s"[real rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]

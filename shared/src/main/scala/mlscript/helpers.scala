@@ -29,23 +29,12 @@ abstract class TypeImpl extends Located { self: Type =>
     case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
   }
   
-  def show: Str =
-    showIn(ShowCtx.mk(this :: Nil), 0)
+  def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
-  // private def showFieldMut(f: Field): Str = if (f.in.nonEmpty) "mut " else ""
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
     case Field(N, ub) => ub.showIn(ctx, 0)
     case Field(S(lb), ub) if lb === ub => ub.showIn(ctx, 0)
-    // 
-    // case Field(S(Bot), ub) => "? : " + ub.showIn(ctx, 0)
-    // case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} : ?"
-    // case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} : ? : ${ub.showIn(ctx, 0)}"
-    // 
-    // case Field(S(Bot), ub) => s"${ub.showIn(ctx, 0)} out"
-    // case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} in"
-    // case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} in ${ub.showIn(ctx, 0)} out"
-    // 
     case Field(S(Bot), ub) => s"out ${ub.showIn(ctx, 0)}"
     case Field(S(lb), Top) => s"in ${lb.showIn(ctx, 0)}"
     case Field(S(lb), ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
@@ -56,7 +45,6 @@ abstract class TypeImpl extends Located { self: Type =>
     case Bot => "nothing"
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
-    // case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs.getOrElse(n, s"[??? $n ???]")}"
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
@@ -81,15 +69,8 @@ abstract class TypeImpl extends Located { self: Type =>
     // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
     // case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
     case c: Composed =>
-      // val iprec = if (pol)
-      // val oprec = if (pol) 20 else 25
       val prec = if (c.pol) 20 else 25
       val opStr = if (c.pol) " | " else " & "
-      // println(c, c.distinctComponents)
-      // parensIf(c.distinctComponents.iterator
-      //   .map(_.showIn(ctx, prec))
-      //   .reduceOption(_ + opStr + _)
-      //   .getOrElse((if (c.pol) Bot else Top).showIn(ctx, prec)), outerPrec > prec)
       c.distinctComponents match {
         case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
         case x :: Nil => x.showIn(ctx, prec)
@@ -98,11 +79,6 @@ abstract class TypeImpl extends Located { self: Type =>
             .map(_.showIn(ctx, prec))
             .reduce(_ + opStr + _), outerPrec > prec)
       }
-    // 
-    // case Bounds(Bot, Top) => s"?"
-    // case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
-    // case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
-    // case Bounds(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
     // 
     case Bounds(Bot, Top) => s"?"
     case Bounds(lb, ub) if lb === ub => lb.showIn(ctx, outerPrec)
@@ -195,11 +171,6 @@ object ShowCtx {
     * hinted variables use what is given. For unnamed variables generate
     * completely new names. If same name exists increment counter suffix
     * in the name.
-    *
-    * @param tys
-    * @param pre
-    * @param debug
-    * @return
     */
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
@@ -227,7 +198,7 @@ object ShowCtx {
     }.toMap
     val used = usedNames.keySet
     
-    // generate names for unnamed variables
+    // * Generate names for unnamed variables
     val numLetters = 'z' - 'a' + 1
     val names = Iterator.unfold(0) { idx =>
       val postfix = idx/numLetters
@@ -242,17 +213,13 @@ trait ComposedImpl { self: Composed =>
   val lhs: Type
   val rhs: Type
   def components: Ls[Type] = (lhs match {
-    // case Composed(`pol`, l, r) => 
-    // case c @ Composed(`pol`) => c.components
     case c: Composed if c.pol === pol => c.components
     case _ => lhs :: Nil
   }) ::: (rhs match {
-    // case c @ Composed(`pol`) => c.components
     case c: Composed if c.pol === pol => c.components
     case _ => rhs :: Nil
   })
   lazy val distinctComponents =
-    // components.filterNot(c => if (pol) c === Top else c === Bot).distinct
     components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 

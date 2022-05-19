@@ -60,7 +60,6 @@ abstract class TyperHelpers { Typer: Typer =>
     case N => "="
   }
   
-  // def recordIntersection(fs1: Ls[Var -> SimpleType], fs2: Ls[Var -> SimpleType]): Ls[Var -> SimpleType] =
   def recordIntersection(fs1: Ls[Var -> FieldType], fs2: Ls[Var -> FieldType]): Ls[Var -> FieldType] =
     mergeMap(fs1, fs2)(_ && _).toList
   
@@ -72,57 +71,17 @@ abstract class TyperHelpers { Typer: Typer =>
   def subst(ts: PolymorphicType, map: Map[SimpleType, SimpleType]): PolymorphicType = 
     PolymorphicType(ts.level, subst(ts.body, map))
 
-  // TODO use ts.map
-  /* 
-  def subst(ts: SimpleType, map: Map[SimpleType, SimpleType])
-        (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty, substInMap: Bool = false): SimpleType =
-            trace(s"subst($ts)") {
-              (if (substInMap) map.get(ts).map(subst(_, map)) else map.get(ts)).getOrElse(
-              ts match {
-    // case _ if map.isDefinedAt(ts) => map(ts)
-    case TypeBounds(lb, ub) => TypeBounds(subst(lb, map), subst(ub, map))(ts.prov)
-    case FunctionType(lhs, rhs) => FunctionType(subst(lhs, map), subst(rhs, map))(ts.prov)
-    case RecordType(fields) => RecordType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
-    case TupleType(fields) => TupleType(fields.mapValues(_.update(subst(_, map), subst(_, map))))(ts.prov)
-    case ArrayType(inner) => ArrayType(inner.update(subst(_, map), subst(_, map)))(ts.prov)
-    case ComposedType(pol, lhs, rhs) => ComposedType(pol, subst(lhs, map), subst(rhs, map))(ts.prov)
-    case NegType(negated) => NegType(subst(negated, map))(ts.prov)
-    case WithType(base, rcd) => WithType(subst(base, map),
-      RecordType(rcd.fields.mapValues(_.update(subst(_, map), subst(_, map))))(rcd.prov)
-    )(ts.prov)
-    case Without(base, names) => Without(subst(base, map), names)(ts.prov)
-    case ProvType(underlying) => ProvType(subst(underlying, map))(ts.prov)
-    case ProxyType(underlying) => subst(underlying, map)
-    case t @ TypeRef(defn, targs) => TypeRef(defn, targs.map(subst(_, map)))(t.prov)
-    case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
-      cache += tv -> tv
-      tv
-    case tv: TypeVariable => cache.getOrElse(tv, {
-      val v = freshVar(tv.prov, tv.nameHint)(tv.level)
-      cache += tv -> v
-      v.lowerBounds = tv.lowerBounds.map(subst(_, map))
-      v.upperBounds = tv.upperBounds.map(subst(_, map))
-      v
-    })
-    case _: ObjectTag | _: ExtrType => ts
-  })
-  }(r => s"= $r")
-  */
   def subst(st: SimpleType, map: Map[SimpleType, SimpleType], substInMap: Bool = false)
         (implicit cache: MutMap[TypeVariable, SimpleType] = MutMap.empty): SimpleType =
             // trace(s"subst($st)") {
     map.get(st) match {
-      case S(res) =>
-        // println(s"")
-        if (substInMap) subst(res, map, substInMap)
-        else res
+      case S(res) => if (substInMap) subst(res, map, substInMap) else res
       case N =>
         st match {
           case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
             cache += tv -> tv
             tv
           case tv: TypeVariable => cache.getOrElse(tv, {
-            // val v = freshVar(tv.prov)(tv.level)
             val v = freshVar(tv.prov, tv.nameHint)(tv.level)
             cache += tv -> v
             v.lowerBounds = tv.lowerBounds.map(subst(_, map, substInMap))
@@ -133,31 +92,13 @@ abstract class TyperHelpers { Typer: Typer =>
         }
     }
     // }(r => s"= $r")
-    
-    // map.getOrElse(st, st match {
-    //   case tv: TypeVariable if tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty =>
-    //     cache += tv -> tv
-    //     tv
-    //   case tv: TypeVariable => cache.getOrElse(tv, {
-    //     val v = freshVar(tv.prov)(tv.level)
-    //     cache += tv -> v
-    //     v.lowerBounds = tv.lowerBounds.map(subst(_, map))
-    //     v.upperBounds = tv.upperBounds.map(subst(_, map))
-    //     v
-    //   })
-    //   case _ => st.map(subst(_, map))
-    // })
-  
   
   /** Substitutes only at the syntactic level, without updating type variables nor traversing their bounds. */
-  // def substSyntax(st: SimpleType, map: Map[SimpleType, SimpleType]): SimpleType =
-  def substSyntax(st: SimpleType)(mapping: PartialFunction[SimpleType, SimpleType]): SimpleType =
-    trace(s"substSyntax $st") {
-      // st.map(ty => mapping.applyOrElse[ST, ST](ty, _ => substSyntax(st)(mapping)))
-      mapping.applyOrElse[ST, ST](st, _.map(substSyntax(_)(mapping)))
-    }(r => s"=> $r")
+  def substSyntax(st: SimpleType)(map: PartialFunction[SimpleType, SimpleType]): SimpleType =
+    // trace(s"substSyntax $st") {
+      map.applyOrElse[ST, ST](st, _.map(substSyntax(_)(map)))
+    // }(r => s"=> $r")
   
-  // def tupleIntersection(fs1: Ls[Opt[Var] -> SimpleType], fs2: Ls[Opt[Var] -> SimpleType]): Ls[Opt[Var] -> SimpleType] = {
   def tupleIntersection(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
     require(fs1.size === fs2.size)
     (fs1 lazyZip fs2).map {
@@ -231,11 +172,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     res
   }
-  // def factorize(ty: ST): ST = {
   def factorize(ctx: Ctx)(ty: ST): ST = {
-    // val cs = cleanupUnion(ty.components(true))(ctx)
-    // if (cs.sizeCompare(1) <= 0) ty
-    // else factorizeImpl(cs.map(_.components(false)))
     cleanupUnion(ty.components(true))(ctx) match {
       case Nil => BotType
       case ty :: Nil => ty
@@ -281,13 +218,12 @@ abstract class TyperHelpers { Typer: Typer =>
   
   def mapPol(rt: RecordType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): RecordType =
     RecordType(rt.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rt.prov)
+  
   def mapPol(bt: BaseType, pol: Opt[Bool], smart: Bool)(f: (Opt[Bool], SimpleType) => SimpleType): BaseType = bt match {
     case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
-    // case RecordType(fields) => RecordType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
     case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
-    // case Without(base, names) if smart => f(pol, base).without(names)
     case Without(base, names) => Without(f(pol, base), names)(bt.prov)
     case _: ClassTag => bt
   }
@@ -358,15 +294,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds(f(S(false), lb), f(S(true), ub))(prov)
-      // case RecordType(fields) => RecordType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(prov)
       case rt: RecordType => Typer.mapPol(rt, pol, smart)(f)
-      /* 
-      case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(prov)
-      case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(prov)
-      case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(prov)
-      case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
-      case Without(base, names) => Without(f(pol, base), names)(prov)
-      */
       case Without(base, names) if smart => f(pol, base).without(names)
       case bt: BaseType => Typer.mapPol(bt, pol, smart)(f)
       case ComposedType(kind, lhs, rhs) if smart =>
@@ -440,6 +368,7 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def >:< (that: SimpleType)(implicit ctx: Ctx): Bool =
       (this is that) || this <:< that && that <:< this
+    
     // TODO for composed types and negs, should better first normalize the inequation
     def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
@@ -484,14 +413,15 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, ExtrType(false)) => true
         case (ExtrType(true), _) => true
         case (_, ExtrType(true)) | (ExtrType(false), _) => false // not sure whether LHS <: Bot (or Top <: RHS)
-        case (tr: TypeRef, _) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
-        case (_, tr: TypeRef) if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
+        case (tr: TypeRef, _)
+          if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => tr.expand <:< that
+        case (_, tr: TypeRef)
+          if (primitiveTypes contains tr.defn.name) && !tr.defn.name.isCapitalized => this <:< tr.expand
         case (tr: TypeRef, _) =>
           ctx.tyDefs.get(tr.defn.name) match {
             case S(td) if td.kind is Cls => clsNameToNomTag(td)(noProv, ctx) <:< that
             case _ => false
           }
-        // case (_: TypeRef, _) | (_, _: TypeRef) =>
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: Without, _) | (_, _: Without)
@@ -506,10 +436,10 @@ abstract class TyperHelpers { Typer: Typer =>
     def isTop: Bool = (TopType <:< this)(Ctx.empty)
     def isBot: Bool = (this <:< BotType)(Ctx.empty)
     
-    // Sometimes, Without types are temporarily pushed to the RHS of constraints,
-    // sometimes behind a single negation,
-    // just for the time of massaging the constraint through a type variable.
-    // So it's important we only push and simplify Without types only in _positive_ position!
+    // * Sometimes, Without types are temporarily pushed to the RHS of constraints,
+    // *  sometimes behind a single negation,
+    // *  just for the time of massaging the constraint through a type variable.
+    // * So it's important we only push and simplify Without types only in _positive_ position!
     def without(names: SortedSet[Var]): SimpleType = if (names.isEmpty) this else this match {
       case Without(b, ns) => Without(b, ns ++ names)(this.prov)
       case _ => Without(this, names)(noProv)
@@ -571,9 +501,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case rw => NegType(f(rw))(p)
     }
     def withProvOf(ty: SimpleType): ST = withProv(ty.prov)
-    def withProv(p: TypeProvenance): ST =
-      // ProvType(this)(p)
-      mkProxy(this, p)
+    def withProv(p: TypeProvenance): ST = mkProxy(this, p)
     def pushPosWithout(implicit ctx: Ctx, ptr: PreserveTypeRefs): SimpleType = this match {
       case NegType(n) => n.negNormPos(_.pushPosWithout, prov)
       case Without(b, ns) => if (ns.isEmpty) b.pushPosWithout else (if (preserveTypeRefs) b.unwrapProxies else b.unwrapAll).withoutPos(ns) match {
@@ -613,28 +541,25 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
-    // private def childrenPolField(fld: FieldType, pol: Opt[Bool]): List[Opt[Bool] -> SimpleType] =
     def childrenPol(pol: Opt[Bool]): List[Opt[Bool] -> SimpleType] = {
       def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
         fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
       this match {
-      case tv: TypeVariable =>
-        (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
-        (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
-      case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
-      case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
-      case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
-      case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
-      // case ArrayType(inner) => pol -> inner :: Nil
-      // case ArrayType(FieldType(lb, ub)) => lb.map(pol.map(!_) -> _).toList ::: pol -> ub :: Nil
-      case ArrayType(fld) => childrenPolField(fld)
-      case NegType(n) => pol.map(!_) -> n :: Nil
-      case ExtrType(_) => Nil
-      case ProxyType(und) => pol -> und :: Nil
-      case _: ObjectTag => Nil
-      case TypeRef(d, ts) => ts.map(N -> _)
-      case Without(b, ns) => pol -> b :: Nil
-      case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
+        case tv: TypeVariable =>
+          (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
+          (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
+        case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
+        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
+        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
+        case ArrayType(fld) => childrenPolField(fld)
+        case NegType(n) => pol.map(!_) -> n :: Nil
+        case ExtrType(_) => Nil
+        case ProxyType(und) => pol -> und :: Nil
+        case _: ObjectTag => Nil
+        case TypeRef(d, ts) => ts.map(N -> _)
+        case Without(b, ns) => pol -> b :: Nil
+        case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
     }}
     
     def getVarsPol(pol: Opt[Bool]): Map[TypeVariable, Opt[Bool]] = {
@@ -644,11 +569,8 @@ abstract class TyperHelpers { Typer: Typer =>
           // trace(s"getVarsPol ${queue.iterator.map(e => s"${printPol(e._1)}${e._2}").mkString(", ")}") {
           queue match {
         case (tvp, tv: TypeVariable) :: tys =>
-          // if (res(tv)) rec(tys)
-          // else { res += tv; rec(tv.children(includeBounds = true) ::: tys) }
           res.get(tv) match {
             case S(N) => rec(tys)
-            // case S(p) if p === tvp || tvp.isEmpty => rec(tys)
             case S(p) if p === tvp => rec(tys)
             case S(S(p)) =>
               assert(!tvp.contains(p))
@@ -698,39 +620,22 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     
     def showBounds: String =
-      // getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
-      //   tv.toString
-      //     + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
-      //     + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-      // ).mkString(", ")
       getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
         "\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
       ).mkString
     
-    def expPos(implicit ctx: Ctx): Type = (
-      // this
-      this.pushPosWithout(ctx, ptr = true)
-      // this.normalize(true)
-      // |> (canonicalizeType(_, true))
-      // |> (simplifyType(_, S(true), removePolarVars = false, inlineBounds = false))
+    def expPos(implicit ctx: Ctx): Type = exp(S(true), this)
+    def expNeg(implicit ctx: Ctx): Type = exp(S(false), this)
+    def exp(pol: Opt[Bool], ty: ST)(implicit ctx: Ctx): Type = (
+      ty
+      // |> (_.normalize(false))
+      // |> (simplifyType(_, pol, removePolarVars = false, inlineBounds = false))
       // |> (shallowCopy)
       |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
-      // |> (reconstructClassTypes(_, S(true), ctx))
-      |> (normalizeTypes_!(_, S(true))(ctx))
-      |> (expandType(_, true, stopAtTyVars = true))
-    )
-    def expNeg(implicit ctx: Ctx): Type = (
-      this
-      // this.normalize(false)
-      // |> (canonicalizeType(_, false))
-      // |> (simplifyType(_, S(false), removePolarVars = false, inlineBounds = false))
-      // |> (shallowCopy)
-      |> (subst(_, Map.empty)) // * Make a copy of the type and its TV graph – although we won't show the TV bounds, we still care about the bounds as they affect class type reconstruction in normalizeTypes_!
-      // |> (reconstructClassTypes(_, S(false), ctx))
-      |> (normalizeTypes_!(_, S(false))(ctx))
-      |> (expandType(_, false, stopAtTyVars = true))
+      |> (normalizeTypes_!(_, pol)(ctx))
+      |> (expandType(_, stopAtTyVars = true))
     )
     
   }

@@ -18,12 +18,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   def expandTupleFields(implicit etf: ExpandTupleFields): Bool = etf === true
   
   
-  private def mergeTypeRefs(trs1: SortedMap[TN, TR], trs2: SortedMap[TN, TR]): SortedMap[TN, TR] =
+  private def mergeTypeRefs(trs1: SortedMap[TN, TR], trs2: SortedMap[TN, TR])(implicit ctx: Ctx): SortedMap[TN, TR] =
     mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
       assert(tr1.defn === tr2.defn)
       assert(tr1.targs.size === tr2.targs.size)
       TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
-        TypeBounds.mk2(ta1 | ta2, ta1 & ta2)))(noProv)
+        TypeBounds.mk(ta1 | ta2, ta1 & ta2)))(noProv)
     }
   
   
@@ -109,7 +109,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
           assert(that.targs.sizeCompare(other.targs) === 0)
           TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds.mk2(ta1 | ta2, ta1 & ta2)
+            case (ta1, ta2) => TypeBounds.mk(ta1 | ta2, ta1 & ta2)
           }.toList)(that.prov)
         })
         val res = LhsRefined(b, ts, rt, trs2)
@@ -162,19 +162,19 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsBases(ts, _, trs) => ts.contains(ttg)
       case RhsBot | _: RhsField => false
     }
-    def | (that: TypeRef): Opt[RhsNf] = this match {
+    def | (that: TypeRef)(implicit ctx: Ctx): Opt[RhsNf] = this match {
       case RhsBot => S(RhsBases(Nil, N, SortedMap.single(that.defn -> that)))
       case RhsField(name, ty) => this | name -> ty
       case RhsBases(prims, bf, trs) =>
         val trs2 = trs + (that.defn -> trs.get(that.defn).fold(that) { other =>
           assert(that.targs.sizeCompare(other.targs) === 0)
           TypeRef(that.defn, that.targs.lazyZip(other.targs).map{
-            case (ta1, ta2) => TypeBounds.mk2(ta1 & ta2, ta1 | ta2)
+            case (ta1, ta2) => TypeBounds.mk(ta1 & ta2, ta1 | ta2)
           }.toList)(that.prov)
         })
         S(RhsBases(prims, bf, trs2))
     }
-    def | (that: RhsNf): Opt[RhsNf] = that match {
+    def | (that: RhsNf)(implicit ctx: Ctx): Opt[RhsNf] = that match {
       case RhsBases(prims, bf, trs) =>
         val thisWithTrs = trs.valuesIterator.foldLeft(this)(_ | _ getOrElse (return N))
         val tmp = prims.foldLeft(thisWithTrs)(_ | _ getOrElse (return N))
@@ -183,7 +183,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case RhsField(name, ty) => this | name -> ty
       case RhsBot => S(this)
     }
-    def tryMergeInter (that: RhsNf): Opt[RhsNf] = (this, that) match {
+    def tryMergeInter(that: RhsNf)(implicit ctx: Ctx): Opt[RhsNf] = (this, that) match {
       case (RhsBot, _) | (_, RhsBot) => S(RhsBot)
       case (RhsField(name1, ty1), RhsField(name2, ty2)) if name1 === name2 => S(RhsField(name1, ty1 && ty2))
       case (RhsBases(prims1, S(R(r1)), trs1), RhsBases(prims2, S(R(r2)), trs2))
@@ -300,7 +300,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       * This ends up simplifying away things like:
       *   {x: int} | {y: int} ~> anything
       *   (A -> B) | {x: C}   ~> anything  */
-    def tryMerge(that: Conjunct)(implicit etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
+    def tryMerge(that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
       case _ if this <:< that => S(that)
       case _ if that <:< this => S(this)
       case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
@@ -406,10 +406,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def & (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)
-    def | (that: DNF)(implicit etf: ExpandTupleFields): DNF = that.cs.foldLeft(this)(_ | _)
+    def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = that.cs.foldLeft(this)(_ | _)
     def & (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       DNF(cs.flatMap(_ & that)) // TODO may need further simplif afterward
-    def | (that: Conjunct)(implicit etf: ExpandTupleFields): DNF = {
+    def | (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       def go(cs: Ls[Conjunct], acc: Ls[Conjunct], toMerge: Conjunct): Ls[Conjunct] = 
         // trace(s"go?? $cs $acc M $toMerge") {
         cs match {

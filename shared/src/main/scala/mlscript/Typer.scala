@@ -132,8 +132,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     } ::
     Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator//.filter(_.kind is Cls)
-      .map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
@@ -306,7 +305,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv.upperBounds ::= bod
         tv.lowerBounds ::= bod
         tv
-        // RecType(bod, tv)(tyTp(ty.toLoc, "recursive type"))
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
       case Constrained(base, where) =>
         val res = rec(base)
@@ -801,15 +799,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
+  def expandType(st: SimpleType, stopAtTyVars: Bool = false): Type = {
     val expandType = ()
     
     import Set.{empty => semp}
     
     var bounds: Ls[TypeVar -> Bounds] = Nil
     
-    // For type vars used as invariant TypeRef arguments (and other invariant places in the future?)
-    // val invariant = mutable.Map.empty[TV, Type]
     val seenVars = mutable.Set.empty[TV]
     
     def field(ft: FieldType): Field = ft match {
@@ -820,8 +816,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         Field(f.lb.map(go), go(f.ub))
     }
     
-    // def go(st: SimpleType): Type = goImpl(st.unwrapProvs)
-    // def goImpl(st: SimpleType): Type = {
     def go(st: SimpleType): Type =
             // trace(s"expand $st") {
           st.unwrapProvs match {
@@ -832,10 +826,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             seenVars += tv
             val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
             val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
-            // if (l === u) l else { // TODO try to rm to see what happens
-            //   if (l =/= Bot || u =/= Top)
-            //     bounds ::= nv -> Bounds(l, u) // FIXME no dup?
-            // }
             if (l =/= Bot || u =/= Top)
               bounds ::= nv -> Bounds(l, u)
           }
