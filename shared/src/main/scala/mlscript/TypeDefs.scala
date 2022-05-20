@@ -453,7 +453,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.addMthDefn(tn.name, mn, mt)
         }
       }
-
+      
       newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
         /* Recursive traverse the type definition and type the bodies of method definitions 
          * by applying the targs in `TypeRef` and rigidifying class type parameters. */
@@ -567,7 +567,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   def computeVariances(tyDefs: List[TypeDef], ctx: Ctx): Unit = {
     println(s"VARIANCE ANALYSIS")
     var varianceUpdated: Bool = false;
-
+    
     /** Update variance information for all type variables belonging
       * to a type definition.
       *
@@ -588,7 +588,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           fieldTy.lb.foreach(lb => updateVariance(lb, curVariance.flip))
           updateVariance(fieldTy.ub, curVariance)
       }
-
+      
       trace(s"upd[$curVariance] $ty") {
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
@@ -649,22 +649,22 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         }
       }()
     }
-
+    
     // set default value for all type variables as bivariant
     // this prevents errors when printing type defintions in
     // DiffTests for type variables that are not used at all
     // and hence are not set in the variance info map
     tyDefs.foreach(t => t.tparamsargs.foreach{case (_, tvar) => t.tvarVariances.put(tvar, VarianceInfo.bi)})
-
+    
     var i = 1
     do trace(s"⬤ ITERATION $i") {
       val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
       varianceUpdated = false;
       tyDefs.foreach {
-        case t@TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
+        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
           trace(s"${k.str} ${nme.name}  ${t.tvarVariances.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)
-            val stores = mthDecls.foreach { mthDef => 
+            val stores = (mthDecls ++ mthDefs).foreach { mthDef => 
               val mthBody = ctx.mthEnv.getOrElse(
                 Right(Some(nme.name), mthDef.nme.name),
                 throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
@@ -677,18 +677,18 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     }() while (varianceUpdated)
     println(s"DONE")
   }
-
+  
   case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
-
+    
     /** Combine two pieces of variance information together
      */
     def &&(that: VarianceInfo): VarianceInfo =
       VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
-
+    
     /*  Flip the current variance if it encounters a contravariant position
      */
     def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
-
+    
     override def toString(): String = this match {
       case (VarianceInfo(true, true)) => "±"
       case (VarianceInfo(false, true)) => "-"
@@ -696,13 +696,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       case (VarianceInfo(false, false)) => "="
     }
   }
-
+  
   object VarianceInfo {
     val bi: VarianceInfo = VarianceInfo(true, true)
     val co: VarianceInfo = VarianceInfo(true, false)
     val contra: VarianceInfo = VarianceInfo(false, true)
     val in: VarianceInfo = VarianceInfo(false, false)
   }
-
+  
   type VarianceStore = MutMap[TypeVariable, VarianceInfo]
 }

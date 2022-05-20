@@ -37,3 +37,51 @@ class Z[X, R]
 //│ ╙──      	           ^
 
 
+:dv
+class C0[A]
+  method M0 (x: A) = x
+//│ VARIANCE ANALYSIS
+//│ ⬤ ITERATION 1
+//│ | class C0  ± A73'
+//│ | | upd[+] ⊤
+//│ | | upd[+] (A73' -> [α76'])
+//│ | | | upd[-] (A73',)
+//│ | | | | upd[-] A73'
+//│ | | | | | UPDATE C0.A73' from ± to -
+//│ | | | upd[+] [α76']
+//│ | | | | upd[+] α76'
+//│ | | | | | UPDATE C0.α76' from ± to +
+//│ | | | | | upd[+] A73'
+//│ | | | | | | UPDATE C0.A73' from - to =
+//│ ⬤ ITERATION 2
+//│ | class C0  = A73'  + α76'
+//│ | | upd[+] ⊤
+//│ | | upd[+] (A73' -> [α76'])
+//│ | | | upd[-] (A73',)
+//│ | | | | upd[-] A73'
+//│ | | | upd[+] [α76']
+//│ | | | | upd[+] α76'
+//│ | | | | | upd[+] A73'
+//│ DONE
+//│ Defined class C0[=A]
+//│ Defined C0.M0: C0['A] -> 'A -> 'A
+
+
+// Note that the variance that'd be implied by the method definition inferred type
+//  is not taken into consideration because that inferred type is discarded
+//  in favor of the explicit signature.
+:w
+class C1[A]
+  method M1 (x: A) = x
+  method M1: nothing -> anything
+//│ Defined class C1[±A]
+//│ Declared C1.M1: C1['A] -> nothing -> anything
+//│ Defined C1.M1: C1['A] -> 'A -> 'A
+//│ ╔══[WARNING] Type definition C1 has bivariant type parameters:
+//│ ║  l.74: 	class C1[A]
+//│ ║        	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.74: 	class C1[A]
+//│ ╙──      	         ^
+
+
