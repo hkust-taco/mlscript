@@ -12,7 +12,7 @@ class Box[T]: { inner: T }
 //│ ╙──     	                ^^^^
 //│ Defined class Box[+T]
 //│ Defined Box.Get: Box['T] -> 'T
-//│ Defined Box.Get2: Box[anything] -> error
+//│ Defined Box.Get2: Box[?] -> error
 
 
 class Box2[T]: { inner: T }
@@ -27,4 +27,4 @@ class Box2[T]: { inner: T }
 //│ ║  l.18: 	class Box2[T]: { inner: T }
 //│ ╙──      	           ^
 //│ Defined class Box2[+T]
-//│ Defined Box2.Test: Box2[anything] -> (error | int)
+//│ Defined Box2.Test: Box2[?] -> (error | int)

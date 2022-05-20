@@ -221,3 +221,39 @@ f'
 //│ res: 1
 //│    = 0
 
+
+
+class C0[A]: S0[A]
+  method Foo0 = id
+//│ Defined class C0[=A]
+//│ Defined C0.Foo0: C0['A] -> 'a -> 'a
+
+def s0: S0['a] -> S0['a]
+//│ s0: S0['a] -> S0['a]
+//│   = <missing implementation>
+
+s0 (C0{})
+//│ res: S0['a]
+//│    = <no result>
+//│      s0 is not implemented
+
+def s0: S0[?] -> S0[?]
+//│ s0: S0[?] -> S0[?]
+//│   = <missing implementation>
+
+:e
+s0 (C0{})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.245: 	s0 (C0{})
+//│ ║         	^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.240: 	def s0: S0[?] -> S0[?]
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.240: 	def s0: S0[?] -> S0[?]
+//│ ╙──       	           ^
+//│ res: error | S0[?]
+//│    = <no result>
+//│      s0 is not implemented
+
+

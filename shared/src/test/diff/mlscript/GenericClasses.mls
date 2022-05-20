@@ -203,7 +203,7 @@ class Foo2_Co[A]
   method Foo2_Co = error
 //│ Defined class Foo2_Co[+A]
 //│ Declared Foo2_Co.Foo2_Co: Foo2_Co['A] -> 'A
-//│ Defined Foo2_Co.Foo2_Co: Foo2_Co[anything] -> nothing
+//│ Defined Foo2_Co.Foo2_Co: Foo2_Co[?] -> nothing
 
 Foo2_Co
 //│ res: anything -> Foo2_Co[nothing]
@@ -216,7 +216,7 @@ error: Foo2_Co[int]
 //│   Error: unexpected runtime error
 
 f = fun x -> case x of { Foo2_Co -> x }
-//│ f: (Foo2_Co[anything] & 'a) -> 'a
+//│ f: (Foo2_Co[?] & 'a) -> 'a
 //│  = [Function: f1]
 
 f (Foo2_Co {})
@@ -242,7 +242,7 @@ f: (Foo2_Co[?] & 'a) -> 'a
 //│    = [Function: f1]
 
 f
-//│ res: (Foo2_Co[anything] & 'a) -> 'a
+//│ res: (Foo2_Co[?] & 'a) -> 'a
 //│    = [Function: f1]
 
 

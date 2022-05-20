@@ -143,7 +143,7 @@ class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 def strawman: C2 & ~MyTrait[anything]
-//│ strawman: C2 & ~MyTrait[anything]
+//│ strawman: C2 & ~MyTrait[?]
 //│         = <missing implementation>
 
 test2 strawman
@@ -161,7 +161,7 @@ strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.160: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
-//│ ╟── type `C2 & ~MyTrait[anything]` does not match type `~{value: anything}`
+//│ ╟── type `C2 & ~MyTrait[?]` does not match type `~{value: anything}`
 //│ ║  l.145: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`

@@ -850,13 +850,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case lit: Lit => Literal(lit)
         }
         case TypeRef(td, Nil) => td
-        case tr @ TypeRef(td, targs) => AppliedType(td, targs.map(go))
-        // case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
-        //   // case (N, _) | (S(true), TopType) | (S(false), BotType) => Bounds(Bot, Top)
-        //   case (N, TypeBounds(BotType, TopType)) | (S(true), TypeBounds(_, TopType)) | (S(false), TypeBounds(BotType, _)) => Bounds(Bot, Top)
-        //   // case (N, _) | (S(true), TypeBounds(BotType, _)) | (S(false), TypeBounds(_, TopType)) => Bounds(Bot, Top)
-        //   case (_, ty) => go(ty)
-        // })
+        // case tr @ TypeRef(td, targs) => AppliedType(td, targs.map(go))
+        case tr @ TypeRef(td, targs) => 
+          println(s"> " + targs)
+          AppliedType(td, tr.mapTargs(S(true)) {
+          // case ta @ ((N, _) | (S(true), TopType) | (S(false), BotType)) => 
+          case ta @ ((S(true), TopType) | (S(false), BotType)) => 
+            println(s"> " + ta)
+            Bounds(Bot, Top)
+          // case (N, TypeBounds(BotType, TopType)) | (S(true), TypeBounds(_, TopType)) | (S(false), TypeBounds(BotType, _)) => Bounds(Bot, Top)
+          // case (N, _) | (S(true), TypeBounds(BotType, _)) | (S(false), TypeBounds(_, TopType)) => Bounds(Bot, Top)
+          case (_, ty) => go(ty)
+        })
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
         case Without(base, names) => Rem(go(base), names.toList)
     }

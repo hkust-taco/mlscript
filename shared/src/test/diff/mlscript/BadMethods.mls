@@ -21,7 +21,7 @@ class Bar[A]: Foo[A]
 //│ Declared Foo.Map: Foo['A] -> ('A -> anything) -> 'A
 //│ Defined class Bar[+A]
 //│ Declared Bar.Map: Bar['A] -> anything -> 'A
-//│ Defined Bar.Map: Bar[anything] -> 'Map
+//│ Defined Bar.Map: Bar[?] -> 'Map
 //│   where
 //│     'Map :> ('Map -> (anything -> 'Map) -> 'a) -> 'a
 
@@ -131,7 +131,7 @@ class BadSelf[A]: { x: A }
 //│ ║  l.122: 	class BadSelf[A]: { x: A }
 //│ ╙──       	              ^
 //│ Defined class BadSelf[+A]
-//│ Defined BadSelf.F: BadSelf[anything] -> error
+//│ Defined BadSelf.F: BadSelf[?] -> error
 
 c = BadSelf { x = fun x -> x }
 c.F
@@ -158,7 +158,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ║  l.149: 	class Simple3[A, B]: Simple2[A]
 //│ ╙──       	              ^
 //│ Defined class Simple3[+A, +B]
-//│ Declared Simple3.Get: Simple3[anything, 'B] -> 'B
+//│ Declared Simple3.Get: Simple3[?, 'B] -> 'B
 
 
 
@@ -210,8 +210,8 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ║  l.168: 	    method Map[C, D]: (A -> C) -> (B -> D) -> AbstractPair[C, D]
 //│ ╙──       	               ^
 //│ Defined class BadPair[+A, +B]
-//│ Defined BadPair.Test: BadPair['A, anything] -> ('A -> 'A -> 'a) -> 'a
-//│ Defined BadPair.Map: BadPair['A, anything] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
+//│ Defined BadPair.Test: BadPair['A, ?] -> ('A -> 'A -> 'a) -> 'a
+//│ Defined BadPair.Map: BadPair['A, ?] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
 
 bp = BadPair { x = 42; y = true }
 bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
@@ -234,7 +234,7 @@ BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
 BadPair.(BadPair.Map)
 //│ BadPair: BadPair[42, 0]
-//│ res: BadPair['A, anything] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
+//│ res: BadPair['A, ?] -> ('A -> 'y) -> anything -> BadPair['y, 'y]
 //│ ╔══[ERROR] Class BadPair has no method BadPair.Map
 //│ ║  l.235: 	BadPair.(BadPair.Map)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
@@ -575,7 +575,7 @@ class Dup[A, A]: { x: A }
 //│ ╙──       	          ^
 
 t = Dup { x = 42 }
-//│ t: Dup[?, anything] & {x: 42}
+//│ t: Dup[?, ?] & {x: 42}
 
 :stats
 t : Dup[bool, int]
@@ -817,7 +817,7 @@ class Test8C[A]
     method F = error
 //│ Defined class Test8C[+A]
 //│ Declared Test8C.F: Test8C['A] -> 'A
-//│ Defined Test8C.F: Test8C[anything] -> nothing
+//│ Defined Test8C.F: Test8C[?] -> nothing
 
 // We used to allow syntactically identitcal declarations for documentation,
 //  but that's actually a bad idea (and the implementation was broken)

@@ -35,7 +35,7 @@ Foo { field = id 1 }
 //│    = Foo { field: 1 }
 
 def test x = case x of { Bar -> 1 | Foo -> 2 }
-//│ test: (Bar | Foo[anything]) -> (1 | 2)
+//│ test: (Bar | Foo[?]) -> (1 | 2)
 //│     = [Function: test]
 
 test foo
@@ -43,7 +43,7 @@ test foo
 //│    = 2
 
 def test x = case x of { Bar -> 1 | Foo -> x.field }
-//│ test: (Bar | (Foo[anything] with {field: 'field})) -> (1 | 'field)
+//│ test: (Bar | (Foo[?] with {field: 'field})) -> (1 | 'field)
 //│     = [Function: test1]
 
 test foo
@@ -55,7 +55,7 @@ test (Foo { field = 2 })
 //│    = 2
 
 def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: ((Foo[anything] with {field: 'field}) | ~Foo[anything]) -> (1 | 'field)
+//│ test: ((Foo[?] with {field: 'field}) | ~Foo[?]) -> (1 | 'field)
 //│     = [Function: test2]
 
 

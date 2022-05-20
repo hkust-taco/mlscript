@@ -7,7 +7,7 @@ class C[A]
   method Co = error
 //│ Defined class C[+A]
 //│ Declared C.Co: C['A] -> 'A
-//│ Defined C.Co: C[anything] -> nothing
+//│ Defined C.Co: C[?] -> nothing
 
 def c: C[C[int]]
 //│ c: C[C[int]]
@@ -79,7 +79,7 @@ class C3[A]: { a: C3[A] }
   method Co = error
 //│ Defined class C3[+A]
 //│ Declared C3.Co: C3['A] -> 'A
-//│ Defined C3.Co: C3[anything] -> nothing
+//│ Defined C3.Co: C3[?] -> nothing
 
 def c: 'a -> C3['a]
 //│ c: 'a -> C3['a]
@@ -102,7 +102,7 @@ class C4[A]: { a: C[C4[A]] }
   method Co = error
 //│ Defined class C4[+A]
 //│ Declared C4.Co: C4['A] -> 'A
-//│ Defined C4.Co: C4[anything] -> nothing
+//│ Defined C4.Co: C4[?] -> nothing
 
 def c: 'a -> C4['a]
 //│ c: 'a -> C4['a]
@@ -124,7 +124,7 @@ class C5[A]: { a: C2[C5[A]] }
   method Co = error
 //│ Defined class C5[+A]
 //│ Declared C5.Co: C5['A] -> 'A
-//│ Defined C5.Co: C5[anything] -> nothing
+//│ Defined C5.Co: C5[?] -> nothing
 
 def c: 'a -> C5['a]
 //│ c: 'a -> C5['a]
@@ -147,7 +147,7 @@ class C6[A]: { a: C5[C6[A]] }
   method Co = error
 //│ Defined class C6[+A]
 //│ Declared C6.Co: C6['A] -> 'A
-//│ Defined C6.Co: C6[anything] -> nothing
+//│ Defined C6.Co: C6[?] -> nothing
 
 def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]

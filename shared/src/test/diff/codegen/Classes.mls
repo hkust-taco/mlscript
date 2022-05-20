@@ -160,7 +160,7 @@ error : Box[int] & ~box
 //│ res: nothing
 
 error : Box[?] | Box[?] & {x: '_}
-//│ res: Box[anything]
+//│ res: Box[?]
 
 error : ((Box[?] | Box[?] & {x: 'a -> int}) & 'a) -> 'a
 //│ res: (Box[nothing] & 'a) -> 'a
