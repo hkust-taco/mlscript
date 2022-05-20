@@ -1,9 +1,6 @@
 :NoJS
 
 
-// TODO use RecType immediately for all TVs in canon?
-
-
 // :stdout
 // :s
 // :d
@@ -18,8 +15,27 @@ def f: { x: 'a } as 'a
 // :s
 // :d
 // :ds
-rec def l a = l
+rec def l x = l
 //│ l: 'l
+//│   where
+//│     'l :> anything -> 'l
+
+l
+//│ res: 'l
+//│   where
+//│     'l :> anything -> 'l
+
+:ns
+m y = l y
+//│ m: 'a -> 'b
+//│   where
+//│     'b :> 'c -> 'l
+//│     'l :> 'c -> 'l
+//│        <: 'b & 'a -> 'b
+//│     'a <: 'c
+
+m
+//│ res: 'l
 //│   where
 //│     'l :> anything -> 'l
 
@@ -40,14 +56,15 @@ rec def f a = a a
 //│   where
 //│     'a :> {x: 'a}
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.36: 	rec def f a = a a
+//│ ║  l.52: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
-//│ ║  l.36: 	rec def f a = a a
+//│ ║  l.52: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
-//│ ║  l.11: 	def f: { x: 'a } as 'a
-//│ ╙──      	       ^^^^^^^^^
+//│ ║  l.8: 	def f: { x: 'a } as 'a
+//│ ╙──     	       ^^^^^^^^^
+
 
 // :stdout
 // :s
@@ -57,11 +74,15 @@ rec def g a = a a
 //│ g: ('a -> 'b & 'a) -> 'b
 
 
+// :ds
+def ite x y z = if x then y else z
+//│ ite: bool -> 'a -> 'a -> 'a
+
+
 
 class Some[A]: { v: A }
 //│ Defined class Some[+A]
 
-// :ds
 def Some v = Some{v}
 //│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
 
@@ -74,23 +95,21 @@ def foo(x: Some['a]) =
 //│     'a := Some[?] & 'a0
 //│     'a0 <: {Some#A :> anything <: nothing, v: nothing} | ~Some[?]
 
-// :ds
 def f: Some['a]
 //│ f: Some['a]
 
 
 
-// TODO MV
-
 def foo(x: 'a) = (x + 1, x)
 //│ foo: (int & 'a) -> (int, 'a,)
 
-// NOTE: currently each parameter type is typed independently – so these 'a are different!
+// * NOTE: currently each parameter type is typed independently – so these 'a are different!
 def foo(x: 'a, y: 'a) = (x + 1, y)
 //│ foo: (int, 'a,) -> (int, 'a,)
 
-// def foo(x: 'a) =
 def foo(f: 'a -> 'a, x: 'a) =
   let _ = x + 1
   in error: Some['a & some]
 //│ foo: ('a -> 'a, int,) -> Some[Some[?] & 'a0]
+
+
