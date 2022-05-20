@@ -59,41 +59,35 @@ def g x y = if x.b == 1 then x else x.a
 //│ export declare const g<a>: (arg: {readonly a: a, readonly b: int} & a) => (arg1: unknown) => a
 //│ // end ts
 
+// FIXME
 :ts
 rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 def f: ('c -> 'a as 'a) -> 'c -> int
 // recursion type functions
-//│ l: int -> 'a as 'a
-//│ m: int -> int -> 'a as 'a
-//│ f: ('c -> 'a as 'a) -> 'c -> int
-//│ // start ts
-//│ export type a = (arg: int) => a
-//│ export declare const l: a
-//│ export type a = (arg: int) => (arg1: int) => a
-//│ export declare const m: a
-//│ export type a<c> = (arg: c) => a<c>
-//│ export declare const f<c>: (arg: a<c>) => (arg1: c) => int
-//│ // end ts
+//│ l: 'l
+//│   where
+//│     'l :> int -> 'l
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α111,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α111),Top)))
 
 :ts
 :e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.81: 	1: ?
+//│ ║  l.75: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.81: 	1: ?
+//│ ║  l.75: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.76: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.82: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.76: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -154,23 +148,15 @@ def l: ((1, 2), (3, 4)) -> 5
 //│ // end ts
 
 
+// FIXME
 :ts
 def weird: ((int, int) -> 'a) as 'a
 def weird: ('a -> (int, int)) as 'a
 def weird: ((int, 'a) as 'a) -> int
 def weird: ((int, bool) | 'a) -> 'a
-//│ weird: (int, int,) -> 'a as 'a
-//│ weird: 'a | ('b -> (int, int,) & 'a) -> (int, int,) as 'b
-//│ weird: ((int, 'a,) as 'a) -> int
-//│ weird: ('a | (int, bool,)) -> 'a
-//│ // start ts
-//│ export type a = (arg: int, arg1: int) => a
-//│ export declare const weird: a
-//│ export type b = a | ((arg: ((arg1: b) => readonly [int, int]) & a) => readonly [int, int])
-//│ export declare const weird<a>: b
-//│ export type a = readonly [int, a]
-//│ export declare const weird: (arg: a) => int
-//│ export declare const weird<a>: (arg: a | readonly [int, bool]) => a
-//│ // end ts
+//│ weird: 'a
+//│   where
+//│     'a :> (int, int,) -> 'a
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α233,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α233),Top)))
 
 

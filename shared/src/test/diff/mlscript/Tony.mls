@@ -11,7 +11,9 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: None | (Some['A .. 42 | 'A] with {payload: 23, value: 42})
+//│ arg: None | Some['A] & {payload: 23, value: 42}
+//│   where
+//│     'A :> 42
 //│    = Some { value: 42, payload: 23 }
 
 // > TODO don't distribute neg inters + handle better at constraint top level
@@ -21,11 +23,13 @@ flatMap3 (fun x -> add x.value x.payload) arg
 //│    = 65
 //│ constrain calls  : 100
 //│ annoying  calls  : 23
-//│ subtyping calls  : 44
+//│ subtyping calls  : 38
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: None | (Some['A .. 42 | 'A] with {value: 42})
+//│ arg: None | Some['A] & {value: 42}
+//│   where
+//│     'A :> 42
 //│    = Some { value: 42 }
 
 flatMap3 (fun x -> x.value) arg
@@ -61,7 +65,9 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: ((Some['A .. 42 | 'A] with {value: 42}) -> 'a) -> (None | 'a)
+//│ res: ((Some['A] & {value: 42}) -> 'a) -> (None | 'a)
+//│   where
+//│     'A :> 42
 //│    = [Function: res]
 
 
@@ -93,13 +99,13 @@ simpler (fun x -> x.value)
 :e
 res 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.94: 	res 1
-//│ ║        	^^^^^
+//│ ║  l.100: 	res 1
+//│ ║         	^^^^^
 //│ ╟── integer literal of type `1` does not match type `None & ?a | Some[?] & ?b`
-//│ ║  l.94: 	res 1
-//│ ║        	    ^
+//│ ║  l.100: 	res 1
+//│ ║         	    ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.85: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
+//│ ║  l.91: 	def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
 //│ ╙──      	                                       ^^^
 //│ res: error
 //│ Runtime error:

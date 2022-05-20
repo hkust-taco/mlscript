@@ -396,7 +396,7 @@ a1.x
 //│ // Query 3
 //│ res = a1.x;
 //│ // End of generated code
-//│ a1: M with {x: int & 'x .. 233 | 'x}
+//│ a1: M with {mut x: in int & 'x out 233 | 'x}
 //│   = M { x: 233 }
 //│ = []
 //│ res: 233
@@ -411,7 +411,10 @@ t1 = (mut "hello", mut true)
 //│ ];
 //│ res = t1;
 //│ // End of generated code
-//│ t1: ('a .. "hello" | 'a, 'b .. true | 'b,)
+//│ t1: (mut 'a, mut 'b,)
+//│   where
+//│     'b :> true
+//│     'a :> "hello"
 //│   = [ 'hello', true ]
 
 :js
@@ -439,11 +442,16 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 //│ ];
 //│ res = muta1;
 //│ // End of generated code
-//│ muta1: MutArray[int .. int]
+//│ muta1: MutArray[int]
 //│      = <missing implementation>
-//│ ('a .. 1 | 'a, 'b .. 2 | 'b, 'c .. 3 | 'c, 'd .. 4 | 'd,)
+//│ (mut 'a, mut 'b, mut 'c, mut 'd,)
+//│   where
+//│     'd :> 4
+//│     'c :> 3
+//│     'b :> 2
+//│     'a :> 1
 //│   <:  muta1:
-//│ MutArray[int .. int]
+//│ MutArray[int]
 //│      = [ 1, 2, 3, 4 ]
 
 :js
@@ -455,7 +463,7 @@ muta1
 //│ res = muta1;
 //│ // End of generated code
 //│ = []
-//│ res: MutArray[int .. int]
+//│ res: MutArray[int]
 //│    = [ 1, 233, 3, 4 ]
 
 :js
@@ -469,7 +477,7 @@ xpp a1
 //│ // Query 2
 //│ res = xpp(a1);
 //│ // End of generated code
-//│ xpp: ({x: int .. int} & 'a) -> 'a
+//│ xpp: ({mut x: int} & 'a) -> 'a
 //│    = [Function: xpp]
 //│ res: M
 //│    = M { x: 667 }
@@ -492,7 +500,10 @@ tu._2
 //│ // Query 4
 //│ res = tu["_2"];
 //│ // End of generated code
-//│ tu: ('a .. () | 'a, 'b .. 2 | 'b,)
+//│ tu: (mut 'a, mut 'b,)
+//│   where
+//│     'b :> 2
+//│     'a :> ()
 //│   = [ [], 2 ]
 //│ = []
 //│ res: ()

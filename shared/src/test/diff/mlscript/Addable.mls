@@ -22,10 +22,15 @@ n.Add n
 //│ res: Num
 //│    = Num { val: 2 }
 
+n.Add
+//│ res: Num -> Num
+//│    = [Function: Add]
+
 
 def addTwo a0 a1 = a0.Add a1
 //│ addTwo: Addable['A] -> 'A -> 'A
 //│       = [Function: addTwo]
+
 
 addTwo n n
 //│ res: Num
@@ -80,7 +85,9 @@ addNTimes s 5
 rec def addNTimes a n =
   if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 addNTimes n 12
-//│ addNTimes: Addable[0 | 'A .. 'A] -> int -> (0 | 'A)
+//│ addNTimes: Addable['A] -> int -> 'A
+//│   where
+//│     'A :> 0
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -95,7 +102,12 @@ addNTimes n 12
 rec def addNTimes a n =
   if n <= 0 then 0 else a.Add addNTimes a (n - 1)
 addNTimes n 12
-//│ addNTimes: (Addable['a -> int -> (0 | 'b) | 'A .. 'c -> int -> 'b & 'A] & 'c) -> int -> (0 | 'b)
+//│ addNTimes: 'addNTimes
+//│   where
+//│     'addNTimes :> 'a -> int -> (0 | 'b)
+//│     'a <: Addable['A]
+//│     'A :> 'addNTimes
+//│        <: 'a -> int -> 'b
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
@@ -135,7 +147,7 @@ addTwo s n
 //│ ║  l.12: 	class Str: Addable[Str] & { val: string }
 //│ ║        	                   ^^^
 //│ ╟── from reference:
-//│ ║  l.26: 	def addTwo a0 a1 = a0.Add a1
+//│ ║  l.30: 	def addTwo a0 a1 = a0.Add a1
 //│ ╙──      	                          ^^
 //│ res: error
 

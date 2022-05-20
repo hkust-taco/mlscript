@@ -101,11 +101,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
     Var(clsNme.name + "#" + tparamNme.name)
   
-  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require(td.kind is Cls)
     ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
-  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
     TraitTag(Var(td.nme.name.decapitalize))(prov)
   }
@@ -288,6 +288,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
+                  val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
                     tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
@@ -308,7 +309,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
-                        )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
+                        )(noProv)
+                        // * TODO try later:
+                        // TypeRef(td.nme, td.tparamsargs.unzip._2)(noProv) & RecordType.mk(fieldsRefined)(noProv)
+                      )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
                       val tv = freshVar(noProv)(1)
@@ -334,9 +338,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr, true).show
+                  expandType(tr).show
                 }, but is defined as ${
-                  expandType(TypeRef(defn, td.targs)(noProv), true).show
+                  expandType(TypeRef(defn, td.targs)(noProv)).show
                 }", td.toLoc)(raise)
                 false
               } else true

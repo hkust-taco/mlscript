@@ -29,14 +29,15 @@ abstract class TypeImpl extends Located { self: Type =>
     case _ => this.children.foldRight(Set.empty[TypeVar])((ty, acc) => ty.freeTypeVariables ++ acc)
   }
   
-  def show: Str =
-    showIn(ShowCtx.mk(this :: Nil), 0)
+  def show: Str = showIn(ShowCtx.mk(this :: Nil), 0)
   
   private def parensIf(str: Str, cnd: Boolean): Str = if (cnd) "(" + str + ")" else str
   private def showField(f: Field, ctx: ShowCtx): Str = f match {
-    case Field(N | S(Bot), ub) => ub.showIn(ctx, 0)
-    case Field(S(lb), Top) => s"${lb.showIn(ctx, 0)} .."
-    case Field(S(lb), ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Field(N, ub) => ub.showIn(ctx, 0)
+    case Field(S(lb), ub) if lb === ub => ub.showIn(ctx, 0)
+    case Field(S(Bot), ub) => s"out ${ub.showIn(ctx, 0)}"
+    case Field(S(lb), Top) => s"in ${lb.showIn(ctx, 0)}"
+    case Field(S(lb), ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
   }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
@@ -44,7 +45,6 @@ abstract class TypeImpl extends Located { self: Type =>
     case Bot => "nothing"
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
-    // case Recursive(n, b) => s"${b.showIn(ctx, 31)} as ${ctx.vs.getOrElse(n, s"[??? $n ???]")}"
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
@@ -53,31 +53,56 @@ abstract class TypeImpl extends Located { self: Type =>
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) => fs.map { nt =>
         val nme = nt._1.name
-        if (nme.isCapitalized) 
-        nt._2 match {
+        if (nme.isCapitalized) nt._2 match {
           case Field(N | S(Bot), Top) => s"$nme"
           case Field(S(lb), ub) if lb === ub => s"$nme = ${ub.showIn(ctx, 0)}"
           case Field(N | S(Bot), ub) => s"$nme <: ${ub.showIn(ctx, 0)}"
           case Field(S(lb), Top) => s"$nme :> ${lb.showIn(ctx, 0)}"
           case Field(S(lb), ub) => s"$nme :> ${lb.showIn(ctx, 0)} <: ${ub.showIn(ctx, 0)}"
         }
-        else s"${nme}: ${showField(nt._2, ctx)}"
+        else s"${nt._2.mutStr}${nme}: ${showField(nt._2, ctx)}"
       }.mkString("{", ", ", "}")
     case Tuple(fs) =>
-      fs.map(nt => s"${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
+      fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)},").mkString("(", " ", ")")
     case Union(TypeName("true"), TypeName("false")) | Union(TypeName("false"), TypeName("true")) =>
       TypeName("bool").showIn(ctx, 0)
-    case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
-    case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    // case Union(l, r) => parensIf(l.showIn(ctx, 20) + " | " + r.showIn(ctx, 20), outerPrec > 20)
+    // case Inter(l, r) => parensIf(l.showIn(ctx, 25) + " & " + r.showIn(ctx, 25), outerPrec > 25)
+    case c: Composed =>
+      val prec = if (c.pol) 20 else 25
+      val opStr = if (c.pol) " | " else " & "
+      c.distinctComponents match {
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
+        case x :: Nil => x.showIn(ctx, prec)
+        case _ =>
+          parensIf(c.distinctComponents.iterator
+            .map(_.showIn(ctx, prec))
+            .reduce(_ + opStr + _), outerPrec > prec)
+      }
+    // 
     case Bounds(Bot, Top) => s"?"
-    case Bounds(Bot, ub) => s".. ${ub.showIn(ctx, 0)}"
-    case Bounds(lb, Top) => s"${lb.showIn(ctx, 0)} .."
-    case Bounds(lb, ub) => s"${lb.showIn(ctx, 0)} .. ${ub.showIn(ctx, 0)}"
+    case Bounds(lb, ub) if lb === ub => lb.showIn(ctx, outerPrec)
+    case Bounds(Bot, ub) => s"out ${ub.showIn(ctx, 0)}"
+    case Bounds(lb, Top) => s"in ${lb.showIn(ctx, 0)}"
+    case Bounds(lb, ub) => s"in ${lb.showIn(ctx, 0)} out ${ub.showIn(ctx, 0)}"
+    // 
     case AppliedType(n, args) => s"${n.name}[${args.map(_.showIn(ctx, 0)).mkString(", ")}]"
     case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
+    case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
+      case (uv, Bounds(Bot, ub)) =>
+        s"\n    ${ctx.vs(uv)} <: ${ub.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, Top)) =>
+        s"\n    ${ctx.vs(uv)} :> ${lb.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, ub)) if lb === ub =>
+        s"\n    ${ctx.vs(uv)} := ${lb.showIn(ctx, 0)}"
+      case (uv, Bounds(lb, ub)) =>
+        val vstr = ctx.vs(uv)
+        s"\n    ${vstr             } :> ${lb.showIn(ctx, 0)}" +
+        s"\n    ${" " * vstr.length} <: ${ub.showIn(ctx, 0)}"
+    }.mkString}", outerPrec > 0)
     case Literal(UnitLit(b)) => if (b) "undefined" else "null"
   }
   
@@ -94,6 +119,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case AppliedType(n, ts) => ts
     case Rem(b, _) => b :: Nil
     case WithExtension(b, r) => b :: r :: Nil
+    case Constrained(b, ws) => b :: ws.flatMap(c => c._1 :: c._2 :: Nil)
   }
 
   /**
@@ -105,7 +131,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectFields ++ ty2.collectFields
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained =>
       Nil
   }
 
@@ -119,7 +145,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(lhs, rhs) => lhs.collectTypeNames ++ rhs.collectTypeNames
     case _: Union | _: Function | _: Record | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar =>
+        | _: Literal | _: TypeVar | _: Constrained =>
       Nil
   }
 
@@ -132,7 +158,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case Inter(ty1, ty2) => ty1.collectBodyFieldsAndTypes ++ ty2.collectBodyFieldsAndTypes
     case _: Union | _: Function | _: Tuple | _: Recursive
         | _: Neg | _: Rem | _: Bounds | _: WithExtension | Top | Bot
-        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName =>
+        | _: Literal | _: TypeVar | _: AppliedType | _: TypeName | _: Constrained =>
       Nil
   }
 }
@@ -145,11 +171,6 @@ object ShowCtx {
     * hinted variables use what is given. For unnamed variables generate
     * completely new names. If same name exists increment counter suffix
     * in the name.
-    *
-    * @param tys
-    * @param pre
-    * @param debug
-    * @return
     */
   def mk(tys: IterableOnce[Type], pre: Str = "'", debug: Bool = false): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
@@ -176,12 +197,30 @@ object ShowCtx {
       // tv -> assignName(nh.stripPrefix(pre))
     }.toMap
     val used = usedNames.keySet
-    // generate names for unnamed variables
+    
+    // * Generate names for unnamed variables
+    val numLetters = 'z' - 'a' + 1
     val names = Iterator.unfold(0) { idx =>
-      S(('a' + idx % ('z' - 'a')).toChar.toString, idx + 1)
+      val postfix = idx/numLetters
+      S(('a' + idx % numLetters).toChar.toString + (if (postfix === 0) "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
+    
     ShowCtx(namedMap ++ unnamedVars.zip(names), debug)
   }
+}
+
+trait ComposedImpl { self: Composed =>
+  val lhs: Type
+  val rhs: Type
+  def components: Ls[Type] = (lhs match {
+    case c: Composed if c.pol === pol => c.components
+    case _ => lhs :: Nil
+  }) ::: (rhs match {
+    case c: Composed if c.pol === pol => c.components
+    case _ => rhs :: Nil
+  })
+  lazy val distinctComponents =
+    components.filterNot(c => if (pol) c === Bot else c === Top).distinct
 }
 
 abstract class PolyTypeImpl extends Located { self: PolyType =>
@@ -240,6 +279,10 @@ trait DeclImpl extends Located { self: Decl =>
     case TypeDef(k, n, tps, b, _, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}"
   }
+}
+
+trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
+  def compare(that: TypeName): Int = this.name compare that.name
 }
 
 trait TermImpl extends StatementImpl { self: Term =>
@@ -368,6 +411,8 @@ trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
 trait FieldImpl extends Located { self: Field =>
   def children: List[Located] =
     self.in.toList ::: self.out :: Nil
+  def isMutabe: Bool = in.isDefined
+  def mutStr: Str = if (isMutabe) "mut " else ""
 }
 
 trait Located {

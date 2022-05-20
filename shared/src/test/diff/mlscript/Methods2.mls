@@ -42,15 +42,17 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
     method HeadOption = Some { payload = this.head }
     method Map[B] f = Cons { head = f this.head; tail = this.tail.Map f }
 //│ Defined class Cons[+A]
-//│ Defined Cons.Size: (Cons['A] with {tail: List['A]}) -> int
-//│ Defined Cons.HeadOption: (Cons['A] with {tail: List['A]}) -> (Some['A0 .. 'A | 'A0] with {payload: 'A})
-//│ Defined Cons.Map: (Cons['A] with {tail: List['A]}) -> ('A -> ('B & 'head)) -> (Cons['B] with {head: 'head, tail: List['B]})
+//│ Defined Cons.Size: Cons['A] -> int
+//│ Defined Cons.HeadOption: Cons['A] -> (Some['A0] with {payload: 'A})
+//│   where
+//│     'A0 :> 'A
+//│ Defined Cons.Map: Cons['A] -> ('A -> ('B & 'head)) -> (Cons['B] with {head: 'head})
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false
 //  as we do not try to expand type aliases right now.
 Cons.Size
-//│ res: (Cons['A] with {tail: List['A]}) -> int
+//│ res: Cons['A] -> int
 //│    = undefined
 
 List.HeadOption
@@ -58,46 +60,121 @@ List.HeadOption
 //│    = undefined
 
 Cons.HeadOption
-//│ res: (Cons['A] with {tail: List['A]}) -> (Some['A0 .. 'A | 'A0] with {payload: 'A})
+//│ res: Cons['A] -> (Some['A0] with {payload: 'A})
+//│   where
+//│     'A0 :> 'A
 //│    = undefined
 
 l = Cons { head = 0; tail = Cons { head = 1; tail = Nil {} } }
-//│ l: Cons['A .. 0 | 1 | 'A] with {head: 0, tail: Cons['A .. 0 | 1 | 'A] with {head: 1, tail: Nil['A .. 0 | 1 | 'A]}}
+//│ l: Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Nil['A]}}
+//│   where
+//│     'A :> 0 | 1
 //│  = Cons { head: 0, tail: Cons { head: 1, tail: Nil {} } }
 
 l.Size
 //│ res: int
 //│    = 2
 
+:stats
 l.Map (fun x -> mul x 2)
-//│ res: List['B .. 'B | int]
+//│ res: List['B]
+//│   where
+//│     'B :> int
 //│    = Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } }
+//│ constrain calls  : 112
+//│ annoying  calls  : 6
+//│ subtyping calls  : 10
+
+l0 = Cons { head = 0; tail = Nil {} }
+//│ l0: Cons['A] with {head: 0, tail: Nil['A]}
+//│   where
+//│     'A :> 0
+//│   = Cons { head: 0, tail: Nil {} }
+
+:re
+:stats
+Cons.HeadOption l0
+//│ res: Some['A] & {payload: 0}
+//│   where
+//│     'A :> 0
+//│ Runtime error:
+//│   TypeError: (intermediate value).HeadOption is not a function
+//│ constrain calls  : 75
+//│ annoying  calls  : 27
+//│ subtyping calls  : 100
+
+
+l1 = Cons { head = 0; tail = Nil {} }
+//│ l1: Cons['A] with {head: 0, tail: Nil['A]}
+//│   where
+//│     'A :> 0
+//│   = Cons { head: 0, tail: Nil {} }
+
+:re
+:stats
+Cons.HeadOption l1
+//│ res: Some['A] & {payload: 0}
+//│   where
+//│     'A :> 0
+//│ Runtime error:
+//│   TypeError: (intermediate value).HeadOption is not a function
+//│ constrain calls  : 75
+//│ annoying  calls  : 27
+//│ subtyping calls  : 100
+
+:re
+:stats
+Cons.HeadOption l
+//│ res: Some['A] & {payload: 0 | 1}
+//│   where
+//│     'A :> 0 | 1
+//│ Runtime error:
+//│   TypeError: (intermediate value).HeadOption is not a function
+//│ constrain calls  : 141
+//│ annoying  calls  : 27
+//│ subtyping calls  : 191
+
+:stats
+o = l.(Cons.HeadOption)
+//│ o: Some['A] & {payload: 0 | 1}
+//│   where
+//│     'A :> 0 | 1
+//│  = undefined
+//│ constrain calls  : 139
+//│ annoying  calls  : 27
+//│ subtyping calls  : 191
 
 o = l.(Cons.HeadOption)
-//│ o: Some['A .. 0 | 1 | 'A] with {payload: 0 | 1}
+//│ o: Some['A] & {payload: 0 | 1}
+//│   where
+//│     'A :> 0 | 1
 //│  = undefined
 
 o = l.HeadOption
-//│ o: Option['A .. 0 | 1 | 'A]
+//│ o: Option['A]
+//│   where
+//│     'A :> 0 | 1
 //│  = Some { payload: 0 }
 
 :e
 case o of {None -> 0 | Some -> o.payload}
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.85: 	case o of {None -> 0 | Some -> o.payload}
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.160: 	case o of {None -> 0 | Some -> o.payload}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.85: 	case o of {None -> 0 | Some -> o.payload}
-//│ ╙──      	     ^
+//│ ║  l.160: 	case o of {None -> 0 | Some -> o.payload}
+//│ ╙──       	     ^
 //│ res: 0
 //│    = 0
 
 v = o.Destruct
 case v of {None -> 0 | Some -> v.payload}
-//│ v: None['A .. 0 | 1 | 'A] | Some['A .. 0 | 1 | 'A]
+//│ v: None['A] | Some['A]
+//│   where
+//│     'A :> 0 | 1
 //│  = Some { payload: 0 }
 //│ res: 0 | 1
 //│    = 0
@@ -107,7 +184,7 @@ def newHeadOption x = case x of {
     | Cons -> Some {payload = x.head}
     | _ -> None{}
     }
-//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~cons) -> (None['A0] | (Some['A] with {payload: 'payload}))
+//│ newHeadOption: ((Cons[?]\tail with {head: 'payload & 'A}) | ~Cons[?]) -> (None['A0] | (Some['A] with {payload: 'payload}))
 //│              = [Function: newHeadOption]
 
 // Note that `o` is not a list, so this takes the default case:
@@ -116,7 +193,9 @@ newHeadOption o
 //│    = None {}
 
 newHeadOption l
-//│ res: None['A] | (Some['A0 .. 0 | 'A0] with {payload: 0})
+//│ res: None['A] | Some['A0] & {payload: 0}
+//│   where
+//│     'A0 :> 0
 //│    = Some { payload: 0 }
 
 case res of {None -> 0 | Some -> res.payload}
@@ -129,15 +208,15 @@ case res of {None -> 0 | Some -> res.payload}
 case o of {
     Some -> o.Get | None -> 0 }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.129: 	case o of {
+//│ ║  l.208: 	case o of {
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.130: 	    Some -> o.Get | None -> 0 }
+//│ ║  l.209: 	    Some -> o.Get | None -> 0 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Option[?A]` does not match type `None[?] & ?a | Some[?] & ?b`
 //│ ║  l.24: 	    method HeadOption: Option[A]
 //│ ║        	                       ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `None[?] & ?a | Some[?] & ?c`
-//│ ║  l.129: 	case o of {
+//│ ║  l.208: 	case o of {
 //│ ╙──       	     ^
 //│ res: 0 | 1
 //│    = 0

@@ -10,7 +10,7 @@ class D[R]: { z: R }
 //│ Defined type alias UseT[-T]
 //│ Defined class C[=X]
 //│ Declared C.Create: C['X] -> int -> C['X]
-//│ Declared C.MapWrap: C['X] -> (int -> int) -> int -> D[c & {C#X = 'X, y: 'X}]
+//│ Declared C.MapWrap: C['X] -> (int -> int) -> int -> D[C['X]]
 //│ Defined class D[=R]
 //│ Declared D.Produce: D['R] -> string -> D['R]
 //│ Declared D.Producer: D['R] -> int -> C['R] -> D['R]

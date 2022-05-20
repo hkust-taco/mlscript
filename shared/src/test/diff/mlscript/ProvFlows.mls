@@ -308,7 +308,7 @@ succ foo
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.307: 	succ foo
 //│ ║         	^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of `int`
 //│ ║  l.303: 	def foo: int | string
 //│ ║         	               ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -318,7 +318,6 @@ succ foo
 //│ ║  l.3: 	def succ: int -> int
 //│ ║       	          ^^^
 //│ ╟── ========= Additional explanations below =========
-//│ ╟── [info] flowing from expression of type `string`
 //│ ╟── [info] flowing from type `string`
 //│ ║  l.303: 	def foo: int | string
 //│ ║         	               ^^^^^^
@@ -330,8 +329,7 @@ succ foo
 //│ ║         	     ^^^
 //│ ╟── [info] flowing into type `int`
 //│ ║  l.3: 	def succ: int -> int
-//│ ║       	          ^^^
-//│ ╙── [info] flowing into expression of type `int`
+//│ ╙──     	          ^^^
 //│ res: error | int
 
 
@@ -359,59 +357,59 @@ ty00 = ty11
 //│   <:  ty00:
 //│ (A & 'a | B & 'b) -> ('a, 'b,)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.357: 	ty00 = ty11
+//│ ║  l.355: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `B & 'b` is not an instance of type 'a
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                ^^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from expression of type `B & 'b`
 //│ ╟── [info] flowing from type `B & 'b`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                    ^^^^^^
 //│ ╟── [info] flowing from type `B & 'b`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from type `B & 'b`
-//│ ║  l.347: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║  l.345: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
 //│ ╟── [info] flowing from type `?a0`
-//│ ║  l.347: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║  l.345: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	                                ^^
 //│ ╟── [info] flowing into type `'a`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                ^^
 //│ ╙── [info] flowing into expression of type `'a`
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.357: 	ty00 = ty11
+//│ ║  l.355: 	ty00 = ty11
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `A & 'a` is not an instance of type 'b
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                    ^^
 //│ ╟── ========= Additional explanations below =========
 //│ ╟── [info] flowing from expression of type `A & 'a`
 //│ ╟── [info] flowing from type `A & 'a`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	           ^^^^^^
 //│ ╟── [info] flowing from type `A & 'a`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from type `A & 'a`
-//│ ║  l.347: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║  l.345: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	          ^^^^^^^^^^^^^^^^^
 //│ ╟── [info] flowing from expression of type `?a`
 //│ ╟── [info] flowing from type `?a0`
-//│ ║  l.347: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
+//│ ║  l.345: 	def ty11: ('a & A | 'a & B) -> ('a, 'a)
 //│ ║         	                                    ^^
 //│ ╟── [info] flowing into type `'b`
-//│ ║  l.344: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
+//│ ║  l.342: 	def ty00: ('a & A | 'b & B) -> ('a, 'b)
 //│ ║         	                                    ^^
 //│ ╙── [info] flowing into expression of type `'b`
 

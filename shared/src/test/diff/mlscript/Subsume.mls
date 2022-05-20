@@ -327,3 +327,42 @@ ty2 = twice
 //│    = [Function: twice]
 
 
+
+// --- // Self Application // --- //
+
+
+def self1: ('a -> 'b & 'a) -> 'b
+//│ self1: ('a -> 'b & 'a) -> 'b
+//│      = <missing implementation>
+
+def self1 a = a a
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: self1]
+
+fun a -> a a
+//│ res: ('a -> 'b & 'a) -> 'b
+//│    = [Function: res]
+
+self1 = res
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: res]
+
+def self2: 'a -> 'b as 'a
+//│ self2: 'a
+//│   where
+//│     'a := 'a -> 'b
+//│      = <missing implementation>
+
+def self2 = self1
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self2:
+//│ 'a
+//│   where
+//│     'a := 'a -> 'b
+//│      = [Function: res]
+
+

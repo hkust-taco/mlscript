@@ -1,0 +1,196 @@
+:NoJS
+
+:w
+class Option[A]
+class Some[A]: Option[A] & { payload: A }
+class None[A]: Option[A]
+//│ Defined class Option[±A]
+//│ Defined class Some[+A]
+//│ Defined class None[±A]
+//│ ╔══[WARNING] Type definition None has bivariant type parameters:
+//│ ║  l.6: 	class None[A]: Option[A]
+//│ ║       	      ^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.6: 	class None[A]: Option[A]
+//│ ╙──     	           ^
+//│ ╔══[WARNING] Type definition Option has bivariant type parameters:
+//│ ║  l.4: 	class Option[A]
+//│ ║       	      ^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.4: 	class Option[A]
+//│ ╙──     	             ^
+
+
+:w
+class List[A]
+    method HeadOption: Option[A]
+//│ Defined class List[±A]
+//│ Declared List.HeadOption: List['A] -> Option['A]
+//│ ╔══[WARNING] Type definition List has bivariant type parameters:
+//│ ║  l.25: 	class List[A]
+//│ ║        	      ^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.25: 	class List[A]
+//│ ╙──      	           ^
+
+:w
+class Nil[A]: List[A]
+    method HeadOption = None {}
+//│ Defined class Nil[±A]
+//│ Defined Nil.HeadOption: Nil['A] -> None['A0]
+//│ ╔══[WARNING] Type definition Nil has bivariant type parameters:
+//│ ║  l.37: 	class Nil[A]: List[A]
+//│ ║        	      ^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.37: 	class Nil[A]: List[A]
+//│ ╙──      	          ^
+
+class Cons[A]: List[A] & { head: A; tail: List[A] }
+    method HeadOption = Some { payload = error: A }
+//│ Defined class Cons[+A]
+//│ Defined Cons.HeadOption: Cons['A] -> (Some['A0] with {payload: 'A})
+//│   where
+//│     'A0 :> 'A
+
+// * Incur much fewer constraining/subtyping checks:
+// class Cons[A]: List[A] & { head: A; tail: list }
+// class Cons[A]: List[A] & { head: A; tail: anything }
+
+
+:stats
+l0 = Cons { head = 1; tail = Nil {} }
+//│ l0: Cons['A] with {head: 1, tail: Nil['A]}
+//│   where
+//│     'A :> 1
+//│ constrain calls  : 32
+//│ annoying  calls  : 6
+//│ subtyping calls  : 65
+
+:stats
+Cons.HeadOption l0
+//│ res: Some['A] & {payload: 1}
+//│   where
+//│     'A :> 1
+//│ constrain calls  : 75
+//│ annoying  calls  : 27
+//│ subtyping calls  : 100
+
+:stats
+l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
+//│ l1: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Cons['A] with {head: 3, tail: Nil['A]}}}
+//│   where
+//│     'A :> 1 | 2 | 3
+//│ constrain calls  : 164
+//│ annoying  calls  : 18
+//│ subtyping calls  : 344
+
+:stats
+Cons.HeadOption l1
+//│ res: Some['A] & {payload: 1 | 2 | 3}
+//│   where
+//│     'A :> 1 | 2 | 3
+//│ constrain calls  : 234
+//│ annoying  calls  : 27
+//│ subtyping calls  : 319
+
+:stats
+l2 = Cons { head = 0; tail = l1 }
+//│ l2: Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Cons['A] with {head: 3, tail: Nil['A]}}}}
+//│   where
+//│     'A :> 0 | 1 | 2 | 3
+//│ constrain calls  : 136
+//│ annoying  calls  : 6
+//│ subtyping calls  : 649
+
+:stats
+Cons.HeadOption l2
+//│ res: Some['A] & {payload: 0 | 1 | 2 | 3}
+//│   where
+//│     'A :> 0 | 1 | 2 | 3
+//│ constrain calls  : 355
+//│ annoying  calls  : 27
+//│ subtyping calls  : 484
+
+:stats
+l3 = Cons { head = 0-1; tail = l2 }
+//│ l3: Cons['A] with {head: int, tail: Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Cons['A] with {head: 2, tail: Cons['A] with {head: 3, tail: Nil['A]}}}}}
+//│   where
+//│     'A :> int
+//│ constrain calls  : 226
+//│ annoying  calls  : 6
+//│ subtyping calls  : 809
+
+:stats
+Cons.HeadOption l3
+//│ res: Some['A] & {payload: int}
+//│   where
+//│     'A :> int
+//│ constrain calls  : 517
+//│ annoying  calls  : 27
+//│ subtyping calls  : 564
+
+
+:stats
+rec def lr1 = Cons { head = 0; tail = lr1 }
+//│ lr1: 'tail
+//│   where
+//│     'tail :> Cons['A] with {head: 0, tail: 'tail}
+//│     'A :> 0
+//│ constrain calls  : 20
+//│ annoying  calls  : 2
+//│ subtyping calls  : 51
+
+:stats
+Cons.HeadOption lr1
+//│ res: Some['A] & {payload: 0}
+//│   where
+//│     'A :> 0
+//│ constrain calls  : 42
+//│ annoying  calls  : 21
+//│ subtyping calls  : 49
+
+:stats
+rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
+//│ lr2: 'tail
+//│   where
+//│     'tail :> Cons['A] with {head: 0, tail: Cons['A] with {head: 1, tail: Cons['A] with {head: 3, tail: 'tail}}}
+//│     'A :> 0 | 1 | 3
+//│ constrain calls  : 286
+//│ annoying  calls  : 18
+//│ subtyping calls  : 434
+
+:stats
+Cons.HeadOption lr2
+//│ res: Some['A] & {payload: 0 | 1 | 3}
+//│   where
+//│     'A :> 0 | 1 | 3
+//│ constrain calls  : 397
+//│ annoying  calls  : 27
+//│ subtyping calls  : 337
+
+
+:e
+l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ╙──       	                                      ^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{tail: ?a}` does not have field 'head'
+//│ ║  l.173: 	l1 = Cons { tail = Cons { tail = Cons { tail = Nil {} } } }
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ l1: (Cons['A] with {head: nothing, tail: (Cons['A] with {head: nothing, tail: (Cons['A] with {head: nothing, tail: Nil['A]}) | error}) | error}) | error
+//│   where
+//│     'A :> error
+
+

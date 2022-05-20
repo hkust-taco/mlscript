@@ -39,7 +39,7 @@ type B = Oops
 //│ Defined type alias B
 
 42: B
-//│ res: error
+//│ res: B
 //│    = 42
 
 :e
@@ -118,6 +118,6 @@ type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│    = 42
 
 42: Id[int]
-//│ res: int
+//│ res: Id[int]
 //│    = 42
 

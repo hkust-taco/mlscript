@@ -34,7 +34,7 @@ D
 
 :re
 error: A & B
-//│ res: {x: int, y: string} & a & b
+//│ res: A & B
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -71,7 +71,7 @@ dv: nothing
 //│    = D { x: 0, y: 'hello' }
 
 dv: A & B
-//│ res: {x: int, y: string} & a & b
+//│ res: A & B
 //│    = D { x: 0, y: 'hello' }
 
 :e
@@ -79,7 +79,7 @@ dv: A & B: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	^^
-//│ ╟── type `{x: int, y: string} & a & b` does not match type `nothing`
+//│ ╟── type `A & B` does not match type `nothing`
 //│ ║  l.78: 	dv: A & B: nothing
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -168,11 +168,11 @@ def c1 = C1 { x = 1; y = "hi" }
 //│   = C1 { y: 'hi', x: 1 }
 
 c1: T1
-//│ res: C & a & t1
+//│ res: T1
 //│    = C1 { y: 'hi', x: 1 }
 
 c1: A
-//│ res: {x: int} & a
+//│ res: A
 //│    = C1 { y: 'hi', x: 1 }
 
 c1.x

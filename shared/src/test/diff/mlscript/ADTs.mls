@@ -15,30 +15,66 @@ def nega arg = Nega { arg }
 //│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
 //│     = [Function: nega]
 
+rec def evalStub1 e = case e of {
+  Lit -> e.val
+  }
+//│ evalStub1: (Lit with {val: 'val}) -> 'val
+//│          = [Function: evalStub1]
+
+rec def evalStub2 e = case e of {
+  Lit -> e.val | Nega -> 0 - (evalStub2 e.arg)
+  }
+//│ evalStub2: 'a -> int
+//│   where
+//│     'a <: Lit | (Nega[?] with {arg: 'a})
+//│          = [Function: evalStub2]
+
 rec def eval e = case e of {
   | Lit -> e.val
   | Add -> eval e.lhs + eval e.rhs
   | Nega -> 0 - (eval e.arg)
   }
-//│ eval: ((Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> int
+//│ eval: 'a -> int
+//│   where
+//│     'a <: (Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a})
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)
-//│ ex: Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ ex: Add['E] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│   where
+//│     'E :> Lit & {val: 2}
 //│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval ex
 //│ res: int
 //│    = 4
 
+def e: Add['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e := Add['e]
+//│  = <missing implementation>
+
+def e: Lit | Add['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e := Add['e] | Lit
+//│  = <missing implementation>
+
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ e: 'e
+//│   where
+//│     'e := Add['e] | Lit | Nega['e]
 //│  = <missing implementation>
 
 def e = ex
-//│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ Add['E] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│   where
+//│     'E :> Lit & {val: 2}
 //│   <:  e:
-//│ 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ 'e
+//│   where
+//│     'e := Add['e] | Lit | Nega['e]
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -77,7 +113,7 @@ eval exp
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 
@@ -93,7 +129,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from local type binding:
-//│ ║  l.34: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║  l.64: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
@@ -105,7 +141,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 

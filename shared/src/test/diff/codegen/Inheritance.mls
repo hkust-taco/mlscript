@@ -4,7 +4,7 @@ class Y: X
   method MX = this.x
 //│ Defined trait X
 //│ Defined class Y
-//│ Defined Y.MX: (Y & x) -> int
+//│ Defined Y.MX: Y -> int
 //│ // Prelude
 //│ let res;
 //│ const X = function () {
@@ -242,7 +242,7 @@ checkS p && checkR p && checkQ p && checkP p
 trait Foo
   method Foo = 1
 //│ Defined trait Foo
-//│ Defined Foo.Foo: foo -> 1
+//│ Defined Foo.Foo: Foo -> 1
 
 class Bar: Foo
 //│ Defined class Bar

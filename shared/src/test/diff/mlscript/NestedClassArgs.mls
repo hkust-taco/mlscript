@@ -1,0 +1,238 @@
+:NoJS
+:NoProvs
+
+
+:w
+class C[A]
+//│ Defined class C[±A]
+//│ ╔══[WARNING] Type definition C has bivariant type parameters:
+//│ ║  l.6: 	class C[A]
+//│ ║       	      ^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.6: 	class C[A]
+//│ ╙──     	        ^
+
+def c: C[C[int]]
+//│ c: C[C[int]]
+
+def c: 'a -> C[C['a]]
+//│ c: 'a -> C[C['a]]
+
+def c: C[C['a]] -> 'a
+//│ c: C[C['a]] -> 'a
+
+def c: C['a] as 'a
+//│ c: 'a
+//│   where
+//│     'a := C['a]
+
+def c: C['a] | 'a as 'a
+//│ c: 'a
+//│   where
+//│     'a :> C['a]
+
+def c: C[C['a]] as 'a
+//│ c: 'a
+//│   where
+//│     'a := C[C['a]]
+
+def c: C[C['a] & 'a] as 'a
+//│ c: 'a
+//│   where
+//│     'a := C[C['a] & 'a]
+
+def c: C[C['a] & 'a | 'a] as 'a
+//│ c: 'a
+//│   where
+//│     'a := C['a]
+
+def c: C['a]
+//│ c: C['a]
+
+
+class C2[A]: { a: A }
+//│ Defined class C2[+A]
+
+
+def mkC: 'a -> C2['a]
+//│ mkC: 'a -> C2['a]
+
+mkC' a = C2 { a }
+//│ mkC': ('a & 'A) -> (C2['A] with {a: 'a})
+
+mkC = mkC'
+//│ ('a & 'A) -> (C2['A] with {a: 'a})
+//│   <:  mkC:
+//│ 'a -> C2['a]
+
+rec def rc = mkC(rc)
+//│ rc: 'rc
+//│   where
+//│     'rc :> C2['a]
+//│     'a :> 'rc
+
+rec def rc = mkC'(rc)
+//│ rc: 'a
+//│   where
+//│     'a :> C2['A] with {a: 'a}
+//│     'A :> 'a
+
+
+
+:w
+class C3[A]: { a: C3[A] }
+//│ Defined class C3[±A]
+//│ ╔══[WARNING] Type definition C3 has bivariant type parameters:
+//│ ║  l.83: 	class C3[A]: { a: C3[A] }
+//│ ║        	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.83: 	class C3[A]: { a: C3[A] }
+//│ ╙──      	         ^
+
+def c: 'a -> C3['a]
+//│ c: 'a -> C3['a]
+
+rec def c a = C3 { a = c a }
+//│ anything -> 'a
+//│   where
+//│     'a :> C3['A] with {a: 'a}
+//│   <:  c:
+//│ 'a -> C3['a]
+
+rec def c (a: 'X) = C3 { a = c a: 'X }: C3['X]
+//│ anything -> C3['X]
+//│   <:  c:
+//│ 'a -> C3['a]
+
+
+:w
+class C4[A]: { a: C[C4[A]] }
+//│ Defined class C4[±A]
+//│ ╔══[WARNING] Type definition C4 has bivariant type parameters:
+//│ ║  l.109: 	class C4[A]: { a: C[C4[A]] }
+//│ ║         	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.109: 	class C4[A]: { a: C[C4[A]] }
+//│ ╙──       	         ^
+
+def c: 'a -> C4['a]
+//│ c: 'a -> C4['a]
+
+C{}
+//│ res: C['A]
+
+def c4 a = C4{ a = C{} }
+//│ c4: anything -> C4['A]
+
+def c = c4
+//│ anything -> C4['A]
+//│   <:  c:
+//│ 'a -> C4['a]
+
+
+:w
+class C5[A]: { a: C2[C5[A]] }
+//│ Defined class C5[±A]
+//│ ╔══[WARNING] Type definition C5 has bivariant type parameters:
+//│ ║  l.134: 	class C5[A]: { a: C2[C5[A]] }
+//│ ║         	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.134: 	class C5[A]: { a: C2[C5[A]] }
+//│ ╙──       	         ^
+
+def c: 'a -> C5['a]
+//│ c: 'a -> C5['a]
+
+rec def c5 a = C5{ a = C2 { a = c5 a } }
+//│ c5: anything -> 'a
+//│   where
+//│     'a :> C5['A] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5['A]
+//│         <: C5['A]
+
+c = c5
+//│ anything -> 'a
+//│   where
+//│     'a :> C5['A] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5['A]
+//│         <: C5['A]
+//│   <:  c:
+//│ 'a -> C5['a]
+
+
+:w
+class C6[A]: { a: C5[C6[A]] }
+//│ Defined class C6[±A]
+//│ ╔══[WARNING] Type definition C6 has bivariant type parameters:
+//│ ║  l.164: 	class C6[A]: { a: C5[C6[A]] }
+//│ ║         	      ^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.164: 	class C6[A]: { a: C5[C6[A]] }
+//│ ╙──       	         ^
+
+def c: 'a -> C6['a]
+//│ c: 'a -> C6['a]
+
+// :s
+// :d
+// rec def c a = C6{ a = c5 (c a) }
+
+rec def c6 a = C6{ a = c5 (c6 a) }
+//│ c6: anything -> (C6['A] with {a: 'a})
+//│   where
+//│     'a :> C5[C6['A]] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5[C6['A]]
+//│         <: C5[C6['A]]
+
+c = c6
+//│ anything -> (C6['A] with {a: 'a})
+//│   where
+//│     'a :> C5[C6['A]] with {a: C2['A0] with {a: 'a}}
+//│     'A0 :> 'a | C5[C6['A]]
+//│         <: C5[C6['A]]
+//│   <:  c:
+//│ 'a -> C6['a]
+
+
+
+
+class N: {}
+class S[T]: { v: T }
+type O[T] = S[T] | N
+class L[T]: { h: T; t: O[L[T]] }
+  method Append: T -> L[T]
+  method Append elem = L { h = elem; t = S { v = this } }
+//│ Defined class N
+//│ Defined class S[+T]
+//│ Defined type alias O[+T]
+//│ Defined class L[=T]
+//│ Declared L.Append: L['T] -> 'T -> L['T]
+//│ Defined L.Append: (L['T] & 'this) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] & {v: L['T] & 'this}})
+
+// :ds
+// L.Append
+
+// before:
+//  Defined L.Append: L['T] -> ('T & 'a & 'b) -> (L['T & 'b .. 'T | 'b] with {h: 'a, t: S[L['T & 'b .. 'T | 'b] & 'c .. L['T & 'b .. 'T | 'b] | L['T] | 'c] with {v: L['T]}})
+
+L.Append
+//│ res: L['T] -> 'T -> L['T]
+
+
+def append ls elem = L { h = elem; t = S { v = ls } }
+//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] with {v: 'v}})
+
+def append0 ls = L { h = 0; t = S { v = ls } }
+//│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S[L['T]] with {v: 'v}})
+//│   where
+//│     'T :> 0
+
+def appendNil elem = L { h = elem; t = N{} }
+//│ appendNil: ('h & 'T) -> (L['T] with {h: 'h, t: N})
+
+
+S{v=1}
+//│ res: S['T] & {v: 1}
+//│   where
+//│     'T :> 1
+

@@ -13,7 +13,9 @@ def Some v = Some { value = v }
 
 Some 42
 (Some 42).value
-//│ res: Some['A .. 42 | 'A] with {value: 42}
+//│ res: Some['A] & {value: 42}
+//│   where
+//│     'A :> 42
 //│    = Some { value: 42 }
 //│ res: 42
 //│    = 42
@@ -23,21 +25,21 @@ type Option[A] = Some[A] | None
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = None {}
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = Some { value: 42 }
 
 :e
 res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.32: 	res.value
+//│ ║  l.34: 	res.value
 //│ ║        	^^^^^^^^^
 //│ ╟── type `None` does not have field 'value'
-//│ ║  l.21: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?value}`
-//│ ║  l.32: 	res.value
+//│ ║  l.34: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
 //│    = 42
@@ -45,19 +47,19 @@ res.value
 :e
 42: Option[int, int]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 1, found 2
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ║        	^^
 //│ ╟── integer literal of type `42` does not match type `None | Some[int]`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.21: 	type Option[A] = Some[A] | None
+//│ ║  l.23: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.46: 	42: Option[int, int]
+//│ ║  l.48: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = 42
 
 
@@ -93,13 +95,13 @@ res.x
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── type `int` does not match type `string`
-//│ ║  l.65: 	class Bar1: Foo1[int]
+//│ ╟── type `int` is not an instance of `string`
+//│ ║  l.67: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.96: 	g: Foo1['a]: Foo1[string]
 //│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
@@ -109,10 +111,10 @@ g: Foo1['a]: Foo1[string]
 class Foo2[A]
 //│ Defined class Foo2[±A]
 //│ ╔══[WARNING] Type definition Foo2 has bivariant type parameters:
-//│ ║  l.109: 	class Foo2[A]
+//│ ║  l.111: 	class Foo2[A]
 //│ ║         	      ^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.109: 	class Foo2[A]
+//│ ║  l.111: 	class Foo2[A]
 //│ ╙──       	           ^
 
 Foo2
@@ -135,20 +137,65 @@ f (Foo2 {})
 
 :re
 error: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│    = [Function: f]
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> (Foo2[?] & 'a as 'a)
+//│ res: (Foo2[?] & 'a) -> 'a
+//│   where
+//│     'a :> Foo2[?] & 'a
+//│        <: (foo2 | ~{Foo2#A = ?} | ~foo2 | ~(foo2 & {Foo2#A = ?})) & (foo2 | ~(foo2 & {Foo2#A = ?}))
 //│    = [Function: f]
 
 f
 //│ res: (Foo2[?] & 'a) -> 'a
 //│    = [Function: f]
+
+
+def mrg: Foo2[int] & Foo2[string]
+//│ mrg: Foo2[in int | string out nothing]
+//│    = <missing implementation>
+
+mrg: Foo2[int]
+//│ res: Foo2[int]
+//│    = <no result>
+//│      mrg is not implemented
+
+:e
+mrg = Foo2{}
+//│ Foo2['A]
+//│   <:  mrg:
+//│ Foo2[in int | string out nothing]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.171: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of `int`
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.111: 	class Foo2[A]
+//│ ╙──       	           ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.171: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of `string`
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.161: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	                          ^^^^^^
+//│    = Foo2 {}
+
+def mrg: Foo2[int] | Foo2[string]
+//│ mrg: Foo2[in int | string out nothing]
+//│    = <missing implementation>
 
