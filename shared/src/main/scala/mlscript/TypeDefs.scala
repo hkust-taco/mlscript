@@ -598,10 +598,11 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable
-            val oldVariance = tyDef.tvarVariances.get.getOrElseUpdate(t, VarianceInfo.bi)
+            val tvv = tyDef.tvarVariances.getOrElse(die)
+            val oldVariance = tvv.getOrElseUpdate(t, VarianceInfo.bi)
             val newVariance = oldVariance && curVariance
             if (newVariance =/= oldVariance) {
-              tyDef.tvarVariances.get(t) = newVariance
+              tvv(t) = newVariance
               println(s"UPDATE ${tyDef.nme.name}.$t from $oldVariance to $newVariance")
               varianceUpdated = true
             }
@@ -626,7 +627,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               // variance for all type parameters of type definitions has been preset
               // do nothing if variance for the parameter does not exist
               targs.zip(typeRefDef.tparamsargs).foreach { case (targ, (_, tvar)) =>
-                typeRefDef.tvarVariances.get.get(tvar).foreach {
+                typeRefDef.tvarVariances.getOrElse(die).get(tvar).foreach {
                   case in @ VarianceInfo(false, false) => updateVariance(targ, in)
                   case VarianceInfo(true, false) => updateVariance(targ, curVariance)
                   case VarianceInfo(false, true) => updateVariance(targ, curVariance.flip)
@@ -659,7 +660,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     tyDefs.foreach { t =>
       assert(t.tvarVariances.isEmpty)
       t.tvarVariances = S(MutMap.empty)
-      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.get.put(tvar, VarianceInfo.bi) }
+      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
     }
     
     var i = 1
@@ -668,7 +669,8 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       varianceUpdated = false;
       tyDefs.foreach {
         case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
-          trace(s"${k.str} ${nme.name}  ${t.tvarVariances.get.iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
+          trace(s"${k.str} ${nme.name}  ${
+                t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
             updateVariance(body, VarianceInfo.co)(t, visitedSet)
             val stores = (mthDecls ++ mthDefs).foreach { mthDef => 
               val mthBody = ctx.mthEnv.getOrElse(

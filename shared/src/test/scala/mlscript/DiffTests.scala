@@ -324,10 +324,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
                 val tn = td.nme.name
                 val ttd = ctx.tyDefs(tn)
+                val tvv = ttd.tvarVariances.getOrElse(die)
 
                 // generate warnings for bivariant type variables
                 val bivariantTypeVars = ttd.tparamsargs.iterator.filter{ case (tname, tvar) =>
-                  ttd.tvarVariances.get.get(tvar).contains(typer.VarianceInfo.bi)
+                  tvv.get(tvar).contains(typer.VarianceInfo.bi)
                 }.map(_._1).toList
                 if (!bivariantTypeVars.isEmpty) {
                   varianceWarnings.put(td.nme, bivariantTypeVars)
@@ -335,7 +336,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 
                 val params = if (!ttd.tparamsargs.isEmpty)
                     SourceCode.horizontalArray(ttd.tparamsargs.map{ case (tname, tvar) =>
-                      val tvarVariance = ttd.tvarVariances.get.getOrElse(tvar, throw new Exception(
+                      val tvarVariance = tvv.getOrElse(tvar, throw new Exception(
                         s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
                       SourceCode(s"${tvarVariance.show}${tname.name}")
                     }.toList).toString()
