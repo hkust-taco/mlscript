@@ -37,32 +37,8 @@ class Z[X, R]
 //│ ╙──      	           ^
 
 
-:dv
 class C0[A]
   method M0 (x: A) = x
-//│ VARIANCE ANALYSIS
-//│ ⬤ ITERATION 1
-//│ | class C0  ± A73'
-//│ | | upd[+] ⊤
-//│ | | upd[+] (A73' -> [α76'])
-//│ | | | upd[-] (A73',)
-//│ | | | | upd[-] A73'
-//│ | | | | | UPDATE C0.A73' from ± to -
-//│ | | | upd[+] [α76']
-//│ | | | | upd[+] α76'
-//│ | | | | | UPDATE C0.α76' from ± to +
-//│ | | | | | upd[+] A73'
-//│ | | | | | | UPDATE C0.A73' from - to =
-//│ ⬤ ITERATION 2
-//│ | class C0  = A73'  + α76'
-//│ | | upd[+] ⊤
-//│ | | upd[+] (A73' -> [α76'])
-//│ | | | upd[-] (A73',)
-//│ | | | | upd[-] A73'
-//│ | | | upd[+] [α76']
-//│ | | | | upd[+] α76'
-//│ | | | | | upd[+] A73'
-//│ DONE
 //│ Defined class C0[=A]
 //│ Defined C0.M0: C0['A] -> 'A -> 'A
 
@@ -75,13 +51,13 @@ class C1[A]
   method M1 (x: A) = x
   method M1: nothing -> anything
 //│ Defined class C1[±A]
-//│ Declared C1.M1: C1['A] -> nothing -> anything
-//│ Defined C1.M1: C1['A] -> 'A -> 'A
+//│ Declared C1.M1: C1[?] -> nothing -> anything
+//│ Defined C1.M1: C1[?] -> 'A -> 'A
 //│ ╔══[WARNING] Type definition C1 has bivariant type parameters:
-//│ ║  l.74: 	class C1[A]
+//│ ║  l.50: 	class C1[A]
 //│ ║        	      ^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.74: 	class C1[A]
+//│ ║  l.50: 	class C1[A]
 //│ ╙──      	         ^
 
 
