@@ -214,10 +214,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-            // val tvv = td.tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
             val tvv = td.getVariancesOrDefault
             tparamField(defn, tp) -> FieldType(
-              // if (tvv(tv).isCovariant) N else Some(tv),
               Some(if (tvv(tv).isCovariant) BotType else tv),
               if (tvv(tv).isContravariant) TopType else tv)(prov)
           }.toList)(noProv)
@@ -244,7 +242,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
           tvv(tv) match {
             case VarianceInfo(true, true) =>
-              // f(S(true), TypeBounds(BotType, TopType)(noProv))
               f(N, TypeBounds(BotType, TopType)(noProv))
             case VarianceInfo(co, contra) =>
               f(if (co) pol else if (contra) pol.map(!_) else N, ta)
@@ -312,7 +309,6 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
       FieldType(this.lb.map(lb), ub(this.ub))(prov)
     override def toString =
-      // lb.filterNot(_ === BotType).fold(s"$ub")(lb => s"mut $lb..$ub")
       lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
   

@@ -146,6 +146,48 @@ MyBox.Map mb (fun x -> x * 3)
 
 
 
+// Note that there is currently an inconsistency with wildcards:
+//  The type simplifier uses `?` to denote a class type argument wildcard,
+//    meaning there are no constraints on the corresponding class parameter in that type application,
+//    while user-written `?` in type signatures is handled like a definition-wide existential,
+//    which is NOT the same:
+
+def f0 (x: Box['_]) = 42
+//│ f0: Box[?] -> 42
+//│   = [Function: f0]
+
+f0(Box{})
+//│ res: 42
+//│    = 42
+
+// i.e., def f: exists T. Box[T] -> int
+def f: Box[?] -> int
+//│ f: Box[nothing] -> int
+//│  = <missing implementation>
+
+:e
+f(Box{})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.169: 	f(Box{})
+//│ ║         	^^^^^^^^
+//│ ╟── record literal of type `anything` does not match type `nothing`
+//│ ║  l.169: 	f(Box{})
+//│ ║         	     ^^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.164: 	def f: Box[?] -> int
+//│ ╙──       	           ^
+//│ res: error | int
+//│    = <no result>
+//│      f is not implemented
+
+f = f0
+//│ Box[?] -> 42
+//│   <:  f:
+//│ Box[nothing] -> int
+//│  = [Function: f0]
+
+
+
 //  Some simplification tests:
 
 :NoJS

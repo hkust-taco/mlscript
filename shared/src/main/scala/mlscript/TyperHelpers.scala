@@ -307,9 +307,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
       case ProxyType(underlying) => f(pol, underlying) // TODO different?
-      case tr @ TypeRef(defn, targs) =>
-        // TypeRef(defn, targs.map(f(N, _)))(prov)
-        TypeRef(defn, tr.mapTargs(pol)(f))(prov)
+      case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs(pol)(f))(prov)
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     

@@ -385,10 +385,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               val td = ctx.tyDefs(tr1.defn.name)
               val tvv = td.getVariancesOrDefault
               td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
-                // TODO use variance info
-                // rec(targ1, targ2, false)
-                // rec(targ2, targ1, false)
-                // val v = td.tvarVariances
                 val v = tvv(tv)
                 if (!v.isContravariant) rec(targ1, targ2, false)
                 if (!v.isCovariant) rec(targ2, targ1, false)
