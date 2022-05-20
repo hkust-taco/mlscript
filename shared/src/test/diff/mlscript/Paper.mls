@@ -36,9 +36,9 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('value -> ('value0 & 'A)) -> 'a -> 'tail
+//│ map2: ('value -> 'value0) -> 'a -> 'tail
 //│   where
-//│     'tail :> (Cons['A] with {tail: 'tail, value: 'value0}) | None
+//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
 //│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
 //│     = [Function: map2]
 
@@ -117,9 +117,7 @@ def tryDiv: int -> int -> Option[int]
 //│       = <missing implementation>
 
 def tryDiv x y = case y of { 0 -> None{} | _ -> Some { value = safeDiv x y } }
-//│ int -> (0 | int & ~0) -> (None | Some['A] & {value: int})
-//│   where
-//│     'A :> int
+//│ int -> (0 | int & ~0) -> (None | Some[int])
 //│   <:  tryDiv:
 //│ int -> int -> Option[int]
 //│       = [Function: tryDiv]

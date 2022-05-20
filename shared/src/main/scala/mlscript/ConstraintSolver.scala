@@ -382,10 +382,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)
-              tr1.targs.lazyZip(tr2.targs).foreach { (targ1, targ2) =>
-                // TODO use variance info
-                rec(targ1, targ2, false)
-                rec(targ2, targ1, false)
+              val td = ctx.tyDefs(tr1.defn.name)
+              val tvv = td.getVariancesOrDefault
+              td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
+                val v = tvv(tv)
+                if (!v.isContravariant) rec(targ1, targ2, false)
+                if (!v.isCovariant) rec(targ2, targ1, false)
               }
             } else {
               (tr1.mkTag, tr2.mkTag) match {
@@ -587,12 +589,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => extrude(und, lvl, pol)
       case _: ClassTag | _: TraitTag => ty
       case tr @ TypeRef(d, ts) =>
-        /* Note: we could try to preserve TypeRef-s through extrusion,
-            but in the absence of variance analysis it's a bit wasteful
-            to always extrude in both directions: */
-        // TypeRef(d, ts.map(t =>
-        //   TypeBounds(extrude(t, lvl, pol), extrude(t, lvl, pol))(noProv)))(tr.prov, tr.ctx) // FIXME pol...
-        extrude(tr.expand, lvl, pol).withProvOf(tr)
+        TypeRef(d, tr.mapTargs(S(pol)) {
+          case (N, targ) =>
+            TypeBounds(extrude(targ, lvl, false), extrude(targ, lvl, true))(noProv)
+          case (S(pol), targ) => extrude(targ, lvl, pol)
+        })(tr.prov)
     }
   
   

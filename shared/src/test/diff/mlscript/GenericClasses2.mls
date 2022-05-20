@@ -5,7 +5,7 @@ class Bar1: Foo1[int]
 //│ Defined class Bar1
 
 Foo1
-//│ res: {x: 'x & 'A} -> (Foo1['A] with {x: 'x})
+//│ res: {x: 'x} -> Foo1['x]
 //│    = [Function: res]
 
 Bar1
@@ -106,12 +106,12 @@ c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.105: 	c = b: Foo2[string]
 //│ ║         	    ^
-//│ ╟── type `string` is not an instance of `int`
-//│ ║  l.105: 	c = b: Foo2[string]
-//│ ║         	            ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
-//│ ╙──      	                 ^^^
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.105: 	c = b: Foo2[string]
+//│ ╙──       	            ^^^^^^
 //│ c: Foo2[string]
 //│  = Bar2 { x: 1 }
 
@@ -136,12 +136,12 @@ d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.135: 	d: Foo2[string]
 //│ ║         	^
-//│ ╟── type `string` is not an instance of `int`
-//│ ║  l.135: 	d: Foo2[string]
-//│ ║         	        ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
+//│ ╟── type `int` is not an instance of `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
-//│ ╙──      	                 ^^^
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.135: 	d: Foo2[string]
+//│ ╙──       	        ^^^^^^
 //│ res: Foo2[string]
 //│    = Bar2 { x: 1 }
 

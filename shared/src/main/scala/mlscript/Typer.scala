@@ -120,14 +120,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val tv = freshVar(noTyProv)(1)
       val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
-      tyDef.tvarVariances += tv -> VarianceInfo.co
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
       tyDef
     } ::
     {
       val tv = freshVar(noTyProv)(1)
       val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
-      tyDef.tvarVariances += tv -> VarianceInfo.in
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
       tyDef
     } ::
     Nil
@@ -799,7 +799,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
-  def expandType(st: SimpleType, stopAtTyVars: Bool = false): Type = {
+  def expandType(st: SimpleType, stopAtTyVars: Bool = false)(implicit ctx: Ctx): Type = {
     val expandType = ()
     
     import Set.{empty => semp}
@@ -850,7 +850,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           case lit: Lit => Literal(lit)
         }
         case TypeRef(td, Nil) => td
-        case TypeRef(td, targs) => AppliedType(td, targs.map(go))
+        case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
+          case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
+          case (_, ty) => go(ty)
+        })
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
         case Without(base, names) => Rem(go(base), names.toList)
     }

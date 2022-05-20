@@ -57,7 +57,26 @@ trait TypeSimplifier { self: Typer =>
       
       case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) => process(tr.expand, parent)
       
-      case _ => ty.map(process(_, N))
+      case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
+        // * We make a pass to transform the LB and UB of variant type parameter fields into their exterma
+        val prefix = fnme.takeWhile(_ =/= '#')
+        val postfix = fnme.drop(prefix.length + 1)
+        lazy val default = fty.update(process(_ , N), process(_ , N))
+        if (postfix.isEmpty) v -> default :: Nil
+        else {
+          val td = ctx.tyDefs(prefix)
+          td.tvarVariances.fold(v -> default :: Nil)(tvv =>
+            tvv(td.tparamsargs.find(_._1.name === postfix).getOrElse(die)._2) match {
+              case VarianceInfo(true, true) => Nil
+              case VarianceInfo(co, contra) =>
+                if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
+                else if (contra) v -> FieldType(fty.lb.map(process(_, N)), TopType)(fty.prov) :: Nil
+                else  v -> default :: Nil
+            })
+        }
+      })(ty.prov)
+      
+      case _ => ty.mapPol(N)((_, ty) => process(ty, N))
       
     }
     // }(r => s"= $r")
@@ -115,7 +134,7 @@ trait TypeSimplifier { self: Typer =>
             
             val trs2 = trs.map {
               case (d, tr @ TypeRef(defn, targs)) =>
-                d -> TypeRef(defn, targs.map(go(_, N)))(tr.prov) // TODO improve with variance analysis
+                d -> TypeRef(defn, tr.mapTargs(pol)((pol, ta) => go(ta, pol)))(tr.prov)
             }
             
             val traitPrefixes =
@@ -132,8 +151,10 @@ trait TypeSimplifier { self: Typer =>
                 val rcd2  = rcd.copy(rcd.fields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol))))(rcd.prov)
                 println(s"rcd2 ${rcd2}")
                 
+                val vs = td.getVariancesOrDefault
+                
                 // * Reconstruct a TypeRef from its current structural components
-                val typeRef = TypeRef(td.nme, td.tparams.zipWithIndex.map { case (tp, tpidx) =>
+                val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
@@ -141,7 +162,13 @@ trait TypeSimplifier { self: Typer =>
                       case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
                         (acc_lb | lb.getOrElse(BotType), acc_ub & ub)
                     }.pipe {
-                      case (lb, ub) => TypeBounds.mk(lb, ub)
+                      case (lb, ub) =>
+                        vs(tv) match {
+                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
+                          case VarianceInfo(co, contra) =>
+                            if (co) ub else lb
+                        }
                     }
                 })(noProv)
                 println(s"typeRef ${typeRef}")
@@ -333,9 +360,10 @@ trait TypeSimplifier { self: Typer =>
       case NegType(und) => analyze2(und, !pol)
       case ProxyType(underlying) => analyze2(underlying, pol)
       case tr @ TypeRef(defn, targs) =>
-        // TODO improve with variance analysis
-        targs.foreach(analyze2(_, true))
-        targs.foreach(analyze2(_, false))
+        val _ = tr.mapTargs(S(pol)) { (pol, ta) =>
+          if (pol =/= S(false)) analyze2(ta, true)
+          if (pol =/= S(true)) analyze2(ta, false)
+        }
       case Without(base, names) => analyze2(base, pol)
       case TypeBounds(lb, ub) =>
         if (pol) analyze2(ub, true) else analyze2(lb, false)
@@ -605,7 +633,7 @@ trait TypeSimplifier { self: Typer =>
         RecordType(fs.mapValues(_.update(transform(_, pol.map(!_), N), transform(_, pol, N))))(noProv))(noProv)
       case ProxyType(underlying) => transform(underlying, pol, parent)
       case tr @ TypeRef(defn, targs) =>
-        TypeRef(defn, targs.map(transform(_, N, N)))(tr.prov) // TODO improve with variance analysis
+        TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, N)))(tr.prov)
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol, N)
         else if (pol === S(true)) transform(base, pol, N).withoutPos(names)

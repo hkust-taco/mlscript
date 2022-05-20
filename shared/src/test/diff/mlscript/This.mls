@@ -31,7 +31,7 @@ b.Boom 1 // : A
 class Myself[A]
   method Me = this
 //│ Defined class Myself[±A]
-//│ Defined Myself.Me: (Myself['A] & 'this) -> (Myself['A] & 'this)
+//│ Defined Myself.Me: (Myself[?] & 'this) -> (Myself[?] & 'this)
 //│ ╔══[WARNING] Type definition Myself has bivariant type parameters:
 //│ ║  l.31: 	class Myself[A]
 //│ ║        	      ^^^^^^
@@ -40,10 +40,10 @@ class Myself[A]
 //│ ╙──      	             ^
 
 m0 = Myself {}
-//│ m0: Myself['A]
+//│ m0: Myself[?]
 
 m0.Me
-//│ res: Myself['A]
+//│ res: Myself[?]
 
 
 
