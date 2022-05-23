@@ -104,7 +104,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // TODO: assert no repeated fields
     lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     def toInter: SimpleType =
-      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
+      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType: ST)(((l, r) => ComposedType(false, l, r)(noProv)))
     def mergeAllFields(fs: Iterable[Var -> FieldType]): RecordType = {
       val res = mutable.SortedMap.empty[Var, FieldType]
       fs.foreach(f => res.get(f._1) match {
