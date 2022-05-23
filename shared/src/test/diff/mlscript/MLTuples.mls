@@ -224,3 +224,17 @@ t = (1, 2, 3) with {_1 = "oops"}
 //│ res: "oops"
 //│    = 'oops'
 
+
+def f: (1, 2, 3) & (2, 2 | 3, 3 | 4)
+//│ f: (nothing, 2, 3,)
+//│  = <missing implementation>
+
+def f: (1, 2, 3) & (2, 3)
+//│ f: nothing
+//│  = <missing implementation>
+
+def f: (1, 2, 3) & Array[2 | 3 | 4]
+//│ f: (nothing, 2, 3,)
+//│  = <missing implementation>
+
+
