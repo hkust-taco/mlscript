@@ -156,10 +156,7 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	                                      ^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
-//│ ║  l.+1: 	class Str_bad_0: Addable[Str_bad_0] & { val: string }
-//│ ║        	                                             ^^^^^^
-//│ ╟── but it flows into field selection with expected type `int`
+//│ ╟── field selection of type `string` does not match type `int`
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                      ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
@@ -174,9 +171,7 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
-//│ ║  l.+1: 	class Str_bad_0: Addable[Str_bad_0] & { val: string }
-//│ ║        	                                             ^^^^^^
+//│ ╟── expression of type `string` does not match type `int`
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                                 ^^^^^^^^

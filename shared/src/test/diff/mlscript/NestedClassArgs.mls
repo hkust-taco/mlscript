@@ -117,10 +117,10 @@ C{}
 //│ res: C['A]
 
 def c4 a = C4{ a = C{} }
-//│ c4: anything -> C4['A]
+//│ c4: anything -> (C4['A] with {a: C[C4['A]]})
 
 def c = c4
-//│ anything -> C4['A]
+//│ anything -> (C4['A] with {a: C[C4['A]]})
 //│   <:  c:
 //│ 'a -> C4['a]
 
@@ -256,10 +256,10 @@ L.Append
 
 
 def append ls elem = L { h = elem; t = S { v = ls } }
-//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S[L['T]] with {v: 'v}})
+//│ append: (L['T] & 'v & 'T0) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['T0] with {v: 'v}})
 
 def append0 ls = L { h = 0; t = S { v = ls } }
-//│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S[L['T]] with {v: 'v}})
+//│ append0: (L['T] & 'v & 'T0) -> (L['T] with {h: 0, t: S['T0] with {v: 'v}})
 //│   where
 //│     'T :> 0
 

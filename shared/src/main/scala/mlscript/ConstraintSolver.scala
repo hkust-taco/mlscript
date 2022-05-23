@@ -31,7 +31,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx): Unit =
-      constrainDNF(DNF.mk(lhs, true), DNF.mk(rhs, false), rhs)
+      constrainDNF(DNF.mkDeep(lhs, true), DNF.mkDeep(rhs, false), rhs)
     
     def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
@@ -43,8 +43,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
             implicit val etf: ExpandTupleFields = true
-            val fullRhs = nvars.iterator.map(DNF.mk(_, true))
-              .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
+            val fullRhs = nvars.iterator.map(DNF.mkDeep(_, true))
+              .foldLeft(rhs | DNF.mkDeep(rnf.toType(), false))(_ | _)
             println(s"Consider ${lnf} <: ${fullRhs}")
             
             // The following crutch is necessary because the pesky Without types may get stuck

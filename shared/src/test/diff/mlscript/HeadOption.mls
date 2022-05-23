@@ -65,9 +65,9 @@ l0 = Cons { head = 1; tail = Nil {} }
 :stats
 Cons.HeadOption l0
 //│ res: Some[1]
-//│ constrain calls  : 37
-//│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ constrain calls  : 39
+//│ annoying  calls  : 24
+//│ subtyping calls  : 51
 
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
@@ -79,9 +79,9 @@ l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil
 :stats
 Cons.HeadOption l1
 //│ res: Some[1]
-//│ constrain calls  : 37
-//│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ constrain calls  : 39
+//│ annoying  calls  : 24
+//│ subtyping calls  : 51
 
 :stats
 l2 = Cons { head = 0; tail = l1 }
@@ -93,9 +93,9 @@ l2 = Cons { head = 0; tail = l1 }
 :stats
 Cons.HeadOption l2
 //│ res: Some[0]
-//│ constrain calls  : 38
-//│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ constrain calls  : 40
+//│ annoying  calls  : 24
+//│ subtyping calls  : 51
 
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
@@ -107,9 +107,9 @@ l3 = Cons { head = 0-1; tail = l2 }
 :stats
 Cons.HeadOption l3
 //│ res: Some[int]
-//│ constrain calls  : 44
-//│ annoying  calls  : 23
-//│ subtyping calls  : 50
+//│ constrain calls  : 46
+//│ annoying  calls  : 24
+//│ subtyping calls  : 54
 
 
 :stats
@@ -124,9 +124,9 @@ rec def lr1 = Cons { head = 0; tail = lr1 }
 :stats
 Cons.HeadOption lr1
 //│ res: Some[0]
-//│ constrain calls  : 36
-//│ annoying  calls  : 21
-//│ subtyping calls  : 39
+//│ constrain calls  : 38
+//│ annoying  calls  : 22
+//│ subtyping calls  : 43
 
 :stats
 rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
@@ -140,9 +140,9 @@ rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; t
 :stats
 Cons.HeadOption lr2
 //│ res: Some[0]
-//│ constrain calls  : 38
-//│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ constrain calls  : 40
+//│ annoying  calls  : 24
+//│ subtyping calls  : 51
 
 
 :e

@@ -580,7 +580,7 @@ t = Dup { x = 42 }
 :stats
 t : Dup[bool, int]
 //│ res: Dup[?, int]
-//│ constrain calls  : 22
+//│ constrain calls  : 20
 //│ annoying  calls  : 21
 //│ subtyping calls  : 33
 
@@ -591,12 +591,9 @@ t : Dup[int, bool]
 //│ ║         	^
 //│ ╟── integer literal of type `42` does not match type `bool`
 //│ ║  l.577: 	t = Dup { x = 42 }
-//│ ║         	              ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.588: 	t : Dup[int, bool]
-//│ ╙──       	             ^^^^
+//│ ╙──       	              ^^
 //│ res: Dup[?, bool]
-//│ constrain calls  : 33
+//│ constrain calls  : 31
 //│ annoying  calls  : 23
 //│ subtyping calls  : 32
 
@@ -624,7 +621,7 @@ class B: { x: int }
   method F1: int
   method F1 = 1
 //│ ╔══[ERROR] Method F1 not found
-//│ ║  l.622: 	  method Nope = this.Yes.F1
+//│ ║  l.619: 	  method Nope = this.Yes.F1
 //│ ╙──       	                ^^^^^^^^^^^
 //│ Defined class A
 //│ Defined A.Yes: A -> (B & {x: 1})
@@ -641,25 +638,25 @@ trait E
 class H: D & E
   method G = 2
 //│ ╔══[ERROR] Overriding method D.G without explicit declaration is not allowed.
-//│ ║  l.642: 	  method G = 2
+//│ ║  l.639: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.638: 	  method G = 1
+//│ ║  l.635: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.642: 	  method G = 2
+//│ ║  l.639: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── integer literal of type `2` does not match type `1`
-//│ ║  l.642: 	  method G = 2
+//│ ║  l.639: 	  method G = 2
 //│ ║         	             ^
 //│ ╟── but it flows into method definition with expected type `1`
-//│ ║  l.642: 	  method G = 2
+//│ ║  l.639: 	  method G = 2
 //│ ║         	         ^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.638: 	  method G = 1
+//│ ║  l.635: 	  method G = 1
 //│ ║         	             ^
 //│ ╟── from inherited method definition:
-//│ ║  l.638: 	  method G = 1
+//│ ║  l.635: 	  method G = 1
 //│ ╙──       	         ^^^^^
 //│ Defined trait D
 //│ Defined D.G: D -> 1
@@ -687,19 +684,19 @@ trait E2
   method G2: bool
 class H2: D2 & E2
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
-//│ ║  l.685: 	  method G2 = 1
+//│ ║  l.682: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── integer literal of type `1` does not match type `bool`
-//│ ║  l.685: 	  method G2 = 1
+//│ ║  l.682: 	  method G2 = 1
 //│ ║         	              ^
 //│ ╟── but it flows into inherited method definition with expected type `bool`
-//│ ║  l.685: 	  method G2 = 1
+//│ ║  l.682: 	  method G2 = 1
 //│ ║         	         ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.687: 	  method G2: bool
+//│ ║  l.684: 	  method G2: bool
 //│ ║         	             ^^^^
 //│ ╟── from inherited method declaration:
-//│ ║  l.687: 	  method G2: bool
+//│ ║  l.684: 	  method G2: bool
 //│ ╙──       	         ^^^^^^^^
 //│ Defined trait D2
 //│ Defined D2.G2: D2 -> 1
@@ -726,14 +723,14 @@ trait Test7B
 :e
 class Test7C: Test7A & Test7B
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.727: 	class Test7C: Test7A & Test7B
+//│ ║  l.724: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.715: 	  method Mth7A = 42
+//│ ║  l.712: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.718: 	  method Mth7A = 43
+//│ ║  l.715: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7C
 
@@ -749,14 +746,14 @@ class Test7D: Test7A & Test7B
 class Test7E: Test7C
   method Mth7A = 0
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.727: 	class Test7C: Test7A & Test7B
+//│ ║  l.724: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.715: 	  method Mth7A = 42
+//│ ║  l.712: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.718: 	  method Mth7A = 43
+//│ ║  l.715: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ Defined class Test7E
 //│ Defined Test7E.Mth7A: Test7E -> 0
@@ -769,24 +766,24 @@ trait Test7F
 :e
 class Test7G: Test7C & Test7F
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.727: 	class Test7C: Test7A & Test7B
+//│ ║  l.724: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7A
-//│ ║  l.715: 	  method Mth7A = 42
+//│ ║  l.712: 	  method Mth7A = 42
 //│ ║         	         ^^^^^^^^^^
 //│ ╟── • Test7B
-//│ ║  l.718: 	  method Mth7A = 43
+//│ ║  l.715: 	  method Mth7A = 43
 //│ ╙──       	         ^^^^^^^^^^
 //│ ╔══[ERROR] An overriding method definition must be given when inheriting from multiple method definitions
-//│ ║  l.770: 	class Test7G: Test7C & Test7F
+//│ ║  l.767: 	class Test7G: Test7C & Test7F
 //│ ║         	      ^^^^^^
 //│ ╟── Definitions of method Mth7A inherited from:
 //│ ╟── • Test7C
-//│ ║  l.727: 	class Test7C: Test7A & Test7B
+//│ ║  l.724: 	class Test7C: Test7A & Test7B
 //│ ║         	      ^^^^^^
 //│ ╟── • Test7F
-//│ ║  l.765: 	  method Mth7A = 0
+//│ ║  l.762: 	  method Mth7A = 0
 //│ ╙──       	         ^^^^^^^^^
 //│ Defined class Test7G
 
@@ -804,10 +801,10 @@ class Test8A
 class Test8B: Test8A
     method F: 1
 //│ ╔══[ERROR] Overriding method Test8A.F without an overriding definition is not allowed.
-//│ ║  l.805: 	    method F: 1
+//│ ║  l.802: 	    method F: 1
 //│ ║         	           ^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.798: 	    method F = 1
+//│ ║  l.795: 	    method F = 1
 //│ ╙──       	           ^^^^^
 //│ Defined class Test8B
 //│ Declared Test8B.F: Test8B -> 1
@@ -825,10 +822,10 @@ class Test8C[A]
 class Test8D: Test8C[int]
     method F: int
 //│ ╔══[ERROR] Overriding method Test8C.F without an overriding definition is not allowed.
-//│ ║  l.826: 	    method F: int
+//│ ║  l.823: 	    method F: int
 //│ ║         	           ^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.817: 	    method F = error
+//│ ║  l.814: 	    method F = error
 //│ ╙──       	           ^^^^^^^^^
 //│ Defined class Test8D
 //│ Declared Test8D.F: Test8D -> int
@@ -845,40 +842,40 @@ class Test9B: Test9A[int]
     method Mth9A : Test9A[int] -> int
     method Mth9A = this.x
 //│ ╔══[ERROR] Overriding method Test9A.Mth9A without explicit declaration is not allowed.
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.840: 	    method Mth9A = this.x
+//│ ║  l.837: 	    method Mth9A = this.x
 //│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method declaration:
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Test9A[int] -> int` is not an instance of type X
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into method declaration with expected type `x`
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.840: 	    method Mth9A = this.x
+//│ ║  l.837: 	    method Mth9A = this.x
 //│ ║         	                   ^^^^^^
 //│ ╟── from inherited method definition:
-//│ ║  l.840: 	    method Mth9A = this.x
+//│ ║  l.837: 	    method Mth9A = this.x
 //│ ╙──       	           ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in method definition:
-//│ ║  l.846: 	    method Mth9A = this.x
+//│ ║  l.843: 	    method Mth9A = this.x
 //│ ║         	           ^^^^^^^^^^^^^^
-//│ ╟── type `int` is not a function
-//│ ║  l.844: 	class Test9B: Test9A[int]
-//│ ║         	                     ^^^
-//│ ╟── but it flows into field selection with expected type `Test9A[int] -> int`
-//│ ║  l.846: 	    method Mth9A = this.x
+//│ ╟── field selection of type `int` is not a function
+//│ ║  l.843: 	    method Mth9A = this.x
 //│ ║         	                   ^^^^^^
+//│ ╟── but it flows into method definition with expected type `Test9A[int] -> int`
+//│ ║  l.843: 	    method Mth9A = this.x
+//│ ║         	           ^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── from method declaration:
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class Test9B
 //│ Declared Test9B.Mth9A: Test9B -> Test9A[int] -> int
@@ -888,15 +885,15 @@ class Test9B: Test9A[int]
 :NoJS
 error.(Test9B.Mth9A): nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.889: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.886: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Test9A[int] -> int` does not match type `nothing`
-//│ ║  l.845: 	    method Mth9A : Test9A[int] -> int
+//│ ║  l.842: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.889: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.886: 	error.(Test9B.Mth9A): nothing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.889: 	error.(Test9B.Mth9A): nothing
+//│ ║  l.886: 	error.(Test9B.Mth9A): nothing
 //│ ╙──       	                      ^^^^^^^
 //│ res: nothing
