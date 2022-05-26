@@ -213,19 +213,6 @@ c = e
 //│ 'a -> C6['a]
 
 
-// Simplification/Minimization:
-
-type T1 = { x: T1 & { x: T1 } }
-type T2 = { x: T2 }
-//│ Defined type alias T1
-//│ Defined type alias T2
-
-// :stdout
-// :d
-error : T1 : T2
-//│ res: T2
-
-
 
 
 
