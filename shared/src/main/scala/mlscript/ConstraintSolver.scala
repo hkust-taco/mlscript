@@ -84,16 +84,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             println(s"Possible: " + possible)
             
-            // Then, we try to factorize the RHS to help make subsequent solving take shortcuts:
-            val fact = factorize(possible, sort = false)
-            
-            println(s"Factorized: " + fact)
-            
-            // Finally, we enter the "annoying constraint" resolution routine:
-            annoying(Nil, lnf, fact, RhsBot)
-            
-            // // Alternatively, wothout factorization (does not actually make a difference most of the time):
-            // annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+            if (doFactorize) {
+              // We try to factorize the RHS to help make subsequent solving take shortcuts:
+              
+              val fact = factorize(possible, sort = false)
+              
+              println(s"Factorized: " + fact)
+              
+              // Finally, we enter the "annoying constraint" resolution routine:
+              annoying(Nil, lnf, fact, RhsBot)
+              
+            } else {
+              // Alternatively, without factorization (does not actually make a difference most of the time):
+              
+              annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+              
+            }
             
         }
       }

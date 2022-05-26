@@ -80,10 +80,10 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
-//│ res: error | int
-//│ constrain calls  : 94
-//│ annoying  calls  : 84
-//│ subtyping calls  : 1345
+//│ res: error
+//│ constrain calls  : 87
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2642
 
 :stats
 :e
@@ -101,9 +101,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error
-//│ constrain calls  : 111
-//│ annoying  calls  : 109
-//│ subtyping calls  : 4178
+//│ constrain calls  : 135
+//│ annoying  calls  : 224
+//│ subtyping calls  : 11852
 
 
 // ====== 2 ====== //
@@ -157,10 +157,10 @@ foo arg
 //│ ╟── from refined scrutinee:
 //│ ║  l.141: 	def foo x = case x of {
 //│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls  : 105
-//│ annoying  calls  : 84
-//│ subtyping calls  : 1300
+//│ res: error
+//│ constrain calls  : 98
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2597
 
 
 // ====== 4 ====== //
@@ -188,9 +188,9 @@ foo arg
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 116
-//│ annoying  calls  : 97
-//│ subtyping calls  : 1399
+//│ constrain calls  : 102
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2681
 
 :stats
 :e
@@ -206,9 +206,9 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 91
+//│ constrain calls  : 79
 //│ annoying  calls  : 94
-//│ subtyping calls  : 1228
+//│ subtyping calls  : 2545
 
 :stats
 :e
@@ -224,9 +224,9 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 91
+//│ constrain calls  : 79
 //│ annoying  calls  : 94
-//│ subtyping calls  : 1216
+//│ subtyping calls  : 2533
 
 
 // ====== 5 ====== //
@@ -255,9 +255,9 @@ foo arg
 //│ ║  l.236: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 120
-//│ annoying  calls  : 97
-//│ subtyping calls  : 1529
+//│ constrain calls  : 106
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2800
 
 
 // ====== 6 ====== //
@@ -287,9 +287,9 @@ foo arg
 //│ ║  l.267: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 124
-//│ annoying  calls  : 97
-//│ subtyping calls  : 1700
+//│ constrain calls  : 110
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2959
 
 
 // ====== 7 ====== //
@@ -320,9 +320,9 @@ foo arg
 //│ ║  l.299: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 128
-//│ annoying  calls  : 97
-//│ subtyping calls  : 1917
+//│ constrain calls  : 114
+//│ annoying  calls  : 96
+//│ subtyping calls  : 3163
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
@@ -343,9 +343,9 @@ foo_manual arg
 //│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
-//│ constrain calls  : 27
-//│ annoying  calls  : 90
-//│ subtyping calls  : 3117
+//│ constrain calls  : 23
+//│ annoying  calls  : 67
+//│ subtyping calls  : 3043
 
 :stats
 foo_manual = foo
@@ -386,8 +386,8 @@ foo arg
 //│ ║  l.364: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 132
-//│ annoying  calls  : 97
-//│ subtyping calls  : 2185
+//│ constrain calls  : 118
+//│ annoying  calls  : 96
+//│ subtyping calls  : 3417
 
 

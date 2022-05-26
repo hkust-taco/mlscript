@@ -17,6 +17,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     extends TypeDefs with TypeSimplifier {
   
   def funkyTuples: Bool = false
+  def doFactorize: Bool = false
   
   var recordProvenances: Boolean = true
   
