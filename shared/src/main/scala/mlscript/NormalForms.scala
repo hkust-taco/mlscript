@@ -18,12 +18,13 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   def expandTupleFields(implicit etf: ExpandTupleFields): Bool = etf === true
   
   
-  private def mergeTypeRefs(trs1: SortedMap[TN, TR], trs2: SortedMap[TN, TR])(implicit ctx: Ctx): SortedMap[TN, TR] =
+  private def mergeTypeRefs(pol: Bool, trs1: SortedMap[TN, TR], trs2: SortedMap[TN, TR])(implicit ctx: Ctx): SortedMap[TN, TR] =
     mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
       assert(tr1.defn === tr2.defn)
       assert(tr1.targs.size === tr2.targs.size)
       TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
-        TypeBounds.mk(ta1 | ta2, ta1 & ta2)))(noProv)
+          if (pol) TypeBounds.mk(ta1 & ta2, ta1 | ta2) else TypeBounds.mk(ta1 | ta2, ta1 & ta2)
+        ))(noProv)
     }
   
   
@@ -192,7 +193,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2))
         if prims1 === prims2 && bf1 === bf2 && trs1.keySet === trs2.keySet
         => // * eg for merging `~Foo[S] & ~Foo[T]`:
-          S(RhsBases(prims1, bf1, mergeTypeRefs(trs1, trs2)))
+          S(RhsBases(prims1, bf1, mergeTypeRefs(false, trs1, trs2)))
       case (RhsBases(prims1, bf1, trs1), RhsBases(prims2, bf2, trs2)) =>
         N // TODO could do some more merging here – for the possible base types
       case _ => N
@@ -295,12 +296,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         , nvars | that.nvars))
       // }(r => s"!! $r")
     def neg: Disjunct = Disjunct(rnf, nvars, lnf, vars)
-    /** `tryMerge` tries to compute the union of two conjuncts as a conjunct,
+    /** `tryMergeUnion` tries to compute the union of two conjuncts as a conjunct,
       * failing if this merging cannot be done without losing information.
       * This ends up simplifying away things like:
       *   {x: int} | {y: int} ~> anything
       *   (A -> B) | {x: C}   ~> anything  */
-    def tryMerge(that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
+    def tryMergeUnion(that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): Opt[Conjunct] = (this, that) match {
       case _ if this <:< that => S(that)
       case _ if that <:< this => S(this)
       case (Conjunct(LhsTop, vs1, r1, nvs1), Conjunct(LhsTop, vs2, r2, nvs2))
@@ -314,7 +315,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         if bse1 === bse2 && ts1 === ts2 && vs1 === vs2 && r1 === r2 && nvs1 === nvs2
         && trs1.keySet === trs2.keySet
       =>
-        val trs = mergeTypeRefs(trs1, trs2)
+        val trs = mergeTypeRefs(true, trs1, trs2)
         val rcd = RecordType(recordUnion(rcd1.fields, rcd2.fields))(noProv)
         S(Conjunct(LhsRefined(bse1, ts1, rcd, trs), vs1, r1, nvs1))
       case (Conjunct(LhsRefined(bse1, ts1, rcd1, trs1), vs1, r1, nvs1)
@@ -416,7 +417,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case c :: cs =>
           if (c <:< toMerge) acc.reverse ::: toMerge :: cs
           else if (toMerge <:< c) acc.reverse ::: c :: cs
-          else c.tryMerge(toMerge) match {
+          else c.tryMergeUnion(toMerge) match {
             case Some(value) => acc.reverse ::: value :: cs
             case None => go(cs, c :: acc, toMerge)
           }
