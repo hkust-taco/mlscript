@@ -182,9 +182,9 @@ c = c6
 //│         <: C5[C6['A]]
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ constrain calls  : 145
-//│ annoying  calls  : 133
-//│ subtyping calls  : 1292
+//│ constrain calls  : 212
+//│ annoying  calls  : 179
+//│ subtyping calls  : 2368
 
 
 // A reproduction of an issue found while trying out TypeRef ctor typing:
@@ -220,10 +220,10 @@ type T2 = { x: T2 }
 //│ Defined type alias T1
 //│ Defined type alias T2
 
-// FIXME doesn't terminate:
 // :stdout
 // :d
-// error : T1 : T2
+error : T1 : T2
+//│ res: T2
 
 
 

@@ -437,6 +437,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
+    
+    /* 
     def mkDeep(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
       mkWith(ty, pol, (polo, st) => polo match {
         // case S(pol) => mk(st, pol)(ctx, ptr = true, etf = false).toType(sort = true)
@@ -444,6 +446,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case S(pol) => mkDeep(st, pol)(ctx, ptr = true, etf = false).toType(sort = true)
         case N => TypeBounds.mk(mkDeep(st, false)(ctx, ptr = true, etf = false).toType(sort = true), mkDeep(st, false)(ctx, ptr = true, etf = false).toType(sort = true))
       })
+    */
+    def mkDeep(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF = {
+      mk(mkDeepST(ty, pol), pol)
+    }
+    def mkDeepST(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): ST = {
+      val dnf = mk(ty, pol)
+      // dnf.toType().mapPol(S(pol)) { (polo, st) => polo match {
+      //   // case _ if st === ty => ty
+      //   case S(pol) => mkDeepST(st, pol)(ctx, ptr = true, etf = false)
+      //   case N => TypeBounds.mk(mkDeepST(st, false)(ctx, ptr = true, etf = false), mkDeepST(st, false)(ctx, ptr = true, etf = false))
+      // }}
+      def go(polo: Opt[Bool], st: ST): ST = polo match {
+        case _ if st === ty => ty.mapPol(polo)(go)
+        case S(pol) => mkDeepST(st, pol)(ctx, ptr = true, etf = false)
+        case N => TypeBounds.mk(mkDeepST(st, false)(ctx, ptr = true, etf = false), mkDeepST(st, false)(ctx, ptr = true, etf = false))
+      }
+      dnf.toType().mapPol(S(pol))(go)
+    }
+    
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
       mkWith(ty, pol, (_, st) => st)
     def mkWith(ty: SimpleType, pol: Bool, f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
