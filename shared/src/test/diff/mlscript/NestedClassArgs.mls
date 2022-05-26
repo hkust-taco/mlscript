@@ -183,6 +183,48 @@ c = c6
 //│ 'a -> C6['a]
 
 
+// A reproduction of an issue found while trying out TypeRef ctor typing:
+
+// anything -> (C6['A] with {a: 'a})
+//   where
+//     'a :> C5[C6['A]] with {a: C2['A0] with {a: 'a}}
+//     'A0 :> 'a | C5[C6['A]]
+//         <: C5[C6['A]] | C5[C6['A]] & ~c5 | C5[C6['A]] & ~{C5#A = C6['A]} | C5[C6['A]] & ~{a: C2[C5[C6['A]]]}
+
+def e: C5[C6['A]] | C5[C6['A]] & ~c5 | C5[C6['A]] | C5[C6['A]] & ~{a: C2[C5[C6['A]]]}
+//│ e: C5[C6['A]]
+
+def e: C5[C6['A]] & {a: C2[C5[C6['A]] | C5[C6['A]] & ~c5 | C5[C6['A]] | C5[C6['A]] & ~{a: C2[C5[C6['A]]]}] & {a: 'a}}
+//│ e: C5[C6['A]] & {a: C2[C5[C6['A]]] & {a: nothing}}
+
+type Inner = C5[C6['A]] & {a: C2[C5[C6['A]] | C5[C6['A]] & ~c5 | C5[C6['A]] | C5[C6['A]] & ~{a: C2[C5[C6['A]]]}] & {a: 'a}} as 'a
+//│ Defined type alias Inner
+
+def e: anything -> (C6['A] & {a: Inner})
+//│ e: anything -> (C6['A] with {a: Inner})
+
+// FIXME SOF
+c = e
+//│ anything -> (C6['A] with {a: Inner})
+//│   <:  c:
+//│ 'a -> C6['a]
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+
+// Simplification/Minimization:
+
+type T1 = { x: T1 & { x: T1 } }
+type T2 = { x: T2 }
+//│ Defined type alias T1
+//│ Defined type alias T2
+
+// FIXME doesn't terminate:
+// :stdout
+// :d
+// error : T1 : T2
+
+
+
 
 
 class N: {}
@@ -193,6 +235,7 @@ type O[T] = S[T] | N
 class L[T]: { h: T; t: O[L[T]] }
   method Append: T -> L[T]
   method Append elem = L { h = elem; t = S { v = this } }
+// Defined class N
 //│ Defined class N
 //│ Defined class S[=T]
 //│ Declared S.In: S['T] -> 'T -> ()
