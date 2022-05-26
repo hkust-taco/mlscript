@@ -285,7 +285,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
-    trace(s"C $lhs <! $rhs") {
+    // trace(s"C $lhs <! $rhs") {
+    trace(s"C $lhs <! $rhs    (${cache.size})") {
+    // trace(s"C $lhs <! $rhs") { println(s"cache ${cache.size}")
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
@@ -300,10 +302,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // type variables or type references, as these will necessary be part of any possible
           // cycles. Since these types form regular trees, there will necessarily be a point where
           // a variable or type ref part of a cycle will be matched against the same type periodically.
-          case (_: TypeVariable | _: TypeRef, _) | (_, _: TypeVariable | _: TypeRef) =>
+          // case (_: TypeVariable | _: TypeRef, _) | (_, _: TypeVariable | _: TypeRef) =>
+          case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
             cache += lhs_rhs
-          case _ => ()
+          // case _ => ()
         }
         lhs_rhs match {
           case (ExtrType(true), _) => ()

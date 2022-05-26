@@ -173,6 +173,7 @@ rec def c6 a = C6{ a = c5 (c6 a) }
 //│     'A0 :> 'a | C5[C6['A]]
 //│         <: C5[C6['A]]
 
+:stats
 c = c6
 //│ anything -> (C6['A] with {a: 'a})
 //│   where
@@ -181,6 +182,9 @@ c = c6
 //│         <: C5[C6['A]]
 //│   <:  c:
 //│ 'a -> C6['a]
+//│ constrain calls  : 145
+//│ annoying  calls  : 133
+//│ subtyping calls  : 1292
 
 
 // A reproduction of an issue found while trying out TypeRef ctor typing:
@@ -203,12 +207,10 @@ type Inner = C5[C6['A]] & {a: C2[C5[C6['A]] | C5[C6['A]] & ~c5 | C5[C6['A]] | C5
 def e: anything -> (C6['A] & {a: Inner})
 //│ e: anything -> (C6['A] with {a: Inner})
 
-// FIXME SOF
 c = e
 //│ anything -> (C6['A] with {a: Inner})
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 // Simplification/Minimization:
