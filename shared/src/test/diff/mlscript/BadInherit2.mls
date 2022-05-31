@@ -245,7 +245,12 @@ s0 (C0{})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	s0 (C0{})
 //│ ║         	^^^^^^^^^
-//│ ╙── type `anything` does not match type `nothing`
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.239: 	def s0: S0[?] -> S0[?]
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.239: 	def s0: S0[?] -> S0[?]
+//│ ╙──       	           ^
 //│ res: error | S0[?]
 //│    = <no result>
 //│      s0 is not implemented

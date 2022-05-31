@@ -172,7 +172,10 @@ f(Box{})
 //│ ║         	^^^^^^^^
 //│ ╟── record literal of type `anything` does not match type `nothing`
 //│ ║  l.169: 	f(Box{})
-//│ ╙──       	     ^^
+//│ ║         	     ^^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.164: 	def f: Box[?] -> int
+//│ ╙──       	           ^
 //│ res: error | int
 //│    = <no result>
 //│      f is not implemented
