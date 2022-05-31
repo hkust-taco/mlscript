@@ -120,11 +120,16 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
 //│ ╟── type `Lit` does not match type `int`
 //│ ║  l.62: 	def e: Lit | Add['e] | Nega['e] as 'e
-//│ ╙──      	       ^^^
+//│ ║        	       ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ╙──      	                               ^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
+//│ ╟── type `int` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.32: 	rec def eval e = case e of {
 //│ ║        	                      ^

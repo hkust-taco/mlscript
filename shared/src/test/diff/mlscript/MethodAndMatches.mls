@@ -200,7 +200,12 @@ def bar2 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.196: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╙── expression of type `int` is not an instance of type 'a
+//│ ╟── type `int` is not an instance of type 'a
+//│ ║  l.4: 	class Derived1: Base1[int] & { x: int }
+//│ ║       	                      ^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.182: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ╙──       	                ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.196: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
@@ -214,6 +219,11 @@ def bar2 = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.196: 	def bar2 = foo
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╙── expression of type `'a` does not match type `int`
+//│ ╟── type `'a` does not match type `int`
+//│ ║  l.182: 	def bar2: Base1['a] -> 'a -> Base1['a]
+//│ ║         	                                   ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.4: 	class Derived1: Base1[int] & { x: int }
+//│ ╙──     	                      ^^^
 //│     = [Function: foo]
 

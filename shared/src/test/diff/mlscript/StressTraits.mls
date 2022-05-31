@@ -343,16 +343,16 @@ foo_manual arg
 //│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
-//│ constrain calls  : 21
+//│ constrain calls  : 23
 //│ annoying  calls  : 67
-//│ subtyping calls  : 4983
+//│ subtyping calls  : 4984
 
 :stats
 foo_manual = foo
 //│ ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | ~e & ({fF: 'fA} & f | {fG: 'fA} & g & ~f)))))) -> 'fA
 //│   <:  foo_manual:
 //│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
-//│ constrain calls  : 89
+//│ constrain calls  : 96
 //│ annoying  calls  : 183
 //│ subtyping calls  : 4292
 

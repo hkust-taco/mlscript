@@ -46,7 +46,7 @@ foo (arg with { fC = true })
 //│ res: int | string | true
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 31
+//│ constrain calls  : 32
 //│ annoying  calls  : 28
 //│ subtyping calls  : 115
 

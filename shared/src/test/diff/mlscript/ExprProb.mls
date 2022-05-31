@@ -162,7 +162,7 @@ def eval1_ty_ugly = eval1
 //│   where
 //│     'b <: 'a & ~Add[?] & ~Lit | Add['b] | Lit
 //│              = [Function: eval1]
-//│ constrain calls  : 77
+//│ constrain calls  : 78
 //│ annoying  calls  : 36
 //│ subtyping calls  : 319
 
@@ -190,7 +190,7 @@ def eval1_ty = eval1
 //│   where
 //│     'b <: 'a & ~add & ~lit | Add['b] | Lit
 //│         = [Function: eval1]
-//│ constrain calls  : 77
+//│ constrain calls  : 78
 //│ annoying  calls  : 36
 //│ subtyping calls  : 321
 
@@ -244,7 +244,7 @@ def eval1_ty = eval1
 //│   <:  eval1_ty:
 //│ ('a -> int) -> E1['a] -> int
 //│         = [Function: eval1]
-//│ constrain calls  : 81
+//│ constrain calls  : 82
 //│ annoying  calls  : 38
 //│ subtyping calls  : 225
 

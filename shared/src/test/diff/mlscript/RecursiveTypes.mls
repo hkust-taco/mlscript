@@ -673,7 +673,9 @@ f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.672: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int` does not have field 'a'
+//│ ╟── type `int` does not have field 'a'
+//│ ║  l.662: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
+//│ ║         	                                                              ^^^
 //│ ╟── Note: constraint arises from record type:
 //│ ║  l.662: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
 //│ ║         	                              ^^^^^^^^^^^^
@@ -731,13 +733,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.732: 	r.a
+//│ ║  l.734: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.719: 	r = f 1
+//│ ║  l.721: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.732: 	r.a
+//│ ║  l.734: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 //│ Runtime error:

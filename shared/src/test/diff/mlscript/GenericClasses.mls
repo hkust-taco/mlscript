@@ -97,8 +97,8 @@ g: Foo1['a]: Foo1[string]
 //│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
 //│ ╟── type `int` does not match type `string`
-//│ ║  l.95: 	g: Foo1['a]: Foo1[string]
-//│ ║        	        ^^
+//│ ║  l.66: 	class Bar1: Foo1[int]
+//│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ╙──      	                  ^^^^^^
@@ -172,14 +172,24 @@ mrg = Foo2{}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.168: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── expression of type `string` does not match type `int`
+//│ ╟── type `string` does not match type `int`
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.110: 	class Foo2[A]
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.168: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
-//│ ╙── expression of type `int` does not match type `string`
+//│ ╟── type `int` does not match type `string`
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 
 def mrg: Foo2[int] | Foo2[string]
@@ -261,10 +271,10 @@ def mrg: Foo2_Co[int] | Foo2_Co[string]
 class Foo2_Bi[A]
 //│ Defined class Foo2_Bi[±A]
 //│ ╔══[WARNING] Type definition Foo2_Bi has bivariant type parameters:
-//│ ║  l.261: 	class Foo2_Bi[A]
+//│ ║  l.271: 	class Foo2_Bi[A]
 //│ ║         	      ^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.261: 	class Foo2_Bi[A]
+//│ ║  l.271: 	class Foo2_Bi[A]
 //│ ╙──       	              ^
 
 Foo2_Bi

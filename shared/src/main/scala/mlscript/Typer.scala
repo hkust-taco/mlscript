@@ -222,8 +222,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
-      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
-        if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
+      case Bounds(Bot, Top) =>
+        val p = tyTp(ty.toLoc, "type wildcard")
+        TypeBounds(ExtrType(true)(p), ExtrType(false)(p))(p)
+      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc, "type bounds"))
+      // case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
+      //   if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
       case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
