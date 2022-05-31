@@ -307,24 +307,28 @@ trait TypeSimplifier { self: Typer =>
     
     val analyzed1 = MutSet.empty[PolarVariable]
     
-    def analyze1(pol: Opt[Bool], st: SimpleType): Unit =
-        trace(s"analyze1[${printPol(pol)}] $st") {
-          st match {
-      case tv: TV =>
-        if (pol.isEmpty) occursInvariantly += tv
-        pol.fold {
-          occNums(true -> tv) += 1
-          occNums(false -> tv) += 1
-        }{ pol => occNums(pol -> tv) += 1 }
-        if (pol =/= S(false))
-          analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(analyze1(S(true), _)) }
-        if (pol =/= S(true))
-          analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(analyze1(S(false), _)) }
-      case _ =>
-        st.childrenPol(pol).foreach { case (pol, st) => analyze1(pol, st) }
+    // * Note: it is important here to make sure the interpretation of invariant position
+    // *    coincides with that of the later `transform` function.
+    // *  In particular, the traversal of fields with identical UB/LB is considered invariant.
+    object Analyze1 extends Traverser.InvariantFields {
+      override def apply(pol: Opt[Bool])(st: ST): Unit = trace(s"analyze1[${printPol(pol)}] $st") {
+        st match {
+          case tv: TV =>
+            if (pol.isEmpty) occursInvariantly += tv
+            pol.fold {
+              occNums(true -> tv) += 1
+              occNums(false -> tv) += 1
+            }{ pol => occNums(pol -> tv) += 1 }
+            if (pol =/= S(false))
+              analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(S(true))) }
+            if (pol =/= S(true))
+              analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(S(false))) }
+          case _ =>
+            super.apply(pol)(st)
+        }
+      }()
     }
-    }()
-    analyze1(pol, st)
+    Analyze1(pol)(st)
     
     println(s"[inv] ${occursInvariantly.iterator.mkString(", ")}")
     println(s"[nums] ${occNums.iterator

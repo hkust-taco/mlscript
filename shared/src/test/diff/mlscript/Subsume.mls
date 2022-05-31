@@ -366,3 +366,15 @@ def self2 = self1
 //│      = [Function: res]
 
 
+fun p -> fun q -> p q p
+//│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
+//│    = [Function: res]
+
+:ns
+fun p -> fun q -> p q p
+//│ res: 'a -> 'b -> 'c
+//│   where
+//│     'a <: 'b -> 'd
+//│     'd <: 'a -> 'c
+//│    = [Function: res]
+

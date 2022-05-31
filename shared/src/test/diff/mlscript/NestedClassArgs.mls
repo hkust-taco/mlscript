@@ -162,10 +162,6 @@ class C6[A]: { a: C5[C6[A]] }
 def c: 'a -> C6['a]
 //│ c: 'a -> C6['a]
 
-// :s
-// :d
-// rec def c a = C6{ a = c5 (c a) }
-
 rec def c6 a = C6{ a = c5 (c6 a) }
 //│ c6: anything -> (C6['A] with {a: 'a})
 //│   where
@@ -303,6 +299,20 @@ append_ty_2 = append_ty
 //│ ║  l.274: 	append_ty_2 = append_ty
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `L[?T]` is not an instance of type 'T0
+
+
+:ns
+append
+//│ res: 'a -> 'b -> 'c
+//│   where
+//│     'c :> l & {h: 'h, t: 't, L#T = 'T}
+//│     't :> s & {v: 'v, S#T = 'T0}
+//│        <: O[L['T]]
+//│     'b <: 'h
+//│     'h <: 'T
+//│     'a <: 'v
+//│     'v <: L['T] & 'T0
+//│     'T0 := L['T]
 
 
 def append0 ls = L { h = 0; t = S { v = ls } }
