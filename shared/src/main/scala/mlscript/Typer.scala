@@ -121,6 +121,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val tv = freshVar(noTyProv)(1)
       val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+        // * ^ Note that the `noTyProv` here is kind of a problem
+        // *    since we currently expand primitive types eagerly in DNFs.
+        // *  For instance, see `inn2 v1` in test `Yicong.mls`.
+        // *  We could instead treat these primitives like any other TypeRef,
+        // *    but that currently requires more simplifier work
+        // *    to get rid of things like `1 & int` and `T | nothing`.
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
       tyDef
     } ::
