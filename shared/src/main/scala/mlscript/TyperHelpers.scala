@@ -652,4 +652,36 @@ abstract class TyperHelpers { Typer: Typer =>
     else ts.foldLeft(TopType: ST)(_ & _)
   
   
+  class Traverser(implicit ctx: Ctx) {
+    def apply(pol: Opt[Bool])(st: ST): Unit = st match {
+      case tv: TypeVariable =>
+        if (pol =/= S(false)) tv.lowerBounds.foreach(apply(S(true)))
+        if (pol =/= S(true)) tv.upperBounds.foreach(apply(S(false)))
+      case FunctionType(l, r) => apply(pol.map(!_))(l); apply(pol)(r)
+      case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
+      case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
+      case TupleType(fs) => fs.unzip._2.foreach(applyField(pol))
+      case ArrayType(fld) => applyField(pol)(fld)
+      case NegType(n) => apply(pol.map(!_))(n)
+      case ExtrType(_) => ()
+      case ProxyType(und) => apply(pol)(und)
+      case _: ObjectTag => ()
+      case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
+      case Without(b, ns) => apply(pol)(b)
+      case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
+    }
+    def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {
+      fld.lb.foreach(apply(pol.map(!_)))
+      apply(pol)(fld.ub)
+    }
+  }
+  object Traverser {
+    trait InvariantFields extends Traverser {
+      override def applyField(pol: Opt[Bool])(fld: FieldType): Unit =
+        if (fld.lb.exists(_ === fld.ub)) apply(N)(fld.ub)
+        else super.applyField(pol)(fld)
+    }
+  }
+  
+  
 }
