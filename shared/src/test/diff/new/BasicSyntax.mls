@@ -49,14 +49,14 @@ foo
 
   
 //│ | |
-//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ╔══[ERROR] Unexpected space in expression position
 //│ ║  l.50: 	  
 //│ ╙──      	^^
 //│ Parsed: ()
 
   1
 //│ | |1|
-//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ╔══[ERROR] Unexpected space in expression position
 //│ ║  l.57: 	  1
 //│ ╙──      	^^
 //│ Parsed: 1
@@ -64,7 +64,7 @@ foo
   
   1
 //│ | |→|1|
-//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ╔══[ERROR] Unexpected space in expression position
 //│ ║  l.64: 	  
 //│ ╙──      	^^
 //│ Parsed: 1;
@@ -75,7 +75,7 @@ foo
 
 (1
 //│ |(|1|
-//│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
+//│ ╔══[ERROR] Expected closing parenthesis; found end of input instead
 //│ ║  l.76: 	(1
 //│ ║        	  
 //│ ╟── Note: unmatched parenthesis was opened here:
@@ -85,14 +85,14 @@ foo
 
 (1))
 //│ |(|1|)|)|
-//│ ╔══[ERROR] Expected end of input; found closing parenthesis token instead
+//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
 //│ ║  l.86: 	(1))
 //│ ╙──      	   ^
 //│ Parsed: {1}
 
 (
 //│ |(|
-//│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
+//│ ╔══[ERROR] Expected closing parenthesis; found end of input instead
 //│ ║  l.93: 	(
 //│ ║        	 
 //│ ╟── Note: unmatched parenthesis was opened here:
@@ -102,7 +102,7 @@ foo
 
 )
 //│ |)|
-//│ ╔══[ERROR] Unexpected closing parenthesis token in expression position
+//│ ╔══[ERROR] Unexpected closing parenthesis in expression position
 //│ ║  l.103: 	)
 //│ ╙──       	^
 //│ Parsed: ()
@@ -113,7 +113,7 @@ foo
 
 *
 //│ |*|
-//│ ╔══[ERROR] Unexpected operator token in expression position
+//│ ╔══[ERROR] Unexpected operator in expression position
 //│ ║  l.114: 	*
 //│ ╙──       	^
 //│ Parsed: ()
@@ -125,10 +125,26 @@ f 1, 2, 3
 
 f 1,, 2
 //│ |f| |1|,|,| |2|
-//│ ╔══[ERROR] Unexpected comma token in expression position
+//│ ╔══[ERROR] Unexpected comma in expression position
 //│ ║  l.126: 	f 1,, 2
 //│ ╙──       	    ^
 //│ Parsed: (f (1, 2,))
+
+
+f of x
+//│ |f| |#of| |x|
+//│ Parsed: (f (x,))
+
+f of g of x
+//│ |f| |#of| |g| |#of| |x|
+//│ Parsed: (f ((g (x,)),))
+
+f of of g
+//│ |f| |#of| |#of| |g|
+//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.142: 	f of of g
+//│ ╙──       	     ^^
+//│ Parsed: (f (g,))
 
 
 f x: 1
@@ -164,8 +180,8 @@ f  x: 1,  y:  g  2, z: 3
 //│ Parsed: (f (x: 1, y: (g (2, z: 3,)),))
 
 f of x: 1, y: g of 2, z: 3
-//│ |f| |of| |x|:| |1|,| |y|:| |g| |of| |2|,| |z|:| |3|
-//│ Parsed: (f ((of (x: 1, y: (g ((of (2, z: 3,)),)),)),))
+//│ |f| |#of| |x|:| |1|,| |y|:| |g| |#of| |2|,| |z|:| |3|
+//│ Parsed: (f (x: 1, y: (g (2, z: 3,)),))
 
 f x: 1 + 1, y: 2 2, z: 3 + 2 4 - 1
 //│ |f| |x|:| |1| |+| |1|,| |y|:| |2| |2|,| |z|:| |3| |+| |2| |4| |-| |1|
@@ -178,8 +194,8 @@ x.y
 
 .y
 //│ |.|y|
-//│ ╔══[ERROR] Unexpected operator token in expression position
-//│ ║  l.179: 	.y
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.195: 	.y
 //│ ╙──       	^
 //│ Parsed: y
 

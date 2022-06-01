@@ -118,7 +118,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        go(j, IDENT(n, false))
+        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, false))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         go(j, IDENT(n, true))
@@ -153,6 +153,20 @@ object NewLexer {
   
   type TokLoc = (Token, Loc)
   
+  val keywords: Set[Str] = Set(
+    "if",
+    "then",
+    "else",
+    "fun",
+    "is",
+    "as",
+    "of",
+    "and",
+    "or",
+    "let",
+    "in",
+  )
+  
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
     case (SPACE, _) :: ts => " " + printTokens(ts)
     case (COMMA, _) :: ts => "," + printTokens(ts)
@@ -161,6 +175,7 @@ object NewLexer {
     case (DEINDENT, _) :: ts => "←" + printTokens(ts)
     case (ERROR, _) :: ts => "<error>"
     case (LITVAL(lv), _) :: ts => lv.idStr + printTokens(ts)
+    case (KEYWORD(name: String), _) :: ts => "#" + name + printTokens(ts)
     case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
     case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)
     case (CLOSE_BRACKET(k: BracketKind), _) :: ts => k.end.toString + printTokens(ts)

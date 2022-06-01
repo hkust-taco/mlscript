@@ -347,6 +347,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) => s"case $s of $c"
     case Subs(a, i) => s"$a[$i]"
     case Assign(lhs, rhs) => s" $lhs <- $rhs"
+    case If(body, els) => s"if $body" + els.fold("")(" else " + _)
   }
   
   def toType: Diagnostic \/ Type =
@@ -628,6 +629,27 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
   lazy val toList: Ls[Case] = this match {
     case c: Case => c :: c.rest.toList
     case _ => Nil
+  }
+  
+}
+
+trait IfBodyImpl extends Located { self: IfBody =>
+  
+  def children: List[Located] = this match {
+    // case Case(pat, body, rest) => pat :: body :: rest :: Nil
+    // case Wildcard(body) => body :: Nil
+    // case NoCases => Nil
+    case _ => ??? // TODO
+  }
+  
+  // lazy val toList: Ls[Case] = this match {
+  //   case c: Case => c :: c.rest.toList
+  //   case _ => Nil
+  // }
+  
+  override def toString: String = this match {
+    case IfThen(lhs, rhs) => s"$lhs then $rhs"
+    case _ => ??? // TODO
   }
   
 }

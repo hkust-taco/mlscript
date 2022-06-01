@@ -43,7 +43,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     // if (cur.nonEmpty) fail(cur)
     cur match {
       case (tk, tkl) :: _ =>
-        raise(CompilationError(msg"Expected end of input; found ${tk.describe} token instead" -> S(tkl) :: Nil))
+        raise(CompilationError(msg"Expected end of input; found ${tk.describe} instead" -> S(tkl) :: Nil))
       case Nil => ()
     }
     t
@@ -118,18 +118,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     _cur = _cur.tailOption.getOrElse(Nil) // FIXME throw error if empty?
     // _next = ite.nextOption
   }
-  def skip(tk: Token, allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)(implicit n: Name): Unit = {
+  def skip(tk: Token, ignored: Set[Token] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)(implicit n: Name): Unit = {
+    require(!ignored(tk))
     // if (!cur.headOption.forall(_._1 === tk)) {
     //   // fail(cur)
     //   raise(CompilationError(msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
     // }
     cur match {
       case (tk2, l2) :: _ =>
-        if (tk2 =/= tk)
-          raise(CompilationError(msg"Expected ${tk.describe} token; found ${tk2.describe} instead" -> S(l2) :: note))
+        if (ignored(tk2)) {
+          consume
+          skip(tk, ignored, allowEnd, note)
+        } else if (tk2 =/= tk)
+          raise(CompilationError(msg"Expected ${tk.describe}; found ${tk2.describe} instead" -> S(l2) :: note))
       case Nil =>
         if (!allowEnd)
-          raise(CompilationError(msg"Expected ${tk.describe} token; found end of input instead" -> lastLoc :: note))
+          raise(CompilationError(msg"Expected ${tk.describe}; found end of input instead" -> lastLoc :: note))
     }
     consume
   }
@@ -181,12 +185,29 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       //   consume
       //   val rhs = expr(opPrec(opStr)._2)
       //   exprCont(Prefix(opStr, rhs), prec)
+      case (KEYWORD("if"), l0) :: _ =>
+        consume
+        val cond = expr(0)
+        skip(KEYWORD("then"), ignored = Set(SPACE, NEWLINE), note =
+          msg"Note: unmatched if here:" -> S(l0) :: Nil)
+        val thn = expr(0)
+        // val els = cur match {
+        //   case (KEYWORD("else"), _) :: _ => 
+        //   case _ => N
+        // }
+        val hasEls = cur match {
+          case (KEYWORD("else"), _) :: _ => consume; true
+          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; true
+          case _ => false
+        }
+        val els = Option.when(hasEls)(expr(0))
+        If(IfThen(cond, thn), els)
       case Nil =>
         // UnitLit
         Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
       case (tk, l0) :: _ =>
         // fail(cur)
-        raise(CompilationError(msg"Unexpected ${tk.describe} token in expression position" -> S(l0) :: Nil))
+        raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
         consume
         expr(prec)
   }
@@ -222,9 +243,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         val rhs = expr(opPrec(opStr)._2)
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       case Nil => acc
-      case (DEINDENT | COMMA | NEWLINE | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => acc
-      case _ =>
-        // consume
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => acc
+      case c =>
+        c match {
+          case (KEYWORD("of"), _) :: _ =>
+            consume
+          case _ =>
+        }
         val as = args(Nil)
         App(acc, Tup(as.map(_.mapSecond(_ -> false))))
       // case _ => acc

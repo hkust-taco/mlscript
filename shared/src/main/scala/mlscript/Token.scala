@@ -12,6 +12,7 @@ sealed abstract class Token {
     case DEINDENT => "deindentation"
     case ERROR => "error"
     case LITVAL(value) => "literal"
+    case KEYWORD(name) => s"'$name' keyword"
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
@@ -27,6 +28,7 @@ case object DEINDENT extends Token // TODO rm
 // final case class INDENTED(block: Ls[Token]) extends Token
 case object ERROR extends Token
 final case class LITVAL(value: Lit) extends Token
+final case class KEYWORD(name: String) extends Token
 final case class IDENT(name: String, symbolic: Bool) extends Token
 final case class OPEN_BRACKET(k: BracketKind) extends Token // TODO rm
 final case class CLOSE_BRACKET(k: BracketKind) extends Token // TODO rm

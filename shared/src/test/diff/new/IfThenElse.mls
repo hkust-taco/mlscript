@@ -1,0 +1,8 @@
+
+if true then 1 else 2
+//│ |#if| |true| |#then| |1| |#else| |2|
+//│ Parsed: if true then 1 else 2
+
+
+
+

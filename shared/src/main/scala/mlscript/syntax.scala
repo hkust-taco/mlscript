@@ -66,6 +66,13 @@ final case class With(trm: Term, fields: Rcd)                        extends Ter
 final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
+final case class If(body: IfBody, els: Opt[Term])                    extends Term
+
+sealed abstract class IfBody extends IfBodyImpl
+final case class IfTerm(expr: Term) extends IfBody
+final case class IfThen(expr: Term, rhs: Term) extends IfBody
+final case class IfOpApp(lhs: Term, op: Var, rhs: IfBody) extends IfBody
+final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
