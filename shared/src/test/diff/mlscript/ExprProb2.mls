@@ -313,6 +313,6 @@ fix eval2f_oops e2
 //│ ╟── from reference:
 //│ ║  l.296: 	def eval2f_oops eval2 e = case e of {
 //│ ╙──       	                               ^
-//│ res: error
+//│ res: error | int
 
 

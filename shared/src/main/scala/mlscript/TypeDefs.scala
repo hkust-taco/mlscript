@@ -469,6 +469,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           val defined = MutMap.empty[Str, Opt[Loc]]
           
           def filterTR(ty: SimpleType): List[TypeRef] = ty match {
+            case ProxyType(und) => filterTR(und)
             case tr: TypeRef => tr :: Nil
             case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
             case _ => Nil

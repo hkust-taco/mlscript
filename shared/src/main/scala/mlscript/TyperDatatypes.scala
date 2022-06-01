@@ -222,9 +222,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
-        case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
-        case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
-      }, td.targs.lazyZip(targs).toMap)
+        case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
+        case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
+      }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
     }
     private var tag: Opt[Opt[ClassTag]] = N
     def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {

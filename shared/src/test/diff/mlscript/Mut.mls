@@ -332,7 +332,7 @@ b2.x <- b1.y
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.331: 	b2.x <- b1.y
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `bool` is not an instance of `int`
+//│ ╟── type `bool` is not an instance of type `int`
 //│ ║  l.260: 	class B: { mut x: int; y: bool }
 //│ ║         	                          ^^^^
 //│ ╟── but it flows into field selection with expected type `int`

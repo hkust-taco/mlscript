@@ -60,56 +60,56 @@ l0 = Cons { head = 1; tail = Nil {} }
 //│ l0: Cons[1] with {tail: Nil[?]}
 //│ constrain calls  : 21
 //│ annoying  calls  : 2
-//│ subtyping calls  : 38
+//│ subtyping calls  : 40
 
 :stats
 Cons.HeadOption l0
 //│ res: Some[1]
 //│ constrain calls  : 37
 //│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ subtyping calls  : 54
 
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
 //│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}
 //│ constrain calls  : 53
 //│ annoying  calls  : 6
-//│ subtyping calls  : 118
+//│ subtyping calls  : 124
 
 :stats
 Cons.HeadOption l1
 //│ res: Some[1]
 //│ constrain calls  : 37
 //│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ subtyping calls  : 54
 
 :stats
 l2 = Cons { head = 0; tail = l1 }
 //│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ constrain calls  : 17
 //│ annoying  calls  : 2
-//│ subtyping calls  : 134
+//│ subtyping calls  : 136
 
 :stats
 Cons.HeadOption l2
 //│ res: Some[0]
 //│ constrain calls  : 38
 //│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ subtyping calls  : 54
 
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
 //│ constrain calls  : 35
 //│ annoying  calls  : 2
-//│ subtyping calls  : 166
+//│ subtyping calls  : 168
 
 :stats
 Cons.HeadOption l3
 //│ res: Some[int]
 //│ constrain calls  : 44
 //│ annoying  calls  : 23
-//│ subtyping calls  : 50
+//│ subtyping calls  : 57
 
 
 :stats
@@ -119,14 +119,14 @@ rec def lr1 = Cons { head = 0; tail = lr1 }
 //│     'tail :> Cons[0] with {tail: 'tail}
 //│ constrain calls  : 20
 //│ annoying  calls  : 2
-//│ subtyping calls  : 43
+//│ subtyping calls  : 45
 
 :stats
 Cons.HeadOption lr1
 //│ res: Some[0]
-//│ constrain calls  : 36
+//│ constrain calls  : 37
 //│ annoying  calls  : 21
-//│ subtyping calls  : 39
+//│ subtyping calls  : 44
 
 :stats
 rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
@@ -135,14 +135,14 @@ rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; t
 //│     'tail :> Cons[0] with {tail: Cons[1] with {tail: Cons[3] with {tail: 'tail}}}
 //│ constrain calls  : 52
 //│ annoying  calls  : 6
-//│ subtyping calls  : 123
+//│ subtyping calls  : 129
 
 :stats
 Cons.HeadOption lr2
 //│ res: Some[0]
 //│ constrain calls  : 38
 //│ annoying  calls  : 23
-//│ subtyping calls  : 47
+//│ subtyping calls  : 54
 
 
 :e

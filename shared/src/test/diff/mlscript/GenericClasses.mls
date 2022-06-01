@@ -96,7 +96,7 @@ g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.66: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -147,7 +147,7 @@ f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a) -> 'a
 //│   where
 //│     'a :> Foo2[?] & 'a
-//│        <: (foo2 | ~{Foo2#A = ?} | ~foo2 | ~(foo2 & {Foo2#A = ?})) & (foo2 | ~(foo2 & {Foo2#A = ?}))
+//│        <: (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))
 //│    = [Function: f]
 
 f
@@ -172,7 +172,7 @@ mrg = Foo2{}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.168: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -184,7 +184,7 @@ mrg = Foo2{}
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.168: 	mrg = Foo2{}
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -238,7 +238,7 @@ f: (Foo2_Co[?] & 'a) -> 'a
 //│ res: (Foo2_Co[?] & 'a) -> 'a
 //│   where
 //│     'a :> Foo2_Co[?] & 'a
-//│        <: (foo2_Co | ~{Foo2_Co#A <: ?} | ~foo2_Co | ~(foo2_Co & {Foo2_Co#A <: ?})) & (foo2_Co | ~(foo2_Co & {Foo2_Co#A <: ?}))
+//│        <: (foo2_Co | ~{Foo2_Co#A} | ~foo2_Co | ~(foo2_Co & {Foo2_Co#A})) & (foo2_Co | ~(foo2_Co & {Foo2_Co#A}))
 //│    = [Function: f1]
 
 f

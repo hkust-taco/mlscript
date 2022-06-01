@@ -158,8 +158,7 @@ a1: R1['_]
 a1: R1['_]
 //│ res: R1['_]
 //│   where
-//│     '_ :> int & string
-//│        <: int | string
+//│     '_ <: int | string
 //│    = A1 { Foo1: [Function (anonymous)] }
 
 
@@ -168,7 +167,7 @@ a1: R1['_]
 class A1_2: S1 & T1
   method Foo1 = error
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.168: 	class A1_2: S1 & T1
+//│ ║  l.167: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `int` is not an instance of `string`
 //│ ║  l.93: 	trait S1: R1[int]
@@ -177,7 +176,7 @@ class A1_2: S1 & T1
 //│ ║  l.95: 	trait T1: R1[string]
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type definition:
-//│ ║  l.168: 	class A1_2: S1 & T1
+//│ ║  l.167: 	class A1_2: S1 & T1
 //│ ║         	      ^^^^^^^^^^^^^
 //│ ╟── type `string` is not an instance of `int`
 //│ ║  l.95: 	trait T1: R1[string]
@@ -244,13 +243,13 @@ def s0: S0[?] -> S0[?]
 :e
 s0 (C0{})
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.245: 	s0 (C0{})
+//│ ║  l.244: 	s0 (C0{})
 //│ ║         	^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.240: 	def s0: S0[?] -> S0[?]
+//│ ║  l.239: 	def s0: S0[?] -> S0[?]
 //│ ║         	           ^
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.240: 	def s0: S0[?] -> S0[?]
+//│ ║  l.239: 	def s0: S0[?] -> S0[?]
 //│ ╙──       	           ^
 //│ res: error | S0[?]
 //│    = <no result>

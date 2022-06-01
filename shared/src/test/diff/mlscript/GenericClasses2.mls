@@ -106,7 +106,7 @@ c = b: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.105: 	c = b: Foo2[string]
 //│ ║         	    ^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -136,7 +136,7 @@ d: Foo2[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.135: 	d: Foo2[string]
 //│ ║         	^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.36: 	class Bar2: Foo2[int] & { x: int }
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:

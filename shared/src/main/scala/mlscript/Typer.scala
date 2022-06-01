@@ -121,6 +121,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val tv = freshVar(noTyProv)(1)
       val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+        // * ^ Note that the `noTyProv` here is kind of a problem
+        // *    since we currently expand primitive types eagerly in DNFs.
+        // *  For instance, see `inn2 v1` in test `Yicong.mls`.
+        // *  We could instead treat these primitives like any other TypeRef,
+        // *    but that currently requires more simplifier work
+        // *    to get rid of things like `1 & int` and `T | nothing`.
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
       tyDef
     } ::
@@ -222,8 +228,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
-      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
-        if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
+      case Bounds(Bot, Top) =>
+        val p = tyTp(ty.toLoc, "type wildcard")
+        TypeBounds(ExtrType(true)(p), ExtrType(false)(p))(p)
+      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc, "type bounds"))
       case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))

@@ -199,7 +199,7 @@ error : 2 | int
 //│ res: int
 
 error : Box[int] & ~box
-//│ res: nothing
+//│ res: Box[int] & ~box
 
 error : Box[?] | Box[?] & {x: '_}
 //│ res: Box[?]

@@ -118,7 +118,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── type `Lit` is not an instance of `int`
+//│ ╟── type `Lit` is not an instance of type `int`
 //│ ║  l.62: 	def e: Lit | Add['e] | Nega['e] as 'e
 //│ ║        	       ^^^
 //│ ╟── Note: constraint arises from type reference:

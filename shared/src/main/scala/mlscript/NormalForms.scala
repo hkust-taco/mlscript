@@ -35,7 +35,11 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     private def mkType(sort: Bool): SimpleType = this match {
       case LhsRefined(bo, ts, r, trs) =>
         val sr = if (sort) r.sorted else r
-        val trsBase = trs.valuesIterator.foldRight(bo.fold[ST](sr)(_ & sr))(_ & _)
+        val bo2 = bo.filter {
+          case ClassTag(id, parents) => !trs.contains(TypeName(id.idStr.capitalize))
+          case _ => true
+        }
+        val trsBase = trs.valuesIterator.foldRight(bo2.fold[ST](sr)(_ & sr))(_ & _)
         (if (sort) ts.toArray.sorted else ts.toArray).foldLeft(trsBase)(_ & _)
       case LhsTop => TopType
     }
@@ -437,6 +441,28 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
     def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
+    
+    def mkDeep(ty: SimpleType, pol: Bool)
+          (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF = {
+      mk(mkDeepST(ty, pol), pol)
+    }
+    def mkDeepST(ty: SimpleType, pol: Bool)
+          (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): ST = ty match {
+      case ProvType(und) =>
+        mkDeepST(und, pol).withProv(ty.prov)
+      case TypeBounds(lb, ub) => mkDeepST(if (pol) ub else lb, pol).withProv(ty.prov)
+      case _ =>
+        val dnf = mk(ty, pol)
+        def go(polo: Opt[Bool], st: ST): ST = polo match {
+          case _ if st === ty => ty.mapPol(polo)(go)
+          case S(pol) => mkDeepST(st, pol)(ctx, ptr = true, etf = false)
+          case N => TypeBounds.mk(
+            mkDeepST(st, false)(ctx, ptr = true, etf = false),
+            mkDeepST(st, false)(ctx, ptr = true, etf = false))
+        }
+        dnf.toType().mapPol(S(pol))(go)
+    }
+    
     def mk(ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
         // trace(s"DNF[$pol,$ptr,$etf](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
