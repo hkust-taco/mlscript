@@ -252,20 +252,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         //   case (KEYWORD("else"), _) :: _ => 
         //   case _ => N
         // }
-        val hasEls = cur match {
-          case (SPACE, _) :: (KEYWORD("else"), _) :: _ => consume; true // no changes?
-          case (KEYWORD("else"), _) :: _ => consume; true
-          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true
-          case (INDENT, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true // FIXME consume matching DEINDENT
-          case _ => false
+        val (hasEls, hasIndent) = cur match {
+          case (SPACE, _) :: (KEYWORD("else"), _) :: _ => consume; (true, false) // no changes?
+          case (KEYWORD("else"), _) :: _ => consume; (true, false)
+          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; consume; (true, false)
+          case (INDENT, _) :: (KEYWORD("else"), _) :: _ => consume; consume; (true, true) // FIXME consume matching DEINDENT
+          case _ => (false, false)
         }
         // raiseDbg(hasEls)
         val els = Option.when(hasEls)(expr(0))
         // R(If(IfThen(cond, thn), els))
+        if (hasIndent) skipDeindent
         R(If(body, els))
       case Nil =>
         // UnitLit
-        R(errExpr)
+        R(errExpr) // TODO
       case (tk, l0) :: _ =>
         // fail(cur)
         raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
@@ -306,12 +307,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         val rhs = expr(opPrec(opStr)._2) // TODO if
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       // case (NEWLINE, _) :: (INDENT, _) :: (IDENT(opStr, true), l0) :: _ =>
-      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec => // FIXME consume matching DEINDENT
+      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         // consume
         // ??? // TODO
         consume
         consume
         val rhs = expr(opPrec(opStr)._2) // TODO if
+        skipDeindent
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       case Nil => R(acc)
       case (KEYWORD("then"), _) :: _ =>
@@ -331,7 +333,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         skipDeindent
         L(IfThen(acc, e))
       case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
-      case c =>
+      
+      // case c =>
+      // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
+      case c @ (h :: _) if h._1 =/= INDENT =>
         val ofLess = c match {
           case (KEYWORD("of"), _) :: _ =>
             consume
@@ -359,10 +364,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
             ()
         }
         R(res)
-      // case _ => acc
+      case _ => R(acc)
     }
   }
   
+  // TODO support comma-less arg blocks...
   def args(acc: Ls[Opt[Var] -> Term]): Ls[Opt[Var] -> Term] =
     cur match {
       case (SPACE, _) :: _ =>
