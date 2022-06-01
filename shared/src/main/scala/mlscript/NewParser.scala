@@ -61,7 +61,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   
   private val prec: Map[Char,Int] =
     List(
-      "", // for keywords
+      "",
+      "",
+      "",
+      // ^ for keywords
       ",",
       ";",
       "=",
@@ -83,9 +86,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     }.toMap.withDefaultValue(Int.MaxValue)
   
   def opCharPrec(opChar: Char): Int = prec(opChar)
-  def opPrec(opStr: Str): (Int, Int) = {
-    val r = opStr.last
-    (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
+  def opPrec(opStr: Str): (Int, Int) = opStr match {
+    case "and" => (2, 2)
+    case "or" => (1, 1)
+    case _ =>
+      val r = opStr.last
+      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
   }
   
   def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -143,6 +149,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private lazy val lastLoc =
     tokens.lastOption.map(_._2.right)
   
+  private def curLoc = _cur.headOption.map(_._2)
+  
   def block: Ls[IfBody \/ Term] =
     cur match {
       case (DEINDENT, _) :: _ => Nil
@@ -163,6 +171,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         raise(CompilationError(msg"Expected an expression; found a 'then' clause instead" -> e.toLoc :: Nil))
         errExpr
     }
+  
+  private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
+    raise(Warning(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
   
   def exprOrIf(prec: Int, allowSpace: Bool = true): IfBody \/ Term =
     cur match {
@@ -212,15 +223,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
               msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
             IfThen(e, errExpr)
         }
+        // warnDbg("huh")
+        
         // val els = cur match {
         //   case (KEYWORD("else"), _) :: _ => 
         //   case _ => N
         // }
         val hasEls = cur match {
           case (KEYWORD("else"), _) :: _ => consume; true
-          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; true
+          case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true
+          case (INDENT, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true
           case _ => false
         }
+        // raiseDbg(hasEls)
         val els = Option.when(hasEls)(expr(0))
         // R(If(IfThen(cond, thn), els))
         R(If(body, els))
@@ -279,13 +294,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         val e = expr(0)
         L(IfThen(acc, e))
+      case (NEWLINE, _) :: (KEYWORD("then"), _) :: _ =>
+        consume
+        consume
+        val e = expr(0)
+        L(IfThen(acc, e))
+      case (INDENT, _) :: (KEYWORD("then"), _) :: _ =>
+        consume
+        consume
+        val e = expr(0)
+        // skip(DEINDENT)
+        L(IfThen(acc, e))
       case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       case c =>
-        c match {
+        val ofLess = c match {
           case (KEYWORD("of"), _) :: _ =>
             consume
+            false
           case _ =>
+            true
         }
+        // val ofKw = curLoc
         val openedPar = cur match {
           case (OPEN_BRACKET(Round), l0) :: _ => consume; S(l0)
           case (SPACE, _) :: (OPEN_BRACKET(Round), l0) :: _ => consume; consume; S(l0)
@@ -297,7 +326,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           case S(l0) =>
             skip(CLOSE_BRACKET(Round), note =
               msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
-          case N => ()
+          case N =>
+            if (ofLess)
+              raise(Warning(msg"Paren-less applications should use the 'of' keyword"
+                // -> ofKw :: Nil))
+                -> res.toLoc :: Nil))
+            ()
         }
         R(res)
       // case _ => acc

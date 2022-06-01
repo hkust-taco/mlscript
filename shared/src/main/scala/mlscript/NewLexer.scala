@@ -39,6 +39,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     ";",
   )
   
+  private val isAlphaOp = Set(
+    "and",
+    "or",
+  )
+  
   // val keywords = Map(
   //   "data" -> Pre,
   //   "class" -> Pre,
@@ -118,7 +123,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, false))
+        go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         go(j, IDENT(n, true))
@@ -161,8 +166,8 @@ object NewLexer {
     "is",
     "as",
     "of",
-    "and",
-    "or",
+    // "and",
+    // "or",
     "let",
     "in",
   )
