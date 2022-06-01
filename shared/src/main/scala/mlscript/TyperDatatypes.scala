@@ -300,7 +300,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class FieldType(lb: Option[SimpleType], ub: SimpleType)(val prov: TypeProvenance) {
     def level: Int = lb.map(_.level).getOrElse(ub.level) max ub.level
-    def <:< (that: FieldType)(implicit ctx: Ctx): Bool =
+    def <:< (that: FieldType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
       (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
     def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
       FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub)(prov)

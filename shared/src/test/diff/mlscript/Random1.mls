@@ -83,8 +83,7 @@ manual id
 //│ ╙──      	                  ^^^^^^^
 //│ res: ('a & 'b) -> 'b | error
 //│   where
-//│     'a :> ('a & 'b) -> 'b
-//│        <: ('a | 'b -> 'b) -> nothing & 'b
+//│     'a <: ('b -> 'b) -> nothing & 'b
 //│     'b :> ('a & 'b) -> 'b
 //│        <: nothing
 

@@ -290,7 +290,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
-      if (lhs === rhs) return ()  // TODO try subtyping here?
+      
+      if (lhs === rhs) return ()
+      
+      // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
+      
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
         if (lhs is rhs) return

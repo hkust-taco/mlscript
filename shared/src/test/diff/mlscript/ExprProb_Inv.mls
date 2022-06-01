@@ -689,7 +689,7 @@ prettier2 done eval2 e1
 //│    = '123'
 //│ constrain calls  : 376
 //│ annoying  calls  : 108
-//│ subtyping calls  : 1915
+//│ subtyping calls  : 1932
 
 :e
 :stats
@@ -727,7 +727,7 @@ prettier2 done eval2 e2
 //│    = '1-123'
 //│ constrain calls  : 427
 //│ annoying  calls  : 131
-//│ subtyping calls  : 2627
+//│ subtyping calls  : 2644
 
 :e
 :stats
@@ -765,7 +765,7 @@ prettier2 done eval2 d2
 //│    = '-1-1'
 //│ constrain calls  : 301
 //│ annoying  calls  : 95
-//│ subtyping calls  : 1486
+//│ subtyping calls  : 1506
 
 :e
 :stats
@@ -803,5 +803,5 @@ prettier2 done eval1 e2
 //│    = '1-123'
 //│ constrain calls  : 421
 //│ annoying  calls  : 131
-//│ subtyping calls  : 2612
+//│ subtyping calls  : 2629
 

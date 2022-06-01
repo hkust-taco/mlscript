@@ -374,6 +374,8 @@ abstract class TyperHelpers { Typer: Typer =>
     def <:< (that: SimpleType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
     {
     // trace(s"? $this <: $that") {
+    // trace(s"? $this <: $that   assuming:  ${
+    //     cache.iterator.map(kv => "" + kv._1._1 + (if (kv._2) " <: " else " <? ") + kv._1._2).mkString(" ; ")}") {
       subtypingCalls += 1
       def assume[R](k: MutMap[ST -> ST, Bool] => R): R = k(cache.map(kv => kv._1 -> true))
       (this === that) || ((this, that) match {
@@ -385,7 +387,6 @@ abstract class TyperHelpers { Typer: Typer =>
         case (FunctionType(l1, r1), FunctionType(l2, r2)) => assume { implicit cache =>
           l2 <:< l1 && r1 <:< r2 
         }
-        case (_: FunctionType, _) | (_, _: FunctionType) => false
         case (ComposedType(true, l, r), _) => l <:< that && r <:< that
         case (_, ComposedType(false, l, r)) => this <:< l && this <:< r
         case (ComposedType(false, l, r), _) => l <:< that || r <:< that
@@ -393,7 +394,6 @@ abstract class TyperHelpers { Typer: Typer =>
         case (RecordType(fs1), RecordType(fs2)) => assume { implicit cache =>
           fs2.forall(f => fs1.find(_._1 === f._1).exists(_._2 <:< f._2))
         }
-        case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
         case (_: TypeVariable, _) | (_, _: TypeVariable)
           if cache.contains(this -> that)
           => cache(this -> that)
@@ -429,10 +429,12 @@ abstract class TyperHelpers { Typer: Typer =>
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
           => false // don't even try
+        case (_: FunctionType, _) | (_, _: FunctionType) => false
+        case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
         case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
       })
-    }
     // }(r => s"! $r")
+    }
     
     def isTop: Bool = (TopType <:< this)(Ctx.empty)
     def isBot: Bool = (this <:< BotType)(Ctx.empty)
