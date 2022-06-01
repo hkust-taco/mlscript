@@ -4,7 +4,7 @@ import scala.util.chaining._
 import mlscript.utils._, shorthands._
 
 
-sealed abstract class Diagnostic(theMsg: String) extends Exception(theMsg) {
+sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg) {
   val allMsgs: Ls[Message -> Opt[Loc]]
 }
 

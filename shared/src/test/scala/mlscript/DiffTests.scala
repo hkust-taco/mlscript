@@ -14,6 +14,7 @@ import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
+import javax.tools.Diagnostic
 
 class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 // class DiffTests extends funsuite.AnyFunSuite {
@@ -76,6 +77,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
       noSimplification: Bool = false,
       explainErrors: Bool = false,
       dbg: Bool = false,
+      dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
@@ -114,6 +116,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
+          case "ds" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -187,11 +190,17 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           if (basePath.headOption.contains("new")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
-            val lexer = new NewLexer(Origin(testName, globalStartLineNum, fph), _ => (), dbg = mode.dbg)
+            val origin = Origin(testName, globalStartLineNum, fph)
+            val raise: mlscript.Diagnostic => Unit = diag => //() // TODO
+              output("/!\\ Parse error: " + diag.theMsg //+s" at l.$globalLineNum:$col: $lineStr"
+                ) // TODO use reporting
+            val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
             // println(lexer.lex(0, ))
             val tokens = lexer.tokens
             // output(tokens.toString)
             output(lexer.printTokens(tokens))
+            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing)
+            output(p.parse.toString)
             // ???
             Success(Pgrm(Nil), 0)
           }
@@ -231,7 +240,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             var totalCodeGenErrors = 0
             
             // report errors and warnings
-            def report(diags: Ls[Diagnostic]): Unit = {
+            def report(diags: Ls[mlscript.Diagnostic]): Unit = {
               diags.foreach { diag =>
                 val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
                 val headStr = diag match {

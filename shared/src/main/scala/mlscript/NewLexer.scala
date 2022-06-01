@@ -1,6 +1,5 @@
 package mlscript
 
-
 import scala.annotation.tailrec
 import utils._, shorthands._
 
@@ -8,7 +7,7 @@ import utils._, shorthands._
 import Message.MessageContext
 
 class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
-
+  
   type TokLoc = (Token, Loc)
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
