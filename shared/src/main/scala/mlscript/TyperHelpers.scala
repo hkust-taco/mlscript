@@ -431,7 +431,7 @@ abstract class TyperHelpers { Typer: Typer =>
           => false // don't even try
         case (_: FunctionType, _) | (_, _: FunctionType) => false
         case (_: RecordType, _: ObjectTag) | (_: ObjectTag, _: RecordType) => false
-        case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
+        // case _ => lastWords(s"TODO $this $that ${getClass} ${that.getClass()}")
       })
     // }(r => s"! $r")
     }
