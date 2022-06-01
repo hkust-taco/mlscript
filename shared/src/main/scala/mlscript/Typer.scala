@@ -232,8 +232,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val p = tyTp(ty.toLoc, "type wildcard")
         TypeBounds(ExtrType(true)(p), ExtrType(false)(p))(p)
       case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc, "type bounds"))
-      // case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
-      //   if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
       case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
