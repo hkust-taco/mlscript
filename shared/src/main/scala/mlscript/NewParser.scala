@@ -37,8 +37,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
 
   def printDbg(msg: => Any): Unit
   
-  def parse: Term = {
-    val t = expr(0, allowSpace = false)
+  def parseAll[R](parser: => R): R = {
+    // val t = expr(0, allowSpace = false)
+    val res = parser
     // printDbg(p.cur)
     // if (cur.nonEmpty) fail(cur)
     cur match {
@@ -46,7 +47,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         raise(CompilationError(msg"Expected end of input; found ${tk.describe} instead" -> S(tkl) :: Nil))
       case Nil => ()
     }
-    t
+    res
   }
   
   // def fail(ts: List[TokLoc]): Unit =
@@ -143,6 +144,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     }
     consume
   }
+  private def skipDeindent = 
+    cur match {
+      case (DEINDENT, _) :: _ => consume
+      case (NEWLINE, l0) :: _ => consume; _cur ::= (INDENT, l0)
+      case Nil => ()
+      case (tk, l0) :: _ =>
+        raise(CompilationError(msg"Expected deindent; found ${tk.describe} instead" -> S(l0) :: Nil))
+    }
   
   import BracketKind._
   
@@ -150,6 +159,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     tokens.lastOption.map(_._2.right)
   
   private def curLoc = _cur.headOption.map(_._2)
+  
+  def blockTerm: Term = {
+    val ts = block
+    // skip(DEINDENT, allowEnd = true, note =
+    //   msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
+    // R(Blk(ts)) // TODO
+    val es = ts.map {
+      case L(t) =>
+        raise(CompilationError(msg"Unexpected 'then' clause" -> t.toLoc :: Nil))
+        errExpr
+      case R(e) => e
+    }
+    Blk(es)
+  }
   
   def block: Ls[IfBody \/ Term] =
     cur match {
@@ -230,9 +253,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         //   case _ => N
         // }
         val hasEls = cur match {
+          case (SPACE, _) :: (KEYWORD("else"), _) :: _ => consume; true // no changes?
           case (KEYWORD("else"), _) :: _ => consume; true
           case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true
-          case (INDENT, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true
+          case (INDENT, _) :: (KEYWORD("else"), _) :: _ => consume; consume; true // FIXME consume matching DEINDENT
           case _ => false
         }
         // raiseDbg(hasEls)
@@ -282,7 +306,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         val rhs = expr(opPrec(opStr)._2) // TODO if
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       // case (NEWLINE, _) :: (INDENT, _) :: (IDENT(opStr, true), l0) :: _ =>
-      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec => // FIXME consume matching DEINDENT
         // consume
         // ??? // TODO
         consume
@@ -304,6 +328,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         val e = expr(0)
         // skip(DEINDENT)
+        skipDeindent
         L(IfThen(acc, e))
       case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       case c =>

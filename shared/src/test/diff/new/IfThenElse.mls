@@ -4,24 +4,24 @@
 
 if true then 1 else 2
 //│ |#if| |true| |#then| |1| |#else| |2|
-//│ Parsed: if true then 1 else 2
+//│ Parsed: ‹if true then 1 else 2›
 
 if a == 0
 then "false" else 2
 //│ |#if| |a| |==| |0|↵|#then| |"false"| |#else| |2|
-//│ Parsed: if a == 0 then "false" else 2
+//│ Parsed: ‹if a == 0 then "false" else 2›
 
 if a == 0
 then "false"
 else 2
 //│ |#if| |a| |==| |0|↵|#then| |"false"|↵|#else| |2|
-//│ Parsed: if a == 0 then "false" else 2
+//│ Parsed: ‹if a == 0 then "false" else 2›
 
 if a == 0
   then "false"
   else 2
 //│ |#if| |a| |==| |0|→|#then| |"false"|↵|#else| |2|
-//│ Parsed: if a == 0 then "false" else 2
+//│ Parsed: ‹if a == 0 then "false" else 2›
 
 if a == 0
 then "false"
@@ -35,90 +35,105 @@ then "false"
 //│ ║        	     ^^^^^^^
 //│ ║  l.28: 	  else 2
 //│ ╙──      	^^^^^^^^
-//│ Parsed: if a == 0 then ("false" (‹2›,))
+//│ Parsed: ‹if a == 0 then ("false" (‹2›,))›
 
 if a == 0
   then "false"
 else 2
 //│ |#if| |a| |==| |0|→|#then| |"false"|←|↵|#else| |2|
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.42: 	else 2
-//│ ╙──      	
-//│ Parsed: if a == 0 then "false"
+//│ Parsed: ‹if a == 0 then "false" else 2›
 
 if a == 0
   then "false"
 print of "ok!"
 //│ |#if| |a| |==| |0|→|#then| |"false"|←|↵|print| |#of| |"ok!"|
-//│ ╔══[ERROR] Expected end of input; found deindentation instead
-//│ ║  l.51: 	print of "ok!"
-//│ ╙──      	
-//│ Parsed: if a == 0 then "false"
+//│ Parsed: ‹if a == 0 then "false"; (print ("ok!",))›
 
 if a == 0 then "false"
   else 2
 print of "ok!"
 //│ |#if| |a| |==| |0| |#then| |"false"|→|#else| |2|←|↵|print| |#of| |"ok!"|
 //│ ╔══[ERROR] Unexpected 'else' keyword in expression position
-//│ ║  l.59: 	  else 2
+//│ ║  l.53: 	  else 2
 //│ ╙──      	  ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.58: 	if a == 0 then "false"
+//│ ║  l.52: 	if a == 0 then "false"
 //│ ║        	               ^^^^^^^
-//│ ║  l.59: 	  else 2
+//│ ║  l.53: 	  else 2
 //│ ╙──      	^^^^^^^^
-//│ ╔══[ERROR] Expected end of input; found newline instead
-//│ ║  l.59: 	  else 2
-//│ ║        	        
-//│ ║  l.60: 	print of "ok!"
-//│ ╙──      	
-//│ Parsed: if a == 0 then ("false" (‹2›,))
+//│ Parsed: ‹if a == 0 then ("false" (‹2›,)); (print ("ok!",))›
 
 if
   true  then "true"
   false then "false"
 //│ |#if|→|true| |#then| |"true"|↵|false| |#then| |"false"|
-//│ Parsed: if ‹true then "true"; false then "false"›
+//│ Parsed: ‹if ‹true then "true"; false then "false"››
 
 if
   a == 0 then "false"
   a == 1 then "true"
 //│ |#if|→|a| |==| |0| |#then| |"false"|↵|a| |==| |1| |#then| |"true"|
-//│ Parsed: if ‹a == 0 then "false"; a == 1 then "true"›
+//│ Parsed: ‹if ‹a == 0 then "false"; a == 1 then "true"››
 
 if a ==
   0 then "false"
   1 then "true"
 //│ |#if| |a| |==|→|0| |#then| |"false"|↵|1| |#then| |"true"|
-//│ Parsed: if a == ‹0 then "false"; 1 then "true"›
+//│ Parsed: ‹if a == ‹0 then "false"; 1 then "true"››
 
 if a ==
   0 then "false"
   1 then "true"
 else 2
 //│ |#if| |a| |==|→|0| |#then| |"false"|↵|1| |#then| |"true"|←|↵|#else| |2|
-//│ Parsed: if a == ‹0 then "false"; 1 then "true"› else 2
+//│ Parsed: ‹if a == ‹0 then "false"; 1 then "true"› else 2›
 
 
 if lol
 //│ |#if| |lol|
 //│ ╔══[ERROR] Expected 'then' clause; found reference instead
-//│ ║  l.103: 	if lol
-//│ ║         	   ^^^
+//│ ║  l.92: 	if lol
+//│ ║        	   ^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.103: 	if lol
-//│ ╙──       	^^
-//│ Parsed: if lol then ()
+//│ ║  l.92: 	if lol
+//│ ╙──      	^^
+//│ Parsed: ‹if lol then ()›
+
+if lol then
+//│ |#if| |lol| |#then|
+//│ Parsed: ‹if lol then ()›
+
+if lol then else
+//│ |#if| |lol| |#then| |#else|
+//│ ╔══[ERROR] Unexpected 'else' keyword in expression position
+//│ ║  l.106: 	if lol then else
+//│ ╙──       	            ^^^^
+//│ Parsed: ‹if lol then ()›
+
+if lol
+then
+else
+//│ |#if| |lol|↵|#then|↵|#else|
+//│ ╔══[ERROR] Unexpected newline in expression position
+//│ ║  l.114: 	then
+//│ ║         	    
+//│ ║  l.115: 	else
+//│ ╙──       	
+//│ ╔══[ERROR] Unexpected 'else' keyword in expression position
+//│ ║  l.115: 	else
+//│ ╙──       	^^^^
+//│ Parsed: ‹if lol then ()›
 
 if lol else 2
 //│ |#if| |lol| |#else| |2|
 //│ ╔══[ERROR] Expected 'then' clause; found reference instead
-//│ ║  l.113: 	if lol else 2
+//│ ║  l.127: 	if lol else 2
 //│ ║         	   ^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.113: 	if lol else 2
+//│ ║  l.127: 	if lol else 2
 //│ ╙──       	^^
-//│ Parsed: if lol then () else 2
+//│ Parsed: ‹if lol then () else 2›
+
 
 
 
