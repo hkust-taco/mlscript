@@ -65,13 +65,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     val c = bytes(i)
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
-      raise(TypeError(msg -> S(loc(i, i + 1)) :: Nil)) // TODO parse error
+      raise(CompilationError(msg -> S(loc(i, i + 1)) :: Nil)) // TODO parse error
     // @inline 
     def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     c match{
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
-        go(j, SPACE())
+        go(j, SPACE)
       case '"' =>
         val j = i + 1
         val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
@@ -93,7 +93,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           takeWhile(j)(c => c === ' ' || c === '\n')
         val nextInd = space.reverseIterator.takeWhile(_ =/= '\n').size
         if (ind.headOption.forall(_ < nextInd) && nextInd > 0)
-          lex(k, nextInd :: ind, (INDENT(), loc(j, k)) :: acc)
+          lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc)
         else {
           val newIndBase = ind.dropWhile(_ > nextInd)
           val droppedNum = ind.size - newIndBase.size
@@ -105,10 +105,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           }
           lex(k, newInd,
             if (droppedNum > 0) {
-              if (hasNewIndent) (INDENT(), loc(j, k))
-              else (NEWLINE(), loc(i, k))
-            } :: List.fill(droppedNum)((DEINDENT(), loc(j, k))) ::: acc
-            else (NEWLINE(), loc(i, k)) :: acc
+              if (hasNewIndent) (INDENT, loc(j, k))
+              else (NEWLINE, loc(i, k))
+            } :: List.fill(droppedNum)((DEINDENT, loc(j, k))) ::: acc
+            else (NEWLINE, loc(i, k)) :: acc
           )
         }
       case _ if isIdentFirstChar(c) =>
@@ -122,7 +122,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         go(j, LITVAL(IntLit(BigInt(str))))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
-        go(i + 1, ERROR())
+        go(i + 1, ERROR)
     }
   }
  
@@ -143,11 +143,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
-    case (SPACE(), _) :: ts => " " + printTokens(ts)
-    case (NEWLINE(), _) :: ts => "↵" + printTokens(ts)
-    case (INDENT(), _) :: ts => "→" + printTokens(ts)
-    case (DEINDENT(), _) :: ts => "←" + printTokens(ts)
-    case (ERROR(), _) :: ts => "<error>"
+    case (SPACE, _) :: ts => " " + printTokens(ts)
+    case (NEWLINE, _) :: ts => "↵" + printTokens(ts)
+    case (INDENT, _) :: ts => "→" + printTokens(ts)
+    case (DEINDENT, _) :: ts => "←" + printTokens(ts)
+    case (ERROR, _) :: ts => "<error>"
     case (LITVAL(lv), _) :: ts => lv.idStr + printTokens(ts)
     case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
     case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)

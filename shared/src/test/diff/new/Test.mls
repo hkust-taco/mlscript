@@ -1,3 +1,5 @@
+:AllowParseErrors
+:AllowTypeErrors
 
 1
 //│ |1|
@@ -5,19 +7,25 @@
 
 1 2 3
 //│ |1| |2| |3|
-//│ /!\ Parse error: Parse failure on: (SPACE(),Loc(1,2,new/Test:+6))|(LITVAL(2),Loc(2,3,new/Test:+6))|(SPACE(),Loc(3,4,new/Test:+6))|(LITVAL(3),Loc(4,5,new/Test:+6))
+//│ ╔══[ERROR] Expected end of input; found space token instead
+//│ ║  l.8: 	1 2 3
+//│ ╙──     	 ^
 //│ 1
 
-12 3
+12  3
 //│ |12| |3|
-//│ /!\ Parse error: Parse failure on: (SPACE(),Loc(2,3,new/Test:+11))|(LITVAL(3),Loc(3,4,new/Test:+11))
+//│ ╔══[ERROR] Expected end of input; found space token instead
+//│ ║  l.15: 	12  3
+//│ ╙──      	  ^^
 //│ 12
 
 foo bar
   baz 1
   2 3
 //│ |foo| |bar|→|baz| |1|↵|2| |3|
-//│ /!\ Parse error: Parse failure on: (SPACE(),Loc(3,4,new/Test:+16))|(IDENT(bar,false),Loc(4,7,new/Test:+16))|(INDENT(),Loc(8,10,new/Test:+16))|(IDENT(baz,false),Loc(10,13,new/Test:+16))|(SPACE(),Loc(13,14,new/Test:+16))|(LITVAL(1),Loc(14,15,new/Test:+16))|(NEWLINE(),Loc(15,18,new/Test:+16))|(LITVAL(2),Loc(18,19,new/Test:+16))|(SPACE(),Loc(19,20,new/Test:+16))|(LITVAL(3),Loc(20,21,new/Test:+16))
+//│ ╔══[ERROR] Expected end of input; found space token instead
+//│ ║  l.22: 	foo bar
+//│ ╙──      	   ^
 //│ foo
 
 foo bar
@@ -25,7 +33,85 @@ foo bar
     2 3
   4 v5
 //│ |foo| |bar|→|baz| |1|→|2| |3|←|↵|4| |v5|
-//│ /!\ Parse error: Parse failure on: (SPACE(),Loc(3,4,new/Test:+23))|(IDENT(bar,false),Loc(4,7,new/Test:+23))|(INDENT(),Loc(8,10,new/Test:+23))|(IDENT(baz,false),Loc(10,13,new/Test:+23))|(SPACE(),Loc(13,14,new/Test:+23))|(LITVAL(1),Loc(14,15,new/Test:+23))|(INDENT(),Loc(16,20,new/Test:+23))|(LITVAL(2),Loc(20,21,new/Test:+23))|(SPACE(),Loc(21,22,new/Test:+23))|(LITVAL(3),Loc(22,23,new/Test:+23))|(DEINDENT(),Loc(24,26,new/Test:+23))|(NEWLINE(),Loc(23,26,new/Test:+23))|(LITVAL(4),Loc(26,27,new/Test:+23))|(SPACE(),Loc(27,28,new/Test:+23))|(IDENT(v5,false),Loc(28,30,new/Test:+23))
+//│ ╔══[ERROR] Expected end of input; found space token instead
+//│ ║  l.31: 	foo bar
+//│ ╙──      	   ^
 //│ foo
+
+foo
+  1
+//│ |foo|→|1|
+//│ ╔══[ERROR] Expected end of input; found indentation token instead
+//│ ║  l.42: 	  1
+//│ ╙──      	^^
+//│ foo
+
+  
+//│ | |
+//│ ╔══[ERROR] Unexpected space token
+//│ ║  l.49: 	  
+//│ ╙──      	^^
+//│ ()
+
+  1
+//│ | |1|
+//│ ╔══[ERROR] Unexpected space token
+//│ ║  l.56: 	  1
+//│ ╙──      	^^
+//│ 1
+
+  
+  1
+//│ | |→|1|
+//│ ╔══[ERROR] Unexpected space token
+//│ ║  l.63: 	  
+//│ ╙──      	^^
+//│ ╔══[ERROR] Unexpected indentation token
+//│ ║  l.64: 	  1
+//│ ╙──      	^^
+//│ 1
+
+(1)
+//│ |(|1|)|
+//│ {1}
+
+(1
+//│ |(|1|
+//│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
+//│ ║  l.78: 	(1
+//│ ╙──      	  
+//│ {1}
+
+(1))
+//│ |(|1|)|)|
+//│ ╔══[ERROR] Expected end of input; found closing parenthesis token instead
+//│ ║  l.85: 	(1))
+//│ ╙──      	   ^
+//│ {1}
+
+(
+//│ |(|
+//│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
+//│ ║  l.92: 	(
+//│ ╙──      	 
+//│ {()}
+
+)
+//│ |)|
+//│ ╔══[ERROR] Unexpected closing parenthesis token
+//│ ║  l.99: 	)
+//│ ╙──      	^
+//│ ()
+
+1+
+//│ |1|+|
+//│ ((+ 1) ())
+
+*
+//│ |*|
+//│ ╔══[ERROR] Unexpected operator token
+//│ ║  l.110: 	*
+//│ ╙──       	^
+//│ ()
 
 

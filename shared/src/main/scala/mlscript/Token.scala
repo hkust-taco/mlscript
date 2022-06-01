@@ -3,14 +3,27 @@ package mlscript
 import mlscript.utils._, shorthands._
 
 
-sealed abstract class Token
+sealed abstract class Token {
+  def describe: Str = this match {
+    case SPACE => "space"
+    case NEWLINE => "newline"
+    case INDENT => "indentation"
+    case DEINDENT => "unindentation"
+    case ERROR => "error"
+    case LITVAL(value) => "literal"
+    case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
+    case OPEN_BRACKET(k) => s"opening ${k.name}"
+    case CLOSE_BRACKET(k) => s"closing ${k.name}"
+    case COMMENT(text) => "comment"
+  }
+}
 
-final case class SPACE() extends Token
-final case class NEWLINE() extends Token // TODO rm
-final case class INDENT() extends Token // TODO rm
-final case class DEINDENT() extends Token // TODO rm
+case object SPACE extends Token
+case object NEWLINE extends Token // TODO rm
+case object INDENT extends Token // TODO rm
+case object DEINDENT extends Token // TODO rm
 // final case class INDENTED(block: Ls[Token]) extends Token
-final case class ERROR() extends Token
+case object ERROR extends Token
 final case class LITVAL(value: Lit) extends Token
 final case class IDENT(name: String, symbolic: Bool) extends Token
 final case class OPEN_BRACKET(k: BracketKind) extends Token // TODO rm
@@ -26,7 +39,7 @@ sealed abstract class BracketKind {
     case Curly => '{' -> '}'
     case Square => '[' -> ']'
   }
-  def name = this match {
+  def name: Str = this match {
     case Round => "parenthesis"
     case Curly => "curly brace"
     case Square => "square bracket"

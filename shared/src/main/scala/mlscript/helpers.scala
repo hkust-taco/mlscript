@@ -353,7 +353,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     try R(toType_!) catch {
       case e: NotAType =>
         import Message._
-        L(TypeError(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
+        L(CompilationError(msg"not a recognized type: ${e.trm.toString}"->e.trm.toLoc::Nil)) }
   protected def toType_! : Type = (this match {
     case Var(name) if name.startsWith("`") => TypeVar(R(name.tail), N)
     case Var(name) => TypeName(name)
@@ -485,7 +485,7 @@ trait StatementImpl extends Located { self: Statement =>
         case v @ Var(nme) => R(TypeName(nme).withLocOf(v))
         case t =>
           import Message._
-          L(TypeError(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil))
+          L(CompilationError(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil))
       }
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
@@ -499,7 +499,7 @@ trait StatementImpl extends Located { self: Statement =>
   protected def desugDefnPattern(pat: Term, args: Ls[Term]): (Ls[Diagnostic], Var, Ls[Term]) = pat match {
     case App(l, r) => desugDefnPattern(l, r :: args)
     case v: Var => (Nil, v, args)
-    case _ => (TypeError(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
+    case _ => (CompilationError(msg"Unsupported pattern shape" -> pat.toLoc :: Nil) :: Nil, Var("<error>"), args) // TODO
   }
   protected def desugarCases(bod: Term, baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = bod match {
     case Blk(stmts) => desugarCases(stmts, baseTargs)
@@ -509,7 +509,7 @@ trait StatementImpl extends Located { self: Statement =>
         case S(n) -> (d -> _) => ???
       }
       desugarCases(stmts, baseTargs)
-    case _ => (TypeError(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
+    case _ => (CompilationError(msg"Unsupported data type case shape" -> bod.toLoc :: Nil) :: Nil, Nil)
   }
   protected def desugarCases(stmts: Ls[Statement], baseTargs: Ls[TypeName]): (Ls[Diagnostic], Ls[Decl]) = stmts match {
     case stmt :: stmts =>

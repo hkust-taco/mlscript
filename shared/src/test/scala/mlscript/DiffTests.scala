@@ -98,6 +98,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
     val defaultMode = Mode()
     
     var allowTypeErrors = false
+    var allowParseErrors = false // TODO use
     var showRelativeLineNums = false
     var noJavaScript = false
     var noProvs = false
@@ -125,6 +126,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case "stats" => mode.copy(stats = true)
           case "stdout" => mode.copy(stdout = true)
           case "AllowTypeErrors" => allowTypeErrors = true; mode
+          case "AllowParseErrors" => allowParseErrors = true; mode
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NoJS" => noJavaScript = true; mode
@@ -174,6 +176,8 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         rec(rest.tail, if (hasBlankLines) defaultMode else mode)
       // process block of text and show output - type, expressions, errors
       case l :: ls =>
+        val blockLineNum = (allLines.size - lines.size) + 1
+        
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
           l.startsWith(outputMarker)
           || l.startsWith(diffBegMarker)
@@ -185,15 +189,80 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
         
+        var totalTypeErrors = 0
+        var totalWarnings = 0
+        var totalRuntimeErrors = 0
+        var totalCodeGenErrors = 0
+        
+        // report errors and warnings
+        def report(diags: Ls[mlscript.Diagnostic]): Unit = {
+          diags.foreach { diag =>
+            val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
+            val headStr = diag match {
+              case CompilationError(msg, loco) =>
+                totalTypeErrors += 1
+                s"╔══[ERROR] "
+              case Warning(msg, loco) =>
+                totalWarnings += 1
+                s"╔══[WARNING] "
+            }
+            val lastMsgNum = diag.allMsgs.size - 1
+            var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
+            diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
+              val isLast = msgNum =:= lastMsgNum
+              val msgStr = msg.showIn(sctx)
+              if (msgNum =:= 0) output(headStr + msgStr)
+              else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
+              if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
+              loco.foreach { loc =>
+                val (startLineNum, startLineStr, startLineCol) =
+                  loc.origin.fph.getLineColAt(loc.spanStart)
+                if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
+                val (endLineNum, endLineStr, endLineCol) =
+                  loc.origin.fph.getLineColAt(loc.spanEnd)
+                var l = startLineNum
+                var c = startLineCol
+                while (l <= endLineNum) {
+                  val globalLineNum = loc.origin.startLineNum + l - 1
+                  val relativeLineNum = globalLineNum - blockLineNum + 1
+                  val shownLineNum =
+                    if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
+                    else "l." + globalLineNum
+                  val prepre = "║  "
+                  val pre = s"$shownLineNum: "
+                  val curLine = loc.origin.fph.lines(l - 1)
+                  output(prepre + pre + "\t" + curLine)
+                  out.print(outputMarker
+                    + (if (isLast && l =:= endLineNum) "╙──" else prepre)
+                    + " " * pre.length + "\t" + " " * (c - 1))
+                  val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
+                  while (c < lastCol) { out.print('^'); c += 1 }
+                  out.println
+                  c = 1
+                  l += 1
+                }
+              }
+            }
+            if (diag.allMsgs.isEmpty) output("╙──")
+            if (!allowTypeErrors && !mode.fixme && (
+                !mode.expectTypeErrors && diag.isInstanceOf[CompilationError]
+              || !mode.expectWarnings && diag.isInstanceOf[Warning]
+            )) failures += globalLineNum
+            ()
+          }
+        }
+        
+        val raise: typer.Raise = d => report(d :: Nil)
+        
         // try to parse block of text into mlscript ast
         val ans = try {
           if (basePath.headOption.contains("new")) {
             // ??? : Parsed.Extra
             // Failure("",0,Parsed.Extra())
             val origin = Origin(testName, globalStartLineNum, fph)
-            val raise: mlscript.Diagnostic => Unit = diag => //() // TODO
-              output("/!\\ Parse error: " + diag.theMsg //+s" at l.$globalLineNum:$col: $lineStr"
-                ) // TODO use reporting
+            // val raise: mlscript.Diagnostic => Unit = diag => //() // TODO
+            //   output("/!\\ Parse error: " + diag.theMsg //+s" at l.$globalLineNum:$col: $lineStr"
+            //     ) // TODO use reporting
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
             // println(lexer.lex(0, ))
             val tokens = lexer.tokens
@@ -221,7 +290,6 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
 
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
-            val blockLineNum = (allLines.size - lines.size) + 1
             if (mode.expectParseErrors)
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
@@ -233,71 +301,6 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
-            
-            var totalTypeErrors = 0
-            var totalWarnings = 0
-            var totalRuntimeErrors = 0
-            var totalCodeGenErrors = 0
-            
-            // report errors and warnings
-            def report(diags: Ls[mlscript.Diagnostic]): Unit = {
-              diags.foreach { diag =>
-                val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-                val headStr = diag match {
-                  case TypeError(msg, loco) =>
-                    totalTypeErrors += 1
-                    s"╔══[ERROR] "
-                  case Warning(msg, loco) =>
-                    totalWarnings += 1
-                    s"╔══[WARNING] "
-                }
-                val lastMsgNum = diag.allMsgs.size - 1
-                var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
-                diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-                  val isLast = msgNum =:= lastMsgNum
-                  val msgStr = msg.showIn(sctx)
-                  if (msgNum =:= 0) output(headStr + msgStr)
-                  else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-                  if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
-                  loco.foreach { loc =>
-                    val (startLineNum, startLineStr, startLineCol) =
-                      loc.origin.fph.getLineColAt(loc.spanStart)
-                    if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
-                    val (endLineNum, endLineStr, endLineCol) =
-                      loc.origin.fph.getLineColAt(loc.spanEnd)
-                    var l = startLineNum
-                    var c = startLineCol
-                    while (l <= endLineNum) {
-                      val globalLineNum = loc.origin.startLineNum + l - 1
-                      val relativeLineNum = globalLineNum - blockLineNum + 1
-                      val shownLineNum =
-                        if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
-                        else "l." + globalLineNum
-                      val prepre = "║  "
-                      val pre = s"$shownLineNum: "
-                      val curLine = loc.origin.fph.lines(l - 1)
-                      output(prepre + pre + "\t" + curLine)
-                      out.print(outputMarker
-                        + (if (isLast && l =:= endLineNum) "╙──" else prepre)
-                        + " " * pre.length + "\t" + " " * (c - 1))
-                      val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-                      while (c < lastCol) { out.print('^'); c += 1 }
-                      out.println
-                      c = 1
-                      l += 1
-                    }
-                  }
-                }
-                if (diag.allMsgs.isEmpty) output("╙──")
-                if (!allowTypeErrors && !mode.fixme && (
-                    !mode.expectTypeErrors && diag.isInstanceOf[TypeError]
-                  || !mode.expectWarnings && diag.isInstanceOf[Warning]
-                )) failures += globalLineNum
-                ()
-              }
-            }
-            
-            val raise: typer.Raise = d => report(d :: Nil)
             
             val (diags, (typeDefs, stmts)) = p.desugared
             report(diags)

@@ -425,7 +425,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
       var errorsCount = 0
       constrain(lhs, rhs)({
-        case err: TypeError =>
+        case err: CompilationError =>
           // Note that we do not immediately abort constraining because we still
           //  care about getting the non-erroneous parts of the code return meaningful types.
           // In other words, this is so that errors do not interfere too much

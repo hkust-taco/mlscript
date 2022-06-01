@@ -8,10 +8,11 @@ sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg) {
   val allMsgs: Ls[Message -> Opt[Loc]]
 }
 
-final case class TypeError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
-object TypeError {
-  def apply(msgs: Ls[Message -> Opt[Loc]]): TypeError =
-    TypeError(msgs.head._1.show.toString, msgs)
+// TODO add error kind field
+final case class CompilationError(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
+object CompilationError {
+  def apply(msgs: Ls[Message -> Opt[Loc]]): CompilationError =
+    CompilationError(msgs.head._1.show.toString, msgs)
 }
 
 final case class Warning(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]]) extends Diagnostic(mainMsg)
@@ -31,6 +32,8 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
     that.spanStart >= this.spanStart && that.spanStart <= this.spanEnd
     || that.spanEnd <= this.spanEnd && that.spanEnd >= this.spanStart
   )
+  def right = copy(spanStart = spanEnd)
+  def left = copy(spanEnd = spanStart)
 }
 
 final case class Origin(fileName: Str, startLineNum: Int, fph: FastParseHelpers) {
