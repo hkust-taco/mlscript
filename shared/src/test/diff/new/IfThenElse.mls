@@ -1,7 +1,96 @@
 
+
 if true then 1 else 2
 //│ |#if| |true| |#then| |1| |#else| |2|
 //│ Parsed: if true then 1 else 2
+
+if a == 0
+then "false"
+else 2
+//│ |#if| |a| |==| |0|↵|#then| |"false"|↵|#else| |2|
+//│ ╔══[ERROR] Expected 'then' clause; found application instead
+//│ ║  l.7: 	if a == 0
+//│ ║       	   ^^^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.7: 	if a == 0
+//│ ╙──     	^^
+//│ ╔══[ERROR] Expected end of input; found newline instead
+//│ ║  l.7: 	if a == 0
+//│ ║       	         
+//│ ║  l.8: 	then "false"
+//│ ╙──     	
+//│ Parsed: if ((== a) 0) then ()
+
+if a == 0
+  then "false"
+  else 2
+//│ |#if| |a| |==| |0|→|#then| |"false"|↵|#else| |2|
+//│ ╔══[ERROR] Unexpected 'then' keyword in expression position
+//│ ║  l.25: 	  then "false"
+//│ ╙──      	  ^^^^
+//│ ╔══[ERROR] Unexpected 'else' keyword in expression position
+//│ ║  l.26: 	  else 2
+//│ ╙──      	  ^^^^
+//│ ╔══[ERROR] Expected 'then' clause; found application instead
+//│ ║  l.24: 	if a == 0
+//│ ║        	   ^^^^^^
+//│ ║  l.25: 	  then "false"
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.26: 	  else 2
+//│ ║        	^^^^^^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.24: 	if a == 0
+//│ ╙──      	^^
+//│ Parsed: if ((== a) (0 (‹"false"; 2›,))) then ()
+
+if
+  true  then "true"
+  false then "false"
+//│ |#if|→|true| |#then| |"true"|↵|false| |#then| |"false"|
+//│ Parsed: if ‹true then "true"; false then "false"›
+
+if
+  a == 0 then "false"
+  a == 1 then "true"
+//│ |#if|→|a| |==| |0| |#then| |"false"|↵|a| |==| |1| |#then| |"true"|
+//│ Parsed: if ‹a == 0 then "false"; a == 1 then "true"›
+
+if a ==
+  0 then "false"
+  1 then "true"
+//│ |#if| |a| |==|→|0| |#then| |"false"|↵|1| |#then| |"true"|
+//│ Parsed: if a == ‹0 then "false"; 1 then "true"›
+
+if a ==
+  0 then "false"
+  1 then "true"
+else 2
+//│ |#if| |a| |==|→|0| |#then| |"false"|↵|1| |#then| |"true"|←|↵|#else| |2|
+//│ ╔══[ERROR] Unexpected 'else' keyword in expression position
+//│ ║  l.67: 	else 2
+//│ ╙──      	^^^^
+//│ Parsed: if a == ‹0 then "false"; 1 then "true"› else 2
+
+
+if lol
+//│ |#if| |lol|
+//│ ╔══[ERROR] Expected 'then' clause; found reference instead
+//│ ║  l.75: 	if lol
+//│ ║        	   ^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.75: 	if lol
+//│ ╙──      	^^
+//│ Parsed: if lol then ()
+
+if lol else 2
+//│ |#if| |lol| |#else| |2|
+//│ ╔══[ERROR] Expected 'then' clause; found reference instead
+//│ ║  l.85: 	if lol else 2
+//│ ║        	   ^^^
+//│ ╟── Note: 'if' expression started here:
+//│ ║  l.85: 	if lol else 2
+//│ ╙──      	^^
+//│ Parsed: if lol then () else 2
 
 
 

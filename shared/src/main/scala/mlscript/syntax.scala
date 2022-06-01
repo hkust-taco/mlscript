@@ -73,6 +73,7 @@ final case class IfTerm(expr: Term) extends IfBody
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfOpApp(lhs: Term, op: Var, rhs: IfBody) extends IfBody
 final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
+final case class IfBlock(lines: Ls[IfBody \/ Term]) extends IfBody
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
 final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches

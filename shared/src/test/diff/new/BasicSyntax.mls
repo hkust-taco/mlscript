@@ -33,19 +33,19 @@ foo bar
   baz 1
   2 3
 //│ |foo| |bar|→|baz| |1|↵|2| |3|
-//│ Parsed: (foo ((bar ((baz (1,)); (2 (3,));,)),))
+//│ Parsed: (foo ((bar (‹(baz (1,)); (2 (3,))›,)),))
 
 foo bar
   baz 1
     2 3
   4 v5
 //│ |foo| |bar|→|baz| |1|→|2| |3|←|↵|4| |v5|
-//│ Parsed: (foo ((bar ((baz ((1 ((2 (3,));,)),)); (4 (v5,));,)),))
+//│ Parsed: (foo ((bar (‹(baz ((1 (‹(2 (3,))›,)),)); (4 (v5,))›,)),))
 
 foo
   1
 //│ |foo|→|1|
-//│ Parsed: (foo (1;,))
+//│ Parsed: (foo (‹1›,))
 
   
 //│ | |
@@ -67,7 +67,7 @@ foo
 //│ ╔══[ERROR] Unexpected space in expression position
 //│ ║  l.64: 	  
 //│ ╙──      	^^
-//│ Parsed: 1;
+//│ Parsed: ‹1›
 
 (1)
 //│ |(|1|)|
@@ -246,4 +246,15 @@ acc+1+2*3
 //│ |acc|+|1|+|2|*|3|
 //│ Parsed: ((+ ((+ acc) 1)) ((* 2) 3))
 
+acc +
+  foo bar
+  baz
+//│ |acc| |+|→|foo| |bar|↵|baz|
+//│ Parsed: ((+ acc) ‹(foo (bar,)); baz›)
+
+a+
+  b
+  c
+//│ |a|+|→|b|↵|c|
+//│ Parsed: ((+ a) ‹b; c›)
 

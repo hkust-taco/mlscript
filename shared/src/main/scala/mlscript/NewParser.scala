@@ -143,12 +143,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private lazy val lastLoc =
     tokens.lastOption.map(_._2.right)
   
-  def block: Ls[Term] =
+  def block: Ls[IfBody \/ Term] =
     cur match {
       case (DEINDENT, _) :: _ => Nil
       case (NEWLINE, _) :: _ => consume; block
       case _ =>
-        val t = expr(0, allowSpace = false)
+        val t = exprOrIf(0, allowSpace = false)
         cur match {
           case (NEWLINE, _) :: _ => consume; t :: block
           case _ => t :: Nil
@@ -156,16 +156,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     }
   
   def expr(prec: Int, allowSpace: Bool = true): Term =
+    exprOrIf(prec, allowSpace) match {
+      case R(e) => e
+      case L(e) =>
+        // ??? // TODO
+        raise(CompilationError(msg"Expected an expression; found a 'then' clause instead" -> e.toLoc :: Nil))
+        errExpr
+    }
+  
+  def exprOrIf(prec: Int, allowSpace: Bool = true): IfBody \/ Term =
     cur match {
       case (SPACE, l0) :: _ if allowSpace =>
         consume
-        expr(prec, allowSpace)
+        exprOrIf(prec, allowSpace)
       case (INDENT, l0) :: _ if allowSpace =>
         consume
         val ts = block
         skip(DEINDENT, allowEnd = true, note =
           msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
-        Blk(ts)
+        // R(Blk(ts)) // TODO
+        val es = ts.map { case L(t) => return L(IfBlock(ts)); case R(e) => e }
+        R(Blk(es))
       // case (NEWLINE, l0) :: _ =>
       //   Tup(Nil).withLoc(lastLoc)
       case (LITVAL(lit), l0) :: _ =>
@@ -187,10 +198,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       //   exprCont(Prefix(opStr, rhs), prec)
       case (KEYWORD("if"), l0) :: _ =>
         consume
+        /* 
         val cond = expr(0)
         skip(KEYWORD("then"), ignored = Set(SPACE, NEWLINE), note =
           msg"Note: unmatched if here:" -> S(l0) :: Nil)
         val thn = expr(0)
+        */
+        val body = exprOrIf(0) match {
+          case L(b) => b
+          case R(e) =>
+            // ??? // TODO
+            raise(CompilationError(msg"Expected 'then' clause; found ${e.describe} instead" -> e.toLoc ::
+              msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
+            IfThen(e, errExpr)
+        }
         // val els = cur match {
         //   case (KEYWORD("else"), _) :: _ => 
         //   case _ => N
@@ -201,25 +222,36 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           case _ => false
         }
         val els = Option.when(hasEls)(expr(0))
-        If(IfThen(cond, thn), els)
+        // R(If(IfThen(cond, thn), els))
+        R(If(body, els))
       case Nil =>
         // UnitLit
-        Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
+        R(errExpr)
       case (tk, l0) :: _ =>
         // fail(cur)
         raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
         consume
-        expr(prec)
+        exprOrIf(prec)
   }
   
-  def exprCont(acc: Term, prec: Int): Term = {
+  private def errExpr =
+    Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
+  
+  def exprCont(acc: Term, prec: Int): IfBody \/ Term = {
     implicit val n: Name = Name(s"exprCont($prec)")
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
-        val rhs = expr(opPrec(opStr)._2)
-        // exprCont(Infix(acc, opStr, rhs), prec)
-        exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
+        // val rhs = expr(opPrec(opStr)._2)
+        // // exprCont(Infix(acc, opStr, rhs), prec)
+        // exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
+        val v = Var(opStr).withLoc(N/*TODO*/)
+        exprOrIf(opPrec(opStr)._2) match {
+          case L(rhs) =>
+            L(IfOpApp(acc, v, rhs))
+          case R(rhs) =>
+            exprCont(App(App(v, acc), rhs), prec)
+        }
       // case Oper(opStr) :: _ if isPostfix(opStr) =>
       // case Oper(opStr) :: _ if isPostfix(opStr) && opPrec(opStr)._1 > prec =>
       //   consume
@@ -232,7 +264,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // ??? // TODO
         consume
         consume
-        val rhs = expr(opPrec(opStr)._2)
+        val rhs = expr(opPrec(opStr)._2) // TODO if
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       // case (NEWLINE, _) :: (INDENT, _) :: (IDENT(opStr, true), l0) :: _ =>
       case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
@@ -240,10 +272,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // ??? // TODO
         consume
         consume
-        val rhs = expr(opPrec(opStr)._2)
+        val rhs = expr(opPrec(opStr)._2) // TODO if
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
-      case Nil => acc
-      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => acc
+      case Nil => R(acc)
+      case (KEYWORD("then"), _) :: _ =>
+        consume
+        val e = expr(0)
+        L(IfThen(acc, e))
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       case c =>
         c match {
           case (KEYWORD("of"), _) :: _ =>
@@ -263,7 +299,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
               msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
           case N => ()
         }
-        res
+        R(res)
       // case _ => acc
     }
   }

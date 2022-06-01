@@ -322,7 +322,8 @@ trait TermImpl extends StatementImpl { self: Term =>
   override def toString: Str = this match {
     case Bra(true, trm) => s"{$trm}"
     case Bra(false, trm) => s"($trm)"
-    case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
+    // case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
+    case Blk(stmts) => stmts.mkString("‹", "; ", "›")
     // case Blk(stmts) => stmts.map("" + _ + ";").mkString("‹", " ", "›") // for better legibility in debugging
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
@@ -639,7 +640,9 @@ trait IfBodyImpl extends Located { self: IfBody =>
     // case Case(pat, body, rest) => pat :: body :: rest :: Nil
     // case Wildcard(body) => body :: Nil
     // case NoCases => Nil
-    case _ => ??? // TODO
+    case _ if false => ??? // TODO
+    case IfBlock(ts) => ts.map(_.fold(identity, identity))
+    case IfThen(l, r) => l :: r :: Nil
   }
   
   // lazy val toList: Ls[Case] = this match {
@@ -649,6 +652,8 @@ trait IfBodyImpl extends Located { self: IfBody =>
   
   override def toString: String = this match {
     case IfThen(lhs, rhs) => s"$lhs then $rhs"
+    case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
+    case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
     case _ => ??? // TODO
   }
   
