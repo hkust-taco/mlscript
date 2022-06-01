@@ -64,7 +64,7 @@ sample2: bool
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.62: 	sample: bool
 //│ ║        	^^^^^^
-//│ ╟── undefined literal of type `undefined` does not match type `bool`
+//│ ╟── undefined literal of type `undefined` is not an instance of type `bool`
 //│ ║  l.47: 	sample = undefined
 //│ ║        	         ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `bool`
@@ -78,7 +78,7 @@ sample2: bool
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.63: 	sample2: bool
 //│ ║        	^^^^^^^
-//│ ╟── null literal of type `null` does not match type `bool`
+//│ ╟── null literal of type `null` is not an instance of type `bool`
 //│ ║  l.54: 	sample2 = null
 //│ ║        	          ^^^^
 //│ ╟── but it flows into reference with expected type `bool`

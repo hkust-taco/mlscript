@@ -68,7 +68,7 @@ class A0_2: S0[int] & T0[string]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.49: 	  method Foo0 x = 1
 //│ ║        	         ^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `string`
+//│ ╟── integer literal of type `1` is not an instance of type `string`
 //│ ║  l.49: 	  method Foo0 x = 1
 //│ ║        	                  ^
 //│ ╟── Note: constraint arises from type reference:

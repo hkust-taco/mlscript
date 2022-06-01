@@ -56,7 +56,7 @@ succ true
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
 //│ res: error | int
@@ -66,7 +66,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	     ^^^^^^^^^^^^
-//│ ╟── application of type `bool` does not match type `int`
+//│ ╟── application of type `bool` is not an instance of type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -79,7 +79,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `bool`
+//│ ╟── integer literal of type `123` is not an instance of type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
 //│ ╟── Note: constraint arises from argument:

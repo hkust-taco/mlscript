@@ -20,7 +20,7 @@ class Box2[T]: { inner: T }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.19: 	  method Test = this.inner + 1
 //│ ║        	                ^^^^^^^^^^^^
-//│ ╟── field selection of type `T` does not match type `int`
+//│ ╟── field selection of type `T` is not an instance of type `int`
 //│ ║  l.19: 	  method Test = this.inner + 1
 //│ ║        	                ^^^^^^^^^^
 //│ ╟── Note: class type parameter T is defined at:

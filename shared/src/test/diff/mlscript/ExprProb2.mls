@@ -188,7 +188,7 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║        	                                   ^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (?val | ?b)` does not match type `int`
+//│ ╟── function of type `?a -> (?val | ?b)` is not an instance of type `int`
 //│ ║  l.29: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
 //│ ║  l.30: 	  | Lit -> e.val
@@ -281,7 +281,7 @@ eval2_broken eval2_broken e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Add[?E] & {Add#E = ?E, lhs: ?lhs, rhs: ?rhs}` does not match type `int`
+//│ ╟── application of type `Add[?E] & {Add#E = ?E, lhs: ?lhs, rhs: ?rhs}` is not an instance of type `int`
 //│ ║  l.8: 	def add lhs rhs = Add { lhs; rhs }
 //│ ║       	                  ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:

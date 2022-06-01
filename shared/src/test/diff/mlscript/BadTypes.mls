@@ -73,7 +73,7 @@ aa: { a: int; a: string }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	^^
-//│ ╟── integer literal of type `1` does not match type `string`
+//│ ╟── integer literal of type `1` is not an instance of type `string`
 //│ ║  l.49: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:

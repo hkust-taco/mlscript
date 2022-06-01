@@ -40,7 +40,7 @@ false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.37: 	1 as true
 //│ ║        	^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `true`
+//│ ╟── integer literal of type `1` is not an instance of type `true`
 //│ ║  l.37: 	1 as true
 //│ ║        	^
 //│ ╟── Note: constraint arises from reference:
@@ -50,7 +50,7 @@ false as 1
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.38: 	true as Int
 //│ ║        	^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -105,7 +105,7 @@ f false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.104: 	f false
 //│ ║         	^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.104: 	f false
 //│ ║         	  ^^^^^
 //│ ╟── Note: constraint arises from argument:

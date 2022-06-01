@@ -32,7 +32,7 @@
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.26: 	1 |> 2 || 3
 //│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `3` does not match type `bool`
+//│ ╟── integer literal of type `3` is not an instance of type `bool`
 //│ ║  l.26: 	1 |> 2 || 3
 //│ ╙──      	          ^
 //│ res: bool | error

@@ -54,7 +54,7 @@ add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.53: 	add boom 1
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` does not match type `int`
+//│ ╟── type `anything` is not an instance of type `int`
 //│ ║  l.42: 	def boom: anything
 //│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -97,7 +97,7 @@ def boom = 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.93: 	def boom = 1
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type 'a
+//│ ╟── integer literal of type `1` is not an instance of type `'a`
 //│ ║  l.93: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type variable:
@@ -142,7 +142,7 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` does not match type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from reference:
@@ -151,7 +151,7 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type 'a
+//│ ╟── application of type `int` is not an instance of type `'a`
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -167,7 +167,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` does not match type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -176,7 +176,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type 'a
+//│ ╟── type `int` is not an instance of type `'a`
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	           ^^^
 //│ ╟── but it flows into reference with expected type `'a`
@@ -277,7 +277,7 @@ def g a = add a 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.271: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type 'a
+//│ ╟── application of type `int` is not an instance of type `'a`
 //│ ║  l.271: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:

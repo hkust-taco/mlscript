@@ -90,7 +90,7 @@ add 1 : Als2[?]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.89: 	add 1 : Als2[?]
 //│ ║        	^^^^^
-//│ ╟── type `anything` does not match type `int`
+//│ ╟── type `anything` is not an instance of type `int`
 //│ ║  l.89: 	add 1 : Als2[?]
 //│ ╙──      	             ^
 //│ res: Als2[?]
@@ -121,7 +121,7 @@ q + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.120: 	q + 1
 //│ ║         	^^^
-//│ ╟── type `anything` does not match type `int`
+//│ ╟── type `anything` is not an instance of type `int`
 //│ ║  l.109: 	def q: ?
 //│ ║         	       ^
 //│ ╟── but it flows into reference with expected type `int`

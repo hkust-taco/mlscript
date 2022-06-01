@@ -37,7 +37,7 @@ def c = Child(Parent1{name="A"})
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.36: 	def c = Child(Parent1{name="A"})
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Parent1 & {name: ?name}` is not an instance of type Parent2
+//│ ╟── application of type `Parent1 & {name: ?name}` is not an instance of type `Parent2`
 //│ ║  l.36: 	def c = Child(Parent1{name="A"})
 //│ ║        	              ^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -225,7 +225,7 @@ E{} + 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.211: 	E{}: int
 //│ ║         	^^^
-//│ ╟── application of type `E` does not match type `int`
+//│ ╟── application of type `E` is not an instance of type `int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.211: 	E{}: int
 //│ ║         	     ^^^
@@ -237,7 +237,7 @@ E{} + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.212: 	E{} + 1
 //│ ║         	^^^^^
-//│ ╟── application of type `E` does not match type `int`
+//│ ╟── application of type `E` is not an instance of type `int`
 //│ ║  l.212: 	E{} + 1
 //│ ║         	^^^
 //│ ╟── Note: class E is defined at:

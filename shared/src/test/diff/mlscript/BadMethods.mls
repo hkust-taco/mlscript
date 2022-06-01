@@ -151,7 +151,7 @@ class Simple3[A, B]: Simple2[A]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.150: 	    method Get: B
 //│ ║         	           ^^^^^^
-//│ ╟── type `B` is not an instance of type A
+//│ ╟── type `B` is not an instance of type `A`
 //│ ║  l.149: 	class Simple3[A, B]: Simple2[A]
 //│ ║         	                 ^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -176,7 +176,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.174: 	    method Test f = f this.x this.x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── field selection of type `A` is not an instance of type B
+//│ ╟── field selection of type `A` is not an instance of type `B`
 //│ ║  l.174: 	    method Test f = f this.x this.x
 //│ ║         	                             ^^^^^^
 //│ ╟── Note: constraint arises from class type parameter:
@@ -188,7 +188,7 @@ class BadPair[A, B]: AbstractPair[A, B]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.175: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `C` is not an instance of type D
+//│ ╟── application of type `C` is not an instance of type `D`
 //│ ║  l.175: 	    method Map fx fy = BadPair { x = fx this.x; y = fx this.x }
 //│ ║         	                                                    ^^^^^^^^^
 //│ ╟── Note: constraint arises from method type parameter:
@@ -207,7 +207,7 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.205: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `42` does not match type `bool`
+//│ ╟── integer literal of type `42` is not an instance of type `bool`
 //│ ║  l.204: 	bp = BadPair { x = 42; y = true }
 //│ ║         	                   ^^
 //│ ╟── Note: constraint arises from argument:
@@ -358,7 +358,7 @@ class Class2B: Class2A[int] & Trait2A[string]
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.357: 	    method MtdA = "ok"
 //│ ║         	           ^^^^^^^^^^^
-//│ ╟── string literal of type `"ok"` does not match type `int`
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
 //│ ║  l.357: 	    method MtdA = "ok"
 //│ ║         	                  ^^^^
 //│ ╟── but it flows into method definition with expected type `int`
@@ -412,7 +412,7 @@ class Test4B: Test4A
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
 //│ ║  l.405: 	    method Mth4A = true
 //│ ║         	           ^^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.405: 	    method Mth4A = true
 //│ ║         	                   ^^^^
 //│ ╟── but it flows into inherited method definition with expected type `int`
@@ -577,7 +577,7 @@ t : Dup[int, bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.576: 	t : Dup[int, bool]
 //│ ║         	^
-//│ ╟── integer literal of type `42` does not match type `bool`
+//│ ╟── integer literal of type `42` is not an instance of type `bool`
 //│ ║  l.565: 	t = Dup { x = 42 }
 //│ ║         	              ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -677,7 +677,7 @@ class H2: D2 & E2
 //│ ╔══[ERROR] Type mismatch in inherited method definition:
 //│ ║  l.673: 	  method G2 = 1
 //│ ║         	         ^^^^^^
-//│ ╟── integer literal of type `1` does not match type `bool`
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
 //│ ║  l.673: 	  method G2 = 1
 //│ ║         	              ^
 //│ ╟── but it flows into inherited method definition with expected type `bool`
@@ -841,7 +841,7 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.833: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` is not an instance of type X
+//│ ╟── type `Test9A[int] -> int` is not an instance of type `X`
 //│ ║  l.833: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into method declaration with expected type `x`
