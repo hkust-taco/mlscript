@@ -1,5 +1,5 @@
 :AllowParseErrors
-:AllowTypeErrors
+:AllowTypeErrors // TODO rm
 
 1
 //│ |1|
@@ -71,7 +71,7 @@ foo
 
 (1)
 //│ |(|1|)|
-//│ Parsed: {1}
+//│ Parsed: (1)
 
 (1
 //│ |(|1|
@@ -81,14 +81,14 @@ foo
 //│ ╟── Note: unmatched parenthesis was opened here:
 //│ ║  l.76: 	(1
 //│ ╙──      	^
-//│ Parsed: {1}
+//│ Parsed: (1)
 
 (1))
 //│ |(|1|)|)|
 //│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
 //│ ║  l.86: 	(1))
 //│ ╙──      	   ^
-//│ Parsed: {1}
+//│ Parsed: (1)
 
 (
 //│ |(|
@@ -98,7 +98,7 @@ foo
 //│ ╟── Note: unmatched parenthesis was opened here:
 //│ ║  l.93: 	(
 //│ ╙──      	^
-//│ Parsed: {()}
+//│ Parsed: (())
 
 )
 //│ |)|
@@ -119,14 +119,36 @@ foo
 //│ Parsed: ()
 
 
+f 1
+//│ |f| |1|
+//│ Parsed: (f (1,))
+
+f(1)
+//│ |f|(|1|)|
+//│ Parsed: (f (1,))
+
+f (1)
+//│ |f| |(|1|)|
+//│ Parsed: (f (1,))
+
+
 f 1, 2, 3
 //│ |f| |1|,| |2|,| |3|
 //│ Parsed: (f (1, 2, 3,))
 
+f (1, 2, 3)
+//│ |f| |(|1|,| |2|,| |3|)|
+//│ Parsed: (f (1, 2, 3,))
+
+f(1, 2, 3)
+//│ |f|(|1|,| |2|,| |3|)|
+//│ Parsed: (f (1, 2, 3,))
+
+
 f 1,, 2
 //│ |f| |1|,|,| |2|
 //│ ╔══[ERROR] Unexpected comma in expression position
-//│ ║  l.126: 	f 1,, 2
+//│ ║  l.148: 	f 1,, 2
 //│ ╙──       	    ^
 //│ Parsed: (f (1, 2,))
 
@@ -142,7 +164,7 @@ f of g of x
 f of of g
 //│ |f| |#of| |#of| |g|
 //│ ╔══[ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.142: 	f of of g
+//│ ║  l.164: 	f of of g
 //│ ╙──       	     ^^
 //│ Parsed: (f (g,))
 
@@ -195,7 +217,7 @@ x.y
 .y
 //│ |.|y|
 //│ ╔══[ERROR] Unexpected operator in expression position
-//│ ║  l.195: 	.y
+//│ ║  l.217: 	.y
 //│ ╙──       	^
 //│ Parsed: y
 

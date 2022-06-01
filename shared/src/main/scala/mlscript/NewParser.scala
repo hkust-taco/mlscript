@@ -179,7 +179,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         val res = expr(0)
         skip(CLOSE_BRACKET(Round), note =
           msg"Note: unmatched parenthesis was opened here:" -> S(l0) :: Nil)
-        exprCont(Bra(true, res), prec)
+        exprCont(Bra(false, res), prec)
       // case Oper(opStr) :: _ if isPrefix(opStr) && opPrec(opStr)._1 > prec =>
       // case (IDENT(opStr, true), l0) :: _ if isPrefix(opStr) =>
       //   consume
@@ -250,8 +250,20 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
             consume
           case _ =>
         }
+        val openedPar = cur match {
+          case (OPEN_BRACKET(Round), l0) :: _ => consume; S(l0)
+          case (SPACE, _) :: (OPEN_BRACKET(Round), l0) :: _ => consume; consume; S(l0)
+          case _ => N
+        }
         val as = args(Nil)
-        App(acc, Tup(as.map(_.mapSecond(_ -> false))))
+        val res = App(acc, Tup(as.map(_.mapSecond(_ -> false))))
+        openedPar match {
+          case S(l0) =>
+            skip(CLOSE_BRACKET(Round), note =
+              msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
+          case N => ()
+        }
+        res
       // case _ => acc
     }
   }
