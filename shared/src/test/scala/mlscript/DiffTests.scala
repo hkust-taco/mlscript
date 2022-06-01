@@ -267,8 +267,10 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             // println(lexer.lex(0, ))
             val tokens = lexer.tokens
             // output(tokens.toString)
-            output(lexer.printTokens(tokens))
-            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing)
+            output(NewLexer.printTokens(tokens))
+            val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing) {
+              def printDbg(msg: => Any): Unit = if (dbg) output(msg.toString)
+            }
             val res = p.parse
             // if (mode.showParse || mode.dbgParsing) 
             output("Parsed: " + res.toString)

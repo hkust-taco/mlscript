@@ -6,9 +6,9 @@ import utils._, shorthands._
 // import Token._
 import Message.MessageContext
 
+import NewLexer._
+
 class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
-  
-  type TokLoc = (Token, Loc)
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
@@ -146,6 +146,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   
   def tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
+  
+}
+
+object NewLexer {
+  
+  type TokLoc = (Token, Loc)
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
     case (SPACE, _) :: ts => " " + printTokens(ts)

@@ -12,7 +12,7 @@ object NewParser {
   // def parse(ts: Iterable[Token], debug: Boolean = false): Term = {
   //   val p = new NewParser(ts.iterator, debug)
   //   val t = p.expr(0)
-  //   // println(p.cur)
+  //   // printDbg(p.cur)
   //   if (p.cur.nonEmpty) fail(p.cur.toList ++ p.rest)
   //   t
   // }
@@ -33,11 +33,13 @@ object NewParser {
   // }.toMap.withDefaultValue(Int.MaxValue) // prec('~') == 2147483647
 }
 
-class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => Unit, dbg: Bool) {
+abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => Unit, val dbg: Bool) {
+
+  def printDbg(msg: => Any): Unit
   
   def parse: Term = {
     val t = expr(0, allowSpace = false)
-    // println(p.cur)
+    // printDbg(p.cur)
     // if (cur.nonEmpty) fail(cur)
     cur match {
       case (tk, tkl) :: _ =>
@@ -91,7 +93,12 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
   
   
   
-  private var cur: Ls[TokLoc] = tokens
+  private var _cur: Ls[TokLoc] = tokens
+  
+  private def cur(implicit n: Name) = {
+    if (dbg) printDbg(s"=> ${n.value}\t\tinspects ${NewLexer printTokens _cur}")
+    _cur
+  }
   
   // val accept: Ls[TokLoc] => Unit =
   //   cur = _
@@ -103,12 +110,12 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
   //   }
   
   // def next(implicit n: Name): Option[Token] = {
-  //   if (dbg) println(s"=> ${n.value}\t\tinspects next ${_next}")
+  //   if (dbg) printDbg(s"=> ${n.value}\t\tinspects next ${_next}")
   //   _next
   // }
   def consume(implicit n: Name): Unit = {
-    if (dbg) println(s"=> ${n.value}\t\tconsumes ${cur}")
-    cur = cur.tailOption.getOrElse(Nil)
+    if (dbg) printDbg(s"=> ${n.value}\t\tconsumes ${NewLexer printTokens _cur}")
+    _cur = _cur.tailOption.getOrElse(Nil) // FIXME throw error if empty?
     // _next = ite.nextOption
   }
   def skip(tk: Token, allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)(implicit n: Name): Unit = {
@@ -176,7 +183,7 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
       //   exprCont(Prefix(opStr, rhs), prec)
       case Nil =>
         // UnitLit
-        Tup(Nil).withLoc(lastLoc)
+        Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
       case (tk, l0) :: _ =>
         // fail(cur)
         raise(CompilationError(msg"Unexpected ${tk.describe} token in expression position" -> S(l0) :: Nil))
@@ -184,7 +191,8 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
         expr(prec)
   }
   
-  def exprCont(acc: Term, prec: Int): Term =
+  def exprCont(acc: Term, prec: Int): Term = {
+    implicit val n: Name = Name(s"exprCont($prec)")
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -199,30 +207,55 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
         consume
         exprCont(acc, prec)
       // case (SPACE, l0) :: _ =>
-      case (DEINDENT | COMMA | CLOSE_BRACKET(Round), _) :: _ => acc
+      case (NEWLINE, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+        // ??? // TODO
+        consume
+        consume
+        val rhs = expr(opPrec(opStr)._2)
+        exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
+      // case (NEWLINE, _) :: (INDENT, _) :: (IDENT(opStr, true), l0) :: _ =>
+      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+        // consume
+        // ??? // TODO
+        consume
+        consume
+        val rhs = expr(opPrec(opStr)._2)
+        exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       case Nil => acc
+      case (DEINDENT | COMMA | NEWLINE | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => acc
       case _ =>
         // consume
         val as = args(Nil)
         App(acc, Tup(as.map(_.mapSecond(_ -> false))))
       // case _ => acc
     }
+  }
   
   def args(acc: Ls[Opt[Var] -> Term]): Ls[Opt[Var] -> Term] =
     cur match {
-      case (NEWLINE, _) :: _ =>
+      case (SPACE, _) :: _ =>
+        consume
+        args(acc)
+      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
         acc.reverse
       case _ =>
     // }
     // {
     
+    val argName = cur match {
+      case (IDENT(idStr, false), l0) :: (IDENT(":", true), _) :: _ =>
+        consume
+        consume
+        S(Var(idStr).withLoc(S(l0)))
+      case _ => N
+    }
     val e = expr(MinPrec)
     cur match {
       case (COMMA, l0) :: _ =>
         consume
-        args((N -> e) :: acc)
+        args((argName -> e) :: acc)
       case _ =>
-        ((N -> e) :: acc).reverse
+        ((argName -> e) :: acc).reverse
     }
     
   }
