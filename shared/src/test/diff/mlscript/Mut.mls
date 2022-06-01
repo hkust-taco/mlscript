@@ -15,7 +15,7 @@ muta1[1] <- false
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.14: 	muta1[1] <- false
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.14: 	muta1[1] <- false
 //│ ║        	            ^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -77,7 +77,7 @@ rc1.x <- true
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.76: 	rc1.x <- true
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.76: 	rc1.x <- true
 //│ ║        	         ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -369,7 +369,7 @@ h {mut x = 4} 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.368: 	h {mut x = 4} 2
 //│ ║         	^^^^^^^^^^^^^
-//│ ╟── record literal of type `{mut x: ?x}` is not an instance of type B
+//│ ╟── record literal of type `{mut x: ?x}` is not an instance of type `B`
 //│ ║  l.368: 	h {mut x = 4} 2
 //│ ║         	  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -563,7 +563,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.544: 	mt1._2 <- 1
 //│ ║         	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `bool`
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
 //│ ║  l.544: 	mt1._2 <- 1
 //│ ║         	          ^
 //│ ╟── Note: constraint arises from type reference:
@@ -587,7 +587,7 @@ b1.x <- 1 + 2 <- 4
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.545: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── assignment of type `unit` does not match type `int`
+//│ ╟── assignment of type `unit` is not an instance of type `int`
 //│ ║  l.545: 	mt1._1 <- (b1.t <- 4)
 //│ ║         	           ^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -744,7 +744,7 @@ foreach am1 (fun y -> y._1 <- 2)
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.742: 	(0,)["oops"]
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.742: 	(0,)["oops"]
 //│ ╙──       	     ^^^^^^
 //│ res: 0 | undefined
@@ -752,7 +752,7 @@ foreach am1 (fun y -> y._1 <- 2)
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.743: 	(mut 0,)["oops"] <- 1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.743: 	(mut 0,)["oops"] <- 1
 //│ ╙──       	         ^^^^^^
 //│ = []
@@ -772,7 +772,7 @@ arr[oops] <- 1
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.770: 	arr[oops]
 //│ ║         	^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.760: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -783,7 +783,7 @@ arr[oops] <- 1
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.771: 	arr[oops] <- 1
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.760: 	oops = "oops"
 //│ ║         	       ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -855,7 +855,7 @@ foo { a = 1 } 2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.853: 	foo { mut a = "oops" } 2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.853: 	foo { mut a = "oops" } 2
 //│ ║         	              ^^^^^^
 //│ ╟── but it flows into mutable record field with expected type `int`

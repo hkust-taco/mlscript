@@ -50,7 +50,7 @@ def safeDiv x (y: ~0) = div x y
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                        ^^^^^^^
-//│ ╟── type `~0` does not match type `int`
+//│ ╟── type `~0` is not an instance of type `int`
 //│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                  ^^
 //│ ╟── but it flows into reference with expected type `int`

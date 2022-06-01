@@ -439,8 +439,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             .headOption.fold(doesntMatch(rhs)) { n1 => doesntHaveField(n1.name) }
         case (lunw, obj: ObjectTag)
           if obj.id.isInstanceOf[Var]
-          && !primitiveTypes(obj.id.idStr)
-          => msg"is not an instance of type ${obj.id.idStr.capitalize}"
+          => msg"is not an instance of type `${
+              if (primitiveTypes(obj.id.idStr)) obj.id.idStr else obj.id.idStr.capitalize}`"
         case (lunw, obj: TypeRef)
           => msg"is not an instance of `${obj.expNeg}`"
         case (lunw, TupleType(fs))

@@ -43,7 +43,7 @@ def r4 = addOne (selectBoolOrInt 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.42: 	def r4 = addOne (selectBoolOrInt 1)
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.15: 	def selectBoolOrInt = fun x -> if isInt x then 1 else true
 //│ ║        	                                                      ^^^^
 //│ ╟── but it flows into application with expected type `int`
@@ -63,7 +63,7 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.62: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.15: 	def selectBoolOrInt = fun x -> if isInt x then 1 else true
 //│ ║        	                                                      ^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -85,7 +85,7 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.84: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `1` does not match type `bool`
+//│ ╟── expression of type `1` is not an instance of type `bool`
 //│ ╟── Note: constraint arises from argument:
 //│ ║  l.3: 	def bb = (fun a -> fun b -> toBool (if b then not a else not a)) true
 //│ ║       	                                       ^
@@ -143,7 +143,7 @@ addOne "hello"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.142: 	addOne "hello"
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hello"` does not match type `int`
+//│ ╟── string literal of type `"hello"` is not an instance of type `int`
 //│ ║  l.142: 	addOne "hello"
 //│ ║         	       ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -177,7 +177,7 @@ concat "Three" (addOne "Two")
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.175: 	(addOne 1) + 1
 //│ ║         	^^^^^^^^^^^^
-//│ ╟── application of type `string` does not match type `int`
+//│ ╟── application of type `string` is not an instance of type `int`
 //│ ║  l.112: 	def addOneS = fun x -> concat x "One"
 //│ ║         	                       ^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `int`
@@ -188,7 +188,7 @@ concat "Three" (addOne "Two")
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.176: 	concat "Three" (addOne "Two")
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` does not match type `string`
+//│ ╟── application of type `int` is not an instance of type `string`
 //│ ║  l.18: 	def addOneI = fun x -> add x 1
 //│ ║        	                       ^^^^^^^
 //│ ╟── but it flows into application with expected type `string`

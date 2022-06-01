@@ -75,7 +75,7 @@ f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── type `Parent` is not an instance of type Child
+//│ ╟── type `Parent` is not an instance of type `Child`
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from class pattern:

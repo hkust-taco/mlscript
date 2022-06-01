@@ -286,7 +286,7 @@ sum t2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.283: 	sum t2
 //│ ║         	^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.282: 	t2 = (1,1,2,true)
 //│ ║         	            ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -339,7 +339,7 @@ a1._2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	          ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -348,7 +348,7 @@ a1._2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hello"` does not match type `int`
+//│ ╟── string literal of type `"hello"` is not an instance of type `int`
 //│ ║  l.332: 	a1 = (1,2,true,'hello')
 //│ ║         	               ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -782,7 +782,7 @@ ge[2]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.765: 	true[false]
 //│ ║         	^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.765: 	true[false]
 //│ ╙──       	     ^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
@@ -796,7 +796,7 @@ ge[2]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.766: 	4["hello"]
 //│ ║         	^^^^^^^^^^
-//│ ╟── string literal of type `"hello"` does not match type `int`
+//│ ╟── string literal of type `"hello"` is not an instance of type `int`
 //│ ║  l.766: 	4["hello"]
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:

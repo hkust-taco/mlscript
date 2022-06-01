@@ -4,7 +4,7 @@ succ false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.3: 	succ false
 //│ ║       	^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.3: 	succ false
 //│ ╙──     	     ^^^^^
 //│ res: error | int
@@ -20,7 +20,7 @@ f x
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.19: 	f x
 //│ ║        	^^^
-//│ ╟── string literal of type `"oops"` does not match type `int`
+//│ ╟── string literal of type `"oops"` is not an instance of type `int`
 //│ ║  l.12: 	x = "oops"
 //│ ║        	    ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -103,7 +103,7 @@ add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.102: 	add boom 1
 //│ ║         	^^^^^^^^
-//│ ╟── type `anything` does not match type `int`
+//│ ╟── type `anything` is not an instance of type `int`
 //│ ║  l.97: 	def boom: anything
 //│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`

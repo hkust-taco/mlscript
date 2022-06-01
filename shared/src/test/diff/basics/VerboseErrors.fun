@@ -16,7 +16,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -33,7 +33,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.32: 	(x => succ x) false
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -65,7 +65,7 @@ test arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.64: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── application of type `bool` does not match type `int`
+//│ ╟── application of type `bool` is not an instance of type `int`
 //│ ║  l.51: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:

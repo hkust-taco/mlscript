@@ -67,7 +67,7 @@ foo
 //│ ╟── Type mismatch in application:
 //│ ║  l.63: 	  foo 1
 //│ ║        	  ^^^^^
-//│ ╟── operator application of type `int` does not match type `unit`
+//│ ╟── operator application of type `int` is not an instance of type `unit`
 //│ ║  l.19: 	  u + 1
 //│ ║        	  ^^^^^
 //│ ╟── but it flows into application with expected type `unit`

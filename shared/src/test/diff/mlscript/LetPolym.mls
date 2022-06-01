@@ -31,7 +31,7 @@ test succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.30: 	test succ
 //│ ║        	^^^^^^^^^
-//│ ╟── string literal of type `"ok"` does not match type `int`
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
 //│ ║  l.25: 	  in (local add 1, local concat "ok")
 //│ ╙──      	                                ^^^^
 //│ res: (int -> int, string -> string,) | error
@@ -73,7 +73,7 @@ res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.72: 	res add "1"
 //│ ║        	^^^^^^^^^^^
-//│ ╟── string literal of type `"1"` does not match type `int`
+//│ ╟── string literal of type `"1"` is not an instance of type `int`
 //│ ║  l.72: 	res add "1"
 //│ ║        	        ^^^
 //│ ╟── Note: constraint arises from reference:
@@ -97,7 +97,7 @@ res add "1"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.96: 	res add "1"
 //│ ║        	^^^^^^^^^^^
-//│ ╟── string literal of type `"1"` does not match type `int`
+//│ ╟── string literal of type `"1"` is not an instance of type `int`
 //│ ║  l.96: 	res add "1"
 //│ ║        	        ^^^
 //│ ╟── Note: constraint arises from application:

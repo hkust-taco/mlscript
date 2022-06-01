@@ -164,7 +164,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `MyArray[?a]` is not an instance of type 'a
+//│ ╟── type `MyArray[?a]` is not an instance of type `'a`
 //│ ║  l.35: 	def ty2B: MyArray[MyArray['a]]
 //│ ║        	                  ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -173,7 +173,7 @@ ty2A = ty2B
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	ty2A = ty2B
 //│ ║        	^^^^^^^^^^^
-//│ ╟── type `'a` is not an instance of type MyArray
+//│ ╟── type `'a` is not an instance of type `MyArray`
 //│ ║  l.23: 	def ty2A: MyArray['a]
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from applied type reference:

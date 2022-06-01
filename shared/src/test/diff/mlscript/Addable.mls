@@ -91,7 +91,7 @@ addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type Num
+//│ ╟── integer literal of type `0` is not an instance of type `Num`
 //│ ║  l.+2: 	  if n < 0 then 0 else a.Add (addNTimes a (n - 1))
 //│ ║        	                ^
 //│ ╟── Note: constraint arises from type reference:
@@ -111,7 +111,7 @@ addNTimes n 12
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+3: 	addNTimes n 12
 //│ ║        	^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type Num
+//│ ╟── function of type `?a -> ?b -> ?c` is not an instance of type `Num`
 //│ ║  l.+1: 	rec def addNTimes a n =
 //│ ║        	                  ^^^^^
 //│ ║  l.+2: 	  if n <= 0 then 0 else a.Add addNTimes a (n - 1)
@@ -137,7 +137,7 @@ addTwo s n
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	addTwo s n
 //│ ║        	^^^^^^^^^^
-//│ ╟── application of type `Num & {val: ?val}` is not an instance of type Str
+//│ ╟── application of type `Num & {val: ?val}` is not an instance of type `Str`
 //│ ║  l.17: 	n = Num { val = 1 }
 //│ ║        	    ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Str`
@@ -156,7 +156,7 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	                                      ^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.+1: 	class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║        	                                             ^^^^^^
 //│ ╟── but it flows into field selection with expected type `int`
@@ -165,7 +165,7 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` does not match type `string`
+//│ ╟── operator application of type `int` is not an instance of type `string`
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	                                      ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -174,7 +174,7 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` does not match type `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.+1: 	class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║        	                                             ^^^^^^
 //│ ╟── Note: constraint arises from field selection:

@@ -21,7 +21,7 @@ b: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.20: 	b: Foo1[string]
 //│ ║        	^
-//│ ╟── integer literal of type `1` does not match type `string`
+//│ ╟── integer literal of type `1` is not an instance of type `string`
 //│ ║  l.15: 	b = Bar1{x = 1}
 //│ ║        	             ^
 //│ ╟── Note: constraint arises from type reference:

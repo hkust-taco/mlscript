@@ -61,7 +61,7 @@ addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.60: 	addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops!"` does not match type `int`
+//│ ╟── string literal of type `"oops!"` is not an instance of type `int`
 //│ ║  l.60: 	addOne1 ((Integer { value = 1; addOne = id }) with { value = "oops!" })
 //│ ║        	                                                             ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -143,7 +143,7 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type 'a
+//│ ╟── operator application of type `int` is not an instance of type `'a`
 //│ ║  l.135: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                                                                  ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `'a`
@@ -211,7 +211,7 @@ def mkIntegerPrecise3 = mkInteger
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.203: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `int` is not an instance of type 'a
+//│ ╟── operator application of type `int` is not an instance of type `'a`
 //│ ║  l.89: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
