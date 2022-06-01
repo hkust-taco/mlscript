@@ -9,13 +9,13 @@ final case class SPACE() extends Token
 final case class NEWLINE() extends Token // TODO rm
 final case class INDENT() extends Token // TODO rm
 final case class DEINDENT() extends Token // TODO rm
-final case class INDENTED(block: Ls[Token]) extends Token
+// final case class INDENTED(block: Ls[Token]) extends Token
 final case class ERROR() extends Token
-final case class LITERAL(value: Lit) extends Token
+final case class LITVAL(value: Lit) extends Token
 final case class IDENT(name: String, symbolic: Bool) extends Token
 final case class OPEN_BRACKET(k: BracketKind) extends Token // TODO rm
 final case class CLOSE_BRACKET(k: BracketKind) extends Token // TODO rm
-final case class BRACKETS(k: BracketKind) extends Token
+// final case class BRACKETS(k: BracketKind) extends Token
 final case class COMMENT(text: String) extends Token
 
 

@@ -181,13 +181,26 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
         val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
-
+        
         // try to parse block of text into mlscript ast
-        val ans = try parse(processedBlockStr,
-          p => if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
+        val ans = try {
+          if (basePath.headOption.contains("new")) {
+            // ??? : Parsed.Extra
+            // Failure("",0,Parsed.Extra())
+            val lexer = new NewLexer(Origin(testName, globalStartLineNum, fph), _ => (), dbg = mode.dbg)
+            // println(lexer.lex(0, ))
+            val tokens = lexer.tokens
+            // output(tokens.toString)
+            output(lexer.printTokens(tokens))
+            // ???
+            Success(Pgrm(Nil), 0)
+          }
+          else parse(processedBlockStr, p =>
+            if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
             else new MLParser(Origin(testName, globalStartLineNum, fph)).pgrm(p),
-          verboseFailures = true)
-        match {
+            verboseFailures = true
+          )
+        } match {
           case f: Failure =>
             val Failure(lbl, index, extra) = f
             val (lineNum, lineStr, col) = fph.getLineColAt(index)

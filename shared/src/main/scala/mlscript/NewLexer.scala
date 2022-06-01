@@ -80,7 +80,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           pe(msg"unclosed quotation mark")
           k
         }
-        go(k2, LITERAL(StrLit(chars)))
+        go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
@@ -120,7 +120,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         go(j, IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
-        go(j, LITERAL(IntLit(BigInt(str))))
+        go(j, LITVAL(IntLit(BigInt(str))))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
         go(i + 1, ERROR())
@@ -144,16 +144,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
-    // case (SPACE, _) :: ts => " " + printTokens(ts)
-    // case (NEWLINE, _) :: ts => "↵" + printTokens(ts)
-    // case (INDENT, _) :: ts => "→" + printTokens(ts)
-    // case (DEINDENT, _) :: ts => "←" + printTokens(ts)
-    // case (ERROR, _) :: ts => "<error>"
-    // case (LIT(lv), _) :: ts => lv.identifyingStr + printTokens(ts)
-    // case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
-    // case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)
-    // case (CLOSE_BRACKET(k: BracketKind), _) :: ts => k.end.toString + printTokens(ts)
-    // case (COMMENT(text: String), _) :: ts => "/*" + text + "*/"
+    case (SPACE(), _) :: ts => " " + printTokens(ts)
+    case (NEWLINE(), _) :: ts => "↵" + printTokens(ts)
+    case (INDENT(), _) :: ts => "→" + printTokens(ts)
+    case (DEINDENT(), _) :: ts => "←" + printTokens(ts)
+    case (ERROR(), _) :: ts => "<error>"
+    case (LITVAL(lv), _) :: ts => lv.idStr + printTokens(ts)
+    case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
+    case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)
+    case (CLOSE_BRACKET(k: BracketKind), _) :: ts => k.end.toString + printTokens(ts)
+    case (COMMENT(text: String), _) :: ts => "/*" + text + "*/"
     case Nil => ""
   })
   
