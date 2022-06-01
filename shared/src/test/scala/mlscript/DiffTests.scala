@@ -117,7 +117,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case "pe" => mode.copy(expectParseErrors = true)
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
-          case "ds" => mode.copy(dbgParsing = true)
+          case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -269,7 +269,10 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
             // output(tokens.toString)
             output(lexer.printTokens(tokens))
             val p = new NewParser(origin, tokens, raise, dbg = mode.dbgParsing)
-            output(p.parse.toString)
+            val res = p.parse
+            // if (mode.showParse || mode.dbgParsing) 
+            output("Parsed: " + res.toString)
+            // output(p.parse.toString)
             // ???
             Success(Pgrm(Nil), 0)
           }
@@ -292,7 +295,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
           case Success(p, index) =>
             if (mode.expectParseErrors)
               failures += blockLineNum
-            if (mode.showParse) output("Parsed: " + p)
+            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg

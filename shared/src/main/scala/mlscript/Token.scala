@@ -6,9 +6,10 @@ import mlscript.utils._, shorthands._
 sealed abstract class Token {
   def describe: Str = this match {
     case SPACE => "space"
+    case COMMA => "comma"
     case NEWLINE => "newline"
     case INDENT => "indentation"
-    case DEINDENT => "unindentation"
+    case DEINDENT => "deindentation"
     case ERROR => "error"
     case LITVAL(value) => "literal"
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
@@ -19,6 +20,7 @@ sealed abstract class Token {
 }
 
 case object SPACE extends Token
+case object COMMA extends Token
 case object NEWLINE extends Token // TODO rm
 case object INDENT extends Token // TODO rm
 case object DEINDENT extends Token // TODO rm

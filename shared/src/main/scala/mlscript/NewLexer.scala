@@ -11,26 +11,28 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   type TokLoc = (Token, Loc)
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
-  val length = bytes.length
+  private val length = bytes.length
   type State = Int
   
-  val isOpChar = Set(
-    '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.', ',', ';'
+  private val isOpChar = Set(
+    '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
+    // ',', 
+    ';'
   )
   def isIdentFirstChar(c: Char): Bool =
-    c.isLetter || c == '_' || c == '\''
+    c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
-    isIdentFirstChar(c) || isDigit(c) || c == '\''
+    isIdentFirstChar(c) || isDigit(c) || c === '\''
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   
-  val isNonStickyKeywordChar = Set(
+  private val isNonStickyKeywordChar = Set(
     ',',
     ':',
     ';',
   )
   
-  val isSymKeyword = Set(
+  private val isSymKeyword = Set(
     "->",
     "=",
     ":",
@@ -72,6 +74,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
         go(j, SPACE)
+      case ',' =>
+        val j = i + 1
+        go(j, COMMA)
       case '"' =>
         val j = i + 1
         val (chars, k) = takeWhile(j)(c => c =/= '"' && c =/= '\n')
@@ -144,6 +149,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
     case (SPACE, _) :: ts => " " + printTokens(ts)
+    case (COMMA, _) :: ts => "," + printTokens(ts)
     case (NEWLINE, _) :: ts => "↵" + printTokens(ts)
     case (INDENT, _) :: ts => "→" + printTokens(ts)
     case (DEINDENT, _) :: ts => "←" + printTokens(ts)

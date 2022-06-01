@@ -3,115 +3,128 @@
 
 1
 //│ |1|
-//│ 1
+//│ Parsed: 1
+
+f 1
+//│ |f| |1|
+//│ Parsed: (f (1,))
+
+1 + 1
+//│ |1| |+| |1|
+//│ Parsed: ((+ 1) 1)
+
+f 1 + 1
+//│ |f| |1| |+| |1|
+//│ Parsed: (f (((+ 1) 1),))
 
 1 2 3
 //│ |1| |2| |3|
-//│ ╔══[ERROR] Expected end of input; found space token instead
-//│ ║  l.8: 	1 2 3
-//│ ╙──     	 ^
-//│ 1
+//│ Parsed: (1 ((2 (3,)),))
 
 12  3
 //│ |12| |3|
-//│ ╔══[ERROR] Expected end of input; found space token instead
-//│ ║  l.15: 	12  3
-//│ ╙──      	  ^^
-//│ 12
+//│ Parsed: (12 (3,))
 
 foo bar
   baz 1
   2 3
 //│ |foo| |bar|→|baz| |1|↵|2| |3|
-//│ ╔══[ERROR] Expected end of input; found space token instead
-//│ ║  l.22: 	foo bar
-//│ ╙──      	   ^
-//│ foo
+//│ Parsed: (foo ((bar ((baz ((1 ()),)); (2 (3,));,)),))
 
 foo bar
   baz 1
     2 3
   4 v5
 //│ |foo| |bar|→|baz| |1|→|2| |3|←|↵|4| |v5|
-//│ ╔══[ERROR] Expected end of input; found space token instead
-//│ ║  l.31: 	foo bar
-//│ ╙──      	   ^
-//│ foo
+//│ Parsed: (foo ((bar ((baz ((1 ((2 (3,));,)),)); (4 (v5,));,)),))
 
 foo
   1
 //│ |foo|→|1|
-//│ ╔══[ERROR] Expected end of input; found indentation token instead
-//│ ║  l.42: 	  1
-//│ ╙──      	^^
-//│ foo
+//│ Parsed: (foo (1;,))
 
   
 //│ | |
-//│ ╔══[ERROR] Unexpected space token
-//│ ║  l.49: 	  
+//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ║  l.46: 	  
 //│ ╙──      	^^
-//│ ()
+//│ Parsed: ()
 
   1
 //│ | |1|
-//│ ╔══[ERROR] Unexpected space token
-//│ ║  l.56: 	  1
+//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ║  l.53: 	  1
 //│ ╙──      	^^
-//│ 1
+//│ Parsed: 1
 
   
   1
 //│ | |→|1|
-//│ ╔══[ERROR] Unexpected space token
-//│ ║  l.63: 	  
+//│ ╔══[ERROR] Unexpected space token in expression position
+//│ ║  l.60: 	  
 //│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected indentation token
-//│ ║  l.64: 	  1
-//│ ╙──      	^^
-//│ 1
+//│ Parsed: 1;
 
 (1)
 //│ |(|1|)|
-//│ {1}
+//│ Parsed: {1}
 
 (1
 //│ |(|1|
 //│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
-//│ ║  l.78: 	(1
-//│ ╙──      	  
-//│ {1}
+//│ ║  l.72: 	(1
+//│ ║        	  
+//│ ╟── Note: unmatched parenthesis was opened here:
+//│ ║  l.72: 	(1
+//│ ╙──      	^
+//│ Parsed: {1}
 
 (1))
 //│ |(|1|)|)|
 //│ ╔══[ERROR] Expected end of input; found closing parenthesis token instead
-//│ ║  l.85: 	(1))
+//│ ║  l.82: 	(1))
 //│ ╙──      	   ^
-//│ {1}
+//│ Parsed: {1}
 
 (
 //│ |(|
 //│ ╔══[ERROR] Expected closing parenthesis token; found end of input instead
-//│ ║  l.92: 	(
-//│ ╙──      	 
-//│ {()}
+//│ ║  l.89: 	(
+//│ ║        	 
+//│ ╟── Note: unmatched parenthesis was opened here:
+//│ ║  l.89: 	(
+//│ ╙──      	^
+//│ Parsed: {()}
 
 )
 //│ |)|
-//│ ╔══[ERROR] Unexpected closing parenthesis token
+//│ ╔══[ERROR] Unexpected closing parenthesis token in expression position
 //│ ║  l.99: 	)
 //│ ╙──      	^
-//│ ()
+//│ Parsed: ()
 
 1+
 //│ |1|+|
-//│ ((+ 1) ())
+//│ Parsed: ((+ 1) ())
 
 *
 //│ |*|
-//│ ╔══[ERROR] Unexpected operator token
+//│ ╔══[ERROR] Unexpected operator token in expression position
 //│ ║  l.110: 	*
 //│ ╙──       	^
-//│ ()
+//│ Parsed: ()
+
+
+f 1, 2, 3
+//│ |f| |1|,| |2|,| |3|
+//│ Parsed: (f (1, 2, 3,))
+
+f 1,, 2
+//│ |f| |1|,|,| |2|
+//│ ╔══[ERROR] Unexpected comma token in expression position
+//│ ║  l.122: 	f 1,, 2
+//│ ╙──       	    ^
+//│ Parsed: (f (1, 2,))
+
 
 

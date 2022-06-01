@@ -36,7 +36,7 @@ object NewParser {
 class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => Unit, dbg: Bool) {
   
   def parse: Term = {
-    val t = expr(0)
+    val t = expr(0, allowSpace = false)
     // println(p.cur)
     // if (cur.nonEmpty) fail(cur)
     cur match {
@@ -83,7 +83,7 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
   def opCharPrec(opChar: Char): Int = prec(opChar)
   def opPrec(opStr: Str): (Int, Int) = {
     val r = opStr.last
-    (prec(opStr.head), prec(r) - (if (r == '@' || r == '/' || r == ',') 1 else 0))
+    (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
   }
   
   def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -111,7 +111,7 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
     cur = cur.tailOption.getOrElse(Nil)
     // _next = ite.nextOption
   }
-  def skip(tk: Token)(implicit n: Name): Unit = {
+  def skip(tk: Token, allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)(implicit n: Name): Unit = {
     // if (!cur.headOption.forall(_._1 === tk)) {
     //   // fail(cur)
     //   raise(CompilationError(msg"Expected: ${tk.describe}; found: ${ts.mkString("|")}" -> N :: Nil))
@@ -119,9 +119,10 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
     cur match {
       case (tk2, l2) :: _ =>
         if (tk2 =/= tk)
-          raise(CompilationError(msg"Expected ${tk.describe} token; found ${tk2.describe} instead" -> S(l2) :: Nil))
+          raise(CompilationError(msg"Expected ${tk.describe} token; found ${tk2.describe} instead" -> S(l2) :: note))
       case Nil =>
-        raise(CompilationError(msg"Expected ${tk.describe} token; found end of input instead" -> lastLoc :: Nil))
+        if (!allowEnd)
+          raise(CompilationError(msg"Expected ${tk.describe} token; found end of input instead" -> lastLoc :: note))
     }
     consume
   }
@@ -131,18 +132,42 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
   private lazy val lastLoc =
     tokens.lastOption.map(_._2.right)
   
-  def expr(prec: Int): Term =
+  def block: Ls[Term] =
     cur match {
+      case (DEINDENT, _) :: _ => Nil
+      case (NEWLINE, _) :: _ => consume; block
+      case _ =>
+        val t = expr(0, allowSpace = false)
+        cur match {
+          case (NEWLINE, _) :: _ => consume; t :: block
+          case _ => t :: Nil
+        }
+    }
+  
+  def expr(prec: Int, allowSpace: Bool = true): Term =
+    cur match {
+      case (SPACE, l0) :: _ if allowSpace =>
+        consume
+        expr(prec, allowSpace)
+      case (INDENT, l0) :: _ if allowSpace =>
+        consume
+        val ts = block
+        skip(DEINDENT, allowEnd = true, note =
+          msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
+        Blk(ts)
+      // case (NEWLINE, l0) :: _ =>
+      //   Tup(Nil).withLoc(lastLoc)
       case (LITVAL(lit), l0) :: _ =>
         consume
         exprCont(lit.withLoc(S(l0)), prec)
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec)
-      case (OPEN_BRACKET(Round), _) :: _ =>
+      case (OPEN_BRACKET(Round), l0) :: _ =>
         consume
         val res = expr(0)
-        skip(CLOSE_BRACKET(Round))
+        skip(CLOSE_BRACKET(Round), note =
+          msg"Note: unmatched parenthesis was opened here:" -> S(l0) :: Nil)
         exprCont(Bra(true, res), prec)
       // case Oper(opStr) :: _ if isPrefix(opStr) && opPrec(opStr)._1 > prec =>
       // case (IDENT(opStr, true), l0) :: _ if isPrefix(opStr) =>
@@ -154,7 +179,7 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
         Tup(Nil).withLoc(lastLoc)
       case (tk, l0) :: _ =>
         // fail(cur)
-        raise(CompilationError(msg"Unexpected ${tk.describe} token" -> S(l0) :: Nil))
+        raise(CompilationError(msg"Unexpected ${tk.describe} token in expression position" -> S(l0) :: Nil))
         consume
         expr(prec)
   }
@@ -170,8 +195,37 @@ class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => U
       // case Oper(opStr) :: _ if isPostfix(opStr) && opPrec(opStr)._1 > prec =>
       //   consume
       //   exprCont(Postfix(acc, opStr), prec)
-      case _ => acc
+      case (SPACE, l0) :: _ =>
+        consume
+        exprCont(acc, prec)
+      // case (SPACE, l0) :: _ =>
+      case (DEINDENT | COMMA | CLOSE_BRACKET(Round), _) :: _ => acc
+      case Nil => acc
+      case _ =>
+        // consume
+        val as = args(Nil)
+        App(acc, Tup(as.map(_.mapSecond(_ -> false))))
+      // case _ => acc
     }
+  
+  def args(acc: Ls[Opt[Var] -> Term]): Ls[Opt[Var] -> Term] =
+    cur match {
+      case (NEWLINE, _) :: _ =>
+        acc.reverse
+      case _ =>
+    // }
+    // {
+    
+    val e = expr(MinPrec)
+    cur match {
+      case (COMMA, l0) :: _ =>
+        consume
+        args((N -> e) :: acc)
+      case _ =>
+        ((N -> e) :: acc).reverse
+    }
+    
+  }
   
   
   
