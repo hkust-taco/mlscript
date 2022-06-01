@@ -13,18 +13,28 @@ import mlscript.JSTestBackend.Unimplemented
 import mlscript.JSTestBackend.UnexpectedCrash
 import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
+import org.scalatest.{funsuite, ParallelTestExecution}
 
-class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
-// class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
+class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
+// class DiffTests extends funsuite.AnyFunSuite {
+   
+  private val inParallel = isInstanceOf[ParallelTestExecution]
   
   import DiffTests._
-  files.foreach { file => val fileName = file.baseName; test(fileName) {
+  
+  files.foreach { file =>
+        val basePath = file.segments.drop(dir.segmentCount).toList.init
+        val testName = basePath.map(_ + "/").mkString + file.baseName
+        test(testName) {
     
-    val buf = mutable.ArrayBuffer.empty[Char]
-    buf ++= s"Processed  $fileName"
+    val baseStr = basePath.mkString("/")
     
-    // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
-    // println(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    val testStr = " " * (8 - baseStr.length) + baseStr + ": " + file.baseName
+    
+    if (!inParallel) print(s"Processing $testStr")
+    
+    // * For some reason, the color is sometimes wiped out when the line is later updated not in iTerm3:
+    // if (!inParallel) print(s"${Console.CYAN}Processing${Console.RESET} $testStr ... ")
     
     val beginTime = System.nanoTime()
     
@@ -174,8 +184,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
         // try to parse block of text into mlscript ast
         val ans = try parse(processedBlockStr,
-          p => if (file.ext =:= "fun") new Parser(Origin(fileName, globalStartLineNum, fph)).pgrm(p)
-            else new MLParser(Origin(fileName, globalStartLineNum, fph)).pgrm(p),
+          p => if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
+            else new MLParser(Origin(testName, globalStartLineNum, fph)).pgrm(p),
           verboseFailures = true)
         match {
           case f: Failure =>
@@ -639,13 +649,18 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val endTime = System.nanoTime()
     val timeStr = (((endTime - beginTime) / 1000 / 100).toDouble / 10.0).toString
     val testColor = if (testFailed) Console.RED else Console.GREEN
-    buf ++= s"${" " * (30 - fileName.size)}${testColor}${
-      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
+    
+    val resStr = s"${" " * (35 - testStr.size)}${testColor}${
+      " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}"
+    
+    if (inParallel) println(s"${Console.CYAN}Processed${Console.RESET}  $testStr$resStr")
+    else println(resStr)
+    
     if (result =/= fileContents) {
-      buf ++= s"! Updated $file\n"
+      println(s"! Updated $file")
       os.write.over(file, result)
     }
-    print(buf.mkString)
+    
     if (testFailed)
       if (unmergedChanges.nonEmpty)
         fail(s"Unmerged non-output changes around: " + unmergedChanges.map("l."+_).mkString(", "))
