@@ -306,7 +306,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
             val curBlockTypeDefs = typeDefs
               // add check from process type def block below
-              .flatMap(typeDef => if (!oldCtx.tyDefs.contains(typeDef.nme.name)) ctx.tyDefs.get(typeDef.nme.name) else None)
+              .flatMap(td => if (!oldCtx.tyDefs.contains(td.nme.name)) ctx.tyDefs.get(td.nme.name) else None)
+            
             // activate typer tracing if variance debugging is on and then set it back
             // this makes it possible to debug variance in isolation
             var temp = typer.dbg
@@ -315,7 +316,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.dbg = temp
             val varianceWarnings: MutMap[TypeName, Ls[TypeName]] = MutMap()
 
-            // process type definitions first
+            // show the result of type inference for each processed type def
             typeDefs.foreach(td =>
               // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)

@@ -180,9 +180,12 @@ object Main {
     def formatError(culprit: Str, err: TypeError): Str = {
       s"""<b><font color="Red">
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
-                ${err.allMsgs.tail
-        .map(_._1.show.toString + "<br/>")
-        .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}
+                <!--${
+                  // The rest of the message may not make sense if we don't also print the provs
+                  // For example we'd get things like "Declared at\nDeclared at" for dup type params...
+                  err.allMsgs.tail
+                    .map(_._1.show.toString + "<br/>")
+                    .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}-->
                 </font></b><br/>"""
     }
     
@@ -194,6 +197,9 @@ object Main {
           res ++= formatError("class definitions", err)
           Ctx.init
       }
+    
+    val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
+    typer.computeVariances(curBlockTypeDefs, ctx)
     
     def getType(ty: typer.TypeScheme): Type = {
       val wty = ty.uninstantiatedBody
