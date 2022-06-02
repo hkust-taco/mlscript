@@ -23,28 +23,13 @@ fun f x = x
 //│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
 //│ ║  l.21: 	fun f x = x
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Unexpected '=' keyword in expression position
-//│ ║  l.21: 	fun f x = x
-//│ ╙──      	        ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.21: 	fun f x = x
-//│ ╙──      	      ^^^^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.21: 	fun f x = x
-//│ ╙──      	    ^^^^^^^
 //│ Parsed: {f (x (x,),)}
 
 fun f(x) = x
 //│ |#fun| |f|(|x|)| |#=| |x|
 //│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.37: 	fun f(x) = x
+//│ ║  l.28: 	fun f(x) = x
 //│ ╙──      	^^^
-//│ ╔══[ERROR] Unexpected '=' keyword in expression position
-//│ ║  l.37: 	fun f(x) = x
-//│ ╙──      	         ^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.37: 	fun f(x) = x
-//│ ╙──      	    ^^^^^^^^
 //│ Parsed: {f (x,) (x,)}
 
 f(x) + x

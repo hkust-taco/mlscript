@@ -105,7 +105,7 @@ x: 1,
 //│ ╙──       	 ^
 //│ ╔══[ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.101: 	x: 1,
-//│ ╙──       	     
+//│ ╙──       	     ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.101: 	x: 1,
 //│ ╙──       	^^^^^

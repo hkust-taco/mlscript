@@ -10,8 +10,10 @@ import mlscript.Message._
 object NewParser {
   
   type ExpectThen >: Bool
+  type FoundErr >: Bool  // may be better done as:  class FoundErr(var found: Bool)
   
   def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
+  def foundErr(implicit ptr: FoundErr): Bool = ptr === true
   
   // def parse(ts: Iterable[Token], debug: Boolean = false): Term = {
   //   val p = new NewParser(ts.iterator, debug)
@@ -38,8 +40,11 @@ object NewParser {
 }
 import NewParser._
 
-abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => Unit, val dbg: Bool) {
-
+abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Diagnostic => Unit, val dbg: Bool) {
+  
+  def raise(mkDiag: => Diagnostic)(implicit fe: FoundErr = false): Unit =
+    if (!foundErr) raiseFun(mkDiag)
+  
   def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
 
@@ -145,7 +150,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     // _next = ite.nextOption
   }
   def skip(tk: Token, ignored: Set[Token] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)
-        (implicit n: Name): Opt[Loc] = {
+        // (implicit n: Name): Loc \/ Opt[Loc] = {
+        (implicit n: Name): (Bool, Opt[Loc]) = {
     require(!ignored(tk))
     // if (!cur.headOption.forall(_._1 === tk)) {
     //   // fail(cur)
@@ -156,24 +162,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         if (ignored(tk2)) {
           consume
           skip(tk, ignored, allowEnd, note)
-        } else if (tk2 =/= tk)
+        } else if (tk2 =/= tk) {
           raise(CompilationError(msg"Expected ${tk.describe}; found ${tk2.describe} instead" -> S(l2) :: note))
-        S(l2)
+          (false, S(l2))
+        } else (true, S(l2))
       case Nil =>
         if (!allowEnd)
           raise(CompilationError(msg"Expected ${tk.describe}; found end of input instead" -> lastLoc :: note))
-        N
+        (allowEnd, N)
     }
     consume
     res
   }
-  private def skipDeindent = 
+  // private def skipDeindent: Loc \/ Opt[Loc] = 
+  private def skipDeindent: (Bool, Opt[Loc]) =
     cur match {
-      case (DEINDENT, _) :: _ => consume
-      case (NEWLINE, l0) :: _ => consume; _cur ::= (INDENT, l0)
-      case Nil => ()
+      case (DEINDENT, l0) :: _ => consume; (true, S(l0))
+      case (NEWLINE, l0) :: _ => consume; _cur ::= (INDENT, l0); (true, N)
+      case Nil => (true, N)
       case (tk, l0) :: _ =>
         raise(CompilationError(msg"Expected end of indented block; found ${tk.describe} instead" -> S(l0) :: Nil))
+        (false, S(l0))
     }
   
   import BracketKind._
@@ -184,7 +193,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private def curLoc = _cur.headOption.map(_._2)
   
   def blockTerm: Term = {
-    val ts = block(false)
+    val ts = block(false, false)
     // skip(DEINDENT, allowEnd = true, note =
     //   msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
     // R(Blk(ts)) // TODO
@@ -197,7 +206,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     Blk(es)
   }
   
-  def block(implicit et: ExpectThen): Ls[IfBody \/ Term] =
+  def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Term] =
     cur match {
       case (DEINDENT, _) :: _ => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -209,8 +218,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         }
     }
   
-  def expr(prec: Int, allowSpace: Bool = true): Term =
-    exprOrIf(prec, allowSpace)(et = false) match {
+  def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr): Term =
+    exprOrIf(prec, allowSpace)(et = false, fe = fe) match {
       case R(e) => e
       case L(e) =>
         // ??? // TODO
@@ -221,7 +230,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
     raise(Warning(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
   
-  def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen): IfBody \/ Term = wrap {
+  def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr): IfBody \/ Term = wrap {
     implicit val n: Name = Name(s"exprOrIf($prec,$et)")
     // if (prec > 10) ???
     cur match {
@@ -249,7 +258,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         // val res = expr(0)
         val res = args(Nil)
-        val l1 = skip(CLOSE_BRACKET(bk), note =
+        val (success, l1) = skip(CLOSE_BRACKET(bk), note =
           msg"Note: unmatched ${bk.name} was opened here:" -> S(l0) :: Nil)
         exprCont(Bra(bk === Curly, Tup(res)).withLoc(S(l0 ++ l1)), prec)
       // case Oper(opStr) :: _ if isPrefix(opStr) && opPrec(opStr)._1 > prec =>
@@ -291,7 +300,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           msg"Note: unmatched if here:" -> S(l0) :: Nil)
         val thn = expr(0)
         */
-        val body = exprOrIf(0)(et = true) match {
+        val body = exprOrIf(0)(et = true, fe = fe) match {
           case L(b) => b
           case R(e) =>
             // ??? // TODO
@@ -347,14 +356,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // fail(cur)
         raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
         consume
-        exprOrIf(prec)
+        exprOrIf(prec)(et = et, fe = true)
   }}
   
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen): IfBody \/ Term = {
+  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen, fe: FoundErr): IfBody \/ Term = {
     implicit val n: Name = Name(s"exprCont($prec,$et)")
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
@@ -393,8 +402,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         consume
         val rhs = expr(opPrec(opStr)._2) // TODO if
-        skipDeindent
-        exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
+        val (success, _) = skipDeindent
+        exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)(et = et, fe = foundErr || !success)
       case Nil => R(acc)
       case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
         consume
@@ -441,9 +450,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         val res = App(acc, Tup(as))
         openedPar match {
           case S(l0) =>
-            skip(CLOSE_BRACKET(Round), note =
+            val (success, _) = skip(CLOSE_BRACKET(Round), note =
               msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
-            exprCont(res, 0)
+            exprCont(res, 0)(et = et, fe = foundErr || !success)
           case N =>
             if (ofLess)
               raise(Warning(msg"Paren-less applications should use the 'of' keyword"
@@ -457,7 +466,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   }
   
   // TODO support comma-less arg blocks...
-  def args(acc: Ls[Opt[Var] -> (Term -> Bool)]): Ls[Opt[Var] -> (Term -> Bool)] =
+  def args(acc: Ls[Opt[Var] -> (Term -> Bool)])(implicit fe: FoundErr): Ls[Opt[Var] -> (Term -> Bool)] =
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -493,7 +502,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     
   }
   
-  def bindings(acc: Ls[Var -> Term]): Ls[Var -> Term] = 
+  def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -504,8 +513,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         // skip(EQUALS)
         // skip(IDENT("=", true)) // TODO kw?
-        skip(KEYWORD("=")) // TODO kw?
-        val rhs = expr(0)
+        val (success, _) = skip(KEYWORD("=")) // TODO kw?
+        val rhs = expr(0)(fe = foundErr || !success)
         // cur.dropWhile(_ === SPACE) match {
         //   case (KEYWORD("in"), _) :: _ =>
         //     acc.reverse

@@ -237,6 +237,7 @@ class DiffTests extends funsuite.AnyFunSuite with ParallelTestExecution {
                     + " " * pre.length + "\t" + " " * (c - 1))
                   val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
                   while (c < lastCol) { out.print('^'); c += 1 }
+                  if (c =:= startLineCol) out.print('^')
                   out.println
                   c = 1
                   l += 1
