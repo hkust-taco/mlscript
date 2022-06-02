@@ -242,7 +242,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           case L(b) => b
           case R(e) =>
             // ??? // TODO
-            raise(CompilationError(msg"Expected 'then' clause; found ${e.describe} instead" -> e.toLoc ::
+            val (desc, loc) = _cur match {
+              case (tk, l1) :: _ => (tk.describe, S(l1))
+              case Nil => (e.describe, e.toLoc)
+            }
+            raise(CompilationError(msg"Expected 'then' clause; found ${desc} instead" -> 
+                // e.toLoc ::
+                // curLoc ::
+                loc ::
               msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
             IfThen(e, errExpr)
         }

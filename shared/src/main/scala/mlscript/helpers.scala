@@ -319,37 +319,39 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Assign(lhs, rhs) => "assignment"
   }
   
-  override def toString: Str = this match {
-    case Bra(true, trm) => s"{$trm}"
-    case Bra(false, trm) => s"($trm)"
-    // case Blk(stmts) => stmts.map("" + _ + ";").mkString(" ")
-    case Blk(stmts) => stmts.mkString("‹", "; ", "›")
-    // case Blk(stmts) => stmts.map("" + _ + ";").mkString("‹", " ", "›") // for better legibility in debugging
+  override def toString: Str = show(false)
+  
+  def show(brackets: Bool): Str = {
+      def bra(str: Str): Str = if (brackets) s"($str)" else str
+      this match {
+    case Bra(true, trm) => s"'{' $trm '}'"
+    case Bra(false, trm) => s"'(' $trm ')'"
+    case Blk(stmts) => stmts.mkString("{", "; ", "}")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case Var(name) => name
-    case Asc(trm, ty) => s"$trm : $ty"
-    case Lam(name, rhs) => s"($name => $rhs)"
-    case App(lhs, rhs) => s"($lhs $rhs)"
+    case Asc(trm, ty) => s"$trm : $ty"  |> bra
+    case Lam(name, rhs) => s"$name => $rhs" |> bra
+    case App(lhs, rhs) => s"${lhs.show(!lhs.isInstanceOf[App])} ${rhs.show(true)}" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
         (if (nv._2._2) "mut " else "") + nv._1.name + ": " + nv._2._1).mkString("{", ", ", "}")
     case Sel(receiver, fieldName) => receiver.toString + "." + fieldName
     case Let(isRec, name, rhs, body) =>
-      s"(let${if (isRec) " rec" else ""} $name = $rhs; $body)"
+      s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
     case Tup(xs) =>
       xs.iterator.map { case (n, t) =>
         (if (t._2) "mut " else "") + n.fold("")(_.name + ": ") + t._1 + "," }.mkString("(", " ", ")")
-    case Bind(l, r) => s"($l as $r)"
-    case Test(l, r) => s"($l is $r)"
-    case With(t, fs) =>  s"$t with $fs"
-    case CaseOf(s, c) => s"case $s of $c"
+    case Bind(l, r) => s"$l as $r" |> bra
+    case Test(l, r) => s"$l is $r" |> bra
+    case With(t, fs) =>  s"$t with $fs" |> bra
+    case CaseOf(s, c) => s"case $s of $c" |> bra
     case Subs(a, i) => s"$a[$i]"
-    case Assign(lhs, rhs) => s" $lhs <- $rhs"
-    case If(body, els) => s"if $body" + els.fold("")(" else " + _)
-  }
+    case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
+    case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
+  }}
   
   def toType: Diagnostic \/ Type =
     try R(toType_!) catch {
