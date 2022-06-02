@@ -170,8 +170,8 @@ object NewLexer {
     // "or",
     "let",
     "in",
-    "any",
-    "all",
+    // "any",
+    // "all",
   )
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {

@@ -43,8 +43,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     // printDbg(p.cur)
     // if (cur.nonEmpty) fail(cur)
     cur match {
-      case (tk, tkl) :: _ =>
-        raise(CompilationError(msg"Expected end of input; found ${tk.describe} instead" -> S(tkl) :: Nil))
+      case c @ (tk, tkl) :: _ =>
+        val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
+        raise(CompilationError(msg"Expected end of input; found ${relevantToken.describe} instead" -> S(rl) :: Nil))
       case Nil => ()
     }
     res
@@ -242,6 +243,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           case L(b) => b
           case R(e) =>
             // ??? // TODO
+            /* 
             val (desc, loc) = _cur match {
               case (tk, l1) :: _ => (tk.describe, S(l1))
               case Nil => (e.describe, e.toLoc)
@@ -250,6 +252,17 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
                 // e.toLoc ::
                 // curLoc ::
                 loc ::
+              msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
+            */
+            val (found, loc) = _cur.dropWhile(_._1 === SPACE) match {
+              case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
+                // e.toLoc.fold(S(l1))(_ ++ l1 |> some))
+                // e.toLoc.fold(S(l1))(_ ++ l1 |> some))
+                S(e.toLoc.fold(l1)(_ ++ l1)))
+                // e.toLoc.orElse(S(l1)))
+              case Nil => (msg"${e.describe}", e.toLoc)
+            }
+            raise(CompilationError(msg"Expected 'then' clause; found $found instead" -> loc ::
               msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
             IfThen(e, errExpr)
         }
@@ -272,8 +285,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         if (hasIndent) skipDeindent
         R(If(body, els))
       case Nil =>
-        // UnitLit
-        R(errExpr) // TODO
+        raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
+        R(errExpr)
+      case //Nil | 
+      ((CLOSE_BRACKET(_) /* | NEWLINE | DEINDENT */, _) :: _)=>
+        R(UnitLit(true))
+        // R(errExpr) // TODO
       case (tk, l0) :: _ =>
         // fail(cur)
         raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
@@ -282,7 +299,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   }
   
   private def errExpr =
-    Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
+    // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
+    UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
   def exprCont(acc: Term, prec: Int): IfBody \/ Term = {
     implicit val n: Name = Name(s"exprCont($prec)")
@@ -363,14 +381,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           case S(l0) =>
             skip(CLOSE_BRACKET(Round), note =
               msg"Note: unmatched application parenthesis was opened here:" -> S(l0) :: Nil)
+            exprCont(res, 0)
           case N =>
             if (ofLess)
               raise(Warning(msg"Paren-less applications should use the 'of' keyword"
                 // -> ofKw :: Nil))
                 -> res.toLoc :: Nil))
-            ()
+            R(res)
         }
-        R(res)
       case _ => R(acc)
     }
   }

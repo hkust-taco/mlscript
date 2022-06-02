@@ -743,12 +743,19 @@ object DiffTests {
     // "Subsume",
     // "Methods",
   )
-  private def filter(name: Str): Bool =
-    if (focused.nonEmpty) focused(name) else modified.isEmpty || modified(name)
+  // private def filter(name: Str): Bool =
+  private def filter(file: os.Path): Bool = {
+    val name = file.baseName
+    if (focused.nonEmpty) focused(name) else modified(name) || modified.isEmpty &&
+      // false
+      // name.startsWith("new/")
+      file.segments.toList.init.lastOption.contains("new")
+  }
   
   private val files = allFiles.filter { file =>
       val fileName = file.baseName
-      validExt(file.ext) && filter(fileName)
+      // validExt(file.ext) && filter(fileName)
+      validExt(file.ext) && filter(file)
   }
   
   

@@ -81,44 +81,70 @@ if lol
 //│ ╟── Note: 'if' expression started here:
 //│ ║  l.76: 	if lol
 //│ ╙──      	^^
-//│ Parsed: {if lol then ()}
+//│ Parsed: {if lol then undefined}
 
 if lol then
 //│ |#if| |lol| |#then|
-//│ Parsed: {if lol then ()}
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.86: 	if lol then
+//│ ╙──      	           
+//│ Parsed: {if lol then undefined}
 
 if lol then else
 //│ |#if| |lol| |#then| |#else|
 //│ ╔══[ERROR] Unexpected 'else' keyword in expression position
-//│ ║  l.90: 	if lol then else
+//│ ║  l.93: 	if lol then else
 //│ ╙──      	            ^^^^
-//│ Parsed: {if lol then ()}
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.93: 	if lol then else
+//│ ╙──      	                
+//│ Parsed: {if lol then undefined}
 
 if lol
 then
 else
 //│ |#if| |lol|↵|#then|↵|#else|
 //│ ╔══[ERROR] Unexpected newline in expression position
-//│ ║  l.98: 	then
-//│ ║        	    
-//│ ║  l.99: 	else
-//│ ╙──      	
+//│ ║  l.104: 	then
+//│ ║         	    
+//│ ║  l.105: 	else
+//│ ╙──       	
 //│ ╔══[ERROR] Unexpected 'else' keyword in expression position
-//│ ║  l.99: 	else
-//│ ╙──      	^^^^
-//│ Parsed: {if lol then ()}
+//│ ║  l.105: 	else
+//│ ╙──       	^^^^
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.105: 	else
+//│ ╙──       	    
+//│ Parsed: {if lol then undefined}
 
 if lol else 2
 //│ |#if| |lol| |#else| |2|
-//│ ╔══[ERROR] Expected 'then' clause; found 'else' keyword instead
-//│ ║  l.111: 	if lol else 2
-//│ ║         	       ^^^^
+//│ ╔══[ERROR] Expected 'then' clause; found reference followed by 'else' keyword instead
+//│ ║  l.120: 	if lol else 2
+//│ ║         	   ^^^^^^^^
 //│ ╟── Note: 'if' expression started here:
-//│ ║  l.111: 	if lol else 2
+//│ ║  l.120: 	if lol else 2
 //│ ╙──       	^^
-//│ Parsed: {if lol then () else 2}
+//│ Parsed: {if lol then undefined else 2}
 
 
+x = if true then false else maybe
+//│ |x| |=| |#if| |true| |#then| |false| |#else| |maybe|
+//│ Parsed: {= x (if true then false else maybe)}
+
+x =
+  if true then
+y = 1
+//│ |x| |=|→|#if| |true| |#then|←|↵|y| |=| |1|
+//│ ╔══[ERROR] Unexpected deindentation in expression position
+//│ ║  l.137: 	y = 1
+//│ ╙──       	
+//│ ╔══[ERROR] Unexpected newline in expression position
+//│ ║  l.136: 	  if true then
+//│ ║         	              
+//│ ║  l.137: 	y = 1
+//│ ╙──       	
+//│ Parsed: {= x {if true then = y 1}}
 
 
 

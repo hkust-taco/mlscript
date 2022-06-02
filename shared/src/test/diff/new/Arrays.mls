@@ -1,0 +1,85 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+[]
+//│ |[|]|
+//│ ╔══[ERROR] Unexpected opening square bracket in expression position
+//│ ║  l.5: 	[]
+//│ ╙──     	^
+//│ ╔══[ERROR] Expected end of input; found closing square bracket instead
+//│ ║  l.5: 	[]
+//│ ╙──     	 ^
+//│ Parsed: {undefined}
+
+[1]
+//│ |[|1|]|
+//│ ╔══[ERROR] Unexpected opening square bracket in expression position
+//│ ║  l.15: 	[1]
+//│ ╙──      	^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.15: 	[1]
+//│ ╙──      	 ^
+//│ ╔══[ERROR] Expected end of input; found closing square bracket instead
+//│ ║  l.15: 	[1]
+//│ ╙──      	  ^
+//│ Parsed: {1 (undefined,)}
+
+[1,]
+//│ |[|1|,|]|
+//│ ╔══[ERROR] Unexpected opening square bracket in expression position
+//│ ║  l.28: 	[1,]
+//│ ╙──      	^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.28: 	[1,]
+//│ ╙──      	  ^
+//│ Parsed: {1}
+
+[1, 2, 3]
+//│ |[|1|,| |2|,| |3|]|
+//│ ╔══[ERROR] Unexpected opening square bracket in expression position
+//│ ║  l.38: 	[1, 2, 3]
+//│ ╙──      	^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.38: 	[1, 2, 3]
+//│ ╙──      	  ^
+//│ Parsed: {1}
+
+()
+//│ |(|)|
+//│ Parsed: {'(' undefined ')'}
+
+(1)
+//│ |(|1|)|
+//│ Parsed: {'(' 1 ')'}
+
+(1,)
+//│ |(|1|,|)|
+//│ ╔══[ERROR] Expected closing parenthesis; found comma instead
+//│ ║  l.56: 	(1,)
+//│ ║        	  ^
+//│ ╟── Note: unmatched parenthesis was opened here:
+//│ ║  l.56: 	(1,)
+//│ ╙──      	^
+//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
+//│ ║  l.56: 	(1,)
+//│ ╙──      	   ^
+//│ Parsed: {'(' 1 ')'}
+
+(1, 2, 3)
+//│ |(|1|,| |2|,| |3|)|
+//│ ╔══[ERROR] Expected closing parenthesis; found comma instead
+//│ ║  l.69: 	(1, 2, 3)
+//│ ║        	  ^
+//│ ╟── Note: unmatched parenthesis was opened here:
+//│ ║  l.69: 	(1, 2, 3)
+//│ ╙──      	^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.69: 	(1, 2, 3)
+//│ ╙──      	 ^^^^^^^
+//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
+//│ ║  l.69: 	(1, 2, 3)
+//│ ╙──      	        ^
+//│ Parsed: {'(' 1 ')' (2, 3,)}
+
+
