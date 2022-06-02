@@ -240,6 +240,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       //   consume
       //   val rhs = expr(opPrec(opStr)._2)
       //   exprCont(Prefix(opStr, rhs), prec)
+      case (KEYWORD("let"), l0) :: _ =>
+        consume
+        val bs = bindings(Nil)
+        // Let(false, )
+        // ???
+        val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
+          case (KEYWORD("in") | IDENT(";", true), _) :: _ =>
+            consume
+            expr(0)
+          case (NEWLINE, _) :: _ =>
+            // UnitLit(true)
+            consume
+            expr(0)
+          case _ =>
+            UnitLit(true)
+        }
+        R(bs.foldRight(body) { case ((v, r), acc) => Let(false, v, r, acc) })
       case (KEYWORD("if"), l0) :: _ =>
         consume
         /* 
@@ -366,7 +383,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // skip(DEINDENT)
         skipDeindent
         L(IfThen(acc, e))
-      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       
       // case c =>
       // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
@@ -442,6 +459,35 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         ((argName -> e) :: acc).reverse
     }
     
+  }
+  
+  def bindings(acc: Ls[Var -> Term]): Ls[Var -> Term] = 
+    cur match {
+      case (SPACE, _) :: _ =>
+        consume
+        bindings(acc)
+      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
+        acc.reverse
+      case (IDENT(id, false), l0) :: _ =>
+        consume
+        // skip(EQUALS)
+        skip(IDENT("=", true)) // TODO kw?
+        val rhs = expr(0)
+        // cur.dropWhile(_ === SPACE) match {
+        //   case (KEYWORD("in"), _) :: _ =>
+        //     acc.reverse
+        //   case _ => ???
+        // }
+        val v = Var(id).withLoc(S(l0))
+        cur match {
+          case (COMMA, l1) :: _ =>
+            consume
+            bindings((v -> rhs) :: acc)
+          case _ =>
+            ((v -> rhs) :: acc).reverse
+        }
+      case _ =>
+        Nil
   }
   
   
