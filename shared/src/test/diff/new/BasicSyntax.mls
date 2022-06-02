@@ -463,7 +463,7 @@ acc
   + 2
   * 3
 //│ |acc|→|+| |1|↵|+| |2|↵|*| |3|
-//│ Parsed: {+ (+ acc 1) (* 2 3)}
+//│ Parsed: {* (+ (+ acc 1) 2) 3}
 
 acc + 1 + 2 * 3
 //│ |acc| |+| |1| |+| |2| |*| |3|
@@ -504,14 +504,14 @@ c
 a + b
   * 2
 //│ |a| |+| |b|→|*| |2|
-//│ Parsed: {+ a (* b 2)}
+//│ Parsed: {* (+ a b) 2}
 
 a + b
   * 2
   + 1
   * 3
 //│ |a| |+| |b|→|*| |2|↵|+| |1|↵|*| |3|
-//│ Parsed: {+ (+ a (* b 2)) (* 1 3)}
+//│ Parsed: {* (+ (* (+ a b) 2) 1) 3}
 
 a + b
   * 2
@@ -520,7 +520,7 @@ a + b
 //│ ╔══[ERROR] Expected end of indented block; found indentation instead
 //│ ║  l.518: 	    + 1
 //│ ╙──       	^^^^
-//│ Parsed: {+ (+ a (* b 2)) 1}
+//│ Parsed: {+ (* (+ a b) 2) 1}
 
 a + b
   * 2
@@ -530,7 +530,7 @@ a + b
 //│ ╔══[ERROR] Expected end of indented block; found indentation instead
 //│ ║  l.527: 	    + 1
 //│ ╙──       	^^^^
-//│ Parsed: {* (+ (+ a (* b 2)) 1) 3}
+//│ Parsed: {* (+ (* (+ a b) 2) 1) 3}
 
 a +
   b
@@ -538,7 +538,7 @@ a +
   + 1
   * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|↵|*| |3|
-//│ Parsed: {+ a {+ (* b 2) (* 1 3)}}
+//│ Parsed: {+ a {* (+ (* b 2) 1) 3}}
 
 a +
     b
@@ -563,7 +563,7 @@ a +
   + 1
     * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|→|*| |3|
-//│ Parsed: {+ a {+ (* b 2) (* 1 3)}}
+//│ Parsed: {+ a {* (+ (* b 2) 1) 3}}
 
 
 a then b

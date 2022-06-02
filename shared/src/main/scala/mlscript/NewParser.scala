@@ -378,14 +378,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         consume
         exprCont(acc, prec)
       // case (SPACE, l0) :: _ =>
-      case (NEWLINE, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      // case (NEWLINE, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      case (NEWLINE, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ prec === 0 =>
         // ??? // TODO
         consume
         consume
         val rhs = expr(opPrec(opStr)._2) // TODO if
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       // case (NEWLINE, _) :: (INDENT, _) :: (IDENT(opStr, true), l0) :: _ =>
-      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      // case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
+      case (INDENT, _) :: (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ prec === 0 =>
         // consume
         // ??? // TODO
         consume
