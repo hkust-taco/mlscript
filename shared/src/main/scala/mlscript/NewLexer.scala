@@ -172,6 +172,7 @@ object NewLexer {
     "in",
     // "any",
     // "all",
+    "mut",
   )
   
   def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {

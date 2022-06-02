@@ -8,7 +8,7 @@ x => x
 
 (x) => x
 //│ |(|x|)| |=>| |x|
-//│ Parsed: {=> '(' x ')' x}
+//│ Parsed: {=> '(' x, ')' x}
 
 fun x => x
 //│ |#fun| |x| |=>| |x|
@@ -42,18 +42,6 @@ f(x) + x
 
 (x, y) => x
 //│ |(|x|,| |y|)| |=>| |x|
-//│ ╔══[ERROR] Expected closing parenthesis; found comma instead
-//│ ║  l.43: 	(x, y) => x
-//│ ║        	  ^
-//│ ╟── Note: unmatched parenthesis was opened here:
-//│ ║  l.43: 	(x, y) => x
-//│ ╙──      	^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.43: 	(x, y) => x
-//│ ╙──      	 ^^^^
-//│ ╔══[ERROR] Expected end of input; found closing parenthesis instead
-//│ ║  l.43: 	(x, y) => x
-//│ ╙──      	     ^
-//│ Parsed: {'(' x ')' (y,)}
+//│ Parsed: {=> '(' x, y, ')' x}
 
 

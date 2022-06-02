@@ -36,6 +36,7 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin) {
     require(this.origin is that.origin)
     Loc(this.spanStart min that.spanStart, this.spanEnd max that.spanEnd, origin)
   }
+  def ++(that: Opt[Loc]): Loc = that.fold(this)(this ++ _)
   def right: Loc = copy(spanStart = spanEnd)
   def left: Loc = copy(spanEnd = spanStart)
 }
