@@ -66,10 +66,12 @@ f of
 //│ ╟── Note: indented block starts here:
 //│ ║  l.61: 	  1, 2, 3
 //│ ╙──      	^^
-//│ ╔══[ERROR] Expected end of input; found literal instead
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.60: 	f of
+//│ ║        	^^^^
 //│ ║  l.61: 	  1, 2, 3
-//│ ╙──      	     ^
-//│ Parsed: {f ({1},)}
+//│ ╙──      	^^^^^^^^^
+//│ Parsed: {f ({1},) (2, 3,)}
 
 f of
   1,
@@ -77,13 +79,13 @@ f of
   3
 //│ |f| |#of|→|1|,|↵|2|,|↵|3|
 //│ ╔══[ERROR] Expected deindentation; found comma instead
-//│ ║  l.75: 	  1,
+//│ ║  l.77: 	  1,
 //│ ║        	   ^
 //│ ╟── Note: indented block starts here:
-//│ ║  l.75: 	  1,
+//│ ║  l.77: 	  1,
 //│ ╙──      	^^
 //│ ╔══[ERROR] Expected end of input; found comma instead
-//│ ║  l.76: 	  2,
+//│ ║  l.78: 	  2,
 //│ ╙──      	   ^
 //│ Parsed: {f ({1},); 2}
 

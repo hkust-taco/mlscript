@@ -9,6 +9,10 @@ import mlscript.Message._
 
 object NewParser {
   
+  type ExpectThen >: Bool
+  
+  def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
+  
   // def parse(ts: Iterable[Token], debug: Boolean = false): Term = {
   //   val p = new NewParser(ts.iterator, debug)
   //   val t = p.expr(0)
@@ -32,13 +36,19 @@ object NewParser {
   //     cs.filterNot(_.isWhitespace).map(_ -> i)
   // }.toMap.withDefaultValue(Int.MaxValue) // prec('~') == 2147483647
 }
+import NewParser._
 
 abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagnostic => Unit, val dbg: Bool) {
 
   def mkLoc(l: Int, r: Int): Loc =
     Loc(l, r, origin)
 
-  def printDbg(msg: => Any): Unit
+  protected def printDbg(msg: => Any): Unit
+  protected var indent = 0
+  private def wrap[R](mkRes: => R) = try {
+    indent += 1
+    mkRes
+  } finally indent -= 1
   
   def parseAll[R](parser: => R): R = {
     // val t = expr(0, allowSpace = false)
@@ -63,9 +73,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   type LTL = Ls[TokLoc]
   
   private val MinPrec = 0
+  private val NoElsePrec = MinPrec + 1
   
   private val prec: Map[Char,Int] =
     List(
+      "", // 0 is the virtual precedence of 'else'
+      "",
       "",
       "",
       "",
@@ -92,8 +105,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   
   def opCharPrec(opChar: Char): Int = prec(opChar)
   def opPrec(opStr: Str): (Int, Int) = opStr match {
-    case "and" => (2, 2)
-    case "or" => (1, 1)
+    case "and" => (3, 3)
+    case "or" => (2, 2)
+    case _ if opStr.exists(_.isLetter) =>
+      (4, 4)
     case _ =>
       val r = opStr.last
       (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',') 1 else 0))
@@ -158,7 +173,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       case (NEWLINE, l0) :: _ => consume; _cur ::= (INDENT, l0)
       case Nil => ()
       case (tk, l0) :: _ =>
-        raise(CompilationError(msg"Expected deindent; found ${tk.describe} instead" -> S(l0) :: Nil))
+        raise(CompilationError(msg"Expected end of indented block; found ${tk.describe} instead" -> S(l0) :: Nil))
     }
   
   import BracketKind._
@@ -169,7 +184,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private def curLoc = _cur.headOption.map(_._2)
   
   def blockTerm: Term = {
-    val ts = block
+    val ts = block(false)
     // skip(DEINDENT, allowEnd = true, note =
     //   msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
     // R(Blk(ts)) // TODO
@@ -182,7 +197,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     Blk(es)
   }
   
-  def block: Ls[IfBody \/ Term] =
+  def block(implicit et: ExpectThen): Ls[IfBody \/ Term] =
     cur match {
       case (DEINDENT, _) :: _ => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -195,7 +210,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     }
   
   def expr(prec: Int, allowSpace: Bool = true): Term =
-    exprOrIf(prec, allowSpace) match {
+    exprOrIf(prec, allowSpace)(et = false) match {
       case R(e) => e
       case L(e) =>
         // ??? // TODO
@@ -206,7 +221,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
     raise(Warning(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil))
   
-  def exprOrIf(prec: Int, allowSpace: Bool = true): IfBody \/ Term =
+  def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen): IfBody \/ Term = wrap {
+    implicit val n: Name = Name(s"exprOrIf($prec,$et)")
+    // if (prec > 10) ???
     cur match {
       case (SPACE, l0) :: _ if allowSpace =>
         consume
@@ -274,7 +291,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
           msg"Note: unmatched if here:" -> S(l0) :: Nil)
         val thn = expr(0)
         */
-        val body = exprOrIf(0) match {
+        val body = exprOrIf(0)(et = true) match {
           case L(b) => b
           case R(e) =>
             // ??? // TODO
@@ -331,14 +348,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         raise(CompilationError(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil))
         consume
         exprOrIf(prec)
-  }
+  }}
   
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int): IfBody \/ Term = {
-    implicit val n: Name = Name(s"exprCont($prec)")
+  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen): IfBody \/ Term = {
+    implicit val n: Name = Name(s"exprCont($prec,$et)")
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
@@ -346,6 +363,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // // exprCont(Infix(acc, opStr, rhs), prec)
         // exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
         val v = Var(opStr).withLoc(N/*TODO*/)
+        // printDbg(s">>> $opStr ${opPrec(opStr)}")
         exprOrIf(opPrec(opStr)._2) match {
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
@@ -376,16 +394,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         skipDeindent
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)
       case Nil => R(acc)
-      case (KEYWORD("then"), _) :: _ =>
+      case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
         consume
         val e = expr(0)
         L(IfThen(acc, e))
-      case (NEWLINE, _) :: (KEYWORD("then"), _) :: _ =>
+      case (NEWLINE, _) :: (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
         consume
         consume
         val e = expr(0)
         L(IfThen(acc, e))
-      case (INDENT, _) :: (KEYWORD("then"), _) :: _ =>
+      case (INDENT, _) :: (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
         consume
         consume
         val e = expr(0)
@@ -429,7 +447,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
               raise(Warning(msg"Paren-less applications should use the 'of' keyword"
                 // -> ofKw :: Nil))
                 -> res.toLoc :: Nil))
-            R(res)
+            // R(res)
+            exprCont(res, 0)
         }
       case _ => R(acc)
     }
@@ -455,13 +474,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     }
     val argName = cur match {
       // case (IDENT(idStr, false), l0) :: (IDENT(":", true), _) :: _ =>
-      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ =>
+      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
         consume
         consume
         S(Var(idStr).withLoc(S(l0)))
       case _ => N
     }
-    val e = expr(MinPrec) -> argMut.isDefined
+    val e = expr(NoElsePrec) -> argMut.isDefined
     cur match {
       case (COMMA, l0) :: _ =>
         consume

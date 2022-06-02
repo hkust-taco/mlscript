@@ -659,7 +659,8 @@ trait IfBodyImpl extends Located { self: IfBody =>
   // }
   
   override def toString: String = this match {
-    case IfThen(lhs, rhs) => s"$lhs then $rhs"
+    // case IfThen(lhs, rhs) => s"${lhs.print(true)} then $rhs"
+    case IfThen(lhs, rhs) => s"($lhs) then $rhs"
     case IfElse(trm) => s"else $trm"
     case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
     case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
