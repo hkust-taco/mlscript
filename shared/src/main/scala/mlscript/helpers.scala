@@ -602,6 +602,7 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _) => nme :: tparams ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
+    case If(body, els) => body :: els.toList
   }
   
   
@@ -647,6 +648,9 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case _ if false => ??? // TODO
     case IfBlock(ts) => ts.map(_.fold(identity, identity))
     case IfThen(l, r) => l :: r :: Nil
+    case IfElse(t) => t :: Nil
+    case IfLet(_, v, r, b) => v :: r :: b :: Nil
+    case IfOpApp(t, v, b) => t :: v :: b :: Nil
   }
   
   // lazy val toList: Ls[Case] = this match {
@@ -656,8 +660,10 @@ trait IfBodyImpl extends Located { self: IfBody =>
   
   override def toString: String = this match {
     case IfThen(lhs, rhs) => s"$lhs then $rhs"
+    case IfElse(trm) => s"else $trm"
     case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
     case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
+    case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
     case _ => ??? // TODO
   }
   

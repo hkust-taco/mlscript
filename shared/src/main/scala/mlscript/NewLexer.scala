@@ -128,7 +128,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        go(j, IDENT(n, true))
+        // go(j, IDENT(n, true))
+        go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
       case _ if isDigit(c) =>
         val (str, j) = takeWhile(i)(isDigit)
         go(j, LITVAL(IntLit(BigInt(str))))

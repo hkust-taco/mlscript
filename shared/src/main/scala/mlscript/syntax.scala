@@ -71,6 +71,8 @@ final case class If(body: IfBody, els: Opt[Term])                    extends Ter
 sealed abstract class IfBody extends IfBodyImpl
 final case class IfTerm(expr: Term) extends IfBody // rm?
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
+final case class IfElse(expr: Term) extends IfBody
+final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
 final case class IfOpApp(lhs: Term, op: Var, rhs: IfBody) extends IfBody
 final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Term]) extends IfBody

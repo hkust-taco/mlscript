@@ -175,7 +175,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
     // R(Blk(ts)) // TODO
     val es = ts.map {
       case L(t) =>
-        raise(CompilationError(msg"Unexpected 'then' clause" -> t.toLoc :: Nil))
+        raise(CompilationError(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil))
         errExpr
       case R(e) => e
     }
@@ -199,7 +199,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       case R(e) => e
       case L(e) =>
         // ??? // TODO
-        raise(CompilationError(msg"Expected an expression; found a 'then' clause instead" -> e.toLoc :: Nil))
+        raise(CompilationError(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil))
         errExpr
     }
   
@@ -246,17 +246,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // Let(false, )
         // ???
         val body = cur.dropWhile(_._1 === SPACE && { consume; true }) match {
-          case (KEYWORD("in") | IDENT(";", true), _) :: _ =>
+          // case (KEYWORD("in") | IDENT(";", true), _) :: _ =>
+          case (KEYWORD("in") | KEYWORD(";"), _) :: _ =>
             consume
-            expr(0)
+            exprOrIf(0)
           case (NEWLINE, _) :: _ =>
             // UnitLit(true)
             consume
-            expr(0)
+            exprOrIf(0)
           case _ =>
-            UnitLit(true)
+            R(UnitLit(true))
         }
-        R(bs.foldRight(body) { case ((v, r), acc) => Let(false, v, r, acc) })
+        // R(bs.foldRight(body) { case ((v, r), acc) => Let(false, v, r, acc) })
+        bs.foldRight(body) {
+          case ((v, r), R(acc)) => R(Let(false, v, r, acc))
+          case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
+        }
+      case (KEYWORD("else"), l0) :: _ =>
+        consume
+        val e = expr(0)
+        L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
       case (KEYWORD("if"), l0) :: _ =>
         consume
         /* 
@@ -274,7 +283,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
               case (tk, l1) :: _ => (tk.describe, S(l1))
               case Nil => (e.describe, e.toLoc)
             }
-            raise(CompilationError(msg"Expected 'then' clause; found ${desc} instead" -> 
+            raise(CompilationError(msg"Expected 'then'/'else' clause; found ${desc} instead" -> 
                 // e.toLoc ::
                 // curLoc ::
                 loc ::
@@ -288,7 +297,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
                 // e.toLoc.orElse(S(l1)))
               case Nil => (msg"${e.describe}", e.toLoc)
             }
-            raise(CompilationError(msg"Expected 'then' clause; found $found instead" -> loc ::
+            raise(CompilationError(msg"Expected 'then'/'else' clause; found $found instead" -> loc ::
               msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
             IfThen(e, errExpr)
         }
@@ -314,7 +323,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
         R(errExpr)
       case //Nil | 
-      ((CLOSE_BRACKET(_) | COMMA /* | NEWLINE | DEINDENT */, _) :: _)=>
+      ((CLOSE_BRACKET(_) | COMMA | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _)=>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
@@ -383,7 +392,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         // skip(DEINDENT)
         skipDeindent
         L(IfThen(acc, e))
-      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       
       // case c =>
       // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
@@ -391,6 +400,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       case c @ (h :: _) if (h._1 match {
         case INDENT => false
         case CLOSE_BRACKET(_) => false
+        case KEYWORD(";") => false
         case _ => true
       }) =>
         val ofLess = c match {
@@ -444,7 +454,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       case _ => N
     }
     val argName = cur match {
-      case (IDENT(idStr, false), l0) :: (IDENT(":", true), _) :: _ =>
+      // case (IDENT(idStr, false), l0) :: (IDENT(":", true), _) :: _ =>
+      case (IDENT(idStr, false), l0) :: (KEYWORD(":"), _) :: _ =>
         consume
         consume
         S(Var(idStr).withLoc(S(l0)))
@@ -466,12 +477,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
       case (SPACE, _) :: _ =>
         consume
         bindings(acc)
-      case (NEWLINE | IDENT(_, true), _) :: _ => // TODO: | ...
+      case (NEWLINE | IDENT(_, true) | KEYWORD(";"), _) :: _ => // TODO: | ...
         acc.reverse
       case (IDENT(id, false), l0) :: _ =>
         consume
         // skip(EQUALS)
-        skip(IDENT("=", true)) // TODO kw?
+        // skip(IDENT("=", true)) // TODO kw?
+        skip(KEYWORD("=")) // TODO kw?
         val rhs = expr(0)
         // cur.dropWhile(_ === SPACE) match {
         //   case (KEYWORD("in"), _) :: _ =>
