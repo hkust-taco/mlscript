@@ -42,6 +42,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   private val isAlphaOp = Set(
     "and",
     "or",
+    "is",
+    "as",
   )
   
   // val keywords = Map(
@@ -163,8 +165,8 @@ object NewLexer {
     "then",
     "else",
     "fun",
-    "is",
-    "as",
+    // "is",
+    // "as",
     "of",
     // "and",
     // "or",

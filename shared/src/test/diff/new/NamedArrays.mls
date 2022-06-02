@@ -1,0 +1,167 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+[]
+//│ |[|]|
+//│ Parsed: {'(' undefined, ')'}
+
+[x: 1]
+//│ |[|x|:| |1|]|
+//│ Parsed: {'(' x: 1, ')'}
+
+[x : 1]
+//│ |[|x| |:| |1|]|
+//│ Parsed: {'(' : x 1, ')'}
+
+[x: 1,]
+//│ |[|x|:| |1|,|]|
+//│ Parsed: {'(' x: 1, undefined, ')'}
+
+[x: 1, y:]
+//│ |[|x|:| |1|,| |y|:|]|
+//│ Parsed: {'(' x: 1, y: undefined, ')'}
+
+[x:, y: 1]
+//│ |[|x|:|,| |y|:| |1|]|
+//│ Parsed: {'(' x: undefined, y: 1, ')'}
+
+[x:, y:]
+//│ |[|x|:|,| |y|:|]|
+//│ Parsed: {'(' x: undefined, y: undefined, ')'}
+
+[x: 1, 2, 3]
+//│ |[|x|:| |1|,| |2|,| |3|]|
+//│ Parsed: {'(' x: 1, 2, 3, ')'}
+
+[1, y: 2, 3]
+//│ |[|1|,| |y|:| |2|,| |3|]|
+//│ Parsed: {'(' 1, y: 2, 3, ')'}
+
+[x: 1, y: 2, z: 3]
+//│ |[|x|:| |1|,| |y|:| |2|,| |z|:| |3|]|
+//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+
+()
+//│ |(|)|
+//│ Parsed: {'(' undefined, ')'}
+
+(x: 1)
+//│ |(|x|:| |1|)|
+//│ Parsed: {'(' x: 1, ')'}
+
+(x:)
+//│ |(|x|:|)|
+//│ Parsed: {'(' x: undefined, ')'}
+
+(x: 1,)
+//│ |(|x|:| |1|,|)|
+//│ Parsed: {'(' x: 1, undefined, ')'}
+
+(x: 1, 2, 3)
+//│ |(|x|:| |1|,| |2|,| |3|)|
+//│ Parsed: {'(' x: 1, 2, 3, ')'}
+
+(1, y: 2, 3)
+//│ |(|1|,| |y|:| |2|,| |3|)|
+//│ Parsed: {'(' 1, y: 2, 3, ')'}
+
+(x: 1, y: 2, z: 3)
+//│ |(|x|:| |1|,| |y|:| |2|,| |z|:| |3|)|
+//│ Parsed: {'(' x: 1, y: 2, z: 3, ')'}
+
+
+1
+//│ |1|
+//│ Parsed: {1}
+
+x: 1
+//│ |x|:| |1|
+//│ Parsed: {: x 1}
+
+1,
+//│ |1|,|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.82: 	1,
+//│ ╙──      	 ^
+//│ Parsed: {1}
+
+x: 1,
+//│ |x|:| |1|,|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.89: 	x: 1,
+//│ ╙──      	    ^
+//│ Parsed: {: x 1}
+
+1, 2, 3
+//│ |1|,| |2|,| |3|
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.96: 	1, 2, 3
+//│ ╙──      	 ^
+//│ Parsed: {1}
+
+f of 1, 2, 3
+//│ |f| |#of| |1|,| |2|,| |3|
+//│ Parsed: {f (1, 2, 3,)}
+
+f of x: 1, y: 2, z: 3
+//│ |f| |#of| |x|:| |1|,| |y|:| |2|,| |z|:| |3|
+//│ Parsed: {f (x: 1, y: 2, z: 3,)}
+
+f of x: 1, 2, z: 3
+//│ |f| |#of| |x|:| |1|,| |2|,| |z|:| |3|
+//│ Parsed: {f (x: 1, 2, z: 3,)}
+
+f of
+  x: 1, 2, 3
+//│ |f| |#of|→|x|:| |1|,| |2|,| |3|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.116: 	  x: 1, 2, 3
+//│ ║         	      ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.116: 	  x: 1, 2, 3
+//│ ╙──       	^^
+//│ ╔══[ERROR] Expected end of input; found literal instead
+//│ ║  l.116: 	  x: 1, 2, 3
+//│ ╙──       	        ^
+//│ Parsed: {f ({: x 1},)}
+
+f of
+  x: 1,
+  y: 2,
+  z: 3
+//│ |f| |#of|→|x|:| |1|,|↵|y|:| |2|,|↵|z|:| |3|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.130: 	  x: 1,
+//│ ║         	      ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.130: 	  x: 1,
+//│ ╙──       	^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.131: 	  y: 2,
+//│ ╙──       	      ^
+//│ Parsed: {f ({: x 1},); : y 2}
+
+f of
+  x: 1
+  y: 2
+  z: 3
+//│ |f| |#of|→|x|:| |1|↵|y|:| |2|↵|z|:| |3|
+//│ Parsed: {f ({: x 1; : y 2; : z 3},)}
+
+f of
+  x: 1
+  2
+  z: 3
+//│ |f| |#of|→|x|:| |1|↵|2|↵|z|:| |3|
+//│ Parsed: {f ({: x 1; 2; : z 3},)}
+
+f of
+  x: 1
+  y: 2
+  3
+//│ |f| |#of|→|x|:| |1|↵|y|:| |2|↵|3|
+//│ Parsed: {f ({: x 1; : y 2; 3},)}
+
+
+

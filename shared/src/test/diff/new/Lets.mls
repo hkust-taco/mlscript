@@ -1,0 +1,70 @@
+
+let x = 1
+//│ |#let| |x| |=| |1|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.2: 	let x = 1
+//│ ╙──     	^^^
+//│ Parsed: {= x 1}
+
+let x = 1, y = 2
+//│ |#let| |x| |=| |1|,| |y| |=| |2|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.9: 	let x = 1, y = 2
+//│ ╙──     	^^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.9: 	let x = 1, y = 2
+//│ ╙──     	         ^
+//│ Parsed: {= x 1}
+
+let x = 1, y = 2
+x + y
+//│ |#let| |x| |=| |1|,| |y| |=| |2|↵|x| |+| |y|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.19: 	let x = 1, y = 2
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.19: 	let x = 1, y = 2
+//│ ╙──      	         ^
+//│ Parsed: {= x 1}
+
+let x = 1 in x + 1
+//│ |#let| |x| |=| |1| |#in| |x| |+| |1|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.30: 	let x = 1 in x + 1
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Unexpected 'in' keyword in expression position
+//│ ║  l.30: 	let x = 1 in x + 1
+//│ ╙──      	          ^^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.30: 	let x = 1 in x + 1
+//│ ╙──      	        ^^^^^^^^^^
+//│ Parsed: {= x (1 (+ x 1,))}
+
+let x = 1, y = 2 in x + y
+//│ |#let| |x| |=| |1|,| |y| |=| |2| |#in| |x| |+| |y|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.43: 	let x = 1, y = 2 in x + y
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.43: 	let x = 1, y = 2 in x + y
+//│ ╙──      	         ^
+//│ Parsed: {= x 1}
+
+let x = 1; x + 1
+//│ |#let| |x| |=| |1|;| |x| |+| |1|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.53: 	let x = 1; x + 1
+//│ ╙──      	^^^
+//│ Parsed: {; (= x 1) (+ x 1)}
+
+let x = 1, y = 2; x + y
+//│ |#let| |x| |=| |1|,| |y| |=| |2|;| |x| |+| |y|
+//│ ╔══[ERROR] Unexpected 'let' keyword in expression position
+//│ ║  l.60: 	let x = 1, y = 2; x + y
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Expected end of input; found comma instead
+//│ ║  l.60: 	let x = 1, y = 2; x + y
+//│ ╙──      	         ^
+//│ Parsed: {= x 1}
+
+

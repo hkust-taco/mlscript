@@ -297,7 +297,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raise: Diagno
         raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
         R(errExpr)
       case //Nil | 
-      ((CLOSE_BRACKET(_) /* | NEWLINE | DEINDENT */, _) :: _)=>
+      ((CLOSE_BRACKET(_) | COMMA /* | NEWLINE | DEINDENT */, _) :: _)=>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
