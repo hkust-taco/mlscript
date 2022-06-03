@@ -1,0 +1,97 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+// TODO
+f (
+  0
+)
+//│ |f| |(|→|0|←|↵|)|
+//│ Parsed: {f ({0},)}
+
+// TODO
+f (
+  0,
+  1
+)
+//│ |f| |(|→|0|,|↵|1|←|↵|)|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.14: 	  0,
+//│ ║        	   ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.14: 	  0,
+//│ ╙──      	^^
+//│ ╔══[ERROR] Expected closing parenthesis; found literal instead
+//│ ║  l.15: 	  1
+//│ ║        	  ^
+//│ ╟── Note: unmatched application parenthesis was opened here:
+//│ ║  l.13: 	f (
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Expected end of input; found deindentation instead
+//│ ║  l.15: 	  1
+//│ ║        	   ^
+//│ ║  l.16: 	)
+//│ ╙──      	
+//│ Parsed: {f ({0},)}
+
+f (
+  0
+  1
+)
+//│ |f| |(|→|0|↵|1|←|↵|)|
+//│ Parsed: {f ({0; 1},)}
+
+f of
+  0,
+  1
+//│ |f| |#of|→|0|,|↵|1|
+//│ ╔══[ERROR] Expected deindentation; found comma instead
+//│ ║  l.45: 	  0,
+//│ ║        	   ^
+//│ ╟── Note: indented block starts here:
+//│ ║  l.45: 	  0,
+//│ ╙──      	^^
+//│ Parsed: {f ({0},); 1}
+
+f of
+  0
+  1
+//│ |f| |#of|→|0|↵|1|
+//│ Parsed: {f ({0; 1},)}
+
+// :pe
+f
+of  0
+//│ |f|↵|#of| |0|
+//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.64: 	of  0
+//│ ╙──      	^^
+//│ Parsed: {f; 0}
+
+// TODO?
+f
+  (0)
+//│ |f|→|(|0|)|
+//│ ╔══[ERROR] Expected end of input; found indentation instead
+//│ ║  l.73: 	  (0)
+//│ ╙──      	^^
+//│ Parsed: {f}
+
+f
+  of 0
+  of 1
+//│ |f|→|#of| |0|↵|#of| |1|
+//│ Parsed: {f (0,) (1,)}
+
+// TODO?
+f
+  (0)
+  (1)
+//│ |f|→|(|0|)|↵|(|1|)|
+//│ ╔══[ERROR] Expected end of input; found indentation instead
+//│ ║  l.88: 	  (0)
+//│ ╙──      	^^
+//│ Parsed: {f}
+
+
+
