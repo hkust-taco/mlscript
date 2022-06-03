@@ -260,7 +260,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
               val ps = funParams
               skip(KEYWORD("="))
               val body = expr(0)
-              R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
+              // R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
+              R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(i, acc)))))
             }
           case _ =>
             exprOrIf(0, allowSpace = false)
@@ -271,13 +272,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         }
     }
   
-  def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Term] = wrap(()) { l =>
+  def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
     cur.dropWhile(_._1 === SPACE && { consume; true }) match {
-      case (KEYWORD("="), _) :: _ => Nil
+      case (KEYWORD("=" | ":"), _) :: _ => Nil
       case Nil => Nil
-      case _ =>
-        val e = expr(0)
-        e :: funParams
+      case (KEYWORD("of"), _) :: _ =>
+        consume
+        Tup(args(Nil)) :: funParams
+      case (OPEN_BRACKET(Round), _) :: _ =>
+        consume
+        val as = args(Nil)
+        skip(CLOSE_BRACKET(Round))
+        Tup(as) :: funParams
+      case (tk, l0) :: _ =>
+        // val e = expr(0)
+        // e :: funParams
+        // ???
+        raise(CompilationError(
+          // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
+          msg"Expected function parameter list; found ${tk.describe} instead" -> S(l0) :: Nil))
+        consume
+        Nil
     }
   }
   
