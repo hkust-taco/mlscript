@@ -119,7 +119,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             if (droppedNum > 0) {
               if (hasNewIndent) (INDENT, loc(j, k))
               else (NEWLINE, loc(i, k))
-            } :: List.fill(droppedNum)((DEINDENT, loc(j, k))) ::: acc
+            // } :: List.fill(droppedNum)((DEINDENT, loc(j, k))) ::: acc
+            } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
           )
         }
