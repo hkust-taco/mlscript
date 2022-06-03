@@ -651,6 +651,7 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfElse(t) => t :: Nil
     case IfLet(_, v, r, b) => v :: r :: b :: Nil
     case IfOpApp(t, v, b) => t :: v :: b :: Nil
+    case IfOpsApp(t, ops) => t :: ops.flatMap(x => x._1 :: x._2 :: Nil)
   }
   
   // lazy val toList: Ls[Case] = this match {
@@ -664,8 +665,9 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfElse(trm) => s"else $trm"
     case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
     case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
+    case IfOpsApp(lhs, ops) => s"$lhs ‹${ops.iterator.map{case(v, r) => s"· $v $r"}.mkString("; ")}›"
     case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
-    case _ => ??? // TODO
+    // case _ => ??? // TODO
   }
   
 }

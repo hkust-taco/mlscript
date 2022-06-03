@@ -178,21 +178,39 @@ object NewLexer {
     "mut",
   )
   
-  def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
-    case (SPACE, _) :: ts => " " + printTokens(ts)
-    case (COMMA, _) :: ts => "," + printTokens(ts)
-    case (NEWLINE, _) :: ts => "↵" + printTokens(ts)
-    case (INDENT, _) :: ts => "→" + printTokens(ts)
-    case (DEINDENT, _) :: ts => "←" + printTokens(ts)
-    case (ERROR, _) :: ts => "<error>"
-    case (LITVAL(lv), _) :: ts => lv.idStr + printTokens(ts)
-    case (KEYWORD(name: String), _) :: ts => "#" + name + printTokens(ts)
-    case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
-    case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)
-    case (CLOSE_BRACKET(k: BracketKind), _) :: ts => k.end.toString + printTokens(ts)
-    case (COMMENT(text: String), _) :: ts => "/*" + text + "*/"
-    case Nil => ""
-  })
+  def printToken(tl: TokLoc): Str = tl match {
+    case (SPACE, _) => " "
+    case (COMMA, _) => ","
+    case (NEWLINE, _) => "↵"
+    case (INDENT, _) => "→"
+    case (DEINDENT, _) => "←"
+    case (ERROR, _) => "<error>"
+    case (LITVAL(lv), _) => lv.idStr
+    case (KEYWORD(name: String), _) => "#" + name
+    case (IDENT(name: String, symbolic: Bool), _) => name
+    case (OPEN_BRACKET(k: BracketKind), _) => k.beg.toString
+    case (CLOSE_BRACKET(k: BracketKind), _) => k.end.toString
+    case (COMMENT(text: String), _) => "/*" + text + "*/"
+  }
+  def printTokens(ts: Ls[TokLoc]): Str =
+    ts.iterator.map(printToken).mkString("|", "|", "|")
+    // ts.iterator.map(printToken).mkString("⟨", "|", "⟩")
+  
+  // def printTokens(ts: Ls[TokLoc]): Str = "|" + (ts match {
+  //   case (SPACE, _) :: ts => " " + printTokens(ts)
+  //   case (COMMA, _) :: ts => "," + printTokens(ts)
+  //   case (NEWLINE, _) :: ts => "↵" + printTokens(ts)
+  //   case (INDENT, _) :: ts => "→" + printTokens(ts)
+  //   case (DEINDENT, _) :: ts => "←" + printTokens(ts)
+  //   case (ERROR, _) :: ts => "<error>"
+  //   case (LITVAL(lv), _) :: ts => lv.idStr + printTokens(ts)
+  //   case (KEYWORD(name: String), _) :: ts => "#" + name + printTokens(ts)
+  //   case (IDENT(name: String, symbolic: Bool), _) :: ts => name + printTokens(ts)
+  //   case (OPEN_BRACKET(k: BracketKind), _) :: ts => k.beg.toString + printTokens(ts)
+  //   case (CLOSE_BRACKET(k: BracketKind), _) :: ts => k.end.toString + printTokens(ts)
+  //   case (COMMENT(text: String), _) :: ts => "/*" + text + "*/"
+  //   case Nil => ""
+  // })
   
 
 }

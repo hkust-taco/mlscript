@@ -423,7 +423,10 @@ acc + 1
 acc
 + 1
 //│ |acc|↵|+| |1|
-//│ Parsed: {+ acc 1}
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.424: 	+ 1
+//│ ╙──       	^
+//│ Parsed: {acc; 1}
 
 acc
   + 1
@@ -440,9 +443,9 @@ acc
   1
 //│ |acc|→|+|↵|1|
 //│ ╔══[ERROR] Unexpected newline in expression position
-//│ ║  l.439: 	  +
+//│ ║  l.442: 	  +
 //│ ║         	   ^
-//│ ║  l.440: 	  1
+//│ ║  l.443: 	  1
 //│ ╙──       	^^
 //│ Parsed: {+ acc 1}
 
@@ -451,6 +454,12 @@ acc
     1
 //│ |acc|→|+|→|1|
 //│ Parsed: {+ acc {1}}
+
+acc
+  + 1
+  * 3
+//│ |acc|→|+| |1|↵|*| |3|
+//│ Parsed: {* (+ acc 1) 3}
 
 acc
   + 1
@@ -472,7 +481,7 @@ acc +
   baz
 //│ |acc| |+|→|foo| |bar|↵|baz|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.471: 	  foo bar
+//│ ║  l.480: 	  foo bar
 //│ ╙──       	  ^^^^^^^
 //│ Parsed: {+ acc {foo (bar,); baz}}
 
@@ -511,20 +520,24 @@ a + b
   * 2
     + 1
 //│ |a| |+| |b|→|*| |2|→|+| |1|
-//│ ╔══[ERROR] Expected end of indented block; found indentation instead
-//│ ║  l.512: 	    + 1
-//│ ╙──       	^^^^
-//│ Parsed: {+ (* (+ a b) 2) 1}
+//│ Parsed: {* (+ a b) (+ 2 1)}
+
+// TODO?
+a + b
+    * 2
+  + 1
+//│ |a| |+| |b|→|*| |2|←|→|+| |1|
+//│ ╔══[ERROR] Expected end of input; found indentation instead
+//│ ║  l.528: 	  + 1
+//│ ╙──       	^^
+//│ Parsed: {* (+ a b) 2}
 
 a + b
   * 2
     + 1
   * 3
 //│ |a| |+| |b|→|*| |2|→|+| |1|←|↵|*| |3|
-//│ ╔══[ERROR] Expected end of indented block; found indentation instead
-//│ ║  l.521: 	    + 1
-//│ ╙──       	^^^^
-//│ Parsed: {* (+ (* (+ a b) 2) 1) 3}
+//│ Parsed: {* (* (+ a b) (+ 2 1)) 3}
 
 a +
   b
@@ -532,7 +545,13 @@ a +
   + 1
   * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|↵|*| |3|
-//│ Parsed: {+ a {* (+ (* b 2) 1) 3}}
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.545: 	  + 1
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.546: 	  * 3
+//│ ╙──       	  ^
+//│ Parsed: {+ a {* b 2; 1; 3}}
 
 a +
     b
@@ -540,7 +559,10 @@ a +
     + 1
   * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|←|→|*| |3|
-//│ Parsed: {* (+ a {+ (* b 2) 1}) 3}
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.559: 	    + 1
+//│ ╙──       	    ^
+//│ Parsed: {* (+ a {* b 2; 1}) 3}
 
 a +
   b
@@ -549,6 +571,18 @@ a +
     1
       * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+|→|1|→|*| |3|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.570: 	  +
+//│ ╙──       	  ^
+//│ Parsed: {+ a {* b 2; {* 1 3}}}
+
+a +
+  b
+    * 2
+    +
+      1
+        * 3
+//│ |a| |+|→|b|→|*| |2|↵|+|→|1|→|*| |3|
 //│ Parsed: {+ a {+ (* b 2) {* 1 3}}}
 
 a +
@@ -557,13 +591,24 @@ a +
   + 1
     * 3
 //│ |a| |+|→|b|→|*| |2|←|↵|+| |1|→|*| |3|
-//│ Parsed: {+ a {* (+ (* b 2) 1) 3}}
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.591: 	  + 1
+//│ ╙──       	  ^
+//│ Parsed: {+ a {* b 2; * 1 3}}
+
+a +
+  b
+    * 2
+    + 1
+      * 3
+//│ |a| |+|→|b|→|*| |2|↵|+| |1|→|*| |3|
+//│ Parsed: {+ a {+ (* b 2) (* 1 3)}}
 
 
 a then b
 //│ |a| |#then| |b|
 //│ ╔══[ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.563: 	a then b
+//│ ║  l.608: 	a then b
 //│ ╙──       	^^^^^^^^
 //│ Parsed: {undefined}
 
