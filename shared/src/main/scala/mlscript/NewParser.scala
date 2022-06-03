@@ -189,10 +189,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     res
   }
   // private def skipDeindent: Loc \/ Opt[Loc] = 
-  private def skipDeindent: (Bool, Opt[Loc]) = wrap(()) { l =>
+  // private def skipDeindent(allowNewline: Bool = true)(implicit l: Line): (Bool, Opt[Loc]) = wrap(()) { l =>
+  private def skipDeindent(allowNewlineOn: Ls[TokLoc] => Bool = _ => true)(implicit l: Line): (Bool, Opt[Loc]) = wrap(()) { l =>
     cur match {
       case (DEINDENT, l0) :: _ => consume; (true, S(l0))
-      case (NEWLINE, l0) :: _ => consume; _cur ::= (INDENT, l0); (true, N)
+      // case (NEWLINE, l0) :: _ if allowNewline => consume; _cur ::= (INDENT, l0); (true, N)
+      case (NEWLINE, l0) :: c if allowNewlineOn(c) => consume; _cur ::= (INDENT, l0); (true, N)
       case Nil => (true, N)
       case (tk, l0) :: _ =>
         raise(CompilationError(msg"Expected end of indented block; found ${tk.describe} instead" -> S(l0) :: Nil))
@@ -360,8 +362,31 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         // raiseDbg(hasEls)
         val els = Option.when(hasEls)(expr(0))
         // R(If(IfThen(cond, thn), els))
-        if (hasIndent) skipDeindent
-        R(If(body, els))
+        // 
+        if (hasIndent) skipDeindent(allowNewlineOn = _ => false)
+        // R(If(body, els))
+        // 
+        // if (hasIndent) {
+        //   val (success, _) = skipDeindent()
+        //   if (success) {
+        //     res match {
+        //       case L(res) => 
+        //         L(res)
+        //       case R(res) =>
+        //         exprCont(res, 0)
+        //     }
+        //   }
+        //   else
+        //   res
+        // }
+        // else R(If(body, els))
+        // 
+        cur match {
+          case (INDENT, lind) :: _ =>
+            // consume
+            exprCont(If(body, els), 0)
+          case _ => R(If(body, els))
+        }
       case Nil =>
         raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
         R(errExpr)
@@ -380,7 +405,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
   
-  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, acc) { l =>
+  def exprCont(acc: Term, prec: Int)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`") { l =>
     // implicit val n: Name = Name(s"exprCont($prec,$et)")
     cur match {
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
@@ -425,14 +450,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         /* 
         // val rhs = expr(opPrec(opStr)._2) // TODO if
         val rhs = expr(1) // TODO if
-        val (success, _) = skipDeindent
+        val (success, _) = skipDeindent()
         exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)(et = et, fe = foundErr || !success)
         */
         val res = opBlock(acc, opStr, l0)
-        skipDeindent
+        // skipDeindent()
+        val (success, _) = skipDeindent()
+        if (success) {
+          res match {
+            case L(res) => 
+              L(res)
+            case R(res) =>
+              exprCont(res, 0)
+          }
+        }
+        else
         res
         // val rhs = exprOrIf(0)
-        // val (success, _) = skipDeindent
+        // val (success, _) = skipDeindent()
         // rhs match {
         //   case R(rhs) => 
         //     exprCont(App(App(Var(opStr).withLoc(N/*TODO*/), acc), rhs), prec)(et = et, fe = foundErr || !success)
@@ -454,10 +489,40 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         consume
         val e = expr(0)
         // skip(DEINDENT)
-        skipDeindent
+        // skipDeindent(allowNewline = false)
+        skipDeindent(allowNewlineOn = {
+          case (KEYWORD("else"), _) :: _ => true
+          case _ => false
+        })
         L(IfThen(acc, e))
+        // val (success, _) = skipDeindent()
+        // if (success) 
+        // else L(IfThen(acc, e))
       case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       
+      // case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec === 0 =>
+      case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec <= 1 =>
+        consume
+        consume
+        // TODO allow indent before the args... indented allow arg block
+        val as = args(Nil)
+        val res = App(acc, Tup(as))
+        val (success, _) = skipDeindent(allowNewlineOn = {
+          case (KEYWORD("of"), _) :: _ => true
+          case _ => false
+        })
+        if (success) {
+          // res match {
+          //   case L(res) => 
+          //     L(res)
+          //   case R(res) =>
+          //     exprCont(res, 0)
+          // }
+          exprCont(res, 0)
+        }
+        else
+        R(res)
+        
       // case c =>
       // case c @ ((KEYWORD("of"), _) :: _ | (OPEN_BRACKET(Round), _) :: _) =>
       // case c @ (h :: _) if h._1 =/= INDENT =>
@@ -500,7 +565,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     }
   }
   
-  def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(acc, opStr) { l =>
+  def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(s"`$acc`", opStr) { l =>
       val opv = Var(opStr).withLoc(S(opLoc))
       val rhs = exprOrIf(0)
       // val rhs = exprOrIf(1)
