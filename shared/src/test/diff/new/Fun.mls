@@ -1,0 +1,140 @@
+:AllowParseErrors
+:AllowTypeErrors // TODO rm
+
+
+fun f = 1
+//│ |#fun| |f| |#=| |1|
+//│ Parsed: {def f: 1}
+
+fun f x = x
+//│ |#fun| |f| |x| |#=| |x|
+//│ Parsed: {def f: x, => x}
+
+fun f = x => x
+//│ |#fun| |f| |#=| |x| |=>| |x|
+//│ Parsed: {def f: => x x}
+
+// TODO
+fun x => x
+//│ |#fun| |x| |=>| |x|
+//│ ╔══[ERROR] Unexpected operator in expression position
+//│ ║  l.18: 	fun x => x
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Expected '=' keyword; found end of input instead
+//│ ║  l.18: 	fun x => x
+//│ ╙──      	          ^
+//│ ╔══[ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.18: 	fun x => x
+//│ ╙──      	          ^
+//│ Parsed: {def x: x, => undefined}
+
+let f = x => x
+//│ |#let| |f| |#=| |x| |=>| |x|
+//│ Parsed: {let f = => x x in undefined}
+
+// TODO
+let f = fun x => x
+//│ |#let| |f| |#=| |#fun| |x| |=>| |x|
+//│ ╔══[ERROR] Unexpected 'fun' keyword in expression position
+//│ ║  l.36: 	let f = fun x => x
+//│ ╙──      	        ^^^
+//│ Parsed: {let f = => x x in undefined}
+
+
+fun f x = x
+//│ |#fun| |f| |x| |#=| |x|
+//│ Parsed: {def f: x, => x}
+
+fun f(x) = x
+//│ |#fun| |f|(|x|)| |#=| |x|
+//│ Parsed: {def f: '(' x, ')', => x}
+
+f(x) + x
+//│ |f|(|x|)| |+| |x|
+//│ Parsed: {+ (f (x,)) x}
+
+
+(x, y) => x
+//│ |(|x|,| |y|)| |=>| |x|
+//│ Parsed: {=> '(' x, y, ')' x}
+
+
+fun f(x) = x
+//│ |#fun| |f|(|x|)| |#=| |x|
+//│ Parsed: {def f: '(' x, ')', => x}
+
+fun f(x, y) = x
+//│ |#fun| |f|(|x|,| |y|)| |#=| |x|
+//│ Parsed: {def f: '(' x, y, ')', => x}
+
+fun f of x = x
+//│ |#fun| |f| |#of| |x| |#=| |x|
+//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.70: 	fun f of x = x
+//│ ╙──      	      ^^
+//│ Parsed: {def f: x, => x}
+
+fun f of x, y = x
+//│ |#fun| |f| |#of| |x|,| |y| |#=| |x|
+//│ ╔══[ERROR] Unexpected 'of' keyword in expression position
+//│ ║  l.77: 	fun f of x, y = x
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Unexpected comma in expression position
+//│ ║  l.77: 	fun f of x, y = x
+//│ ╙──      	          ^
+//│ Parsed: {def f: x, => y, => x}
+
+fun f x, y = x
+//│ |#fun| |f| |x|,| |y| |#=| |x|
+//│ ╔══[ERROR] Unexpected comma in expression position
+//│ ║  l.87: 	fun f x, y = x
+//│ ╙──      	       ^
+//│ Parsed: {def f: x, => y, => x}
+
+fun f x y = x
+//│ |#fun| |f| |x| |y| |#=| |x|
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.94: 	fun f x y = x
+//│ ╙──      	      ^^^
+//│ Parsed: {def f: x (y,), => x}
+
+
+fun f(Some(x)) = x
+//│ |#fun| |f|(|Some|(|x|)|)| |#=| |x|
+//│ Parsed: {def f: '(' Some (x,), ')', => x}
+
+fun f(Some of x) = x
+//│ |#fun| |f|(|Some| |#of| |x|)| |#=| |x|
+//│ Parsed: {def f: '(' Some (x,), ')', => x}
+
+
+fun 1
+//│ |#fun| |1|
+//│ ╔══[ERROR] Expected a function name; found literal instead
+//│ ║  l.111: 	fun 1
+//│ ╙──       	    ^
+//│ Parsed: {def <error>: undefined}
+
+fun 1 = 1
+//│ |#fun| |1| |#=| |1|
+//│ ╔══[ERROR] Expected a function name; found literal instead
+//│ ║  l.118: 	fun 1 = 1
+//│ ╙──       	    ^
+//│ Parsed: {def <error>: 1}
+
+fun
+//│ |#fun|
+//│ ╔══[ERROR] Expected a function name; found end of input instead
+//│ ║  l.125: 	fun
+//│ ╙──       	   ^
+//│ Parsed: {def <error>: undefined}
+
+fun = 1
+//│ |#fun| |#=| |1|
+//│ ╔══[ERROR] Expected a function name; found '=' keyword instead
+//│ ║  l.132: 	fun = 1
+//│ ╙──       	    ^
+//│ Parsed: {def <error>: 1, => undefined}
+
+
+

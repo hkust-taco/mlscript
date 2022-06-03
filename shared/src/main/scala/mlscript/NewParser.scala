@@ -1,5 +1,6 @@
 package mlscript
 
+import scala.util.chaining._
 import scala.annotation.tailrec
 import sourcecode.{Name, Line}
 
@@ -165,7 +166,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   }
   def skip(tk: Token, ignored: Set[Token] = Set(SPACE), allowEnd: Bool = false, note: => Ls[Message -> Opt[Loc]] = Nil)
         // (implicit n: Name): Loc \/ Opt[Loc] = {
-        (implicit n: Name): (Bool, Opt[Loc]) = {
+        (implicit n: Name, fe: FoundErr): (Bool, Opt[Loc]) = {
     require(!ignored(tk))
     // if (!cur.headOption.forall(_._1 === tk)) {
     //   // fail(cur)
@@ -177,12 +178,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
           consume
           skip(tk, ignored, allowEnd, note)
         } else if (tk2 =/= tk) {
-          raise(CompilationError(msg"Expected ${tk.describe}; found ${tk2.describe} instead" -> S(l2) :: note))
+          if (!foundErr) raise(CompilationError(
+            msg"Expected ${tk.describe}; found ${tk2.describe} instead" -> S(l2) :: note))
           (false, S(l2))
         } else (true, S(l2))
       case Nil =>
         if (!allowEnd)
-          raise(CompilationError(msg"Expected ${tk.describe}; found end of input instead" -> lastLoc :: note))
+          if (!foundErr) raise(CompilationError(
+            msg"Expected ${tk.describe}; found end of input instead" -> lastLoc :: note))
         (allowEnd, N)
     }
     consume
@@ -238,22 +241,26 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
       case (NEWLINE, _) :: _ => consume; block
       case c =>
         val t = c match {
-          case (KEYWORD("fun"), l0) :: c => // TODO rec
+          case (KEYWORD("fun"), l0) :: c => // TODO support rec
             consume
-            c.dropWhile(_._1 === SPACE && { consume; true }) match {
+            val (v, success) = c.dropWhile(_._1 === SPACE && { consume; true }) match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
-                val v = Var(idStr).withLoc(S(l1))
-                val ps = funParams
-                skip(KEYWORD("="))
-                val body = expr(0)
-                R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
-              case _ =>
+                (Var(idStr).withLoc(S(l1)), true)
+              case c =>
                 val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
                 raise(CompilationError(
                   // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
                   msg"Expected a function name; found ${tkstr} instead" -> loc :: Nil))
-                ???
+                consume
+                // R(errExpr)
+                (Var("<error>").withLoc(curLoc.map(_.left)), false)
+            }
+            foundErr || !success pipe { implicit fe =>
+              val ps = funParams
+              skip(KEYWORD("="))
+              val body = expr(0)
+              R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
             }
           case _ =>
             exprOrIf(0, allowSpace = false)
@@ -430,7 +437,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         raise(CompilationError(msg"Unexpected end of input; an expression was expected here" -> lastLoc :: Nil))
         R(errExpr)
       case //Nil | 
-      ((CLOSE_BRACKET(_) | COMMA | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _)=>
+      // ((CLOSE_BRACKET(_) | COMMA | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _) =>
+      ((CLOSE_BRACKET(_) | KEYWORD(";") /* | NEWLINE | DEINDENT */, _) :: _) =>
         R(UnitLit(true))
         // R(errExpr) // TODO
       case (tk, l0) :: _ =>
