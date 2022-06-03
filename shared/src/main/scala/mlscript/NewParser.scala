@@ -258,10 +258,37 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
             }
             foundErr || !success pipe { implicit fe =>
               val ps = funParams
-              skip(KEYWORD("="))
-              val body = expr(0)
-              // R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
-              R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(i, acc)))))
+              // skip(KEYWORD("="))
+              val asc = yeetSpaces match {
+                case (KEYWORD(":"), _) :: _ =>
+                  consume
+                  val e = expr(0)
+                  S(e)
+                // case (KEYWORD("="), _) =>
+                case _ => N
+              }
+              yeetSpaces match {
+                case (KEYWORD("="), _) :: _ =>
+                  consume
+                  val body = expr(0)
+                  val annotatedBody = asc.fold(body)(ty => Asc(body, ty.toType match {
+                    case R(ty) => ty
+                    case L(d) => ???
+                  }))
+                  // R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
+                  R(Def(false, v, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))))
+                case c =>
+                  asc match {
+                    case S(ty) => ???
+                    case N =>
+                      // TODO dedup:
+                      val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                      raise(CompilationError(
+                        msg"Expected ':' or '=' followed by a function body or signature; found ${tkstr} instead" -> loc :: Nil))
+                      consume
+                      R(Def(false, v, L(ps.foldRight(errExpr: Term)((i, acc) => Lam(i, acc)))))
+                  }
+              }
             }
           case _ =>
             exprOrIf(0, allowSpace = false)
@@ -272,8 +299,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         }
     }
   
+  private def yeetSpaces: Ls[TokLoc] =
+    cur.dropWhile(_._1 === SPACE && { consume; true })
+  
   def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Tup] = wrap(()) { l =>
-    cur.dropWhile(_._1 === SPACE && { consume; true }) match {
+    yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
       case Nil => Nil
       case (KEYWORD("of"), _) :: _ =>
