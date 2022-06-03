@@ -209,7 +209,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
   
   private def curLoc = _cur.headOption.map(_._2)
   
-  def blockTerm: Term = {
+  def blockTerm: Blk = {
     val ts = block(false, false)
     // skip(DEINDENT, allowEnd = true, note =
     //   msg"Note: unmatched indentation is here:" -> S(l0) :: Nil)
@@ -223,17 +223,56 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
     Blk(es)
   }
   
-  def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Term] =
+  def toParams(t: Term): Tup = t match {
+    case t: Tup => t
+    case _ => Tup((N, (t, false)) :: Nil)
+  }
+  def toParamsTy(t: Type): Tuple = t match {
+    case t: Tuple => t
+    case _ => Tuple((N, Field(None, t)) :: Nil)
+  }
+  
+  def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
     cur match {
       case (DEINDENT, _) :: _ => Nil
       case (NEWLINE, _) :: _ => consume; block
-      case _ =>
-        val t = exprOrIf(0, allowSpace = false)
+      case c =>
+        val t = c match {
+          case (KEYWORD("fun"), l0) :: c => // TODO rec
+            consume
+            c.dropWhile(_._1 === SPACE && { consume; true }) match {
+              case (IDENT(idStr, false), l1) :: _ =>
+                consume
+                val v = Var(idStr).withLoc(S(l1))
+                val ps = funParams
+                skip(KEYWORD("="))
+                val body = expr(0)
+                R(Def(false, v, L(ps.foldRight(body)((i, acc) => Lam(toParams(i), acc)))))
+              case _ =>
+                val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+                raise(CompilationError(
+                  // msg"Expected a function name; found ${"[TODO]"} instead" -> N :: Nil))
+                  msg"Expected a function name; found ${tkstr} instead" -> loc :: Nil))
+                ???
+            }
+          case _ =>
+            exprOrIf(0, allowSpace = false)
+        }
         cur match {
           case (NEWLINE, _) :: _ => consume; t :: block
           case _ => t :: Nil
         }
     }
+  
+  def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line): Ls[Term] = wrap(()) { l =>
+    cur.dropWhile(_._1 === SPACE && { consume; true }) match {
+      case (KEYWORD("="), _) :: _ => Nil
+      case Nil => Nil
+      case _ =>
+        val e = expr(0)
+        e :: funParams
+    }
+  }
   
   // def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr): Term =
   def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
@@ -334,7 +373,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
                 loc ::
               msg"Note: 'if' expression started here:" -> S(l0) :: Nil))
             */
-            val (found, loc) = _cur.dropWhile(_._1 === SPACE) match {
+            val (found, loc) = _cur.dropWhile(_._1 === SPACE && { consume; true }) match {
               case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
                 // e.toLoc.fold(S(l1))(_ ++ l1 |> some))
                 // e.toLoc.fold(S(l1))(_ ++ l1 |> some))
@@ -498,7 +537,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Token -> Loc], raiseFun: Dia
         // val (success, _) = skipDeindent()
         // if (success) 
         // else L(IfThen(acc, e))
-      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
+      case (DEINDENT | COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=") | CLOSE_BRACKET(Round) | IDENT(_, true), _) :: _ => R(acc)
       
       // case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec === 0 =>
       case (INDENT, _) :: (KEYWORD("of"), _) :: _ if prec <= 1 =>
