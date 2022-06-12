@@ -271,16 +271,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
       }
     
-    def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
+    def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool, nestedProv: Opt[TypeProvenance] = N)
           (implicit raise: Raise, cctx: ConCtx): Unit = {
       constrainCalls += 1
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise,
         if (sameLevel)
-          (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
+          (if (cctx._1.headOption.exists(_ is lhs.prov)) cctx._1 else lhs :: cctx._1)
           ->
-          (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
-        else (lhs :: Nil) -> (rhs :: Nil)
+          (if (cctx._2.headOption.exists(_ is rhs.prov)) cctx._2 else rhs :: cctx._2)
+        else (lhs :: Nil) ->
+          (nestedProv.map(prov => rhs.withProv(prov) :: Nil).getOrElse(rhs :: Nil))
       )
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
@@ -319,8 +320,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           case (FunctionType(l0, r0), FunctionType(l1, r1)) =>
-            rec(l1, l0, false)
-            rec(r0, r1, false)
+            rec(l1, l0, false, Some(NestedTypeProvenance((cctx._1 reverse_::: cctx._2).reverse)))
+            rec(r0, r1, false, Some(NestedTypeProvenance(cctx._1 reverse_::: cctx._2)))
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
@@ -537,6 +538,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       val detailedContext =
         if (explainErrors)
+          // TODO show nested provs
           msg"========= Additional explanations below =========" -> N ::
           lhsChain.flatMap { lhs =>
             if (dbg) msg"[info] LHS >> ${lhs.prov.toString} : ${lhs.expPos}" -> lhs.prov.loco :: Nil

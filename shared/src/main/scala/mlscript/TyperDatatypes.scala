@@ -12,14 +12,22 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   type TN = TypeName
   
-  
   // The data types used for type inference:
-  
   case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
     val isOrigin: Bool = originName.isDefined
     def & (that: TypeProvenance): TypeProvenance = this // arbitrary; maybe should do better
     override def toString: Str = (if (isOrigin) "o: " else "") + "‹"+loco.fold(desc)(desc+":"+_)+"›"
   }
+
+  case class NestingInfo()
+  class NestedTypeProvenance(val chain: Ls[SimpleType], val nestingInfo: NestingInfo = NestingInfo()) extends TypeProvenance(N, "<nested>")
+
+  object NestedTypeProvenance {
+    def apply(chain: Ls[SimpleType], nestingInfo: NestingInfo = NestingInfo()): NestedTypeProvenance = {
+      new NestedTypeProvenance(chain, nestingInfo)
+    }
+  }
+
   type TP = TypeProvenance
 
   sealed abstract class TypeInfo
