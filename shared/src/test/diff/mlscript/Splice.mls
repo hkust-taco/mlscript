@@ -1,10 +1,10 @@
+:NoJS
+
 def t1 : (int, ...Array[int], bool)
 //│ t1: (int, ...Array[int], bool)
-//│   = <missing implementation>
 
 def t2 : (int, ...(bool, int))
 //│ t2: (int, ...(bool, int,))
-//│   = <missing implementation>
 
 :e
 def t3 : (int, ...bool, mut int)
@@ -13,16 +13,14 @@ def t3 : (int, ...bool, mut int)
 //│ ║        	                  ^^^^
 //│ ╙── type `bool` does not match type `Array[?a]`
 //│ t3: (int, ...bool, int .. int)
-//│   = <missing implementation>
 
 :e
 def t4 : (int, ...int, bool)
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.19: 	def t4 : (int, ...int, bool)
+//│ ║  l.18: 	def t4 : (int, ...int, bool)
 //│ ║        	                  ^^^
 //│ ╙── type `int` does not match type `Array[?a]`
 //│ t4: (int, ...int, bool)
-//│   = <missing implementation>
 
 :d
 def f1 : ('a, ...Array[int]) -> 'a
@@ -37,107 +35,73 @@ def f1 : ('a, ...Array[int]) -> 'a
 //│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[Int]))),) -> ['a0'])
 //│  where: 
 //│ f1: ('a, ...Array[int]) -> 'a
-//│   = <missing implementation>
 
-:d
+// FIXME
 def f1 (x, ...y) = x
-//│ 1. Typing term (((x, ...y),) => x)
-//│ | 1. Typing pattern ((x, ...y),)
-//│ | | 1. Typing pattern (x, ...y)
-//│ | | | 1. Typing pattern x
-//│ | | | 1. : α0'
-//│ | | | 1. Typing pattern y
-//│ | | | 1. : α1'
-//│ | | | CONSTRAIN α1' <! Array[None..α2']
-//│ | | |   where 
-//│ | | | C α1' <! Array[None..α2']
-//│ | | 1. : SpliceType(List(Right(None..α0'), Left(α1')))
-//│ | 1. : (None..SpliceType(List(Right(None..α0'), Left(α1'))),)
-//│ | 1. Typing term x
-//│ | 1. : [α0']
-//│ 1. : ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
-//│ Typed as: ((None..SpliceType(List(Right(None..α0'), Left(α1'))),) -> [α0'])
-//│  where: α1' <: [[Array[None..α2']]]
-//│ Typed as: ((None..SpliceType(List(Right(None..['a0']), Left(Array[Int]))),) -> ['a0'])
-//│  where: 
 //│ ('a, ...Array[anything]) -> 'a
 //│   <:  f1:
 //│ ('a, ...Array[int]) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.43: 	def f1 (x, ...y) = x
+//│ ║  l.40: 	def f1 (x, ...y) = x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `('a, ...Array[int])` does not match type `(?a, ...?b)`
-//│ ║  l.28: 	def f1 : ('a, ...Array[int]) -> 'a
+//│ ║  l.26: 	def f1 : ('a, ...Array[int]) -> 'a
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from splice:
-//│ ║  l.43: 	def f1 (x, ...y) = x
+//│ ║  l.40: 	def f1 (x, ...y) = x
 //│ ╙──      	       ^^^^^^^^^
-//│ Code generation crashed:
-//│   scala.MatchError: (x, ...y) (of class mlscript.Splc)
 
 :e
 errt = (1, ...2, 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.79: 	errt = (1, ...2, 3)
+//│ ║  l.55: 	errt = (1, ...2, 3)
 //│ ║        	       ^^^^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `Array[?a]`
-//│ ║  l.79: 	errt = (1, ...2, 3)
+//│ ║  l.55: 	errt = (1, ...2, 3)
 //│ ╙──      	              ^
 //│ errt: (1, ...2, 3)
-//│ Code generation crashed:
-//│   scala.MatchError: (1, ...2, 3) (of class mlscript.Splc)
 
 :e
 wrerr = (1, ...true, mut 3)
 //│ ╔══[ERROR] Type mismatch in splice:
-//│ ║  l.91: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.65: 	wrerr = (1, ...true, mut 3)
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` does not match type `Array[?a]`
-//│ ║  l.91: 	wrerr = (1, ...true, mut 3)
+//│ ║  l.65: 	wrerr = (1, ...true, mut 3)
 //│ ╙──      	               ^^^^
 //│ wrerr: (1, ...true, 3 .. 3)
-//│ Code generation crashed:
-//│   scala.MatchError: (1, ...true, mut 3) (of class mlscript.Splc)
 
 gt1 = (1, ...(1,2,3), 2)
 //│ gt1: (1, ...(1, 2, 3,), 2)
-//│ Code generation crashed:
-//│   scala.MatchError: (1, ...(1, 2, 3,), 2) (of class mlscript.Splc)
 
 gt1[0]
 //│ res: 1 | 2 | 3
-//│ Code generation encountered an error:
-//│   unresolved symbol gt1
 
+//FIXME
 def arr1: Array[int]
 gt2 = (...arr1)
 //│ arr1: Array[int]
 //│ gt2: (...Array[int])
-//│ Code generation crashed:
-//│   scala.MatchError: (...arr1) (of class mlscript.Splc)
 
 :e
 (1, ...(true, false), "hi") : Array[int | bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hi"` does not match type `bool | int`
-//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
-//│ ║         	                      ^^^^
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ║        	                      ^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.120: 	(1, ...(true, false), "hi") : Array[int | bool]
-//│ ╙──       	                                    ^^^^^^^^^^
+//│ ║  l.87: 	(1, ...(true, false), "hi") : Array[int | bool]
+//│ ╙──      	                                    ^^^^^^^^^^
 //│ res: Array[bool | int]
-//│ Code generation crashed:
-//│   scala.MatchError: (1, ...(true, false,), "hi") (of class mlscript.Splc)
 
 a1 = (1,2,3,4,5)
 a2 = (1,2, ...a1, 4,5)
 //│ a1: (1, 2, 3, 4, 5,)
 //│ a2: (1, 2, ...(1, 2, 3, 4, 5,), 4, 5)
-//│ Code generation crashed:
-//│   scala.MatchError: (1, 2, ...a1, 4, 5) (of class mlscript.Splc)
 
+// FIXME
 a2 : Array[int]
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
