@@ -10,21 +10,21 @@ import fastparse.NoWhitespace._
 @SuppressWarnings(Array("org.wartremover.warts.All"))
 object Lexer {
   
-  def kw[_: P](s: String) = s ~ !(letter | digit | "_")
-  def comment[_: P] = P( "//" ~ CharsWhile(_ != '\n', /*min =*/ 0) )
-  def wscomment[_: P] = P( (CharsWhileIn(" \n") | Lexer.comment | "\\\n").rep )
-  def nonewlinewscomment[_: P] = P( (CharsWhileIn(" ") | Lexer.comment | "\\\n").rep )
+  def kw[p: P](s: String) = s ~ !(letter | digit | "_")
+  def comment[p: P] = P( "//" ~ CharsWhile(_ != '\n', /*min =*/ 0) )
+  def wscomment[p: P] = P( (CharsWhileIn(" \n") | Lexer.comment | "\\\n").rep )
+  def nonewlinewscomment[p: P] = P( (CharsWhileIn(" ") | Lexer.comment | "\\\n").rep )
   
-  def identifier[_: P]: P[String] =
+  def identifier[p: P]: P[String] =
     P( (letter|"_"|"`") ~ (letter | digit | "_" | "-" | "'" | "!" | "?").rep ).!.filter(!keywordList.contains(_))
-  def letter[_: P]     = P( lowercase | uppercase )
-  def lowercase[_: P]  = P( CharIn("a-z") )
-  def uppercase[_: P]  = P( CharIn("A-Z") )
-  def digit[_: P]      = P( CharIn("0-9") )
+  def letter[p: P]     = P( lowercase | uppercase )
+  def lowercase[p: P]  = P( CharIn("a-z") )
+  def uppercase[p: P]  = P( CharIn("A-Z") )
+  def digit[p: P]      = P( CharIn("0-9") )
   
-  //def operator[_: P]: P[String] =
+  //def operator[p: P]: P[String] =
   //  P( ("_" | "-" | opchar).rep ).!.filter(!keywordList.contains(_))
-  def operator[_: P]: P[Unit] = P(
+  def operator[p: P]: P[Unit] = P(
     !symbolicKeywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   ).opaque("operator")
   
@@ -36,7 +36,7 @@ object Lexer {
     override def toString() = name.value
   }
   
-  def OpChar[_: P] = P ( CharPred(isOpChar) )
+  def OpChar[p: P] = P ( CharPred(isOpChar) )
   
   val isOpChar = NamedFunction{
     case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/'
@@ -71,7 +71,7 @@ object Lexer {
     "type",
   )
   
-  def symbolicKeywords[_: P] = P{
+  def symbolicKeywords[p: P] = P{
     StringIn(
       //":", 
       ";", "=>", "=", "->", "<-", 
@@ -81,21 +81,21 @@ object Lexer {
     ) ~ !OpChar
   }.opaque("SymbolicKeywords")
   
-  def stringliteral[_: P]: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
-  def stringprefix[_: P]: P[Unit] = identifier
-  def shortstring[_: P]: P[String] = P( shortstring0("'") | shortstring0("\"") )
-  def shortstring0[_: P](delimiter: String) = P( delimiter ~ shortstringitem(delimiter).rep.! ~ delimiter)
-  def shortstringitem[_: P](quote: String): P[Unit] = P( shortstringchar(quote) | escapeseq )
-  def shortstringchar[_: P](quote: String): P[Unit] = P( CharsWhile(!s"\\\n${quote(0)}".contains(_)) )
+  def stringliteral[p: P]: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
+  def stringprefix[p: P]: P[Unit] = identifier
+  def shortstring[p: P]: P[String] = P( shortstring0("'") | shortstring0("\"") )
+  def shortstring0[p: P](delimiter: String) = P( delimiter ~ shortstringitem(delimiter).rep.! ~ delimiter)
+  def shortstringitem[p: P](quote: String): P[Unit] = P( shortstringchar(quote) | escapeseq )
+  def shortstringchar[p: P](quote: String): P[Unit] = P( CharsWhile(!s"\\\n${quote(0)}".contains(_)) )
   
-  def longstring[_: P]: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
-  def longstring0[_: P](delimiter: String) = P( delimiter ~ longstringitem(delimiter).rep.! ~ delimiter)
-  def longstringitem[_: P](quote: String): P[Unit] = P( longstringchar(quote) | escapeseq | !quote ~ quote.take(1)  )
-  def longstringchar[_: P](quote: String): P[Unit] = P( CharsWhile(!s"\\${quote(0)}".contains(_)) )
+  def longstring[p: P]: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
+  def longstring0[p: P](delimiter: String) = P( delimiter ~ longstringitem(delimiter).rep.! ~ delimiter)
+  def longstringitem[p: P](quote: String): P[Unit] = P( longstringchar(quote) | escapeseq | !quote ~ quote.take(1)  )
+  def longstringchar[p: P](quote: String): P[Unit] = P( CharsWhile(!s"\\${quote(0)}".contains(_)) )
   
-  def escapeseq[_: P]: P[Unit] = P( "\\" ~ AnyChar )
+  def escapeseq[p: P]: P[Unit] = P( "\\" ~ AnyChar )
   
-  def negatable[T, _: P](p: => P[T])(implicit ev: Numeric[T]) = (
+  def negatable[T, _P: P](p: => P[T])(implicit ev: Numeric[T]) = (
     //("+" | "-") // '+' is useless and causes problems, e.g., f +1 and f+1 parsed as f (+1)...
     "-"
   .?.! ~ p).map {
@@ -103,24 +103,24 @@ object Lexer {
     case (_, i) => i
   }
   
-  def longinteger[_: P]: P[BigInt] = P( integer ~ ("l" | "L") )
-  def integer[_: P]: P[BigInt] = negatable[BigInt, Any](P( octinteger | hexinteger | bininteger | decimalinteger))
-  def decimalinteger[_: P]: P[BigInt] = P( nonzerodigit ~ digit.rep | "0" ).!.map(scala.BigInt(_))
-  def octinteger[_: P]: P[BigInt] = P( "0" ~ ("o" | "O") ~ octdigit.rep(1).! | "0" ~ octdigit.rep(1).! ).map(scala.BigInt(_, 8))
-  def hexinteger[_: P]: P[BigInt] = P( "0" ~ ("x" | "X") ~ hexdigit.rep(1).! ).map(scala.BigInt(_, 16))
-  def bininteger[_: P]: P[BigInt] = P( "0" ~ ("b" | "B") ~ bindigit.rep(1).! ).map(scala.BigInt(_, 2))
-  def nonzerodigit[_: P]: P[Unit] = P( CharIn("1-9") )
-  def octdigit[_: P]: P[Unit] = P( CharIn("0-7") )
-  def bindigit[_: P]: P[Unit] = P( "0" | "1" )
-  def hexdigit[_: P]: P[Unit] = P( digit | CharIn("a-f", "A-F") )
+  def longinteger[p: P]: P[BigInt] = P( integer ~ ("l" | "L") )
+  def integer[p: P]: P[BigInt] = negatable[BigInt, Any](P( octinteger | hexinteger | bininteger | decimalinteger))
+  def decimalinteger[p: P]: P[BigInt] = P( nonzerodigit ~ digit.rep | "0" ).!.map(scala.BigInt(_))
+  def octinteger[p: P]: P[BigInt] = P( "0" ~ ("o" | "O") ~ octdigit.rep(1).! | "0" ~ octdigit.rep(1).! ).map(scala.BigInt(_, 8))
+  def hexinteger[p: P]: P[BigInt] = P( "0" ~ ("x" | "X") ~ hexdigit.rep(1).! ).map(scala.BigInt(_, 16))
+  def bininteger[p: P]: P[BigInt] = P( "0" ~ ("b" | "B") ~ bindigit.rep(1).! ).map(scala.BigInt(_, 2))
+  def nonzerodigit[p: P]: P[Unit] = P( CharIn("1-9") )
+  def octdigit[p: P]: P[Unit] = P( CharIn("0-7") )
+  def bindigit[p: P]: P[Unit] = P( "0" | "1" )
+  def hexdigit[p: P]: P[Unit] = P( digit | CharIn("a-f", "A-F") )
   
   
-  def floatnumber[_: P]: P[BigDecimal] = negatable[BigDecimal, Any](P( pointfloat | exponentfloat ))
-  def pointfloat[_: P]: P[BigDecimal] = P( intpart.? ~ fraction | intpart ~ "." ).!.map(BigDecimal(_))
-  def exponentfloat[_: P]: P[BigDecimal] = P( (intpart | pointfloat) ~ exponent ).!.map(BigDecimal(_))
-  def intpart[_: P]: P[BigDecimal] = P( digit.rep(1) ).!.map(BigDecimal(_))
-  def fraction[_: P]: P[Unit] = P( "." ~ digit.rep(1) )
-  def exponent[_: P]: P[Unit] = P( ("e" | "E") ~ ("+" | "-").? ~ digit.rep(1) )
+  def floatnumber[p: P]: P[BigDecimal] = negatable[BigDecimal, Any](P( pointfloat | exponentfloat ))
+  def pointfloat[p: P]: P[BigDecimal] = P( intpart.? ~ fraction | intpart ~ "." ).!.map(BigDecimal(_))
+  def exponentfloat[p: P]: P[BigDecimal] = P( (intpart | pointfloat) ~ exponent ).!.map(BigDecimal(_))
+  def intpart[p: P]: P[BigDecimal] = P( digit.rep(1) ).!.map(BigDecimal(_))
+  def fraction[p: P]: P[Unit] = P( "." ~ digit.rep(1) )
+  def exponent[p: P]: P[Unit] = P( ("e" | "E") ~ ("+" | "-").? ~ digit.rep(1) )
   
   
 }

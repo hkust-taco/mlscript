@@ -10,40 +10,125 @@ Lit
 //│ res: anything -> Lit
 //│    = [Function: res]
 
-// TODO: support `as` types in parser and typer:
-// def eval: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
+def eval0: ('b -> ('c & int)) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~lit & ~add & 'b as 'a) -> (int | 'c)
+//│ eval0: ('b -> int) -> 'a -> int
+//│   where
+//│     'a <: 'b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│      = <missing implementation>
+
+def evalUgly: ('b -> ('c & int)) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
+//│ evalUgly: ('b -> int) -> 'a -> int
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│         = <missing implementation>
+
+def evalBad: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
+//│ evalBad: ('b -> 'c) -> 'a -> ('c | int)
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│        = <missing implementation>
 
 type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
-//│ Defined type alias Expr
+//│ Defined type alias Expr[+A]
 
-// TODO: make sure the simplified from this commented version is corect:
-// def eval: ('b -> 'c & int) -> Expr['b] -> (int | 'c)
+def eval1: ('b -> ('c & int)) -> Expr['b] -> (int | 'c)
+//│ eval1: ('b -> int) -> Expr['b] -> int
+//│      = <missing implementation>
 
 def eval: ('b -> int) -> Expr['b] -> int
-//│ eval: ('b -> int) -> ('b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} as 'a) -> int
+//│ eval: ('b -> int) -> Expr['b] -> int
 //│     = <missing implementation>
 
-// TODO better simplify type!
-rec def eval f e = case e of {
+rec def evalImpl f e = case e of {
+  | Lit -> e.val
+  | Add -> evalImpl f e.lhs + evalImpl f e.rhs
+  | _ -> f e
+  }
+//│ evalImpl: ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│         = [Function: evalImpl]
+
+rec def evalPeel f e = case e of {
   | Lit -> e.val
   | Add -> eval f e.lhs + eval f e.rhs
   | _ -> f e
   }
-//│ ('a -> int) -> (Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit as 'b) -> int
+//│ evalPeel: ('b -> (int & 'val)) -> ('b & ~add & ~lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
+//│         = <no result>
+//│           eval is not implemented
+
+eval = evalPeel
+//│ ('b -> (int & 'val)) -> ('b & ~add & ~lit | Add & {lhs: Expr['b], rhs: Expr['b]} | Lit & {val: 'val}) -> (int | 'val)
 //│   <:  eval:
-//│ ('b -> int) -> ('b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int} as 'a) -> int
-//│     = [Function: eval]
+//│ ('b -> int) -> Expr['b] -> int
+//│     = <no result>
+//│       evalPeel and eval are not implemented
+
+eval = evalImpl
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│   <:  eval:
+//│ ('b -> int) -> Expr['b] -> int
+//│     = [Function: evalImpl]
+
+eval0 = evalImpl
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│   <:  eval0:
+//│ ('b -> int) -> 'a -> int
+//│   where
+//│     'a <: 'b & ~add & ~lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│      = [Function: evalImpl]
+
+evalUgly = evalImpl
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│   <:  evalUgly:
+//│ ('b -> int) -> 'a -> int
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│         = [Function: evalImpl]
+
+eval1 = evalImpl
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: Add & {lhs: 'b, rhs: 'b} | Lit & {val: int} | 'a & ~add & ~lit
+//│   <:  eval1:
+//│ ('b -> int) -> Expr['b] -> int
+//│      = [Function: evalImpl]
+
+:e
+evalBad = eval
+//│ ('b -> int) -> Expr['b] -> int
+//│   <:  evalBad:
+//│ ('b -> 'c) -> 'a -> ('c | int)
+//│   where
+//│     'a <: 'b & ~Add & ~Lit | Add & {lhs: 'a, rhs: 'a} | Lit & {val: int}
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.105: 	evalBad = eval
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `'c` is not an instance of type `int`
+//│ ║  l.25: 	def evalBad: ('b -> 'c) -> (Lit & {val: int} | Add & {lhs: 'a; rhs: 'a} | ~Lit & ~Add & 'b as 'a) -> (int | 'c)
+//│ ║        	                    ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
+//│ ╙──      	                 ^^^
+//│        = [Function: evalImpl]
 
 :e
 eval {} (Lit{} with { val = 1 })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	eval {} (Lit{} with { val = 1 })
-//│ ║        	^^^^^^^
+//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
+//│ ║         	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.38: 	eval {} (Lit{} with { val = 1 })
-//│ ║        	     ^^
+//│ ║  l.123: 	eval {} (Lit{} with { val = 1 })
+//│ ║         	     ^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
+//│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	          ^^^^^^^^^^^
 //│ res: error | int
 //│    = 1
@@ -63,16 +148,16 @@ eval (fun x -> x.hello) (Const{} with {hello=1})
 :e
 eval (fun x -> x.hello) {hello=1}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~add & ~lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
-//│ ║  l.64: 	eval (fun x -> x.hello) {hello=1}
-//│ ║        	                        ^^^^^^^^^
+//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{hello: 1}` does not match type `?b & ~Add & ~Lit | Add & {lhs: Expr[?b], rhs: Expr[?b]} | Lit & {val: int}`
+//│ ║  l.149: 	eval (fun x -> x.hello) {hello=1}
+//│ ║         	                        ^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.16: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
+//│ ║  l.31: 	type Expr[A] = Lit & {val: int} | Add & {lhs: Expr[A]; rhs: Expr[A]} | ~Lit & ~Add & A
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from applied type reference:
-//│ ║  l.22: 	def eval: ('b -> int) -> Expr['b] -> int
+//│ ║  l.38: 	def eval: ('b -> int) -> Expr['b] -> int
 //│ ╙──      	                         ^^^^^^^^
 //│ res: error | int
 //│    = 1

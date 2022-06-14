@@ -48,7 +48,7 @@ c: { name: string }
 def f x = case x of {
   | Parent -> x.name
   }
-//│ f: (Parent with {name: 'a}) -> 'a
+//│ f: (Parent with {name: 'name}) -> 'name
 //│  = [Function: f]
 
 f c
@@ -63,7 +63,7 @@ f (c: Parent)
 def f x = case x of {
   | Child -> x.name
   }
-//│ f: (Child\age with {name: 'a}) -> 'a
+//│ f: (Child\age with {name: 'name}) -> 'name
 //│  = [Function: f1]
 
 f c
@@ -75,7 +75,7 @@ f (c: Parent)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	^^^^^^^^^^^^^
-//│ ╟── type `Parent` is not an instance of type Child
+//│ ╟── type `Parent` is not an instance of type `Child`
 //│ ║  l.74: 	f (c: Parent)
 //│ ║        	      ^^^^^^
 //│ ╟── Note: constraint arises from class pattern:
@@ -92,7 +92,7 @@ def f x = case x of {
   | Parent -> x.name
   | _ -> ""
   }
-//│ f: ((Parent with {name: 'a}) | ~parent) -> ("" | 'a)
+//│ f: ((Parent with {name: 'name}) | ~Parent) -> ("" | 'name)
 //│  = [Function: f2]
 
 f c
@@ -108,7 +108,7 @@ def f x = case x of {
   | Parent -> x.name
   | Child -> x.name
   }
-//│ f: (Parent with {name: 'a}) -> 'a
+//│ f: (Parent with {name: 'name}) -> 'name
 //│  = [Function: f3]
 
 f c

@@ -55,7 +55,7 @@ def foo { _ ; _ } = 1
 //│ ╟── Declared at
 //│ ║  l.48: 	def foo { _ ; _ } = 1
 //│ ╙──      	              ^
-//│ foo: {_: anything} -> 1
+//│ foo: {_: anything, _: anything} -> 1
 //│    = 1
 
 // :js

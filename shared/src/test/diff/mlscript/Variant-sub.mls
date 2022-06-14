@@ -1,28 +1,28 @@
 class None: {}
 class Some[A]: { v: A }
 //│ Defined class None
-//│ Defined class Some
+//│ Defined class Some[+A]
 
 def Some v = Some{v}
 def None = None{}
-//│ Some: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ Some: 'v -> Some['v]
 //│     = [Function: Some1]
 //│ None: None
 //│     = None {}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('a -> 'b) -> (None & 'b | (Some[?] with {v: 'a})) -> 'b
+//│ flatMap: ('v -> 'a) -> (None & 'a | (Some[?] with {v: 'v})) -> 'a
 //│        = [Function: flatMap]
 
 f x = Some x
 flatMap f (Some 1)
 flatMap f None
-//│ f: ('v & 'A) -> (Some['A] with {v: 'v})
+//│ f: 'v -> Some['v]
 //│  = [Function: f]
-//│ res: Some['A .. 1 | 'A] with {v: 1}
+//│ res: Some[1]
 //│    = Some { v: 1 }
-//│ res: None | (Some['A] with {v: nothing})
+//│ res: None | Some[nothing]
 //│    = None {}
 
 :e
@@ -36,14 +36,14 @@ flatMap f "oops"
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
-//│ res: error | (Some['A] with {v: nothing})
+//│ res: error | Some[nothing]
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
-//│ res: NoneBecause & {reason: "uh uh"} | (Some['A] with {v: nothing})
+//│ res: NoneBecause & {reason: "uh uh"} | Some[nothing]
 //│    = NoneBecause { reason: 'uh uh' }
 
 type Expr = Lit | Neg | Var | Plus
@@ -73,9 +73,11 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'v & 'A} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var as 'a) -> (NoneBecause | (Some['A] with {v: 'v}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int}))
+//│ evalOpt: 'a -> (NoneBecause | Some[int])
+//│   where
+//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | (Some['A .. 2 | 3 | 'A] with {v: 2 | 3}) | (Some['A0 .. 'A0 | int] with {v: int}) | (Some['A1 .. 'A1 | int] with {v: int})
+//│ res: NoneBecause | Some[int]
 //│    = Some { v: 5 }

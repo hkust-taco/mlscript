@@ -17,12 +17,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     extends TypeDefs with TypeSimplifier {
   
   def funkyTuples: Bool = false
+  def doFactorize: Bool = false
+  
+  var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit
   type Binding = Str -> TypeScheme
   type Bindings = Map[Str, TypeScheme]
   
-  /** Keys of `mthEnv`:
+  /**  `env`: maps the names of all global and local bindings to their types
+    *  Keys of `mthEnv`:
     * `L` represents the inferred types of method definitions. The first value is the parent name,
     *   and the second value is the method name.
     * `R` represents the actual method types.
@@ -47,9 +51,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel: Ctx = copy(lvl = lvl + 1)
-    private val abcCache: MutMap[Str, Set[Var]] = MutMap.empty
-    def allBaseClassesOf(name: Str): Set[Var] = abcCache.getOrElseUpdate(name,
-      tyDefs.get(name).fold(Set.empty[Var])(_.allBaseClasses(this)(Set.empty)))
+    private val abcCache: MutMap[Str, Set[TypeName]] = MutMap.empty
+    def allBaseClassesOf(name: Str): Set[TypeName] = abcCache.getOrElseUpdate(name,
+      tyDefs.get(name).fold(Set.empty[TypeName])(_.allBaseClasses(this)(Set.empty)))
   }
   object Ctx {
     def init: Ctx = Ctx(
@@ -87,9 +91,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   val BotType: ExtrType = ExtrType(true)(noTyProv)
   val UnitType: ClassTag = ClassTag(Var("unit"), Set.empty)(noTyProv)
   val BoolType: ClassTag = ClassTag(Var("bool"), Set.empty)(noTyProv)
-  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(Var("bool")))(noTyProv)
-  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(Var("bool")))(noTyProv)
-  val IntType: ClassTag = ClassTag(Var("int"), Set.single(Var("number")))(noTyProv)
+  val TrueType: ClassTag = ClassTag(Var("true"), Set.single(TypeName("bool")))(noTyProv)
+  val FalseType: ClassTag = ClassTag(Var("false"), Set.single(TypeName("bool")))(noTyProv)
+  val IntType: ClassTag = ClassTag(Var("int"), Set.single(TypeName("number")))(noTyProv)
   val DecType: ClassTag = ClassTag(Var("number"), Set.empty)(noTyProv)
   val StrType: ClassTag = ClassTag(Var("string"), Set.empty)(noTyProv)
   
@@ -101,29 +105,41 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "anything" -> TopType, "nothing" -> BotType)
   
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TypeName("int"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("number")), N) ::
+    TypeDef(Cls, TypeName("int"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("number")), N) ::
     TypeDef(Cls, TypeName("number"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("bool"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
-    TypeDef(Cls, TypeName("true"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
-    TypeDef(Cls, TypeName("false"), Nil, Nil, TopType, Nil, Nil, Set.single(Var("bool")), N) ::
+    TypeDef(Cls, TypeName("true"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N) ::
+    TypeDef(Cls, TypeName("false"), Nil, Nil, TopType, Nil, Nil, Set.single(TypeName("bool")), N) ::
     TypeDef(Cls, TypeName("string"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
+    TypeDef(Als, TypeName("undefined"), Nil, Nil, ClassTag(UnitLit(true), Set.empty)(noProv), Nil, Nil, Set.empty, N) ::
+    TypeDef(Als, TypeName("null"), Nil, Nil, ClassTag(UnitLit(false), Set.empty)(noProv), Nil, Nil, Set.empty, N) ::
     TypeDef(Als, TypeName("anything"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Als, TypeName("nothing"), Nil, Nil, BotType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+        // * ^ Note that the `noTyProv` here is kind of a problem
+        // *    since we currently expand primitive types eagerly in DNFs.
+        // *  For instance, see `inn2 v1` in test `Yicong.mls`.
+        // *  We could instead treat these primitives like any other TypeRef,
+        // *    but that currently requires more simplifier work
+        // *    to get rid of things like `1 & int` and `T | nothing`.
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.co))
+      tyDef
     } ::
     {
       val tv = freshVar(noTyProv)(1)
-      TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
+      val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
+      tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
+      tyDef
     } ::
     Nil
   val primitiveTypes: Set[Str] =
-    builtinTypes.iterator.filter(_.kind is Cls).map(_.nme.name).flatMap(n => n :: n.capitalize :: Nil).toSet
+    builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
@@ -212,8 +228,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     def rec(ty: Type)(implicit ctx: Ctx, recVars: Map[TypeVar, TypeVariable]): SimpleType = ty match {
       case Top => ExtrType(false)(tyTp(ty.toLoc, "top type"))
       case Bot => ExtrType(true)(tyTp(ty.toLoc, "bottom type"))
-      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc,
-        if (lb === Bot && ub === Top) "type wildcard" else "type bounds"))
+      case Bounds(Bot, Top) =>
+        val p = tyTp(ty.toLoc, "type wildcard")
+        TypeBounds(ExtrType(true)(p), ExtrType(false)(p))(p)
+      case Bounds(lb, ub) => TypeBounds(rec(lb), rec(ub))(tyTp(ty.toLoc, "type bounds"))
       case Tuple(fields) =>
         TupleType(fields.mapValues(f =>
             FieldType(f.in.map(rec), rec(f.out))(tp(f.toLoc, "tuple field"))
@@ -258,6 +276,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               tyTp(App(n, Var("").withLocOf(f)).toCoveringLoc, "extension field")) }
           )(tyTp(r.toLoc, "extension record")))(tyTp(ty.toLoc, "extension type"))
       case Literal(lit) => ClassTag(lit, lit.baseClasses)(tyTp(ty.toLoc, "literal type"))
+      case TypeName("this") =>
+        ctx.env.getOrElse("this", err(msg"undeclared this" -> ty.toLoc :: Nil)) match {
+          case AbstractConstructor(_, _) => die
+          case t: TypeScheme => t.instantiate
+        }
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
@@ -304,6 +327,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         tv.lowerBounds ::= bod
         tv
       case Rem(base, fs) => Without(rec(base), fs.toSortedSet)(tyTp(ty.toLoc, "field removal type"))
+      case Constrained(base, where) =>
+        val res = rec(base)
+        where.foreach { case (tv, Bounds(lb, ub)) =>
+          constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx)
+          constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
+        }
+        res
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
   }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
@@ -356,8 +386,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // It turns out it is better to NOT store a provenance here,
         //    or it will obscure the true provenance of constraints causing errors
         //    across recursive references.
-        noProv
-        // TypeProvenance(rhs.toLoc, "let-bound value")
+        noProv,
+        // TypeProvenance(rhs.toLoc, "let-bound value"),
+        S(nme)
       )(lvl + 1)
       ctx += nme -> e_ty
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
@@ -368,7 +399,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   def mkProxy(ty: SimpleType, prov: TypeProvenance): SimpleType = {
-    ProvType(ty)(prov)
+    if (recordProvenances) ProvType(ty)(prov)
+    else ty // TODO don't do this when debugging errors
     // TODO switch to return this in perf mode:
     // ty
   }
@@ -482,7 +514,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(App(n, t).toLoc, (if (mut) "mutable " else "") + "record field")
           if (mut) {
-            val res = freshVar(fprov)
+            val res = freshVar(fprov, S(n.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -494,7 +526,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
-            val res = freshVar(fprov)
+            val res = freshVar(fprov, n.map(_.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -507,15 +539,23 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_i = typeTerm(i)
         con(t_i, IntType, TopType)
         val elemType = freshVar(prov)
-        con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType)
+        elemType.upperBounds ::=
+          // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
+          // *  which could result in surprising behavior and bugs in the presence of parametricity!
+          // * Note that in modern JS, `undefined` is arguably not a value you're supposed to use explicitly;
+          // *  `null` should be used instead for those willing to indulge in the Billion Dollar Mistake.
+          TypeRef(TypeName("undefined"), Nil)(noProv).neg(
+            prov.copy(desc = "prohibited undefined element")) // TODO better reporting for this; the prov isn't actually used
+        con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
+          TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
-        val fieldType = freshVar(sprov)
+        val fieldType = freshVar(sprov, Opt.when(!f.name.startsWith("_"))(f.name))
         val obj_ty =
           // Note: this proxy does not seem to make any difference:
           mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
-        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), fieldType)(
+        con(obj_ty, RecordType.mk((f, FieldType(Some(fieldType), TopType)(
           tp(f.toLoc, "assigned field")
         )) :: Nil)(sprov), fieldType)
         val vl = typeTerm(rhs)
@@ -527,7 +567,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val arr_ty =
             // Note: this proxy does not seem to make any difference:
             mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
-        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), elemType)
+        con(arr_ty, ArrayType(FieldType(Some(elemType), elemType)(sprov))(prov), TopType)
         val i_ty = typeTerm(i)
         con(i_ty, IntType, TopType)
         val vl = typeTerm(rhs)
@@ -590,7 +630,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //   Returns a function expecting an additional argument of type `Class` before the method arguments
         def rcdSel(obj: Term, fieldName: Var) = {
           val o_ty = typeTerm(obj)
-          val res = freshVar(prov)
+          val res = freshVar(prov, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           val rcd_ty = RecordType.mk(
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)
@@ -703,7 +743,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
-          val tv = freshVar(tp(v.toLoc, "refined scrutinee"))
+          val tv = freshVar(tp(v.toLoc, "refined scrutinee"),
+            // S(v.name), // this one seems a bit excessive
+          )
           newCtx += v.name -> tv
           val bod_ty = typeTerm(bod)(newCtx, raise)
           (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
@@ -789,100 +831,73 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   
-  /** Convert an inferred SimpleType into the immutable Type representation.
-    * Important precondition:
-    *   We require that only polar variables
-    *     (those occurring strictly positively or strictly negatively)
-    *   have bounds.
-    *   So typically, only recursive variables whose recursion is expressed through the bound
-    *     (since other polar variables would be simplified away).
-    *   This is because we re-tie the recursive knots by using hash consing
-    *     in order to simplify recursive structures,
-    *     after which we want to be able to discard the old leftover polar variables. */
-  def expandType(st: SimpleType, polarity: Bool, stopAtTyVars: Bool = false): Type = {
+  /** Convert an inferred SimpleType into the immutable Type representation. */
+  def expandType(st: SimpleType, stopAtTyVars: Bool = false)(implicit ctx: Ctx): Type = {
     val expandType = ()
     
-    // TODO improve/simplify? (take inspiration from other impls?)
-    //    see: duplication of recursive.get(st_pol) logic
+    import Set.{empty => semp}
     
-    val recursive = mutable.Map.empty[SimpleType -> Bool, TypeVar]
-    def go(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type =
-      // trace(s"expand $st, $polarity  — $inProcess") {
-        goImpl(st.unwrapProvs, polarity)
-      // }(r => s"=> $r")
-    def goImpl(st: SimpleType, polarity: Boolean)(implicit inProcess: Set[SimpleType -> Bool]): Type = {
-      val st_pol = st -> polarity
-      if (inProcess(st_pol)) recursive.getOrElseUpdate(st_pol, freshVar(st.prov, st |>?? {
-        case tv: TypeVariable => tv.nameHint
-      })(0).asTypeVar)
-      else (inProcess + st_pol) pipe { implicit inProcess => st match {
+    var bounds: Ls[TypeVar -> Bounds] = Nil
+    
+    val seenVars = mutable.Set.empty[TV]
+    
+    def field(ft: FieldType): Field = ft match {
+      case FieldType(S(l: TV), u: TV) if l === u =>
+        val res = go(u)
+        Field(S(res), res) // TODO improve Field
+      case f =>
+        Field(f.lb.map(go), go(f.ub))
+    }
+    
+    def go(st: SimpleType): Type =
+            // trace(s"expand $st") {
+          st.unwrapProvs match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable =>
-          val bounds = if (polarity) tv.lowerBounds else tv.upperBounds
-          val bound =
-            if (polarity) bounds.foldLeft(BotType: SimpleType)(_ | _)
-            else bounds.foldLeft(TopType: SimpleType)(_ & _)
-          if (inProcess(bound -> polarity))
-            recursive.getOrElseUpdate(bound -> polarity, freshVar(st.prov, tv.nameHint)(0).asTypeVar)
-          else {
-            val boundTypes = bounds.map(go(_, polarity))
-            val mrg = if (polarity) Union else Inter
-            recursive.get(st_pol) match {
-              case Some(variable) =>
-                Recursive(variable, boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top))
-              case None =>
-                if (boundTypes.isEmpty)
-                  boundTypes.foldLeft[Type](tv.asTypeVar)(mrg)
-                else // see precondition
-                  boundTypes.reduceOption(mrg).getOrElse(if (polarity) Bot else Top)
-            }
+          val nv = tv.asTypeVar
+          if (!seenVars(tv)) {
+            seenVars += tv
+            val l = go(tv.lowerBounds.foldLeft(BotType: ST)(_ | _))
+            val u = go(tv.upperBounds.foldLeft(TopType: ST)(_ & _))
+            if (l =/= Bot || u =/= Top)
+              bounds ::= nv -> Bounds(l, u)
           }
-        case _ =>
-          val res = st match {
-            case FunctionType(l, r) => Function(go(l, !polarity), go(r, polarity))
-            case ComposedType(true, l, r) => Union(go(l, polarity), go(r, polarity))
-            case ComposedType(false, l, r) => Inter(go(l, polarity), go(r, polarity))
-            case RecordType(fs) =>
-              Record(fs.mapValues(v => Field(v.lb.map(go(_, !polarity)), go(v.ub, polarity))))
-            case TupleType(fs) =>
-              Tuple(fs.mapValues(v => Field(v.lb.map(go(_, !polarity)), go(v.ub, polarity))))
-            case ArrayType(FieldType(None, ub)) =>
-              AppliedType(TypeName("Array"), go(ub, polarity) :: Nil)
-            case ArrayType(FieldType(Some(lb), ub)) =>
-              AppliedType(TypeName("MutArray"), Bounds(go(lb, !polarity), go(ub, polarity)) :: Nil)
-            case SpliceType(elems) => Splice(elems.map { 
-              case L(l) => L(go(l, polarity)) 
-              case R(v) => R(Field(v.lb.map(go(_, !polarity)), go(v.ub, polarity))) })
-            case NegType(t) => Neg(go(t, !polarity))
-            case ExtrType(true) => Bot
-            case ExtrType(false) => Top
-            case WithType(base, rcd) => WithExtension(go(base, polarity),
-              Record(rcd.fields.mapValues(f => Field(f.lb.map(go(_, !polarity)), go(f.ub, polarity)))))
-            case ProxyType(und) => go(und, polarity)
-            case tag: ObjectTag => tag.id match {
-              case Var(n) => TypeName(n)
-              case lit: Lit => Literal(lit)
-            }
-            case TypeRef(td, Nil) => td
-            case TypeRef(td, targs) =>
-              AppliedType(td, targs.map { t =>
-                val l = go(t, false)
-                val u = go(t, true)
-                if (l === u) l else Bounds(l, u)
-              })
-            case TypeBounds(lb, ub) => if (polarity) go(ub, true) else go(lb, false)
-            case Without(base, names) => Rem(go(base, polarity), names.toList)
-            case _: TypeVariable => die
-          }
-          recursive.get(st_pol) match {
-            case Some(variable) =>
-              Recursive(variable, res)
-            case None => res
-          }
-      }
-    }}
+          nv
+        case FunctionType(l, r) => Function(go(l), go(r))
+        case ComposedType(true, l, r) => Union(go(l), go(r))
+        case ComposedType(false, l, r) => Inter(go(l), go(r))
+        case RecordType(fs) => Record(fs.mapValues(field))
+        case TupleType(fs) => Tuple(fs.mapValues(field))
+        case ArrayType(FieldType(None, ub)) => AppliedType(TypeName("Array"), go(ub) :: Nil)
+        case ArrayType(f) =>
+          val f2 = field(f)
+          AppliedType(TypeName("MutArray"), Bounds(f2.in.getOrElse(Bot), f2.out) :: Nil)
+        case SpliceType(elems) => Splice(elems.map { 
+              case L(l) => L(go(l)) 
+              case R(v) => R(Field(v.lb.map(go(_)), go(v.ub))) })
+        case NegType(t) => Neg(go(t))
+        case ExtrType(true) => Bot
+        case ExtrType(false) => Top
+        case WithType(base, rcd) =>
+          WithExtension(go(base), Record(rcd.fields.mapValues(field)))
+        case ProxyType(und) => go(und)
+        case tag: ObjectTag => tag.id match {
+          case Var(n) => TypeName(n)
+          case lit: Lit => Literal(lit)
+        }
+        case TypeRef(td, Nil) => td
+        case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
+          case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
+          case (_, ty) => go(ty)
+        })
+        case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
+        case Without(base, names) => Rem(go(base), names.toList)
+    }
+    // }(r => s"~> $r")
     
-    go(st, polarity)(Set.empty)
+    val res = go(st)
+    if (bounds.isEmpty) res
+    else Constrained(res, bounds)
   }
   
 }

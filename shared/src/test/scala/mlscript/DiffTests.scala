@@ -4,8 +4,8 @@ import fastparse._
 import fastparse.Parsed.Failure
 import fastparse.Parsed.Success
 import sourcecode.Line
-import ammonite.ops._
 import scala.collection.mutable
+import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.JSTestBackend.IllFormedCode
@@ -15,14 +15,16 @@ import mlscript.JSTestBackend.TestCode
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 
 class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.ParallelTestExecution {
+// class DiffTests extends org.scalatest.funsuite.AnyFunSuite {
   
   import DiffTests._
   files.foreach { file => val fileName = file.baseName; test(fileName) {
     
     val buf = mutable.ArrayBuffer.empty[Char]
     buf ++= s"Processed  $fileName"
+    
     // For some reason the color is sometimes wiped out when the line is later updated not in iTerm3:
-    // print(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
+    // println(s"${Console.CYAN}Processing $fileName${Console.RESET}... ")
     
     val beginTime = System.nanoTime()
     
@@ -33,17 +35,21 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val diffMidMarker = "======="
     val diffEndMarker = ">>>>>>>"
     
-    val fileContents = read(file)
+    val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
     val out = new java.io.PrintWriter(strw)
-    def output(str: String) = out.println(outputMarker + str)
+    var stdout = false
+    def output(str: String) =
+      // out.println(outputMarker + str)
+      if (stdout) System.out.println(str) else
+      str.splitSane('\n').foreach(l => out.println(outputMarker + l))
     def outputSourceCode(code: SourceCode) = code.lines.foreach{line => out.println(outputMarker + line.toString())}
     val allStatements = mutable.Buffer.empty[DesugaredStatement]
-    var stdout = false
     val typer = new Typer(dbg = false, verbose = false, explainErrors = false) {
       override def funkyTuples = file.ext =:= "fun"
-      override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
+      // override def emitDbg(str: String): Unit = if (stdout) System.out.println(str) else output(str)
+      override def emitDbg(str: String): Unit = output(str)
     }
     var ctx: typer.Ctx = typer.Ctx.init
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
@@ -68,10 +74,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       noGeneration: Bool = false,
       showGeneratedJS: Bool = false,
       generateTsDeclarations: Bool = false,
+      debugVariance: Bool = false,
       expectRuntimeErrors: Bool = false,
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
+      // noProvs: Bool = false,
     ) {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -80,6 +88,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var allowTypeErrors = false
     var showRelativeLineNums = false
     var noJavaScript = false
+    var noProvs = false
     var allowRuntimeErrors = false
 
     val backend = new JSTestBackend()
@@ -106,10 +115,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "AllowRuntimeErrors" => allowRuntimeErrors = true; mode
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NoJS" => noJavaScript = true; mode
+          case "NoProvs" => noProvs = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
           case "ts" => mode.copy(generateTsDeclarations = true)
+          case "dv" => mode.copy(debugVariance = true)
           case "ge" => mode.copy(expectCodeGenErrors = true)
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
@@ -125,9 +136,12 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
         rec(ls, mode.copy(fixme = true))
       case line :: ls if line.startsWith(outputMarker) //|| line.startsWith(oldOutputMarker)
         => rec(ls, defaultMode)
-      case line :: ls if line.isEmpty || line.startsWith("//") =>
+      case line :: ls if line.isEmpty =>
         out.println(line)
         rec(ls, defaultMode)
+      case line :: ls if line.startsWith("//") =>
+        out.println(line)
+        rec(ls, mode)
       case line :: ls if line.startsWith(diffBegMarker) => // Check if there are unmerged git conflicts
         val diff = ls.takeWhile(l => !l.startsWith(diffEndMarker))
         assert(diff.exists(_.startsWith(diffMidMarker)), diff)
@@ -179,9 +193,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             if (mode.expectParseErrors)
               failures += blockLineNum
             if (mode.showParse) output("Parsed: " + p)
-            if (mode.isDebugging) typer.resetState()
+            // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
+            // typer.recordProvenances = !noProvs
+            typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
@@ -264,21 +280,18 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             
             def getType(ty: typer.TypeScheme): Type = {
               val wty = ty.uninstantiatedBody
-              if (mode.isDebugging) output(s"Typed as: $wty")
+              if (mode.isDebugging) output(s"⬤ Typed as: $wty")
               if (mode.isDebugging) output(s" where: ${wty.showBounds}")
-              if (mode.noSimplification) typer.expandType(wty, true)
+              typer.dbg = mode.dbgSimplif
+              if (mode.noSimplification) typer.expandType(wty)(ctx)
               else {
-                typer.dbg = mode.dbgSimplif
-                val cty = typer.canonicalizeType(wty)(ctx)
-                if (mode.dbgSimplif) output(s"Canon: ${cty}")
-                if (mode.dbgSimplif) output(s" where: ${cty.showBounds}")
-                val sim = typer.simplifyType(cty)(ctx)
-                if (mode.dbgSimplif) output(s"Type after simplification: ${sim}")
-                if (mode.dbgSimplif) output(s" where: ${sim.showBounds}")
-                val recons = typer.reconstructClassTypes(sim, true, ctx)
-                if (mode.dbgSimplif) output(s"Recons: ${recons}")
-                if (mode.dbgSimplif) output(s" where: ${recons.showBounds}")
-                val exp = typer.expandType(recons, true)
+                object SimplifyPipeline extends typer.SimplifyPipeline {
+                  def debugOutput(msg: => Str): Unit =
+                    if (mode.dbgSimplif) output(msg)
+                }
+                val sim = SimplifyPipeline(wty)(ctx)
+                val exp = typer.expandType(sim)(ctx)
+                if (mode.dbgSimplif) output(s"⬤ Expanded: ${exp}")
                 exp
               }
             }
@@ -290,16 +303,47 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 ctx.tyDefs.contains(td.nme.name) && !oldCtx.tyDefs.contains(td.nme.name)
               ).foreach(td => tsTypegenCodeBuilder.declareTypeDef(td))
             }
+
+            val curBlockTypeDefs = typeDefs
+              // add check from process type def block below
+              .flatMap(td => if (!oldCtx.tyDefs.contains(td.nme.name)) ctx.tyDefs.get(td.nme.name) else None)
             
-            // process type definitions first
+            // activate typer tracing if variance debugging is on and then set it back
+            // this makes it possible to debug variance in isolation
+            var temp = typer.dbg
+            typer.dbg = mode.debugVariance
+            typer.computeVariances(curBlockTypeDefs, ctx)
+            typer.dbg = temp
+            val varianceWarnings: MutMap[TypeName, Ls[TypeName]] = MutMap()
+
+            // show the result of type inference for each processed type def
             typeDefs.foreach(td =>
               // check if type def is not previously defined
               if (ctx.tyDefs.contains(td.nme.name)
                   && !oldCtx.tyDefs.contains(td.nme.name)) {
                   // ^ it may not end up being defined if there's an error
+
                 val tn = td.nme.name
-                output(s"Defined " + td.kind.str + " " + tn)
                 val ttd = ctx.tyDefs(tn)
+                val tvv = ttd.tvarVariances.getOrElse(die)
+
+                // generate warnings for bivariant type variables
+                val bivariantTypeVars = ttd.tparamsargs.iterator.filter{ case (tname, tvar) =>
+                  tvv.get(tvar).contains(typer.VarianceInfo.bi)
+                }.map(_._1).toList
+                if (!bivariantTypeVars.isEmpty) {
+                  varianceWarnings.put(td.nme, bivariantTypeVars)
+                }
+                
+                val params = if (!ttd.tparamsargs.isEmpty)
+                    SourceCode.horizontalArray(ttd.tparamsargs.map{ case (tname, tvar) =>
+                      val tvarVariance = tvv.getOrElse(tvar, throw new Exception(
+                        s"Type variable $tvar not found in variance store ${ttd.tvarVariances} for $ttd"))
+                      SourceCode(s"${tvarVariance.show}${tname.name}")
+                    }.toList).toString()
+                  else
+                    SourceCode("")
+                output(s"Defined " + td.kind.str + " " + tn + params)
 
                 // calculate types for all method definitions and declarations
                 // only once and reuse for pretty printing and type generation
@@ -336,6 +380,15 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               }
             )
             
+            if (!varianceWarnings.isEmpty) {
+              import Message._
+              val diags = varianceWarnings.map{ case (tname, biVars) =>
+                val warnings = biVars.map( tname => msg"${tname.name} is irrelevant and may be removed" -> tname.toLoc).toList
+                Warning(msg"Type definition ${tname.name} has bivariant type parameters:" -> tname.toLoc :: warnings)
+              }.toList
+              report(diags)
+            }
+
             final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
               def showFirst(prefixLength: Int): Unit = replies match {
                 case ReplHost.Error(err) :: rest =>
@@ -449,9 +502,10 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // generate typescript types if generateTsDeclarations flag is
             // set in the mode
             stmts.foreach {
-              // statement only declares a new term with it's type
+              // statement only declares a new term with its type
               // but does not give a body/definition to it
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
+                typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(0,
                   typer.typeType(rhs)(ctx.nextLevel, raise,
                     vars = tps.map(tp => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)).toMap))
@@ -464,6 +518,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
               // statement is defined and has a body/definition
               case d @ Def(isrec, nme, L(rhs)) =>
+                typer.dbg = mode.dbg
                 val ty_sch = typer.typeLetRhs(isrec, nme.name, rhs)(ctx, raise)
                 val exp = getType(ty_sch)
                 // statement does not have a declared type for the body
@@ -485,12 +540,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(exp.show)
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
+                    typer.dbg = mode.dbg
                     typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
+                typer.dbg = mode.dbg
                 typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
                   // when does this happen??
                   case R(binds) =>
@@ -560,8 +617,11 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               failures += allLines.size - lines.size
             // err.printStackTrace(out)
             output("/!!!\\ Uncaught error: " + err +
-              err.getStackTrace().take(if (mode.fullExceptionStack) Int.MaxValue else 10)
-                .map("\n" + outputMarker + "\tat: " + _).mkString)
+              err.getStackTrace().take(
+                if (mode.fullExceptionStack) Int.MaxValue
+                else if (mode.fixme) 0
+                else 10
+              ).map("\n" + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false
           typer.verbose = false
@@ -583,7 +643,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
       " " * (6 - timeStr.size)}$timeStr  ms${Console.RESET}\n"
     if (result =/= fileContents) {
       buf ++= s"! Updated $file\n"
-      write.over(file, result)
+      os.write.over(file, result)
     }
     print(buf.mkString)
     if (testFailed)
@@ -596,9 +656,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
 
 object DiffTests {
   
-  private val dir = pwd/"shared"/"src"/"test"/"diff"
+  private val dir = os.pwd/"shared"/"src"/"test"/"diff"
   
-  private val allFiles = ls.rec(dir).filter(_.isFile)
+  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
   
@@ -608,7 +668,7 @@ object DiffTests {
       println(" [git] " + gitStr)
       val prefix = gitStr.take(2)
       val filePath = gitStr.drop(3)
-      val fileName = RelPath(filePath).baseName
+      val fileName = os.RelPath(filePath).baseName
       if (prefix =:= "A " || prefix =:= "M ") N else S(fileName) // disregard modified files that are staged
     }.toSet catch {
       case err: Throwable => System.err.println("/!\\ git command failed with: " + err)

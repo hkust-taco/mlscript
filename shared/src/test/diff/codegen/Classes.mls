@@ -9,9 +9,9 @@ class Box[T]: { inner: T }
   method Map: (T -> 'a) -> Box['a]
   method Map f = Box { inner = f this.inner }
   method Get = this.inner
-//│ Defined class Box
+//│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: Box['T] -> ('T -> ('T0 & 'a)) -> (Box['T0] with {inner: 'a})
+//│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
 //│ Defined Box.Get: Box['T] -> 'T
 //│ // Prelude
 //│ class Box {
@@ -35,7 +35,7 @@ def Box value = Box { inner = value }
 //│ };
 //│ res = Box1;
 //│ // End of generated code
-//│ Box: ('inner & 'T) -> (Box['T] with {inner: 'inner})
+//│ Box: 'inner -> Box['inner]
 //│    = [Function: Box1]
 
 :js
@@ -48,9 +48,9 @@ def box2 = box1.Map (fun x -> add x 1)
 //│ globalThis.box2 = box1.Map((x) => add(x)(1));
 //│ res = box2;
 //│ // End of generated code
-//│ box1: Box['T .. 1 | 'T] with {inner: 1}
+//│ box1: Box[1]
 //│     = Box { inner: 1 }
-//│ box2: Box['a .. 'a | int]
+//│ box2: Box[int]
 //│     = Box { inner: 2 }
 
 :js
@@ -67,7 +67,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (int -> ('T & 'a)) -> (Box['T] with {info: string, inner: 'a})
+//│ Defined MyBox.Map: MyBox -> (int -> 'inner) -> (Box['inner] & {info: string})
 //│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {
@@ -123,7 +123,7 @@ mb2.Get
 //│   = MyBox { inner: 2, info: 'hello' }
 //│ res: int
 //│    = 2
-//│ mb2: Box['a .. 'a | int]
+//│ mb2: Box[int]
 //│    = Box { inner: 6, info: 'hello' }
 //│ res: int
 //│    = 6
@@ -137,10 +137,77 @@ MyBox.Map mb (fun x -> x * 3)
 //│ // Query 2
 //│ res = MyBox1.Map(mb1)((x) => x * 3);
 //│ // End of generated code
-//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ res: Box[int] & {info: string}
 //│ Runtime error:
 //│   TypeError: mb1.MyBox.Map is not a function
-//│ res: Box['T .. 'T | int] with {info: string, inner: int}
+//│ res: Box[int] & {info: string}
 //│ Runtime error:
 //│   TypeError: MyBox1.Map is not a function
+
+
+
+// Note that there is currently an inconsistency with wildcards:
+//  The type simplifier uses `?` to denote a class type argument wildcard,
+//    meaning there are no constraints on the corresponding class parameter in that type application,
+//    while user-written `?` in type signatures is handled like a definition-wide existential,
+//    which is NOT the same:
+
+def f0 (x: Box['_]) = 42
+//│ f0: Box[?] -> 42
+//│   = [Function: f0]
+
+f0(Box{})
+//│ res: 42
+//│    = 42
+
+// i.e., def f: exists T. Box[T] -> int
+def f: Box[?] -> int
+//│ f: Box[nothing] -> int
+//│  = <missing implementation>
+
+:e
+f(Box{})
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.169: 	f(Box{})
+//│ ║         	^^^^^^^^
+//│ ╟── record literal of type `anything` does not match type `nothing`
+//│ ║  l.169: 	f(Box{})
+//│ ║         	     ^^
+//│ ╟── Note: constraint arises from type wildcard:
+//│ ║  l.164: 	def f: Box[?] -> int
+//│ ╙──       	           ^
+//│ res: error | int
+//│    = <no result>
+//│      f is not implemented
+
+f = f0
+//│ Box[?] -> 42
+//│   <:  f:
+//│ Box[nothing] -> int
+//│  = [Function: f0]
+
+
+
+//  Some simplification tests:
+
+:NoJS
+
+error : 2 & int
+//│ res: 2
+
+error : 2 | int
+//│ res: int
+
+error : Box[int] & ~box
+//│ res: Box[int] & ~box
+
+error : Box[?] | Box[?] & {x: '_}
+//│ res: Box[?]
+
+error : ((Box[?] | Box[?] & {x: 'a -> int}) & 'a) -> 'a
+//│ res: (Box[nothing] & 'a) -> 'a
+
+error: "" | string
+//│ res: string
+
 

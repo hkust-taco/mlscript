@@ -1,6 +1,6 @@
 
 Two interpretations of types of the form T['a] as 'a
- - if interereted as proper recursive (a.k.a., infinite) type,
+ - if interpreted as proper recursive (a.k.a., infinite) type,
     it means ('a -> Bot) as 'a is too restrictive a type for self-app
     (it's specialized for applying self-app to itself, resulting in non-term and the Bot type as expected),
     but the original type ('a -> 'b) as 'a works fine.
@@ -43,5 +43,5 @@ Note:
   in positive or only in negative positions (the change was easy). Before that, the algorithm was probably
   wrong anyways, under our both-bounds interpretation.
   We'll no longer infer things like "('a -> 'b) as 'a", but rather "(('a -> 'b) -> 'b) as 'a",
-  which is easier to co-occurrence-anlayse using the current indrastructure (otherwise, we'd have to keep
+  which is easier to co-occurrence-analyze using the current infrastructure (otherwise, we'd have to keep
   track of the fact some recursive variables may appear both posly and negly as we do the analysis!)

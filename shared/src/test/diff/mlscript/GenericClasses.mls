@@ -7,25 +7,25 @@ def None = None{}
 
 class Some[A]: { value: A }
 def Some v = Some { value = v }
-//│ Defined class Some
-//│ Some: ('value & 'A) -> (Some['A] with {value: 'value})
+//│ Defined class Some[+A]
+//│ Some: 'value -> Some['value]
 //│     = [Function: Some1]
 
 Some 42
 (Some 42).value
-//│ res: Some['A .. 42 | 'A] with {value: 42}
+//│ res: Some[42]
 //│    = Some { value: 42 }
 //│ res: 42
 //│    = 42
 
 type Option[A] = Some[A] | None
-//│ Defined type alias Option
+//│ Defined type alias Option[+A]
 
 None: Option[int]
 Some 42 : Option[int]
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = None {}
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = Some { value: 42 }
 
 :e
@@ -36,7 +36,7 @@ res.value
 //│ ╟── type `None` does not have field 'value'
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                           ^^^^
-//│ ╟── but it flows into reference with expected type `{value: ?a}`
+//│ ╟── but it flows into reference with expected type `{value: ?value}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
 //│ res: error | int
@@ -57,13 +57,14 @@ res.value
 //│ ╟── from applied type reference:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ╙──      	    ^^^^^^^^^^^^^^^^
-//│ res: None | Some[int]
+//│ res: Option[int]
 //│    = 42
+
 
 
 class Foo1[A]: { x: A }
 class Bar1: Foo1[int]
-//│ Defined class Foo1
+//│ Defined class Foo1[+A]
 //│ Defined class Bar1
 
 Bar1
@@ -93,20 +94,25 @@ res.x
 :e
 g: Foo1['a]: Foo1[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ║        	^
-//│ ╟── type `int` does not match type `string`
-//│ ║  l.65: 	class Bar1: Foo1[int]
+//│ ╟── type `int` is not an instance of type `string`
+//│ ║  l.66: 	class Bar1: Foo1[int]
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.94: 	g: Foo1['a]: Foo1[string]
+//│ ║  l.95: 	g: Foo1['a]: Foo1[string]
 //│ ╙──      	                  ^^^^^^
 //│ res: Foo1[string]
 //│    = Bar1 { x: 42 }
 
 
+
 class Foo2[A]
-//│ Defined class Foo2
+  method Foo2: A -> A
+  method Foo2 = id
+//│ Defined class Foo2[=A]
+//│ Declared Foo2.Foo2: Foo2['A] -> 'A -> 'A
+//│ Defined Foo2.Foo2: Foo2['A] -> 'a -> 'a
 
 Foo2
 //│ res: anything -> Foo2['A]
@@ -128,20 +134,206 @@ f (Foo2 {})
 
 :re
 error: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[anything .. nothing] & 'a) -> 'a
+//│ res: (Foo2[?] & 'a) -> 'a
 //│    = [Function: f]
 
 :ns
 f: (Foo2[?] & 'a) -> 'a
-//│ res: (Foo2[?] & (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))) -> (Foo2[?] & 'a as 'a)
+//│ res: (Foo2[?] & 'a) -> 'a
+//│   where
+//│     'a :> Foo2[?] & 'a
+//│        <: (foo2 | ~{Foo2#A} | ~foo2 | ~(foo2 & {Foo2#A})) & (foo2 | ~(foo2 & {Foo2#A}))
 //│    = [Function: f]
 
 f
 //│ res: (Foo2[?] & 'a) -> 'a
 //│    = [Function: f]
+
+
+def mrg: Foo2[int] & Foo2[string]
+//│ mrg: Foo2[in int | string out nothing]
+//│    = <missing implementation>
+
+mrg: Foo2[int]
+//│ res: Foo2[int]
+//│    = <no result>
+//│      mrg is not implemented
+
+:e
+mrg = Foo2{}
+//│ Foo2['A]
+//│   <:  mrg:
+//│ Foo2[in int | string out nothing]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.168: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `string` is not an instance of type `int`
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	                          ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: class type parameter A is defined at:
+//│ ║  l.110: 	class Foo2[A]
+//│ ╙──       	           ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.168: 	mrg = Foo2{}
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `int` is not an instance of type `string`
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ║         	              ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
+//│ ╙──       	                          ^^^^^^
+//│    = Foo2 {}
+
+def mrg: Foo2[int] | Foo2[string]
+//│ mrg: Foo2[out int | string]
+//│    = <missing implementation>
+
+
+
+class Foo2_Co[A]
+  method Foo2_Co: A
+  method Foo2_Co = error
+//│ Defined class Foo2_Co[+A]
+//│ Declared Foo2_Co.Foo2_Co: Foo2_Co['A] -> 'A
+//│ Defined Foo2_Co.Foo2_Co: Foo2_Co[?] -> nothing
+
+Foo2_Co
+//│ res: anything -> Foo2_Co[nothing]
+//│    = [Function: res]
+
+:re
+error: Foo2_Co[int]
+//│ res: Foo2_Co[int]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+f = fun x -> case x of { Foo2_Co -> x }
+//│ f: (Foo2_Co[?] & 'a) -> 'a
+//│  = [Function: f1]
+
+f (Foo2_Co {})
+//│ res: Foo2_Co[nothing]
+//│    = Foo2_Co {}
+
+:re
+error: (Foo2_Co[?] & 'a) -> 'a
+//│ res: (Foo2_Co[nothing] & 'a) -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+f: (Foo2_Co[?] & 'a) -> 'a
+//│ res: (Foo2_Co[nothing] & 'a) -> 'a
+//│    = [Function: f1]
+
+:ns
+f: (Foo2_Co[?] & 'a) -> 'a
+//│ res: (Foo2_Co[?] & 'a) -> 'a
+//│   where
+//│     'a :> Foo2_Co[?] & 'a
+//│        <: (foo2_Co | ~{Foo2_Co#A} | ~foo2_Co | ~(foo2_Co & {Foo2_Co#A})) & (foo2_Co | ~(foo2_Co & {Foo2_Co#A}))
+//│    = [Function: f1]
+
+f
+//│ res: (Foo2_Co[?] & 'a) -> 'a
+//│    = [Function: f1]
+
+
+def mrg: Foo2_Co[int] & Foo2_Co[string]
+//│ mrg: Foo2_Co[nothing]
+//│    = <missing implementation>
+
+mrg: Foo2_Co[int]
+//│ res: Foo2_Co[int]
+//│    = <no result>
+//│      mrg is not implemented
+
+mrg = Foo2_Co{}
+//│ Foo2_Co[nothing]
+//│   <:  mrg:
+//│ Foo2_Co[nothing]
+//│    = Foo2_Co {}
+
+def mrg: Foo2_Co[int] | Foo2_Co[string]
+//│ mrg: Foo2_Co[int | string]
+//│    = <missing implementation>
+
+
+
+:w
+class Foo2_Bi[A]
+//│ Defined class Foo2_Bi[±A]
+//│ ╔══[WARNING] Type definition Foo2_Bi has bivariant type parameters:
+//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║         	      ^^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ╙──       	              ^
+
+Foo2_Bi
+//│ res: anything -> Foo2_Bi[?]
+//│    = [Function: res]
+
+:re
+error: Foo2_Bi[int]
+//│ res: Foo2_Bi[?]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+f = fun x -> case x of { Foo2_Bi -> x }
+//│ f: (Foo2_Bi[?] & 'a) -> 'a
+//│  = [Function: f2]
+
+f (Foo2_Bi {})
+//│ res: Foo2_Bi[?]
+//│    = Foo2_Bi {}
+
+:re
+error: (Foo2_Bi[?] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+f: (Foo2_Bi[?] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
+//│    = [Function: f2]
+
+:ns
+f: (Foo2_Bi[?] & 'a) -> 'a
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
+//│   where
+//│     'a :> Foo2_Bi[?] & 'a
+//│        <: (foo2_Bi | ~{Foo2_Bi#A} | ~foo2_Bi | ~(foo2_Bi & {Foo2_Bi#A})) & (foo2_Bi | ~(foo2_Bi & {Foo2_Bi#A}))
+//│    = [Function: f2]
+
+f
+//│ res: (Foo2_Bi[?] & 'a) -> 'a
+//│    = [Function: f2]
+
+
+def mrg: Foo2_Bi[int] & Foo2_Bi[string]
+//│ mrg: Foo2_Bi[?]
+//│    = <missing implementation>
+
+mrg: Foo2_Bi[int]
+//│ res: Foo2_Bi[?]
+//│    = <no result>
+//│      mrg is not implemented
+
+mrg = Foo2_Bi{}
+//│ Foo2_Bi[?]
+//│   <:  mrg:
+//│ Foo2_Bi[?]
+//│    = Foo2_Bi {}
+
+def mrg: Foo2_Bi[int] | Foo2_Bi[string]
+//│ mrg: Foo2_Bi[?]
+//│    = <missing implementation>
 

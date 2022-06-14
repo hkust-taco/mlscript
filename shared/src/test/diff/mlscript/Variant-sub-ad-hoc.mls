@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | _ -> opt }
-//│ flatMap: ('a -> 'b) -> (Some & {v: 'a} | 'b & ~some) -> 'b
+//│ flatMap: ('v -> 'a) -> (Some & {v: 'v} | 'a & ~some) -> 'a
 //│        = [Function: flatMap]
 
 f = fun x -> Some x
@@ -46,7 +46,9 @@ rec def evalOpt = fun x -> case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: (Lit & {v: int & 'b} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string} as 'a) -> (None & {err: string} | Some & {v: int} | Some & {v: 'b})
+//│ evalOpt: 'a -> (None & {err: string} | Some & {v: int})
+//│   where
+//│     'a <: Lit & {v: int} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string}
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})

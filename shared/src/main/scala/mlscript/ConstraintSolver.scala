@@ -31,7 +31,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx): Unit =
-      constrainDNF(DNF.mk(lhs, true), DNF.mk(rhs, false), rhs)
+      constrainDNF(DNF.mkDeep(lhs, true), DNF.mkDeep(rhs, false), rhs)
     
     def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
@@ -42,18 +42,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case S(v) =>
             rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
-            val fullRhs = nvars.iterator.map(DNF.mk(_, true))
-              .foldLeft(rhs | DNF.mk(rnf.toType(), false))(_ | _)
+            implicit val etf: ExpandTupleFields = true
+            val fullRhs = nvars.iterator.map(DNF.mkDeep(_, true))
+              .foldLeft(rhs | DNF.mkDeep(rnf.toType(), false))(_ | _)
             println(s"Consider ${lnf} <: ${fullRhs}")
             
             // The following crutch is necessary because the pesky Without types may get stuck
             //  on type variables and type variable negations:
             lnf match {
-              case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd) =>
-                return rec((fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns).neg(), tv, true)
-              case LhsRefined(S(Without(b, ns)), tts, rcd) =>
+              case LhsRefined(S(Without(NegType(tv: TV), ns)), tts, rcd, trs) =>
+                return rec((
+                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns).neg(), tv, true)
+              case LhsRefined(S(Without(b, ns)), tts, rcd, trs) =>
                 assert(b.isInstanceOf[TV])
-                return rec(b, (fullRhs.toType() | LhsRefined(N, tts, rcd).toType().neg()).without(ns), true)
+                return rec(b, (
+                  fullRhs.toType() | LhsRefined(N, tts, rcd, trs).toType().neg()).without(ns), true)
               case _ => ()
             }
             
@@ -69,11 +72,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
               
               // println(s"Possible? $r ${lnf & r.lnf}")
-              !vars.exists(r.nvars) && (lnf & r.lnf).isDefined && ((lnf, r.rnf) match {
-                case (LhsRefined(_, ttags, _), RhsBases(objTags, rest))
+              !vars.exists(r.nvars) && ((lnf & r.lnf)(ctx, etf = false)).isDefined && ((lnf, r.rnf) match {
+                case (LhsRefined(_, ttags, _, _), RhsBases(objTags, rest, trs))
                   if objTags.exists { case t: TraitTag => ttags(t); case _ => false }
                   => false
-                case (LhsRefined(S(ot: ClassTag), _, _), RhsBases(objTags, rest))
+                case (LhsRefined(S(ot: ClassTag), _, _, _), RhsBases(objTags, rest, trs))
                   => !objTags.contains(ot)
                 case _ => true
               })
@@ -81,16 +84,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
             println(s"Possible: " + possible)
             
-            // Then, we try to factorize the RHS to help make subsequent solving take shortcuts:
-            val fact = factorize(possible, sort = false)
-            
-            println(s"Factorized: " + fact)
-            
-            // Finally, we enter the "annoying constraint" resolution routine:
-            annoying(Nil, lnf, fact, RhsBot)
-            
-            // // Alternatively, wothout factorization (does not actually make a difference most of the time):
-            // annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+            if (doFactorize) {
+              // We try to factorize the RHS to help make subsequent solving take shortcuts:
+              
+              val fact = factorize(possible, sort = false)
+              
+              println(s"Factorized: " + fact)
+              
+              // Finally, we enter the "annoying constraint" resolution routine:
+              annoying(Nil, lnf, fact, RhsBot)
+              
+            } else {
+              // Alternatively, without factorization (does not actually make a difference most of the time):
+              
+              annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+              
+            }
             
         }
       }
@@ -116,6 +125,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
         tys.reduceOption(_ & _).getOrElse(TopType)
       }
+      implicit val etf: ExpandTupleFields = false
       (ls, rs) match {
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
@@ -143,8 +153,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
         case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
           
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, (done_ls & tr) getOrElse
+          (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
+        
+        // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | tr getOrElse
+          (return println(s"OK  $done_rs & $tr  =:=  ${TopType}")))
         
         /*
         // This logic is now in `constrainDNF`... and even if we got here,
@@ -157,7 +172,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
         
-        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, done_ls & l getOrElse
+        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & l)(etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
         case (ls, (r: BaseTypeOrTag) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
           (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))
@@ -173,26 +188,39 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
           (done_ls, done_rs) match {
-            case (LhsRefined(S(Without(b, _)), _, _), RhsBot) => rec(b, BotType, true)
-            case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil)), _)
-              | (_, RhsBot) | (_, RhsBases(Nil, N)) =>
+            case (LhsRefined(S(Without(b, _)), _, _, _), RhsBot) => rec(b, BotType, true)
+            case (LhsTop, _) | (LhsRefined(N, empty(), RecordType(Nil), empty()), _) =>
               // TODO ^ actually get rid of LhsTop and RhsBot...? (might make constraint solving slower)
               reportError()
-            case (LhsRefined(_, ts, _), RhsBases(pts, _)) if ts.exists(pts.contains) => ()
-            case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r)
-                , RhsBases(_, S(L(f1@FunctionType(l1, r1))))) =>
+            case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
+            
+            case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
+              annoying(trs.valuesIterator.map(_.expand).toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
+            
+            case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
+              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
+            
+            // From this point on, trs should be empty!
+            case (LhsRefined(_, _, _, trs), _) if trs.nonEmpty => die
+            case (_, RhsBases(_, _, trs)) if trs.nonEmpty => die
+            
+            case (_, RhsBot) | (_, RhsBases(Nil, N, _)) =>
+              reportError()
+            
+            case (LhsRefined(S(f0@FunctionType(l0, r0)), ts, r, _)
+                , RhsBases(_, S(L(f1@FunctionType(l1, r1))), _)) =>
               rec(f0, f1, true)
-            case (LhsRefined(S(f: FunctionType), ts, r), RhsBases(pts, _)) =>
-              annoying(Nil, LhsRefined(N, ts, r), Nil, done_rs)
-            case (LhsRefined(S(pt: ClassTag), ts, r), RhsBases(pts, bf)) =>
+            case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
+              annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
+            case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
               if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, ts, r), Nil, RhsBases(Nil, bf))
-            case (lr @ LhsRefined(bo, ts, r), rf @ RhsField(n, t2)) =>
+              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
+            case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
-              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf))))
-            case (LhsRefined(bo, ts, r), RhsBases(ots, S(R(RhsField(n, t2))))) =>
+              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
+            case (LhsRefined(bo, ts, r, _), RhsBases(ots, S(R(RhsField(n, t2))), trs)) =>
               r.fields.find(_._1 === n) match {
                 case S(nt1) =>
                   recLb(t2, nt1._2)
@@ -200,26 +228,26 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case N =>
                   bo match {
                     case S(Without(b, ns)) =>
-                      if (ns(n)) rec(b, RhsBases(ots, N).toType(), true)
+                      if (ns(n)) rec(b, RhsBases(ots, N, trs).toType(), true)
                       else rec(b, done_rs.toType(), true)
                     case _ => reportError()
                   }
               }
-            case (LhsRefined(N, ts, r), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)))) =>
+            case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)), _)) =>
               reportError()
-            case (LhsRefined(S(b: TupleType), ts, r), RhsBases(pts, S(L(ty: TupleType))))
+            case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
                 (b.fields.unzip._2 lazyZip ty.fields.unzip._2).foreach { (l, r) =>
                   rec(l.ub, r.ub, false)
                   recLb(r, l)
                 }
-            case (LhsRefined(S(b: ArrayBase), ts, r), RhsBases(pts, S(L(ar: ArrayType)))) =>
+            case (LhsRefined(S(b: ArrayBase), ts, r, _), RhsBases(pts, S(L(ar: ArrayType)), _)) =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
-            case (LhsRefined(S(b: ArrayBase), ts, r), _) => reportError()
-            case (LhsRefined(S(Without(b, ns)), ts, r), RhsBases(pts, N | S(L(_)))) =>
+            case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
+            case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
-            case (_, RhsBases(pts, S(L(Without(base, ns))))) =>
+            case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
               // rec((pts.map(_.neg()).foldLeft(done_ls.toType())(_ & _)).without(ns), base)
               // ^ This less efficient version creates a slightly different error message
               //    (see test in Annoying.mls)
@@ -229,7 +257,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }()
     
-    /** Helper function to constrain Field lower bounds */
+    /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
       (implicit raise: Raise, cctx: ConCtx): Unit = {
         (lhs.lb, rhs.lb) match {
@@ -257,25 +285,30 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx): Unit =
-    trace(s"C $lhs <! $rhs") {
+    // trace(s"C $lhs <! $rhs") {
+    trace(s"C $lhs <! $rhs    (${cache.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
-      if (lhs === rhs) return ()  // TODO try subtyping here?
+      
+      if (lhs === rhs) return ()
+      
+      // if (lhs <:< rhs) return () // * It's not clear that doing this here is worth it
+      
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
         lhs_rhs match {
           case (_: ProvType, _) | (_, _: ProvType) => ()
-          // There is no need to remember the subtyping tests performed that did not involve
-          // type variables or type references, as these will necessary be part of any possible
-          // cycles. Since these types form regular trees, there will necessarily be a point where
-          // a variable or type ref part of a cycle will be matched against the same type periodically.
-          case (_: TypeVariable | _: TypeRef, _) | (_, _: TypeVariable | _: TypeRef) =>
+          // * Note: contrary to Simple-sub, we do have to remember subtyping tests performed
+          // *    between things that are not syntactically type variables or type references.
+          // *  Indeed, due to the normalization of unions and intersections in the wriong polarity,
+          // *    cycles in regular trees may only ever go through unions or intersections,
+          // *    and not plain type variables.
+          case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
             cache += lhs_rhs
-          case _ => ()
         }
         lhs_rhs match {
           case (ExtrType(true), _) => ()
@@ -289,7 +322,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(l1, l0, false)
             rec(r0, r1, false)
           case (prim: ClassTag, ot: ObjectTag)
-            if (ot.id match { case v: Var => prim.parents.contains(v); case _ => false }) => ()
+            if prim.parentsST.contains(ot.id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
@@ -356,8 +389,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             fs1.foreach(f => rec(err, f._2.ub, false))
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2.ub, err, false))
+            
+          case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
+            if (tr1.defn === tr2.defn) {
+              assert(tr1.targs.sizeCompare(tr2.targs) === 0)
+              val td = ctx.tyDefs(tr1.defn.name)
+              val tvv = td.getVariancesOrDefault
+              td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
+                val v = tvv(tv)
+                if (!v.isContravariant) rec(targ1, targ2, false)
+                if (!v.isCovariant) rec(targ2, targ1, false)
+              }
+            } else {
+              (tr1.mkTag, tr2.mkTag) match {
+                case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
+                  reportError()
+                case _ =>
+                  rec(tr1.expand, tr2.expand, true)
+              }
+            }
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
           case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
+          
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
           case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)
@@ -391,8 +444,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             .headOption.fold(doesntMatch(rhs)) { n1 => doesntHaveField(n1.name) }
         case (lunw, obj: ObjectTag)
           if obj.id.isInstanceOf[Var]
-          && !primitiveTypes(obj.id.idStr)
-          => msg"is not an instance of type ${obj.id.idStr.capitalize}"
+          => msg"is not an instance of type `${
+              if (primitiveTypes(obj.id.idStr)) obj.id.idStr else obj.id.idStr.capitalize}`"
+        case (lunw, obj: TypeRef)
+          => msg"is not an instance of `${obj.expNeg}`"
         case (lunw, TupleType(fs))
           if !lunw.isInstanceOf[TupleType] => msg"is not a ${fs.size.toString}-element tuple"
         case (lunw, FunctionType(_, _))
@@ -547,12 +602,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => extrude(und, lvl, pol)
       case _: ClassTag | _: TraitTag => ty
       case tr @ TypeRef(d, ts) =>
-        /* Note: we could try to preserve TypeRef-s through extrusion,
-            but in the absence of variance analysis it's a bit wasteful
-            to always extrude in both directions: */
-        // TypeRef(d, ts.map(t =>
-        //   TypeBounds(extrude(t, lvl, pol), extrude(t, lvl, pol))(noProv)))(tr.prov, tr.ctx) // FIXME pol...
-        extrude(tr.expand, lvl, pol).withProvOf(tr)
+        TypeRef(d, tr.mapTargs(S(pol)) {
+          case (N, targ) =>
+            TypeBounds(extrude(targ, lvl, false), extrude(targ, lvl, true))(noProv)
+          case (S(pol), targ) => extrude(targ, lvl, pol)
+        })(tr.prov)
     }
   
   

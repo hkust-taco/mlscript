@@ -3,7 +3,7 @@
 class MyArray[A]: { size: int }
   method Set: (int, A) -> ()
   method Get: int -> A 
-//│ Defined class MyArray
+//│ Defined class MyArray[=A]
 //│ Declared MyArray.Set: MyArray['A] -> (int, 'A,) -> ()
 //│ Declared MyArray.Get: MyArray['A] -> int -> 'A
 
@@ -12,7 +12,7 @@ class MyArray[A]: { size: int }
 class Dummy[A]: MyArray[A] & { size: 0 }
   method Set (i, a) = ()
   method Get i = error
-//│ Defined class Dummy
+//│ Defined class Dummy[=A]
 //│ Defined Dummy.Set: Dummy['A] -> (anything, anything,) -> ()
 //│ Defined Dummy.Get: Dummy['A] -> anything -> nothing
 
@@ -27,7 +27,9 @@ dummy: MyArray[int]
 
 
 def ty4B: MyArray[MyArray[MyArray['a]]] as 'a
-//│ ty4B: 'a | MyArray[MyArray['c .. 'd] .. MyArray[MyArray['e .. 'f] .. MyArray[MyArray[MyArray[MyArray['e .. 'f] .. 'g] .. 'h] & 'a .. 'b] as 'g]] as 'b
+//│ ty4B: 'a
+//│   where
+//│     'a := MyArray[MyArray[MyArray['a]]]
 //│     = <missing implementation>
 
 

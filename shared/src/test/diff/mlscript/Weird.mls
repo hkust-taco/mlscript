@@ -32,3 +32,17 @@ int + 1
 //│ Code generation encountered an error:
 //│   type alias int is not a valid expression
 
+
+class C
+//│ Defined class C
+
+:p
+def n: C{}
+//│ Parsed: rec def n: [] -> C; {};
+//│ Desugared: rec def n: [] -> C
+//│ Desugared: {}
+//│ n: C
+//│  = <missing implementation>
+//│ res: anything
+//│    = {}
+

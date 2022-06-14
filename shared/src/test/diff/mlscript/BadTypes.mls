@@ -33,7 +33,7 @@ type Hello = int
 //│ Defined type alias Hello
 
 42: Hello
-//│ res: int
+//│ res: Hello
 //│    = 42
 
 :e
@@ -73,7 +73,7 @@ aa: { a: int; a: string }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	aa: { a: int; a: string }
 //│ ║        	^^
-//│ ╟── integer literal of type `1` does not match type `string`
+//│ ╟── integer literal of type `1` is not an instance of type `string`
 //│ ║  l.49: 	aa = { a = 1; a = "oops" }
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:
@@ -103,18 +103,18 @@ type Bad = { x: 'a }
 
 // :d
 {x = 123}: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│    = { x: 123 }
 
 // Note: we should get {x: 123 | "ah"} here; but there seems to be a TV problem
 // :d
 {x = "ah"}: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│    = { x: 'ah' }
 
 :re
 error: Bad
-//│ res: {x: 123}
+//│ res: Bad
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
@@ -129,17 +129,45 @@ type BadRec = { x: 'a; y: BadRec }
 
 :re
 error: BadRec
-//│ res: {x: nothing, y: 'a} as 'a
+//│ res: BadRec
 //│ Runtime error:
 //│   Error: unexpected runtime error
 
 def someRec: { y: 'a } as 'a
-//│ someRec: {y: 'a} as 'a
+//│ someRec: 'a
+//│   where
+//│     'a :> {y: 'a}
 //│        = <missing implementation>
 
-// // FIXME: causes SOF in type simplifier
-// :d
-// :s
-// someRec: BadRec
+:e
+someRec: BadRec
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.+1: 	someRec: BadRec
+//│ ║        	^^^^^^^
+//│ ╟── type `{y: ?a}` does not have field 'x'
+//│ ║  l.136: 	def someRec: { y: 'a } as 'a
+//│ ║         	             ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{x: ?a0, y: BadRec}`
+//│ ║  l.+1: 	someRec: BadRec
+//│ ║        	^^^^^^^
+//│ ╟── Note: constraint arises from record type:
+//│ ║  l.121: 	type BadRec = { x: 'a; y: BadRec }
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.+1: 	someRec: BadRec
+//│ ╙──      	         ^^^^^^
+//│ res: BadRec
+//│    = <no result>
+//│      someRec is not implemented
 
+def someRec: { x: 'a; y: 'a } as 'a
+//│ someRec: 'a
+//│   where
+//│     'a :> {x: 'a, y: 'a}
+//│        = <missing implementation>
+
+someRec: BadRec
+//│ res: BadRec
+//│    = <no result>
+//│      someRec is not implemented
 

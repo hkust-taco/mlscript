@@ -5,11 +5,11 @@ type H = int | ~string
 class Box[T]: { length: T }
 class RectangleBox[T]: Box[T] & { breadth: T }
 class StackedRectangleBoxes[T, N]: RectangleBox[T] & { size: N }
-//│ Defined type alias G
+//│ Defined type alias G[+T]
 //│ Defined type alias H
-//│ Defined class Box
-//│ Defined class RectangleBox
-//│ Defined class StackedRectangleBoxes
+//│ Defined class Box[+T]
+//│ Defined class RectangleBox[+T]
+//│ Defined class StackedRectangleBoxes[+T, +N]
 //│ // start ts
 //│ export type G = {readonly a: T}
 //│ type Neg<NegatedType, FromType> = FromType extends NegatedType ? never: FromType
@@ -41,15 +41,15 @@ class Bank: { lock: Lock[int]; cash: int }
   method Better other = this.Potential > other.Potential
 def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
-//│ Defined class Lock
+//│ Defined class Lock[+T]
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined Lock.Map: Lock['T] -> ('T -> ('T0 & 'a)) -> (Lock['T0] with {pins: 'a})
+//│ Defined Lock.Map: Lock['T] -> ('T -> 'pins) -> Lock['pins]
 //│ Defined class Bank
-//│ Declared Bank.Potential: (Bank with {lock: Lock[int]}) -> int
-//│ Declared Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
-//│ Defined Bank.Potential: (Bank with {lock: Lock[int]}) -> int
-//│ Defined Bank.Better: (Bank with {lock: Lock[int]}) -> (Bank with {lock: Lock[int]}) -> bool
-//│ Lock: ('pins & 'T) -> (Lock['T] with {pins: 'pins})
+//│ Declared Bank.Potential: Bank -> int
+//│ Declared Bank.Better: Bank -> Bank -> bool
+//│ Defined Bank.Potential: Bank -> int
+//│ Defined Bank.Better: Bank -> Bank -> bool
+//│ Lock: 'pins -> Lock['pins]
 //│ Bank: (Lock[int] & 'lock) -> (int & 'cash) -> (Bank with {cash: 'cash, lock: 'lock})
 //│ res: bool
 //│ // start ts
@@ -63,16 +63,15 @@ let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lock
 //│     cash: int
 //│     constructor(fields: {lock: Lock<int>, cash: int})
 //│     readonly Potential: int
-//│     Better(arg: Omit<Bank, "lock"> & {readonly lock: Lock<int>}): bool
+//│     Better(arg: Bank): bool
 //│ }
-//│ export declare const Lock<pins, T>: (arg: pins & T) => Omit<Lock<T>, "pins"> & {readonly pins: pins}
+//│ export declare const Lock<pins>: (arg: pins) => Lock<pins>
 //│ export declare const Bank<lock, cash>: (arg: Lock<int> & lock) => (arg1: int & cash) => Omit<Bank, "cash" | "lock"> & {readonly cash: cash, readonly lock: lock}
 //│ export declare const res: bool
 //│ // end ts
 
 
 :ts
-// FIXME
 class None: {}
 class Some[T]: { value: T }
 type Option[T] = Some[T] | None
@@ -82,22 +81,31 @@ class LinkedList[T]: { head: T; tail: Option[LinkedList[T]] }
 def None = None {}
 def Some v = Some { value = v }
 //│ Defined class None
-//│ Defined class Some
-//│ Defined type alias Option
-//│ Defined class LinkedList
-//│ Declared LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> 'T -> ((LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. 'd] with {value: 'd})}) as 'd)
-//│ Defined LinkedList.Append: ((LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a) -> ('T & 'd & 'e) -> (LinkedList['T & 'e .. 'T | 'e] with {head: 'd, tail: Some[((LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f) & 'i .. (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. 'j] with {value: 'j})}) as 'j] with {value: (LinkedList['T & 'e .. 'T | 'e] with {tail: None | (Some[(LinkedList['T | 'e .. 'T & 'e] with {tail: None | (Some['g .. LinkedList['T | 'e .. 'T & 'e] with {tail: 'h}] with {value: 'f})}) as 'f .. 'j] with {value: 'j})}) as 'j})}) | (LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. LinkedList['T] with {tail: 'k}] with {value: LinkedList['T] with {tail: 'k}}) as 'k}) | 'i] with {value: LinkedList['T] with {tail: None | (Some[(LinkedList['T] with {tail: None | (Some['b .. 'c] with {value: 'a})}) as 'a .. LinkedList['T] with {tail: 'k}] with {value: LinkedList['T] with {tail: 'k}}) as 'k}}})
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for invariant type Bounds(Recursive(α179,WithExtension(AppliedType(TypeName(LinkedList),List(α175)),Record(List((tail,Field(None,Union(TypeName(None),WithExtension(AppliedType(TypeName(Some),List(Bounds(α178,α177))),Record(List((value,Field(None,α179)))))))))))),α180)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:560)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$20(TsTypegen.scala:521)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:521)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:549)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:402)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:392)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.$anonfun$toTsType$5(TsTypegen.scala:417)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.codegen.typescript.TsTypegenCodeBuilder.toTsType(TsTypegen.scala:413)
+//│ Defined class Some[+T]
+//│ Defined type alias Option[+T]
+//│ Defined class LinkedList[=T]
+//│ Declared LinkedList.Append: LinkedList['T] -> 'T -> LinkedList['T]
+//│ Defined LinkedList.Append: (LinkedList['T] & 'this) -> ('T & 'head) -> (LinkedList['T] with {head: 'head, tail: Some[LinkedList['T]] & {value: LinkedList['T] & 'this}})
+//│ None: None
+//│ Some: 'value -> Some['value]
+//│ // start ts
+//│ export declare class None {
+//│     constructor(fields: {})
+//│ }
+//│ export declare class Some<T> {
+//│     value: T
+//│     constructor(fields: {value: T})
+//│ }
+//│ export type Option = Some<T> | None
+//│ export declare class LinkedList<T> {
+//│     head: T
+//│     tail: Option<LinkedList<T>>
+//│     constructor(fields: {head: T, tail: Option<LinkedList<T>>})
+//│     Append(arg: T): LinkedList<T>
+//│ }
+//│ export declare const None: None
+//│ export declare const Some<value>: (arg: value) => Some<value>
+//│ // end ts
 
 :ts
 trait A: { x: int }
@@ -122,16 +130,14 @@ class C: { x: 0 | 1 }
 :ts
 class LL[T]: { head: T; tail: LL[T] -> int }
   method Append: T -> LL[T]
-//│ Defined class LL
-//│ Declared LL.Append: ((LL['T] with {tail: (LL['T] with {tail: 'a -> int}) -> int},) as 'a) -> 'T -> ((LL['T] with {tail: ((LL['T] with {tail: 'b -> int},) as 'a) -> int}) as 'b)
+//│ Defined class LL[=T]
+//│ Declared LL.Append: LL['T] -> 'T -> LL['T]
 //│ // start ts
-//│ export type b<T> = readonly [Omit<LL<T>, "tail"> & {readonly tail: (arg: a<T>) => int}]
-//│ export type a<T> = Omit<LL<T>, "tail"> & {readonly tail: (...arg: b<T>) => int}
 //│ export declare class LL<T> {
 //│     head: T
 //│     tail: (arg: LL<T>) => int
 //│     constructor(fields: {head: T, tail: (arg: LL<T>) => int})
-//│     Append(arg: T): a<T>
+//│     Append(arg: T): LL<T>
 //│ }
 //│ // end ts
 
@@ -165,30 +171,37 @@ class E: { x: "hello"; y: int } & A1 & B2 & D3
 type VarArg[T] = (T, T)
 class Program[T]
   method Run: VarArg[T] -> number
-//│ Defined type alias VarArg
-//│ Defined class Program
-//│ Declared Program.Run: Program['T] -> ('T, 'T,) -> number
+//│ Defined type alias VarArg[+T]
+//│ Defined class Program[-T]
+//│ Declared Program.Run: Program['T] -> VarArg['T] -> number
 //│ // start ts
 //│ export type VarArg = readonly [T, T]
 //│ export declare class Program<T> {
 //│     constructor(fields: {})
-//│     Run(arg: readonly [T, T]): number
+//│     Run(arg: VarArg<T>): number
 //│ }
 //│ // end ts
 
 :ts
 :e
+:w
 class Arg[T]: (T, T)
 class Prog[T]
   method Run: Arg[T] -> number
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.181: 	class Arg[T]: (T, T)
+//│ ║  l.188: 	class Arg[T]: (T, T)
 //│ ╙──       	      ^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Arg
-//│ ║  l.183: 	  method Run: Arg[T] -> number
+//│ ║  l.190: 	  method Run: Arg[T] -> number
 //│ ╙──       	              ^^^^^^
-//│ Defined class Prog
-//│ Declared Prog.Run: Prog['T] -> error -> number
+//│ Defined class Prog[±T]
+//│ Declared Prog.Run: Prog[?] -> error -> number
+//│ ╔══[WARNING] Type definition Prog has bivariant type parameters:
+//│ ║  l.189: 	class Prog[T]
+//│ ║         	      ^^^^
+//│ ╟── T is irrelevant and may be removed
+//│ ║  l.189: 	class Prog[T]
+//│ ╙──       	           ^
 //│ // start ts
 //│ export declare class Prog<T> {
 //│     constructor(fields: {})

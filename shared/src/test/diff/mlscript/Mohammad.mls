@@ -28,7 +28,7 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│ };
 //│ res = useCls;
 //│ // End of generated code
-//│ useCls: ((Class with {x: 'a}) | int) -> ("oops" | 'a)
+//│ useCls: ((Class with {x: 'x}) | int) -> ("oops" | 'x)
 //│       = [Function: useCls]
 
 useCls c
@@ -44,8 +44,8 @@ trait T
   method Test2: int
   method Test2 = 1
 //│ Defined trait T
-//│ Declared T.Test2: t -> int
-//│ Defined T.Test2: t -> 1
+//│ Declared T.Test2: T -> int
+//│ Defined T.Test2: T -> 1
 //│ // Prelude
 //│ const T = function () {
 //│   const tag = Symbol();
@@ -81,7 +81,7 @@ trait T
 class D: T & {z: int}
   method Test2 = 2
 //│ Defined class D
-//│ Defined D.Test2: (D & t) -> 2
+//│ Defined D.Test2: D -> 2
 //│ // Prelude
 //│ class D {
 //│   constructor(fields) {
@@ -95,7 +95,7 @@ class D: T & {z: int}
 //│ // End of generated code
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ useTrt: ((Class with {x: 'a}) & ~t | {y: 'a} & t) -> 'a
+//│ useTrt: ((Class with {x: 'y}) & ~t | {y: 'y} & t) -> 'y
 //│       = [Function: useTrt]
 
 :e
@@ -134,17 +134,17 @@ trait T1
   method Test3 = 1
   method Test4 = 4
 //│ Defined trait T1
-//│ Declared T1.Test3: t1 -> int
-//│ Defined T1.Test3: t1 -> 1
-//│ Defined T1.Test4: t1 -> 4
+//│ Declared T1.Test3: T1 -> int
+//│ Defined T1.Test3: T1 -> 1
+//│ Defined T1.Test4: T1 -> 4
 
 :js
 trait T2: T1
   method Test3: int
   method Test3 = 2
 //│ Defined trait T2
-//│ Declared T2.Test3: (t1 & t2) -> int
-//│ Defined T2.Test3: (t1 & t2) -> 2
+//│ Declared T2.Test3: T2 -> int
+//│ Defined T2.Test3: T2 -> 2
 //│ // Prelude
 //│ const T2 = function () {
 //│   const tag = Symbol();

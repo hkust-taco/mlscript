@@ -57,13 +57,17 @@ rec def pow2 n = { call = fun x -> if n > 0 then (pow2 (n - 1)).call x * x else 
 
 :ge
 let rec x = { f = x } in x
-//│ res: {f: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {f: 'x}
 //│ Code generation encountered an error:
 //│   recursive non-function definition x is not supported
 
 :ge
 let x = { f = x } in x
-//│ res: {f: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {f: 'x}
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
@@ -73,7 +77,9 @@ let x = { f = x } in x
 class A
   rec method M x = M
 //│ Defined class A
-//│ Defined A.M: A -> (anything -> 'a as 'a)
+//│ Defined A.M: A -> 'M
+//│   where
+//│     'M :> anything -> 'M
 //│ Code generation encountered an error:
 //│   unresolved symbol M
 

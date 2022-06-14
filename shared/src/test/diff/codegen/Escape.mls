@@ -11,7 +11,6 @@ def console: nothing
 //│        = <missing implementation>
 
 :js
-// TODO: implement an escape hatch
 console.log "hello"
 //│ // Query 1
 //│ res = console.log("hello");
