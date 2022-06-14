@@ -223,6 +223,7 @@ abstract class TyperHelpers { Typer: Typer =>
     case FunctionType(lhs, rhs) => FunctionType(f(pol.map(!_), lhs), f(pol, rhs))(bt.prov)
     case TupleType(fields) => TupleType(fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(bt.prov)
     case ArrayType(inner) => ArrayType(inner.update(f(pol.map(!_), _), f(pol, _)))(bt.prov)
+    case sp @SpliceType(elems) => sp.updateElems(f(pol, _), f(pol.map(!_), _), f(pol, _))
     case wt @ Without(b: ComposedType, ns @ empty()) => Without(b.map(f(pol, _)), ns)(wt.prov) // FIXME very hacky
     case Without(base, names) => Without(f(pol, base), names)(bt.prov)
     case _: ClassTag => bt
@@ -558,6 +559,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
         case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
         case ArrayType(fld) => childrenPolField(fld)
+        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
         case NegType(n) => pol.map(!_) -> n :: Nil
         case ExtrType(_) => Nil
         case ProxyType(und) => pol -> und :: Nil
@@ -667,6 +669,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case RecordType(fs) => fs.unzip._2.foreach(applyField(pol))
       case TupleType(fs) => fs.unzip._2.foreach(applyField(pol))
       case ArrayType(fld) => applyField(pol)(fld)
+      case SpliceType(elems) => elems foreach {case L(l) => apply(pol)(l) case R(r) => applyField(pol)(r)}
       case NegType(n) => apply(pol.map(!_))(n)
       case ExtrType(_) => ()
       case ProxyType(und) => apply(pol)(und)

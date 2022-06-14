@@ -243,6 +243,8 @@ trait TypeSimplifier { self: Typer =>
                     S(FunctionType(go(l, pol.map(!_)), go(r, pol))(ft.prov)) -> nFields
                   case S(at @ ArrayType(inner)) =>
                     S(ArrayType(inner.update(go(_, pol.map(!_)), go(_, pol)))(at.prov)) -> nFields
+                  case S(sp @ SpliceType(elems)) =>
+                    S(sp.updateElems(go(_, pol), go(_, pol.map(!_)), go(_, pol))) -> nFields
                   case S(wt @ Without(b: ComposedType, ns @ empty())) =>
                     S(Without(b.map(go(_, pol)), ns)(wt.prov)) -> nFields // FIXME very hacky
                   case S(wt @ Without(b, ns)) => S(Without(go(b, pol), ns)(wt.prov)) -> nFields
@@ -358,10 +360,10 @@ trait TypeSimplifier { self: Typer =>
         inner.lb.foreach(analyze2(_, !pol))
         analyze2(inner.ub, pol)
       case SpliceType(elems) => elems.foreach {
-        case L(l) => analyze(l, pol)
+        case L(l) => analyze2(l, pol)
         case R(r) => 
-          r.lb.foreach(analyze(_, !pol))
-          analyze(r.ub, pol)
+          r.lb.foreach(analyze2(_, !pol))
+          analyze2(r.ub, pol)
       }
       case FunctionType(l, r) => analyze2(l, !pol); analyze2(r, pol)
       case tv: TypeVariable => process(tv, pol)
@@ -575,7 +577,9 @@ trait TypeSimplifier { self: Typer =>
       case RecordType(fs) => RecordType(fs.mapValues(_ |> transformField))(st.prov)
       case TupleType(fs) => TupleType(fs.mapValues(_ |> transformField))(st.prov)
       case ArrayType(inner) => ArrayType(inner |> transformField)(st.prov)
-      case sp @ SpliceType(elems) => sp.updateElems(transform(_, pol),transform(_, !pol), transform(_, pol), st.prov)
+      case sp @ SpliceType(elems) => SpliceType(elems map {
+        case L(l) => L(transform(l, pol, N)) 
+        case R(r) => R(transformField(r))})(st.prov)
       case FunctionType(l, r) => FunctionType(transform(l, pol.map(!_), N), transform(r, pol, N))(st.prov)
       case _: ObjectTag | ExtrType(_) => st
       case tv: TypeVariable if parent.exists(_ === tv) =>
