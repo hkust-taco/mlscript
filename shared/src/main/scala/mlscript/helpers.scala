@@ -72,8 +72,8 @@ abstract class TypeImpl extends Located { self: Type =>
       val prec = if (c.pol) 20 else 25
       val opStr = if (c.pol) " | " else " & "
       c.distinctComponents match {
-        case Nil => (if (c.pol) Bot else Top).showIn(ctx, prec)
-        case x :: Nil => x.showIn(ctx, prec)
+        case Nil => (if (c.pol) Bot else Top).showIn(ctx, outerPrec)
+        case x :: Nil => x.showIn(ctx, outerPrec)
         case _ =>
           parensIf(c.distinctComponents.iterator
             .map(_.showIn(ctx, prec))
@@ -96,7 +96,7 @@ abstract class TypeImpl extends Located { self: Type =>
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(ctx, 0)))
           .mkString("forall ", ", ", ".")} ${body.showIn(ctx, 1)}",
-        outerPrec > 1
+        outerPrec > 1 // or 0?
       )
     case Constrained(b, ws) => parensIf(s"${b.showIn(ctx, 0)}\n  where${ws.map {
       case (uv, Bounds(Bot, ub)) =>

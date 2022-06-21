@@ -108,14 +108,14 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: int
 //│ constrain calls  : 39
 //│ annoying  calls  : 37
-//│ subtyping calls  : 242
+//│ subtyping calls  : 214
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
 //│ constrain calls  : 39
 //│ annoying  calls  : 37
-//│ subtyping calls  : 206
+//│ subtyping calls  : 178
 
 
 // ====== 5 ====== //

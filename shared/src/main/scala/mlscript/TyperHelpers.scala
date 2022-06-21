@@ -311,7 +311,8 @@ abstract class TyperHelpers { Typer: Typer =>
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
       case ProxyType(underlying) => f(pol, underlying) // TODO different?
       case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs(pol)(f))(prov)
-      case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(pol, und))
+      case PolymorphicType(plvl, und) =>
+        if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -492,7 +493,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case p: ObjectTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
-      case PolymorphicType(plvl, bod) => PolymorphicType(plvl, bod.withoutPos(names))
+      case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
       case tr: TypeRef => tr.expand.unwrapAll

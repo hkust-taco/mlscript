@@ -67,7 +67,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
       require(polymLevel <= MaxLevel)
-      if (polymLevel === MaxLevel) body
+      if (polymLevel === MaxLevel || body.level <= polymLevel) body
       else body match { // TODO see through proxies?
         case PolymorphicType(lvl, bod) => PolymorphicType(polymLevel min lvl, bod)
         case _ => PolymorphicType(polymLevel, body)
@@ -101,9 +101,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         (this.parents ::: that.parents).distinct, isInherited = true)(prov)
     }
     val toPT: PolymorphicType =
-      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2)(prov)))
+      body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2)(prov)))
     val bodyPT: PolymorphicType =
-      body.fold(PolymorphicType(0, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
+      body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
   }
   
   /** A general type form (TODO: rename to AnyType). */

@@ -88,7 +88,7 @@ l2 = Cons { head = 0; tail = l1 }
 //│ l2: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ constrain calls  : 22
 //│ annoying  calls  : 2
-//│ subtyping calls  : 129
+//│ subtyping calls  : 137
 
 :stats
 Cons.HeadOption l2
@@ -102,7 +102,7 @@ l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
 //│ constrain calls  : 40
 //│ annoying  calls  : 2
-//│ subtyping calls  : 154
+//│ subtyping calls  : 170
 
 :stats
 Cons.HeadOption l3

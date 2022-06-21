@@ -38,7 +38,7 @@ def z =
 //│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α34'
 //│ ╟── while constraining:  (∀ 1. (α42'' -> α49''),)  <!<  (α34',)
 //│ ╙── while constraining:  (α34' -> α41')  <!<  ((∀ 1. (α42'' -> α49''),) -> α55')
-//│ (anything -> nothing) -> anything -> error
+//│ ((anything -> nothing) -> anything) -> error
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z]
@@ -79,4 +79,5 @@ oops 1
 //│ res: nothing
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
+
 

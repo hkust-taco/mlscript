@@ -274,7 +274,7 @@ x => {l: x x, r: x }
 //│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α303 -> α306)
 //│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α303
 //│ ╙── while constraining:  (α303 -> α310)  <!<  (∀ 0. (α311' -> α318') -> α324)
-//│ res: (anything -> nothing) -> anything -> error
+//│ res: ((anything -> nothing) -> anything) -> error
 
 // Function that takes arbitrarily many arguments:
 :e

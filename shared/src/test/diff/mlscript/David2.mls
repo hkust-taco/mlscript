@@ -150,11 +150,11 @@ def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.val
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: Integer -> Integer, value: 'value})
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {value: 'value})
 //│                 = [Function: mkIntegerPrecise2]
 
 n = mkIntegerPrecise 42
-//│ n: Integer with {addOne: Integer -> Integer, value: 42}
+//│ n: Integer & {value: 42}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 addOne1 n
@@ -165,7 +165,7 @@ def mkIntegerPrecise2: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise2 = mkIntegerPrecise
 //│ mkIntegerPrecise2: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
-//│ (int & 'value) -> (Integer with {addOne: Integer -> Integer, value: 'value})
+//│ (int & 'value) -> (Integer with {value: 'value})
 //│   <:  mkIntegerPrecise2:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = [Function: mkIntegerPrecise2]
@@ -253,7 +253,7 @@ addOne2 (mkStr "hello")
 //│    = Str { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: (Integer with {addOne: Integer -> Integer, value: 42}) | Str
+//│ union: Integer & {value: 42} | Str
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union

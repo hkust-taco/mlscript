@@ -653,7 +653,7 @@ trait TypeSimplifier { self: Typer =>
       case tb @ TypeBounds(lb, ub) =>
         pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parent), transform(ub, S(true), parent), noProv))(pol =>
           if (pol) transform(ub, S(true), parent) else transform(lb, S(false), parent))
-      case PolymorphicType(lvl, bod) => PolymorphicType(lvl, transform(bod, pol, parent)) // FIXME? parent or None?
+      case PolymorphicType(lvl, bod) => PolymorphicType.mk(lvl, transform(bod, pol, parent)) // FIXME? parent or None?
     }
     }(r => s"~> $r")
     

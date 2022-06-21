@@ -208,7 +208,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: error
 //│ constrain calls  : 105
 //│ annoying  calls  : 135
-//│ subtyping calls  : 2448
+//│ subtyping calls  : 2444
 
 :stats
 :e
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 105
 //│ annoying  calls  : 135
-//│ subtyping calls  : 2436
+//│ subtyping calls  : 2432
 
 
 // ====== 5 ====== //
