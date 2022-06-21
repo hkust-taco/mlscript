@@ -149,11 +149,32 @@ package object utils {
     def dlof[B](f: A => B)(b: => B): B = opt.fold(b)(f)
   }
   
+  implicit class MutSetHelpers[A](self: mutable.Set[A]) {
+    def setAndIfUnset(x: A)(thunk: => Unit): Unit = {
+      if (!self.contains(x)) {
+        self += x
+        thunk
+      }
+    }
+    def setAnd[R](x: A)(ifSet: => R)(ifUnset: => R): R = {
+      if (self.contains(x)) ifSet else {
+        self += x
+        ifUnset
+      }
+    }
+  }
+  
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }
   implicit class SortedSetObjectHelpers(self: SortedSet.type) {
     def single[A: Ordering](a: A): SortedSet[A] = (SortedSet.newBuilder[A] += a).result()
+  }
+  implicit class MapObjectHelpers(self: Map.type) {
+    def single[A, B](ab: A -> B): Map[A, B] = (Map.newBuilder[A, B] += ab).result()
+  }
+  implicit class SortedMapObjectHelpers(self: SortedMap.type) {
+    def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
   }
   
   def die: Nothing = lastWords("Program reached and unexpected state.")

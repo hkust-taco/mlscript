@@ -1,0 +1,1121 @@
+
+def intToString: int -> string
+def intToString x = toString x
+def done x = case x of {}
+//│ intToString: int -> string
+//│            = <missing implementation>
+//│ anything -> string
+//│   <:  intToString:
+//│ int -> string
+//│            = [Function: intToString]
+//│ done: nothing -> nothing
+//│     = [Function: done]
+
+
+
+class Lit: { val: int }
+class Add[E]: { lhs: E; rhs: E }
+  method Inv (x: E) = x
+def lit val = Lit { val }
+def add lhs rhs = Add { lhs; rhs }
+//│ Defined class Lit
+//│ Defined class Add[=E]
+//│ Defined Add.Inv: Add['E] -> 'E -> 'E
+//│ lit: (int & 'val) -> (Lit with {val: 'val})
+//│    = [Function: lit]
+//│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: add]
+
+
+
+rec def eval1_stub k e = case e of {
+  | Add -> eval1_stub k e.lhs
+  | _ -> k e
+  }
+//│ eval1_stub: ('a -> 'b) -> 'c -> 'b
+//│   where
+//│     'c <: (Add[?]\rhs with {lhs: 'c}) | 'a & ~add
+//│           = [Function: eval1_stub]
+
+rec def eval1_stub k e = case e of {
+  | Add -> eval1_stub k e.lhs + eval1_stub k e.rhs
+  | _ -> k e
+  }
+//│ eval1_stub: ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | 'a & ~add
+//│           = [Function: eval1_stub1]
+
+:ns
+rec def eval1_stub e = case e of {
+  | Lit -> 1
+  | Add -> eval1_stub e.lhs
+  | _ -> 0
+  }
+//│ eval1_stub: forall 'eval1_stub, 'a, 'b, 'c, 'lhs, 'd, 'e. 'eval1_stub
+//│   where
+//│     'eval1_stub :> 'a -> (1 | 'd | 0)
+//│                 <: 'lhs -> 'd
+//│     'd :> 1 | 'd | 0
+//│     'a <: lit & 'b | (add & 'c | 'e & ~add) & ~lit
+//│     'c <: {lhs: 'lhs}
+//│     'lhs <: 'a
+//│           = [Function: eval1_stub2]
+
+eval1_stub
+//│ res: 'a -> (0 | 1)
+//│   where
+//│     'a <: (Add[?]\rhs with {lhs: 'a}) | Lit | ~Add[?] & ~Lit
+//│    = [Function: eval1_stub2]
+
+// def eval1: ('b -> int) -> Expr['b] -> int
+:stats
+rec def eval1 k e = case e of {
+  | Lit -> e.val
+  | Add -> eval1 k e.lhs + eval1 k e.rhs
+  | _ -> k e
+  }
+//│ eval1: ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
+//│      = [Function: eval1]
+//│ constrain calls  : 79
+//│ annoying  calls  : 0
+//│ subtyping calls  : 82
+
+:ns
+eval1
+//│ res: forall 'eval1, 'a, 'b, 'c, 'val, 'd, 'e, 'lhs, 'f, 'g, 'rhs, 'h, 'i, 'j, 'k. 'eval1
+//│   where
+//│     'eval1 :> 'a -> 'b -> ('val | 'i | 'k)
+//│            <: 'a -> 'g & 'a -> 'e
+//│     'e :> 'b -> ('val | 'i | 'k)
+//│        <: 'lhs -> 'f
+//│     'f :> 'val | 'i | 'k
+//│        <: int
+//│     'g :> 'b -> ('val | 'i | 'k)
+//│        <: 'rhs -> 'h
+//│     'h :> 'val | 'i | 'k
+//│        <: int
+//│     'i := int
+//│     'b <: lit & 'c | (add & 'd | 'j & ~add) & ~lit
+//│     'd <: {rhs: 'rhs} & {lhs: 'lhs}
+//│     'lhs <: 'b
+//│     'rhs <: 'b
+//│     'c <: {val: 'val}
+//│     'val <: int
+//│     'a <: 'j -> 'k
+//│     'k <: int
+//│    = [Function: eval1]
+
+:re
+error: ~Add[?]
+//│ res: ~Add[?]
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:re
+error: ('a & ~Lit) -> 'a
+//│ res: ('a & ~Lit) -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:re
+error: ('a) -> ('a & Add[?])
+error: ('a) -> ('a & ~Add[?])
+error: ('a & ~Add[?]) -> 'a
+//│ res: 'a -> (Add[?] & 'a)
+//│ Runtime error:
+//│   Error: unexpected runtime error
+//│ res: 'a -> ('a & ~Add[?])
+//│ Runtime error:
+//│   Error: unexpected runtime error
+//│ res: ('a & ~Add[?]) -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:re
+error: ('a & ~add) -> 'a
+//│ res: ('a & ~add) -> 'a
+//│ Runtime error:
+//│   Error: unexpected runtime error
+
+:ns
+def eval1_ty_ugly: ('a -> int) -> (Lit | Add['b] | 'a & ~Lit & ~Add[?] as 'b) -> int
+//│ eval1_ty_ugly: forall 'a, 'b. ('a -> int) -> 'b -> int
+//│   where
+//│     'b := Lit | Add['b] | 'a & ~Lit & ~Add[?]
+//│              = <missing implementation>
+
+eval1_ty_ugly
+//│ res: ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~Add[?] & ~Lit | Add['b] | Lit
+//│    = <no result>
+//│      eval1_ty_ugly is not implemented
+
+:stats
+def eval1_ty_ugly = eval1
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
+//│   <:  eval1_ty_ugly:
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~Add[?] & ~Lit | Add['b] | Lit
+//│              = [Function: eval1]
+//│ constrain calls  : 79
+//│ annoying  calls  : 36
+//│ subtyping calls  : 362
+
+:ns
+def eval1_ty: ('a -> int) -> (Lit | Add['b] | 'a & ~lit & ~add as 'b) -> int
+//│ eval1_ty: forall 'a, 'b. ('a -> int) -> 'b -> int
+//│   where
+//│     'b := Lit | Add['b] | 'a & ~lit & ~add
+//│         = <missing implementation>
+
+eval1_ty
+//│ res: ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~add & ~lit | Add['b] | Lit
+//│    = <no result>
+//│      eval1_ty is not implemented
+
+:stats
+def eval1_ty = eval1
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
+//│   <:  eval1_ty:
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~add & ~lit | Add['b] | Lit
+//│         = [Function: eval1]
+//│ constrain calls  : 79
+//│ annoying  calls  : 36
+//│ subtyping calls  : 354
+
+:stats
+eval1_ty_ugly = eval1_ty
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~add & ~lit | Add['b] | Lit
+//│   <:  eval1_ty_ugly:
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~Add[?] & ~Lit | Add['b] | Lit
+//│              = [Function: eval1]
+//│ constrain calls  : 16
+//│ annoying  calls  : 1
+//│ subtyping calls  : 290
+
+:stats
+eval1_ty = eval1_ty_ugly
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~Add[?] & ~Lit | Add['b] | Lit
+//│   <:  eval1_ty:
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b := 'a & ~add & ~lit | Add['b] | Lit
+//│         = [Function: eval1]
+//│ constrain calls  : 16
+//│ annoying  calls  : 1
+//│ subtyping calls  : 1072
+
+
+// Workaround:
+:ns
+type E1[A] = Lit | Add[E1[A]] | A & ~lit & ~add
+def eval1_ty: ('a -> int) -> E1['a] -> int
+//│ Defined type alias E1[=A]
+//│ eval1_ty: forall 'a. ('a -> int) -> E1['a] -> int
+//│         = <missing implementation>
+
+eval1_ty
+//│ res: ('a -> int) -> E1['a] -> int
+//│    = <no result>
+//│      eval1_ty is not implemented
+
+:stats
+def eval1_ty = eval1
+//│ ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
+//│   <:  eval1_ty:
+//│ ('a -> int) -> E1['a] -> int
+//│         = [Function: eval1]
+//│ constrain calls  : 83
+//│ annoying  calls  : 38
+//│ subtyping calls  : 211
+
+
+:stats
+rec def pretty1 k e = case e of {
+  | Lit -> intToString e.val
+  | Add -> concat (pretty1 k e.lhs) (pretty1 k e.rhs)
+  | _ -> k e
+  }
+//│ pretty1: ('a -> string) -> 'b -> string
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | 'a & ~add & ~lit
+//│        = [Function: pretty1]
+//│ constrain calls  : 91
+//│ annoying  calls  : 0
+//│ subtyping calls  : 86
+
+
+:stats
+rec def prettier1 k ev e = case e of {
+  | Lit -> intToString e.val
+  | Add ->
+      if ev e.lhs == 0 then prettier1 k ev e.rhs
+      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+      else concat (prettier1 k ev e.lhs) (prettier1 k ev e.rhs)
+  | _ -> k e
+  }
+//│ prettier1: ('a -> string) -> ('rhs -> int & 'lhs -> int) -> 'b -> string
+//│   where
+//│     'b <: (Add[?] with {lhs: 'lhs & 'b, rhs: 'rhs & 'b}) | Lit | 'a & ~add & ~lit
+//│          = [Function: prettier1]
+//│ constrain calls  : 300
+//│ annoying  calls  : 0
+//│ subtyping calls  : 110
+
+:stats
+rec def prettier11 k ev e = case e of {
+  | Lit -> intToString e.val
+  | Add ->
+      let tmp = pretty1 k e.lhs
+      in if ev e.rhs == 0 then tmp else concat tmp (prettier11 k ev e.rhs)
+  | _ -> k e
+  }
+//│ prettier11: ('a -> string & 'b -> string) -> ('rhs -> int) -> 'c -> string
+//│   where
+//│     'c <: (Add[?] with {lhs: 'd, rhs: 'rhs & 'c}) | Lit | 'a & ~add & ~lit
+//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | 'b & ~add & ~lit
+//│           = [Function: prettier11]
+//│ constrain calls  : 198
+//│ annoying  calls  : 0
+//│ subtyping calls  : 198
+
+// Doesn't make much sense, but generates very ugly type unless aggressively simplified:
+:stats
+rec def prettier12 k ev e = case e of {
+  | Lit -> intToString e.val
+  | Add ->
+      let tmp = pretty1 k e.lhs
+      in if ev e == 0 then tmp else concat tmp (pretty1 k e.rhs)
+  | _ -> k e
+  }
+//│ prettier12: ('a -> string & 'b -> 'c & 'd -> string) -> ('e -> int) -> ((Add[?] with {lhs: 'f, rhs: 'g}) & 'e | Lit | 'b & ~add & ~lit) -> (string | 'c)
+//│   where
+//│     'g <: (Add[?] with {lhs: 'g, rhs: 'g}) | Lit | 'd & ~add & ~lit
+//│     'f <: (Add[?] with {lhs: 'f, rhs: 'f}) | Lit | 'a & ~add & ~lit
+//│           = [Function: prettier12]
+//│ constrain calls  : 169
+//│ annoying  calls  : 0
+//│ subtyping calls  : 271
+
+
+:stats
+e1 = Add{lhs = Lit {val = 1}; rhs = Add{lhs = Lit {val = 2}; rhs = Lit {val = 3}}}
+eval1 done e1
+pretty1 done e1
+prettier1 done (eval1 done) e1
+prettier11 done (eval1 done) e1
+prettier12 done (eval1 done) e1
+//│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│   where
+//│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E0 :> Lit & {val: 2 | 3}
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
+//│     }
+//│ res: int
+//│    = 6
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+//│ constrain calls  : 1410
+//│ annoying  calls  : 490
+//│ subtyping calls  : 1861
+
+
+e1 = add (lit 1) (add (lit 2) (lit 3))
+eval1 done e1
+pretty1 done e1
+prettier1 done (eval1 done) e1
+prettier11 done (eval1 done) e1
+prettier12 done (eval1 done) e1
+//│ e1: Add['E] with {lhs: Lit & {val: 1}, rhs: Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│   where
+//│     'E :> (Add['E0] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E0 :> Lit & {val: 2 | 3}
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
+//│     }
+//│ res: int
+//│    = 6
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+//│ res: string
+//│    = '123'
+
+
+
+class Nega[E]: { arg: E }
+def nega arg = Nega { arg }
+//│ Defined class Nega[+E]
+//│ nega: 'arg -> Nega['arg]
+//│     = [Function: nega]
+
+
+
+rec def eval2 k = eval1 (fun x -> case x of {
+  | Nega -> 0 - (eval2 k x.arg)
+  | _ -> k x
+  })
+//│ eval2: ('a -> int) -> 'b -> int
+//│   where
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | Nega[?] & {arg: 'b} | 'a & ~add & ~lit & ~nega
+//│      = [Function: eval2]
+
+
+:stats
+rec def prettier2 k ev = prettier1 (fun x -> case x of {
+  | Nega -> concat "-" (prettier2 k ev x.arg)
+  | _ -> k x
+  }) ev
+//│ prettier2: ('a -> string) -> ('rhs -> int & 'lhs -> int) -> 'b -> string
+//│   where
+//│     'b <: (Add[?] with {lhs: 'lhs & 'b, rhs: 'rhs & 'b}) | Lit | Nega[?] & {arg: 'b} | 'a & ~add & ~lit & ~nega
+//│          = [Function: prettier2]
+//│ constrain calls  : 136
+//│ annoying  calls  : 0
+//│ subtyping calls  : 194
+
+:stats
+rec def prettier22 k ev = prettier12 (fun x -> case x of {
+  | Nega -> concat "-" (prettier22 k ev x.arg)
+  | _ -> k x
+  }) ev
+//│ prettier22: ('a -> string) -> ('b -> int) -> 'c -> string
+//│   where
+//│     'b <: {lhs: 'd, rhs: 'd}
+//│     'd <: (Add[?] with {lhs: 'd, rhs: 'd}) | Lit | Nega[?] & {arg: 'c} | 'a & ~add & ~lit & ~nega
+//│     'c <: Add[?] & 'b | Lit | Nega[?] & {arg: 'c} | 'a & ~add & ~lit & ~nega
+//│           = [Function: prettier22]
+//│ constrain calls  : 204
+//│ annoying  calls  : 0
+//│ subtyping calls  : 458
+
+
+
+:stats
+eval2 done e1
+//│ res: int
+//│    = 6
+//│ constrain calls  : 204
+//│ annoying  calls  : 60
+//│ subtyping calls  : 203
+
+e2 = add (lit 1) (nega e1)
+//│ e2: Add['E] with {lhs: Lit & {val: 1}, rhs: Nega[forall 'E0, 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
+//│   where
+//│     'E :> Lit & {val: 1} | Nega[forall 'E0, 'E1. Add['E0] with {lhs: Lit & {val: 1}, rhs: Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]
+//│     'E0 :> (Add['E1] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}) | Lit & {val: 1}
+//│     'E1 :> Lit & {val: 2 | 3}
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
+//│     }
+
+:e
+:stats
+eval2 done e2
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.448: 	eval2 done e2
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1751..E1751, lhs: lhs1749, rhs: rhs1753})  <!<  {rhs: rhs1722}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1751..E1751, lhs: lhs1749, rhs: rhs1753})  <!<  α1721
+//│ ╟── while constraining:  (add<> & {lhs: lhs1749, rhs: rhs1753, Add#E: mut E1751..E1751})  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs1749, rhs: rhs1753, Add#E: mut E1751..E1751})  <!<  α1718
+//│ ╟── while constraining:  (add<> & {lhs: lhs1749, rhs: rhs1753, Add#E: mut E1751..E1751})  <!<  rhs1722
+//│ ╟── while constraining:  rhs1754  <!<  rhs1722
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1748..E1748, lhs: lhs1746, rhs: rhs1754})  <!<  {rhs: rhs1722}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1748..E1748, lhs: lhs1746, rhs: rhs1754})  <!<  α1721
+//│ ╟── while constraining:  (add<> & {lhs: lhs1746, rhs: rhs1754, Add#E: mut E1748..E1748})  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1745  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α1718
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg1728
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg1727
+//│ ╟── while constraining:  arg1742  <!<  arg1727
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  {arg: arg1727}
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  α1726
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  ((nega<> & α1726) | (α1729 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  α1725
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  α1724
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  α1718
+//│ ╟── while constraining:  (nega<> & {arg: arg1742, Nega#E: mut E1743..E1743})  <!<  rhs1722
+//│ ╟── while constraining:  rhs1744  <!<  rhs1722
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1741..E1741, lhs: lhs1739, rhs: rhs1744})  <!<  {rhs: rhs1722}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1741..E1741, lhs: lhs1739, rhs: rhs1744})  <!<  α1721
+//│ ╟── while constraining:  (add<> & {lhs: lhs1739, rhs: rhs1744, Add#E: mut E1741..E1741})  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1738  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α1719) | (((add<> & α1721) | (α1724 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α1718
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α1718,)
+//│ ╟── while constraining:  (α1718 -> (val1720 | (α1730 | α1731)))  <!<  ((∀ 0. α1688',) -> α1737)
+//│ ╙── while constraining:  α1712  <!<  ((∀ 0. α1688',) -> α1737)
+//│ res: error
+//│    = -5
+//│ constrain calls  : 128
+//│ annoying  calls  : 38
+//│ subtyping calls  : 1060
+
+d2 = nega (add (lit 1) (nega (lit 1)))
+//│ d2: Nega[Add['E] with {lhs: Lit & {val: 1}, rhs: Nega[Lit & {val: 1}]}]
+//│   where
+//│     'E :> Lit & {val: 1} | Nega[Lit & {val: 1}]
+//│   = Nega { arg: Add { lhs: Lit { val: 1 }, rhs: Nega { arg: [Lit] } } }
+
+:e
+:stats
+eval2 done d2
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?arg, ?lhs, ?val, ?E, ?arg0, ?val0, ?E0, ?rhs, ?E1. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.499: 	eval2 done d2
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── while constraining:  (lit<> & {val: val1895})  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (lit<> & {val: val1895})  <!<  α1869
+//│ ╟── while constraining:  (lit<> & {val: val1895})  <!<  arg1879
+//│ ╟── while constraining:  (lit<> & {val: val1895})  <!<  arg1878
+//│ ╟── while constraining:  arg1894  <!<  arg1878
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  {arg: arg1878}
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  α1877
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  ((nega<> & α1877) | (α1880 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  α1876
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  α1875
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  α1869
+//│ ╟── while constraining:  (nega<> & {arg: arg1894, Nega#E: mut E1896..E1896})  <!<  rhs1873
+//│ ╟── while constraining:  rhs1897  <!<  rhs1873
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1893..E1893, lhs: lhs1891, rhs: rhs1897})  <!<  {rhs: rhs1873}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1893..E1893, lhs: lhs1891, rhs: rhs1897})  <!<  α1872
+//│ ╟── while constraining:  (add<> & {lhs: lhs1891, rhs: rhs1897, Add#E: mut E1893..E1893})  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs1891, rhs: rhs1897, Add#E: mut E1893..E1893})  <!<  α1869
+//│ ╟── while constraining:  (add<> & {lhs: lhs1891, rhs: rhs1897, Add#E: mut E1893..E1893})  <!<  arg1879
+//│ ╟── while constraining:  (add<> & {lhs: lhs1891, rhs: rhs1897, Add#E: mut E1893..E1893})  <!<  arg1878
+//│ ╟── while constraining:  arg1890  <!<  arg1878
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  {arg: arg1878}
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  α1877
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  ((nega<> & α1877) | (α1880 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  α1876
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  α1875
+//│ ╟── while constraining:  (nega<> & {arg: arg1890, Nega#E: mut E1898..E1898})  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α1889  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  ((lit<> & α1870) | (((add<> & α1872) | (α1875 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  α1869
+//│ ╟── while constraining:  (∀ 0. α1846',)  <!<  (α1869,)
+//│ ╟── while constraining:  (α1869 -> (val1871 | (α1881 | α1882)))  <!<  ((∀ 0. α1846',) -> α1888)
+//│ ╙── while constraining:  α1863  <!<  ((∀ 0. α1846',) -> α1888)
+//│ res: error
+//│    = 0
+//│ constrain calls  : 128
+//│ annoying  calls  : 36
+//│ subtyping calls  : 1087
+
+
+prettier2 done
+//│ res: ('rhs -> int & 'lhs -> int) -> 'a -> string
+//│   where
+//│     'a <: (Add[?] with {lhs: 'lhs & 'a, rhs: 'rhs & 'a}) | Lit | Nega[?] & {arg: 'a}
+//│    = [Function (anonymous)]
+
+prettier22 done
+//│ res: ('a -> int) -> 'b -> string
+//│   where
+//│     'a <: {lhs: 'c, rhs: 'c}
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | Nega[?] & {arg: 'b}
+//│     'b <: Add[?] & 'a | Lit | Nega[?] & {arg: 'b}
+//│    = [Function (anonymous)]
+
+:stats
+prettier2 done (eval1 done)
+//│ res: 'a -> string
+//│   where
+//│     'a <: (Add[?] with {lhs: 'a & 'b, rhs: 'a & 'b}) | Lit | Nega[?] & {arg: 'a}
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit
+//│    = [Function (anonymous)]
+//│ constrain calls  : 93
+//│ annoying  calls  : 0
+//│ subtyping calls  : 247
+
+
+prettier22 done (eval1 done)
+//│ res: 'a -> string
+//│   where
+//│     'a <: (Add[?] with {lhs: 'b, rhs: 'b}) & 'c | Lit | Nega[?] & {arg: 'a}
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | Nega[?] & {arg: 'a}
+//│    = [Function (anonymous)]
+
+// TODO could probably merge `a` and `b` here!
+:stats
+prettier2 done (eval2 done)
+//│ res: 'a -> string
+//│   where
+//│     'a <: (Add[?] with {lhs: 'a & 'b, rhs: 'a & 'b}) | Lit | Nega[?] & {arg: 'a}
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | Nega[?] & {arg: 'b}
+//│    = [Function (anonymous)]
+//│ constrain calls  : 106
+//│ annoying  calls  : 0
+//│ subtyping calls  : 309
+
+:e
+prettier2 done (eval2 done) e2
+prettier2 done (eval2 done) d2
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.590: 	prettier2 done (eval2 done) e2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2565..E2565, lhs: lhs2563, rhs: rhs2567})  <!<  {rhs: rhs2506}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2565..E2565, lhs: lhs2563, rhs: rhs2567})  <!<  α2505
+//│ ╟── while constraining:  (add<> & {lhs: lhs2563, rhs: rhs2567, Add#E: mut E2565..E2565})  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs2563, rhs: rhs2567, Add#E: mut E2565..E2565})  <!<  α2502
+//│ ╟── while constraining:  (add<> & {lhs: lhs2563, rhs: rhs2567, Add#E: mut E2565..E2565})  <!<  rhs2506
+//│ ╟── while constraining:  rhs2568  <!<  rhs2506
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2562..E2562, lhs: lhs2560, rhs: rhs2568})  <!<  {rhs: rhs2506}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2562..E2562, lhs: lhs2560, rhs: rhs2568})  <!<  α2505
+//│ ╟── while constraining:  (add<> & {lhs: lhs2560, rhs: rhs2568, Add#E: mut E2562..E2562})  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α2559  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α2502
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg2514
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg2513
+//│ ╟── while constraining:  arg2556  <!<  arg2513
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  {arg: arg2513}
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  α2512
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  ((nega<> & α2512) | (α2515 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  α2511
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  α2510
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  α2502
+//│ ╟── while constraining:  (nega<> & {arg: arg2556, Nega#E: mut E2557..E2557})  <!<  rhs2506
+//│ ╟── while constraining:  rhs2558  <!<  rhs2506
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2555..E2555, lhs: lhs2553, rhs: rhs2558})  <!<  {rhs: rhs2506}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2555..E2555, lhs: lhs2553, rhs: rhs2558})  <!<  α2505
+//│ ╟── while constraining:  (add<> & {lhs: lhs2553, rhs: rhs2558, Add#E: mut E2555..E2555})  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α2552  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α2503) | (((add<> & α2505) | (α2510 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α2502
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α2502,)
+//│ ╟── while constraining:  (α2502 -> (α2516 | (α2517 | α2518)))  <!<  ((∀ 0. α1688',) -> α2551)
+//│ ╙── while constraining:  α2550  <!<  ((∀ 0. α1688',) -> α2551)
+//│ res: error
+//│    = '1-123'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?arg, ?lhs, ?val, ?E, ?arg0, ?val0, ?E0, ?rhs, ?E1. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.591: 	prettier2 done (eval2 done) d2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (lit<> & {val: val2726})  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (lit<> & {val: val2726})  <!<  α2670
+//│ ╟── while constraining:  (lit<> & {val: val2726})  <!<  arg2682
+//│ ╟── while constraining:  (lit<> & {val: val2726})  <!<  arg2681
+//│ ╟── while constraining:  arg2725  <!<  arg2681
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  {arg: arg2681}
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  α2680
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  ((nega<> & α2680) | (α2683 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  α2679
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  α2678
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  α2670
+//│ ╟── while constraining:  (nega<> & {arg: arg2725, Nega#E: mut E2727..E2727})  <!<  rhs2674
+//│ ╟── while constraining:  rhs2728  <!<  rhs2674
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2724..E2724, lhs: lhs2722, rhs: rhs2728})  <!<  {rhs: rhs2674}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E2724..E2724, lhs: lhs2722, rhs: rhs2728})  <!<  α2673
+//│ ╟── while constraining:  (add<> & {lhs: lhs2722, rhs: rhs2728, Add#E: mut E2724..E2724})  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs2722, rhs: rhs2728, Add#E: mut E2724..E2724})  <!<  α2670
+//│ ╟── while constraining:  (add<> & {lhs: lhs2722, rhs: rhs2728, Add#E: mut E2724..E2724})  <!<  arg2682
+//│ ╟── while constraining:  (add<> & {lhs: lhs2722, rhs: rhs2728, Add#E: mut E2724..E2724})  <!<  arg2681
+//│ ╟── while constraining:  arg2721  <!<  arg2681
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  {arg: arg2681}
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  α2680
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  ((nega<> & α2680) | (α2683 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  α2679
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  α2678
+//│ ╟── while constraining:  (nega<> & {arg: arg2721, Nega#E: mut E2729..E2729})  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α2720  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  ((lit<> & α2671) | (((add<> & α2673) | (α2678 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  α2670
+//│ ╟── while constraining:  (∀ 0. α1846',)  <!<  (α2670,)
+//│ ╟── while constraining:  (α2670 -> (α2684 | (α2685 | α2686)))  <!<  ((∀ 0. α1846',) -> α2719)
+//│ ╙── while constraining:  α2718  <!<  ((∀ 0. α1846',) -> α2719)
+//│ res: error
+//│    = '-1-1'
+
+:e
+:stats
+prettier22 done (eval2 done)
+prettier22 done (eval2 done) e2
+prettier22 done (eval2 done) d2
+//│ res: 'a -> string
+//│   where
+//│     'a <: (Add[?] with {lhs: 'b, rhs: 'b}) & 'c | Lit | Nega[?] & {arg: 'a}
+//│     'c <: (Add[?] with {lhs: 'c, rhs: 'c}) | Lit | Nega[?] & {arg: 'c}
+//│     'b <: (Add[?] with {lhs: 'b, rhs: 'b}) | Lit | Nega[?] & {arg: 'a}
+//│    = [Function (anonymous)]
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.672: 	prettier22 done (eval2 done) e2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {lhs: lhs3060, rhs: rhs3064, Add#E: mut E3062..E3062})  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs3060, rhs: rhs3064, Add#E: mut E3062..E3062})  <!<  α3028
+//│ ╟── while constraining:  (add<> & {lhs: lhs3060, rhs: rhs3064, Add#E: mut E3062..E3062})  <!<  rhs3032
+//│ ╟── while constraining:  rhs3065  <!<  rhs3032
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3059..E3059, lhs: lhs3057, rhs: rhs3065})  <!<  {rhs: rhs3032}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3059..E3059, lhs: lhs3057, rhs: rhs3065})  <!<  α3031
+//│ ╟── while constraining:  (add<> & {lhs: lhs3057, rhs: rhs3065, Add#E: mut E3059..E3059})  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α3056  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α3028
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg3038
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg3037
+//│ ╟── while constraining:  arg3053  <!<  arg3037
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  {arg: arg3037}
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  α3036
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  ((nega<> & α3036) | (α3039 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  α3035
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  α3034
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  α3028
+//│ ╟── while constraining:  (nega<> & {arg: arg3053, Nega#E: mut E3054..E3054})  <!<  rhs3032
+//│ ╟── while constraining:  rhs3055  <!<  rhs3032
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3052..E3052, lhs: lhs3050, rhs: rhs3055})  <!<  {rhs: rhs3032}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3052..E3052, lhs: lhs3050, rhs: rhs3055})  <!<  α3031
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3052..E3052, lhs: lhs3050, rhs: rhs3055})  <!<  ((lit<> & α3029) | (((add<> & α3031) | (α3034 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3052..E3052, lhs: lhs3050, rhs: rhs3055})  <!<  α3028
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3052..E3052, lhs: lhs3050, rhs: rhs3055})  <!<  α2969
+//│ ╟── while constraining:  (add<> & {lhs: lhs3050, rhs: rhs3055, Add#E: mut E3052..E3052})  <!<  ((lit<> & α2983) | (((add<> & α2969) | (α2985 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α3049  <!<  ((lit<> & α2983) | (((add<> & α2969) | (α2985 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α2983) | (((add<> & α2969) | (α2985 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α2982
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α2982,)
+//│ ╟── while constraining:  (α2982 -> (α3006 | (α3007 | α3015)))  <!<  ((∀ 0. α1688',) -> α3048)
+//│ ╙── while constraining:  α3047  <!<  ((∀ 0. α1688',) -> α3048)
+//│ res: error
+//│    = '1-123'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?arg, ?lhs, ?val, ?E, ?arg0, ?val0, ?E0, ?rhs, ?E1. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.673: 	prettier22 done (eval2 done) d2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (lit<> & {val: val3274})  <!<  arg3256
+//│ ╟── while constraining:  arg3273  <!<  arg3256
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  {arg: arg3256}
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  α3255
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  ((nega<> & α3255) | (α3258 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  α3254
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  α3253
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  ((lit<> & α3248) | (((add<> & α3250) | (α3253 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  α3247
+//│ ╟── while constraining:  (nega<> & {arg: arg3273, Nega#E: mut E3275..E3275})  <!<  rhs3251
+//│ ╟── while constraining:  rhs3276  <!<  rhs3251
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3272..E3272, lhs: lhs3270, rhs: rhs3276})  <!<  {rhs: rhs3251}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3272..E3272, lhs: lhs3270, rhs: rhs3276})  <!<  α3250
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3272..E3272, lhs: lhs3270, rhs: rhs3276})  <!<  ((lit<> & α3248) | (((add<> & α3250) | (α3253 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3272..E3272, lhs: lhs3270, rhs: rhs3276})  <!<  α3247
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3272..E3272, lhs: lhs3270, rhs: rhs3276})  <!<  α3188
+//│ ╟── while constraining:  (add<> & {lhs: lhs3270, rhs: rhs3276, Add#E: mut E3272..E3272})  <!<  ((lit<> & α3202) | (((add<> & α3188) | (α3204 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs3270, rhs: rhs3276, Add#E: mut E3272..E3272})  <!<  α3201
+//│ ╟── while constraining:  (add<> & {lhs: lhs3270, rhs: rhs3276, Add#E: mut E3272..E3272})  <!<  arg3200
+//│ ╟── while constraining:  (add<> & {lhs: lhs3270, rhs: rhs3276, Add#E: mut E3272..E3272})  <!<  arg3207
+//│ ╟── while constraining:  arg3269  <!<  arg3207
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  {arg: arg3207}
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  α3206
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  ((nega<> & α3206) | (α3208 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  α3205
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  α3204
+//│ ╟── while constraining:  (nega<> & {arg: arg3269, Nega#E: mut E3277..E3277})  <!<  ((lit<> & α3202) | (((add<> & α3188) | (α3204 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α3268  <!<  ((lit<> & α3202) | (((add<> & α3188) | (α3204 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  ((lit<> & α3202) | (((add<> & α3188) | (α3204 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  α3201
+//│ ╟── while constraining:  (∀ 0. α1846',)  <!<  (α3201,)
+//│ ╟── while constraining:  (α3201 -> (α3225 | (α3226 | α3234)))  <!<  ((∀ 0. α1846',) -> α3267)
+//│ ╙── while constraining:  α3266  <!<  ((∀ 0. α1846',) -> α3267)
+//│ res: error
+//│    = '-1'
+//│ constrain calls  : 489
+//│ annoying  calls  : 79
+//│ subtyping calls  : 3345
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+:ShowRelativeLineNums
+
+
+:e
+eval1 done e2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	eval1 done e2
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── application of type `Nega[?E] & {Nega#E = ?E, arg: ?arg}` does not match type `nothing`
+//│ ║  l.380: 	def nega arg = Nega { arg }
+//│ ║         	               ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.4: 	def done x = case x of {}
+//│ ║       	                  ^
+//│ ╟── from field selection:
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ╙──      	                                   ^^^^^
+//│ res: error | int
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+
+
+:e
+prettier2 done eval1 e1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (?b | ?c)` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.19: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
+//│ res: error
+//│    = '123'
+
+
+:e
+:stats
+prettier2 done (eval1 done) e2
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.+1: 	prettier2 done (eval1 done) e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3622..E3622, lhs: lhs3620, rhs: rhs3624})  <!<  {rhs: rhs3571}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3622..E3622, lhs: lhs3620, rhs: rhs3624})  <!<  α3570
+//│ ╟── while constraining:  (add<> & {lhs: lhs3620, rhs: rhs3624, Add#E: mut E3622..E3622})  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs3620, rhs: rhs3624, Add#E: mut E3622..E3622})  <!<  α3567
+//│ ╟── while constraining:  (add<> & {lhs: lhs3620, rhs: rhs3624, Add#E: mut E3622..E3622})  <!<  rhs3571
+//│ ╟── while constraining:  rhs3625  <!<  rhs3571
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3619..E3619, lhs: lhs3617, rhs: rhs3625})  <!<  {rhs: rhs3571}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3619..E3619, lhs: lhs3617, rhs: rhs3625})  <!<  α3570
+//│ ╟── while constraining:  (add<> & {lhs: lhs3617, rhs: rhs3625, Add#E: mut E3619..E3619})  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α3616  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α3567
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg3579
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg3578
+//│ ╟── while constraining:  arg3613  <!<  arg3578
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  {arg: arg3578}
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  α3577
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  ((nega<> & α3577) | (α3580 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  α3576
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  α3575
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  α3567
+//│ ╟── while constraining:  (nega<> & {arg: arg3613, Nega#E: mut E3614..E3614})  <!<  rhs3571
+//│ ╟── while constraining:  rhs3615  <!<  rhs3571
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3612..E3612, lhs: lhs3610, rhs: rhs3615})  <!<  {rhs: rhs3571}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E3612..E3612, lhs: lhs3610, rhs: rhs3615})  <!<  α3570
+//│ ╟── while constraining:  (add<> & {lhs: lhs3610, rhs: rhs3615, Add#E: mut E3612..E3612})  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α3609  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α3568) | (((add<> & α3570) | (α3575 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α3567
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α3567,)
+//│ ╟── while constraining:  (α3567 -> (α3581 | (α3582 | α3583)))  <!<  ((∀ 0. α1688',) -> α3608)
+//│ ╙── while constraining:  α3607  <!<  ((∀ 0. α1688',) -> α3608)
+//│ res: error
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
+//│ constrain calls  : 195
+//│ annoying  calls  : 38
+//│ subtyping calls  : 1111
+
+:e
+:stats
+prettier2 done eval2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ res: 'a -> string | error
+//│   where
+//│     'a <: (Add[?] with {lhs: nothing -> int & 'a, rhs: nothing -> int & 'a}) | Lit | Nega[?] & {arg: 'a}
+//│    = [Function (anonymous)]
+//│ constrain calls  : 77
+//│ annoying  calls  : 0
+//│ subtyping calls  : 269
+
+:e
+:stats
+prettier2 done eval2 e1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 e1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Lit & {val: ?val}` is not a function
+//│ ║  l.19: 	def lit val = Lit { val }
+//│ ║        	              ^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.389: 	  | _ -> k x
+//│ ║         	         ^^^
+//│ ╟── from field selection:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	                 ^^^^^
+//│ res: error
+//│    = '123'
+//│ constrain calls  : 388
+//│ annoying  calls  : 108
+//│ subtyping calls  : 1904
+
+:e
+:stats
+prettier2 done eval2 e2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.+1: 	prettier2 done eval2 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4163..E4163, lhs: lhs4161, rhs: rhs4165})  <!<  {rhs: rhs4049}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4163..E4163, lhs: lhs4161, rhs: rhs4165})  <!<  α4048
+//│ ╟── while constraining:  (add<> & {lhs: lhs4161, rhs: rhs4165, Add#E: mut E4163..E4163})  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs4161, rhs: rhs4165, Add#E: mut E4163..E4163})  <!<  α4045
+//│ ╟── while constraining:  (add<> & {lhs: lhs4161, rhs: rhs4165, Add#E: mut E4163..E4163})  <!<  rhs4049
+//│ ╟── while constraining:  rhs4166  <!<  rhs4049
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4160..E4160, lhs: lhs4158, rhs: rhs4166})  <!<  {rhs: rhs4049}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4160..E4160, lhs: lhs4158, rhs: rhs4166})  <!<  α4048
+//│ ╟── while constraining:  (add<> & {lhs: lhs4158, rhs: rhs4166, Add#E: mut E4160..E4160})  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α4157  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α4045
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg4057
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg4056
+//│ ╟── while constraining:  arg4154  <!<  arg4056
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  {arg: arg4056}
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  α4055
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  ((nega<> & α4055) | (α4058 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  α4054
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  α4053
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  α4045
+//│ ╟── while constraining:  (nega<> & {arg: arg4154, Nega#E: mut E4155..E4155})  <!<  rhs4049
+//│ ╟── while constraining:  rhs4156  <!<  rhs4049
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4153..E4153, lhs: lhs4151, rhs: rhs4156})  <!<  {rhs: rhs4049}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4153..E4153, lhs: lhs4151, rhs: rhs4156})  <!<  α4048
+//│ ╟── while constraining:  (add<> & {lhs: lhs4151, rhs: rhs4156, Add#E: mut E4153..E4153})  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α4150  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α4046) | (((add<> & α4048) | (α4053 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α4045
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α4045,)
+//│ ╟── while constraining:  (α4045 -> (α4059 | (α4060 | α4061)))  <!<  ((∀ 0. α1688',) -> α4149)
+//│ ╙── while constraining:  α4068  <!<  ((∀ 0. α1688',) -> α4149)
+//│ res: error
+//│    = '1-123'
+//│ constrain calls  : 179
+//│ annoying  calls  : 38
+//│ subtyping calls  : 1178
+
+:e
+:stats
+prettier2 done eval2 d2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval2 d2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?arg, ?lhs, ?val, ?E, ?arg0, ?val0, ?E0, ?rhs, ?E1. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.+1: 	prettier2 done eval2 d2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (lit<> & {val: val4369})  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (lit<> & {val: val4369})  <!<  α4258
+//│ ╟── while constraining:  (lit<> & {val: val4369})  <!<  arg4270
+//│ ╟── while constraining:  (lit<> & {val: val4369})  <!<  arg4269
+//│ ╟── while constraining:  arg4368  <!<  arg4269
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  {arg: arg4269}
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  α4268
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  ((nega<> & α4268) | (α4271 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  α4267
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  α4266
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  α4258
+//│ ╟── while constraining:  (nega<> & {arg: arg4368, Nega#E: mut E4370..E4370})  <!<  rhs4262
+//│ ╟── while constraining:  rhs4371  <!<  rhs4262
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4367..E4367, lhs: lhs4365, rhs: rhs4371})  <!<  {rhs: rhs4262}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4367..E4367, lhs: lhs4365, rhs: rhs4371})  <!<  α4261
+//│ ╟── while constraining:  (add<> & {lhs: lhs4365, rhs: rhs4371, Add#E: mut E4367..E4367})  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs4365, rhs: rhs4371, Add#E: mut E4367..E4367})  <!<  α4258
+//│ ╟── while constraining:  (add<> & {lhs: lhs4365, rhs: rhs4371, Add#E: mut E4367..E4367})  <!<  arg4270
+//│ ╟── while constraining:  (add<> & {lhs: lhs4365, rhs: rhs4371, Add#E: mut E4367..E4367})  <!<  arg4269
+//│ ╟── while constraining:  arg4364  <!<  arg4269
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  {arg: arg4269}
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  α4268
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  ((nega<> & α4268) | (α4271 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  α4267
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  α4266
+//│ ╟── while constraining:  (nega<> & {arg: arg4364, Nega#E: mut E4372..E4372})  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α4363  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  ((lit<> & α4259) | (((add<> & α4261) | (α4266 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1846'  <!<  α4258
+//│ ╟── while constraining:  (∀ 0. α1846',)  <!<  (α4258,)
+//│ ╟── while constraining:  (α4258 -> (α4272 | (α4273 | α4274)))  <!<  ((∀ 0. α1846',) -> α4362)
+//│ ╙── while constraining:  α4281  <!<  ((∀ 0. α1846',) -> α4362)
+//│ res: error
+//│    = '-1-1'
+//│ constrain calls  : 179
+//│ annoying  calls  : 36
+//│ subtyping calls  : 1213
+
+:e
+:stats
+prettier2 done eval1 e2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	prettier2 done eval1 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (?b | ?c)` is not an instance of type `int`
+//│ ║  l.73: 	rec def eval1 k e = case e of {
+//│ ║        	                ^^^^^^^^^^^^^^^
+//│ ║  l.74: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	  | Add -> eval1 k e.lhs + eval1 k e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	  | _ -> k e
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.77: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.274: 	      else if ev e.rhs == 0 then prettier1 k ev e.lhs
+//│ ╙──       	              ^^^^^^^^
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?E, ?E0. ?b) -> ?c` exceeded recursion depth limit (100)
+//│ ║  l.+1: 	prettier2 done eval1 e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4528..E4528, lhs: lhs4526, rhs: rhs4530})  <!<  {rhs: rhs4448}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4528..E4528, lhs: lhs4526, rhs: rhs4530})  <!<  α4447
+//│ ╟── while constraining:  (add<> & {lhs: lhs4526, rhs: rhs4530, Add#E: mut E4528..E4528})  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs4526, rhs: rhs4530, Add#E: mut E4528..E4528})  <!<  α4444
+//│ ╟── while constraining:  (add<> & {lhs: lhs4526, rhs: rhs4530, Add#E: mut E4528..E4528})  <!<  rhs4448
+//│ ╟── while constraining:  rhs4531  <!<  rhs4448
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4525..E4525, lhs: lhs4523, rhs: rhs4531})  <!<  {rhs: rhs4448}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4525..E4525, lhs: lhs4523, rhs: rhs4531})  <!<  α4447
+//│ ╟── while constraining:  (add<> & {lhs: lhs4523, rhs: rhs4531, Add#E: mut E4525..E4525})  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α4522  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  α4444
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg4456
+//│ ╟── while constraining:  ∀ 0. α1011'  <!<  arg4455
+//│ ╟── while constraining:  arg4519  <!<  arg4455
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  {arg: arg4455}
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  α4454
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  ((nega<> & α4454) | (α4457 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  α4453
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  α4452
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  α4444
+//│ ╟── while constraining:  (nega<> & {arg: arg4519, Nega#E: mut E4520..E4520})  <!<  rhs4448
+//│ ╟── while constraining:  rhs4521  <!<  rhs4448
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4518..E4518, lhs: lhs4516, rhs: rhs4521})  <!<  {rhs: rhs4448}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E4518..E4518, lhs: lhs4516, rhs: rhs4521})  <!<  α4447
+//│ ╟── while constraining:  (add<> & {lhs: lhs4516, rhs: rhs4521, Add#E: mut E4518..E4518})  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  α4515  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  ((lit<> & α4445) | (((add<> & α4447) | (α4452 & ~(add<>))) & ~(lit<>)))
+//│ ╟── while constraining:  ∀ 0. α1688'  <!<  α4444
+//│ ╟── while constraining:  (∀ 0. α1688',)  <!<  (α4444,)
+//│ ╟── while constraining:  (α4444 -> (α4458 | (α4459 | α4460)))  <!<  ((∀ 0. α1688',) -> α4514)
+//│ ╙── while constraining:  α4467  <!<  ((∀ 0. α1688',) -> α4514)
+//│ res: error
+//│    = '1-123'
+//│ constrain calls  : 173
+//│ annoying  calls  : 38
+//│ subtyping calls  : 1146
+

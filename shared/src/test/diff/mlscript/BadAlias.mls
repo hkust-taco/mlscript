@@ -22,7 +22,7 @@ add res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.21: 	add res 1
 //│ ║        	^^^^^^^
-//│ ╟── type `"oops"` does not match type `int`
+//│ ╟── type `"oops"` is not an instance of type `int`
 //│ ║  l.16: 	res: "oops"
 //│ ║        	     ^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -39,7 +39,7 @@ type B = Oops
 //│ Defined type alias B
 
 42: B
-//│ res: error
+//│ res: B
 //│    = 42
 
 :e
@@ -72,38 +72,52 @@ type NonReg[A] = { x: NonReg[int] }
 //│    = 42
 
 :e
+:w
 type NonReg[A] = { x: NonReg[int] }
 type RefToNongReg[A] = { x: NonReg[A] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as NonReg[int], but is defined as NonReg['A]
-//│ ║  l.75: 	type NonReg[A] = { x: NonReg[int] }
+//│ ║  l.76: 	type NonReg[A] = { x: NonReg[int] }
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ Defined type alias RefToNongReg
+//│ Defined type alias RefToNongReg[±A]
+//│ ╔══[WARNING] Type definition RefToNongReg has bivariant type parameters:
+//│ ║  l.77: 	type RefToNongReg[A] = { x: NonReg[A] }
+//│ ║        	     ^^^^^^^^^^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.77: 	type RefToNongReg[A] = { x: NonReg[A] }
+//│ ╙──      	                  ^
 
 
+:w
 type Reg[A] = Reg[A] -> Reg[A]
-//│ Defined type alias Reg
+//│ Defined type alias Reg[±A]
+//│ ╔══[WARNING] Type definition Reg has bivariant type parameters:
+//│ ║  l.91: 	type Reg[A] = Reg[A] -> Reg[A]
+//│ ║        	     ^^^
+//│ ╟── A is irrelevant and may be removed
+//│ ║  l.91: 	type Reg[A] = Reg[A] -> Reg[A]
+//│ ╙──      	         ^
 
 
 type Id[A] = A
-//│ Defined type alias Id
+//│ Defined type alias Id[+A]
 
 // Our regularity check for now is very syntactic:
 :e
 type FalseNeg[A] = { x: FalseNeg[Id[A]] }
 //│ ╔══[ERROR] Type definition is not regular: it occurs within itself as FalseNeg[Id['A]], but is defined as FalseNeg['A]
-//│ ║  l.92: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	type FalseNeg[A] = { x: FalseNeg[Id[A]] }
+//│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 :e
 42: Id
 //│ ╔══[ERROR] Type Id takes parameters
-//│ ║  l.99: 	42: Id
-//│ ╙──      	    ^^
+//│ ║  l.113: 	42: Id
+//│ ╙──       	    ^^
 //│ res: error
 //│    = 42
 
 42: Id[int]
-//│ res: int
+//│ res: Id[int]
 //│    = 42
 

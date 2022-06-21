@@ -10,6 +10,9 @@ import mlscript.Message._
 
 abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
+  type TN = TypeName
+  
+  
   // The data types used for type inference:
   
   case class TypeProvenance(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N, isType: Bool = false) {
@@ -137,11 +140,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   sealed trait Factorizable extends SimpleType
   
   case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
+    // lazy val level: Int = lhs.level max rhs.level
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = lhs.levelBelow(ub) max rhs.levelBelow(ub)
     def freshenAboveImplImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): FunctionType =
       FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify))(prov)
-    override def toString = s"($lhs -> $rhs)"
+    override def toString = s"(${lhs match {
+      case TupleType((N, f) :: Nil) => f.toString
+      case lhs => lhs
+    }} -> $rhs)"
   }
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
     require(alts.length > 1)
@@ -156,23 +163,23 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       Overload(alts.map(_.freshenAboveImplImpl(lim, rigidify)))(prov)
   }
   
-  case class RecordType(fields: List[(Var, SimpleType)])(val prov: TypeProvenance) extends SimpleType {
+  case class RecordType(fields: List[(Var, FieldType)])(val prov: TypeProvenance) extends SimpleType {
     // TODO: assert no repeated fields
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): RecordType =
       self.freshenAbove(lim, this, rigidify).asInstanceOf[RecordType]
     def toInter: SimpleType =
-      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType:SimpleType)(((l, r) => ComposedType(false, l, r)(noProv)))
-    def mergeAllFields(fs: Iterable[Var -> SimpleType]): RecordType = {
-      val res = mutable.SortedMap.empty[Var, SimpleType]
+      fields.map(f => RecordType(f :: Nil)(prov)).foldLeft(TopType: ST)(((l, r) => ComposedType(false, l, r)(noProv)))
+    def mergeAllFields(fs: Iterable[Var -> FieldType]): RecordType = {
+      val res = mutable.SortedMap.empty[Var, FieldType]
       fs.foreach(f => res.get(f._1) match {
         case N => res(f._1) = f._2
-        case S(ty) => res(f._1) = ty & f._2
+        case S(ty) => res(f._1) = ty && f._2
       })
       RecordType(res.toList)(prov)
     }
-    def addFields(fs: Ls[Var -> SimpleType]): RecordType = {
+    def addFields(fs: Ls[Var -> FieldType]): RecordType = {
       val shadowing = fs.iterator.map(_._1).toSet
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
@@ -181,28 +188,30 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   object RecordType {
     def empty: RecordType = RecordType(Nil)(noProv)
-    def mk(fields: List[(Var, SimpleType)])(prov: TypeProvenance = noProv): SimpleType =
+    def mk(fields: List[(Var, FieldType)])(prov: TypeProvenance = noProv): SimpleType =
       if (fields.isEmpty) ExtrType(false)(prov) else RecordType(fields)(prov)
   }
   
   sealed abstract class ArrayBase extends MiscBaseType {
-    def inner: SimpleType
+    def inner: FieldType
   }
-  
-  case class ArrayType(val inner: SimpleType)(val prov: TypeProvenance) extends ArrayBase {
+
+  case class ArrayType(val inner: FieldType)(val prov: TypeProvenance) extends ArrayBase {
     def level: Level = inner.level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = inner.levelBelow(ub)
     def freshenAboveImplImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): ArrayType =
       ArrayType(inner.freshenAbove(lim, rigidify))(prov)
-    override def toString = s"Array[${inner}]"
+    override def toString = s"Array‹$inner›"
   }
-  
-  case class TupleType(fields: List[Opt[Var] -> SimpleType])(val prov: TypeProvenance) extends ArrayBase {
-    lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
+
+  case class TupleType(fields: List[Opt[Var] -> FieldType])(val prov: TypeProvenance) extends ArrayBase {
+    lazy val inner: FieldType = fields.map(_._2).reduceLeftOption(_ || _).getOrElse(BotType.toUpper(noProv))
+    // lazy val inner: SimpleType = fields.map(_._2).fold(ExtrType(true)(noProv))(_ | _)
     lazy val level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = fields.iterator.map(_._2.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     def freshenAboveImplImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): TupleType =
       TupleType(fields.mapValues(_.freshenAbove(lim, rigidify)))(prov)
+    // lazy val level: Int = fields.iterator.map(_._2.level).maxOption.getOrElse(0)
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
@@ -275,8 +284,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   case class WithType(base: SimpleType, rcd: RecordType)(val prov: TypeProvenance) extends ProxyType {
     lazy val underlying: ST =
       base.without(rcd.fields.iterator.map(_._1).toSortedSet) & rcd
+    override def toString = s"${base} w/ ${rcd}"
   }
   
+  type TR = TypeRef
   case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType {
     def level: Level = levelBelow(MaxLevel)(MutSet.empty)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
@@ -286,16 +297,42 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       require(targs.size === td.tparamsargs.size)
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
-          tparamField(defn, tp) -> FunctionType(tv, tv)(noProv) }.toList)(noProv)
+            val tvv = td.getVariancesOrDefault
+            tparamField(defn, tp) -> FieldType(
+              Some(if (tvv(tv).isCovariant) BotType else tv),
+              if (tvv(tv).isContravariant) TopType else tv)(prov)
+          }.toList)(noProv)
         else TopType
       subst(td.kind match {
         case Als => td.bodyTy
-        case Cls => clsNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
-        case Trt => trtNameToNomTag(td)(noProv/*TODO*/, ctx) & td.bodyTy & tparamTags
+        case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
+        case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
       // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv => tv -> freshenAbove(0, tv)(tv.level))).toMap)
       // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv =>
       //   tv -> tv.freshenAbove(MinLevel, rigidify = false)(tv.level, MutMap.empty))).toMap)
-      }, td.targs.lazyZip(targs).toMap)
+      }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
+    }
+    private var tag: Opt[Opt[ClassTag]] = N
+    def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
+      val res = ctx.tyDefs.get(defn.name) match {
+        case S(td @ TypeDef(Cls, _, _, _, _, _, _, _, _)) => S(clsNameToNomTag(td)(noProv, ctx))
+        case _ => N
+      }
+      tag = S(res)
+      res
+    }
+    def mapTargs[R](pol: Opt[Bool])(f: (Opt[Bool], ST) => R)(implicit ctx: Ctx): Ls[R] = {
+      val td = ctx.tyDefs(defn.name)
+      td.tvarVariances.fold(targs.map(f(N, _))) { tvv =>
+        assert(td.tparamsargs.sizeCompare(targs) === 0)
+        (td.tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
+          tvv(tv) match {
+            case VarianceInfo(true, true) =>
+              f(N, TypeBounds(BotType, TopType)(noProv))
+            case VarianceInfo(co, contra) =>
+              f(if (co) pol else if (contra) pol.map(!_) else N, ta)
+          }
+      }}
     }
     override def toString = showProvOver(false) {
       val displayName =
@@ -309,8 +346,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def compare(that: ObjectTag): Int = this.id compare that.id
   }
   
-  case class ClassTag(id: SimpleTerm, parents: Set[Var])(val prov: TypeProvenance) extends BaseType with ObjectTag {
-    lazy val parentsST = parents.map(identity[SimpleTerm]) // TODO inefficient... improve
+  case class ClassTag(id: SimpleTerm, parents: Set[TypeName])(val prov: TypeProvenance) extends BaseType with ObjectTag {
+    lazy val parentsST = parents.iterator.map(tn => Var(tn.name)).toSet[SimpleTerm]
     def glb(that: ClassTag): Opt[ClassTag] =
       if (that.id === this.id) S(this)
       else if (that.parentsST.contains(this.id)) S(that)
@@ -344,8 +381,30 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
-    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
-      if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else TypeBounds(lb, ub)(prov)
+    final def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+      if ((lb is ub) || lb === ub || lb <:< ub && ub <:< lb) lb else (lb, ub) match {
+        case (TypeBounds(lb, _), ub) => mk(lb, ub, prov)
+        case (lb, TypeBounds(_, ub)) => mk(lb, ub, prov)
+        case _ => TypeBounds(lb, ub)(prov)
+      }
+  }
+  
+  case class FieldType(lb: Option[SimpleType], ub: SimpleType)(val prov: TypeProvenance) {
+    def level: Int = lb.map(_.level).getOrElse(ub.level) max ub.level
+    def levelBelow(ubLvl: Level)(implicit cache: MutSet[TV]): Level =
+      lb.fold(MinLevel)(_.levelBelow(ubLvl)) max ub.levelBelow(ubLvl)
+    def <:< (that: FieldType)(implicit ctx: Ctx, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool =
+      (that.lb.getOrElse(BotType) <:< this.lb.getOrElse(BotType)) && (this.ub <:< that.ub)
+    def && (that: FieldType, prov: TypeProvenance = noProv): FieldType =
+      FieldType(lb.fold(that.lb)(l => Some(that.lb.fold(l)(l | _))), ub & that.ub)(prov)
+    def || (that: FieldType, prov: TypeProvenance = noProv): FieldType =
+      FieldType(for {l <- lb; r <- that.lb} yield (l & r), ub | that.ub)(prov)
+    def update(lb: SimpleType => SimpleType, ub: SimpleType => SimpleType): FieldType =
+      FieldType(this.lb.map(lb), ub(this.ub))(prov)
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): FieldType =
+      update(_.freshenAbove(lim, rigidify), _.freshenAbove(lim, rigidify))
+    override def toString =
+      lb.fold(s"$ub")(lb => s"mut ${if (lb === BotType) "" else lb}..$ub")
   }
   
   /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
@@ -367,12 +426,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
           (lowerBounds.iterator ++ upperBounds.iterator)
             .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
       }
-    override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): TV =
-      self.freshenAbove(lim, this, rigidify).asInstanceOf[TV]
+    // override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): TV =
+    //   self.freshenAbove(lim, this, rigidify).asInstanceOf[TV]
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
     override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
+    
+    def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
+      case (S(N | S(true)), _) | (_, S(N | S(false))) => true
+      case _ => false
+    } 
+    /** None: not recursive in this bound; Some(Some(pol)): polarly-recursive; Some(None): nonpolarly-recursive.
+      * Note that if we have something like 'a :> Bot <: 'a -> Top, 'a is not truly recursive
+      *   and its bounds can actually be inlined. */
+    private final def lbRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
+      TupleType(lowerBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(true)).get(this)
+    private final def ubRecOccs_$(implicit ctx: Ctx): Opt[Opt[Bool]] =
+      TupleType(upperBounds.map(N -> _.toUpper(noProv)))(noProv).getVarsPol(S(false)).get(this)
   }
   type TV = TypeVariable
   private var freshCount = 0

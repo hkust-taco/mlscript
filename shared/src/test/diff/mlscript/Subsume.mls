@@ -54,7 +54,7 @@ add boom 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.53: 	add boom 1
 //│ ║        	^^^^^^^^
-//│ ╟── type `anything` does not match type `int`
+//│ ╟── type `anything` is not an instance of type `int`
 //│ ║  l.42: 	def boom: anything
 //│ ║        	          ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -97,7 +97,7 @@ def boom = 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.93: 	def boom = 1
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` is not an instance of type 'a
+//│ ╟── integer literal of type `1` is not an instance of type `'a`
 //│ ║  l.93: 	def boom = 1
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type variable:
@@ -142,7 +142,7 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` does not match type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from reference:
@@ -151,7 +151,7 @@ def id n = add n 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type 'a
+//│ ╟── application of type `int` is not an instance of type `'a`
 //│ ║  l.138: 	def id n = add n 1
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -167,7 +167,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `'a` does not match type `int`
+//│ ╟── type `'a` is not an instance of type `int`
 //│ ║  l.110: 	def id: 'a -> 'a
 //│ ║         	        ^^
 //│ ╟── Note: constraint arises from type reference:
@@ -176,7 +176,7 @@ def id (x: int) = x
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type 'a
+//│ ╟── type `int` is not an instance of type `'a`
 //│ ║  l.163: 	def id (x: int) = x
 //│ ║         	           ^^^
 //│ ╟── but it flows into reference with expected type `'a`
@@ -277,7 +277,7 @@ def g a = add a 1
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.271: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type 'a
+//│ ╟── application of type `int` is not an instance of type `'a`
 //│ ║  l.271: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -326,4 +326,103 @@ ty2 = twice
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│    = [Function: twice]
 
+
+
+// --- // Self Application // --- //
+
+
+def self1: ('a -> 'b & 'a) -> 'b
+//│ self1: ('a -> 'b & 'a) -> 'b
+//│      = <missing implementation>
+
+def self1 a = a a
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: self1]
+
+fun a -> a a
+//│ res: ('a -> 'b & 'a) -> 'b
+//│    = [Function: res]
+
+self1 = res
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: res]
+
+def self2: 'a -> 'b as 'a
+//│ self2: 'a
+//│   where
+//│     'a := 'a -> 'b
+//│      = <missing implementation>
+
+:e
+def self2 = self1
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self2:
+//│ 'a
+//│   where
+//│     'a := 'a -> 'b
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. (?a -> ?b & ?a) -> ?b <: ?a0` exceeded recursion depth limit (100)
+//│ ║  l.361: 	def self2 = self1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  ('a380 -> 'b381)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a380 -> 'b381) & 'a380)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a378
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a378 -> 'b379) & 'a378)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a376
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a376 -> 'b377) & 'a376)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a374
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a374 -> 'b375) & 'a374)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a372
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a372 -> 'b373) & 'a372)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a370
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a370 -> 'b371) & 'a370)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a368
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a368 -> 'b369) & 'a368)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a366
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a366 -> 'b367) & 'a366)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a364
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a364 -> 'b365) & 'a364)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a362
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a362 -> 'b363) & 'a362)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a360
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a360 -> 'b361) & 'a360)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a358
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a358 -> 'b359) & 'a358)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a356
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a356 -> 'b357) & 'a356)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a354
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a354 -> 'b355) & 'a354)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a352
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a352 -> 'b353) & 'a352)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a350
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a350 -> 'b351) & 'a350)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a348
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a348 -> 'b349) & 'a348)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a346
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a346 -> 'b347) & 'a346)
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a344
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a344 -> 'b345) & 'a344)
+//│ ╟── while constraining:  'a343  <!<  (('a344 -> 'b345) & 'a344)
+//│ ╟── while constraining:  ('a343,)  <!<  ((('a344 -> 'b345) & 'a344),)
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a343 -> 'b)
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a | ('a343 -> 'b))
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  ('a | ('a343 -> 'b))
+//│ ╙── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a343
+//│      = [Function: res]
+
+
+fun p -> fun q -> p q p
+//│ res: ('a -> 'b -> 'c & 'b) -> 'a -> 'c
+//│    = [Function: res]
+
+:ns
+fun p -> fun q -> p q p
+//│ res: 'a -> 'b -> 'c
+//│   where
+//│     'a <: 'b -> 'd
+//│     'd <: 'a -> 'c
+//│    = [Function: res]
 

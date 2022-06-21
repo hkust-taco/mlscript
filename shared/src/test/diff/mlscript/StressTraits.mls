@@ -8,14 +8,14 @@ trait E[T]: { fE: T }
 trait F[T]: { fF: T }
 trait G[T]: { fG: T }
 trait H[T]: { fH: T }
-//│ Defined trait A
-//│ Defined trait B
-//│ Defined trait C
-//│ Defined trait D
-//│ Defined trait E
-//│ Defined trait F
-//│ Defined trait G
-//│ Defined trait H
+//│ Defined trait A[+T]
+//│ Defined trait B[+T]
+//│ Defined trait C[+T]
+//│ Defined trait D[+T]
+//│ Defined trait E[+T]
+//│ Defined trait F[+T]
+//│ Defined trait G[+T]
+//│ Defined trait H[+T]
 
 :stats
 def foo x = case x of {
@@ -28,10 +28,10 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | ~f & ({fG: 'a} & g | {fH: 'a} & h & ~g))))))) -> 'a
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | ~e & ({fF: 'fA} & f | ~f & ({fG: 'fA} & g | {fH: 'fA} & h & ~g))))))) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 465
+//│ subtyping calls  : 550
 
 
 // ====== 1 & all ====== //
@@ -39,17 +39,17 @@ def foo x = case x of {
 :stats
 def arg: A[int]
 foo arg
-//│ arg: {fA: int} & a
+//│ arg: A[int]
 //│ res: int
 //│ constrain calls  : 21
 //│ annoying  calls  : 9
-//│ subtyping calls  : 67
+//│ subtyping calls  : 421
 
 :stats
 :e
 def arg: A[int] | B[int]
 foo arg
-//│ arg: {fA: int} & a | {fB: int} & b
+//│ arg: A[int] | B[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.51: 	foo arg
 //│ ║        	^^^^^^^
@@ -63,13 +63,13 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 44
 //│ annoying  calls  : 32
-//│ subtyping calls  : 184
+//│ subtyping calls  : 976
 
 :stats
 :e
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b
+//│ arg: A[int] | B[int] | C[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	foo arg
 //│ ║        	^^^^^^^
@@ -82,14 +82,14 @@ foo arg
 //│ ╙──      	                 ^
 //│ res: error | int
 //│ constrain calls  : 96
-//│ annoying  calls  : 84
-//│ subtyping calls  : 534
+//│ annoying  calls  : 96
+//│ subtyping calls  : 3205
 
 :stats
 :e
 def arg: A[int] | B[int] | D[int]
 foo arg
-//│ arg: {fA: int} & a | {fB: int} & b | {fD: int} & d
+//│ arg: A[int] | B[int] | D[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	foo arg
 //│ ║        	^^^^^^^
@@ -101,9 +101,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error
-//│ constrain calls  : 113
-//│ annoying  calls  : 109
-//│ subtyping calls  : 1222
+//│ constrain calls  : 143
+//│ annoying  calls  : 228
+//│ subtyping calls  : 15830
 
 
 // ====== 2 ====== //
@@ -116,8 +116,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ({fA: 'a} & a | {fB: 'a} & b & ~a) -> 'a
-//│ arg: {fA: int} & a | {fB: int} & b
+//│ foo: ({fA: 'fA} & a | {fB: 'fA} & b & ~a) -> 'fA
+//│ arg: A[int] | B[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	foo arg
 //│ ║         	^^^^^^^
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 52
 //│ annoying  calls  : 32
-//│ subtyping calls  : 142
+//│ subtyping calls  : 198
 
 
 // ====== 3 ====== //
@@ -145,8 +145,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | {fC: 'a} & c & ~b)) -> 'a
-//│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | {fC: 'fA} & c & ~b)) -> 'fA
+//│ arg: A[int] | B[int] | C[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.147: 	foo arg
 //│ ║         	^^^^^^^
@@ -159,8 +159,8 @@ foo arg
 //│ ╙──       	                 ^
 //│ res: error | int
 //│ constrain calls  : 107
-//│ annoying  calls  : 84
-//│ subtyping calls  : 504
+//│ annoying  calls  : 96
+//│ subtyping calls  : 2110
 
 
 // ====== 4 ====== //
@@ -175,8 +175,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | {fD: 'a} & d & ~c))) -> 'a
-//│ arg: {fC: int} & c | {fA: int} & a | {fB: int} & b | {fD: int} & d
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | {fD: 'fA} & d & ~c))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.177: 	foo arg
 //│ ║         	^^^^^^^
@@ -188,9 +188,9 @@ foo arg
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 118
-//│ annoying  calls  : 97
-//│ subtyping calls  : 565
+//│ constrain calls  : 131
+//│ annoying  calls  : 138
+//│ subtyping calls  : 2735
 
 :stats
 :e
@@ -206,9 +206,9 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 92
-//│ annoying  calls  : 94
-//│ subtyping calls  : 420
+//│ constrain calls  : 105
+//│ annoying  calls  : 135
+//│ subtyping calls  : 2448
 
 :stats
 :e
@@ -224,9 +224,9 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 92
-//│ annoying  calls  : 94
-//│ subtyping calls  : 408
+//│ constrain calls  : 105
+//│ annoying  calls  : 135
+//│ subtyping calls  : 2436
 
 
 // ====== 5 ====== //
@@ -242,8 +242,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | {fE: 'a} & e & ~d)))) -> 'a
-//│ arg: {fC: int} & c | {fE: int} & e | {fA: int} & a | {fB: int} & b | {fD: int} & d
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | {fE: 'fA} & e & ~d)))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	foo arg
 //│ ║         	^^^^^^^
@@ -255,9 +255,9 @@ foo arg
 //│ ║  l.236: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 122
-//│ annoying  calls  : 97
-//│ subtyping calls  : 654
+//│ constrain calls  : 135
+//│ annoying  calls  : 138
+//│ subtyping calls  : 3039
 
 
 // ====== 6 ====== //
@@ -274,8 +274,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | {fF: 'a} & f & ~e))))) -> 'a
-//│ arg: {fC: int} & c | {fE: int} & e | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | {fF: 'fA} & f & ~e))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.276: 	foo arg
 //│ ║         	^^^^^^^
@@ -287,9 +287,9 @@ foo arg
 //│ ║  l.267: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 126
-//│ annoying  calls  : 97
-//│ subtyping calls  : 762
+//│ constrain calls  : 139
+//│ annoying  calls  : 138
+//│ subtyping calls  : 3468
 
 
 // ====== 7 ====== //
@@ -307,8 +307,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
-//│ arg: {fC: int} & c | {fE: int} & e | {fG: int} & g | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | ~e & ({fF: 'fA} & f | {fG: 'fA} & g & ~f)))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.309: 	foo arg
 //│ ║         	^^^^^^^
@@ -320,9 +320,9 @@ foo arg
 //│ ║  l.299: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 130
-//│ annoying  calls  : 97
-//│ subtyping calls  : 889
+//│ constrain calls  : 143
+//│ annoying  calls  : 138
+//│ subtyping calls  : 4043
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
@@ -343,18 +343,18 @@ foo_manual arg
 //│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error
-//│ constrain calls  : 29
-//│ annoying  calls  : 90
-//│ subtyping calls  : 877
+//│ constrain calls  : 25
+//│ annoying  calls  : 67
+//│ subtyping calls  : 4264
 
 :stats
 foo_manual = foo
-//│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
+//│ ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | ~e & ({fF: 'fA} & f | {fG: 'fA} & g & ~f)))))) -> 'fA
 //│   <:  foo_manual:
 //│ ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | {fG: 'a} & g & ~f)))))) -> 'a
 //│ constrain calls  : 97
 //│ annoying  calls  : 183
-//│ subtyping calls  : 1098
+//│ subtyping calls  : 3312
 
 
 // ====== 8 ====== //
@@ -373,8 +373,8 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
-//│ foo: ({fA: 'a} & a | ~a & ({fB: 'a} & b | ~b & ({fC: 'a} & c | ~c & ({fD: 'a} & d | ~d & ({fE: 'a} & e | ~e & ({fF: 'a} & f | ~f & ({fG: 'a} & g | {fH: 'a} & h & ~g))))))) -> 'a
-//│ arg: {fC: int} & c | {fE: int} & e | {fG: int} & g | {fA: int} & a | {fB: int} & b | {fD: int} & d | {fF: int} & f | {fH: int} & h
+//│ foo: ({fA: 'fA} & a | ~a & ({fB: 'fA} & b | ~b & ({fC: 'fA} & c | ~c & ({fD: 'fA} & d | ~d & ({fE: 'fA} & e | ~e & ({fF: 'fA} & f | ~f & ({fG: 'fA} & g | {fH: 'fA} & h & ~g))))))) -> 'fA
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.375: 	foo arg
 //│ ║         	^^^^^^^
@@ -386,8 +386,8 @@ foo arg
 //│ ║  l.364: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 134
-//│ annoying  calls  : 97
-//│ subtyping calls  : 1035
+//│ constrain calls  : 147
+//│ annoying  calls  : 138
+//│ subtyping calls  : 4785
 
 

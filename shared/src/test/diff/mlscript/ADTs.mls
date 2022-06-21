@@ -6,88 +6,79 @@ def lit val = Lit { val }
 def add lhs rhs = Add { lhs; rhs }
 def nega arg = Nega { arg }
 //│ Defined class Lit
-//│ Defined class Add
-//│ Defined class Nega
+//│ Defined class Add[+E]
+//│ Defined class Nega[+E]
 //│ lit: (int & 'val) -> (Lit with {val: 'val})
 //│    = [Function: lit]
 //│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
 //│    = [Function: add]
-//│ nega: ('arg & 'E) -> (Nega['E] with {arg: 'arg})
+//│ nega: 'arg -> Nega['arg]
 //│     = [Function: nega]
+
+rec def evalStub1 e = case e of {
+  Lit -> e.val
+  }
+//│ evalStub1: (Lit with {val: 'val}) -> 'val
+//│          = [Function: evalStub1]
+
+rec def evalStub2 e = case e of {
+  Lit -> e.val | Nega -> 0 - (evalStub2 e.arg)
+  }
+//│ evalStub2: 'a -> int
+//│   where
+//│     'a <: Lit | Nega[?] & {arg: 'a}
+//│          = [Function: evalStub2]
 
 rec def eval e = case e of {
   | Lit -> e.val
   | Add -> eval e.lhs + eval e.rhs
   | Nega -> 0 - (eval e.arg)
   }
-//│ eval: ((Add[?] with {lhs: 'a, rhs: 'a}) | Lit | (Nega[?] with {arg: 'a}) as 'a) -> int
+//│ eval: 'a -> int
+//│   where
+//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)
-//│ ex: Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ ex: Add[Lit & {val: 2}]
 //│   = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval ex
 //│ res: int
 //│    = 4
 
+def e: Add['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e :> Add['e]
+//│  = <missing implementation>
+
+def e: Lit | Add['e] as 'e
+//│ e: 'e
+//│   where
+//│     'e :> Add['e] | Lit
+//│  = <missing implementation>
+
 def e: Lit | Add['e] | Nega['e] as 'e
-//│ e: 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ e: 'e
+//│   where
+//│     'e :> Add['e] | Lit | Nega['e]
 //│  = <missing implementation>
 
 def e = ex
-//│ Add['E .. 'E | Lit & {val: 2}] with {lhs: Lit & {val: 2}, rhs: Lit & {val: 2}}
+//│ Add[Lit & {val: 2}]
 //│   <:  e:
-//│ 'e | (Add['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {lhs: 'a, rhs: 'a}) | Lit | (Nega['e & ((Add['c .. 'd] with {lhs: 'b, rhs: 'b}) | Lit | (Nega['c .. 'd] with {arg: 'b})) as 'b .. 'a] with {arg: 'a}) as 'a
+//│ 'e
+//│   where
+//│     'e :> Add['e] | Lit | Nega['e]
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
 //│ res: int
 //│    = 4
 
-:e // FIXME a curious infinite recursion, reproduced in `ADRsRepro.mls`
+// :e // FIXedME a curious infinite recursion, reproduced in `ADRsRepro.mls`
 eval (e : Lit | Add['e] | Nega['e] as 'e)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e, ?e0. ?e0 <: ?e1` exceeded recursion depth limit (100)
-//│ ║  l.49: 	eval (e : Lit | Add['e] | Nega['e] as 'e)
-//│ ║        	      ^
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e188
-//│ ╟── while constraining:  'e184  <!<  'e188
-//│ ╟── while constraining:  ('e188 -> 'e188)  <!<  ('e184 -> 'e184)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e188, rhs: 'e188}) & {Add#E: ('e188 -> 'e188)})  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  Add['e188]  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  (Lit | Add['e188])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ((Lit | Add['e188]) | Nega['e188])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  'e188  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e187
-//│ ╟── while constraining:  'e184  <!<  'e187
-//│ ╟── while constraining:  ('e187 -> 'e187)  <!<  ('e184 -> 'e184)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e187, rhs: 'e187}) & {Add#E: ('e187 -> 'e187)})  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  Add['e187]  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  (Lit | Add['e187])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ((Lit | Add['e187]) | Nega['e187])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  'e187  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e186
-//│ ╟── while constraining:  'e184  <!<  'e186
-//│ ╟── while constraining:  ('e186 -> 'e186)  <!<  ('e184 -> 'e184)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e186, rhs: 'e186}) & {Add#E: ('e186 -> 'e186)})  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  Add['e186]  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  (Lit | Add['e186])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ((Lit | Add['e186]) | Nega['e186])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  'e186  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e185
-//│ ╟── while constraining:  'e184  <!<  'e185
-//│ ╟── while constraining:  ('e185 -> 'e185)  <!<  ('e184 -> 'e184)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e185, rhs: 'e185}) & {Add#E: ('e185 -> 'e185)})  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  Add['e185]  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  (Lit | Add['e185])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ((Lit | Add['e185]) | Nega['e185])  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  'e185  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e184]) | Nega['e184])
-//│ ╙── while constraining:  ∀ 0. 'e129'  <!<  'e184
 //│ res: int
 //│    = 4
 
@@ -119,53 +110,21 @@ eval exp
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ╙──      	                      ^
 //│ res: error | int
 
 :e
 eval (e : Lit | Add['e] | Nega[int] as 'e)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e, ?e0. ?e0 <: ?e1` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	      ^
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e255
-//│ ╟── while constraining:  'e251  <!<  'e255
-//│ ╟── while constraining:  ('e255 -> 'e255)  <!<  ('e251 -> 'e251)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e255, rhs: 'e255}) & {Add#E: ('e255 -> 'e255)})  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  Add['e255]  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  (Lit | Add['e255])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ((Lit | Add['e255]) | Nega['e255])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  'e255  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e254
-//│ ╟── while constraining:  'e251  <!<  'e254
-//│ ╟── while constraining:  ('e254 -> 'e254)  <!<  ('e251 -> 'e251)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e254, rhs: 'e254}) & {Add#E: ('e254 -> 'e254)})  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  Add['e254]  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  (Lit | Add['e254])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ((Lit | Add['e254]) | Nega['e254])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  'e254  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e253
-//│ ╟── while constraining:  'e251  <!<  'e253
-//│ ╟── while constraining:  ('e253 -> 'e253)  <!<  ('e251 -> 'e251)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e253, rhs: 'e253}) & {Add#E: ('e253 -> 'e253)})  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  Add['e253]  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  (Lit | Add['e253])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ((Lit | Add['e253]) | Nega['e253])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  'e253  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  'e252
-//│ ╟── while constraining:  'e251  <!<  'e252
-//│ ╟── while constraining:  ('e252 -> 'e252)  <!<  ('e251 -> 'e251)
-//│ ╟── while constraining:  ((add<> & {lhs: 'e252, rhs: 'e252}) & {Add#E: ('e252 -> 'e252)})  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  Add['e252]  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  (Lit | Add['e252])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ((Lit | Add['e252]) | Nega['e252])  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  'e252  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╟── while constraining:  ∀ 0. 'e129'  <!<  ((Lit | Add['e251]) | Nega[Int])
-//│ ╙── while constraining:  ∀ 0. 'e129'  <!<  'e251
+//│ ╟── type `Lit` is not an instance of type `int`
+//│ ║  l.62: 	def e: Lit | Add['e] | Nega['e] as 'e
+//│ ║        	       ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
+//│ ╙──      	                               ^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,10 +132,10 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	rec def eval e = case e of {
+//│ ║  l.32: 	rec def eval e = case e of {
 //│ ║        	                      ^
 //│ ╟── from field selection:
-//│ ║  l.21: 	  | Nega -> 0 - (eval e.arg)
+//│ ║  l.35: 	  | Nega -> 0 - (eval e.arg)
 //│ ╙──      	                      ^^^^^
 //│ res: error | int
 

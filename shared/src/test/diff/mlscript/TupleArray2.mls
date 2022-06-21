@@ -136,7 +136,7 @@ f_1 = f_2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.132: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
-//│ ╟── type `1` is not an instance of type 'a
+//│ ╟── type `1` is not an instance of type `'a`
 //│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
 //│ ║         	                                 ^
 //│ ╟── Note: constraint arises from type variable:
@@ -145,9 +145,9 @@ f_1 = f_2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.132: 	f_1 = f_2
 //│ ║         	^^^^^^^^^
-//│ ╟── type `(1,)` is not an instance of type T
+//│ ╟── type `(1,)` is not an instance of type `T`
 //│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
-//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	                                ^^^^
 //│ ╟── Note: constraint arises from trait tag:
 //│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
 //│ ║         	                            ^

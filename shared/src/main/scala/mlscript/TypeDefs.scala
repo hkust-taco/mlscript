@@ -12,6 +12,19 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   import TypeProvenance.{apply => tp}
   
   
+  /**
+   * TypeDef holds information about declarations like classes, interfaces, and type aliases
+   *
+   * @param kind tells if it's a class, interface or alias
+   * @param nme name of the defined type
+   * @param tparamsargs list of type parameter names and their corresponding type variable names used in the definition of the type
+   * @param tvars
+   * @param bodyTy type of the body, this means the fields of a class or interface or the type that is being aliased
+   * @param mthDecls method type declarations in a class or interface, not relevant for type alias
+   * @param mthDefs method definitions in a class or interface, not relevant for type alias
+   * @param baseClasses base class if the class or interface inherits from any
+   * @param toLoc source location related information
+   */
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
@@ -20,17 +33,29 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
-    baseClasses: Set[Var],
+    baseClasses: Set[TypeName],
     toLoc: Opt[Loc],
   ) {
-    def allBaseClasses(ctx: Ctx)(implicit traversed: Set[Var]): Set[Var] =
-      baseClasses.map(v => Var(v.name.decapitalize)) ++
+    def allBaseClasses(ctx: Ctx)(implicit traversed: Set[TypeName]): Set[TypeName] =
+      baseClasses.map(v => TypeName(v.name.decapitalize)) ++
         baseClasses.iterator.filterNot(traversed).flatMap(v =>
-          ctx.tyDefs.get(v.name).fold(Set.empty[Var])(_.allBaseClasses(ctx)(traversed + v)))
+          ctx.tyDefs.get(v.name).fold(Set.empty[TypeName])(_.allBaseClasses(ctx)(traversed + v)))
     val (tparams: List[TypeName], targs: List[TypeVariable]) = tparamsargs.unzip
-    def thisTy(prov: TypeProvenance): TypeRef = TypeRef(nme, targs)(prov)
-    def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
-      MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
+    
+    
+    
+    
+    
+    
+    // TODO FIXME pt.level -> pt.polymLevel
+    // def wrapMethod(pt: PolymorphicType, prov: TypeProvenance): MethodType =
+    //   MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
+    
+    
+    val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
+    var tvarVariances: Opt[VarianceStore] = N
+    def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
+      tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
   }
   
   /** Represent a set of methods belonging to some owner type.
@@ -71,7 +96,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       def addParent(mt: MethodSet): MethodSet = {
         val td = ctx.tyDefs(ownerType.name)
         def addThis(mt: MethodType): MethodType =
-          mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTy(mt.prov))))(mt.prov)
+          mt.copy(body = mt.body.map(b => b.copy(_1 = td.thisTv)))(mt.prov)
         def add(mt: MethodType): MethodType =
           mt.copy(parents = ownerType :: mt.parents)(mt.prov)
         mt.copy(decls = mt.decls.view.mapValues(addThis).mapValues(add).toMap, defns = mt.defns.view.mapValues(addThis).toMap)
@@ -89,21 +114,21 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
     Var(clsNme.name + "#" + tparamNme.name)
   
-  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def clsNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require(td.kind is Cls)
     ClassTag(Var(td.nme.name.decapitalize), ctx.allBaseClassesOf(td.nme.name))(prov)
   }
-  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): SimpleType = {
+  def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
     TraitTag(Var(td.nme.name.decapitalize))(prov)
   }
   
-  def baseClassesOf(tyd: mlscript.TypeDef): Set[Var] =
+  def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
     if (tyd.kind === Als) Set.empty else baseClassesOf(tyd.body)
   
-  private def baseClassesOf(ty: Type): Set[Var] = ty match {
+  private def baseClassesOf(ty: Type): Set[TypeName] = ty match {
       case Inter(l, r) => baseClassesOf(l) ++ baseClassesOf(r)
-      case TypeName(nme) => Set.single(Var(nme))
+      case TypeName(nme) => Set.single(TypeName(nme))
       case AppliedType(b, _) => baseClassesOf(b)
       case Record(_) => Set.empty
       case _: Union => Set.empty
@@ -115,13 +140,14 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   /** Only supports getting the fields of a valid base class type.
    * Notably, does not traverse type variables. 
    * Note: this does not retrieve the positional fields implicitly defined by tuples */
-  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, ST] =
+  def fieldsOf(ty: SimpleType, paramTags: Bool)(implicit ctx: Ctx): Map[Var, FieldType] =
   // trace(s"Fields of $ty {${travsersed.mkString(",")}}")
   {
     ty match {
-      case tr @ TypeRef(td, targs) => fieldsOf(tr.expandWith(paramTags), paramTags)
+      case tr @ TypeRef(td, targs) =>
+        fieldsOf(tr.expandWith(paramTags), paramTags)
       case ComposedType(false, l, r) =>
-        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ & _)
+        mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
       case p: ProxyType => fieldsOf(p.underlying, paramTags)
       case Without(base, ns) => fieldsOf(base, paramTags).filter(ns contains _._1)
@@ -256,29 +282,45 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             lazy val checkAbstractAddCtors = {
               val (decls, defns) = gatherMthNames(td)
               val isTraitWithMethods = (k is Trt) && defns.nonEmpty
+              val fields = fieldsOf(td.bodyTy, true)
+              fields.foreach {
+                // * Make sure the LB/UB of all inherited type args are consistent.
+                // * This is not actually necessary for soundness
+                // *  (if they aren't, the object type just won't be instantiable),
+                // *  but will help report inheritance errors earlier (see test BadInherit2).
+                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case _ => ()
+              }
               (decls -- defns) match {
                 case absMths if absMths.nonEmpty || isTraitWithMethods =>
                   if (ctx.get(n.name).isEmpty) // The class may already be defined in an erroneous program
                     ctx += n.name -> AbstractConstructor(absMths, isTraitWithMethods)
                 case _ =>
-                  val fields = fieldsOf(td.bodyTy, true)
+                  val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FunctionType(tv, tv)(noProv) }
+                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
-                        else f._1 ->
-                          freshVar(noProv,
+                        else {
+                          val fv = freshVar(noProv,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
-                          )(1).tap(_.upperBounds ::= f._2)
-                        ).toList
+                          )(1).tap(_.upperBounds ::= f._2.ub)
+                          f._1 -> (
+                            if (f._2.lb.isDefined) FieldType(Some(fv), fv)(f._2.prov)
+                            else fv.toUpper(f._2.prov)
+                          )
+                        }).toList
                       PolymorphicType(MinLevel, FunctionType(
                         singleTup(RecordType.mk(fieldsRefined.filterNot(_._1.name.isCapitalized))(noProv)),
                         nomTag & RecordType.mk(
                           fieldsRefined ::: tparamTags
-                        )(noProv))(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
+                        )(noProv)
+                        // * TODO try later:
+                        // TypeRef(td.nme, td.tparamsargs.unzip._2)(noProv) & RecordType.mk(fieldsRefined)(noProv)
+                      )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
                       val tv = freshVar(noProv)(1)
@@ -303,9 +345,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               //    and to have the same has hashCode (see: the use of a cache MutSet)
               if (defn === td.nme && tys =/= targs) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
-                  expandType(tr, true).show
+                  expandType(tr).show
                 }, but is defined as ${
-                  expandType(TypeRef(defn, td.targs)(noProv), true).show
+                  expandType(TypeRef(defn, td.targs)(noProv)).show
                 }", td.toLoc)(raise)
                 false
               } else true
@@ -338,7 +380,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           // This is because implicit method calls always default to the parent methods.
           case S(MethodType(_, _, parents, _)) if {
             val bcs = ctx.allBaseClassesOf(tn.name)
-            parents.forall(prt => bcs(Var(prt.name.decapitalize)))
+            parents.forall(prt => bcs(TypeName(prt.name.decapitalize)))
           } =>
           // If this class is one of the base classes of the parent(s) of the currently registered method,
           // then we need to register the new method. Only happens when the class definitions are "out-of-order",
@@ -351,7 +393,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             // class A
             //   method F: int
           case S(MethodType(_, _, parents, _)) if {
-            val v = Var(tn.name.decapitalize)
+            val v = TypeName(tn.name.decapitalize)
             parents.forall(prt => ctx.allBaseClassesOf(prt.name).contains(v)) 
           } => ctx.addMth(N, mn, mthTy)
           // If this class is unrelated to the parent(s) of the currently registered method,
@@ -419,6 +461,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           ctx.addMthDefn(tn.name, mn, mt)
         }
       }
+      
       newDefs.foreach { td => if (ctx.tyDefs.isDefinedAt(td.nme.name)) {
         /* Recursive traverse the type definition and type the bodies of method definitions 
          * by applying the targs in `TypeRef` and rigidifying class type parameters. */
@@ -429,18 +472,21 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         val reverseRigid = rigidtargs.lazyZip(td.targs).toMap
         def rec(tr: TypeRef, top: Bool = false)(ctx: Ctx): MethodSet = {
           implicit val thisCtx: Ctx = ctx.nest
-          thisCtx += "this" -> tr
           val td2 = ctx.tyDefs(tr.defn.name)
           val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
           val defined = MutMap.empty[Str, Opt[Loc]]
           
           def filterTR(ty: SimpleType): List[TypeRef] = ty match {
+            case ProxyType(und) => filterTR(und)
             case tr: TypeRef => tr :: Nil
             case ComposedType(false, l, r) => filterTR(l) ::: filterTR(r)
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
+            val thisTag = TraitTag(Var("this"))(noProv)
+            val thisTy = thisTag & tr
+            thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
             val prov: TypeProvenance = tp(md.toLoc,
               (if (!top) "inherited " else "")
@@ -473,29 +519,34 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val dummyTargs2 = tparams.map(p =>
               TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
-            val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t =>
-              t -> freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1))
+            val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
+              freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
+                (thisTag -> td.thisTv) +
+                (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
             val bodyTy = subst(rhs.fold(term =>
               ctx.getMthDefn(prt.name, nme.name)
-                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2))(mt =>
+                .fold(typeLetRhs(rec, nme.name, term)(thisCtx, raise, targsMap2)) { mt =>
                   // Now buckle-up because this is some seriously twisted stuff:
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  subst(mt.bodyPT, td2.targs.lazyZip(tr.targs).toMap) match {
+                  val targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST] +
+                    (td2.thisTv -> td.thisTv) +
+                    (td.thisTv -> td.thisTv)
+                  // Subsitute parent this TVs to current this TV.
+                  PolymorphicType(mt.bodyPT.level, subst(mt.bodyPT.body, targsMap3) match {
                     // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
                     // and will otherwise mask the more precise new prov that contains "inherited"
-                    case PolymorphicType(level, ProvType(underlying)) =>
-                      PolymorphicType(level, underlying)
+                    case ProvType(underlying) => underlying
                     case pt => pt
-                  }
-                ),
+                  })
+                },
               ty => PolymorphicType(thisCtx.lvl,
                 typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)
-            val mthTy = td2.wrapMethod(bodyTy, prov)
+            val mthTy = MethodType(bodyTy.level, S((td.thisTv, bodyTy.body)), td2.nme :: Nil, false)(prov)
             if (rhs.isRight || !declared.isDefinedAt(nme.name)) {
               if (top) thisCtx.addMth(S(td.nme.name), nme.name, mthTy)
               thisCtx.addMth(N, nme.name, mthTy)
@@ -510,8 +561,169 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       }}
       ctx
     }
+
     typeMethods(typeTypeDefs(ctx.copy(env = allEnv, mthEnv = allMthEnv, tyDefs = allDefs)))
   }
   
+  /**
+    * Finds the variances of all type variables in the given type definitions with the given
+    * context using a fixed point computation. The algorithm starts with each type variable
+    * as bivariant by default and each type defintion position as covariant and
+    * then keeps updating the position variance based on the types it encounters.
+    * 
+    * It uses the results to update variance info in the type defintions
+    *
+    * @param tyDefs
+    * @param ctx
+    */
+  def computeVariances(tyDefs: List[TypeDef], ctx: Ctx): Unit = {
+    println(s"VARIANCE ANALYSIS")
+    var varianceUpdated: Bool = false;
+    
+    /** Update variance information for all type variables belonging
+      * to a type definition.
+      *
+      * @param ty
+      *   type tree to check variance for
+      * @param curVariance
+      *   variance of current position where the type tree has been found
+      * @param tyDef
+      *   type definition which is currently being processed
+      * @param visited
+      *   set of type variables visited along with the variance
+      *   true polarity if covariant position visit
+      *   false polarity if contravariant position visit
+      *   both if invariant position visit
+      */
+    def updateVariance(ty: SimpleType, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
+      def fieldVarianceHelper(fieldTy: FieldType): Unit = {
+          fieldTy.lb.foreach(lb => updateVariance(lb, curVariance.flip))
+          updateVariance(fieldTy.ub, curVariance)
+      }
+      
+      trace(s"upd[$curVariance] $ty") { // Note: could simplify this (at some perf cost) by just using ty.childrenPol
+        ty match {
+          case ProxyType(underlying) => updateVariance(underlying, curVariance)
+          case TraitTag(_) | ClassTag(_, _) => ()
+          case ExtrType(pol) => ()
+          case t: TypeVariable =>
+            // update the variance information for the type variable
+            val tvv = tyDef.tvarVariances.getOrElse(die)
+            val oldVariance = tvv.getOrElseUpdate(t, VarianceInfo.bi)
+            val newVariance = oldVariance && curVariance
+            if (newVariance =/= oldVariance) {
+              tvv(t) = newVariance
+              println(s"UPDATE ${tyDef.nme.name}.$t from $oldVariance to $newVariance")
+              varianceUpdated = true
+            }
+            val (visitLB, visitUB) = (
+              !curVariance.isContravariant && !visited(true -> t),
+              !curVariance.isCovariant && !visited(false -> t),
+            )
+            if (visitLB) visited += true -> t
+            if (visitUB) visited += false -> t
+            if (visitLB) t.lowerBounds.foreach(lb => updateVariance(lb, VarianceInfo.co))
+            if (visitUB) t.upperBounds.foreach(ub => updateVariance(ub, VarianceInfo.contra))
+          case RecordType(fields) => fields.foreach {
+            case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
+          }
+          case NegType(negated) =>
+            updateVariance(negated, curVariance.flip)
+          case TypeRef(defn, targs) =>
+            // it's possible that the type definition may not exist in the
+            // context because it is malformed or incorrect. Do nothing in
+            // such cases
+            ctx.tyDefs.get(defn.name).foreach(typeRefDef => {
+              // variance for all type parameters of type definitions has been preset
+              // do nothing if variance for the parameter does not exist
+              targs.zip(typeRefDef.tparamsargs).foreach { case (targ, (_, tvar)) =>
+                typeRefDef.tvarVariances.getOrElse(die).get(tvar).foreach {
+                  case in @ VarianceInfo(false, false) => updateVariance(targ, in)
+                  case VarianceInfo(true, false) => updateVariance(targ, curVariance)
+                  case VarianceInfo(false, true) => updateVariance(targ, curVariance.flip)
+                  case VarianceInfo(true, true) => ()
+                }
+              }
+            })
+          case ComposedType(pol, lhs, rhs) =>
+            updateVariance(lhs, curVariance)
+            updateVariance(rhs, curVariance)
+          case TypeBounds(lb, ub) =>
+            updateVariance(lb, VarianceInfo.contra)
+            updateVariance(ub, VarianceInfo.co)
+          case ArrayType(inner) => fieldVarianceHelper(inner)
+          case TupleType(fields) => fields.foreach {
+              case (_ , fieldTy) => fieldVarianceHelper(fieldTy)
+            }
+          case FunctionType(lhs, rhs) =>
+            updateVariance(lhs, curVariance.flip)
+            updateVariance(rhs, curVariance)
+          case Without(base, names) => updateVariance(base, curVariance.flip)
+          case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
+        }
+      }()
+    }
+    
+    // set default value for all type variables as bivariant
+    // this prevents errors when printing type defintions in
+    // DiffTests for type variables that are not used at all
+    // and hence are not set in the variance info map
+    tyDefs.foreach { t =>
+      assert(t.tvarVariances.isEmpty)
+      t.tvarVariances = S(MutMap.empty)
+      t.tparamsargs.foreach { case (_, tvar) => t.tvarVariances.getOrElse(die).put(tvar, VarianceInfo.bi) }
+    }
+    
+    var i = 1
+    do trace(s"⬤ ITERATION $i") {
+      val visitedSet: MutSet[Bool -> TypeVariable] = MutSet()
+      varianceUpdated = false;
+      tyDefs.foreach {
+        case t @ TypeDef(k, nme, _, _, body, mthDecls, mthDefs, _, _) =>
+          trace(s"${k.str} ${nme.name}  ${
+                t.tvarVariances.getOrElse(die).iterator.map(kv => s"${kv._2} ${kv._1}").mkString("  ")}") {
+            updateVariance(body, VarianceInfo.co)(t, visitedSet)
+            val stores = (mthDecls ++ mthDefs).foreach { mthDef => 
+              val mthBody = ctx.mthEnv.getOrElse(
+                Right(Some(nme.name), mthDef.nme.name),
+                throw new Exception(s"Method ${mthDef.nme.name} does not exist in the context")
+              ).body
+              mthBody.foreach { case (_, body) => updateVariance(body, VarianceInfo.co)(t, visitedSet) }
+            }
+          }()
+      }
+      i += 1
+    }() while (varianceUpdated)
+    println(s"DONE")
+  }
   
+  case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
+    
+    /** Combine two pieces of variance information together
+     */
+    def &&(that: VarianceInfo): VarianceInfo =
+      VarianceInfo(isCovariant && that.isCovariant, isContravariant && that.isContravariant)
+    
+    /*  Flip the current variance if it encounters a contravariant position
+     */
+    def flip: VarianceInfo = VarianceInfo(isContravariant, isCovariant)
+    
+    override def toString: Str = show
+    
+    def show: Str = this match {
+      case (VarianceInfo(true, true)) => "±"
+      case (VarianceInfo(false, true)) => "-"
+      case (VarianceInfo(true, false)) => "+"
+      case (VarianceInfo(false, false)) => "="
+    }
+  }
+  
+  object VarianceInfo {
+    val bi: VarianceInfo = VarianceInfo(true, true)
+    val co: VarianceInfo = VarianceInfo(true, false)
+    val contra: VarianceInfo = VarianceInfo(false, true)
+    val in: VarianceInfo = VarianceInfo(false, false)
+  }
+  
+  type VarianceStore = MutMap[TypeVariable, VarianceInfo]
 }

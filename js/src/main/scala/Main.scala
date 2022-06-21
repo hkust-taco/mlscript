@@ -17,9 +17,9 @@ object Main {
     source.addEventListener("input", typecheck)
   }
   @JSExportTopLevel("typecheck")
-  def typecheck(e: UIEvent): Unit = {
+  def typecheck(e: dom.UIEvent): Unit = {
     e.target match {
-      case elt: HTMLTextAreaElement =>
+      case elt: dom.HTMLTextAreaElement =>
         update(elt.value)
     }
   }
@@ -180,9 +180,12 @@ object Main {
     def formatError(culprit: Str, err: TypeError): Str = {
       s"""<b><font color="Red">
                 Error in <font color="LightGreen">${culprit}</font>: ${err.mainMsg}
-                ${err.allMsgs.tail
-        .map(_._1.show.toString + "<br/>")
-        .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}
+                <!--${
+                  // The rest of the message may not make sense if we don't also print the provs
+                  // For example we'd get things like "Declared at\nDeclared at" for dup type params...
+                  err.allMsgs.tail
+                    .map(_._1.show.toString + "<br/>")
+                    .mkString("&nbsp;&nbsp;&nbsp;&nbsp;")}-->
                 </font></b><br/>"""
     }
     
@@ -195,26 +198,17 @@ object Main {
           Ctx.init
       }
     
+    val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
+    typer.computeVariances(curBlockTypeDefs, ctx)
+    
     def getType(ty: typer.TypeScheme): Type = {
-      val wty = ty.uninstantiatedBody
-      println(s"Typed as: $wty")
-      println(s" where: ${wty.showBounds}")
-      val cty = typer.canonicalizeType(wty)
-      println(s"Canon: ${cty}")
-      println(s" where: ${cty.showBounds}")
-      val sim = typer.simplifyType(cty)
-      println(s"Type after simplification: ${sim}")
-      println(s" where: ${sim.showBounds}")
-      val reca = typer.canonicalizeType(sim)
-      println(s"Recanon: ${reca}")
-      println(s" where: ${reca.showBounds}")
-      val resim = typer.simplifyType(reca)
-      println(s"Resimplified: ${resim}")
-      println(s" where: ${resim.showBounds}")
-      // val exp = typer.expandType(resim, true)
-      val recons = typer.reconstructClassTypes(resim, true, ctx)
-      println(s"Recons: ${recons}")
-      val exp = typer.expandType(recons, true)
+      // val wty = ty.uninstantiatedBody
+      val wty = ty.asInstanceOf[ST]
+      object SimplifyPipeline extends typer.SimplifyPipeline {
+        def debugOutput(msg: => Str): Unit = println(msg)
+      }
+      val sim = SimplifyPipeline(wty)(ctx)
+      val exp = typer.expandType(sim, true)
       exp
     }
     def formatBinding(nme: Str, ty: TypeScheme): Str = {
@@ -330,7 +324,8 @@ object Main {
             case N => ()
           }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
-            vars = tps.map(tp => tp.name -> freshVar(noProv/*FIXME*/)(1)).toMap))
+            vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
+              ) -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme.name -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme.name) -> getType(ty_sch).show

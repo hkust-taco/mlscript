@@ -1,0 +1,82 @@
+
+
+def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
+//│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = <missing implementation>
+
+:e
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
+//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α76'
+//│ ╟── while constraining:  α71'  <!<  α76'
+//│ ╟── while constraining:  (α71',)  <!<  (α76',)
+//│ ╟── while constraining:  (α76' -> α80')  <!<  ((α71',) -> α72')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α71',) -> α72')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α71'
+//│ ╟── while constraining:  α66'  <!<  α71'
+//│ ╟── while constraining:  (α66',)  <!<  (α71',)
+//│ ╟── while constraining:  (α71' -> α75')  <!<  ((α66',) -> α67')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α66',) -> α67')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α66'
+//│ ╟── while constraining:  α61'  <!<  α66'
+//│ ╟── while constraining:  (α61',)  <!<  (α66',)
+//│ ╟── while constraining:  (α66' -> α70')  <!<  ((α61',) -> α62')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α61',) -> α62')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α61'
+//│ ╟── while constraining:  α56'  <!<  α61'
+//│ ╟── while constraining:  (α56',)  <!<  (α61',)
+//│ ╟── while constraining:  (α61' -> α65')  <!<  ((α56',) -> α57')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α56',) -> α57')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α56'
+//│ ╟── while constraining:  α34'  <!<  α56'
+//│ ╟── while constraining:  (α34',)  <!<  (α56',)
+//│ ╟── while constraining:  (α56' -> α60')  <!<  ((α34',) -> α37')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α34',) -> α37')
+//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α34'
+//│ ╟── while constraining:  (∀ 1. (α42'' -> α49''),)  <!<  (α34',)
+//│ ╙── while constraining:  (α34' -> α41')  <!<  ((∀ 1. (α42'' -> α49''),) -> α55')
+//│ (anything -> nothing) -> anything -> error
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z]
+
+
+def pow1 = z (fun pow0 -> fun n -> fun x ->
+    if n > 0 then pow0 (n - 1) x * x
+    else 1
+  )
+//│ pow1: int -> int -> int
+//│     = [Function (anonymous)]
+
+pow1 3 4
+//│ res: int
+//│    = 64
+
+
+def pow pow n x =
+    if n > 0 then pow (n - 1) x * x
+    else 1
+//│ pow: (int -> 'a -> int) -> int -> (int & 'a) -> int
+//│    = [Function: pow]
+
+def pow = z pow
+pow 3 4
+//│ pow: int -> int -> int
+//│    = [Function (anonymous)]
+//│ res: int
+//│    = 64
+
+
+def oops = z (fun f -> f)
+//│ oops: anything -> nothing
+//│     = [Function (anonymous)]
+
+:re
+oops 1
+//│ res: nothing
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+

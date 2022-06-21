@@ -2,11 +2,11 @@
 :AllowRuntimeErrors
 
 trait MyTrait[A]: { value: A }
-//│ Defined trait MyTrait
+//│ Defined trait MyTrait[+A]
 
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'a} & myTrait | ~myTrait) -> (0 | 'a)
+//│ test1: ({value: 'value} & myTrait | ~myTrait) -> (0 | 'value)
 //│      = [Function: test1]
 
 :e
@@ -45,7 +45,7 @@ test1 (C1 { value = 1 })
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ test2: ({default: 'a} & ~myTrait | {value: 'a} & myTrait) -> 'a
+//│ test2: ({default: 'value} & ~myTrait | {value: 'value} & myTrait) -> 'value
 //│      = [Function: test2]
 
 :e
@@ -143,7 +143,7 @@ class C3: { default: string } & ~MyTrait[anything]
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 def strawman: C2 & ~MyTrait[anything]
-//│ strawman: C2 & ~myTrait
+//│ strawman: C2 & ~MyTrait[?]
 //│         = <missing implementation>
 
 test2 strawman
@@ -161,7 +161,7 @@ strawman: ~{ value: anything }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.160: 	strawman: ~{ value: anything }
 //│ ║         	^^^^^^^^
-//│ ╟── type `C2 & ~myTrait` does not match type `~{value: anything}`
+//│ ╟── type `C2 & ~MyTrait[?]` does not match type `~{value: anything}`
 //│ ║  l.145: 	def strawman: C2 & ~MyTrait[anything]
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `~{value: anything}`

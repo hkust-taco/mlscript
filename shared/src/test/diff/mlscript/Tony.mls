@@ -1,6 +1,6 @@
 class Some[A]: { value: A }
 class None: {}
-//│ Defined class Some
+//│ Defined class Some[+A]
 //│ Defined class None
 
 
@@ -11,7 +11,7 @@ def flatMap3 = fun f -> fun opt -> case opt of { Some -> f opt | _ -> opt }
 
 
 def arg = if true then Some{value = 42} with {payload = 23} else None {}
-//│ arg: None | (Some['A .. 42 | 'A] with {payload: 23, value: 42})
+//│ arg: None | Some[42] & {payload: 23}
 //│    = Some { value: 42, payload: 23 }
 
 // > TODO don't distribute neg inters + handle better at constraint top level
@@ -19,13 +19,13 @@ def arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: int | None
 //│    = 65
-//│ constrain calls  : 97
+//│ constrain calls  : 100
 //│ annoying  calls  : 23
-//│ subtyping calls  : 42
+//│ subtyping calls  : 60
 
 
 def arg = if true then Some{value = 42} else None {}
-//│ arg: None | (Some['A .. 42 | 'A] with {value: 42})
+//│ arg: None | Some[42]
 //│    = Some { value: 42 }
 
 flatMap3 (fun x -> x.value) arg
@@ -61,7 +61,7 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: ((Some['A .. 42 | 'A] with {value: 42}) -> 'a) -> (None | 'a)
+//│ res: (Some[42] -> 'a) -> (None | 'a)
 //│    = [Function: res]
 
 

@@ -6,7 +6,7 @@ let f = x =>
 let h = y =>
   succ / f y
 let mkArg = a => {prop: a}
-//│ f: {prop: int & 'a} -> 'a
+//│ f: {prop: int & 'prop} -> 'prop
 //│ h: {prop: int} -> int
 //│ mkArg: 'a -> {prop: 'a}
 
@@ -16,7 +16,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -33,7 +33,7 @@ h / mkArg false
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.32: 	(x => succ x) false
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` does not match type `int`
+//│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.32: 	(x => succ x) false
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -53,7 +53,7 @@ let arg2 = {fld: arg}
 let i = y =>
   succ / f y.fld
 let test = x => y => if x.prop then i x else y
-//│ f: {prop: int & 'a} -> 'a
+//│ f: {prop: int & 'prop} -> 'prop
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
@@ -65,7 +65,7 @@ test arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.64: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── application of type `bool` does not match type `int`
+//│ ╟── application of type `bool` is not an instance of type `int`
 //│ ║  l.51: 	let arg = {prop: not true}
 //│ ║        	                 ^^^^^^^^
 //│ ╟── Note: constraint arises from argument:

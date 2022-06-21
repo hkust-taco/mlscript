@@ -15,14 +15,15 @@ def Fals: Fals
 Tru: Boolean
 //│ // Query 1 aborted: Tru is not implemented
 //│ // End of generated code
-//│ res: Fals | Tru
+//│ res: Boolean
 //│    = <no result>
 //│      Tru is not implemented
 
 :e
+:ge
 Boolean
 //│ ╔══[ERROR] identifier not found: Boolean
-//│ ║  l.23: 	Boolean
+//│ ║  l.24: 	Boolean
 //│ ╙──      	^^^^^^^
 //│ res: error
 //│ Code generation encountered an error:

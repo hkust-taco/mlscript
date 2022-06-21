@@ -12,10 +12,8 @@ def test = fun x -> case x of
   { Person -> x.age
   | Animal -> 0
   }
-//│ test: (Animal | (Person\name with {age: 'a})) -> (0 | 'a)
+//│ test: (Animal | (Person\name with {age: 'age})) -> (0 | 'age)
 //│     = [Function: test]
-
-// TODO simplify type to : test: Person & {age: 'a} | Animal -> 'a | 0
 
 test: Person & {age: 'a} | Animal -> 'a | 0
 //│ res: Animal -> 0 | 0 | Person & {age: 0}
@@ -52,4 +50,13 @@ test p
 1: int
 //│ res: int
 //│    = 1
+
+
+def f: 'a -> 'a & string
+//│ f: nothing
+//│  = <missing implementation>
+
+def f: 'a -> ('a & string)
+//│ f: 'a -> (string & 'a)
+//│  = <missing implementation>
 

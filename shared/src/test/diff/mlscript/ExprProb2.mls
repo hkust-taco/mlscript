@@ -1,0 +1,467 @@
+
+// --- Lit, Add ---
+
+
+class Lit: { val: int }
+class Add[E]: { lhs: E; rhs: E }
+def lit val = Lit { val }
+def add lhs rhs = Add { lhs; rhs }
+//│ Defined class Lit
+//│ Defined class Add[+E]
+//│ lit: (int & 'val) -> (Lit with {val: 'val})
+//│    = [Function: lit]
+//│ add: ('lhs & 'E) -> ('E & 'rhs) -> (Add['E] with {lhs: 'lhs, rhs: 'rhs})
+//│    = [Function: add]
+
+
+:stats
+def eval1 eval1 e = case e of {
+  | Lit -> e.val
+  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
+  }
+//│ eval1: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│      = [Function: eval1]
+//│ constrain calls  : 36
+//│ annoying  calls  : 0
+//│ subtyping calls  : 55
+
+:stats
+def eval1f eval1 e = case e of {
+  | Lit -> e.val
+  | Add -> eval1 e.lhs + eval1 e.rhs
+  }
+//│ eval1f: ('rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│       = [Function: eval1f]
+//│ constrain calls  : 32
+//│ annoying  calls  : 0
+//│ subtyping calls  : 52
+
+
+e1 = add (lit 1) (add (lit 2) (lit 3))
+//│ e1: Add[Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}} | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Add { lhs: Lit { val: 2 }, rhs: Lit { val: 3 } }
+//│     }
+
+
+:e
+eval1 eval1 e1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?lhs, ?rhs, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i. ?a -> ?f -> (?val | ?i) <: (forall ?val, ?lhs, ?rhs, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r. ?j -> ?o -> (?val | ?r)) -> ?s` exceeded recursion depth limit (100)
+//│ ║  l.49: 	eval1 eval1 e1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α212
+//│ ╟── while constraining:  α200  <!<  α212
+//│ ╟── while constraining:  (α200,)  <!<  (α212,)
+//│ ╟── while constraining:  (α212 -> (α219 -> (val221 | α223)))  <!<  ((α200,) -> α201)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α200,) -> α201)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α200
+//│ ╟── while constraining:  α188  <!<  α200
+//│ ╟── while constraining:  (α188,)  <!<  (α200,)
+//│ ╟── while constraining:  (α200 -> (α207 -> (val209 | α211)))  <!<  ((α188,) -> α189)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α188,) -> α189)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α188
+//│ ╟── while constraining:  α176  <!<  α188
+//│ ╟── while constraining:  (α176,)  <!<  (α188,)
+//│ ╟── while constraining:  (α188 -> (α195 -> (val197 | α199)))  <!<  ((α176,) -> α177)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α176,) -> α177)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α176
+//│ ╟── while constraining:  α164  <!<  α176
+//│ ╟── while constraining:  (α164,)  <!<  (α176,)
+//│ ╟── while constraining:  (α176 -> (α183 -> (val185 | α187)))  <!<  ((α164,) -> α165)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α164,) -> α165)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α164
+//│ ╟── while constraining:  α152  <!<  α164
+//│ ╟── while constraining:  (α152,)  <!<  (α164,)
+//│ ╟── while constraining:  (α164 -> (α171 -> (val173 | α175)))  <!<  ((α152,) -> α153)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α152,) -> α153)
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α152
+//│ ╟── while constraining:  (∀ 0. (α53' -> (α54' -> (val56' | α65'))),)  <!<  (α152,)
+//│ ╟── while constraining:  (α152 -> (α159 -> (val161 | α163)))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α151)
+//│ ╙── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α151)
+//│ res: error
+//│    = 6
+
+:e
+def eval1_fixed_1 = eval1 eval1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?lhs, ?rhs, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i. ?a -> ?f -> (?val | ?i) <: (forall ?val, ?lhs, ?rhs, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r. ?j -> ?o -> (?val | ?r)) -> ?s` exceeded recursion depth limit (100)
+//│ ║  l.86: 	def eval1_fixed_1 = eval1 eval1
+//│ ║        	                    ^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α305'
+//│ ╟── while constraining:  α293'  <!<  α305'
+//│ ╟── while constraining:  (α293',)  <!<  (α305',)
+//│ ╟── while constraining:  (α305' -> (α312' -> (val314' | α316')))  <!<  ((α293',) -> α294')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α293',) -> α294')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α293'
+//│ ╟── while constraining:  α281'  <!<  α293'
+//│ ╟── while constraining:  (α281',)  <!<  (α293',)
+//│ ╟── while constraining:  (α293' -> (α300' -> (val302' | α304')))  <!<  ((α281',) -> α282')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α281',) -> α282')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α281'
+//│ ╟── while constraining:  α269'  <!<  α281'
+//│ ╟── while constraining:  (α269',)  <!<  (α281',)
+//│ ╟── while constraining:  (α281' -> (α288' -> (val290' | α292')))  <!<  ((α269',) -> α270')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α269',) -> α270')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α269'
+//│ ╟── while constraining:  α257'  <!<  α269'
+//│ ╟── while constraining:  (α257',)  <!<  (α269',)
+//│ ╟── while constraining:  (α269' -> (α276' -> (val278' | α280')))  <!<  ((α257',) -> α258')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α257',) -> α258')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α257'
+//│ ╟── while constraining:  α245'  <!<  α257'
+//│ ╟── while constraining:  (α245',)  <!<  (α257',)
+//│ ╟── while constraining:  (α257' -> (α264' -> (val266' | α268')))  <!<  ((α245',) -> α246')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α245',) -> α246')
+//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α245'
+//│ ╟── while constraining:  (∀ 0. (α53' -> (α54' -> (val56' | α65'))),)  <!<  (α245',)
+//│ ╟── while constraining:  (α245' -> (α252' -> (val254' | α256')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α244')
+//│ ╙── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α244')
+//│ eval1_fixed_1: error
+//│              = [Function (anonymous)]
+
+eval1_fixed_1 e1
+//│ res: error
+//│    = 6
+
+
+rec def eval1_fixed_2 = eval1f (fun x -> eval1f eval1_fixed_2 x)
+//│ eval1_fixed_2: 'a -> int
+//│   where
+//│     'a <: Add[?] & {lhs: Add[?] & {lhs: 'a, rhs: 'a} | Lit, rhs: Add[?] & {lhs: 'a, rhs: 'a} | Lit} | Lit
+//│              = [Function (anonymous)]
+
+eval1_fixed_2 e1
+//│ res: int
+//│    = 6
+
+
+:e
+// Tying the know without a recursive def:
+def eval1_fixed_3 =
+  let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
+  in fixed fixed
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?rhs0, ?i, ?j, ?k, ?val0, ?l, ?rhs1, ?lhs0, ?lhs1, ?m, ?n, ?o, ?val1, ?p, ?rhs2, ?lhs2, ?q. ?a -> ?e <: (forall ?rhs, ?lhs, ?val, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?rhs3, ?z, ?a1, ?b1, ?val2, ?c1, ?rhs4, ?lhs3, ?lhs4, ?d1, ?e1, ?f1, ?val3, ?g1, ?rhs5, ?lhs5, ?h1. ?r -> ?v) -> ?i1` exceeded recursion depth limit (100)
+//│ ║  l.142: 	  in fixed fixed
+//│ ║         	     ^^^^^^^^^^^
+//│ ╟── while constraining:  (α616',)  <!<  (α644',)
+//│ ╟── while constraining:  (α644' -> α650')  <!<  ((α616',) -> α617')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α616',) -> α617')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α616'
+//│ ╟── while constraining:  α588'  <!<  α616'
+//│ ╟── while constraining:  (α588',)  <!<  (α616',)
+//│ ╟── while constraining:  (α616' -> α622')  <!<  ((α588',) -> α589')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α588',) -> α589')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α588'
+//│ ╟── while constraining:  α560'  <!<  α588'
+//│ ╟── while constraining:  (α560',)  <!<  (α588',)
+//│ ╟── while constraining:  (α588' -> α594')  <!<  ((α560',) -> α561')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α560',) -> α561')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α560'
+//│ ╟── while constraining:  α532'  <!<  α560'
+//│ ╟── while constraining:  (α532',)  <!<  (α560',)
+//│ ╟── while constraining:  (α560' -> α566')  <!<  ((α532',) -> α533')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α532',) -> α533')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α532'
+//│ ╟── while constraining:  α504'  <!<  α532'
+//│ ╟── while constraining:  (α504',)  <!<  (α532',)
+//│ ╟── while constraining:  (α532' -> α538')  <!<  ((α504',) -> α505')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α504',) -> α505')
+//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α504'
+//│ ╟── while constraining:  (∀ 1. (α454'' -> α474''),)  <!<  (α504',)
+//│ ╟── while constraining:  (α504' -> α510')  <!<  ((∀ 1. (α454'' -> α474''),) -> α503')
+//│ ╙── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((∀ 1. (α454'' -> α474''),) -> α503')
+//│ eval1_fixed_3: error
+//│              = [Function (anonymous)]
+
+eval1_fixed_3 e1
+//│ res: error
+//│    = 6
+
+
+
+// --- Nega ---
+
+
+class Nega[E]: { arg: E }
+def nega arg = Nega { arg }
+//│ Defined class Nega[+E]
+//│ nega: 'arg -> Nega['arg]
+//│     = [Function: nega]
+
+
+def eval2 eval2 e = case e of {
+  | Nega -> 0 - (eval2 eval2 e.arg)
+  | _ -> eval1 eval2 e
+  }
+//│ eval2: ('a -> 'arg -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│      = [Function: eval2]
+
+def eval2f eval2 e = case e of {
+  | Nega -> 0 - (eval2 e.arg)
+  | _ -> eval1f eval2 e
+  }
+//│ eval2f: ('arg -> int & 'rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│       = [Function: eval2f]
+
+
+e2 = add (lit 1) (nega e1)
+//│ e2: Add[Lit & {val: 1} | Nega[Add[Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}} | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]] with {lhs: Lit & {val: 1}, rhs: Nega[Add[Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}} | Lit & {val: 1}] with {lhs: Lit & {val: 1}, rhs: Add[Lit & {val: 2 | 3}] & {lhs: Lit & {val: 2}, rhs: Lit & {val: 3}}}]}
+//│   = Add {
+//│       lhs: Lit { val: 1 },
+//│       rhs: Nega { arg: Add { lhs: [Lit], rhs: [Add] } }
+//│     }
+
+
+:e
+def eval2_fixed_1 = eval2 eval2
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?arg, ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q. ?a -> ?i -> (?o | ?p) <: (forall ?arg, ?rhs, ?lhs, ?val, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1. ?r -> ?z -> (?f1 | ?g1)) -> ?i1` exceeded recursion depth limit (100)
+//│ ║  l.216: 	def eval2_fixed_1 = eval2 eval2
+//│ ║         	                    ^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α938'
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α937'
+//│ ╟── while constraining:  α917'  <!<  α937'
+//│ ╟── while constraining:  (α917',)  <!<  (α937',)
+//│ ╟── while constraining:  (α937' -> (α948' -> (α955' | α956')))  <!<  ((α917',) -> α918')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α917',) -> α918')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α917'
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α916'
+//│ ╟── while constraining:  α896'  <!<  α916'
+//│ ╟── while constraining:  (α896',)  <!<  (α916',)
+//│ ╟── while constraining:  (α916' -> (α927' -> (α934' | α935')))  <!<  ((α896',) -> α897')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α896',) -> α897')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α896'
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α895'
+//│ ╟── while constraining:  α875'  <!<  α895'
+//│ ╟── while constraining:  (α875',)  <!<  (α895',)
+//│ ╟── while constraining:  (α895' -> (α906' -> (α913' | α914')))  <!<  ((α875',) -> α876')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α875',) -> α876')
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α875'
+//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α874'
+//│ ╟── while constraining:  (∀ 0. (α739' -> (α740' -> (α746' | α761'))),)  <!<  (α874',)
+//│ ╟── while constraining:  (α874' -> (α885' -> (α892' | α893')))  <!<  ((∀ 0. (α739' -> (α740' -> (α746' | α761'))),) -> α873')
+//│ ╙── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((∀ 0. (α739' -> (α740' -> (α746' | α761'))),) -> α873')
+//│ eval2_fixed_1: error
+//│              = [Function (anonymous)]
+
+eval2_fixed_1 e1
+eval2_fixed_1 e2
+//│ res: error
+//│    = 6
+//│ res: error
+//│    = -5
+
+:e
+def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. ?a -> ?e <: (forall ?f, ?g, ?h, ?i, ?j. ?f -> ?j) -> ?k` exceeded recursion depth limit (100)
+//│ ║  l.254: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║         	                                                         ^^^^^^^^^^^
+//│ ╟── while constraining:  (α1034',)  <!<  (α1039',)
+//│ ╟── while constraining:  (α1039' -> α1043')  <!<  ((α1034',) -> α1035')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1034',) -> α1035')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1034'
+//│ ╟── while constraining:  α1029'  <!<  α1034'
+//│ ╟── while constraining:  (α1029',)  <!<  (α1034',)
+//│ ╟── while constraining:  (α1034' -> α1038')  <!<  ((α1029',) -> α1030')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1029',) -> α1030')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1029'
+//│ ╟── while constraining:  α1024'  <!<  α1029'
+//│ ╟── while constraining:  (α1024',)  <!<  (α1029',)
+//│ ╟── while constraining:  (α1029' -> α1033')  <!<  ((α1024',) -> α1025')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1024',) -> α1025')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1024'
+//│ ╟── while constraining:  α1019'  <!<  α1024'
+//│ ╟── while constraining:  (α1019',)  <!<  (α1024',)
+//│ ╟── while constraining:  (α1024' -> α1028')  <!<  ((α1019',) -> α1020')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1019',) -> α1020')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1019'
+//│ ╟── while constraining:  α1014'  <!<  α1019'
+//│ ╟── while constraining:  (α1014',)  <!<  (α1019',)
+//│ ╟── while constraining:  (α1019' -> α1023')  <!<  ((α1014',) -> α1015')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1014',) -> α1015')
+//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1014'
+//│ ╟── while constraining:  (∀ 1. (α1000'' -> α1007''),)  <!<  (α1014',)
+//│ ╟── while constraining:  (α1014' -> α1018')  <!<  ((∀ 1. (α1000'' -> α1007''),) -> α1013')
+//│ ╙── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((∀ 1. (α1000'' -> α1007''),) -> α1013')
+//│ fix: ((anything -> nothing) -> anything) -> error
+//│    = [Function: fix]
+
+def eval2_fixed_2 = fix eval2f
+//│ eval2_fixed_2: error
+//│              = [Function (anonymous)]
+
+eval2_fixed_2 e1
+eval2_fixed_2 e2
+//│ res: error
+//│    = 6
+//│ res: error
+//│    = -5
+
+
+
+
+// === === === ERROR CASES === === === //
+
+
+
+// FIXME should be a code-gen error
+:re
+rec def eval1_fixed = eval1f (eval1f eval1_fixed)
+//│ eval1_fixed: 'a -> int
+//│   where
+//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
+//│ Runtime error:
+//│   ReferenceError: eval1_fixed is not defined
+
+rec def eval1_fixed() = eval1f (eval1f (eval1_fixed()))
+//│ eval1_fixed: () -> 'a -> int
+//│   where
+//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit
+//│            = [Function: eval1_fixed1]
+
+:re
+eval1_fixed() e1
+//│ res: int
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+
+
+:ShowRelativeLineNums
+:AllowTypeErrors
+
+
+
+def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
+//│ ║        	                                   ^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (?val | ?b)` is not an instance of type `int`
+//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ║  l.30: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	  }
+//│ ║        	^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ╙──      	                         ^^^^^^^^^^^
+//│ eval1_fixed: (Add[?] & {lhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit, rhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit} | (Lit with {val: 'val})) -> (int | 'val)
+
+rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (?val | ?b)` does not match type `Add[?] & ?c | Lit & ?d`
+//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║        	                 ^^^^^^^^^^^^^^^
+//│ ║  l.30: 	  | Lit -> e.val
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.32: 	  }
+//│ ║        	^^^
+//│ ╟── but it flows into application with expected type `Add[?] & ?e | Lit & ?f`
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ╙──      	                          ^
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` is not a function
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ║        	                                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
+//│ ╙──      	                                       ^^^^^^^^^^^^^^^^^^^^^^^
+//│ eval1_fixed: ((Add[?] with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'a -> int & 'val})) -> (int | 'val)
+
+:e
+rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` is not a function
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `?rhs -> ?a`
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	                         ^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ╙──      	                             ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` is not a function
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `?lhs -> ?a`
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║        	           ^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
+//│ ╙──      	                             ^^^^^^^^^^^
+//│ eval1_fixed: int
+
+
+def eval2_broken eval2 e = case e of {
+  | Nega -> e.arg
+  | _ -> eval1 eval2 e
+  }
+//│ eval2_broken: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[?] with {arg: 'arg})) -> ('arg | int)
+
+:e
+eval2_broken eval2_broken e2
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?arg, ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n. ?a -> ?g -> (?arg | ?m) <: (forall ?arg, ?rhs, ?lhs, ?val, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1. ?o -> ?u -> (?arg | ?a1)) -> ?c1` exceeded recursion depth limit (100)
+//│ ║  l.+1: 	eval2_broken eval2_broken e2
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1545
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1544
+//│ ╟── while constraining:  α1527  <!<  α1544
+//│ ╟── while constraining:  (α1527,)  <!<  (α1544,)
+//│ ╟── while constraining:  (α1544 -> (α1552 -> (arg1554 | α1560)))  <!<  ((α1527,) -> α1528)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1527,) -> α1528)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1527
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1526
+//│ ╟── while constraining:  α1509  <!<  α1526
+//│ ╟── while constraining:  (α1509,)  <!<  (α1526,)
+//│ ╟── while constraining:  (α1526 -> (α1534 -> (arg1536 | α1542)))  <!<  ((α1509,) -> α1510)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1509,) -> α1510)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1509
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1508
+//│ ╟── while constraining:  α1491  <!<  α1508
+//│ ╟── while constraining:  (α1491,)  <!<  (α1508,)
+//│ ╟── while constraining:  (α1508 -> (α1516 -> (arg1518 | α1524)))  <!<  ((α1491,) -> α1492)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1491,) -> α1492)
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1491
+//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1490
+//│ ╟── while constraining:  (∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),)  <!<  (α1490,)
+//│ ╟── while constraining:  (α1490 -> (α1498 -> (arg1500 | α1506)))  <!<  ((∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),) -> α1489)
+//│ ╙── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),) -> α1489)
+//│ res: error
+
+
+def eval2f_oops eval2 e = case e of {
+  | Nega -> 0 - (eval2 e.arg)
+  | _ -> eval1 eval2 e // should be: eval1f eval2 e
+  }
+//│ eval2f_oops: ('arg -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+
+// :e
+fix eval2f_oops e2
+//│ res: error
+
+

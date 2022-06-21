@@ -1,8 +1,8 @@
 
 data Left v
 data Right v
-//│ Defined class Left
-//│ Defined class Right
+//│ Defined class Left[+v]
+//│ Defined class Right[+v]
 //│ Left: 'a -> Left['a]
 //│ Right: 'a -> Right['a]
 
@@ -10,7 +10,7 @@ let Either l r = Left l | Right r // TODO actual type parameters
 //│ Either: 'a -> 'b -> (Left['a] | Right['b])
 
 Either 1 2
-//│ res: Left['a .. 1 | 'a] | Right['b .. 2 | 'b]
+//│ res: Left[1] | Right[2]
 
 res.v
 //│ res: 1 | 2

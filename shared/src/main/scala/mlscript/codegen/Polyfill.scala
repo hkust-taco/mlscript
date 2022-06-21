@@ -112,6 +112,13 @@ object Polyfill {
               `return`(id("clone"))
             )
           ),
+          JSIfStmt(
+            // * "Strict equality checks (===) should be used in favor of ==.
+            // *  The only exception is when checking for undefined and null by way of null."
+            // *  (http://contribute.jquery.org/style-guide/js/)
+            JSBinary("==", t, JSLit("null")),
+            `return`(obj("assign")(JSRecord(Nil), JSRecord(Nil), f)) :: Nil,
+          ),
           JSConstDecl("copy", obj("assign")(JSRecord(Nil), t, f)),
           obj("setPrototypeOf")(id("copy"), obj("getPrototypeOf")(t)).stmt,
           id("copy").`return`

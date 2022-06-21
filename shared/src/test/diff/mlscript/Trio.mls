@@ -11,7 +11,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> x.fC
   }
-//│ foo: ((A with {fA: 'a}) | (B with {fB: 'a}) | (C with {fC: 'a})) -> 'a
+//│ foo: ((A with {fA: 'fA}) | (B with {fB: 'fA}) | (C with {fC: 'fA})) -> 'fA
 //│    = [Function: foo]
 
 
@@ -25,7 +25,7 @@ foo b
 //│    = 'test'
 //│ constrain calls  : 24
 //│ annoying  calls  : 10
-//│ subtyping calls  : 20
+//│ subtyping calls  : 25
 
 
 def arg: A | B | C
@@ -39,7 +39,7 @@ foo arg
 //│      arg is not implemented
 //│ constrain calls  : 41
 //│ annoying  calls  : 30
-//│ subtyping calls  : 67
+//│ subtyping calls  : 87
 
 :stats
 foo (arg with { fC = true })
@@ -48,14 +48,14 @@ foo (arg with { fC = true })
 //│      arg is not implemented
 //│ constrain calls  : 33
 //│ annoying  calls  : 28
-//│ subtyping calls  : 74
+//│ subtyping calls  : 126
 
 def foo x = case x of {
   | A -> add x.fA x.payload
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: (A & {payload: int} | (B with {fB: 'a}) | (C with {fC: 'b, payload: 'c})) -> (int | {l: 'b, r: 'c} | 'a)
+//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> ('fB | int | {l: 'fC, r: 'payload})
 //│    = [Function: foo1]
 
 :e
@@ -67,7 +67,7 @@ foo arg
 //│ ╟── type `A` does not have field 'payload'
 //│ ║  l.31: 	def arg: A | B | C
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{payload: ?a}`
+//│ ╟── but it flows into reference with expected type `{payload: ?payload}`
 //│ ║  l.63: 	foo arg
 //│ ║        	    ^^^
 //│ ╟── Note: constraint arises from field selection:
@@ -79,16 +79,16 @@ foo arg
 //│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 55
+//│ constrain calls  : 53
 //│ annoying  calls  : 40
-//│ subtyping calls  : 104
+//│ subtyping calls  : 123
 
 :stats
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 49
+//│ constrain calls  : 48
 //│ annoying  calls  : 38
-//│ subtyping calls  : 83
+//│ subtyping calls  : 139
 

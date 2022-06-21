@@ -2,28 +2,47 @@
 // Weird features to eventually remove
 
 
+:ge
 anything
 //│ res: anything
 //│ Code generation encountered an error:
 //│   type alias anything is not a valid expression
 
+:ge
 nothing
 //│ res: nothing
 //│ Code generation encountered an error:
 //│   type alias nothing is not a valid expression
 
+:ge
 Nothing
 //│ res: nothing
 //│ Code generation encountered an error:
 //│   unresolved symbol Nothing
 
+:ge
 int
 //│ res: int
 //│ Code generation encountered an error:
 //│   type alias int is not a valid expression
 
+:ge
 int + 1
 //│ res: int
 //│ Code generation encountered an error:
 //│   type alias int is not a valid expression
+
+
+class C
+//│ Defined class C
+
+:p
+def n: C{}
+//│ Parsed: rec def n: C; {};
+//│ Desugared: rec def n: C
+//│ Desugared: {}
+//│ n: C
+//│  = <missing implementation>
+//│ res: anything
+//│    = {}
 

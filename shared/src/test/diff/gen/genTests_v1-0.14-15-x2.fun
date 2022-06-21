@@ -53,7 +53,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add add)
 //│ ║        	 ^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	(add add)
 //│ ╙──      	     ^^^
 //│ res: int -> int | error
@@ -98,7 +98,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0})
 //│ ║        	 ^^^^^^^^^^
-//│ ╟── record of type `{v: 0}` does not match type `int`
+//│ ╟── record of type `{v: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	(add {v: 0})
 //│ ╙──      	     ^^^^^^
 //│ res: int -> int | error
@@ -107,7 +107,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add})
 //│ ║        	 ^^^^^^^^^^^^
-//│ ╟── record of type `{v: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{v: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	(add {v: add})
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
@@ -122,7 +122,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ║        	 ^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?v}` is not an instance of type `int`
 //│ ║  l.+1: 	(add {v: 0.v})
 //│ ╙──      	     ^^^^^^^^
 //│ res: int -> int | error
@@ -137,7 +137,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?v}` is not an instance of type `int`
 //│ ║  l.+1: 	(add {v: add.v})
 //│ ╙──      	     ^^^^^^^^^^
 //│ res: int -> int | error
@@ -239,7 +239,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) add)
 //│ ╙──      	                  ^^^
 //│ res: int -> int | error
@@ -266,7 +266,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> 0` does not match type `int`
+//│ ╟── function of type `?a -> 0` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => 0))
 //│ ║        	                   ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -308,7 +308,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> int -> int -> int` does not match type `int`
+//│ ╟── function of type `?a -> int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => add))
 //│ ║        	                   ^^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -320,7 +320,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?a` does not match type `int`
+//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) (x => x))
 //│ ║        	                   ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -335,7 +335,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) (let x = add; x))
 //│ ║        	                           ^^^
 //│ ╟── but it flows into reference with expected type `int`
@@ -368,7 +368,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {u: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{u: 0}` does not match type `int`
+//│ ╟── record of type `{u: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) {u: 0})
 //│ ╙──      	                  ^^^^^^
 //│ res: int -> int | error
@@ -377,7 +377,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {u: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{u: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{u: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) {u: add})
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
@@ -386,7 +386,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: 0}` does not match type `int`
+//│ ╟── record of type `{v: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) {v: 0})
 //│ ╙──      	                  ^^^^^^
 //│ res: int -> int | error
@@ -395,7 +395,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = 0; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{v: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = 0; add) {v: add})
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> int | error
@@ -407,7 +407,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) add)
 //│ ╙──      	                    ^^^
 //│ res: int -> int | error
@@ -470,7 +470,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> 0` does not match type `int`
+//│ ╟── function of type `?a -> 0` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => 0))
 //│ ║        	                     ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -491,7 +491,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> int -> int -> int` does not match type `int`
+//│ ╟── function of type `?a -> int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => add))
 //│ ║        	                     ^^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -503,7 +503,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = 0; add))
 //│ ║        	                                ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -515,7 +515,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let x = add; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (let x = add; add))
 //│ ║        	                                  ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -527,7 +527,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (let rec x = x; add))
 //│ ║        	                                    ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -539,7 +539,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = add; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?a` does not match type `int`
+//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = add; add) (x => x))
 //│ ║        	                     ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -554,7 +554,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) add)
 //│ ╙──      	                      ^^^
 //│ res: int -> int | error
@@ -584,7 +584,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {u: add}.u)
 //│ ║        	                          ^^^
 //│ ╟── but it flows into field selection with expected type `int`
@@ -596,7 +596,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: 0}` does not match type `int`
+//│ ╟── record of type `{v: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0})
 //│ ╙──      	                      ^^^^^^
 //│ res: int -> int | error
@@ -605,7 +605,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{v: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: add})
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
@@ -620,7 +620,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?u}` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: 0.u})
 //│ ╙──      	                      ^^^^^^^^
 //│ res: int -> int | error
@@ -635,7 +635,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: ?a}` does not match type `int`
+//│ ╟── record of type `{v: ?u}` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = x; add) {v: add.u})
 //│ ╙──      	                      ^^^^^^^^^^
 //│ res: int -> int | error
@@ -647,7 +647,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) add)
 //│ ╙──      	                       ^^^
 //│ res: int -> int | error
@@ -656,7 +656,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int -> int` does not match type `int`
+//│ ╟── application of type `int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add 0))
 //│ ║        	                        ^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -668,13 +668,13 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	                        ^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ╙──      	                            ^^^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int -> int` does not match type `int`
+//│ ╟── application of type `int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (add add))
 //│ ║        	                        ^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -686,7 +686,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> 0` does not match type `int`
+//│ ╟── function of type `?a -> 0` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0))
 //│ ║        	                        ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -707,7 +707,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> int -> int -> int` does not match type `int`
+//│ ╟── function of type `?a -> int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add))
 //│ ║        	                        ^^^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -719,7 +719,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = 0; add))
 //│ ║        	                                   ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -731,7 +731,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = add; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let x = add; add))
 //│ ║        	                                     ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -743,7 +743,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (let rec x = x; add))
 //│ ║        	                                       ^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -755,7 +755,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x))
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?a` does not match type `int`
+//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x))
 //│ ║        	                        ^^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -788,7 +788,7 @@ add
 //│ ╟── function of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => 0).v)
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
@@ -800,7 +800,7 @@ add
 //│ ╟── function of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ║        	                        ^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => add).v)
 //│ ╙──      	                       ^^^^^^^^^^
 //│ res: int -> int
@@ -812,7 +812,7 @@ add
 //│ ╟── function of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
 //│ ║        	                        ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	((let x = {v: 0}; add) (x => x).v)
 //│ ╙──      	                       ^^^^^^^^
 //│ res: int -> int
@@ -824,7 +824,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: add}; add) add)
 //│ ╙──      	                         ^^^
 //│ res: int -> int | error
@@ -833,7 +833,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: 0})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: 0}` does not match type `int`
+//│ ╟── record of type `{v: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: 0})
 //│ ╙──      	                         ^^^^^^
 //│ res: int -> int | error
@@ -842,7 +842,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: add})
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── record of type `{v: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{v: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	((let x = {v: add}; add) {v: add})
 //│ ╙──      	                         ^^^^^^^^
 //│ res: int -> int | error
@@ -854,7 +854,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	((let rec x = {v: x}; add) add)
 //│ ║        	 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	((let rec x = {v: x}; add) add)
 //│ ╙──      	                           ^^^
 //│ res: int -> int | error
@@ -1037,7 +1037,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                ^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
+//│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: 0}.u)
 //│ ║        	                  ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -1055,7 +1055,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'u'
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                ^^^
-//│ ╟── but it flows into field selection with expected type `{u: ?a}`
+//│ ╟── but it flows into field selection with expected type `{u: ?u}`
 //│ ║  l.+1: 	((x => x.u) {u: add}.u)
 //│ ║        	                    ^^
 //│ ╟── Note: constraint arises from field selection:
@@ -1214,7 +1214,7 @@ add
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
 //│ ║        	                   ^^
-//│ ╟── record of type `{v: ?a}` does not have field 'u'
+//│ ╟── record of type `{v: ?x}` does not have field 'u'
 //│ ║  l.+1: 	(let rec x = {v: x}.u; x)
 //│ ╙──      	             ^^^^^^
 //│ res: error
@@ -1229,7 +1229,9 @@ add
 //│ res: {u: 0, v: int -> int -> int}
 
 (let rec x = {u: 0, v: x}; x)
-//│ res: {u: 0, v: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {u: 0, v: 'x}
 
 (let x = {u: 0, v: 0.v}; x)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -1256,7 +1258,9 @@ add
 //│ res: {u: int -> int -> int}
 
 (let rec x = {u: x}; x)
-//│ res: {u: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {u: 'x}
 
 (x => (0 0))
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1760,7 +1764,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ║        	          ^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	(let x = (add add); (0 x))
 //│ ╙──      	              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
@@ -1775,7 +1779,7 @@ add
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ║        	             ^^^^^^^
-//│ ╟── application of type `int -> int` does not match type `int`
+//│ ╟── application of type `int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	(let rec x = (add x); (0 x))
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -2135,7 +2139,7 @@ add
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(let x = (add add); {u: 0, v: 0})
 //│ ║        	          ^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	(let x = (add add); {u: 0, v: 0})
 //│ ╙──      	              ^^^
 //│ res: {u: 0, v: 0}
@@ -2144,7 +2148,7 @@ add
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
 //│ ║        	             ^^^^^^^
-//│ ╟── application of type `int -> int` does not match type `int`
+//│ ╟── application of type `int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	(let rec x = (add x); {u: 0, v: 0})
 //│ ║        	              ^^^^^
 //│ ╟── Note: constraint arises from argument:
@@ -2203,6 +2207,7 @@ add
 (let rec x = (x add); {u: 0, v: x})
 //│ res: {u: 0, v: nothing}
 
+// FIXME
 (let rec x = (x x); {u: 0, v: x})
 //│ res: {u: 0, v: nothing}
 
@@ -2291,7 +2296,9 @@ add
 //│ res: {u: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x})
-//│ res: {u: {v: 'a} as 'a}
+//│ res: {u: forall 'x. 'x}
+//│   where
+//│     'x :> {v: 'x}
 
 (x => {u: x, v: 0})
 //│ res: 'a -> {u: 'a, v: 0}
@@ -2399,16 +2406,24 @@ add
 //│ res: {u: {u: int -> int -> int}, v: {u: int -> int -> int}}
 
 (let rec x = {u: x}; {u: x, v: x})
-//│ res: {u: {u: 'a} as 'a, v: {u: 'a} as 'a}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
+//│   where
+//│     'x :> {u: 'x}
 
 (let rec x = {u: x, v: 0}; {u: x, v: x})
-//│ res: {u: {u: 'a, v: 0} as 'a, v: {u: 'a, v: 0} as 'a}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
+//│   where
+//│     'x :> {u: 'x, v: 0}
 
 (let rec x = {u: x, v: add}; {u: x, v: x})
-//│ res: {u: {u: 'a, v: int -> int -> int} as 'a, v: {u: 'a, v: int -> int -> int} as 'a}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
+//│   where
+//│     'x :> {u: 'x, v: int -> int -> int}
 
 (let rec x = {u: x, v: x}; {u: x, v: x})
-//│ res: {u: 'a, v: 'a} as 'a
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
+//│   where
+//│     'x :> {u: 'x, v: 'x}
 
 (let x = {v: 0}; {u: x, v: x})
 //│ res: {u: {v: 0}, v: {v: 0}}
@@ -2417,7 +2432,9 @@ add
 //│ res: {u: {v: int -> int -> int}, v: {v: int -> int -> int}}
 
 (let rec x = {v: x}; {u: x, v: x})
-//│ res: {u: {v: 'a} as 'a, v: {v: 'a} as 'a}
+//│ res: {u: forall 'x. 'x, v: forall 'x. 'x}
+//│   where
+//│     'x :> {v: 'x}
 
 (x => {u: 0.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2492,7 +2509,7 @@ add
 //│ res: {u: error}
 
 (x => {u: x.v})
-//│ res: {v: 'a} -> {u: 'a}
+//│ res: {v: 'v} -> {u: 'v}
 
 (let x = 0; {u: x.v})
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2501,7 +2518,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = 0; {u: x.v})
 //│ ╙──      	                ^
 //│ res: {u: error}
@@ -2513,7 +2530,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ║        	         ^^^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; {u: x.v})
 //│ ╙──      	                  ^
 //│ res: {u: error}
@@ -2549,7 +2566,9 @@ add
 //│ res: {u: int -> int -> int}
 
 (let rec x = {v: x}; {u: x.v})
-//│ res: {u: {v: 'a} as 'a}
+//│ res: {u: 'x}
+//│   where
+//│     'x :> {v: 'x}
 
 (let x = {v: (y => 0)}; {u: x.v})
 //│ res: {u: anything -> 0}
@@ -2561,7 +2580,9 @@ add
 //│ res: {u: 'a -> 'a}
 
 (let rec x = {v: (y => x)}; {u: x.v})
-//│ res: {u: anything -> {v: 'a} as 'a}
+//│ res: {u: 'v}
+//│   where
+//│     'v :> anything -> {v: 'v}
 
 (x => 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2873,7 +2894,7 @@ add
 //│ res: error
 
 (x => x.v)
-//│ res: {v: 'a} -> 'a
+//│ res: {v: 'v} -> 'v
 
 (let x = 0; x.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2882,7 +2903,7 @@ add
 //│ ╟── integer literal of type `0` does not have field 'v'
 //│ ║  l.+1: 	(let x = 0; x.v)
 //│ ║        	         ^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = 0; x.v)
 //│ ╙──      	            ^
 //│ res: error
@@ -2894,7 +2915,7 @@ add
 //│ ╟── reference of type `int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ║        	         ^^^
-//│ ╟── but it flows into reference with expected type `{v: ?a}`
+//│ ╟── but it flows into reference with expected type `{v: ?v}`
 //│ ║  l.+1: 	(let x = add; x.v)
 //│ ╙──      	              ^
 //│ res: error
@@ -2909,7 +2930,9 @@ add
 //│ res: int -> int -> int
 
 (let rec x = {v: x}; x.v)
-//│ res: {v: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {v: 'x}
 
 (let x = {v: {v: 0}}; x.v)
 //│ res: {v: 0}
@@ -2918,7 +2941,9 @@ add
 //│ res: {v: int -> int -> int}
 
 (let rec x = {v: {v: x}}; x.v)
-//│ res: {v: {v: 'a}} as 'a
+//│ res: 'v
+//│   where
+//│     'v :> {v: {v: 'v}}
 
 0.u
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -3107,7 +3132,7 @@ add.v.u
 //│ ╟── function of type `?a -> 0` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => 0).v}
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3119,7 +3144,7 @@ add.v.u
 //│ ╟── function of type `?a -> int -> int -> int` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ║        	             ^^^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => add).v}
 //│ ╙──      	            ^^^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3131,7 +3156,7 @@ add.v.u
 //│ ╟── function of type `?a -> ?a` does not have field 'v'
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
 //│ ║        	             ^^^^^^
-//│ ╟── but it flows into receiver with expected type `{v: ?b}`
+//│ ╟── but it flows into receiver with expected type `{v: ?v}`
 //│ ║  l.+1: 	{u: add, v: (x => x).v}
 //│ ╙──      	            ^^^^^^^^
 //│ res: {u: int -> int -> int, v: error}
@@ -3176,7 +3201,7 @@ add.v.u
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add add)}
 //│ ║        	                ^^^^^^^
-//│ ╟── reference of type `int -> int -> int` does not match type `int`
+//│ ╟── reference of type `int -> int -> int` is not an instance of type `int`
 //│ ║  l.+1: 	{u: {u: 0}, v: (add add)}
 //│ ╙──      	                    ^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
@@ -3185,7 +3210,7 @@ add.v.u
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: 0})}
 //│ ║        	                ^^^^^^^^^^
-//│ ╟── record of type `{v: 0}` does not match type `int`
+//│ ╟── record of type `{v: 0}` is not an instance of type `int`
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: 0})}
 //│ ╙──      	                    ^^^^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
@@ -3194,7 +3219,7 @@ add.v.u
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: add})}
 //│ ║        	                ^^^^^^^^^^^^
-//│ ╟── record of type `{v: int -> int -> int}` does not match type `int`
+//│ ╟── record of type `{v: int -> int -> int}` is not an instance of type `int`
 //│ ║  l.+1: 	{u: {u: 0}, v: (add {v: add})}
 //│ ╙──      	                    ^^^^^^^^
 //│ res: {u: {u: 0}, v: int -> int | error}
@@ -3254,7 +3279,7 @@ add.v.u
 //│ res: {u: {u: 0}, v: anything -> error}
 
 {u: {u: 0}, v: (x => x.u)}
-//│ res: {u: {u: 0}, v: {u: 'a} -> 'a}
+//│ res: {u: {u: 0}, v: {u: 'u} -> 'u}
 
 {u: {u: 0}, v: 0.v}
 //│ ╔══[ERROR] Type mismatch in field selection:

@@ -56,7 +56,7 @@ succ true
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	succ true
 //│ ║        	^^^^^^^^^
-//│ ╟── reference of type `true` does not match type `int`
+//│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.+1: 	succ true
 //│ ╙──      	     ^^^^
 //│ res: error | int
@@ -66,7 +66,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	     ^^^^^^^^^^^^
-//│ ╟── application of type `bool` does not match type `int`
+//│ ╟── application of type `bool` is not an instance of type `int`
 //│ ║  l.+1: 	x => succ (not x)
 //│ ║        	           ^^^^^
 //│ ╟── but it flows into argument with expected type `int`
@@ -79,7 +79,7 @@ x => succ (not x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `123` does not match type `bool`
+//│ ╟── integer literal of type `123` is not an instance of type `bool`
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ║        	                    ^^^
 //│ ╟── Note: constraint arises from argument:
@@ -112,7 +112,7 @@ x => succ (not x)
 
 
 x => x.f
-//│ res: {f: 'a} -> 'a
+//│ res: {f: 'f} -> 'f
 
 // note: MLsub returns "⊤" (equivalent)
 {}
@@ -128,7 +128,7 @@ x => x.f
 //│ res: 42
 
 f => { x: f 42 }.x
-//│ res: (42 -> 'a) -> 'a
+//│ res: (42 -> 'x) -> 'x
 
 f => { x: f 42, y: 123 }.y
 //│ res: (42 -> anything) -> 123
@@ -164,6 +164,14 @@ x => { a: x }.b
 x => x x
 //│ res: ('a -> 'b & 'a) -> 'b
 
+res id
+//│ res: 'a -> 'a
+
+
+let f = (x => x + 1); {a: f; b: f 2}
+//│ f: int -> int
+//│ res: {a: int -> int, b: int}
+
 x => x x x
 //│ res: ('a -> 'a -> 'b & 'a) -> 'b
 
@@ -178,28 +186,28 @@ x => y => x x y
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α181
-//│ ╟── while constraining:  α179  <!<  α181
-//│ ╟── while constraining:  (α181 -> α182)  <!<  (α179 -> α180)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  (α179 -> α180)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α179
-//│ ╟── while constraining:  α177  <!<  α179
-//│ ╟── while constraining:  (α179 -> α180)  <!<  (α177 -> α178)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  (α177 -> α178)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α177
-//│ ╟── while constraining:  α175  <!<  α177
-//│ ╟── while constraining:  (α177 -> α178)  <!<  (α175 -> α176)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  (α175 -> α176)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α175
-//│ ╟── while constraining:  α173  <!<  α175
-//│ ╟── while constraining:  (α175 -> α176)  <!<  (α173 -> α174)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  (α173 -> α174)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α173
-//│ ╟── while constraining:  α168  <!<  α173
-//│ ╟── while constraining:  (α173 -> α174)  <!<  (α168 -> α169)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  (α168 -> α169)
-//│ ╟── while constraining:  ∀ 0. (α170' -> α171')  <!<  α168
-//│ ╙── while constraining:  (α168 -> α169)  <!<  (∀ 0. (α170' -> α171') -> α172)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α235
+//│ ╟── while constraining:  α233  <!<  α235
+//│ ╟── while constraining:  (α235 -> α236)  <!<  (α233 -> α234)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  (α233 -> α234)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α233
+//│ ╟── while constraining:  α231  <!<  α233
+//│ ╟── while constraining:  (α233 -> α234)  <!<  (α231 -> α232)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  (α231 -> α232)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α231
+//│ ╟── while constraining:  α229  <!<  α231
+//│ ╟── while constraining:  (α231 -> α232)  <!<  (α229 -> α230)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  (α229 -> α230)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α229
+//│ ╟── while constraining:  α227  <!<  α229
+//│ ╟── while constraining:  (α229 -> α230)  <!<  (α227 -> α228)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  (α227 -> α228)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α227
+//│ ╟── while constraining:  α222  <!<  α227
+//│ ╟── while constraining:  (α227 -> α228)  <!<  (α222 -> α223)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  (α222 -> α223)
+//│ ╟── while constraining:  ∀ 0. (α224' -> α225')  <!<  α222
+//│ ╙── while constraining:  (α222 -> α223)  <!<  (∀ 0. (α224' -> α225') -> α226)
 //│ res: error
 
 
@@ -214,29 +222,29 @@ x => {l: x x, r: x }
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e. ?c -> ?e) -> ?f` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α220
-//│ ╟── while constraining:  α217  <!<  α220
-//│ ╟── while constraining:  (α220 -> α222)  <!<  (α217 -> α218)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  (α217 -> α218)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α217
-//│ ╟── while constraining:  α214  <!<  α217
-//│ ╟── while constraining:  (α217 -> α219)  <!<  (α214 -> α215)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  (α214 -> α215)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α214
-//│ ╟── while constraining:  α211  <!<  α214
-//│ ╟── while constraining:  (α214 -> α216)  <!<  (α211 -> α212)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  (α211 -> α212)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α211
-//│ ╟── while constraining:  α208  <!<  α211
-//│ ╟── while constraining:  (α211 -> α213)  <!<  (α208 -> α209)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  (α208 -> α209)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α208
-//│ ╟── while constraining:  α199  <!<  α208
-//│ ╟── while constraining:  (α208 -> α210)  <!<  (α199 -> α200)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  (α199 -> α200)
-//│ ╟── while constraining:  ∀ 0. (α202' -> α204')  <!<  α199
-//│ ╙── while constraining:  (α199 -> α201)  <!<  (∀ 0. (α202' -> α204') -> α207)
-//│ res: (nothing -> anything & nothing -> anything) -> error
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α276
+//│ ╟── while constraining:  α273  <!<  α276
+//│ ╟── while constraining:  (α276 -> α278)  <!<  (α273 -> α274)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  (α273 -> α274)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α273
+//│ ╟── while constraining:  α270  <!<  α273
+//│ ╟── while constraining:  (α273 -> α275)  <!<  (α270 -> α271)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  (α270 -> α271)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α270
+//│ ╟── while constraining:  α267  <!<  α270
+//│ ╟── while constraining:  (α270 -> α272)  <!<  (α267 -> α268)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  (α267 -> α268)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α267
+//│ ╟── while constraining:  α264  <!<  α267
+//│ ╟── while constraining:  (α267 -> α269)  <!<  (α264 -> α265)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  (α264 -> α265)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α264
+//│ ╟── while constraining:  α255  <!<  α264
+//│ ╟── while constraining:  (α264 -> α266)  <!<  (α255 -> α256)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  (α255 -> α256)
+//│ ╟── while constraining:  ∀ 0. (α258' -> α260')  <!<  α255
+//│ ╙── while constraining:  (α255 -> α257)  <!<  (∀ 0. (α258' -> α260') -> α263)
+//│ res: (nothing -> anything) -> error
 
 // Z combinator:
 :e
@@ -244,29 +252,29 @@ x => {l: x x, r: x }
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α289
-//│ ╟── while constraining:  α284  <!<  α289
-//│ ╟── while constraining:  (α289 -> α293)  <!<  (α284 -> α285)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  (α284 -> α285)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α284
-//│ ╟── while constraining:  α279  <!<  α284
-//│ ╟── while constraining:  (α284 -> α288)  <!<  (α279 -> α280)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  (α279 -> α280)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α279
-//│ ╟── while constraining:  α274  <!<  α279
-//│ ╟── while constraining:  (α279 -> α283)  <!<  (α274 -> α275)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  (α274 -> α275)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α274
-//│ ╟── while constraining:  α269  <!<  α274
-//│ ╟── while constraining:  (α274 -> α278)  <!<  (α269 -> α270)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  (α269 -> α270)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α269
-//│ ╟── while constraining:  α247  <!<  α269
-//│ ╟── while constraining:  (α269 -> α273)  <!<  (α247 -> α250)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  (α247 -> α250)
-//│ ╟── while constraining:  ∀ 0. (α255' -> α262')  <!<  α247
-//│ ╙── while constraining:  (α247 -> α254)  <!<  (∀ 0. (α255' -> α262') -> α268)
-//│ res: ((anything -> nothing) -> anything & (anything -> nothing) -> anything) -> error
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α345
+//│ ╟── while constraining:  α340  <!<  α345
+//│ ╟── while constraining:  (α345 -> α349)  <!<  (α340 -> α341)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α340 -> α341)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α340
+//│ ╟── while constraining:  α335  <!<  α340
+//│ ╟── while constraining:  (α340 -> α344)  <!<  (α335 -> α336)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α335 -> α336)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α335
+//│ ╟── while constraining:  α330  <!<  α335
+//│ ╟── while constraining:  (α335 -> α339)  <!<  (α330 -> α331)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α330 -> α331)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α330
+//│ ╟── while constraining:  α325  <!<  α330
+//│ ╟── while constraining:  (α330 -> α334)  <!<  (α325 -> α326)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α325 -> α326)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α325
+//│ ╟── while constraining:  α303  <!<  α325
+//│ ╟── while constraining:  (α325 -> α329)  <!<  (α303 -> α306)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  (α303 -> α306)
+//│ ╟── while constraining:  ∀ 0. (α311' -> α318')  <!<  α303
+//│ ╙── while constraining:  (α303 -> α310)  <!<  (∀ 0. (α311' -> α318') -> α324)
+//│ res: (anything -> nothing) -> anything -> error
 
 // Function that takes arbitrarily many arguments:
 :e
@@ -274,33 +282,35 @@ x => {l: x x, r: x }
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α381
-//│ ╟── while constraining:  α376  <!<  α381
-//│ ╟── while constraining:  (α381 -> α385)  <!<  (α376 -> α377)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  (α376 -> α377)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α376
-//│ ╟── while constraining:  α371  <!<  α376
-//│ ╟── while constraining:  (α376 -> α380)  <!<  (α371 -> α372)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  (α371 -> α372)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α371
-//│ ╟── while constraining:  α366  <!<  α371
-//│ ╟── while constraining:  (α371 -> α375)  <!<  (α366 -> α367)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  (α366 -> α367)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α366
-//│ ╟── while constraining:  α361  <!<  α366
-//│ ╟── while constraining:  (α366 -> α370)  <!<  (α361 -> α362)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  (α361 -> α362)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α361
-//│ ╟── while constraining:  α339  <!<  α361
-//│ ╟── while constraining:  (α361 -> α365)  <!<  (α339 -> α342)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  (α339 -> α342)
-//│ ╟── while constraining:  ∀ 0. (α347' -> α354')  <!<  α339
-//│ ╙── while constraining:  (α339 -> α346)  <!<  (∀ 0. (α347' -> α354') -> α360)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α437
+//│ ╟── while constraining:  α432  <!<  α437
+//│ ╟── while constraining:  (α437 -> α441)  <!<  (α432 -> α433)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  (α432 -> α433)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α432
+//│ ╟── while constraining:  α427  <!<  α432
+//│ ╟── while constraining:  (α432 -> α436)  <!<  (α427 -> α428)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  (α427 -> α428)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α427
+//│ ╟── while constraining:  α422  <!<  α427
+//│ ╟── while constraining:  (α427 -> α431)  <!<  (α422 -> α423)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  (α422 -> α423)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α422
+//│ ╟── while constraining:  α417  <!<  α422
+//│ ╟── while constraining:  (α422 -> α426)  <!<  (α417 -> α418)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  (α417 -> α418)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α417
+//│ ╟── while constraining:  α395  <!<  α417
+//│ ╟── while constraining:  (α417 -> α421)  <!<  (α395 -> α398)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  (α395 -> α398)
+//│ ╟── while constraining:  ∀ 0. (α403' -> α410')  <!<  α395
+//│ ╙── while constraining:  (α395 -> α402)  <!<  (∀ 0. (α403' -> α410') -> α416)
 //│ res: error
 
 
 let rec trutru = g => trutru (g true)
-//│ trutru: (true -> 'a as 'a) -> nothing
+//│ trutru: 'a -> nothing
+//│   where
+//│     'a <: true -> 'a
 
 i => if ((i i) true) then true else true
 //│ res: ('a -> true -> bool & 'a) -> true
@@ -335,12 +345,16 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: ({u: 'a} as 'a) -> nothing
+//│ f: 'a -> nothing
+//│   where
+//│     'a <: {u: 'a}
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
 let rec recursive_monster = x => { thing: x, self: recursive_monster x }
-//│ recursive_monster: 'a -> ({self: 'b, thing: 'a} as 'b)
+//│ recursive_monster: 'a -> 'b
+//│   where
+//│     'b :> {self: 'b, thing: 'a}
 
 
 
@@ -348,117 +362,121 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 
 
 (let rec x = {a: x, b: x}; x)
-//│ res: {a: 'a, b: 'a} as 'a
+//│ res: 'x
+//│   where
+//│     'x :> {a: 'x, b: 'x}
 
 (let rec x = v => {a: x v, b: x v}; x)
-//│ res: anything -> ({a: 'a, b: 'a} as 'a)
+//│ res: anything -> 'a
+//│   where
+//│     'a :> {a: 'a, b: 'a}
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╔══[ERROR] Subtyping constraint of the form `{u: ?a, v: ?b} <: ?c` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Subtyping constraint of the form `{u: ?y, v: ?a} <: ?y0` exceeded recursion depth limit (100)
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                         ^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  {u: α774'', v: α775''}  <!<  α576'
-//│ ╟── while constraining:  {u: α772'', v: α773''}  <!<  α576'
-//│ ╟── while constraining:  {u: α770'', v: α771''}  <!<  α576'
-//│ ╟── while constraining:  {u: α768'', v: α769''}  <!<  α576'
-//│ ╟── while constraining:  {u: α766'', v: α767''}  <!<  α576'
-//│ ╟── while constraining:  {u: α764'', v: α765''}  <!<  α576'
-//│ ╟── while constraining:  {u: α762'', v: α763''}  <!<  α576'
-//│ ╟── while constraining:  {u: α760'', v: α761''}  <!<  α576'
-//│ ╟── while constraining:  {u: α758'', v: α759''}  <!<  α576'
-//│ ╟── while constraining:  {u: α756'', v: α757''}  <!<  α576'
-//│ ╟── while constraining:  {u: α754'', v: α755''}  <!<  α576'
-//│ ╟── while constraining:  {u: α752'', v: α753''}  <!<  α576'
-//│ ╟── while constraining:  {u: α750'', v: α751''}  <!<  α576'
-//│ ╟── while constraining:  {u: α748'', v: α749''}  <!<  α576'
-//│ ╟── while constraining:  {u: α746'', v: α747''}  <!<  α576'
-//│ ╟── while constraining:  {u: α744'', v: α745''}  <!<  α576'
-//│ ╟── while constraining:  {u: α742'', v: α743''}  <!<  α576'
-//│ ╟── while constraining:  {u: α740'', v: α741''}  <!<  α576'
-//│ ╟── while constraining:  {u: α738'', v: α739''}  <!<  α576'
-//│ ╟── while constraining:  {u: α736'', v: α737''}  <!<  α576'
-//│ ╟── while constraining:  {u: α734'', v: α735''}  <!<  α576'
-//│ ╟── while constraining:  {u: α732'', v: α733''}  <!<  α576'
-//│ ╟── while constraining:  {u: α730'', v: α731''}  <!<  α576'
-//│ ╟── while constraining:  {u: α728'', v: α729''}  <!<  α576'
-//│ ╟── while constraining:  {u: α726'', v: α727''}  <!<  α576'
-//│ ╟── while constraining:  {u: α724'', v: α725''}  <!<  α576'
-//│ ╟── while constraining:  {u: α722'', v: α723''}  <!<  α576'
-//│ ╟── while constraining:  {u: α720'', v: α721''}  <!<  α576'
-//│ ╟── while constraining:  {u: α718'', v: α719''}  <!<  α576'
-//│ ╟── while constraining:  {u: α716'', v: α717''}  <!<  α576'
-//│ ╟── while constraining:  {u: α714'', v: α715''}  <!<  α576'
-//│ ╟── while constraining:  {u: α712'', v: α713''}  <!<  α576'
-//│ ╟── while constraining:  {u: α710'', v: α711''}  <!<  α576'
-//│ ╟── while constraining:  {u: α708'', v: α709''}  <!<  α576'
-//│ ╟── while constraining:  {u: α706'', v: α707''}  <!<  α576'
-//│ ╟── while constraining:  {u: α704'', v: α705''}  <!<  α576'
-//│ ╟── while constraining:  {u: α702'', v: α703''}  <!<  α576'
-//│ ╟── while constraining:  {u: α700'', v: α701''}  <!<  α576'
-//│ ╟── while constraining:  {u: α698'', v: α699''}  <!<  α576'
-//│ ╟── while constraining:  {u: α696'', v: α697''}  <!<  α576'
-//│ ╟── while constraining:  {u: α694'', v: α695''}  <!<  α576'
-//│ ╟── while constraining:  {u: α692'', v: α693''}  <!<  α576'
-//│ ╟── while constraining:  {u: α690'', v: α691''}  <!<  α576'
-//│ ╟── while constraining:  {u: α688'', v: α689''}  <!<  α576'
-//│ ╟── while constraining:  {u: α686'', v: α687''}  <!<  α576'
-//│ ╟── while constraining:  {u: α684'', v: α685''}  <!<  α576'
-//│ ╟── while constraining:  {u: α682'', v: α683''}  <!<  α576'
-//│ ╟── while constraining:  {u: α680'', v: α681''}  <!<  α576'
-//│ ╟── while constraining:  {u: α678'', v: α679''}  <!<  α576'
-//│ ╟── while constraining:  {u: α676'', v: α677''}  <!<  α576'
-//│ ╟── while constraining:  {u: α674'', v: α675''}  <!<  α576'
-//│ ╟── while constraining:  {u: α672'', v: α673''}  <!<  α576'
-//│ ╟── while constraining:  {u: α670'', v: α671''}  <!<  α576'
-//│ ╟── while constraining:  {u: α668'', v: α669''}  <!<  α576'
-//│ ╟── while constraining:  {u: α666'', v: α667''}  <!<  α576'
-//│ ╟── while constraining:  {u: α664'', v: α665''}  <!<  α576'
-//│ ╟── while constraining:  {u: α662'', v: α663''}  <!<  α576'
-//│ ╟── while constraining:  {u: α660'', v: α661''}  <!<  α576'
-//│ ╟── while constraining:  {u: α658'', v: α659''}  <!<  α576'
-//│ ╟── while constraining:  {u: α656'', v: α657''}  <!<  α576'
-//│ ╟── while constraining:  {u: α654'', v: α655''}  <!<  α576'
-//│ ╟── while constraining:  {u: α652'', v: α653''}  <!<  α576'
-//│ ╟── while constraining:  {u: α650'', v: α651''}  <!<  α576'
-//│ ╟── while constraining:  {u: α648'', v: α649''}  <!<  α576'
-//│ ╟── while constraining:  {u: α646'', v: α647''}  <!<  α576'
-//│ ╟── while constraining:  {u: α644'', v: α645''}  <!<  α576'
-//│ ╟── while constraining:  {u: α642'', v: α643''}  <!<  α576'
-//│ ╟── while constraining:  {u: α640'', v: α641''}  <!<  α576'
-//│ ╟── while constraining:  {u: α638'', v: α639''}  <!<  α576'
-//│ ╟── while constraining:  {u: α636'', v: α637''}  <!<  α576'
-//│ ╟── while constraining:  {u: α634'', v: α635''}  <!<  α576'
-//│ ╟── while constraining:  {u: α632'', v: α633''}  <!<  α576'
-//│ ╟── while constraining:  {u: α630'', v: α631''}  <!<  α576'
-//│ ╟── while constraining:  {u: α628'', v: α629''}  <!<  α576'
-//│ ╟── while constraining:  {u: α626'', v: α627''}  <!<  α576'
-//│ ╟── while constraining:  {u: α624'', v: α625''}  <!<  α576'
-//│ ╟── while constraining:  {u: α622'', v: α623''}  <!<  α576'
-//│ ╟── while constraining:  {u: α620'', v: α621''}  <!<  α576'
-//│ ╟── while constraining:  {u: α618'', v: α619''}  <!<  α576'
-//│ ╟── while constraining:  {u: α616'', v: α617''}  <!<  α576'
-//│ ╟── while constraining:  {u: α614'', v: α615''}  <!<  α576'
-//│ ╟── while constraining:  {u: α612'', v: α613''}  <!<  α576'
-//│ ╟── while constraining:  {u: α610'', v: α611''}  <!<  α576'
-//│ ╟── while constraining:  {u: α608'', v: α609''}  <!<  α576'
-//│ ╟── while constraining:  {u: α606'', v: α607''}  <!<  α576'
-//│ ╟── while constraining:  {u: α604'', v: α605''}  <!<  α576'
-//│ ╟── while constraining:  {u: α602'', v: α603''}  <!<  α576'
-//│ ╟── while constraining:  {u: α600'', v: α601''}  <!<  α576'
-//│ ╟── while constraining:  {u: α598'', v: α599''}  <!<  α576'
-//│ ╟── while constraining:  {u: α596'', v: α597''}  <!<  α576'
-//│ ╟── while constraining:  {u: α594'', v: α595''}  <!<  α576'
-//│ ╟── while constraining:  {u: α592'', v: α593''}  <!<  α576'
-//│ ╟── while constraining:  {u: α590'', v: α591''}  <!<  α576'
-//│ ╟── while constraining:  {u: α588'', v: α589''}  <!<  α576'
-//│ ╟── while constraining:  {u: α586'', v: α587''}  <!<  α576'
-//│ ╟── while constraining:  {u: α584'', v: α585''}  <!<  α576'
-//│ ╟── while constraining:  {u: α582'', v: α583''}  <!<  α576'
-//│ ╟── while constraining:  {u: α580'', v: α581''}  <!<  α576'
-//│ ╟── while constraining:  {u: α578'', v: α579''}  <!<  α576'
-//│ ╟── while constraining:  {u: α574'', v: α575''}  <!<  α576'
-//│ ╙── while constraining:  {u: α574'', v: α575''}  <!<  α574''
+//│ ╟── while constraining:  {u: y824'', v: α825''}  <!<  y626'
+//│ ╟── while constraining:  {u: y822'', v: α823''}  <!<  y626'
+//│ ╟── while constraining:  {u: y820'', v: α821''}  <!<  y626'
+//│ ╟── while constraining:  {u: y818'', v: α819''}  <!<  y626'
+//│ ╟── while constraining:  {u: y816'', v: α817''}  <!<  y626'
+//│ ╟── while constraining:  {u: y814'', v: α815''}  <!<  y626'
+//│ ╟── while constraining:  {u: y812'', v: α813''}  <!<  y626'
+//│ ╟── while constraining:  {u: y810'', v: α811''}  <!<  y626'
+//│ ╟── while constraining:  {u: y808'', v: α809''}  <!<  y626'
+//│ ╟── while constraining:  {u: y806'', v: α807''}  <!<  y626'
+//│ ╟── while constraining:  {u: y804'', v: α805''}  <!<  y626'
+//│ ╟── while constraining:  {u: y802'', v: α803''}  <!<  y626'
+//│ ╟── while constraining:  {u: y800'', v: α801''}  <!<  y626'
+//│ ╟── while constraining:  {u: y798'', v: α799''}  <!<  y626'
+//│ ╟── while constraining:  {u: y796'', v: α797''}  <!<  y626'
+//│ ╟── while constraining:  {u: y794'', v: α795''}  <!<  y626'
+//│ ╟── while constraining:  {u: y792'', v: α793''}  <!<  y626'
+//│ ╟── while constraining:  {u: y790'', v: α791''}  <!<  y626'
+//│ ╟── while constraining:  {u: y788'', v: α789''}  <!<  y626'
+//│ ╟── while constraining:  {u: y786'', v: α787''}  <!<  y626'
+//│ ╟── while constraining:  {u: y784'', v: α785''}  <!<  y626'
+//│ ╟── while constraining:  {u: y782'', v: α783''}  <!<  y626'
+//│ ╟── while constraining:  {u: y780'', v: α781''}  <!<  y626'
+//│ ╟── while constraining:  {u: y778'', v: α779''}  <!<  y626'
+//│ ╟── while constraining:  {u: y776'', v: α777''}  <!<  y626'
+//│ ╟── while constraining:  {u: y774'', v: α775''}  <!<  y626'
+//│ ╟── while constraining:  {u: y772'', v: α773''}  <!<  y626'
+//│ ╟── while constraining:  {u: y770'', v: α771''}  <!<  y626'
+//│ ╟── while constraining:  {u: y768'', v: α769''}  <!<  y626'
+//│ ╟── while constraining:  {u: y766'', v: α767''}  <!<  y626'
+//│ ╟── while constraining:  {u: y764'', v: α765''}  <!<  y626'
+//│ ╟── while constraining:  {u: y762'', v: α763''}  <!<  y626'
+//│ ╟── while constraining:  {u: y760'', v: α761''}  <!<  y626'
+//│ ╟── while constraining:  {u: y758'', v: α759''}  <!<  y626'
+//│ ╟── while constraining:  {u: y756'', v: α757''}  <!<  y626'
+//│ ╟── while constraining:  {u: y754'', v: α755''}  <!<  y626'
+//│ ╟── while constraining:  {u: y752'', v: α753''}  <!<  y626'
+//│ ╟── while constraining:  {u: y750'', v: α751''}  <!<  y626'
+//│ ╟── while constraining:  {u: y748'', v: α749''}  <!<  y626'
+//│ ╟── while constraining:  {u: y746'', v: α747''}  <!<  y626'
+//│ ╟── while constraining:  {u: y744'', v: α745''}  <!<  y626'
+//│ ╟── while constraining:  {u: y742'', v: α743''}  <!<  y626'
+//│ ╟── while constraining:  {u: y740'', v: α741''}  <!<  y626'
+//│ ╟── while constraining:  {u: y738'', v: α739''}  <!<  y626'
+//│ ╟── while constraining:  {u: y736'', v: α737''}  <!<  y626'
+//│ ╟── while constraining:  {u: y734'', v: α735''}  <!<  y626'
+//│ ╟── while constraining:  {u: y732'', v: α733''}  <!<  y626'
+//│ ╟── while constraining:  {u: y730'', v: α731''}  <!<  y626'
+//│ ╟── while constraining:  {u: y728'', v: α729''}  <!<  y626'
+//│ ╟── while constraining:  {u: y726'', v: α727''}  <!<  y626'
+//│ ╟── while constraining:  {u: y724'', v: α725''}  <!<  y626'
+//│ ╟── while constraining:  {u: y722'', v: α723''}  <!<  y626'
+//│ ╟── while constraining:  {u: y720'', v: α721''}  <!<  y626'
+//│ ╟── while constraining:  {u: y718'', v: α719''}  <!<  y626'
+//│ ╟── while constraining:  {u: y716'', v: α717''}  <!<  y626'
+//│ ╟── while constraining:  {u: y714'', v: α715''}  <!<  y626'
+//│ ╟── while constraining:  {u: y712'', v: α713''}  <!<  y626'
+//│ ╟── while constraining:  {u: y710'', v: α711''}  <!<  y626'
+//│ ╟── while constraining:  {u: y708'', v: α709''}  <!<  y626'
+//│ ╟── while constraining:  {u: y706'', v: α707''}  <!<  y626'
+//│ ╟── while constraining:  {u: y704'', v: α705''}  <!<  y626'
+//│ ╟── while constraining:  {u: y702'', v: α703''}  <!<  y626'
+//│ ╟── while constraining:  {u: y700'', v: α701''}  <!<  y626'
+//│ ╟── while constraining:  {u: y698'', v: α699''}  <!<  y626'
+//│ ╟── while constraining:  {u: y696'', v: α697''}  <!<  y626'
+//│ ╟── while constraining:  {u: y694'', v: α695''}  <!<  y626'
+//│ ╟── while constraining:  {u: y692'', v: α693''}  <!<  y626'
+//│ ╟── while constraining:  {u: y690'', v: α691''}  <!<  y626'
+//│ ╟── while constraining:  {u: y688'', v: α689''}  <!<  y626'
+//│ ╟── while constraining:  {u: y686'', v: α687''}  <!<  y626'
+//│ ╟── while constraining:  {u: y684'', v: α685''}  <!<  y626'
+//│ ╟── while constraining:  {u: y682'', v: α683''}  <!<  y626'
+//│ ╟── while constraining:  {u: y680'', v: α681''}  <!<  y626'
+//│ ╟── while constraining:  {u: y678'', v: α679''}  <!<  y626'
+//│ ╟── while constraining:  {u: y676'', v: α677''}  <!<  y626'
+//│ ╟── while constraining:  {u: y674'', v: α675''}  <!<  y626'
+//│ ╟── while constraining:  {u: y672'', v: α673''}  <!<  y626'
+//│ ╟── while constraining:  {u: y670'', v: α671''}  <!<  y626'
+//│ ╟── while constraining:  {u: y668'', v: α669''}  <!<  y626'
+//│ ╟── while constraining:  {u: y666'', v: α667''}  <!<  y626'
+//│ ╟── while constraining:  {u: y664'', v: α665''}  <!<  y626'
+//│ ╟── while constraining:  {u: y662'', v: α663''}  <!<  y626'
+//│ ╟── while constraining:  {u: y660'', v: α661''}  <!<  y626'
+//│ ╟── while constraining:  {u: y658'', v: α659''}  <!<  y626'
+//│ ╟── while constraining:  {u: y656'', v: α657''}  <!<  y626'
+//│ ╟── while constraining:  {u: y654'', v: α655''}  <!<  y626'
+//│ ╟── while constraining:  {u: y652'', v: α653''}  <!<  y626'
+//│ ╟── while constraining:  {u: y650'', v: α651''}  <!<  y626'
+//│ ╟── while constraining:  {u: y648'', v: α649''}  <!<  y626'
+//│ ╟── while constraining:  {u: y646'', v: α647''}  <!<  y626'
+//│ ╟── while constraining:  {u: y644'', v: α645''}  <!<  y626'
+//│ ╟── while constraining:  {u: y642'', v: α643''}  <!<  y626'
+//│ ╟── while constraining:  {u: y640'', v: α641''}  <!<  y626'
+//│ ╟── while constraining:  {u: y638'', v: α639''}  <!<  y626'
+//│ ╟── while constraining:  {u: y636'', v: α637''}  <!<  y626'
+//│ ╟── while constraining:  {u: y634'', v: α635''}  <!<  y626'
+//│ ╟── while constraining:  {u: y632'', v: α633''}  <!<  y626'
+//│ ╟── while constraining:  {u: y630'', v: α631''}  <!<  y626'
+//│ ╟── while constraining:  {u: y628'', v: α629''}  <!<  y626'
+//│ ╟── while constraining:  {u: y624'', v: α625''}  <!<  y626'
+//│ ╙── while constraining:  {u: y624'', v: α625''}  <!<  y624''
 //│ ╔══[ERROR] Type mismatch in binding of block of statements:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -477,8 +495,12 @@ let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 (x => (let y = (x x); 0))
 //│ res: ('a -> anything & 'a) -> 0
 
+// TODO simplify more
 (let rec x = (y => (y (x x))); x)
-//│ res: ('b -> ('a & 'b & 'c) as 'a) -> 'c
+//│ res: 'a -> 'b
+//│   where
+//│     'a <: 'b -> 'b
+//│     'b <: 'a
 
 next => 0
 //│ res: anything -> 0
@@ -487,30 +509,64 @@ next => 0
 //│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: ('b -> 'a & 'b as 'a) -> nothing
+//│ res: 'a -> nothing
+//│   where
+//│     'a <: 'a -> 'a
 
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'b -> ('a | 'b) as 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'b -> ('a | 'b) as 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => {u: y, v: (x x)}); x)
-//│ res: 'b -> ({u: 'a | 'b, v: 'c} as 'c) as 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'a, v: 'b}
+//│     'a :> 'x
 
 (let rec x = (y => {u: (x x), v: y}); x)
-//│ res: 'b -> ({u: 'c, v: 'a | 'b} as 'c) as 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'b
+//│     'b :> {u: 'b, v: 'a}
+//│     'a :> 'x
 
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: ('a -> anything & 'b) -> 'b as 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))
-//│ res: ('a -> anything & {v: 'a}) -> 0
+//│ res: ('v -> anything & {v: 'v}) -> 0
 
-let rec x = (let y = (x x); (z => z)); (x (y => y.u))
-//│ x: 'b -> ('a | 'b) as 'a
-//│ res: ({u: 'a} & 'b) -> (({u: 'a} & 'b) -> (forall 'a, 'd. 'c) | 'a | 'b as 'c) | 'b
+let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
+//│ x: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
+//│ res: 'a
+//│   where
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+
+:ns
+let rec x = (let y = (x x); (z => z))
+//│ x: forall 'x, 'a, 'b. 'x
+//│   where
+//│     'x :> 'b -> 'b
+//│        <: 'b & 'x -> 'a
+//│     'b :> 'b -> 'b
+//│        <: 'a
+//│     'a :> 'b -> 'b
 

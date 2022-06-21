@@ -21,7 +21,7 @@ c.name
 //│ ╟── application of type `Child` does not have field 'name'
 //│ ║  l.12: 	def c = Child(p)
 //│ ║        	        ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{name: ?a}`
+//│ ╟── but it flows into reference with expected type `{name: ?name}`
 //│ ║  l.17: 	c.name
 //│ ║        	^
 //│ ╟── Note: class Child is defined at:
