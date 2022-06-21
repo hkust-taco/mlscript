@@ -11,12 +11,21 @@ class List[A]
 
 // ============ Type signatures for functions used in the examples ============
 
+def head: List['a] -> 'a
+//│ head: List['a] -> 'a
+
+def tail: List['a] -> List['a]
+//│ tail: List['a] -> List['a]
+
 // Used to represent `[]` in the papers
 def nil: List['a]
 //│ nil: List[nothing]
 
 def choose: 'a -> 'a -> 'a
 //│ choose: 'a -> 'a -> 'a
+
+def poly: (forall 'a. 'a -> 'a) -> (int, bool)
+//│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 
 def auto : (forall 'a. 'a -> 'a') -> (forall 'b. 'b -> 'b)
 //│ auto: (nothing -> anything) -> (forall 'b. 'b -> 'b)
@@ -74,6 +83,53 @@ f (choose id) ids
 //│ f: ('a -> 'a) -> List['a] -> 'a
 //│ res: 'a -> 'a
 
+
 // TODO rest
 
+
+// ============ B. inference of polymorphic arguments ============
+
+// B1
+fun f -> (f 1, f true)
+//│ res: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+
+// B2
+fun xs -> poly (head xs)
+//│ res: List[forall 'a. 'a -> 'a] -> (int, bool,)
+
+
+// TODO rest
+
+
+// ============ C. functions on polymorphic lists ============
+
+
+// TODO rest
+
+
+// ============ D. application functions ============
+
+
+// TODO rest
+
+
+// ============ E. η-expansion ============
+
+def h: int -> (forall 'a. 'a -> 'a)
+def k: 'a -> List['a] -> 'a
+def lst: List[forall 'a. int -> 'a -> 'a]
+//│ h: int -> (forall 'a. 'a -> 'a)
+//│ k: 'a -> List['a] -> 'a
+//│ lst: List[forall 'a. int -> 'a -> 'a]
+
+// E1
+k h lst
+//│ res: int -> 'a -> 'a
+
+// E2
+k (fun x -> h x) lst
+//│ res: int -> 'a -> 'a
+
+
+// TODO rest
 
