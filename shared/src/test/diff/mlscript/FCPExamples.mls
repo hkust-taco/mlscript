@@ -43,6 +43,12 @@ def auto' : (forall 'a. 'a -> 'a') -> 'b -> 'b
 def ids: List[forall 'a. 'a -> 'a]
 //│ ids: List[forall 'a. 'a -> 'a]
 
+def id: 'a -> 'a
+//│ id: 'a -> 'a
+
+def length: List['a] -> int
+//│ length: List[?] -> int
+
 // TODO the other signatures
 
 
@@ -54,7 +60,7 @@ const2 x y = y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
 
 // A3
 choose nil ids
@@ -68,14 +74,24 @@ fun (x: forall 'a. 'a -> 'a) -> x x
 fun x -> x x
 //│ res: ('a -> 'b & 'a) -> 'b
 
-// TODO ... missing A's
+// A5
+id auto
+//│ res: (nothing -> anything) -> (forall 'b. 'b -> 'b)
+
+// A6
+id auto'
+//│ res: (nothing -> anything) -> 'b -> 'b
+
+// A7
+choose id auto
+//│ res: (nothing -> anything & 'a) -> (forall 'b. 'a | 'b -> 'b)
 
 // A8
 :ns
 choose id auto'
 //│ res: forall 'a', 'b. 'c
 //│   where
-//│     'c :> (forall 'd. 'd -> 'd) | (forall 'a', 'b. (forall 'a. 'a -> 'a') -> 'b -> 'b)
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a', 'b. (forall 'a0. 'a0 -> 'a') -> 'b -> 'b)
 
 // A9
 def f: ('a -> 'a) -> List['a] -> 'a
@@ -83,9 +99,17 @@ f (choose id) ids
 //│ f: ('a -> 'a) -> List['a] -> 'a
 //│ res: 'a -> 'a
 
+// A10
+poly id
+//│ res: (int, bool,)
 
-// TODO rest
+// A11
+poly (fun x -> x)
+//│ res: (int, bool,)
 
+// A12
+id poly (fun x -> x)
+//│ res: (int, bool,)
 
 // ============ B. inference of polymorphic arguments ============
 
@@ -97,15 +121,10 @@ fun f -> (f 1, f true)
 fun xs -> poly (head xs)
 //│ res: List[forall 'a. 'a -> 'a] -> (int, bool,)
 
-
-// TODO rest
-
-
 // ============ C. functions on polymorphic lists ============
 
-
-// TODO rest
-
+length ids
+//│ res: int
 
 // ============ D. application functions ============
 
