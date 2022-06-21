@@ -133,9 +133,9 @@ f0 = f0
 //│ ╟── while constraining:  'a72  <!<  'a73
 //│ ╟── while constraining:  ('a72,)  <!<  ('a73,)
 //│ ╟── while constraining:  ('a73 -> int<TypeName(number)>)  <!<  ('a72 -> int<TypeName(number)>)
-//│ ╟── while constraining:  ('a73 -> Int)  <!<  ('a | ('a72 -> Int))
-//│ ╟── while constraining:  'a73  <!<  ('a | ('a72 -> Int))
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a | ('a72 -> Int))
+//│ ╟── while constraining:  ('a73 -> Int)  <!<  (‘a | ('a72 -> Int))
+//│ ╟── while constraining:  'a73  <!<  (‘a | ('a72 -> Int))
+//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  (‘a | ('a72 -> Int))
 //│ ╙── while constraining:  ∀ 0. 'a62'  <!<  'a72
 //│   = <no result>
 //│     f0 is not implemented

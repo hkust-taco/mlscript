@@ -113,10 +113,10 @@ ty3A = ty3A
 //│ ╟── while constraining:  'a105  <!<  'a106
 //│ ╟── while constraining:  (int<TypeName(number)>, 'a105,)  <!<  (int<TypeName(number)>, 'a106,)
 //│ ╟── while constraining:  ((int<TypeName(number)>, 'a106,) -> ())  <!<  ((int<TypeName(number)>, 'a105,) -> ())
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a106,) -> ()), get: (Int -> 'a106)}) & {MyArray#A: mut 'a106..'a106})  <!<  ('a | MyArray['a105])
-//│ ╟── while constraining:  MyArray['a106]  <!<  ('a | MyArray['a105])
-//│ ╟── while constraining:  'a106  <!<  ('a | MyArray['a105])
-//│ ╟── while constraining:  ∀ 0. 'a95'  <!<  ('a | MyArray['a105])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a106,) -> ()), get: (Int -> 'a106)}) & {MyArray#A: mut 'a106..'a106})  <!<  (‘a | MyArray['a105])
+//│ ╟── while constraining:  MyArray['a106]  <!<  (‘a | MyArray['a105])
+//│ ╟── while constraining:  'a106  <!<  (‘a | MyArray['a105])
+//│ ╟── while constraining:  ∀ 0. 'a95'  <!<  (‘a | MyArray['a105])
 //│ ╙── while constraining:  ∀ 0. 'a95'  <!<  'a105
 //│ constrain calls  : 162
 //│ annoying  calls  : 74
@@ -186,15 +186,15 @@ ty3B = ty3A
 //│ ╟── while constraining:  ∀ 0. 'a95'  <!<  ((myArray<> & {size: Int, set: ((Int, 'a130,) -> ()), get: (Int -> 'a130)}) & {MyArray#A: mut 'a130..'a130})
 //│ ╟── while constraining:  ∀ 0. 'a95'  <!<  MyArray['a130]
 //│ ╟── while constraining:  'a130  <!<  MyArray['a130]
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a130,) -> ()), get: (Int -> 'a130)}) & {MyArray#A: mut 'a130..'a130})  <!<  ('a | MyArray[MyArray['a130]])
-//│ ╟── while constraining:  MyArray['a130]  <!<  ('a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a130,) -> ()), get: (Int -> 'a130)}) & {MyArray#A: mut 'a130..'a130})  <!<  (‘a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  MyArray['a130]  <!<  (‘a | MyArray[MyArray['a130]])
 //│ ╟── while constraining:  MyArray['a130]  <!<  'a131
 //│ ╟── while constraining:  (int<TypeName(number)>, MyArray['a130],)  <!<  (int<TypeName(number)>, 'a131,)
 //│ ╟── while constraining:  ((int<TypeName(number)>, 'a131,) -> ())  <!<  ((int<TypeName(number)>, MyArray['a130],) -> ())
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a131,) -> ()), get: (Int -> 'a131)}) & {MyArray#A: mut 'a131..'a131})  <!<  ('a | MyArray[MyArray['a130]])
-//│ ╟── while constraining:  MyArray['a131]  <!<  ('a | MyArray[MyArray['a130]])
-//│ ╟── while constraining:  'a131  <!<  ('a | MyArray[MyArray['a130]])
-//│ ╟── while constraining:  ∀ 0. 'a95'  <!<  ('a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a131,) -> ()), get: (Int -> 'a131)}) & {MyArray#A: mut 'a131..'a131})  <!<  (‘a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  MyArray['a131]  <!<  (‘a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  'a131  <!<  (‘a | MyArray[MyArray['a130]])
+//│ ╟── while constraining:  ∀ 0. 'a95'  <!<  (‘a | MyArray[MyArray['a130]])
 //│ ╙── while constraining:  ∀ 0. 'a95'  <!<  'a130
 //│ constrain calls  : 231
 //│ annoying  calls  : 118
@@ -253,8 +253,8 @@ ty3A = ty3B
 //│ ╟── while constraining:  'a150  <!<  'a153
 //│ ╟── while constraining:  (int<TypeName(number)>, 'a150,)  <!<  (int<TypeName(number)>, 'a153,)
 //│ ╟── while constraining:  ((int<TypeName(number)>, 'a153,) -> ())  <!<  ((int<TypeName(number)>, 'a150,) -> ())
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a153,) -> ()), get: (Int -> 'a153)}) & {MyArray#A: mut 'a153..'a153})  <!<  ('a | MyArray['a150])
-//│ ╟── while constraining:  MyArray['a153]  <!<  ('a | MyArray['a150])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, 'a153,) -> ()), get: (Int -> 'a153)}) & {MyArray#A: mut 'a153..'a153})  <!<  (‘a | MyArray['a150])
+//│ ╟── while constraining:  MyArray['a153]  <!<  (‘a | MyArray['a150])
 //│ ╟── while constraining:  MyArray['a153]  <!<  'a151
 //│ ╟── while constraining:  MyArray['a151]  <!<  MyArray[MyArray['a153]]
 //│ ╟── while constraining:  MyArray['a151]  <!<  'a153
@@ -272,10 +272,10 @@ ty3A = ty3B
 //│ ╟── while constraining:  'a150  <!<  MyArray['a151]
 //│ ╟── while constraining:  (int<TypeName(number)>, 'a150,)  <!<  (int<TypeName(number)>, MyArray['a151],)
 //│ ╟── while constraining:  ((int<TypeName(number)>, MyArray['a151],) -> ())  <!<  ((int<TypeName(number)>, 'a150,) -> ())
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a151],) -> ()), get: (Int -> MyArray['a151])}) & {MyArray#A: mut MyArray['a151]..MyArray['a151]})  <!<  ('a | MyArray['a150])
-//│ ╟── while constraining:  MyArray[MyArray['a151]]  <!<  ('a | MyArray['a150])
-//│ ╟── while constraining:  'a151  <!<  ('a | MyArray['a150])
-//│ ╟── while constraining:  ∀ 0. 'a120'  <!<  ('a | MyArray['a150])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray['a151],) -> ()), get: (Int -> MyArray['a151])}) & {MyArray#A: mut MyArray['a151]..MyArray['a151]})  <!<  (‘a | MyArray['a150])
+//│ ╟── while constraining:  MyArray[MyArray['a151]]  <!<  (‘a | MyArray['a150])
+//│ ╟── while constraining:  'a151  <!<  (‘a | MyArray['a150])
+//│ ╟── while constraining:  ∀ 0. 'a120'  <!<  (‘a | MyArray['a150])
 //│ ╙── while constraining:  ∀ 0. 'a120'  <!<  'a150
 //│ constrain calls  : 164
 //│ annoying  calls  : 92
@@ -357,10 +357,10 @@ ty4B = ty4B
 //│ ╟── while constraining:  MyArray[MyArray['a175]]  <!<  MyArray[MyArray['a176]]
 //│ ╟── while constraining:  (int<TypeName(number)>, MyArray[MyArray['a175]],)  <!<  (int<TypeName(number)>, MyArray[MyArray['a176]],)
 //│ ╟── while constraining:  ((int<TypeName(number)>, MyArray[MyArray['a176]],) -> ())  <!<  ((int<TypeName(number)>, MyArray[MyArray['a175]],) -> ())
-//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a176]],) -> ()), get: (Int -> MyArray[MyArray['a176]])}) & {MyArray#A: mut MyArray[MyArray['a176]]..MyArray[MyArray['a176]]})  <!<  ('a | MyArray[MyArray[MyArray['a175]]])
-//│ ╟── while constraining:  MyArray[MyArray[MyArray['a176]]]  <!<  ('a | MyArray[MyArray[MyArray['a175]]])
-//│ ╟── while constraining:  'a176  <!<  ('a | MyArray[MyArray[MyArray['a175]]])
-//│ ╟── while constraining:  ∀ 0. 'a165'  <!<  ('a | MyArray[MyArray[MyArray['a175]]])
+//│ ╟── while constraining:  ((myArray<> & {size: Int, set: ((Int, MyArray[MyArray['a176]],) -> ()), get: (Int -> MyArray[MyArray['a176]])}) & {MyArray#A: mut MyArray[MyArray['a176]]..MyArray[MyArray['a176]]})  <!<  (‘a | MyArray[MyArray[MyArray['a175]]])
+//│ ╟── while constraining:  MyArray[MyArray[MyArray['a176]]]  <!<  (‘a | MyArray[MyArray[MyArray['a175]]])
+//│ ╟── while constraining:  'a176  <!<  (‘a | MyArray[MyArray[MyArray['a175]]])
+//│ ╟── while constraining:  ∀ 0. 'a165'  <!<  (‘a | MyArray[MyArray[MyArray['a175]]])
 //│ ╙── while constraining:  ∀ 0. 'a165'  <!<  'a175
 //│ constrain calls  : 162
 //│ annoying  calls  : 74

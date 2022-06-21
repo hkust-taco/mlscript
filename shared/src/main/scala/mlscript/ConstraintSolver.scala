@@ -62,10 +62,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     /* To solve constraints that are more tricky. */
-    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx): Unit =
+    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
       constrainDNF(DNF.mkDeep(MaxLevel, lhs, true), DNF.mkDeep(MaxLevel, rhs, false), rhs)
     
-    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx): Unit =
+    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
@@ -145,7 +145,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = {
+          (implicit cctx: ConCtx, ctx: Ctx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
         consumeFuel()
         annoyingImpl(ls, done_ls, rs, done_rs)(cctx, dbgHelp)
@@ -299,7 +299,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
-      (implicit raise: Raise, cctx: ConCtx): Unit = {
+      (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
           case (Some(l), None) =>
@@ -312,11 +312,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
-          (implicit raise: Raise, cctx: ConCtx): Unit = {
+          // (implicit raise: Raise, cctx: ConCtx): Unit = {
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit = {
       constrainCalls += 1
       val lhs_rhs = lhs -> rhs
       stack.push(lhs_rhs)
-      println(stack.size)
+      // println(stack.size)
       consumeFuel()
       // Thread.sleep(10)  // useful for debugging constraint-solving explosions debugged on stdout
       recImpl(lhs, rhs)(raise,
@@ -324,13 +325,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (if (cctx._1.headOption.exists(_ is lhs)) cctx._1 else lhs :: cctx._1)
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
-        else (lhs :: Nil) -> (rhs :: Nil)
+        else (lhs :: Nil) -> (rhs :: Nil),
+        ctx
       )
       stack.pop()
       ()
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
-          (implicit raise: Raise, cctx: ConCtx): Unit =
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit =
     // trace(s"C $lhs <! $rhs") {
     trace(s"C $lhs <! $rhs    (${cache.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
@@ -375,6 +377,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
+            // println(lhs, rhs, lhs.level, rhs.level)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
@@ -463,7 +466,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
           case (_, poly: PolymorphicType) =>
-            rec(lhs, poly.rigidify, true)
+            // rec(lhs, poly.rigidify, true)
+            ctx.nextLevel |> { implicit ctx =>
+              println(s"BUMP TO LEVEL ${lvl}")
+              rec(lhs, poly.rigidify, true)
+            }
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF
@@ -612,7 +619,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil)
+    rec(lhs, rhs, true)(raise, Nil -> Nil, ctx)
   }
   
   
@@ -664,7 +671,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lvl, pol))(p.prov)
       case p @ ProxyType(und) => extrude(und, lvl, pol)
-      case _: ClassTag | _: TraitTag => ty
+      // case _: ClassTag | _: TraitTag => ty
+      case TraitTag(level, id) =>
+        // println(lvl, upperLvl)
+        // if (lvl > upperLvl)
+        if (level > lvl)
+          // When a rigid type variable is extruded, we need to widen it to Top or Bot
+          ExtrType(!pol)(ty.prov/*TODO wrap/explain prov*/)
+          // ExtrType(pol)(ty.prov/*TODO wrap/explain prov*/)
+        else ty
+      case _: ClassTag => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
@@ -692,6 +708,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
     raise(Warning(msgs))
   
+  
+  // TODO! should we refresh quantified trait tags?!
   
   /** Freshens all the type variables whose level is comprised in `(above, below]`
     *   or which have bounds and whose level is greater than `above`. */
@@ -721,6 +739,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify =>
           val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
+            lvl,
+            // tv.level,
             Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),

@@ -367,10 +367,10 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
   }
   
-  case class TraitTag(id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
-    def level: Level = MinLevel
+  case class TraitTag(level: Level, id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
+    // def level: Level = MinLevel
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
-    override def toString = id.idStr
+    override def toString = (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
   }
   
   /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
@@ -432,7 +432,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }
     lazy val asTypeVar = new TypeVar(L(uid), nameHint)
     def compare(that: TV): Int = this.uid compare that.uid
-    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
+    // override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
+    override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level))
     
     def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true

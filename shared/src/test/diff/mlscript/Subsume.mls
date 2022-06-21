@@ -407,9 +407,9 @@ def self2 = self1
 //│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a344 -> 'b345) & 'a344)
 //│ ╟── while constraining:  'a343  <!<  (('a344 -> 'b345) & 'a344)
 //│ ╟── while constraining:  ('a343,)  <!<  ((('a344 -> 'b345) & 'a344),)
-//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a343 -> 'b)
-//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a | ('a343 -> 'b))
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  ('a | ('a343 -> 'b))
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a343 -> ‘b)
+//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  (‘a | ('a343 -> ‘b))
+//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (‘a | ('a343 -> ‘b))
 //│ ╙── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a343
 //│      = [Function: res]
 

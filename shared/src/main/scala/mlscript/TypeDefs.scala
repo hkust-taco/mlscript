@@ -120,7 +120,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   }
   def trtNameToNomTag(td: TypeDef)(prov: TypeProvenance, ctx: Ctx): TraitTag = {
     require(td.kind is Trt)
-    TraitTag(Var(td.nme.name.decapitalize))(prov)
+    TraitTag(MinLevel, Var(td.nme.name.decapitalize))(prov)
   }
   
   def baseClassesOf(tyd: mlscript.TypeDef): Set[TypeName] =
@@ -484,7 +484,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             case _ => Nil
           }
           def go(md: MethodDef[_ <: Term \/ Type]): (Str, MethodType) = {
-            val thisTag = TraitTag(Var("this"))(noProv)
+            val thisTag = TraitTag(thisCtx.lvl/*TODO correct?*/, Var("this"))(noProv)
             val thisTy = thisTag & tr
             thisCtx += "this" -> thisTy
             val MethodDef(rec, prt, nme, tparams, rhs) = md
@@ -517,7 +517,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             }
             rhs.fold(_ => defined, _ => declared) += nme.name -> nme.toLoc
             val dummyTargs2 = tparams.map(p =>
-              TraitTag(Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
+              TraitTag(MinLevel, Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
               freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
@@ -604,7 +604,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
       trace(s"upd[$curVariance] $ty") { // Note: could simplify this (at some perf cost) by just using ty.childrenPol
         ty match {
           case ProxyType(underlying) => updateVariance(underlying, curVariance)
-          case TraitTag(_) | ClassTag(_, _) => ()
+          case TraitTag(_, _) | ClassTag(_, _) => ()
           case ExtrType(pol) => ()
           case t: TypeVariable =>
             // update the variance information for the type variable

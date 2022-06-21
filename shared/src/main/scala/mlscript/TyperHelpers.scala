@@ -722,4 +722,7 @@ abstract class TyperHelpers { Typer: Typer =>
   }
   
   
+  protected def showLevel(level: Level): Str =
+    (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level)
+  
 }
