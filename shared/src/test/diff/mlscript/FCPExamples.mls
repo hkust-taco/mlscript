@@ -1,0 +1,79 @@
+:NoJS
+
+
+// ============ Dummy classes to represent the types in the examples ============
+
+class List[A]
+  method Get: A // to make List covariant
+//│ Defined class List[+A]
+//│ Declared List.Get: List['A] -> 'A
+
+
+// ============ Type signatures for functions used in the examples ============
+
+// Used to represent `[]` in the papers
+def nil: List['a]
+//│ nil: List[nothing]
+
+def choose: 'a -> 'a -> 'a
+//│ choose: 'a -> 'a -> 'a
+
+def auto : (forall 'a. 'a -> 'a') -> (forall 'b. 'b -> 'b)
+//│ auto: (nothing -> anything) -> (forall 'b. 'b -> 'b)
+
+// NOTE: ^ this argument types is currently incorrectly SHOWN as `nothing -> anything` but it's correct internally:
+:ns
+auto
+//│ res: forall 'a'. forall 'a'. (forall 'a. 'a -> 'a') -> (forall 'b. 'b -> 'b)
+
+// ^ NOTE: `forall 'a'` is another artifact of the current type pretty-printing
+
+def auto' : (forall 'a. 'a -> 'a') -> 'b -> 'b
+//│ auto': (nothing -> anything) -> 'b -> 'b
+
+def ids: List[forall 'a. 'a -> 'a]
+//│ ids: List[forall 'a. 'a -> 'a]
+
+// TODO the other signatures
+
+
+// ============ A. polymorphic instantiation ============
+
+// A1
+const2 x y = y
+//│ const2: anything -> 'a -> 'a
+
+// A2
+choose id
+//│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+
+// A3
+choose nil ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+// A4
+fun (x: forall 'a. 'a -> 'a) -> x x
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
+// A4'
+fun x -> x x
+//│ res: ('a -> 'b & 'a) -> 'b
+
+// TODO ... missing A's
+
+// A8
+:ns
+choose id auto'
+//│ res: forall 'a', 'b. 'c
+//│   where
+//│     'c :> (forall 'd. 'd -> 'd) | (forall 'a', 'b. (forall 'a. 'a -> 'a') -> 'b -> 'b)
+
+// A9
+def f: ('a -> 'a) -> List['a] -> 'a
+f (choose id) ids
+//│ f: ('a -> 'a) -> List['a] -> 'a
+//│ res: 'a -> 'a
+
+// TODO rest
+
+
