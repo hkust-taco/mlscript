@@ -462,6 +462,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, w @ Without(b, ns)) => rec(lhs.without(ns), b, true)
           case (_, n @ NegType(w @ Without(b, ns))) =>
             rec(Without(lhs, ns)(w.prov), NegType(b)(n.prov), true) // this is weird... TODO check sound
+          case (_, poly: PolymorphicType) =>
+            rec(lhs, poly.rigidify, true)
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF
@@ -696,13 +698,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
         (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    // trace(s"FRESHEN $ty | $lim .. $below")
+    // (trace(s"FRESHEN $ty | $above .. $below")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
-      if (!rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
+      if (
+        // !FIXME commenting this breaks wildcard TypeBound-s in signatures:
+        /* !rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...
-        && ty.level <= above) ty else ty match {
+        && */ ty.level <= above) ty else ty match {
       case tv: TypeVariable
         if tv.level > below
         // It is not sound to ignore the bounds here,
@@ -770,7 +774,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         freshenImpl(bod, below = lvl))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    // (r => s"=> $r")
+    // (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   

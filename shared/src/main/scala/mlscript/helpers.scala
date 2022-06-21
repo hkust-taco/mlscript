@@ -43,6 +43,9 @@ abstract class TypeImpl extends Located { self: Type =>
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
     case Bot => "nothing"
+    case TypeName(name) if name.startsWith("'") =>
+      // "_"+name
+      "‘" + name.tail
     case TypeName(name) => name
     // case uv: TypeVar => ctx.vs.getOrElse(uv, s"[??? $uv ???]")
     case uv: TypeVar => ctx.vs(uv)

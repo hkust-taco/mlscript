@@ -398,10 +398,10 @@ bar2_ty2 = bar_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.390: 	bar2_ty2 = bar_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `C[?r]` does not match type `{x: ?r0} | 'r`
+//│ ╟── type `C[?r]` does not match type `{x: ?r0} | ‘r`
 //│ ║  l.306: 	def bar_ty2: C['r] as 'r
 //│ ║         	             ^^^^^
-//│ ╟── but it flows into reference with expected type `{x: ?r1} | 'r`
+//│ ╟── but it flows into reference with expected type `{x: ?r1} | ‘r`
 //│ ║  l.390: 	bar2_ty2 = bar_ty2
 //│ ║         	           ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
@@ -422,10 +422,10 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?r}` does not match type `C[?r0] | 'r`
+//│ ╟── type `{x: ?r}` does not match type `C[?r0] | ‘r`
 //│ ║  l.365: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `C[?r1] | 'r`
+//│ ╟── but it flows into reference with expected type `C[?r1] | ‘r`
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
@@ -434,10 +434,10 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?r}` does not match type `C[?r0] | 'r`
+//│ ╟── type `{x: ?r}` does not match type `C[?r0] | ‘r`
 //│ ║  l.365: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `C[?r1] | 'r`
+//│ ╟── but it flows into reference with expected type `C[?r1] | ‘r`
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
@@ -446,10 +446,10 @@ bar_ty2 = bar2_ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `{x: ?r}` does not match type `C[?r0] | 'r`
+//│ ╟── type `{x: ?r}` does not match type `C[?r0] | ‘r`
 //│ ║  l.365: 	def bar2_ty2: { x: 'r } as 'r
 //│ ║         	              ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `C[?r1] | 'r`
+//│ ╟── but it flows into reference with expected type `C[?r1] | ‘r`
 //│ ║  l.414: 	bar_ty2 = bar2_ty2
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:

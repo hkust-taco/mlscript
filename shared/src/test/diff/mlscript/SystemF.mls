@@ -1,0 +1,73 @@
+// https://crypto.stanford.edu/~blynn/lambda/systemf.html
+
+def succ: int -> int
+//│ succ: int -> int
+//│     = <missing implementation>
+
+
+(fun f -> f succ(f 0)) (fun x -> x)
+//│ res: int
+//│    = <no result>
+//│      succ is not implemented
+
+// Note: does not type check without precise function type intersections
+(fun f -> f succ (f 0)) (fun x -> x)
+//│ res: int
+//│    = <no result>
+//│      succ is not implemented
+
+
+// [Reset]
+id x = x // Polymorphic identity.
+// id as [A] -> A -> A
+//│ id: 'a -> 'a
+//│   = [Function: id]
+
+xx = fun x -> x x // Self-application.
+// xx as ([X] -> X -> X) -> [X] -> X -> X
+//│ xx: ('a -> 'b & 'a) -> 'b
+//│   = [Function: xx]
+
+xx id
+iter2 f x = f(f x)
+// iter2 as [X] -> (X -> X) -> X -> X
+//│ res: 'a -> 'a
+//│    = [Function: id]
+//│ iter2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│      = [Function: iter2]
+
+iter4() = iter2 iter2
+// iter4() as [X] -> (X -> X) -> X -> X
+//│ iter4: () -> ('a -> ('b & 'c) & 'b -> 'a) -> 'b -> 'c
+//│      = [Function: iter4]
+
+iter256() = iter4() (iter4()) // 4^4 = 256.
+// iter256() as [X] -> (X -> X) -> X -> X
+//│ iter256: () -> ('a -> ('a & 'b & 'c) & 'b -> ('a & 'b)) -> 'b -> 'c
+//│        = [Function: iter256]
+
+n0 s z = z // Church numerals.
+// n0 as [X] -> (X -> X) -> X -> X
+//│ n0: anything -> 'a -> 'a
+//│   = [Function: n0]
+
+S n s z = s (n s z)
+// S as ([X] -> (X -> X) -> X -> X) -> ([X] -> (X -> X) -> X -> X)
+//│ S: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
+//│  = [Function: S]
+
+res1() = iter4() S n0
+res2() = iter256() S n0
+//│ res1: () -> ('a -> 'b & 'b -> ('a & 'c)) -> 'a -> 'c
+//│     = [Function: res1]
+//│ res2: () -> ('a -> ('a & 'b) & 'b -> ('a & 'b & 'c)) -> 'a -> 'c
+//│     = [Function: res2]
+
+
+S (S n0)
+//│ res: ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│    = [Function (anonymous)]
+
+
+// TODO rest...
+

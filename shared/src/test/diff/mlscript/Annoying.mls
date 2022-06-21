@@ -63,7 +63,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not have field 'f'
+//│ ╟── expression of type `int & {x: ‘a} | {x: ‘a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -73,14 +73,14 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{y: 'a} & ~int` does not have field 'x'
+//│ ╟── expression of type `{y: ‘a} & ~int` does not have field 'x'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╙──      	                                           ^^^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {y: 'a} | {y: 'a} & ~?a` does not have field 'f'
+//│ ╟── expression of type `int & {y: ‘a} | {y: ‘a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -321,10 +321,10 @@ ty = ty2
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.317: 	ty = ty2
 //│ ║         	^^^^^^^^
-//│ ╟── type `TT & {x: int}` does not match type `'a\x | AA`
+//│ ╟── type `TT & {x: int}` does not match type `‘a\x | AA`
 //│ ║  l.309: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `'a\x | AA`
+//│ ╟── but it flows into reference with expected type `‘a\x | AA`
 //│ ║  l.317: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:

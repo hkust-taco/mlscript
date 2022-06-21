@@ -1,0 +1,26 @@
+
+
+// A Dependently Typed Calculus with Polymorphic Subtyping
+// https://i.cs.hku.hk/~bruno/papers/scp2021.pdf
+
+// callcc’ : ∀a:⋆. ((∀b:⋆. a → b) → a) → a
+// callcc : ∀a:⋆.∀b:⋆. ((a → b) → a) → a
+// callcc = callcc’
+
+def callcc' : ((forall 'b. 'a -> 'b) -> 'a) -> 'a
+//│ callcc': (('a -> nothing) -> 'a) -> 'a
+//│        = <missing implementation>
+
+def callcc : (('a -> 'b) -> 'a) -> 'a
+//│ callcc: (('a -> nothing) -> 'a) -> 'a
+//│       = <missing implementation>
+
+callcc = callcc'
+//│ (('a -> nothing) -> 'a) -> 'a
+//│   <:  callcc:
+//│ (('a -> nothing) -> 'a) -> 'a
+//│       = <no result>
+//│         callcc' is not implemented
+
+
+

@@ -60,7 +60,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // def rigidify(implicit lvl: Int): SimpleType = freshenAbove(level, body, rigidify = true)
     def rigidify(implicit lvl: Int): SimpleType = {
       implicit val state: MutMap[TV, ST] = MutMap.empty
-      body.freshenAbove(level, rigidify = true)
+      // body.freshenAbove(level, rigidify = true)
+      body.freshenAbove(polymLevel, rigidify = true)
     }
     override def toString = s"∀ $polymLevel. $body"
   }

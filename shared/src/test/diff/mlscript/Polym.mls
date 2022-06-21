@@ -31,3 +31,15 @@ foo2 bar
 
 
 
+def foo x f = f (fun a -> (x, a))
+//│ foo: 'a -> ((forall 'b. 'b -> ('a, 'b,)) -> 'c) -> 'c
+//│    = [Function: foo1]
+
+// Swapping the parameters givesa an isomorphic type:
+
+def foo f x = f (fun a -> (x, a))
+//│ foo: ((forall 'a. 'a -> ('b, 'a,)) -> 'c) -> 'b -> 'c
+//│    = [Function: foo3]
+
+
+

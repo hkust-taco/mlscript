@@ -223,6 +223,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       trace(s"$lvl. Typing type $ty") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
     val typeType2 = ()
+    // val outerCtxLvl = MinLevel + 1
+    val outerCtxLvl = ctx.lvl
     def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
       newDefsInfo.get(name)
         .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
@@ -300,7 +302,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, tv.identifier.toOption))
+          localVars.getOrElseUpdate(tv, freshVar(noProv, tv.identifier.toOption)(outerCtxLvl))
             .withProv(tyTp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
@@ -328,6 +330,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
         }
         res
+      case PolyType(vars, ty) =>
+        val oldLvl = ctx.lvl
+        ctx.nextLevel |> { implicit ctx =>
+          var newVars = recVars
+          val tvs = vars.map {
+            case L(tn) => freshVar(tyTp(tn.toLoc, "quantified type name"), S(tn.name)) // this probably never happens...
+            case R(tv) =>
+              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), tv.identifier.toOption)
+              newVars += tv -> nv
+              nv
+          }
+          // val newVars = tvs.map()
+          PolymorphicType(oldLvl, rec(ty)(ctx, newVars))
+        }
     }
     (rec(ty)(ctx, Map.empty), localVars.values)
   }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")

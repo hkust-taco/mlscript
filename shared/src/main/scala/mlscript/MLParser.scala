@@ -13,7 +13,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   val keywords = Set(
     "def", "class", "trait", "type", "method", "mut",
     "let", "rec", "in", "fun", "with", "undefined", "null",
-    "if", "then", "else", "match", "case", "of")
+    "if", "then", "else", "match", "case", "of", "forall")
   def kw[p: P](s: String) = s ~~ !(letter | digit | "_" | "'")
   
   // NOTE: due to bug in fastparse, the parameter should be by-name!
@@ -206,8 +206,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def ty[p: P]: P[Type] = P( tyNoAs ~ ("as" ~ tyVar).rep ).map {
     case (ty, ass) => ass.foldLeft(ty)((a, b) => Recursive(b, a))
   }
-  def tyNoAs[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union))
-  def tyNoUnion[p: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter))
+  def tyNoAs[p: P]: P[Type] = P( (kw("forall") ~/ tyVar.rep ~ "." ~ tyNoAs).map {
+    case (vars, ty) => PolyType(vars.map(R(_)).toList, ty)
+  } | tyNoForall )
+  def tyNoForall[p: P]: P[Type] = P( tyNoUnion.rep(1, "|") ).map(_.reduce(Union) )
+  def tyNoUnion[p: P]: P[Type] = P( tyNoInter.rep(1, "&") ).map(_.reduce(Inter) )
   def tyNoInter[p: P]: P[Type] = P( tyNoFun ~ ("->" ~/ tyNoInter).? ).map {
     case (l, S(r)) => Function(toParamsTy(l), r)
     case (l, N) => l

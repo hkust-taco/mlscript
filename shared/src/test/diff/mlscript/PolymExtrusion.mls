@@ -1,0 +1,40 @@
+
+
+
+
+def foo: (forall 'a. 'a -> 'a) -> int
+//│ foo: (forall 'a. 'a -> 'a) -> int
+//│    = <missing implementation>
+
+foo f = f 42
+//│ (42 -> 'a) -> 'a
+//│   <:  foo:
+//│ (forall 'a. 'a -> 'a) -> int
+//│    = [Function: foo]
+
+foo id
+//│ res: int
+//│    = 42
+
+
+def f: 'a -> 'b
+//│ f: anything -> nothing
+//│  = <missing implementation>
+
+// FIXME type simplifier should not treat 'a as negative here as it's quantified in neg pos:
+def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ foo: (nothing -> 'b) -> 'b
+//│    = <missing implementation>
+
+
+// FIXME rigid variable extrusion:
+// :d
+foo id
+//│ res: ‘a
+//│    = <no result>
+//│      foo is not implemented
+
+
+
+
+

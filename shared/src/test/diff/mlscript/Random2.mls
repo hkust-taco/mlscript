@@ -58,7 +58,7 @@ rec def f a = a a
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.52: 	rec def f a = a a
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | 'a`
+//│ ╟── function of type `?b -> ?c` does not match type `{x: ?a} | ‘a`
 //│ ║  l.52: 	rec def f a = a a
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from local type binding:
