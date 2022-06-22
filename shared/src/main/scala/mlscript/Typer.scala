@@ -19,6 +19,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
   
+  // def generalizeCurriedFunctions: Boolean = false
+  var generalizeCurriedFunctions: Boolean = false
+  
   var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit
@@ -623,7 +626,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val newCtx = ctx.nest.nextLevel
         val param_ty = typePattern(pat)(newCtx, raise, vars)
         // newCtx ++= newBindings
-        val body_ty = typeTerm(body)(newCtx, raise, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas = generalizeCurriedFunctions)
         PolymorphicType.mk(ctx.lvl,
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         )

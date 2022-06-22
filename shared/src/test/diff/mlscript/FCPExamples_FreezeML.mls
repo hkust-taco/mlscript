@@ -1,5 +1,7 @@
 :NoJS
 
+:GeneralizeCurriedFunctions
+
 
 // ============ Dummy classes to represent the types in the examples ============
 
@@ -230,19 +232,11 @@ k (fun x -> h x) lst
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
 //│ r: (nothing -> (forall 'b. 'b -> 'b)) -> int
 r (fun x -> fun y -> y)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.232: 	r (fun x -> fun y -> y)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.230: 	def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
-//│ ║         	                                 ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.232: 	r (fun x -> fun y -> y)
-//│ ║         	                     ^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.230: 	def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
-//│ ╙──       	                                 ^^
-//│ res: error | int
+//│ res: int
+
+:ns
+r
+//│ res: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
 
 // ============ F. FreezeML Programs ============
 
@@ -269,3 +263,10 @@ let f = revapp id in f poly
 // F10
 choose id (fun (x: ('a -> 'a)) -> auto' x)
 //│ res: (anything -> anything & 'a) -> ('a | 'b -> 'b)
+
+choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto' x)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+
+choose id (fun x -> auto' x)
+//│ res: (nothing -> anything & 'a) -> ('a | 'b -> 'b)
+

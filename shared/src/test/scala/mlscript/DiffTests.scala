@@ -91,6 +91,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var noJavaScript = false
     var noProvs = false
     var allowRuntimeErrors = false
+    var generalizeCurriedFunctions = false
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -117,6 +118,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ShowRelativeLineNums" => showRelativeLineNums = true; mode
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
+          case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -199,6 +201,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.dbg = mode.dbg
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
+            typer.generalizeCurriedFunctions = generalizeCurriedFunctions
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
