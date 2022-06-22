@@ -10,6 +10,13 @@ class List[A]
 //│ Defined class List[+A]
 //│ Declared List.Get: List['A] -> 'A
 
+class ST[S, A]
+  method Inv_S: S -> S
+  method Cov_A: A
+//│ Defined class ST[=S, +A]
+//│ Declared ST.Inv_S: ST['S, ?] -> 'S -> 'S
+//│ Declared ST.Cov_A: ST['S, 'A] -> 'A
+
 
 // ============ Type signatures for functions used in the examples ============
 
@@ -68,9 +75,11 @@ def revapp: 'a -> ('a -> 'b) -> 'b
 def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 //│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 
-// def runST: (forall 's. ST 's 'v) -> 'v
+def runST: (forall 's. ST['s, 'v]) -> 'v
+//│ runST: (forall 's. ST['s, 'v]) -> 'v
 
-// def argST: ST 's int
+def argST: ST['s, int]
+//│ argST: ST['s, int]
 
 
 // ============ A. polymorphic instantiation ============
@@ -200,13 +209,16 @@ revapp id poly
 //│ res: (int, bool,)
 
 // D3
-// runST argST
+runST argST
+//│ res: int
 
 // D4
-// app runST argST
+app runST argST
+//│ res: int
 
 // D5
-// runapp argST runST
+revapp argST runST
+//│ res: int
 
 
 // ============ E. η-expansion ============
@@ -285,26 +297,26 @@ a id
 :e
 choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.286: 	choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
+//│ ║  l.298: 	choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
 //│ ║         	                                  ^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║        	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──      	                    ^^
 //│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
 
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.299: 	a (fun x -> { u = x })
+//│ ║  l.311: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.299: 	a (fun x -> { u = x })
+//│ ║  l.311: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──      	                    ^^
 //│ res: ('b & 'a) -> ('b | {u: 'a}) | error
 
