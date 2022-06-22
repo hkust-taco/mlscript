@@ -1,0 +1,112 @@
+// ============ Sec 1.1 ============
+
+g = fun (f: forall 'a. 'a -> 'a) -> f f
+//│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│  = [Function: g]
+
+(fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+(fun g -> g (fun x -> x)) (fun (f: forall 'a. 'a -> 'a) -> f f)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+// ============ Sec 1.2 ============
+
+fun f -> f (g f)
+//│ res: ((forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
+//│    = [Function: res]
+
+// ============ Sec 4.1 ============
+
+let f = fun x -> x in 
+  let g = (fun x -> x) f in
+    g g
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
+
+:NoJS
+
+// ============ Sec 4.2 ============
+// using FCP to solve method typing issues,
+// which is overkill since it can be solved with subtyping and two levels of polymorphism...
+// all of the following are typable in the main branch
+
+// ------------ Dummy classes to represent the types in the examples ------------
+
+class Nil: {}
+class Cons[a]: { head: a; tail: List[a] }
+type List[a] = Nil | Cons[a]
+//│ Defined class Nil
+//│ Defined class Cons[+a]
+//│ Defined type alias List[+a]
+
+def Nil = Nil {}
+//│ Nil: Nil
+
+def Cons head tail = Cons { head; tail }
+//│ Cons: ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+
+// ------------ Type signatures for functions used in the examples ------------
+// (I guess)
+
+rec def mem x l = case l of
+  { Nil -> false
+  | Cons -> if eq l.head x then true else mem x l.tail
+  }
+//│ mem: anything -> 'a -> bool
+//│   where
+//│     'a <: (Cons[?] with {tail: 'a}) | Nil
+
+rec def fold_left f x l = case l of
+  { Nil -> x
+  | Cons -> fold_left f (f x l.head) l.tail
+  }
+//│ fold_left: ('a -> 'head -> 'a) -> 'a -> 'b -> 'a
+//│   where
+//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
+
+// ------------ polymorphic methods ------------
+
+class Collection[a]: { l: List[a] }
+  method Mem x = mem x this.l
+  method Fold f x = fold_left f x this.l
+//│ Defined class Collection[+a]
+//│ Defined Collection.Mem: Collection[?] -> anything -> bool
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
+
+def coll_mem c x = c.Mem x
+//│ coll_mem: Collection[?] -> anything -> bool
+
+// typo in the paper? it was `fun x -> fun y -> ...`
+def simple_and_double c =
+  let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
+  let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
+  (l1, l2)
+//│ simple_and_double: Collection['a | 'a0] -> (forall 'tail. 'tail, forall 'tail0. 'tail0,)
+//│   where
+//│     'tail0 :> (Cons[('a, 'a,)] with {tail: 'tail0}) | Nil
+//│     'tail :> (Cons['a0] with {tail: 'tail}) | Nil
+
+// ------------ subtyping & methods ------------
+
+class Float
+class Color
+class Point: { x: Float; y: Float }
+class ColorPoint: Point & { c: Color }
+class Circle: { x: Float; y: Float; r: Float }
+  method Distance: Point -> Float
+//│ Defined class Float
+//│ Defined class Color
+//│ Defined class Point
+//│ Defined class ColorPoint
+//│ Defined class Circle
+//│ Declared Circle.Distance: Circle -> Point -> Float
+
+c = error : Circle
+cp = error : ColorPoint
+c.Distance cp
+//│ c: Circle
+//│ cp: ColorPoint
+//│ res: Float
