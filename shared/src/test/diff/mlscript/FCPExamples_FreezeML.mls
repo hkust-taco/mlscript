@@ -49,8 +49,33 @@ def id: 'a -> 'a
 def length: List['a] -> int
 //│ length: List[?] -> int
 
-// TODO the other signatures
+def single: 'a -> List['a]
+//│ single: 'a -> List['a]
 
+def cons: 'a -> List['a] -> List['a]
+//│ cons: 'a -> List['a] -> List['a]
+
+def append: List['a] -> List['a] -> List['a]
+//│ append: List['a] -> List['a] -> List['a]
+
+def inc: int -> int
+//│ inc: int -> int
+
+def map: ('a -> 'b) -> List['a] -> List['b]
+//│ map: ('a -> 'b) -> List['a] -> List['b]
+
+def app: ('a -> 'b) -> 'a -> 'b
+//│ app: ('a -> 'b) -> 'a -> 'b
+
+def revapp: 'a -> ('a -> 'b) -> 'b
+//│ revapp: 'a -> ('a -> 'b) -> 'b
+
+def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+//│ flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
+
+// def runST: (forall 's. ST 's 'v) -> 'v
+
+// def argST: ST 's int
 
 // ============ A. polymorphic instantiation ============
 
@@ -123,14 +148,66 @@ fun xs -> poly (head xs)
 
 // ============ C. functions on polymorphic lists ============
 
+// C1
 length ids
 //│ res: int
 
+// C2
+tail ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+// C3
+head ids
+//│ res: 'a -> 'a
+
+// C4
+single id
+//│ res: List[forall 'a. 'a -> 'a]
+
+// C5
+cons id ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+// C6
+cons (fun x -> x) ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+// C7
+append (single inc) (single id)
+//│ res: List[int -> int]
+
+// C8
+def g: List['a] -> List['a] -> 'a
+g (single id) ids
+//│ g: List['a] -> List['a] -> 'a
+//│ res: 'a -> 'a
+
+// C9
+map poly (single id)
+//│ res: List[(int, bool,)]
+
+// C10
+map head (single ids)
+//│ res: List[forall 'a. 'a -> 'a]
+
 // ============ D. application functions ============
 
+// D1
+app poly id
+//│ res: (int, bool,)
 
-// TODO rest
+// D2
+revapp id poly
+//│ res: (int, bool,)
 
+// D3
+// runST argST
+
+// D4
+// app runST argST
+
+// D5
+// runapp argST runST
 
 // ============ E. η-expansion ============
 
@@ -149,6 +226,46 @@ k h lst
 k (fun x -> h x) lst
 //│ res: int -> 'a -> 'a
 
+// E3
+def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
+//│ r: (nothing -> (forall 'b. 'b -> 'b)) -> int
+r (fun x -> fun y -> y)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.232: 	r (fun x -> fun y -> y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.230: 	def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
+//│ ║         	                                 ^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.232: 	r (fun x -> fun y -> y)
+//│ ║         	                     ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.230: 	def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
+//│ ╙──       	                                 ^^
+//│ res: error | int
 
-// TODO rest
+// ============ F. FreezeML Programs ============
 
+// F5
+auto id
+//│ res: 'b -> 'b
+
+// F6
+cons (head ids) ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+// F7
+(head ids) 3
+//│ res: 3
+
+// F8
+choose (head ids)
+//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+
+// F9
+let f = revapp id in f poly
+//│ res: (int, bool,)
+
+// F10
+choose id (fun (x: ('a -> 'a)) -> auto' x)
+//│ res: (anything -> anything & 'a) -> ('a | 'b -> 'b)
