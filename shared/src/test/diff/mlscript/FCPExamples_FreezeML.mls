@@ -29,18 +29,11 @@ def choose: 'a -> 'a -> 'a
 def poly: (forall 'a. 'a -> 'a) -> (int, bool)
 //│ poly: (forall 'a. 'a -> 'a) -> (int, bool,)
 
-def auto : (forall 'a. 'a -> 'a') -> (forall 'b. 'b -> 'b)
-//│ auto: (nothing -> anything) -> (forall 'b. 'b -> 'b)
+def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
+//│ auto: (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 
-// NOTE: ^ this argument types is currently incorrectly SHOWN as `nothing -> anything` but it's correct internally:
-:ns
-auto
-//│ res: forall 'a'. forall 'a'. (forall 'a. 'a -> 'a') -> (forall 'b. 'b -> 'b)
-
-// ^ NOTE: `forall 'a'` is another artifact of the current type pretty-printing
-
-def auto' : (forall 'a. 'a -> 'a') -> 'b -> 'b
-//│ auto': (nothing -> anything) -> 'b -> 'b
+def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ auto': (forall 'a. 'a -> 'a) -> 'b -> 'b
 
 def ids: List[forall 'a. 'a -> 'a]
 //│ ids: List[forall 'a. 'a -> 'a]
@@ -79,6 +72,7 @@ def flip: ('a -> 'b -> 'c) -> 'b -> 'a -> 'c
 
 // def argST: ST 's int
 
+
 // ============ A. polymorphic instantiation ============
 
 // A1
@@ -103,22 +97,22 @@ fun x -> x x
 
 // A5
 id auto
-//│ res: (nothing -> anything) -> (forall 'b. 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 
 // A6
 id auto'
-//│ res: (nothing -> anything) -> 'b -> 'b
+//│ res: (forall 'a. 'a -> 'a) -> 'b -> 'b
 
 // A7
 choose id auto
-//│ res: (nothing -> anything & 'a) -> (forall 'b. 'a | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
 
 // A8
 :ns
 choose id auto'
-//│ res: forall 'a', 'b. 'c
+//│ res: forall 'b. 'c
 //│   where
-//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a', 'b. (forall 'a0. 'a0 -> 'a') -> 'b -> 'b)
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'b. (forall 'a0. 'a0 -> 'a0) -> 'b -> 'b)
 
 // A9
 def f: ('a -> 'a) -> List['a] -> 'a
@@ -138,6 +132,7 @@ poly (fun x -> x)
 id poly (fun x -> x)
 //│ res: (int, bool,)
 
+
 // ============ B. inference of polymorphic arguments ============
 
 // B1
@@ -147,6 +142,7 @@ fun f -> (f 1, f true)
 // B2
 fun xs -> poly (head xs)
 //│ res: List[forall 'a. 'a -> 'a] -> (int, bool,)
+
 
 // ============ C. functions on polymorphic lists ============
 
@@ -192,6 +188,7 @@ map poly (single id)
 map head (single ids)
 //│ res: List[forall 'a. 'a -> 'a]
 
+
 // ============ D. application functions ============
 
 // D1
@@ -210,6 +207,7 @@ revapp id poly
 
 // D5
 // runapp argST runST
+
 
 // ============ E. η-expansion ============
 
@@ -238,6 +236,7 @@ r (fun x -> fun y -> y)
 r
 //│ res: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
 
+
 // ============ F. FreezeML Programs ============
 
 // F5
@@ -261,12 +260,52 @@ let f = revapp id in f poly
 //│ res: (int, bool,)
 
 // F10
-choose id (fun (x: ('a -> 'a)) -> auto' x)
-//│ res: (anything -> anything & 'a) -> ('a | 'b -> 'b)
+a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto' x)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
 
-choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto' x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+a id
+//│ res: 'a -> 'a
 
 choose id (fun x -> auto' x)
-//│ res: (nothing -> anything & 'a) -> ('a | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+
+a = choose id auto'
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+
+a id
+//│ res: 'a -> 'a
+
+
+
+
+
+
+// ============ Expected error cases (useful for regression-testing error messages) ============
+
+:e
+choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.286: 	choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
+//│ ║         	                                  ^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║        	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──      	                    ^^
+//│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
+
+:e
+a (fun x -> { u = x })
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.299: 	a (fun x -> { u = x })
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
+//│ ║  l.299: 	a (fun x -> { u = x })
+//│ ║         	            ^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.35: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──      	                    ^^
+//│ res: ('b & 'a) -> ('b | {u: 'a}) | error
+
 
