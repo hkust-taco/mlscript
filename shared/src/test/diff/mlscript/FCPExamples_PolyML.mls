@@ -2,14 +2,17 @@
 
 // ============ Sec 1.1 ============
 
+// i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
 //│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│  = [Function: g]
 
+// i.e. auto id (FreezeML F5)
 (fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
+// i.e. (fun auto -> auto id) auto
 (fun g -> g (fun x -> x)) (fun (f: forall 'a. 'a -> 'a) -> f f)
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
