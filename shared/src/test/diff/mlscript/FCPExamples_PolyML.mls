@@ -37,37 +37,27 @@ let f = fun x -> x in
 
 // ------------ Dummy classes to represent the types in the examples ------------
 
-class Nil: {}
-class Cons[a]: { head: a; tail: List[a] }
-type List[a] = Nil | Cons[a]
-//│ Defined class Nil
-//│ Defined class Cons[+a]
-//│ Defined type alias List[+a]
+class List[a]
+  method Get: a
+//│ Defined class List[+a]
+//│ Declared List.Get: List['a] -> 'a
 
-def Nil = Nil {}
-//│ Nil: Nil
+// Used to represent `::` in the papers
+def cons[a]: a -> List[a] -> List[a]
+//│ cons: 'a -> List['a] -> List['a]
 
-def Cons head tail = Cons { head; tail }
-//│ Cons: ('head & 'a) -> (List['a] & 'tail) -> (Cons['a] with {head: 'head, tail: 'tail})
+// Used to represent `[]` in the papers
+def nil: List['a]
+//│ nil: List[nothing]
 
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
 
-rec def mem x l = case l of
-  { Nil -> false
-  | Cons -> if eq l.head x then true else mem x l.tail
-  }
-//│ mem: anything -> 'a -> bool
-//│   where
-//│     'a <: (Cons[?] with {tail: 'a}) | Nil
+def mem[a]: List[a] -> a -> bool
+//│ mem: List[?] -> anything -> bool
 
-rec def fold_left f x l = case l of
-  { Nil -> x
-  | Cons -> fold_left f (f x l.head) l.tail
-  }
-//│ fold_left: ('a -> 'head -> 'a) -> 'a -> 'b -> 'a
-//│   where
-//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
+def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
+//│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 // ------------ polymorphic methods ------------
 
@@ -75,21 +65,18 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> anything -> bool
+//│ Defined Collection.Mem: Collection[?] -> List[?] -> bool
 //│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: Collection[?] -> anything -> bool
+//│ coll_mem: Collection[?] -> List[?] -> bool
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
-  let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
-  let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
+  let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
+  let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'a0] -> (forall 'tail. 'tail, forall 'tail0. 'tail0,)
-//│   where
-//│     'tail0 :> (Cons[('a, 'a,)] with {tail: 'tail0}) | Nil
-//│     'tail :> (Cons['a0] with {tail: 'tail}) | Nil
+//│ simple_and_double: Collection['a | 'a0] -> (List['a0], List[('a, 'a,)],)
 
 // ------------ subtyping & methods ------------
 
