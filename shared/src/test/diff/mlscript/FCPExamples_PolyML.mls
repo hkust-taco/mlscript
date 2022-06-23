@@ -53,14 +53,25 @@ def cons[a]: a -> List[a] -> List[a]
 def nil: List['a]
 //│ nil: List[nothing]
 
+def match_list: forall 'a 'b. List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
+//│ match_list: List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
+
 // ------------ Type signatures for functions used in the examples ------------
 // (I guess)
 
-def mem[a]: List[a] -> a -> bool
-//│ mem: List[?] -> anything -> bool
+def mem[a]: a -> List[a] -> bool
+rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
+//│ mem: anything -> List[?] -> bool
+//│ anything -> List[?] -> bool
+//│   <:  mem:
+//│ anything -> List[?] -> bool
 
 def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
+rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
+//│   <:  fold_left:
+//│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 // ------------ polymorphic methods ------------
 
@@ -68,11 +79,11 @@ class Collection[a]: { l: List[a] }
   method Mem x = mem x this.l
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
-//│ Defined Collection.Mem: Collection[?] -> List[?] -> bool
+//│ Defined Collection.Mem: Collection[?] -> anything -> bool
 //│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: Collection[?] -> List[?] -> bool
+//│ coll_mem: Collection[?] -> anything -> bool
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
