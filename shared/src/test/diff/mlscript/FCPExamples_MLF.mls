@@ -1,0 +1,179 @@
+:NoJS
+
+// ------------ Dummy classes to represent the types in the examples ------------
+
+class List[a]
+  method Get: a
+//│ Defined class List[+a]
+//│ Declared List.Get: List['a] -> 'a
+
+class ST[S, A]
+  method Inv_S: S -> S
+  method Cov_A: A
+//│ Defined class ST[=S, +A]
+//│ Declared ST.Inv_S: ST['S, ?] -> 'S -> 'S
+//│ Declared ST.Cov_A: ST['S, 'A] -> 'A
+
+// ============ Type signatures for functions used in the examples ============
+
+def choose x y = if true then x else y
+//│ choose: 'a -> 'a -> 'a
+
+def id x = x
+//│ id: 'a -> 'a
+
+def auto (x: forall 'a. 'a -> 'a) = x x
+//│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
+def app f x = f x
+//│ app: ('a -> 'b) -> 'a -> 'b
+
+def inc: int -> int
+//│ inc: int -> int
+
+// Used to represent `::` in the papers
+def cons: 'a -> List['a] -> List['a]
+//│ cons: 'a -> List['a] -> List['a]
+
+// Used to represent `[]` in the papers
+def nil: List['a]
+//│ nil: List[nothing]
+
+def single: 'a -> List['a]
+//│ single: 'a -> List['a]
+
+def head: List['a] -> 'a
+//│ head: List['a] -> 'a
+
+def tail: List['a] -> List['a]
+//│ tail: List['a] -> List['a]
+
+def append: List['a] -> List['a] -> List['a]
+//│ append: List['a] -> List['a] -> List['a]
+
+def runST: (forall 's. ST['s, 'v]) -> 'v
+//│ runST: (forall 's. ST['s, 'v]) -> 'v
+
+def argST: ST['s, int]
+//│ argST: ST['s, int]
+
+// ============ 2003 ============
+
+// FreezeML A2
+choose id
+//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
+
+fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> ('a1 -> 'a1 & 'a1) -> 'a1
+
+choose id succ
+//│ res: int -> int
+
+// FreezeML A7
+choose id auto
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
+// nope, along with anything with it as a subterm
+omega = fun x -> x x
+//│ omega: ('a -> 'b & 'a) -> 'b
+
+// FreezeML A5
+id auto
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
+// i.e. auto id (FreezeML F5, PolyML 1.1)
+(fun x -> x id) auto
+//│ res: 'a -> 'a
+
+app auto id
+//│ res: 'a -> 'a
+
+// ------------ Sec 5.2 ------------
+
+// error in the paper? they claim this is typable
+:e
+let f = choose id in (f auto) (f succ)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.92: 	let f = choose id in (f auto) (f succ)
+//│ ║        	                     ^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.22: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ╙──      	                    ^^
+//│ res: int -> int | error
+
+// ============ 2009 ============
+
+// ------------ Sec 1.3 ------------
+
+(fun f -> (f 42, f "foo")) (fun x -> x)
+//│ res: (42, "foo",)
+
+(fun f -> (f succ, choose f omega)) (choose id)
+//│ res: (int -> int | 'a, forall 'b, 'c. ('b -> 'c & 'a & 'b) -> (int -> int | 'a | 'c),)
+
+// ------------ Sec 2.3.1 ------------
+
+(fun z -> z) omega
+//│ res: ('a -> 'b & 'a) -> 'b
+
+(fun x -> x x) id
+//│ res: 'a -> 'a
+
+fun z -> (z omega)
+//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+
+(fun y -> fun z -> z y) omega
+//│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
+
+fun z -> omega z
+//│ res: ('a -> 'b & 'a) -> 'b
+
+(fun x -> fun y -> x y) omega
+//│ res: ('a -> 'b & 'a) -> 'b
+
+// ------------ Sec 4.3 ------------
+// affects the order of bindings in the result type in MLF, not very interesting otherwise
+
+fun (x: forall 'a. 'a -> 'b -> 'a) -> x
+//│ res: (forall 'a. 'a -> 'b -> 'a) -> (forall 'a. 'a -> 'b -> 'a)
+
+fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
+//│ res: (forall 'a, 'b. 'a -> 'b -> 'a) -> (forall 'a, 'b. 'a -> 'b -> 'a)
+
+// ============ Leijen 2007 ============
+
+// ------------ Sec 2 ------------
+
+// nope
+poly = fun f -> (f 1, f true)
+//│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
+
+polyL = fun xs -> poly (head xs)
+//│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
+
+let ids = single id in (polyL ids, append ids (single inc))
+//│ res: ((1, true,), List[int -> int],)
+
+// ------------ Sec 5 ------------
+
+ids = single id
+//│ ids: List[forall 'a. 'a -> 'a]
+
+let f = choose nil in f ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+choose nil ids
+//│ res: List[forall 'a. 'a -> 'a]
+
+def g: (int -> (forall 'a. 'a -> 'a)) -> int
+//│ g: (int -> (forall 'a. 'a -> 'a)) -> int
+
+g (fun x -> id)
+//│ res: int
+
+let f = fun x -> id in g f
+//│ res: int
+
+// FreezeML D4
+app runST argST
+//│ res: int
