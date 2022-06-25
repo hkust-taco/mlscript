@@ -74,6 +74,7 @@ choose id auto
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 // nope, along with anything with it as a subterm
+// i.e. unannotated auto
 omega = fun x -> x x
 //│ omega: ('a -> 'b & 'a) -> 'b
 
@@ -81,7 +82,7 @@ omega = fun x -> x x
 id auto
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
-// i.e. auto id (FreezeML F5, PolyML 1.1)
+// ~ auto id (FreezeML F5, PolyML 1.1)
 (fun x -> x id) auto
 //│ res: 'a -> 'a
 
@@ -94,10 +95,10 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.92: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.96: 	let f = choose id in (f auto) (f succ)
 //│ ║        	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.22: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.25: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -105,17 +106,20 @@ let f = choose id in (f auto) (f succ)
 
 // ------------ Sec 1.3 ------------
 
+// ~ FreezeML B1
 (fun f -> (f 42, f "foo")) (fun x -> x)
 //│ res: (42, "foo",)
 
-(fun f -> (f succ, choose f omega)) (choose id)
-//│ res: (int -> int | 'a, forall 'b, 'c. ('b -> 'c & 'a & 'b) -> (int -> int | 'a | 'c),)
+(fun f -> (f succ, choose f auto)) (choose id)
+//│ res: (int -> int | 'b, (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | int -> int | 'b),)
 
 // ------------ Sec 2.3.1 ------------
 
+// i.e. id auto (FreezeML A5)
 (fun z -> z) omega
 //│ res: ('a -> 'b & 'a) -> 'b
 
+// i.e. auto id (FreezeML F5)
 (fun x -> x x) id
 //│ res: 'a -> 'a
 
@@ -148,6 +152,7 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 poly = fun f -> (f 1, f true)
 //│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
 
+// FreezeML B2
 polyL = fun xs -> poly (head xs)
 //│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
 
@@ -156,12 +161,15 @@ let ids = single id in (polyL ids, append ids (single inc))
 
 // ------------ Sec 5 ------------
 
+// FreezeML C5
 ids = single id
 //│ ids: List[forall 'a. 'a -> 'a]
 
+// Let-bound version of FreezeML A3
 let f = choose nil in f ids
 //│ res: List[forall 'a. 'a -> 'a]
 
+// FreezeML A3
 choose nil ids
 //│ res: List[forall 'a. 'a -> 'a]
 
