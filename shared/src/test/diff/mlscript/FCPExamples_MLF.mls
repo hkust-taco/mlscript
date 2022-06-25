@@ -1,5 +1,6 @@
 :NoJS
 
+
 // ------------ Dummy classes to represent the types in the examples ------------
 
 class List[a]
@@ -13,6 +14,7 @@ class ST[S, A]
 //│ Defined class ST[=S, +A]
 //│ Declared ST.Inv_S: ST['S, ?] -> 'S -> 'S
 //│ Declared ST.Cov_A: ST['S, 'A] -> 'A
+
 
 // ============ Type signatures for functions used in the examples ============
 
@@ -57,7 +59,8 @@ def runST: (forall 's. ST['s, 'v]) -> 'v
 def argST: ST['s, int]
 //│ argST: ST['s, int]
 
-// ============ 2003 ============
+
+// ============ Raising ML to the power of System F (2003) ============
 
 // FreezeML A2
 choose id
@@ -91,18 +94,65 @@ app auto id
 
 // ------------ Sec 5.2 ------------
 
-// error in the paper? they claim this is typable
+// Error in the paper (confirmed by Rémy via email).
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.96: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.99: 	let f = choose id in (f auto) (f succ)
 //│ ║        	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.25: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.27: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
-// ============ 2009 ============
+// Reproduced with an unnanotated auto:
+
+def auto2 x = x x
+//│ auto2: ('a -> 'b & 'a) -> 'b
+
+choose id auto2
+//│ res: ('a -> 'b & 'b & 'a) -> 'b
+
+:e
+res (choose id succ)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.117: 	res (choose id succ)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `int -> int` is not an instance of type `int`
+//│ ║  l.117: 	res (choose id succ)
+//│ ║         	               ^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.117: 	res (choose id succ)
+//│ ╙──       	     ^^^^^^^^^^^^^^
+//│ res: int -> int | error | int
+
+// ------------ Sec 6 ------------
+
+// (λ(y) y I ; y K) (λ(x) x x)
+// "typable in Fω but not in F [9]"
+// [9] P. Giannini and S. R. D. Rocca. Characterization of typings in polymorphic type discipline. In Third annual Symposium on Logic in Computer Science, pages 61–70. IEEE, 1988.
+
+// I := λx.x
+I x = x
+//│ I: 'a -> 'a
+
+// K := λx.λy.x
+K x y = x
+//│ K: 'a -> anything -> 'a
+
+(fun y -> let tmp = y I in y K) (fun x -> x x)
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+
+// Note: reduces to
+let tmp = (fun x -> x x) I in (fun x -> x x) K
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+
+// to
+let tmp = I I in K K
+//│ res: anything -> (forall 'a. 'a -> anything -> 'a)
+
+
+// ============ Recasting MLF (2009) ============
 
 // ------------ Sec 1.3 ------------
 
@@ -185,3 +235,4 @@ let f = fun x -> id in g f
 // FreezeML D4
 app runST argST
 //│ res: int
+
