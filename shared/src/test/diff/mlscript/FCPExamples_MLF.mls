@@ -126,6 +126,14 @@ res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
+// Didier Le Botlan suggested this fix by email:
+
+let f = choose id in (f auto, f succ)
+//│ res: (forall 'b. (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | 'b), forall 'b. (int & 'b) -> (int | 'b),)
+
+let f = choose id in (f auto2, f succ)
+//│ res: (forall 'a, 'b, 'c. ('a -> 'b & 'c & 'a) -> ('c | 'b), forall 'c. (int & 'c) -> (int | 'c),)
+
 // ------------ Sec 6 ------------
 
 // (λ(y) y I ; y K) (λ(x) x x)
