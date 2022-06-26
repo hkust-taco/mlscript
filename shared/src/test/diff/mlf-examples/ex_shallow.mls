@@ -1,0 +1,82 @@
+// type sid = ['a] 'a -> 'a;;
+// type nat = ['a] ('a -> 'a) -> 'a -> 'a
+
+// let auto (x:sid) = x x
+// let id x = x
+// let k x y = x
+
+// (* church_zero is like the sequence *)
+// let church_zero = fun f -> id
+
+// (* church_un is like apply *)
+// let church_one = fun f x -> f x
+
+// (* church_un is like apply_twice *)
+// let church_two = fun f x -> f (f x)
+
+// let church_succ n = fun f x -> f (n f x)
+
+// (* We build the a0 of the icfp version paper *)
+// type a1 = ['b] ['a > sid] ('a -> 'b) -> 'b
+// let a1 = fun f -> f id;;
+// let a3 = (fun z z' -> z church_two);;
+// let a2 (x:a1) =  (x auto); (fun y -> x y; y church_succ) a3;;
+// let a0 = a2 a1;;
+
+// let test0 = 
+//   (fun f -> f (fun h -> h id))
+//     (fun (g:a1) ->
+//       k (g (fun (x:sid) -> x x))
+//         ((fun t -> (fun u v -> v) (g t) (t (fun f x -> x)))
+//            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
+// ;;
+
+
+// (** Encoding in F+eta **)
+// (* we repace sa by sb and build a coercion function form sb to sc *)
+
+// type a1_sid = ['b] ['a = sid] ('a -> 'b) -> 'b;;
+// type a1_nat = ['b] ['a = nat -> nat] ('a -> 'b) -> 'b;;
+
+// let a1_sid_to_nat (g : a1_sid) =
+//   let r = fun f -> g (fun (x : sid) -> f x) in
+//   (r : a1_nat);;
+
+// (* the term is as above but abstract over sb and uses the coercion *)
+
+// let test_in_F_eta = 
+//   (fun f -> f (fun h -> h id))
+//     (fun (g : a1_sid) ->
+//       k (g (fun (x : sid) -> x x))
+//         ((fun t -> (fun u v -> v) ((a1_sid_to_nat g) t) (t (fun f x -> x)))
+//            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
+// ;;
+
+// (*
+// (* Le terme dans la syntaxe de Joe Wells *)
+//   (fn f => f (fn h => h id))
+//     (fn g => 
+//         k (g (fn x => x x))
+//           ((fn t => (fn u v => v) (g t) (t (fn f x => x)))
+//              (fn x => ((fn f x => f x) x) (fn f x => x))))
+
+// *)
+
+// (* We can also build a version of a0 that should not be in F+eta. 
+// To do that we require x to return its argument. 
+// *)
+
+// type a1' = ['a > sid] ('a -> 'a) -> 'a -> 'a;;
+
+// let either x y = if true then x else y;;
+// let a1' = fun f x -> f (f (either id x));;
+// let a2' (x:a1') = x auto id; (fun y -> x y church_two; y church_succ) a3;;
+// let a0' = a2' a1';;
+
+// type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;
+// type a1'_nat = ['a = nat] ('a -> 'a) -> 'a -> 'a;;
+
+// (* There is no coercion from a1'_sid to a1'_nat, hence we can conjecture that a0'
+//    is not in F+eta. *)
+
+

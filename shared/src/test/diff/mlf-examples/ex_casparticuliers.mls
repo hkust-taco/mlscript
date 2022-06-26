@@ -1,0 +1,68 @@
+
+// (*** L'annotation est n�cessaire sur z, mais z n'est utilis� qu'une seule fois. ***)
+// type sid = ['a] 'a -> 'a
+
+// let t (z:sid) = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a )
+
+// (* Une seule instance, mais polymorphe. *)
+// let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
+
+
+// (*** Ne type pas avec les value-restriction. Emb�tant. ***)
+
+// type Int = ['a] ('a -> 'a) -> ('a -> 'a)
+// ;;
+
+// let zero f x = x
+// ;;
+
+// let succ (n:Int) = fun f x -> f (n f x)
+// ;;
+
+// let rec to_church n =
+//   if n = 0 then zero
+//   else succ (to_church (n-1))
+// ;;
+
+// (* Marche *)
+// let rec to_church n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1) : Int) f x)
+// ;;
+
+// (* Ne Marche Pas *)
+// let rec to_church n =
+//   if n = 0 then fun f x -> x
+//   else (fun f x -> f ((to_church (n-1)) f x) : Int)
+// ;;
+
+
+// (* La r�cursion est monomorphe. *)
+// let rec to_church n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1)) f x)
+// ;;
+
+// (* Echoue avec la value restriction. *)
+// let rec (to_church:int -> Int) n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1)) f x)
+// ;;
+
+// (* �a coince. *)
+// let tc n = (to_church n : Int);;
+
+// (* Avec la value restriction : �a passe. *)
+// let rec to_church n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1) : Int) f x)
+
+
+// (*** Les annotations de type ne commutent pas. ***)
+// type sid = ['a] 'a -> 'a
+// type z = ['a,'b] ('a -> 'b) -> ('a -> 'b)
+
+// let f x = (x:sid), ((x:sid):z)
+
+// (* Ne type pas ... c'est une instance polymorphe. Interdit. *)
+// untype fun x -> (x:sid), (x:z)

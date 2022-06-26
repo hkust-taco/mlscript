@@ -1,0 +1,17 @@
+// (* Value restriction. *)
+// let id x = x 
+// untype let x = id id in x 1, x true
+// untype let x = (id id:'a) in x 1, x true
+// ;;
+
+// type sid = ['a] 'a -> 'a
+// ;;
+
+// let annot x = (x:sid)
+// ;;
+
+// let delta x = let y = (x:sid) in y y
+// ;;
+
+// untype fun x -> let y = (annot x) in y y
+// ;;

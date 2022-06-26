@@ -1,0 +1,59 @@
+// type sid = ['a] 'a -> 'a
+
+// let choose x y = if true then x else y
+// let choose3 x y z = (choose (choose x y) z)
+// let id = (fun x -> x : sid)
+// let succ n = n + 1
+
+// let test = choose3 id
+// let test2 = test succ
+
+// (* Messages d'erreur foireux : *)
+// type s1 = ['a] 'a -> int * int ;;
+// type s2 = ['a] 'a -> bool * bool ;
+// fun x y -> ((x:s1),(y:s2), if true then x else y) ;; 
+// fun x y -> ((x:s1),(y:s2), x x) ;; 
+
+// (* please onlyweak ['b = sid] 'b -> 'b : sid -> sid *)
+
+// (*
+// let example f = (f:['a] 'a -> int -> 'b) f
+// let mkpair x y = (x,y)
+
+// untype example mkpair
+// (* �a echoue parce qu'on instancie 'b avec un type contenant 'a *)
+// (* Il faudrait que le message d'erreur soit plus clair. *)
+// *)
+
+// let make_ex3 x (f:['a > sid] 'a -> 'b ) = f x 
+
+// let ex_list3 = [ make_ex3 succ ;
+// 		 make_ex3 id ;
+// 		 make_ex3 not ]
+
+// (*let test3 = listiter (open (fun v -> choose v id)) ex_list3  *)
+// (* Meme message d'erreur je crois. *)
+
+// type i = int
+// (* Affichage : nom des variables ??? *)
+// please unify ['a1 = ['a2 = ['a3 = ['a4 = ['a5 = 0] 'a5 -> i]
+//                                         ('a4 -> i) -> i]
+//                                         ('a3 -> i) -> i] 'a2 -> i] 'a1 -> i
+//          :   ['b1 = ['b2 = ['b3 = ['b4 = 0] ('b4 -> i) -> i]
+//                                         ('b3 -> i) -> i]
+//                                         ('b2 -> i) -> i] 'b1 -> i
+
+// (* Cet exemple cr�e un graphe mal form�. *)
+// please failon_unify ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> list ('c)] 'b -> 'a
+
+// (* Plus simple *)
+// please failon_unify ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> 'c] 'b -> 'a
+
+// (* Extrusion automatique de binders. *)
+// please unify  ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+//           :   ['a] ['b > ['c] 'c -> 'c] 'b -> 'a
+//           =   ['c] ('c -> 'c) -> 'c
+
+

@@ -1,0 +1,170 @@
+// (* A quick demo of MLF *)
+
+// (* In the following, "untype expr" means that the expression expr should not be typable. *)
+
+// type sid = ['a] 'a -> 'a
+// let id = fun x -> x
+// let delta = fun (x:sid) -> x x
+// let choose x y = if true then x else y
+// let succ n = n + 1
+// ;;
+// let test1 = delta id
+// untype delta succ
+// let test2 = delta (choose id id)
+// untype delta (choose id succ)
+// let test3 = choose id succ
+// let test4 = choose succ id
+// ;;
+
+// let eqstring s1 s2 = (s1^"A" = s2^"A")
+// let eqint i1 i2 = (i1 - i2) = 0
+// let eqbool b1 b2 = if b1 then b2 else (not b2)
+// let ignore x = ()
+// let rec listiter f ll =
+//   if ll = [] then ()
+//   else begin ignore (f (car ll)) ; listiter f (cdr ll) end
+// ;;
+
+
+// (* Polymorphic recursion. *)
+// untype let rec id x = if true then x else id id x in id
+// let rec (id:sid) x = if true then x else id id x
+
+
+
+
+// (* Existential types. *)
+// (* Creating an encapsulation is explicit (unavoidable). *)
+// (* Here, we build (Exist 'a . 'a * ('a -> unit))              *)
+// (*        then    (Exist 'a . 'a * 'a * ('a -> 'a -> bool))   *)
+// let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
+// let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
+// ;;
+
+// let ex_list1 = [ make_ex1 ("A String", print_string) ; 
+// 		 make_ex1 (8250, print_int) ;
+// 		 make_ex1 (true, print_bool) ]
+// ;;
+// let ex_list2 = [ make_ex2 ("String", "String", eqstring) ;
+// 		 make_ex2 ( 1250, 4890, eqint) ;
+// 		 make_ex2 ( true, false, eqbool) ]
+// ;;
+
+// let test1 = listiter (fun ex -> ex (fun p -> (snd p) (fst p))) ex_list1
+// ;;
+// let test2 = listiter (fun ex -> ex (fun t -> 
+//   let arg1 = fst t
+//   and arg2 = fst (snd t)
+//   and eqf  = snd (snd t) in
+//   let areequal = eqf arg1 arg2
+//   in print_bool areequal )) ex_list2
+// ;;
+
+// (* Some examples for MLF inspired by standard encoding in System F. *)
+
+// type Void   = ['x] 'x
+// type Unit   = ['x] 'x -> 'x
+// type Int    = ['x] ('x -> 'x) -> ('x -> 'x)
+// type Bool   = ['x] (Unit -> 'x) -> (Unit -> 'x) -> 'x 
+
+// type Sum    = ['x] (Int -> 'x) -> (Int -> 'x) -> 'x
+// type Pair   = ['x] (Int -> Int -> 'x) -> 'x
+// type Triple = ['x] (Int -> Int -> Int -> 'x) -> 'x
+
+// (* Unit *)
+// let c_unit = fun x -> x
+
+// (* BOOLEANS, IFS, AND, OR, NOT. *)
+// let c_true  = fun a b -> a c_unit
+// let c_false = fun a b -> b c_unit
+// let c_if (cond:Bool) c_then c_else = cond c_then c_else 
+// let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
+// let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
+// let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
+// let c_or = (c_or : Bool -> Bool -> Bool)
+
+// (* CONSTRUCTORS FOR PAIRS ET TRIPLES. *)
+// let c_pair x y   = fun f -> f x y
+// let c_trip x y z = fun f -> f x y z
+
+// (* PROJECTIONS FOR PRODUCTS. *)
+// let c_1_2 (p:Pair) = p (fun x y -> x) 
+// let c_2_2 (p:Pair) = p (fun x y -> y) 
+// let c_1_3 (t:Triple) = t (fun x y z -> x) 
+// let c_2_3 (t:Triple) = t (fun x y z -> y) 
+// let c_3_3 (t:Triple) = t (fun x y z -> z) 
+
+// (* CONSTRUCTOR FOR A BINARY SUM. *)
+// let c_sumg = fun x fg fd -> fg x
+// let c_sumd = fun x fg fd -> fd x
+
+// (* CASE FOR A SUM. *)
+// let c_case (s:Sum) g d = s g d
+
+// (* Integers. *)
+// let c_i0 = fun f x ->   x
+// let c_i1 = fun f x -> f x
+// let c_i2 = fun f x -> f (f x)
+// let c_succ (n:Int) = fun f x -> n f (f x)
+// let c_iszero (n:Int) = n (fun x -> c_false) c_true
+// let c_add n (m:Int) = m c_succ n
+// let c_mul n (m:Int) = m (c_add n) c_i0
+// let c_pow n (m:Int) = m (c_mul n) c_i1
+
+// let c_pred (n:Int) =
+//    let s p = c_pair (c_2_2 p) (c_succ (c_2_2 p))
+//   and z = c_pair c_i0 c_i0 in
+//   c_1_2 (n s z)
+
+// let c_printint (n:Int) = print_int (n (fun x -> x+1) 0); print " "
+
+// let c_i2 = c_succ c_i1
+// let c_i3 = c_succ c_i2
+// let c_i4 = c_succ c_i3
+
+// (* Fails with value restriction. *)
+// (* Passes with relaxed value restriction. *)
+// let rec (to_church:int -> Int) n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1)) f x)
+
+
+// let rec to_church n =
+//   if n = 0 then fun f x -> x
+//   else fun f x -> f ((to_church (n-1)) f x)
+
+
+// let rec c_fact (n:Int) =
+//   c_if (c_iszero n) (fun (u:Unit) -> c_i1)
+//     (fun (u:Unit) -> c_mul n (c_fact (c_pred n)))
+
+// let print_fact n =
+//   print_string "Factorial " ;
+//   print_int n ;
+//   print_string " = " ;
+//   c_printint (c_fact (to_church n)) ;
+//   print_string "\n" ;
+//   ()
+
+// let essai =
+//   print_string "Church integers :\n";
+//   let c_i5 = c_add c_i3 c_i2 in
+//   let c_i10 = c_mul c_i5 c_i2 in
+//   let c_i9 = c_pred c_i10 in
+//   let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//   let c_98 = c_pred c_99 in
+//   print_string "This should be 98 : " ;
+//   c_printint c_98;
+//   print_string "\n\n" ;
+
+//   print_fact 0 ;
+//   print_fact 1 ;
+//   print_fact 2 ;
+//   print_fact 3 ;
+//   print_fact 4 ;
+//   print_fact 5 ;
+//   print_fact 6 ;
+//   ()
+
+
+

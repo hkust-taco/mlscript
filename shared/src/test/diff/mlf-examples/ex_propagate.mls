@@ -1,0 +1,17 @@
+// (* Use option -pa *)
+
+// type sid = ['a] 'a -> 'a
+
+// let delta = (fun x -> x x : sid -> 'b)
+// let k = ((fun x y -> y) : ['a] 'a -> sid)
+
+// let id x = x
+// let id' = (id : sid -> sid)
+
+// (* Next: We do not give enough information. *)
+// untype fun x -> ((fun y -> y y) : 'a -> sid)
+
+// let (delta:sid -> sid) = fun x -> x x
+// let (delta:sid -> 'b) = fun x -> x x
+
+// untype let (delta:'a -> sid) = fun x -> x x in delta

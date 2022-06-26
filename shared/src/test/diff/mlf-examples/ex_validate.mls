@@ -1,0 +1,374 @@
+// (* Ces exemples permettent de tester durement le syst�me de types. *)
+
+// type id = ['a] 'a -> 'a
+
+// let choose x y = if true then x else y
+// let succ n = n + 1
+// let z = (succ : int -> int)
+// let id x = x
+// let z = choose (id:id) id
+// let z = (choose id succ) 10
+// let z = (choose succ id) 10
+// untype fun x -> x x
+// let delta (x:id) = x x
+// let z = delta (delta id)
+// untype delta succ
+// let z = delta (choose id id)
+
+// let step g = (g 1) - (g 0)
+// let apply_to_id f = f id
+// let test1 = apply_to_id step
+// let test2 = apply_to_id delta
+
+// type s  = ['a] list ('a) -> bool
+// let annote_s (x:id) = (x : s -> s)
+
+// let isnil l = l = []
+
+// passif value_restriction
+// let t = fun x y ->
+//   let isnil = (annote_s x) y in
+//   (isnil [ 1 ; 2 ; 3] , isnil [] , isnil ["ok"] , isnil [true])
+// in t id isnil
+
+// untype fun x y ->
+//   let isnil = (x:id) y in
+//   (isnil [ 1 ; 2 ; 3] , isnil [] , isnil ["ok"] , isnil [true])
+
+// (*let t1 = f delta	
+// let t2 = f step*)
+
+// let partage x = choose id x
+// let departage x = choose id (x:id)
+
+// let delta' = fun x -> (departage x) x
+// untype fun x -> partage x x
+
+// let t = fun x -> (x:id) x, x
+// let t = fun (x:id) -> x x, (x:id)
+// let t = fun (x:id) -> x x, x
+// untype fun x -> x (x:id), x
+// untype fun x -> x x, (x:id)
+// untype fun x -> (x:id), x x
+
+// let ig x = () (* ignore *)
+
+// (* The following is not typable in System F (afaik) *)
+// let aa f = f id
+// untype fun g -> ig (g delta) ; (fun t -> ig (g t) ; t succ) (fun x -> succ (x 8))
+// let ff = fun (g:['a > id] ['b] ('a -> 'b) -> 'b) ->
+//         ig (g delta) ; (fun t -> ig (g t) ; t succ) (fun x -> succ (x 8))
+
+// let bigtest = ff aa
+
+// (* Variable libre / variable li�e dans les annotations. *)
+// let example f = (f:['a] 'a -> int -> 'b) f
+// let mkpair x y = (x,y)
+
+// untype example mkpair
+// (* �a echoue parce qu'on instancie 'b avec un type contenant 'a *)
+// (* Il faudrait que le message d'erreur soit plus clair. *)
+
+
+
+// (* Exemple MLF avec des fonctions et des constructions r�cursives. *)
+
+// let rec x = 1 :: y
+// and     y = 2 :: x
+
+// let print_int x = print_string "#"; print_int x; print_string " "
+// let intprint x = print_int x
+
+// let myNil l = l = []
+
+// let rec append x l =
+//   if l = [] then [x]
+//   else (car l)::(append x (cdr l))
+
+// let rec map l f =
+//  if l = [] then []
+//  else (f (car l)) :: (map (cdr l) f)
+
+// let message () = print "** MESSAGE **"
+
+// let intfa f = f 15
+
+// let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
+
+// let voyage (f:'p -> 'q) x y = (y, f x)
+
+// let main =
+
+//   let print_sep s l =
+
+//     let max_depth = 20 in
+
+//     let rec alpha = print_list
+//     and print_list n l =
+
+//       if not(n < 0) then
+
+// 	if nil l then print_string "]"
+// 	else 
+// 	  begin
+// 	    intprint (car l);
+// 	    print_string s;
+// 	    print_list (n-1) (cdr l)
+// 	  end
+//       else 
+// 	begin
+// 	  print_string ("... ]");
+// 	  (* failwith ("T�te de liste : "^(string_of_int (car l))) *)
+// 	end
+//     in
+//     print_string "[";
+//     print_list max_depth l;
+
+//   in
+
+//   print (myNil [1;2]);
+//   print " ";
+//   print (myNil ["foo";"bar"]);
+//   print "\n";
+
+//   let ll = [10; 20; 30; 40] @ [50; 60; 70] in
+//   let ll2 = append 80 ll in
+//   print_sep "; " ll2;
+//   print_string "\n";
+//   print_sep "" x;
+
+//   ()
+
+// (* Des probl�mes d'unification � gogo. *)
+// type sid = ['a] 'a -> 'a
+// type siid = ['a,'b] ('a -> 'b) -> ('a -> 'b)
+// type sdup = ['a,'b] ('a -> 'a) -> ('b -> 'b)
+// type sdip = ['a]    ('a -> 'a) -> ('a -> 'a)
+// type i = int
+// type j = bool
+
+// (*  PAGE 1 *)
+
+// please unify ['a > ['a0 > sid] i -> 'a0] 'a -> 'a 
+// (* with *) :   ['c > sdup] (i -> 'c) -> (i -> 'c)
+// (* Result should be *) 
+//          =   ['a0 > sdip] ['a = i -> 'a0] 'a -> 'a
+
+// please unify ['a > ['a0 > sid] i -> 'a0] ['b > ['b0 > siid] j -> 'b0] 'a -> 'b
+//          :   ['c > sdup] (i -> 'c) -> (j -> 'c)
+//          =   ['c0 > sdip] (i -> 'c0) -> (j -> 'c0)
+
+// please unify ['a > sid, 'b > sdup] 'a -> 'b  :   sid
+//          =   ['a > sdip] 'a -> 'a
+
+// please failon_unify ['a > sid, 'b = sdup] 'a -> 'b  :   sid
+
+// please unify ['a > sid, 'b = siid] 'a -> 'b  :   sid
+//          =   ['a = siid] 'a -> 'a
+
+// please unify ['a > ['a1 > sid, 'a2 > siid] 'a1 -> 'a2] 'a -> 'a
+//          :   ['c > ['c2 > siid] (i -> i) -> 'c2] 'c -> 'c
+//          =   ['a > ['c2 > siid] (i -> i) -> 'c2] 'a -> 'a
+
+// please unify ['a > ['a0 > siid] ('a0 -> i) -> i] 'a -> 'a
+//          :   ['a > ['a0 > sdup] 'a0 -> i] ('a -> i) -> ('a -> i)
+//          =   ['c0 > sdip, 'c = 'c0 -> i] ('c -> i) -> ('c -> i)
+
+// please unify ['a > sid] ['b1 > ['c] 'c -> 'a]    ['c1 > ['c3] 'c3 -> 'a] 'b1 -> 'c1
+//          :   ['a > sid] ['b2 > ['c] 'c -> i -> i, 'c2 = ['c3] 'c3 -> 'a] 'b2 -> 'c2
+//          =   ['a = i -> i] ['b1 > ['c] 'c -> 'a] ['c1 = ['c3] 'c3 -> 'a] 'b1 -> 'c1
+
+// please unify ['a > sid] ['b > sdup] ('b -> 'b) -> 'a
+//          :   ['c > sid] 'c -> 'c
+//          =   ['b > sdup] ('b -> 'b) -> ('b -> 'b)
+
+// please failon_unify ['a] ['b = ['b0] 'b0 -> 'a] 'a -> 'b : sid
+
+
+// (* PAGE 2 *)
+// please unify ['a1 = ['b1 = sdup] ['c] 'c -> 'b1] 'a1 -> i
+//          :   ['b2 = sdup] ['a2 = ['c3] 'c3 -> 'b2] 'a2 -> i
+//          =   ['b2 = sdup] ['a2 = ['c3] 'c3 -> 'b2] 'a2 -> i
+
+// please unify ['a1 = ['a2 = ['a3 = sdup] ['c] 'c -> 'a3 -> 'a3] 'a2 -> i] 'a1 -> i
+//          :   ['a1 = ['a3 = sdup] ['a2 = ['c] 'c -> 'a3 -> 'a3] 'a2 -> i] 'a1 -> i
+//          =   ['a1 = ['a3 = sdup] ['a2 = ['c] 'c -> 'a3 -> 'a3] 'a2 -> i] 'a1 -> i
+
+// please failon_unify ['a1 = ['a2 > sdup] 'a2 -> 'a2] 'a1 -> i
+//          :   ['a2 = sdup] ['a1 = 'a2 -> 'a2] 'a1 -> i
+
+// please failon_unify ['a1 = ['a2 > sdup] ['a3 = ['a4 > siid] 'a2 -> 'a4] ['a5] 'a5 -> 'a3 -> i] 'a1 -> i
+//          :   ['b2 > sdup] ['b3 = ['b4 > siid] 'b2 -> 'b4] ['b1 = ['b5] 'b5 -> 'b3 -> i] 'b1 -> i
+
+// please unify ['a1 = ['a2 = sdup, 'a3 = sdup] 'a2 -> 'a3] 'a1 -> i
+//          :   ['a1 = ['a = sdup] 'a -> 'a] 'a1 -> i
+//          =   ['a1 = ['a = sdup] 'a -> 'a] 'a1 -> i
+
+// please unify ['a1 = ['a2 = sdup, 'a3 = sdup] 'a2 -> 'a3] 'a1 -> i
+//          :   ['a1 > ['a] 'a -> 'a] 'a1 -> i
+//          =   ['a1 = ['a = sdup] 'a -> 'a] 'a1 -> i
+
+// please unify ['a1 = ['a2 = ['a3 = sdup] ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+//          :   ['a3 = sdup] ['a1 = ['a2 = ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+//          =   ['a3 = sdup] ['a1 = ['a2 = ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+
+// please failon_unify ['a1 = ['a2 = ['a3 > sdup] ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+//          :   ['a3 = sdup] ['a2 = ['b] 'b -> 'a3 -> i] ['a1 = ['c] 'c -> 'a2 -> i] 'a1 -> i
+
+// please unify ['a = ['a2 = ['b1 = sdup] i -> 'b1] ['a1 > ['c] 'c -> 'a2] 'a1 -> 'a1] 'a -> 'a
+//          :   ['b1 = sdup] ['a = ['a1 > ['c] 'c -> i -> 'b1] 'a1 -> 'a1] 'a -> 'a
+//          =   ['b1 = sdup] ['a = ['a1 > ['c] 'c -> i -> 'b1] 'a1 -> 'a1] 'a -> 'a
+
+// please unify ['b > sid, 'a = ['a1 = siid, 'a2 = ['c] 'a1 -> 'b -> 'c, 'a3 = ['c] 'a1 -> 'c] 'a2 -> 'a3] 'a -> 'a
+//          :   ['a = ['a1 = siid, 'a2 = ['c] 'a1 -> (i -> i) -> 'c, 'a3 = ['c] 'a1 -> 'c] 'a2 -> 'a3] 'a -> 'a
+//          =   ['a = ['a1 = siid, 'a2 = ['c] 'a1 -> (i -> i) -> 'c, 'a3 = ['c] 'a1 -> 'c] 'a2 -> 'a3] 'a -> 'a
+
+// please unify ['a1 = ['a2 = ['a3 = siid] i -> 'a3] j -> 'a2] i -> 'a1
+//          :   ['a3 = siid] i -> j -> i -> 'a3
+//          =   ['a3 = siid] i -> j -> i -> 'a3
+
+// please failon_unify ['a1 = ['a2 = ['a3 = sdup] ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+//          :   ['a3 = sdup] ['a1 = ['a2 > ['b] 'b -> 'a3 -> i] ['c] 'c -> 'a2 -> i] 'a1 -> i
+
+
+// please unify ['a1 = ['a2 = ['a3 = ['a4 = ['a5 = 0] 'a5 -> i]
+//                                         ('a4 -> i) -> i]
+//                                         ('a3 -> i) -> i] 'a2 -> i] 'a1 -> i
+//          :   ['b1 = ['b2 = ['b3 = ['b4 = 0] ('b4 -> i) -> i]
+//                                         ('b3 -> i) -> i]
+//                                         ('b2 -> i) -> i] 'b1 -> i
+//          =   ['c1 = ['c5 = 0] ((((('c5 -> i) -> i) -> i) -> i) -> i) -> i] 'c1 -> i
+
+// please unify ['a1 > ['a2 > ['a3 > ['a4 > ['a5 > siid] 'a5 -> i]
+//                                         ('a4 -> i) -> i]
+//                                         ('a3 -> i) -> i] 'a2 -> i] 'a1 -> i
+//          :   ['b1 > ['b2 > ['b3 > ['b4 > sdup] ('b4 -> i) -> i]
+//                                         ('b3 -> i) -> i]
+//                                         ('b2 -> i) -> i] 'b1 -> i
+//          =   ['c1 > ['c5 > sdip] ((((('c5 -> i) -> i) -> i) -> i) -> i) -> i] 'c1 -> i
+
+// (* Avec deux quantificateurs � remonter. *)
+// please unify ['a2 > ['a4 > ['a6,'a7] ('a6 -> 'a7) -> i ] ('a4 -> i) -> i ] ('a2 -> i) -> i
+//          :   ['b1 > ['b3 > ['b5 > ['b6,'b7] 'b6 -> 'b7 ] ('b5 -> i) -> i ] ('b3 -> i) -> i ] 'b1 -> i
+//          =   ['c6,'c7] ((((('c6 -> 'c7) -> i) -> i) -> i) -> i) -> i
+
+
+// (* Cet exemple cr�e un graphe mal form�. *)
+// please failon_unify ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> list ('c)] 'b -> 'a
+
+// (* Plus simple *)
+// please failon_unify ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> 'c] 'b -> 'a
+
+// (* Extrusion automatique de binders. *)
+// please unify  ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+//           :   ['a] ['b > ['c] 'c -> 'c] 'b -> 'a
+//           =   ['c] ('c -> 'c) -> 'c
+
+// (* Plus compliqu�. *)
+// please unify  ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+//           :   ['a] ['b > ['c] 'c -> list ('c)] 'b -> 'a
+//           =   ['c] ('c -> list ('c)) -> list ('c)
+
+// (* Variante *)
+// please unify  ['a] ['b > ['c] ['d] 'c -> 'd] 'b -> 'a
+//           :   ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+//           =   ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+
+// please failon_unify  ['a] ['b = ['c] ['d] 'c -> 'd] 'b -> 'a
+//           :   ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+
+
+// please unify ['a] ['b > ['c] ['d > ['e] 'c -> 'e] 'c -> 'd] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+//          =   ['c] ['a > ['e] 'c -> 'e] ('c -> 'a) -> 'a
+
+// please unify ['a] ['b > ['f] ['c] ['d > ['e] 'c -> 'e] 'f * 'c * 'd] 'b -> 'a
+//          :   ['a] ['b > ['f] ['c] 'f * 'c * 'a] 'b -> 'a
+//          =   ['c] ['a > ['e] 'c -> 'e] ['b > ['f] ('f * 'c * 'a)] 'b -> 'a
+
+// please failon_unify ['a] ['b = ['c] ['d > ['e] 'c -> 'e] 'c -> 'd] 'b -> 'a
+//          :   ['a] ['b > ['c] 'c -> 'a] 'b -> 'a
+
+// please failon_unify ['a] ['b > ['c] ['d > ['e] 'c -> 'e] 'c -> 'd] 'b -> 'a
+//          :   ['a] ['b = ['c] 'c -> 'a] 'b -> 'a
+
+
+
+// please unify ['a] ['b > ['b1] ['c > ['c1] ['d > ['d1] list ('b1 * 'c1 * 'd1)] list ('d) ] list ('c) ] 'b -> 'a
+//          :   ['a] (list (list (list ('a)))) -> 'a
+//          =   ['b1] ['c1] ['d1] (list (list (list ('b1 * 'c1 * 'd1)))) -> ('b1 * 'c1 * 'd1)
+
+
+// please notequiv ['b]['c] ('b * 'c)  -> ('b * 'c)
+//          :   ['b]['c] ('b * 'c)  -> ('c * 'b)
+
+// (* Unification d'une variable avec un sch�ma de types. *)
+// type sid = ['a] 'a -> 'a
+// let id y = y
+// let succ n = n + 1
+// let test = fun (x:'a) -> ((x:sid) , if true then x else id)
+// untype fun (x:'a) -> ((x:sid) , if true then x else succ)
+
+
+// (* Typable dans MLF, mais pas dans systeme F. *)
+// type sid = ['a] 'a -> 'a
+// type sa = ['b] ['a > sid] ('a -> 'b) -> 'b
+
+
+// let auto (x:sid) = x x
+// let id x = x
+// let k x y = x
+
+// let church_zero = fun f -> id
+// let church_un = id
+// let church_succ n = fun f x -> f (n f x)
+// untype fun g -> k (g auto) ((fun t -> g t ; t church_un) (fun x -> (church_succ x) church_zero))
+// let f  = fun (g:sa) -> k (g auto) ((fun t -> g t ; t church_un) (fun x -> (church_succ x) church_zero))
+// let a = fun f -> f id
+
+// let app x y = x y
+// let test1 = f a
+// let test2 = app f a
+
+
+// (* Create occur-checks. *)
+// please failon_unify ['b] 'b -> ('b -> 'b)
+//          :   ['a > ['c] ('c -> 'c) -> ('c -> 'c)]
+//                   'a -> 'a
+
+// please failon_unify ['i] 'i -> 'i
+//          :   ['a > ['c] ('c -> 'c) -> ('c -> 'c)]
+//              ['b > ['d] 'd -> 'a]
+//              'b -> 'a
+
+// ;;
+// please failon_unify ['i] 'i -> 'i
+//          :   ['a > ['c] ('c -> 'c) -> ('c -> 'c)]
+//              ['b > ['d] 'd -> 'a]
+//              'a -> 'b
+
+// ;;
+
+
+// let t = let x = fun y -> y in x x ;;
+// let t = let x = ((fun y -> y) : ['a] 'a -> 'a) in x x ;;
+// let t = let x = ((fun y -> y) : 'a) in x x ;;
+
+
+// untype  fun x -> ( (((x:'a) : sid):'a), (x:'a) x)
+// untype  fun x -> ( ((x:'a) : sid), (x:'a) x)
+// untype  fun x -> ( ((x : sid):'a), (x:'a) x)
+// untype  fun x -> ( (((x:'a) : sid):'a), x x)
+// untype  fun x -> ( (x : sid), (x:'a) x)
+// let t = fun x -> ( (((x:'a) : sid):'a), (x:'a))
+
+// (* R�cursion polymorphe. *)
+// untype let rec id x = if true then x else id id x in id
+// let rec (id:sid) x = if true then x else id id x
+
+
+// let z = print_string "Ok, all tests passed."
+
+

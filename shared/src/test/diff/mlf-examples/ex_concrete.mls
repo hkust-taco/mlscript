@@ -1,0 +1,19 @@
+// type mylist ('b) = Nil | Cons of ('b * mylist ('b))
+// ;;
+
+// let un = Nil ;;
+// let deux = Nil ;;
+// let trois = Cons (10, un) ;;
+// let quatre = Cons ("ok", deux) ;;
+// let cinq = Cons ("zozo", quatre) ;;
+
+// let id x = x 
+
+// let rec mymap f l =
+//   begin match l with
+//   | Nil -> Nil
+//   | Cons (car,cdr) -> Cons (f car, mymap f cdr) 
+//   end
+
+
+

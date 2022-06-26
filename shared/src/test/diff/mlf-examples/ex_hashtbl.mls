@@ -1,0 +1,33 @@
+// (* Use the value restriction ! *)
+
+// type option ('a) = None | Some of 'a
+
+// let create_hashtbl () = []
+
+// let hashtbl_add table key element = (key, element) :: table
+
+// let rec find table key = 
+//   if nil table then None
+//   else if fst (car table) = key then Some (snd (car table))
+//   else find (cdr table) key
+
+
+// let nfind table key =
+//   begin match find table key with
+//   | None -> fun f x -> x
+//   | Some n -> n
+//   end
+
+// type Int = ['a] ('a -> 'a) -> ('a -> 'a)
+
+// let succ (n:Int) = fun f x -> f (n f x)
+// let add (n:Int) (m:Int) = n succ m
+
+// let printInt (n:Int) = print (n (fun x -> x+1) 0)
+
+// let table = create_hashtbl ()
+// let table = hashtbl_add table "one" (fun f x -> f x)
+// let table = hashtbl_add table "two" (fun f x -> f (f x))
+
+// let zog =
+//   printInt (add (nfind table "one") (nfind table "two"))

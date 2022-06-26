@@ -1,0 +1,100 @@
+// type bot = 0;;
+
+// (* Rank 6 with intersection types, untypable in predicative System F,
+//    typable in impredicative System F *)
+
+
+// let imp (z : bot) =
+//   (fun (x : ['a] ('a -> 'u) -> 'v) -> x x)
+//   (fun (y : 'a -> bot) -> y z y);;
+
+
+// (* Quelques constantes. *)
+
+// type sid = ['a] 'a -> 'a
+
+// let id = fun x -> x
+// ;;
+
+// let delta = fun (x:sid) -> x x
+// ;;
+
+// delta id ;;
+
+// let t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e)) ;;
+
+// let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
+
+// let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
+
+// (* Rank 1 *)
+// (fun x -> fun y -> x y) (fun y -> fun x -> x y) ;;
+
+// (* Rank 3 *)
+// (fun x -> fun y -> x) delta ;;
+
+// (* Rank 5 *)
+// (fun x -> fun y -> x y) (fun y -> fun x -> x y) delta ;;
+
+// (* Rank 8 *)
+// (fun (x:sid) -> x x x x x) id delta ;;
+
+// (* Rank 2 *)
+// type sk = ['a,'b] 'a -> 'b -> 'a;;
+// (fun (f:sk) -> fun x -> f f x) (fun v -> fun w -> v) ;;
+
+// (* Rank 3 *)
+// (fun t -> fun k -> t k) (fun (f:sk) -> fun x -> f f x) (fun v -> fun w -> v);;
+
+
+// let k = fun x y -> x
+// let k' = fun x y -> y
+// let app = fun f x -> f x
+// let two = fun f x -> f (f x)
+// let three = fun f x -> f (f (f x))
+
+// type Int = ['a] ('a -> 'a) -> ('a -> 'a)
+// ;;
+
+// (* Factorial of two and three *)
+// (* Only ONE annotation ! *)
+// let t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n:Int) -> n (fun v -> k') k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k') (fun f -> fun x -> f (p k' f x))) (fun s -> s k' k') k) g) x)) two ;;
+
+// let t y = (fun h -> h (h (h (h (fun x -> y))))) (fun f -> fun (n:Int) -> n (fun v -> k') k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k') (fun f -> fun x -> f (p k' f x))) (fun s -> s k' k') k) g) x)) three
+
+// (* This comment is from the ORIGINAL PAGE: *)
+// (* Factorial of three. Exposed bugs in old implementation. This one works correctly, but the generated files take up to 3.8GB, and it takes about 1 hour on a 2GHz PIII box to get the result. You can see the final judgement here. Yes, the result is the Church numeral for 6. *)
+
+// (* We test that the result is 6: *)
+// let succ n = n + 1 ;;
+// t id succ 0 ;;
+
+// let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z y) in x x;;
+
+// (* Plus petit. *)
+// type tt = ['b = 0] ['c > ['a] ['d = ['t] 'a -> 't] ['e] 'd -> 'e] 'b -> 'c ;;
+// let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z) in x x;;
+
+// (*
+//     * Rank 3, untypable in System F?
+//       (fun x -> z (x (fun f -> fun u -> f u)) (x (fun v -> fun g -> g v))) (fun y -> y y y)
+//     * Untypable at any rank
+//       (fun x -> x x) (fun x -> x x)
+
+//     * Rank 3, untypable in F2 but F3
+//       (fun f x -> f (f x)) (fun f x -> f (f x)) (fun v w -> v)
+
+//     * Rank 4, alternate formulation, untypeable in F2, but F3
+//       (fun two k -> two two k)(fun f x -> f (f x)) (fun v w -> v)
+
+//     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
+//       (fun two k -> two two two k)(fun f -x -> f (f x)) (fun v w -> v)
+
+
+
+//  ?????
+//     * Factorial of two, using the Y combinator
+//       (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+
+// *)
+
