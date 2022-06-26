@@ -4,23 +4,35 @@
 
 // i.e. auto
 g = fun (f: forall 'a. 'a -> 'a) -> f f
+g' = fun f -> f f
 //│ g: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│  = [Function: g]
+//│ g': ('a -> 'b & 'a) -> 'b
+//│   = [Function: g]
 
 // i.e. auto id (FreezeML F5)
 (fun (f: forall 'a. 'a -> 'a) -> f f) (fun x -> x)
+(fun f -> f f) (fun x -> x)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
 // i.e. (fun auto -> auto id) auto
+(fun g -> g (fun x -> x)) (fun f -> f f)
 (fun g -> g (fun x -> x)) (fun (f: forall 'a. 'a -> 'a) -> f f)
+//│ res: 'a -> 'a
+//│    = [Function (anonymous)]
 //│ res: 'a -> 'a
 //│    = [Function (anonymous)]
 
 // ============ Sec 1.2 ============
 
 fun f -> f (g f)
+fun f -> f (g' f)
 //│ res: ((forall 'a. 'a -> 'a) -> 'b & 'a -> 'a) -> 'b
+//│    = [Function: res]
+//│ res: ('a -> 'b & 'c -> 'a & 'c) -> 'b
 //│    = [Function: res]
 
 // ============ Sec 4.1 ============

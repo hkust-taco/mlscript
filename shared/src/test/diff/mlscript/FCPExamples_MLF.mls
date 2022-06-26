@@ -81,6 +81,13 @@ choose id auto
 omega = fun x -> x x
 //│ omega: ('a -> 'b & 'a) -> 'b
 
+fun (x: forall 'a. 'a) -> x x
+//│ res: anything -> nothing
+
+// i.e. auto
+omegad = fun (x: forall 'a. 'a -> 'a) -> x x
+//│ omegad: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+
 // FreezeML A5
 id auto
 //│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
@@ -98,8 +105,8 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	let f = choose id in (f auto) (f succ)
-//│ ║        	                     ^^^^^^^^^^^^^^^^^
+//│ ║  l.103: 	let f = choose id in (f auto) (f succ)
+//│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.27: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
@@ -174,23 +181,33 @@ let tmp = I I in K K
 // ------------ Sec 2.3.1 ------------
 
 // i.e. id auto (FreezeML A5)
+(fun z -> z) omegad
 (fun z -> z) omega
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // i.e. auto id (FreezeML F5)
 (fun x -> x x) id
 //│ res: 'a -> 'a
 
+fun z -> (z omegad)
 fun z -> (z omega)
+//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
 //│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
+(fun y -> fun z -> z y) omegad
 (fun y -> fun z -> z y) omega
+//│ res: (((forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
 //│ res: ((forall 'a, 'b. ('a -> 'b & 'a) -> 'b) -> 'c) -> 'c
 
+fun z -> omegad z
 fun z -> omega z
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ res: ('a -> 'b & 'a) -> 'b
 
+(fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
+//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 //│ res: ('a -> 'b & 'a) -> 'b
 
 // ------------ Sec 4.3 ------------
