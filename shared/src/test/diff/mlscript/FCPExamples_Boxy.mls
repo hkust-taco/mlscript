@@ -6,11 +6,9 @@
 
 class None
 class Some[a]: { val: a }
-  method Get: a
 type Option[a] = None | Some[a]
 //│ Defined class None
 //│ Defined class Some[+a]
-//│ Declared Some.Get: Some['a] -> 'a
 //│ Defined type alias Option[+a]
 
 class List[a]
@@ -51,9 +49,9 @@ def f get = (get (cons 1 (cons 2 nil)), get (cons "a" (cons "b" (cons "c" nil)))
 //   g (Some get) = (get [1,2], get ["a","b","c"])
 def g x = case x of
   { None -> (0, "0")
-  | Some -> (x.Get (cons 1 (cons 2 nil)), x.Get (cons "a" (cons "b" (cons "c" nil))))
+  | Some -> (x.val (cons 1 (cons 2 nil)), x.val (cons "a" (cons "b" (cons "c" nil))))
   }
-//│ g: (None | Some[List[nothing] -> ('a | 'b)]) -> (0 | 'b, "0" | 'a,)
+//│ g: (None | Some[?] & {val: List["a" | "b" | "c"] -> 'a & List[1 | 2] -> 'b}) -> (0 | 'b, "0" | 'a,)
 
 // ============ Sec 2 ============
 
@@ -108,5 +106,7 @@ let f = fun x -> nil in f (fun g -> (g 3, g true))
 // ============ Sec 7 ============
 
 // eta-expansion does not preserve typability (in the presented system)
-let f = error: (int -> (forall 'a. 'a -> 'a)) -> int in fun x -> f x
+def f: (int -> (forall 'a. 'a -> 'a)) -> int
+fun x -> f x // Not typeable in Boxy Types!
+//│ f: (int -> (forall 'a. 'a -> 'a)) -> int
 //│ res: (int -> (forall 'a. 'a -> 'a)) -> int
