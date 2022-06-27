@@ -633,7 +633,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, vars)
-        val body_ty = typeTerm(body)(newCtx, raise, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas = generalizeCurriedFunctions)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)

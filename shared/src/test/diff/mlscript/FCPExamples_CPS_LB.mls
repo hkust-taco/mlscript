@@ -1,5 +1,6 @@
 :NoJS
 
+// TODO investigate why this makes many tests fail:
 // :GeneralizeCurriedFunctions
 
 

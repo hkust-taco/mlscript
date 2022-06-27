@@ -1,4 +1,4 @@
-// :GeneralizeCurriedFunctions // TODO try out
+:GeneralizeCurriedFunctions // TODO try out
 
 // ============ Sec 1.1 ============
 
@@ -81,7 +81,7 @@ rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then 
 def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
 rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
+//│ ('a -> 'b -> ('a & 'c)) -> (forall 'd. ('a & 'd) -> List['b] -> ('d | 'c))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -92,7 +92,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> 'b) -> 'b -> 'b
+//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> ('c | 'd))
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool
@@ -102,7 +102,25 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'a0] -> (List['a0], List[('a, 'a,)],)
+//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
+
+// ^ probably the simplification bug of https://github.com/hkust-taco/mlscript/issues/114
+
+simple_and_double (Collection{l = cons 1 nil})
+//│ res: (List[1], List[(nothing, nothing,)],)
+
+:ns
+simple_and_double
+//│ res: forall 'b, 'a, 'a0. 'b -> (forall 'c, 'd, 'e. 'c, forall 'f, 'g, 'h, 'i. 'f,)
+//│   where
+//│     'f :> List['g] | (forall 'a1. List['a1])
+//│     'g :> 'h | ('i, 'i,)
+//│        <: 'h
+//│     'c :> List['d] | (forall 'a1. List['a1])
+//│     'd :> 'a | 'e
+//│        <: 'e
+//│     'e :> 'a
+//│     'b <: Collection['a0] & Collection['a]
 
 // ------------ subtyping & methods ------------
 

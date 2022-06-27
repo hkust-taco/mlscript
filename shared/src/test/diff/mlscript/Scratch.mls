@@ -1,0 +1,17 @@
+
+// TODO clean this afterwards
+
+:GeneralizeCurriedFunctions
+
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+def zero: forall 'a. ('a -> 'a) -> ('a -> 'a)
+def zero f = fun x -> x
+//│ zero: ('a -> 'a) -> 'a -> 'a
+//│     = <missing implementation>
+//│ anything -> (forall 'a. 'a -> 'a)
+//│   <:  zero:
+//│ ('a -> 'a) -> 'a -> 'a
+//│     = [Function: zero]
+

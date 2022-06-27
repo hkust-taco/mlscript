@@ -86,7 +86,7 @@ def argST: ST['s, int]
 
 // A1
 const2 x y = y
-//│ const2: anything -> 'a -> 'a
+//│ const2: anything -> (forall 'a. 'a -> 'a)
 
 // A2
 choose id
