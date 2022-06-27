@@ -223,6 +223,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             val t2 = travsersed + R(tv)
             tv.lowerBounds.forall(checkCycle(_)(t2)) && tv.upperBounds.forall(checkCycle(_)(t2))
           }
+          case PolymorphicType(_, body) => checkCycle(body)
           case _: ExtrType | _: ObjectTag | _: FunctionType | _: RecordType | _: ArrayBase => true
         }
         // }()

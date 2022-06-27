@@ -105,7 +105,7 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.103: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.106: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.27: 	def auto (x: forall 'a. 'a -> 'a) = x x
@@ -123,13 +123,13 @@ choose id auto2
 :e
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.117: 	res (choose id succ)
+//│ ║  l.124: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.117: 	res (choose id succ)
+//│ ║  l.124: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.117: 	res (choose id succ)
+//│ ║  l.124: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
