@@ -76,7 +76,11 @@ trait TypeSimplifier { self: Typer =>
         }
       })(ty.prov)
       
-      case _ => ty.mapPol(N)((_, ty) => process(ty, N))
+      case PolymorphicType(plvl, bod) =>
+        PolymorphicType.mk(plvl, process(bod, parent))
+      
+      // case _ => ty.mapPol(N)((_, ty) => process(ty, N))
+      case _ => ty.mapPol(N, smart = true)((_, ty) => process(ty, N))
       
     }
     // }(r => s"= $r")

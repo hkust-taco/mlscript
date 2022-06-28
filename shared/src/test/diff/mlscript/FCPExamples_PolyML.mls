@@ -86,25 +86,16 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('d | 'c))
+//│ fl: ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('c | 'd))
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 
 // :d
 def fold_left = fl
-//│ ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('d | 'c))
+//│ ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('c | 'd))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.95: 	def fold_left = fl
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.85: 	def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ║        	                      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.85: 	def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ╙──      	                      ^^
 
 def fold_left = fl2
 //│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
