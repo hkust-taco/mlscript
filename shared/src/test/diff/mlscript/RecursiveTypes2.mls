@@ -67,7 +67,7 @@ f = g
 //│ 'a
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 28
+//│ constrain calls  : 30
 //│ annoying  calls  : 55
 //│ subtyping calls  : 2789
 

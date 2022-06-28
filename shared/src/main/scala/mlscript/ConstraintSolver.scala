@@ -334,7 +334,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     def recImpl(lhs: SimpleType, rhs: SimpleType)
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit =
     // trace(s"C $lhs <! $rhs") {
-    trace(s"C $lhs <! $rhs    (${cache.size})") {
+    // trace(s"C $lhs <! $rhs    (${cache.size})") {
+    trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
@@ -625,7 +626,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
       (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
-    constrain(ty_sch.instantiate, sign.rigidify)
+    constrain(ty_sch, sign)
   }
   
   

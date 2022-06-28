@@ -129,66 +129,76 @@ f0 = f0
 //│ 'a
 //│   where
 //│     'a := 'a -> int
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: forall ?a0. ?a0` exceeded recursion depth limit (200)
 //│ ║  l.124: 	f0 = f0
 //│ ║         	^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a95 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a96
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a100
+//│ ╟── while constraining:  'a99  <!<  'a100
+//│ ╟── while constraining:  ('a99,)  <!<  ('a100,)
+//│ ╟── while constraining:  ('a100 -> Int)  <!<  ('a99 -> Int)
+//│ ╟── while constraining:  'a100  <!<  ('a99 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a99 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a99 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a99
+//│ ╟── while constraining:  'a98  <!<  'a99
+//│ ╟── while constraining:  ('a98,)  <!<  ('a99,)
+//│ ╟── while constraining:  ('a99 -> Int)  <!<  ('a98 -> Int)
+//│ ╟── while constraining:  'a99  <!<  ('a98 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a98 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a98 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a98
+//│ ╟── while constraining:  'a97  <!<  'a98
+//│ ╟── while constraining:  ('a97,)  <!<  ('a98,)
+//│ ╟── while constraining:  ('a98 -> Int)  <!<  ('a97 -> Int)
+//│ ╟── while constraining:  'a98  <!<  ('a97 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a97 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a97 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a97
+//│ ╟── while constraining:  'a96  <!<  'a97
+//│ ╟── while constraining:  ('a96,)  <!<  ('a97,)
+//│ ╟── while constraining:  ('a97 -> Int)  <!<  ('a96 -> Int)
+//│ ╟── while constraining:  'a97  <!<  ('a96 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a96 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a96 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a96
 //│ ╟── while constraining:  'a95  <!<  'a96
 //│ ╟── while constraining:  ('a95,)  <!<  ('a96,)
 //│ ╟── while constraining:  ('a96 -> Int)  <!<  ('a95 -> Int)
 //│ ╟── while constraining:  'a96  <!<  ('a95 -> Int)
 //│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a95 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a95
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a95 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a95
 //│ ╟── while constraining:  'a94  <!<  'a95
 //│ ╟── while constraining:  ('a94,)  <!<  ('a95,)
 //│ ╟── while constraining:  ('a95 -> Int)  <!<  ('a94 -> Int)
 //│ ╟── while constraining:  'a95  <!<  ('a94 -> Int)
 //│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a94 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a94
-//│ ╟── while constraining:  'a93  <!<  'a94
-//│ ╟── while constraining:  ('a93,)  <!<  ('a94,)
-//│ ╟── while constraining:  ('a94 -> Int)  <!<  ('a93 -> Int)
-//│ ╟── while constraining:  'a94  <!<  ('a93 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a93 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a93
-//│ ╟── while constraining:  'a92  <!<  'a93
-//│ ╟── while constraining:  ('a92,)  <!<  ('a93,)
-//│ ╟── while constraining:  ('a93 -> Int)  <!<  ('a92 -> Int)
-//│ ╟── while constraining:  'a93  <!<  ('a92 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a92 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a92
-//│ ╟── while constraining:  'a91  <!<  'a92
-//│ ╟── while constraining:  ('a91,)  <!<  ('a92,)
-//│ ╟── while constraining:  ('a92 -> Int)  <!<  ('a91 -> Int)
-//│ ╟── while constraining:  'a92  <!<  ('a91 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a91 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a91
-//│ ╟── while constraining:  'a90  <!<  'a91
-//│ ╟── while constraining:  ('a90,)  <!<  ('a91,)
-//│ ╟── while constraining:  ('a91 -> Int)  <!<  ('a90 -> Int)
-//│ ╟── while constraining:  'a91  <!<  ('a90 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a94 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a94
+//│ ╟── while constraining:  'a90  <!<  'a94
+//│ ╟── while constraining:  ('a90,)  <!<  ('a94,)
+//│ ╟── while constraining:  ('a94 -> Int)  <!<  ('a90 -> Int)
+//│ ╟── while constraining:  'a94  <!<  ('a90 -> Int)
 //│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a90 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a90
-//│ ╟── while constraining:  'a89  <!<  'a90
-//│ ╟── while constraining:  ('a89,)  <!<  ('a90,)
-//│ ╟── while constraining:  ('a90 -> Int)  <!<  ('a89 -> Int)
-//│ ╟── while constraining:  'a90  <!<  ('a89 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a89 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a89
-//│ ╟── while constraining:  'a88  <!<  'a89
-//│ ╟── while constraining:  ('a88,)  <!<  ('a89,)
-//│ ╟── while constraining:  ('a89 -> Int)  <!<  ('a88 -> Int)
-//│ ╟── while constraining:  'a89  <!<  ('a88 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a88 -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  'a88
-//│ ╟── while constraining:  'a87  <!<  'a88
-//│ ╟── while constraining:  ('a87,)  <!<  ('a88,)
-//│ ╟── while constraining:  ('a88 -> int<TypeName(number)>)  <!<  ('a87 -> int<TypeName(number)>)
-//│ ╟── while constraining:  ('a88 -> Int)  <!<  (‘a | ('a87 -> Int))
-//│ ╟── while constraining:  'a88  <!<  (‘a | ('a87 -> Int))
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  (‘a | ('a87 -> Int))
-//│ ╙── while constraining:  ‹∀ 0. 'a77'›  <!<  'a87
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a90 -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a89
+//│ ╟── while constraining:  'a90  <!<  'a89
+//│ ╟── while constraining:  ('a90,)  <!<  ('a89,)
+//│ ╟── while constraining:  ('a89 -> Int)  <!<  ('a90 -> Int)
+//│ ╟── while constraining:  'a89  <!<  ('a90 -> Int)
+//│ ╟── while constraining:  'a89  <!<  ('a88' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a88' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a88' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a88'
+//│ ╟── while constraining:  'a87'  <!<  'a88'
+//│ ╟── while constraining:  ('a87',)  <!<  ('a88',)
+//│ ╟── while constraining:  ('a88' -> int<TypeName(number)>)  <!<  ('a87' -> int<TypeName(number)>)
+//│ ╟── while constraining:  ('a88' -> Int)  <!<  (‘a' | ('a87' -> Int))
+//│ ╟── while constraining:  'a88'  <!<  (‘a' | ('a87' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  (‘a' | ('a87' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  (‘a' | ('a87' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a87'
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ‹∀ 0. 'a77'›
 //│   = <no result>
 //│     f0 is not implemented
 

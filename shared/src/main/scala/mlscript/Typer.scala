@@ -404,8 +404,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         S(nme)
       )(lvl + 1)
       ctx += nme -> e_ty
+      
       val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
       constrain(ty, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
+      
+      // val ty = typeTerm(rhs)(ctx.nextLevel, raise, vars)
+      // val ty_sch = PolymorphicType(lvl, ty)
+      // constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
+      
+      // val oldLvl = lvl
+      // ctx.nextLevel |> { implicit ctx: Ctx =>
+      //   val ty = typeTerm(rhs)
+      //   val ty_sch = PolymorphicType(lvl, ty)
+      //   constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
+      // }
       e_ty
     } else typeTerm(rhs)(ctx.nextLevel, raise, vars)
     PolymorphicType(lvl, res)

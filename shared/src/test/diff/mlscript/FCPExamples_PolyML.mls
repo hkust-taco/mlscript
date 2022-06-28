@@ -1,4 +1,4 @@
-:GeneralizeCurriedFunctions // TODO try out
+:GeneralizeCurriedFunctions
 
 // ============ Sec 1.1 ============
 
@@ -78,12 +78,41 @@ rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then 
 //│   <:  mem:
 //│ anything -> List[?] -> bool
 
-def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
-rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+
+
+
+// def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
+def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+
+rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
+//│ fl: ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('d | 'c))
+
+rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+
+// :d
+def fold_left = fl
 //│ ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('d | 'c))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.95: 	def fold_left = fl
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.85: 	def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│ ║        	                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.85: 	def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+//│ ╙──      	                      ^^
+
+def fold_left = fl2
+//│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
+//│   <:  fold_left:
+//│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+
+// :d
+// rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 
 // ------------ polymorphic methods ------------
 
@@ -92,7 +121,7 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> ('c | 'd))
+//│ Defined Collection.Fold: Collection['a] -> ('a0 -> 'a -> ('a0 & 'a1)) -> (forall 'b. ('a0 & 'b) -> ('a1 | 'b))
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: Collection[?] -> anything -> bool

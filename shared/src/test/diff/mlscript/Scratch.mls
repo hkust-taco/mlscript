@@ -15,3 +15,30 @@ def zero f = fun x -> x
 //│ ('a -> 'a) -> 'a -> 'a
 //│     = [Function: zero]
 
+def id: forall 'a. 'a -> 'a
+//│ id: 'a -> 'a
+//│   = <missing implementation>
+
+def id x = x
+//│ 'a -> 'a
+//│   <:  id:
+//│ 'a -> 'a
+//│   = [Function: id1]
+
+
+rec def foo x y =
+  let tmp = foo x y in (x, y)
+//│ foo: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│    = [Function: foo]
+
+def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = <missing implementation>
+
+// :d
+foo_ty = foo
+//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│   <:  foo_ty:
+//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = [Function: foo]
+
