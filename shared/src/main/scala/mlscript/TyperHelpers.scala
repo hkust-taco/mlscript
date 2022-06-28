@@ -276,6 +276,11 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     // }(r => s"= $r")
     
+    lazy val shadow: ST = this match {
+      case tv: TV => tv.original
+      case _ => map(_.shadow)
+    }
+    
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
