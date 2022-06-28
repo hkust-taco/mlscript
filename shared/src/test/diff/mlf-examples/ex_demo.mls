@@ -217,7 +217,7 @@ let red id x = if true then x else id id x in id
 //│    = [Function: id]
 
 // let rec (id:sid) x = if true then x else id id x
-// FIXME
+// FIXME: polymorphic recursion
 def id: Sid
 rec def id x = if true then x else id id x
 //│ id: Sid
@@ -256,6 +256,56 @@ rec def id x = if true then x else id id x
 //│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──       	                  ^^
 //│   = [Function: id1]
+
+:e // not precise enough
+rec def idd x = if true then x else idd idd x
+id = idd
+//│ idd: 'idd
+//│   where
+//│     'idd :> 'a -> 'b
+//│     'a :> 'idd
+//│        <: 'b
+//│     'b :> 'idd
+//│        <: 'a -> 'b
+//│    = [Function: idd]
+//│ 'idd
+//│   where
+//│     'idd :> 'a -> 'b
+//│     'a :> 'idd
+//│        <: 'b
+//│     'b :> 'idd
+//│        <: 'a -> 'b
+//│   <:  id:
+//│ Sid
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.262: 	id = idd
+//│ ║         	^^^^^^^^
+//│ ╟── type `‘a` is not a function
+//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
+//│ ║         	                                    ^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
+//│ ╙──       	                             ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.262: 	id = idd
+//│ ║         	^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
+//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│   = [Function: idd]
+
+// emulates annotated rec def
+def id x = if true then x else id id x
+//│ 'a -> 'a
+//│   <:  id:
+//│ Sid
+//│   = [Function: id3]
 
 
 
@@ -608,7 +658,7 @@ def c_i4' = c_succ' c_i3
 // let rec (to_church:int -> Int) n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
-// FIXME
+// FIXME: see to_church4 in ex_casparticuliers
 def to_church: int -> Fint
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
@@ -619,20 +669,20 @@ rec def to_church n =
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.613: 	rec def to_church n =
+//│ ║  l.663: 	rec def to_church n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.614: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.664: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.615: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║  l.665: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.336: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.386: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.336: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.386: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── from application:
-//│ ║  l.615: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║  l.665: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│          = [Function: to_church]
 

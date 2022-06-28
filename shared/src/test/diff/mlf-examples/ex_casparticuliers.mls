@@ -47,7 +47,9 @@ def succ' n = fun f -> fun x -> f (n f x)
 //   if n = 0 then zero
 //   else succ (to_church (n-1))
 // ;;
-// FIXME
+// FIXME: only works with explicit declaration for `succ`
+//        might be an instance when we need constrained types to get the principal type
+// def succ: ChurchInt -> ChurchInt
 rec def to_church n =
   if n == 0 then zero
   else succ (to_church (n - 1))
@@ -55,11 +57,11 @@ rec def to_church' n =
   if n == 0 then zero
   else succ' (to_church' (n - 1))
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.51: 	rec def to_church n =
+//│ ║  l.53: 	rec def to_church n =
 //│ ║        	                  ^^^
-//│ ║  l.52: 	  if n == 0 then zero
+//│ ║  l.54: 	  if n == 0 then zero
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.53: 	  else succ (to_church (n - 1))
+//│ ║  l.55: 	  else succ (to_church (n - 1))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -111,7 +113,7 @@ rec def to_church n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 // ;;
-// FIXME
+// FIXME: polymorphic recursion
 def to_church: int -> ChurchInt
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
@@ -122,11 +124,11 @@ rec def to_church n =
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.116: 	rec def to_church n =
+//│ ║  l.118: 	rec def to_church n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.117: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.119: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.118: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║  l.120: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -135,9 +137,40 @@ rec def to_church n =
 //│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.118: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║  l.120: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│          = [Function: to_church4]
+
+:e // not precise enough
+rec def to_church' n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church' (n - 1)) f x)
+to_church = to_church'
+//│ to_church': int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
+//│           = [Function: to_church4]
+//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.148: 	to_church = to_church'
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.147: 	  else fun f -> fun x -> f ((to_church' (n - 1)) f x)
+//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│          = [Function: to_church4]
+
+// emulates annotated rec def
+def to_church' n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church' (n - 1)) f x)
+//│ to_church': int -> (forall 'a, 'b, 'c. ('a -> 'b & 'b -> 'c & 'a -> 'a) -> (forall 'd. ('d & 'b & 'a) -> ('d | 'c)))
+//│           = [Function: to_church4]
 
 // (* �a coince. *)
 // let tc n = (to_church n : Int);;
