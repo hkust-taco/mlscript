@@ -401,7 +401,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //    across recursive references.
         noProv,
         // TypeProvenance(rhs.toLoc, "let-bound value"),
-        S(nme)
+        S(nme),
+        recPlaceholder = true
       )(lvl + 1)
       ctx += nme -> e_ty
       

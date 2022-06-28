@@ -665,6 +665,13 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
             updateVariance(rhs, curVariance)
           case Without(base, names) => updateVariance(base, curVariance.flip)
           case PolymorphicType(lvl, bod) => updateVariance(bod, curVariance)
+          case ConstrainedType(cs, bod) =>
+            cs.foreach(_._2.foreach(pb =>
+              // if (pb._1) updateVariance(pb._2, curVariance)
+              // else updateVariance(pb._2, curVariance.flip)
+              updateVariance(pb._2, if (pb._1) VarianceInfo.co else VarianceInfo.contra)
+            ))
+            updateVariance(bod, curVariance)
         }
       }()
     }

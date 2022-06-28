@@ -113,7 +113,7 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.109: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.114: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
@@ -131,13 +131,13 @@ choose id auto2
 :e
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.127: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
@@ -272,13 +272,13 @@ let f = fun x -> id in g f
 // FreezeML D4
 app runST argST
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.264: 	app runST argST
+//│ ║  l.273: 	app runST argST
 //│ ║         	^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `ST`
 //│ ║  l.26: 	def id x = x
 //│ ║        	       ^^^^^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.58: 	def runST: (forall 's. ST['s, 'v]) -> 'v
+//│ ║  l.60: 	def runST: (forall 's. ST['s, 'v]) -> 'v
 //│ ╙──      	                       ^^^^^^^^^^
 //│ res: error
 

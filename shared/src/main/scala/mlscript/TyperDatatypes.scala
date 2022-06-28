@@ -439,7 +439,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val level: Level,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
-      val nameHint: Opt[Str] = N
+      val nameHint: Opt[Str] = N,
+      val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // if (cache(this)) MinLevel else {
@@ -482,9 +483,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TV = TypeVariable
   private var freshCount = 0
-  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil)
+  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil, recPlaceholder: Bool = false)
         (implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, lbs, ubs, nameHint)(p)
+    new TypeVariable(lvl, lbs, ubs, nameHint, recPlaceholder)(p)
   def resetState(): Unit = {
     freshCount = 0
   }

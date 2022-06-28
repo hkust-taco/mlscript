@@ -18,15 +18,15 @@ addOne1 x = case x of {
 
 rec def loopy() =
   Integer { value = 1; addOne = fun x -> loopy() }
-//│ loopy: () -> (Integer with {addOne: forall 'a. (anything -> 'a
+//│ loopy: () -> 'a
 //│   where
-//│     'loopy <: () -> 'a), value: 1}) | 'loopy
+//│     'a :> Integer with {addOne: anything -> 'a, value: 1}
 //│      = [Function: loopy]
 
 addOne1 (loopy())
-//│ res: Integer with {addOne: forall 'a. (anything -> 'a
+//│ res: 'a
 //│   where
-//│     'loopy <: () -> 'a), value: 1}
+//│     'a :> Integer with {addOne: anything -> 'a, value: 1}
 //│    = Integer { value: 1, addOne: [Function: addOne] }
 
 res : Integer
@@ -38,15 +38,15 @@ res : Integer
 // *  so it could be anything; example:
 
 funny = loopy() with { value = "oops!" }
-//│ funny: Integer with {addOne: forall 'a. (anything -> 'a
+//│ funny: 'a\value & {value: "oops!"}
 //│   where
-//│     'loopy <: () -> 'a), value: "oops!"}
+//│     'a :> Integer with {addOne: anything -> 'a, value: 1}
 //│      = Integer { value: 'oops!', addOne: [Function: addOne] }
 
 addOne1 funny
-//│ res: Integer with {addOne: forall 'a. (anything -> 'a
+//│ res: 'a
 //│   where
-//│     'loopy <: () -> 'a), value: 1}
+//│     'a :> Integer with {addOne: anything -> 'a, value: 1}
 //│    = Integer { value: 1, addOne: [Function: addOne] }
 
 
@@ -70,15 +70,15 @@ addOne1 (Integer { value = 1; addOne = id })
 // * Now for properly closing the loop with a constructor for Integer:
 
 rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkInteger: int -> (Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ mkInteger: int -> 'a
 //│   where
-//│     'mkInteger <: int -> 'a)}) | 'mkInteger
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│          = [Function: mkInteger]
 
 n = mkInteger 42
-//│ n: Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ n: 'a
 //│   where
-//│     'mkInteger <: int -> 'a)}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 n : Integer
@@ -86,9 +86,9 @@ n : Integer
 //│    = Integer { value: 42, addOne: [Function: addOne] }
 
 m = addOne1 n
-//│ m: Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ m: 'a
 //│   where
-//│     'mkInteger <: int -> 'a)}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│  = Integer { value: 43, addOne: [Function: addOne] }
 
 m : Integer
@@ -102,9 +102,9 @@ def mkInteger2: int -> Integer
 def mkInteger2 = mkInteger
 //│ mkInteger2: int -> Integer
 //│           = <missing implementation>
-//│ int -> (Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ int -> 'a
 //│   where
-//│     'mkInteger <: int -> 'a)}) | 'mkInteger
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkInteger2:
 //│ int -> Integer
 //│           = [Function: mkInteger]
@@ -118,22 +118,22 @@ def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
 rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ mkInteger_oops: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│               = <missing implementation>
-//│ int -> (Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ int -> 'a
 //│   where
-//│     'mkInteger_oops <: int -> 'a)}) | 'mkInteger_oops
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkInteger_oops:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.102: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.102: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                                                                  ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.102: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
+//│ ║  l.118: 	rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops (n.value + 1) }
 //│ ║         	                                         ^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.101: 	def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.117: 	def mkInteger_oops: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                      ^^
 //│               = [Function: mkInteger_oops]
 
@@ -144,9 +144,9 @@ def mkIntegerPrecise value = Integer { value; addOne = addOne1 }
 //│                 = [Function: mkIntegerPrecise]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
-//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: {value: int} -> (Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ mkIntegerPrecise: (int & 'value) -> (Integer with {addOne: forall 'a. {value: int} -> 'a, value: 'value})
 //│   where
-//│     'mkInteger <: int -> 'a)}), value: 'value})
+//│     'a :> Integer with {addOne: forall 'a. {value: int} -> 'a}
 //│                 = [Function: mkIntegerPrecise1]
 
 def mkIntegerPrecise value = Integer { value; addOne = fun (n: Integer) -> mkInteger2 (n.value + 1) }
@@ -186,19 +186,19 @@ def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 def mkIntegerPrecise3 = mkInteger
 //│ mkIntegerPrecise3: (int & 'a) -> (Integer\addOne with {value: 'a})
 //│                  = <missing implementation>
-//│ int -> (Integer with {addOne: forall 'a. ({value: int} -> 'a
+//│ int -> 'a
 //│   where
-//│     'mkInteger <: int -> 'a)}) | 'mkInteger
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.166: 	def mkIntegerPrecise3 = mkInteger
+//│ ║  l.186: 	def mkIntegerPrecise3 = mkInteger
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not an instance of type `'a`
-//│ ║  l.64: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
+//│ ║  l.72: 	rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ ║        	                                                                        ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.165: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
+//│ ║  l.185: 	def mkIntegerPrecise3: (int & 'a) -> (Integer & { value: 'a })
 //│ ╙──       	                                                         ^^
 //│                  = [Function: mkInteger]
 
@@ -206,10 +206,10 @@ def mkIntegerPrecise3 = mkInteger
 :e
 addOne1 (Str { value = ""; addOne = error })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.185: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Str & {addOne: ?addOne, value: ?value}` does not match type `Integer & ?a`
-//│ ║  l.185: 	addOne1 (Str { value = ""; addOne = error })
+//│ ║  l.207: 	addOne1 (Str { value = ""; addOne = error })
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.11: 	addOne1 x = case x of {
@@ -241,9 +241,9 @@ def mkStr: string -> Str
 rec def mkStr value = Str { value; addOne = fun s -> mkStr (concat s.value "1") }
 //│ mkStr: string -> Str
 //│      = <missing implementation>
-//│ string -> (Str with {addOne: forall 'a. ({value: string} -> 'a
+//│ string -> 'a
 //│   where
-//│     'mkStr <: string -> 'a)}) | 'mkStr
+//│     'a :> Str with {addOne: {value: string} -> 'a}
 //│   <:  mkStr:
 //│ string -> Str
 //│      = [Function: mkStr]

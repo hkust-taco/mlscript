@@ -47,7 +47,7 @@ self x = x x
 :e
 self self
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (400)
-//│ ║  l.46: 	self self
+//│ ║  l.48: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α126
 //│ ╟── while constraining:  α124  <!<  α126
