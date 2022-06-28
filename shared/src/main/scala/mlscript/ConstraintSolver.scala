@@ -9,8 +9,8 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  def startingFuel: Int = 5000
-  def depthLimit: Int = 200
+  def startingFuel: Int = 10000
+  def depthLimit: Int = 400
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {

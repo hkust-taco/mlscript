@@ -183,9 +183,24 @@ x => y => x x y
 
 :e // Omega: causes divergence in first-class-polymorphic type inference, as expected
 (x => x x) (x => x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (400)
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α247
+//│ ╟── while constraining:  α245  <!<  α247
+//│ ╟── while constraining:  (α247 -> α248)  <!<  (α245 -> α246)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α245 -> α246)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α245
+//│ ╟── while constraining:  α243  <!<  α245
+//│ ╟── while constraining:  (α245 -> α246)  <!<  (α243 -> α244)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α243 -> α244)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α243
+//│ ╟── while constraining:  α241  <!<  α243
+//│ ╟── while constraining:  (α243 -> α244)  <!<  (α241 -> α242)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α241 -> α242)
+//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α241
+//│ ╟── while constraining:  α239  <!<  α241
+//│ ╟── while constraining:  (α241 -> α242)  <!<  (α239 -> α240)
 //│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α239 -> α240)
 //│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α239
 //│ ╟── while constraining:  α237  <!<  α239
@@ -228,116 +243,163 @@ x => {l: x x, r: x }
 // Y combinator:
 :e // similarly to Omega
 (f => (x => f (x x)) (x => f (x x)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e. ?c -> ?e) -> ?f` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e. ?c -> ?e) -> ?f` exceeded recursion depth limit (400)
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α288 -> α289)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α288
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α312
+//│ ╟── while constraining:  α309  <!<  α312
+//│ ╟── while constraining:  (α312 -> α314)  <!<  (α309 -> α310)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α309 -> α310)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α309
+//│ ╟── while constraining:  α306  <!<  α309
+//│ ╟── while constraining:  (α309 -> α311)  <!<  (α306 -> α307)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α306 -> α307)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α306
+//│ ╟── while constraining:  α303  <!<  α306
+//│ ╟── while constraining:  (α306 -> α308)  <!<  (α303 -> α304)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α303 -> α304)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α303
+//│ ╟── while constraining:  α300  <!<  α303
+//│ ╟── while constraining:  (α303 -> α305)  <!<  (α300 -> α301)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α300 -> α301)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α300
+//│ ╟── while constraining:  α297  <!<  α300
+//│ ╟── while constraining:  (α300 -> α302)  <!<  (α297 -> α298)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α297 -> α298)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α297
+//│ ╟── while constraining:  α294  <!<  α297
+//│ ╟── while constraining:  (α297 -> α299)  <!<  (α294 -> α295)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α294 -> α295)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α294
+//│ ╟── while constraining:  α291  <!<  α294
+//│ ╟── while constraining:  (α294 -> α296)  <!<  (α291 -> α292)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α291 -> α292)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α291
+//│ ╟── while constraining:  α288  <!<  α291
+//│ ╟── while constraining:  (α291 -> α293)  <!<  (α288 -> α289)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α288 -> α289)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α288
 //│ ╟── while constraining:  α285  <!<  α288
 //│ ╟── while constraining:  (α288 -> α290)  <!<  (α285 -> α286)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α285 -> α286)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α285
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α285 -> α286)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α285
 //│ ╟── while constraining:  α282  <!<  α285
 //│ ╟── while constraining:  (α285 -> α287)  <!<  (α282 -> α283)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α282 -> α283)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α282
-//│ ╟── while constraining:  α279  <!<  α282
-//│ ╟── while constraining:  (α282 -> α284)  <!<  (α279 -> α280)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α279 -> α280)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α279
-//│ ╟── while constraining:  α276  <!<  α279
-//│ ╟── while constraining:  (α279 -> α281)  <!<  (α276 -> α277)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α276 -> α277)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α276
-//│ ╟── while constraining:  α273  <!<  α276
-//│ ╟── while constraining:  (α276 -> α278)  <!<  (α273 -> α274)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α273 -> α274)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α273
-//│ ╟── while constraining:  α270  <!<  α273
-//│ ╟── while constraining:  (α273 -> α275)  <!<  (α270 -> α271)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α270 -> α271)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α270
-//│ ╟── while constraining:  α261  <!<  α270
-//│ ╟── while constraining:  (α270 -> α272)  <!<  (α261 -> α262)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  (α261 -> α262)
-//│ ╟── while constraining:  ‹∀ 0. (α264' -> α266')›  <!<  α261
-//│ ╙── while constraining:  (α261 -> α263)  <!<  (‹∀ 0. (α264' -> α266')› -> α269)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α282 -> α283)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α282
+//│ ╟── while constraining:  α273  <!<  α282
+//│ ╟── while constraining:  (α282 -> α284)  <!<  (α273 -> α274)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  (α273 -> α274)
+//│ ╟── while constraining:  ‹∀ 0. (α276' -> α278')›  <!<  α273
+//│ ╙── while constraining:  (α273 -> α275)  <!<  (‹∀ 0. (α276' -> α278')› -> α281)
 //│ res: (nothing -> anything) -> error
 
 // Z combinator:
 :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (400)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α371
-//│ ╟── while constraining:  α366  <!<  α371
-//│ ╟── while constraining:  (α371 -> α375)  <!<  (α366 -> α367)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α366 -> α367)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α366
-//│ ╟── while constraining:  α361  <!<  α366
-//│ ╟── while constraining:  (α366 -> α370)  <!<  (α361 -> α362)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α361 -> α362)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α361
-//│ ╟── while constraining:  α356  <!<  α361
-//│ ╟── while constraining:  (α361 -> α365)  <!<  (α356 -> α357)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α356 -> α357)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α356
-//│ ╟── while constraining:  α351  <!<  α356
-//│ ╟── while constraining:  (α356 -> α360)  <!<  (α351 -> α352)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α351 -> α352)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α351
-//│ ╟── while constraining:  α346  <!<  α351
-//│ ╟── while constraining:  (α351 -> α355)  <!<  (α346 -> α347)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α346 -> α347)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α346
-//│ ╟── while constraining:  α341  <!<  α346
-//│ ╟── while constraining:  (α346 -> α350)  <!<  (α341 -> α342)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α341 -> α342)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α341
-//│ ╟── while constraining:  α319  <!<  α341
-//│ ╟── while constraining:  (α341 -> α345)  <!<  (α319 -> α322)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  (α319 -> α322)
-//│ ╟── while constraining:  ‹∀ 0. (α327' -> α334')›  <!<  α319
-//│ ╙── while constraining:  (α319 -> α326)  <!<  (‹∀ 0. (α327' -> α334')› -> α340)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α423
+//│ ╟── while constraining:  α418  <!<  α423
+//│ ╟── while constraining:  (α423 -> α427)  <!<  (α418 -> α419)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α418 -> α419)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α418
+//│ ╟── while constraining:  α413  <!<  α418
+//│ ╟── while constraining:  (α418 -> α422)  <!<  (α413 -> α414)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α413 -> α414)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α413
+//│ ╟── while constraining:  α408  <!<  α413
+//│ ╟── while constraining:  (α413 -> α417)  <!<  (α408 -> α409)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α408 -> α409)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α408
+//│ ╟── while constraining:  α403  <!<  α408
+//│ ╟── while constraining:  (α408 -> α412)  <!<  (α403 -> α404)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α403 -> α404)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α403
+//│ ╟── while constraining:  α398  <!<  α403
+//│ ╟── while constraining:  (α403 -> α407)  <!<  (α398 -> α399)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α398 -> α399)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α398
+//│ ╟── while constraining:  α393  <!<  α398
+//│ ╟── while constraining:  (α398 -> α402)  <!<  (α393 -> α394)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α393 -> α394)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α393
+//│ ╟── while constraining:  α388  <!<  α393
+//│ ╟── while constraining:  (α393 -> α397)  <!<  (α388 -> α389)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α388 -> α389)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α388
+//│ ╟── while constraining:  α383  <!<  α388
+//│ ╟── while constraining:  (α388 -> α392)  <!<  (α383 -> α384)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α383 -> α384)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α383
+//│ ╟── while constraining:  α378  <!<  α383
+//│ ╟── while constraining:  (α383 -> α387)  <!<  (α378 -> α379)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α378 -> α379)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α378
+//│ ╟── while constraining:  α373  <!<  α378
+//│ ╟── while constraining:  (α378 -> α382)  <!<  (α373 -> α374)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α373 -> α374)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α373
+//│ ╟── while constraining:  α351  <!<  α373
+//│ ╟── while constraining:  (α373 -> α377)  <!<  (α351 -> α354)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  (α351 -> α354)
+//│ ╟── while constraining:  ‹∀ 0. (α359' -> α366')›  <!<  α351
+//│ ╙── while constraining:  (α351 -> α358)  <!<  (‹∀ 0. (α359' -> α366')› -> α372)
 //│ res: ((anything -> nothing) -> anything) -> error
 
 // Function that takes arbitrarily many arguments:
 :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (400)
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α481
-//│ ╟── while constraining:  α476  <!<  α481
-//│ ╟── while constraining:  (α481 -> α485)  <!<  (α476 -> α477)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α476 -> α477)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α476
-//│ ╟── while constraining:  α471  <!<  α476
-//│ ╟── while constraining:  (α476 -> α480)  <!<  (α471 -> α472)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α471 -> α472)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α471
-//│ ╟── while constraining:  α466  <!<  α471
-//│ ╟── while constraining:  (α471 -> α475)  <!<  (α466 -> α467)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α466 -> α467)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α466
-//│ ╟── while constraining:  α461  <!<  α466
-//│ ╟── while constraining:  (α466 -> α470)  <!<  (α461 -> α462)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α461 -> α462)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α461
-//│ ╟── while constraining:  α456  <!<  α461
-//│ ╟── while constraining:  (α461 -> α465)  <!<  (α456 -> α457)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α456 -> α457)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α456
-//│ ╟── while constraining:  α451  <!<  α456
-//│ ╟── while constraining:  (α456 -> α460)  <!<  (α451 -> α452)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α451 -> α452)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α451
-//│ ╟── while constraining:  α429  <!<  α451
-//│ ╟── while constraining:  (α451 -> α455)  <!<  (α429 -> α432)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  (α429 -> α432)
-//│ ╟── while constraining:  ‹∀ 0. (α437' -> α444')›  <!<  α429
-//│ ╙── while constraining:  (α429 -> α436)  <!<  (‹∀ 0. (α437' -> α444')› -> α450)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α569
+//│ ╟── while constraining:  α564  <!<  α569
+//│ ╟── while constraining:  (α569 -> α573)  <!<  (α564 -> α565)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α564 -> α565)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α564
+//│ ╟── while constraining:  α559  <!<  α564
+//│ ╟── while constraining:  (α564 -> α568)  <!<  (α559 -> α560)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α559 -> α560)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α559
+//│ ╟── while constraining:  α554  <!<  α559
+//│ ╟── while constraining:  (α559 -> α563)  <!<  (α554 -> α555)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α554 -> α555)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α554
+//│ ╟── while constraining:  α549  <!<  α554
+//│ ╟── while constraining:  (α554 -> α558)  <!<  (α549 -> α550)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α549 -> α550)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α549
+//│ ╟── while constraining:  α544  <!<  α549
+//│ ╟── while constraining:  (α549 -> α553)  <!<  (α544 -> α545)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α544 -> α545)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α544
+//│ ╟── while constraining:  α539  <!<  α544
+//│ ╟── while constraining:  (α544 -> α548)  <!<  (α539 -> α540)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α539 -> α540)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α539
+//│ ╟── while constraining:  α534  <!<  α539
+//│ ╟── while constraining:  (α539 -> α543)  <!<  (α534 -> α535)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α534 -> α535)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α534
+//│ ╟── while constraining:  α529  <!<  α534
+//│ ╟── while constraining:  (α534 -> α538)  <!<  (α529 -> α530)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α529 -> α530)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α529
+//│ ╟── while constraining:  α524  <!<  α529
+//│ ╟── while constraining:  (α529 -> α533)  <!<  (α524 -> α525)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α524 -> α525)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α524
+//│ ╟── while constraining:  α519  <!<  α524
+//│ ╟── while constraining:  (α524 -> α528)  <!<  (α519 -> α520)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α519 -> α520)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α519
+//│ ╟── while constraining:  α497  <!<  α519
+//│ ╟── while constraining:  (α519 -> α523)  <!<  (α497 -> α500)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  (α497 -> α500)
+//│ ╟── while constraining:  ‹∀ 0. (α505' -> α512')›  <!<  α497
+//│ ╙── while constraining:  (α497 -> α504)  <!<  (‹∀ 0. (α505' -> α512')› -> α518)
 //│ res: error
 
 

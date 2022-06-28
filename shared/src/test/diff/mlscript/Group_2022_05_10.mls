@@ -44,9 +44,29 @@ self x = x x
 
 :e
 self self
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (400)
 //│ ║  l.46: 	self self
 //│ ║        	^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  α128
+//│ ╟── while constraining:  α126  <!<  α128
+//│ ╟── while constraining:  (α126,)  <!<  (α128,)
+//│ ╟── while constraining:  (α128 -> α129)  <!<  ((α126,) -> α127)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  ((α126,) -> α127)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  α126
+//│ ╟── while constraining:  α124  <!<  α126
+//│ ╟── while constraining:  (α124,)  <!<  (α126,)
+//│ ╟── while constraining:  (α126 -> α127)  <!<  ((α124,) -> α125)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  ((α124,) -> α125)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  α124
+//│ ╟── while constraining:  α122  <!<  α124
+//│ ╟── while constraining:  (α122,)  <!<  (α124,)
+//│ ╟── while constraining:  (α124 -> α125)  <!<  ((α122,) -> α123)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  ((α122,) -> α123)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  α122
+//│ ╟── while constraining:  α120  <!<  α122
+//│ ╟── while constraining:  (α120,)  <!<  (α122,)
+//│ ╟── while constraining:  (α122 -> α123)  <!<  ((α120,) -> α121)
+//│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  ((α120,) -> α121)
 //│ ╟── while constraining:  ‹∀ 0. (α95' -> α96')›  <!<  α120
 //│ ╟── while constraining:  α118  <!<  α120
 //│ ╟── while constraining:  (α118,)  <!<  (α120,)

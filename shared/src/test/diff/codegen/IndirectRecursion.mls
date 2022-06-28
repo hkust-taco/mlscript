@@ -7,9 +7,29 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (400)
 //│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  α111'
+//│ ╟── while constraining:  α106'  <!<  α111'
+//│ ╟── while constraining:  (α106',)  <!<  (α111',)
+//│ ╟── while constraining:  (α111' -> α115')  <!<  ((α106',) -> α107')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  ((α106',) -> α107')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  α106'
+//│ ╟── while constraining:  α101'  <!<  α106'
+//│ ╟── while constraining:  (α101',)  <!<  (α106',)
+//│ ╟── while constraining:  (α106' -> α110')  <!<  ((α101',) -> α102')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  ((α101',) -> α102')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  α101'
+//│ ╟── while constraining:  α96'  <!<  α101'
+//│ ╟── while constraining:  (α96',)  <!<  (α101',)
+//│ ╟── while constraining:  (α101' -> α105')  <!<  ((α96',) -> α97')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  ((α96',) -> α97')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  α96'
+//│ ╟── while constraining:  α91'  <!<  α96'
+//│ ╟── while constraining:  (α91',)  <!<  (α96',)
+//│ ╟── while constraining:  (α96' -> α100')  <!<  ((α91',) -> α92')
+//│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  ((α91',) -> α92')
 //│ ╟── while constraining:  ‹∀ 1. (α42'' -> α49'')›  <!<  α91'
 //│ ╟── while constraining:  α86'  <!<  α91'
 //│ ╟── while constraining:  (α86',)  <!<  (α91',)
