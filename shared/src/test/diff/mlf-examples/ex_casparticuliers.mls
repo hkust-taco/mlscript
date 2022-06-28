@@ -113,7 +113,7 @@ rec def to_church n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 // ;;
-// FIXME: polymorphic recursion
+// FIXME: principal type for constrained types
 def to_church: int -> ChurchInt
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
