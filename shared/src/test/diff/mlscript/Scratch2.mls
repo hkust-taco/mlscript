@@ -29,14 +29,12 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // :ns
 // def s (n: ChurchInt) = fun f -> fun x -> f (n f x)
 
-:ns
+// :ns
 def s n = fun f -> fun x -> f (n f x)
-//│ s: forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f. ('c -> 'f
+//│ s: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'd
-//│     'b <: 'e -> 'f)))
-//│   where
-//│     'd <: 'c -> 'e
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│  = [Function: s]
 
 def succ: ChurchInt -> ChurchInt
@@ -68,6 +66,115 @@ def zero = z
 //│   <:  zero:
 //│ ChurchInt
 //│     = [Function: z]
+
+
+wrap x = { x }
+//│ wrap: 'a -> {x: 'a}
+//│     = [Function: wrap]
+
+n1 = s z
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.75: 	n1 = s z
+//│ ║        	     ^^^
+//│ ╟── type `anything` is not an instance of type `'a`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ n1: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)) | error
+//│   = [Function (anonymous)]
+
+n1 wrap 0
+//│ res: error | {x: nothing}
+//│    = { x: 0 }
+
+n2 = s (s z)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.98: 	n2 = s (s z)
+//│ ║        	        ^^^
+//│ ╟── type `anything` is not an instance of type `'a`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.98: 	n2 = s (s z)
+//│ ║        	     ^^^^^^^
+//│ ╟── type `anything` is not an instance of type `'a`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ n2: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)) | error
+//│   = [Function (anonymous)]
+
+n2 wrap 0
+//│ res: error | {x: nothing}
+//│    = { x: { x: 0 } }
+
+n3 = s (s (s z))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.133: 	n3 = s (s (s z))
+//│ ║         	           ^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.133: 	n3 = s (s (s z))
+//│ ║         	        ^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.133: 	n3 = s (s (s z))
+//│ ║         	     ^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.33: 	def s n = fun f -> fun x -> f (n f x)
+//│ ╙──      	                               ^^^^^
+//│ n3: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd)) | error
+//│   = [Function (anonymous)]
+
+
+
 
 // :ns
 // :d

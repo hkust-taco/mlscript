@@ -48,11 +48,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def instantiate(implicit lvl: Int): SimpleType = {
       // val res = freshenAbove(polymLevel, body)
       implicit val state: MutMap[TV, ST] = MutMap.empty
-      val res = body.freshenAbove(polymLevel, rigidify = false)
       // println(s"INST  $this  ~>  $res")
       // println(s"  where  ${res.showBounds}")
-      println(s"INST [${level}]   $this")
+      // println(s"INST [${level}]   $this")
+      println(s"INST [${polymLevel}]   $this")
       println(s"  where  ${showBounds}")
+      val res = body.freshenAbove(polymLevel, rigidify = false)
       println(s"TO [${lvl}] ~>  $res")
       println(s"  where  ${res.showBounds}")
       res
@@ -89,11 +90,16 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       (body.level :: constraints.flatMap(_._2.unzip._2.map(_.level))).max
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       (body.levelBelow(ub) :: constraints.flatMap(_._2.unzip._2.map(_.levelBelow(ub)))).max
+    // override def toString: Str =
+    //   s"(${constraints.flatMap(vbs => vbs._2.map {
+    //     case (true, b) => s"${vbs._1} :> $b"
+    //     case (false, b) => s"${vbs._1} <: $b"
+    //   }).mkString(", ")} => $body)"
     override def toString: Str =
-      s"(${constraints.flatMap(vbs => vbs._2.map {
+      s"{$body where: ${constraints.flatMap(vbs => vbs._2.map {
         case (true, b) => s"${vbs._1} :> $b"
         case (false, b) => s"${vbs._1} <: $b"
-      }).mkString(", ")} => $body)"
+      }).mkString(", ")}}"
   }
   object ConstrainedType {
     def mk(constraints: Constrs, body: ST): ST =

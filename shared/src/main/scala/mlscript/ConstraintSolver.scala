@@ -824,7 +824,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // Setting `upperLim` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
         freshenImpl(bod, below = lvl))
-      case ct @ ConstrainedType(cs, bod) => ConstrainedType(cs.mapValues(_.mapValues(freshen)), freshen(bod))
+      case ct @ ConstrainedType(cs, bod) =>
+        ConstrainedType(cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen)), freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r"))
