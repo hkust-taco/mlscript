@@ -63,7 +63,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // body.freshenAbove(level, rigidify = true)
       body.freshenAbove(polymLevel, rigidify = true)
     }
-    override def toString = s"∀ $polymLevel. $body"
+    override def toString = s"‹∀ $polymLevel. $body›"
   }
   object PolymorphicType {
     def mk(polymLevel: Level, body: SimpleType): SimpleType = {
@@ -417,16 +417,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val nameHint: Opt[Str] = N
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
-      if (cache(this)) MinLevel else {
-        cache += this
-        // (if (level <= ub) level else MinLevel) max
-        //   (lowerBounds.iterator ++ upperBounds.iterator)
-        //   .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
-        if (level <= ub) level
-        else
+      // if (cache(this)) MinLevel else {
+      //   cache += this
+      //   // (if (level <= ub) level else MinLevel) max
+      //   //   (lowerBounds.iterator ++ upperBounds.iterator)
+      //   //   .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
+      //   if (level <= ub) level
+      //   else
+      //     (lowerBounds.iterator ++ upperBounds.iterator)
+      //       .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
+      // }
+      if (level <= ub) level else {
+        // println(this, level, ub)
+        if (cache(this)) MinLevel else {
+          cache += this
           (lowerBounds.iterator ++ upperBounds.iterator)
             .map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
-      }
+        }
+      } //tap { r => println(this, level, ub, r, cache) }
     // override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): TV =
     //   self.freshenAbove(lim, this, rigidify).asInstanceOf[TV]
     private[mlscript] val uid: Int = { freshCount += 1; freshCount - 1 }

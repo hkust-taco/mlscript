@@ -232,11 +232,11 @@ def lst: List[forall 'a. int -> 'a -> 'a]
 
 // E1
 k h lst
-//│ res: int -> 'a -> 'a
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E2
 k (fun x -> h x) lst
-//│ res: int -> 'a -> 'a
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E3
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int

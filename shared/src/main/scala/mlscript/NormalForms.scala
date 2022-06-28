@@ -443,8 +443,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   /** `polymLevel` denotes the level at which this type is quantified (MaxLevel if it is not) */
   case class DNF(polymLevel: Int, cs: Ls[Conjunct]) {
     assert(polymLevel <= MaxLevel, polymLevel)
-    def levelBelow(ub: Level): Level =
-      cs.iterator.map(_.levelBelow(polymLevel)(MutSet.empty)).maxOption.getOrElse(MinLevel)
+    private def levelBelow(ub: Level): Level =
+      cs.iterator.map(_.levelBelow(ub)(MutSet.empty)).maxOption.getOrElse(MinLevel)
     lazy val levelBelowPolym = levelBelow(polymLevel)
     def isBot: Bool = cs.isEmpty
     def toType(sort: Bool = false): SimpleType = if (cs.isEmpty) BotType else {
@@ -468,7 +468,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       val (newLvl, thisCs, thatCs) = levelWith(that)
       thatCs.map(DNF(newLvl, thisCs) & _).foldLeft(DNF.extr(false))(_ | _)
     }
-    private def levelWith(that: DNF): (Level, Ls[Conjunct], Ls[Conjunct]) =
+    private def levelWith(that: DNF): (Level, Ls[Conjunct], Ls[Conjunct]) = {
         if (levelBelowPolym <= that.polymLevel && that.levelBelowPolym <= polymLevel)
           (polymLevel min that.polymLevel, cs, that.cs)
         else if (levelBelow(that.polymLevel) <= polymLevel)
@@ -480,6 +480,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         else if (polymLevel > that.polymLevel)
           (polymLevel max that.polymLevel, cs, that.cs.map(_.freshenAbove(that.polymLevel, polymLevel + 1)))
         else (polymLevel, cs, that.cs) ensuring (that.polymLevel === polymLevel)
+    }
     def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)
       thatCs.foldLeft(DNF(newLvl, thisCs))(_ | _)

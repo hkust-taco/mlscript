@@ -128,6 +128,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
+          case "exit" =>
+            ls.tails.foreach {
+              case Nil =>
+              case lastLine :: Nil => out.print(lastLine)
+              case l :: _ => out.println(l)
+            }
+            return ()
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
