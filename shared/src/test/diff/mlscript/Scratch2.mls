@@ -69,11 +69,27 @@ def zero = z
 //│ ChurchInt
 //│     = [Function: z]
 
-// Seems to run out of depth:
 // :ns
+// :d
 // rec def to_ch n =
 //   if n == 0 then zero
-//   else succ (to_ch (n - 1))
+//   else to_ch n
+
+// [fixed] Seems to run out of depth:
+:ns
+rec def to_ch n =
+  if n == 0 then zero
+  else succ (to_ch (n - 1))
+//│ to_ch: forall 'to_ch. 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. ('a -> 'd
+//│   where
+//│     'to_ch <: 'b -> 'c)
+//│     'c <: ChurchInt
+//│     'b :> int
+//│     'd :> ChurchInt
+//│     'a <: int
+//│      = [Function: to_ch]
 
 // rec def to_ch n =
 //   (if n == 0 then zero
@@ -92,14 +108,30 @@ def to_church n =
 //│          = <no result>
 //│            to_church is not implemented
 
+// :s
+:ns
 to_church = to_ch
-//│ ╔══[ERROR] identifier not found: to_ch
-//│ ║  l.308: 	to_church = to_ch
-//│ ╙──       	            ^^^^^
-//│ error
+//│ forall 'to_ch. 'to_ch
+//│   where
+//│     'to_ch :> forall 'a, 'b, 'c, 'd. ('a -> 'd
+//│   where
+//│     'to_ch <: 'b -> 'c)
+//│     'c <: ChurchInt
+//│     'b :> int
+//│     'd :> ChurchInt
+//│     'a <: int
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ Code generation encountered an error:
-//│   unresolved symbol to_ch
+//│ /!!!\ Uncaught error: scala.MatchError: (to_ch109' <: ((α535'',) -> α536'') => (α537'' -> α538'')) (of class mlscript.TyperDatatypes$ConstrainedType)
+//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:549)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$75(TypeSimplifier.scala:282)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:30)
+//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:288)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$78(TypeSimplifier.scala:292)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$77(TypeSimplifier.scala:292)
+//│ 	at: mlscript.utils.package$MutSetHelpers.setAndIfUnset(package.scala:158)
+//│ 	at: mlscript.TypeSimplifier.processVar$1(TypeSimplifier.scala:291)
+//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$8(TypeSimplifier.scala:123)
 
 
