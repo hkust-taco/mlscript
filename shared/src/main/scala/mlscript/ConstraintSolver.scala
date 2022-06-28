@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, Stack => MutStack}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Stack => MutStack, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -12,8 +12,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def startingFuel: Int = 10000
   def depthLimit: Int = 400
   
+  type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
+  // def constrain(lhs: SimpleType, rhs: SimpleType, extrusionContext: Opt[ExtrCtx])(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
+  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx, extrusionContext: Opt[ExtrCtx]): Unit = { val outerCtx = ctx ; {
     val ctx = ()
     
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
@@ -387,6 +390,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+          case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty =>
+            // ???
+            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
+            buf += false -> rhs0
+            ()
+          case (lhs0, _: TypeVariable) if extrusionContext.nonEmpty => ???
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
@@ -480,6 +489,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF
             rec(poly.instantiate, rhs, true)
+          case (ConstrainedType(cs, bod), _) =>
+            cs.foreach { case (tv, bs) => bs.foreach {
+              case (true, b) => rec(b, tv, false)
+              case (false, b) => rec(tv, b, false)
+            }}
+            rec(bod, rhs, true)
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)
           case (ComposedType(false, l, r), _) =>
@@ -629,7 +644,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   
   def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
-      (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): Unit = {
+      (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], prov: TypeProvenance): Unit = {
     constrain(ty_sch, sign)
   }
   
@@ -799,6 +814,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         // Setting `upperLim` here is essentially just an optimization,
         //  to avoid having to copy some type variables needlessly
         freshenImpl(bod, below = lvl))
+      case ct @ ConstrainedType(cs, bod) => ConstrainedType(cs.mapValues(_.mapValues(freshen)), freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
     // (r => s"=> $r"))

@@ -56,6 +56,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -287,7 +288,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             }
             
             val oldCtx = ctx
-            ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
+            ctx = typer.processTypeDefs(typeDefs)(ctx, raise, extrCtx)
             
             def getType(ty: typer.TypeScheme): Type = {
               // val wty = ty.instantiate(0)
@@ -540,7 +541,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(typer.MinLevel,
-                  typer.typeType(rhs)(ctx.nextLevel, raise, vars = tps.collect {
+                  typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
                       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)
                     }.toMap))
                 ctx += nme.name -> ty_sch
@@ -575,14 +576,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.dbg = mode.dbg
-                    typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                    typer.subsume(ty_sch, sign)(ctx, raise, extrCtx, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.dbg = mode.dbg
-                typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
+                typer.typeStatement(desug, allowPure = true)(ctx, raise, extrCtx = N) match {
                   // when does this happen??
                   case R(binds) =>
                     binds.foreach {

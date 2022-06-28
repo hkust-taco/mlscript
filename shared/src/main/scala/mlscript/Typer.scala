@@ -215,13 +215,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
    *   is used to check the kind of the definition and the number of type arguments expected. Use case:
    *   for typing bodies of type definitions with mutually recursive references. */
   def typeType(ty: Type, simplify: Bool = true)
-        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): SimpleType =
+        (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], vars: Map[Str, SimpleType]): SimpleType =
     typeType2(ty, simplify)._1
   
   /* Also returns an iterable of `TypeVariable`s instantiated when typing `TypeVar`s.
    * Useful for instantiating them by substitution when expanding a `TypeRef`. */
   def typeType2(ty: Type, simplify: Bool = true)
-        (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType],
+        (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], vars: Map[Str, SimpleType],
         newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty): (SimpleType, Iterable[TypeVariable]) =
       trace(s"$lvl. Typing type $ty") {
     println(s"vars=$vars newDefsInfo=$newDefsInfo")
@@ -329,8 +329,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Constrained(base, where) =>
         val res = rec(base)
         where.foreach { case (tv, Bounds(lb, ub)) =>
-          constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx)
-          constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx)
+          constrain(rec(lb), tv)(raise, tp(lb.toLoc, "lower bound specifiation"), ctx, extrCtx)
+          constrain(tv, rec(ub))(raise, tp(ub.toLoc, "upper bound specifiation"), ctx, extrCtx)
         }
         res
       case PolyType(vars, ty) =>
@@ -351,12 +351,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     (rec(ty)(ctx, Map.empty), localVars.values)
   }(r => s"=> ${r._1} | ${r._2.mkString(", ")}")
   
-  def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType =
-    typeTerm(pat)(ctx.copy(inPattern = true), raise, vars)
+  def typePattern(pat: Term)(implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], vars: Map[Str, SimpleType] = Map.empty): SimpleType =
+    typeTerm(pat)(ctx.copy(inPattern = true), raise, extrCtx, vars)
   
   
   def typeStatement(s: DesugaredStatement, allowPure: Bool)
-        (implicit ctx: Ctx, raise: Raise): PolymorphicType \/ Ls[Binding] = s match {
+        (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx]): PolymorphicType \/ Ls[Binding] = s match {
     case Def(false, Var("_"), L(rhs)) => typeStatement(rhs, allowPure)
     case Def(isrec, nme, L(rhs)) => // TODO reject R(..)
       if (nme.name === "_")
@@ -383,7 +383,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
               msg"Expression in statement position should have type `unit`." -> N ::
               msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
               err.allMsgs)),
-            prov = TypeProvenance(t.toLoc, t.describe), ctx)
+            prov = TypeProvenance(t.toLoc, t.describe), ctx, extrCtx)
       }
       L(PolymorphicType(MinLevel, ty))
     case _ =>
@@ -414,13 +414,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       
       val oldLvl = lvl
       ctx.nextLevel |> { implicit ctx: Ctx =>
+        implicit val extrCtx: Opt[ExtrCtx] = N
         val ty = typeTerm(rhs)
         // val ty_sch = PolymorphicType(lvl, ty)
         val ty_sch = ty
-        constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
+        constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx, extrCtx)
       }
       e_ty
-    } else typeTerm(rhs)(ctx.nextLevel, raise, vars)
+    } else typeTerm(rhs)(ctx.nextLevel, raise, extrCtx = N, vars)
     PolymorphicType(lvl, res)
   }
   
@@ -456,7 +457,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }
   
   // FIXME should generalize at lambdas passed in arg or returned from blocks
-  def typePolymorphicTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty): SimpleType = 
+  def typePolymorphicTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, extrCtx: Opt[ExtrCtx]): SimpleType = 
     // if (ctx.inPattern) typeTerm(term) else ctx.nextLevel |> { implicit ctx =>
     //   val ty = typeTerm(term)
     //   println(s"POLY? ${ty.level} >= ${ctx.lvl}")
@@ -479,8 +480,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
-        = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
+  // def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = generalizeCurriedFunctions): SimpleType
+        // = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
+        = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term   ${extrCtx.map(_.size)}") {
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType): SimpleType = {
@@ -492,7 +495,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // In other words, this is so that errors do not interfere too much
           //  with the rest of the (hopefully good) code.
           if (errorsCount === 0) {
-            constrain(errType, res)(_ => (), noProv, ctx)
+            constrain(errType, res)(_ => (), noProv, ctx, extrCtx)
             // ^ This is just to get error types leak into the result
             raise(err)
           } else if (errorsCount < 3) {
@@ -505,7 +508,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           }
           errorsCount += 1
         case diag => raise(diag)
-      }, prov, ctx)
+      }, prov, ctx, extrCtx) // Q: extrCtx here?
       res
     }
     term match {
@@ -514,7 +517,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         else err(msg"Widlcard in expression position.", v.toLoc)
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
-        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
+        val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, extrCtx, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern)
           con(ty_ty, trm_ty, ty_ty) // In patterns, we actually _unify_ the pattern and ascribed type 
@@ -637,16 +640,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
         val newCtx = ctx.nest.nextLevel
-        val param_ty = typePattern(pat)(newCtx, raise, vars)
+        val ec: ExtrCtx = MutMap.empty
+        val extrCtx: Opt[ExtrCtx] = S(ec)
+        val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
         // newCtx ++= newBindings
-        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas = generalizeCurriedFunctions)
+        val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
+        val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         PolymorphicType.mk(ctx.lvl,
-        FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-        )
+          // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
+          if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
       case Lam(pat, body) =>
         val newCtx = ctx.nest
-        val param_ty = typePattern(pat)(newCtx, raise, vars)
-        val body_ty = typeTerm(body)(newCtx, raise, vars, genLambdas = generalizeCurriedFunctions)
+        val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
+        val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
       case App(App(Var("and"), lhs), rhs) =>
         val lhs_ty = typeTerm(lhs)
@@ -718,21 +724,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val n_ty = typeLetRhs(isrec, nme.name, rhs)
         val newCtx = ctx.nest
         newCtx += nme.name -> n_ty
-        typeTerm(bod)(newCtx, raise)
+        typeTerm(bod)(newCtx, raise, extrCtx)
       // case Blk(s :: stmts) =>
       //   val (newCtx, ty) = typeStatement(s)
-      //   typeTerm(Blk(stmts))(newCtx, lvl, raise)
-      case Blk(stmts) => typeTerms(stmts, false, Nil)(ctx.nest, raise, prov)
+      //   typeTerm(Blk(stmts))(newCtx, lvl, raise, extrCtx)
+      case Blk(stmts) => typeTerms(stmts, false, Nil)(ctx.nest, raise, extrCtx, prov)
       case Bind(l, r) =>
         val l_ty = typeTerm(l)
         val newCtx = ctx.nest // so the pattern's context don't merge with the outer context!
-        val r_ty = typePattern(r)(newCtx, raise)
+        val r_ty = typePattern(r)(newCtx, raise, extrCtx)
         ctx ++= newCtx.env
         con(l_ty, r_ty, r_ty)
       case Test(l, r) =>
         val l_ty = typeTerm(l)
         val newCtx = ctx.nest
-        val r_ty = typePattern(r)(newCtx, raise) // TODO make these bindings flow
+        val r_ty = typePattern(r)(newCtx, raise, extrCtx) // TODO make these bindings flow
         con(l_ty, r_ty, TopType)
         BoolType
       case With(t, rcd) =>
@@ -753,7 +759,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   }(r => s"$lvl. : ${r}")
   
   def typeArms(scrutVar: Opt[Var], arms: CaseBranches)
-      (implicit ctx: Ctx, raise: Raise, lvl: Int)
+      (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], lvl: Int)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
     case Wildcard(b) =>
@@ -762,7 +768,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       scrutVar match {
         case Some(v) =>
           newCtx += v.name -> fv
-          val b_ty = typeTerm(b)(newCtx, raise)
+          val b_ty = typeTerm(b)(newCtx, raise, extrCtx)
           (fv -> TopType :: Nil) -> b_ty
         case _ =>
           (fv -> TopType :: Nil) -> typeTerm(b)
@@ -793,17 +799,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // S(v.name), // this one seems a bit excessive
           )
           newCtx += v.name -> tv
-          val bod_ty = typeTerm(bod)(newCtx, raise)
+          val bod_ty = typeTerm(bod)(newCtx, raise, extrCtx)
           (patTy -> tv, bod_ty, typeArms(scrutVar, rest))
         case N =>
-          val bod_ty = typeTerm(bod)(newCtx, raise)
+          val bod_ty = typeTerm(bod)(newCtx, raise, extrCtx)
           (patTy -> TopType, bod_ty, typeArms(scrutVar, rest))
       }
       (req_ty :: tys) -> (bod_ty | rest_ty)
   }
   
   def typeTerms(term: Ls[Statement], rcd: Bool, fields: List[Opt[Var] -> SimpleType])
-        (implicit ctx: Ctx, raise: Raise, prov: TypeProvenance): SimpleType
+        (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], prov: TypeProvenance): SimpleType
       = term match {
     case (trm @ Var(nme)) :: sts if rcd => // field punning
       typeTerms(Tup(S(trm) -> (trm -> false) :: Nil) :: sts, rcd, fields)
@@ -833,7 +839,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             new TypeVariable(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
           
           // constrain(ty, t_ty)(raise, prov)
-          constrain(t_ty, ty)(raise, prov, ctx)
+          constrain(t_ty, ty)(raise, prov, ctx, extrCtx)
           ctx += nme.name -> t_ty
           
           t_ty
@@ -946,6 +952,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             // .toList
           if (qvars.isEmpty) b else
             PolyType(qvars.map(_.asTypeVar pipe (R(_))).toList, b)
+        case ConstrainedType(cs, bod) =>
+          Constrained(go(bod), cs.map { case (tv, bs) =>
+            val (lbs, ubs) = bs.partition(_._1)
+            val lb = go(lbs.unzip._2.foldLeft(BotType: ST)(_ | _))
+            val ub = go(ubs.unzip._2.foldLeft(TopType: ST)(_ & _))
+            tv.asTypeVar -> Bounds(lb, ub)
+          })
     }
     // }(r => s"~> $r")
     

@@ -291,6 +291,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProxyType(underlying) => f(underlying) // TODO different?
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
+      case ConstrainedType(cs, bod) => ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -313,6 +314,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs(pol)(f))(prov)
       case PolymorphicType(plvl, und) =>
         if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
+      case ConstrainedType(cs, bod) =>
+        // ConstrainedType(cs.map(tvbs => tvbs.mapV), f(pol, bod))
+        ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -572,6 +576,13 @@ abstract class TyperHelpers { Typer: Typer =>
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
+        case ConstrainedType(cs, bod) =>
+          // cs.flatMap(_._2.unzip._2) ::: bod :: Nil
+          // cs.flatMap(vbs => vbs._2.map {
+          //   case (true, b) => 
+          // }) ::: bod :: Nil
+          cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          // ???
     }}
     
     def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
@@ -618,6 +629,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
+      case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
     }
     
     def getVars: SortedSet[TypeVariable] = {
@@ -707,6 +719,11 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
+      case ConstrainedType(cs, bod) =>
+        cs.foreach(_._2.foreach{
+          case (pol, b) => apply(S(pol))(b)
+        })
+        apply(pol)(bod)
     }
     def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {
       fld.lb.foreach(apply(pol.map(!_)))

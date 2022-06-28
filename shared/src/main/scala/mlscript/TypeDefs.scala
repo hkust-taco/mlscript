@@ -158,7 +158,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
   }
   // ()
   
-  def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise): Ctx = {
+  def processTypeDefs(newDefs0: List[mlscript.TypeDef])(implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx]): Ctx = {
     var allDefs = ctx.tyDefs
     val allEnv = ctx.env.clone
     val allMthEnv = ctx.mthEnv.clone
@@ -185,7 +185,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
-        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
+        typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, extrCtx, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
       val td1 = TypeDef(td.kind, td.nme, tparamsargs.toList, tvars, bodyTy,
         td.mthDecls, td.mthDefs, baseClassesOf(td), td.toLoc)
       allDefs += n -> td1
@@ -289,7 +289,9 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                 // * This is not actually necessary for soundness
                 // *  (if they aren't, the object type just won't be instantiable),
                 // *  but will help report inheritance errors earlier (see test BadInherit2).
-                case (nme, FieldType(S(lb), ub)) => constrain(lb, ub)
+                case (nme, FieldType(S(lb), ub)) =>
+                  // implicit val ec: Opt[ExtrCtx] = N
+                  constrain(lb, ub)
                 case _ => ()
               }
               (decls -- defns) match {
@@ -373,8 +375,10 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
           td.targs.map(freshenAbove(ctx.lvl, _, true))
         }
         val targsMap = td.targs.lazyZip(rigidtargs).toMap[SimpleType, SimpleType]
-        def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) =
+        def ss(mt: MethodType, bmt: MethodType)(implicit prov: TypeProvenance) = {
+          // implicit val ec: Opt[ExtrCtx] = N
           constrain(subst(mt.bodyPT, targsMap).instantiate, subst(bmt.bodyPT, targsMap).rigidify)
+        }
         def registerImplicitSignatures(mn: Str, mthTy: MethodType) = ctx.getMth(N, mn) match {
           // If the currently registered method belongs to one of the base classes of this class,
           // then we don't need to do anything.
@@ -543,7 +547,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                   })
                 },
               ty => PolymorphicType(thisCtx.lvl,
-                typeType(ty)(thisCtx.nextLevel, raise, targsMap2))
+                typeType(ty)(thisCtx.nextLevel, raise, N, targsMap2))
                 // ^ Note: we need to go to the next level here,
                 //    which is also done automatically by `typeLetRhs` in the case above
               ), reverseRigid2)

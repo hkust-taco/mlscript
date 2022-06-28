@@ -76,6 +76,24 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     }
   }
   
+  // case class ConstrainedType(constraints: List[ST -> ST], body: ST) extends SimpleType { // TODO add own prov?
+  case class ConstrainedType(constraints: List[TV -> List[(Bool -> ST)]], body: ST) extends SimpleType { // TODO add own prov?
+    val prov: TypeProvenance = body.prov
+    // lazy val level =
+    //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.level).max
+    // def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+    //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.levelBelow(ub)).max
+    lazy val level =
+      (body.level :: constraints.flatMap(_._2.unzip._2.map(_.level))).max
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+      (body.level :: constraints.flatMap(_._2.unzip._2.map(_.levelBelow(ub)))).max
+    override def toString: Str =
+      s"(${constraints.flatMap(vbs => vbs._2.map {
+        case (true, b) => s"${vbs._1} :> $b"
+        case (false, b) => s"${vbs._1} <: $b"
+      }).mkString(", ")} => $body)"
+  }
+  
   /** `body.get._1`: implicit `this` parameter
     * `body.get._2`: actual body of the method
     * `body` being `None` indicates an error:
@@ -364,7 +382,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): this.type = this
     // override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): this.type = this
-    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
   case class TraitTag(level: Level, id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
