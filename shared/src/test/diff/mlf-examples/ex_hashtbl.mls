@@ -1,15 +1,111 @@
+:GeneralizeCurriedFunctions
+
+// ============ Dummy classes to represent the types in the examples ============
+
+class List[a]
+  method Head: a
+  method Tail: List[a]
+//│ Defined class List[+a]
+//│ Declared List.Head: List['a] -> 'a
+//│ Declared List.Tail: List['a] -> List['a]
+
+class Cons[a]: List[a] & { head: a; tail: List[a] }
+  method Head = this.head
+  method Tail = this.tail
+def cons[a]: a -> List[a] -> List[a]
+def cons head tail = Cons { head; tail }
+//│ Defined class Cons[+a]
+//│ Defined Cons.Head: Cons['a] -> 'a
+//│ Defined Cons.Tail: Cons['a] -> List['a]
+//│ cons: 'a -> List['a] -> List['a]
+//│     = <missing implementation>
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│   <:  cons:
+//│ 'a -> List['a] -> List['a]
+//│     = [Function: cons]
+
+class Nil[a]: List[a]
+  method Head = error
+  method Tail = this
+def nil: List['a]
+def nil = Nil {}
+//│ Defined class Nil[+a]
+//│ Defined Nil.Head: Nil[?] -> nothing
+//│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
+//│ nil: List[nothing]
+//│    = <missing implementation>
+//│ Nil[nothing]
+//│   <:  nil:
+//│ List[nothing]
+//│    = Nil {}
+
+// ============ Type signatures for functions used in the examples ============
+
+def head: forall 'a. List['a] -> 'a
+def head l = l.Head
+//│ head: List['a] -> 'a
+//│     = <missing implementation>
+//│ List['a] -> 'a
+//│   <:  head:
+//│ List['a] -> 'a
+//│     = [Function: head]
+
+def tail: forall 'a. List['a] -> List['a]
+def tail l = l.Tail
+//│ tail: List['a] -> List['a]
+//│     = <missing implementation>
+//│ List['a] -> List['a]
+//│   <:  tail:
+//│ List['a] -> List['a]
+//│     = [Function: tail]
+
+def is_empty: forall 'a. List['a] -> bool
+def is_empty l = eq l nil
+//│ is_empty: List[?] -> bool
+//│         = <missing implementation>
+//│ anything -> bool
+//│   <:  is_empty:
+//│ List[?] -> bool
+//│         = [Function: is_empty]
+
+
+
 // (* Use the value restriction ! *)
 
 // type option ('a) = None | Some of 'a
+class None
+class Some[a]: { val: a }
+type Option[a] = None | Some[a]
+def None = None {}
+def Some val = Some { val }
+//│ Defined class None
+//│ Defined class Some[+a]
+//│ Defined type alias Option[+a]
+//│ None: None
+//│     = None {}
+//│ Some: 'val -> Some['val]
+//│     = [Function: Some1]
 
 // let create_hashtbl () = []
+def create_hashtbl _ = nil
+//│ create_hashtbl: anything -> List[nothing]
+//│               = [Function: create_hashtbl]
 
 // let hashtbl_add table key element = (key, element) :: table
+def hashtbl_add table key element = cons ((key, element)) table
+//│ hashtbl_add: List['a] -> (forall 'b. 'b -> (forall 'c. 'c -> List[('b, 'c,) | 'a]))
+//│            = [Function: hashtbl_add]
 
 // let rec find table key = 
 //   if nil table then None
 //   else if fst (car table) = key then Some (snd (car table))
 //   else find (cdr table) key
+rec def find table key =
+  if is_empty table then None
+  else if eq (head table)._1 key then Some (head table)._2
+  else find (tail table) key
+//│ find: List[?] -> anything -> (None | Some[nothing])
+//│     = [Function: find]
 
 
 // let nfind table key =
@@ -17,17 +113,64 @@
 //   | None -> fun f x -> x
 //   | Some n -> n
 //   end
+def nfind table key =
+  let opt = find table key in
+  case opt of
+  { None -> fun f -> fun x -> x
+  | Some -> opt.val
+  }
+//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
+//│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
 
 // let succ (n:Int) = fun f x -> f (n f x)
+def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+def succ' n = fun f -> fun x -> f (n f x)
+//│ succ: ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│     = [Function: succ]
+//│ succ': ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│      = [Function: succ]
+
 // let add (n:Int) (m:Int) = n succ m
+def add (n: ChurchInt) (m: ChurchInt) = n succ m
+def add' n m = n succ' m
+//│ add: ChurchInt -> ChurchInt -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b | ChurchInt)
+//│    = [Function: add]
+//│ add': ((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)) -> 'e -> 'f) -> 'e -> 'f
+//│     = [Function: add]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
+def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
+def printInt' n = toString (n (fun x -> x + 1) 0)
+//│ printInt: ChurchInt -> string
+//│         = [Function: printInt]
+//│ printInt': ((int -> int) -> 0 -> anything) -> string
+//│          = [Function: printInt]
 
 // let table = create_hashtbl ()
 // let table = hashtbl_add table "one" (fun f x -> f x)
 // let table = hashtbl_add table "two" (fun f x -> f (f x))
+table = create_hashtbl null
+table = hashtbl_add table "one" (fun f -> fun x -> f x)
+table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
+//│ table: List[nothing]
+//│      = Nil {}
+//│ table: List[("one", forall 'a, 'b. ('a -> 'b) -> 'a -> 'b,)]
+//│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│ table: List[("one" | "two", forall 'a, 'b, 'c. ('a -> 'b & 'c -> 'b & 'a -> 'c) -> 'a -> 'b,)]
+//│      = Cons {
+//│          head: [ 'two', [Function (anonymous)] ],
+//│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
+//│        }
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
+zog = printInt (add (nfind table "one") (nfind table "two"))
+zog' = printInt' (add' (nfind table "one") (nfind table "two"))
+//│ zog: string
+//│    = '0'
+//│ zog': string
+//│     = '0'

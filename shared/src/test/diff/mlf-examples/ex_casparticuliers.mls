@@ -1,40 +1,98 @@
+:GeneralizeCurriedFunctions
 
 // (*** L'annotation est n�cessaire sur z, mais z n'est utilis� qu'une seule fois. ***)
 // type sid = ['a] 'a -> 'a
+type Sid = forall 'a. 'a -> 'a
+//│ Defined type alias Sid
 
 // let t (z:sid) = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a )
+def t (z: Sid) = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
+//│ t: Sid -> (forall 'a. anything -> 'a -> 'a)
+//│  = [Function: t]
 
 // (* Une seule instance, mais polymorphe. *)
 // let t z = ( (fun a -> z) : ['a,'b] 'b -> 'a -> 'a );;
+def t z = (fun a -> z) : forall 'a 'b. 'b -> 'a -> 'a
+//│ t: (‘a -> ‘a) -> (forall 'a. anything -> 'a -> 'a)
+//│  = [Function: t1]
+
+def t z = fun a -> z
+//│ t: 'a -> anything -> 'a
+//│  = [Function: t2]
 
 
 // (*** Ne type pas avec les value-restriction. Emb�tant. ***)
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
 // ;;
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
 
 // let zero f x = x
 // ;;
+def zero f x = x
+//│ zero: anything -> (forall 'a. 'a -> 'a)
+//│     = [Function: zero]
 
 // let succ (n:Int) = fun f x -> f (n f x)
 // ;;
+def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
+def succ' n = fun f -> fun x -> f (n f x)
+//│ succ: ChurchInt -> (forall 'b. ('a -> 'b & 'a -> 'a) -> 'a -> 'b)
+//│     = [Function: succ]
+//│ succ': ('a -> 'b -> 'c) -> (forall 'd. ('c -> 'd & 'a) -> 'b -> 'd)
+//│      = [Function: succ]
 
 // let rec to_church n =
 //   if n = 0 then zero
 //   else succ (to_church (n-1))
 // ;;
+// FIXME
+rec def to_church n =
+  if n == 0 then zero
+  else succ (to_church (n - 1))
+rec def to_church' n =
+  if n == 0 then zero
+  else succ' (to_church' (n - 1))
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.51: 	rec def to_church n =
+//│ ║        	                  ^^^
+//│ ║  l.52: 	  if n == 0 then zero
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	  else succ (to_church (n - 1))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ to_church: int -> (forall 'a. (nothing -> 'a & anything -> anything) -> (forall 'a. 'a -> 'a))
+//│          = [Function: to_church]
+//│ to_church': int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'a. ('a & 'b) -> 'a))
+//│           = [Function: to_church]
 
 // (* Marche *)
 // let rec to_church n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1) : Int) f x)
 // ;;
+rec def to_church n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church (n - 1) : ChurchInt) f x)
+//│ to_church: int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b)))
+//│          = [Function: to_church1]
 
 // (* Ne Marche Pas *)
 // let rec to_church n =
 //   if n = 0 then fun f x -> x
 //   else (fun f x -> f ((to_church (n-1)) f x) : Int)
 // ;;
+rec def to_church n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church (n - 1)) f x) : ChurchInt
+//│ to_church: int -> ((ChurchInt | 'a) -> ChurchInt) -> (forall 'b. ('b & 'a) -> (ChurchInt | 'b))
+//│          = [Function: to_church2]
 
 
 // (* La r�cursion est monomorphe. *)
@@ -42,16 +100,52 @@
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 // ;;
+rec def to_church n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ to_church: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
+//│          = [Function: to_church3]
 
 // (* Echoue avec la value restriction. *)
 // let rec (to_church:int -> Int) n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 // ;;
+// FIXME
+def to_church: int -> ChurchInt
+rec def to_church n =
+  if n == 0 then fun f -> fun x -> x
+  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ to_church: int -> ChurchInt
+//│          = <missing implementation>
+//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.116: 	rec def to_church n =
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.117: 	  if n == 0 then fun f -> fun x -> x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.118: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.28: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── from application:
+//│ ║  l.118: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│          = [Function: to_church4]
 
 // (* �a coince. *)
 // let tc n = (to_church n : Int);;
+def tc n = to_church n : ChurchInt
+//│ tc: int -> ChurchInt
+//│   = [Function: tc]
 
+// (* Duplicate with to_church1 ("Marche") above *)
 // (* Avec la value restriction : �a passe. *)
 // let rec to_church n =
 //   if n = 0 then fun f x -> x
@@ -61,8 +155,16 @@
 // (*** Les annotations de type ne commutent pas. ***)
 // type sid = ['a] 'a -> 'a
 // type z = ['a,'b] ('a -> 'b) -> ('a -> 'b)
+type Z = forall 'a 'b. ('a -> 'b) -> ('a -> 'b)
+//│ Defined type alias Z
 
 // let f x = (x:sid), ((x:sid):z)
+def f x = ((x : Sid), ((x : Sid) : Z))
+//│ f: Sid -> (Sid, Z,)
+//│  = [Function: f]
 
 // (* Ne type pas ... c'est une instance polymorphe. Interdit. *)
 // untype fun x -> (x:sid), (x:z)
+fun x -> ((x : Sid), (x : Z))
+//│ res: (Sid & Z) -> (Sid, Z,)
+//│    = [Function: res]
