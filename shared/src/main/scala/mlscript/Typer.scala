@@ -414,6 +414,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       
       val oldLvl = lvl
       ctx.nextLevel |> { implicit ctx: Ctx =>
+        // implicit val genLambdas: Bool = true
         val ty = typeTerm(rhs)
         // val ty_sch = PolymorphicType(lvl, ty)
         val ty_sch = ty
@@ -479,7 +480,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
+  // def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = false): SimpleType
+  def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType] = Map.empty, genLambdas: Bool = true): SimpleType
         = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
     implicit val prov: TypeProvenance = ttp(term)
     
