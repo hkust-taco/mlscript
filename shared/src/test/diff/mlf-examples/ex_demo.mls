@@ -206,7 +206,9 @@ rec def listiter f ll =
   else
     let _ = ignore (f (head ll)) in 
     listiter f (tail ll)
-//│ listiter: ('a -> anything) -> List['a] -> null
+//│ listiter: ('a -> anything & 'b) -> (forall 'a, 'b, 'a0, 'c. (List['a | 'a0] -> (null | 'c)
+//│   where
+//│     'listiter <: 'b -> List['a0] -> 'c)) | 'listiter
 //│         = [Function: listiter]
 
 
@@ -224,37 +226,336 @@ rec def id x = if true then x else id id x
 //│   = <missing implementation>
 //│ 'id
 //│   where
-//│     'id :> 'a -> 'b
-//│     'a :> 'id
-//│        <: 'b
-//│     'b :> 'id
-//│        <: 'a -> 'b
+//│     'id :> forall 'id. (('a & 'b) -> 'b
+//│   where
+//│     'id <: 'id -> 'a -> 'b)
 //│   <:  id:
 //│ Sid
-//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?id, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?d15, ?e15, ?f15, ?g15, ?h15, ?id0, ?id1, ?i15, ?j15, ?k15, ?l15, ?m15, ?n15, ?o15. ?id <: Sid` exceeded recursion depth limit (400)
 //│ ║  l.222: 	rec def id x = if true then x else id id x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not a function
-//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
-//│ ║         	                  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.222: 	rec def id x = if true then x else id id x
-//│ ║         	                                   ^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.222: 	rec def id x = if true then x else id id x
-//│ ╙──       	                            ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.222: 	rec def id x = if true then x else id id x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.222: 	rec def id x = if true then x else id id x
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `‘a`
-//│ ║  l.222: 	rec def id x = if true then x else id id x
-//│ ║         	                                      ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──       	                  ^^
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1195')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1195')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1190'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1190'') => (α1191'' -> α1193''))  <!<  ((id382',) -> α1185')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1185')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1185')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1180'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1180'') => (α1181'' -> α1183''))  <!<  ((id382',) -> α1175')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1175')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1175')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1170'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1170'') => (α1171'' -> α1173''))  <!<  ((id382',) -> α1165')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1165')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1165')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1160'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1160'') => (α1161'' -> α1163''))  <!<  ((id382',) -> α1155')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1155')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1155')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1150'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1150'') => (α1151'' -> α1153''))  <!<  ((id382',) -> α1145')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1145')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1145')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1140'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1140'') => (α1141'' -> α1143''))  <!<  ((id382',) -> α1135')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1135')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1135')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1130'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1130'') => (α1131'' -> α1133''))  <!<  ((id382',) -> α1125')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1125')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1125')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1120'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1120'') => (α1121'' -> α1123''))  <!<  ((id382',) -> α1115')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1115')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1115')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1110'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1110'') => (α1111'' -> α1113''))  <!<  ((id382',) -> α1105')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1105')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1105')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1100'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1100'') => (α1101'' -> α1103''))  <!<  ((id382',) -> α1095')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1095')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1095')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1090'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1090'') => (α1091'' -> α1093''))  <!<  ((id382',) -> α1085')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1085')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1085')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1080'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1080'') => (α1081'' -> α1083''))  <!<  ((id382',) -> α1075')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1075')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1075')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1070'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1070'') => (α1071'' -> α1073''))  <!<  ((id382',) -> α1065')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1065')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1065')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1060'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1060'') => (α1061'' -> α1063''))  <!<  ((id382',) -> α1055')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1055')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1055')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1050'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1050'') => (α1051'' -> α1053''))  <!<  ((id382',) -> α1045')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1045')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1045')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1040'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1040'') => (α1041'' -> α1043''))  <!<  ((id382',) -> α1035')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1035')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1035')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1030'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1030'') => (α1031'' -> α1033''))  <!<  ((id382',) -> α1025')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1025')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1025')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1020'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1020'') => (α1021'' -> α1023''))  <!<  ((id382',) -> α1015')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1015')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1015')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1010'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1010'') => (α1011'' -> α1013''))  <!<  ((id382',) -> α1005')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α1005')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1005')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α1000'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α1000'') => (α1001'' -> α1003''))  <!<  ((id382',) -> α995')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α995')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α995')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α990'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α990'') => (α991'' -> α993''))  <!<  ((id382',) -> α985')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α985')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α985')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α980'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α980'') => (α981'' -> α983''))  <!<  ((id382',) -> α975')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α975')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α975')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α970'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α970'') => (α971'' -> α973''))  <!<  ((id382',) -> α965')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α965')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α965')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α960'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α960'') => (α961'' -> α963''))  <!<  ((id382',) -> α955')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α955')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α955')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α950'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α950'') => (α951'' -> α953''))  <!<  ((id382',) -> α945')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α945')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α945')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α940'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α940'') => (α941'' -> α943''))  <!<  ((id382',) -> α935')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α935')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α935')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α930'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α930'') => (α931'' -> α933''))  <!<  ((id382',) -> α925')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α925')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α925')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α920'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α920'') => (α921'' -> α923''))  <!<  ((id382',) -> α915')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α915')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α915')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α910'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α910'') => (α911'' -> α913''))  <!<  ((id382',) -> α905')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α905')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α905')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α900'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α900'') => (α901'' -> α903''))  <!<  ((id382',) -> α895')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α895')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α895')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α890'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α890'') => (α891'' -> α893''))  <!<  ((id382',) -> α885')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α885')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α885')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α880'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α880'') => (α881'' -> α883''))  <!<  ((id382',) -> α875')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α875')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α875')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α870'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α870'') => (α871'' -> α873''))  <!<  ((id382',) -> α865')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α865')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α865')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α860'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α860'') => (α861'' -> α863''))  <!<  ((id382',) -> α855')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α855')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α855')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α850'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α850'') => (α851'' -> α853''))  <!<  ((id382',) -> α845')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α845')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α845')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α840'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α840'') => (α841'' -> α843''))  <!<  ((id382',) -> α835')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α835')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α835')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α830'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α830'') => (α831'' -> α833''))  <!<  ((id382',) -> α825')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α825')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α825')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α820'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α820'') => (α821'' -> α823''))  <!<  ((id382',) -> α815')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α815')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α815')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α810'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α810'') => (α811'' -> α813''))  <!<  ((id382',) -> α805')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α805')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α805')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α800'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α800'') => (α801'' -> α803''))  <!<  ((id382',) -> α795')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α795')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α795')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α790'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α790'') => (α791'' -> α793''))  <!<  ((id382',) -> α785')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α785')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α785')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α780'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α780'') => (α781'' -> α783''))  <!<  ((id382',) -> α775')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α775')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α775')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α770'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α770'') => (α771'' -> α773''))  <!<  ((id382',) -> α765')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α765')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α765')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α760'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α760'') => (α761'' -> α763''))  <!<  ((id382',) -> α755')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α755')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α755')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α750'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α750'') => (α751'' -> α753''))  <!<  ((id382',) -> α745')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α745')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α745')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α740'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α740'') => (α741'' -> α743''))  <!<  ((id382',) -> α735')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α735')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α735')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α730'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α730'') => (α731'' -> α733''))  <!<  ((id382',) -> α725')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α725')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α725')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α720'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α720'') => (α721'' -> α723''))  <!<  ((id382',) -> α715')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α715')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α715')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α710'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α710'') => (α711'' -> α713''))  <!<  ((id382',) -> α705')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α705')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α705')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α700'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α700'') => (α701'' -> α703''))  <!<  ((id382',) -> α695')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α695')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α695')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α690'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α690'') => (α691'' -> α693''))  <!<  ((id382',) -> α685')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α685')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α685')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α680'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α680'') => (α681'' -> α683''))  <!<  ((id382',) -> α675')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α675')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α675')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α670'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α670'') => (α671'' -> α673''))  <!<  ((id382',) -> α665')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α665')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α665')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α660'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α660'') => (α661'' -> α663''))  <!<  ((id382',) -> α655')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α655')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α655')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α650'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α650'') => (α651'' -> α653''))  <!<  ((id382',) -> α645')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α645')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α645')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α640'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α640'') => (α641'' -> α643''))  <!<  ((id382',) -> α635')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α635')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α635')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α630'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α630'') => (α631'' -> α633''))  <!<  ((id382',) -> α625')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α625')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α625')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α620'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α620'') => (α621'' -> α623''))  <!<  ((id382',) -> α615')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α615')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α615')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α610'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α610'') => (α611'' -> α613''))  <!<  ((id382',) -> α605')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α605')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α605')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α600'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α600'') => (α601'' -> α603''))  <!<  ((id382',) -> α595')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α595')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α595')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α590'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α590'') => (α591'' -> α593''))  <!<  ((id382',) -> α585')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α585')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α585')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α580'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α580'') => (α581'' -> α583''))  <!<  ((id382',) -> α575')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α575')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α575')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α570'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α570'') => (α571'' -> α573''))  <!<  ((id382',) -> α565')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α565')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α565')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α560'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α560'') => (α561'' -> α563''))  <!<  ((id382',) -> α555')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α555')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α555')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α550'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α550'') => (α551'' -> α553''))  <!<  ((id382',) -> α545')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α545')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α545')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α540'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α540'') => (α541'' -> α543''))  <!<  ((id382',) -> α535')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α535')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α535')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α530'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α530'') => (α531'' -> α533''))  <!<  ((id382',) -> α525')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α525')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α525')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α520'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α520'') => (α521'' -> α523''))  <!<  ((id382',) -> α515')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α515')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α515')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α510'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α510'') => (α511'' -> α513''))  <!<  ((id382',) -> α505')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α505')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α505')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α500'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α500'') => (α501'' -> α503''))  <!<  ((id382',) -> α495')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α495')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α495')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α490'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α490'') => (α491'' -> α493''))  <!<  ((id382',) -> α485')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α485')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α485')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α480'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α480'') => (α481'' -> α483''))  <!<  ((id382',) -> α475')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α475')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α475')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α470'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α470'') => (α471'' -> α473''))  <!<  ((id382',) -> α465')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α465')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α465')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α460'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α460'') => (α461'' -> α463''))  <!<  ((id382',) -> α455')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α455')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α455')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α450'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α450'') => (α451'' -> α453''))  <!<  ((id382',) -> α445')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α445')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α445')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α440'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α440'') => (α441'' -> α443''))  <!<  ((id382',) -> α435')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α435')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α435')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α430'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α430'') => (α431'' -> α433''))  <!<  ((id382',) -> α425')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id382',) -> α425')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α425')
+//│ ╟── while constraining:  id382'  <!<  ((id382',) -> α420'')
+//│ ╟── while constraining:  (id382' <: ((id382',) -> α420'') => (α421'' -> α423''))  <!<  ((id414',) -> α415')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id382',) -> α387'') => (α383'' -> α389''))›  <!<  ((id414',) -> α415')
+//│ ╟── while constraining:  id382'  <!<  ((id414',) -> α415')
+//│ ╟── while constraining:  id382'  <!<  ((id408'',) -> α409'')
+//│ ╟── while constraining:  (id382' <: ((id408'',) -> α409'') => (α410'' -> α412''))  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 1. (id382' <: ((id402'',) -> α403'') => (α404'' -> α406''))›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  id402''  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 0. id382'›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 0. id382'›  <!<  ‹∀ 0. ('a188' -> 'a188')›
+//│ ╟── while constraining:  ‹∀ 0. id382'›  <!<  Sid
+//│ ╙── while constraining:  ‹∀ 0. id382'›  <!<  ‹∀ 0. Sid›
 //│   = [Function: id1]
 
 :e // not precise enough
@@ -262,42 +563,341 @@ rec def idd x = if true then x else idd idd x
 id = idd
 //│ idd: 'idd
 //│   where
-//│     'idd :> 'a -> 'b
-//│     'a :> 'idd
-//│        <: 'b
-//│     'b :> 'idd
-//│        <: 'a -> 'b
+//│     'idd :> forall 'idd. (('a & 'b) -> 'b
+//│   where
+//│     'idd <: 'idd -> 'a -> 'b)
 //│    = [Function: idd]
 //│ 'idd
 //│   where
-//│     'idd :> 'a -> 'b
-//│     'a :> 'idd
-//│        <: 'b
-//│     'b :> 'idd
-//│        <: 'a -> 'b
+//│     'idd :> forall 'idd. (('a & 'b) -> 'b
+//│   where
+//│     'idd <: 'idd -> 'a -> 'b)
 //│   <:  id:
 //│ Sid
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.262: 	id = idd
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?idd, ?c6, ?d6, ?e6, ?f6, ?g6, ?h6, ?i6, ?j6, ?k6, ?l6, ?m6, ?n6, ?o6, ?p6, ?q6, ?r6, ?s6, ?t6, ?u6, ?v6, ?w6, ?x6, ?y6, ?z6, ?a7, ?b7, ?c7, ?d7, ?e7, ?f7, ?g7, ?h7, ?i7, ?j7, ?k7, ?l7, ?m7, ?n7, ?o7, ?p7, ?q7, ?r7, ?s7, ?t7, ?u7, ?v7, ?w7, ?x7, ?y7, ?z7, ?a8, ?b8, ?c8, ?d8, ?e8, ?f8, ?g8, ?h8, ?i8, ?j8, ?k8, ?l8, ?m8, ?n8, ?o8, ?p8, ?q8, ?r8, ?s8, ?t8, ?u8, ?v8, ?w8, ?x8, ?y8, ?z8, ?a9, ?b9, ?c9, ?d9, ?e9, ?f9, ?g9, ?h9, ?i9, ?j9, ?k9, ?l9, ?m9, ?n9, ?o9, ?p9, ?q9, ?r9, ?s9, ?t9, ?u9, ?v9, ?w9, ?x9, ?y9, ?z9, ?a10, ?b10, ?c10, ?d10, ?e10, ?f10, ?g10, ?h10, ?i10, ?j10, ?k10, ?l10, ?m10, ?n10, ?o10, ?p10, ?q10, ?r10, ?s10, ?t10, ?u10, ?v10, ?w10, ?x10, ?y10, ?z10, ?a11, ?b11, ?c11, ?d11, ?e11, ?f11, ?g11, ?h11, ?i11, ?j11, ?k11, ?l11, ?m11, ?n11, ?o11, ?p11, ?q11, ?r11, ?s11, ?t11, ?u11, ?v11, ?w11, ?x11, ?y11, ?z11, ?a12, ?b12, ?c12, ?d12, ?e12, ?f12, ?g12, ?h12, ?i12, ?j12, ?k12, ?l12, ?m12, ?n12, ?o12, ?p12, ?q12, ?r12, ?s12, ?t12, ?u12, ?v12, ?w12, ?x12, ?y12, ?z12, ?a13, ?b13, ?c13, ?d13, ?e13, ?f13, ?g13, ?h13, ?i13, ?j13, ?k13, ?l13, ?m13, ?n13, ?o13, ?p13, ?q13, ?r13, ?s13, ?t13, ?u13, ?v13, ?w13, ?x13, ?y13, ?z13, ?a14, ?b14, ?c14, ?d14, ?e14, ?f14, ?g14, ?h14, ?i14, ?j14, ?k14, ?l14, ?m14, ?n14, ?o14, ?p14, ?q14, ?r14, ?s14, ?t14, ?u14, ?v14, ?w14, ?x14, ?y14, ?z14, ?a15, ?b15, ?c15, ?idd0, ?idd1, ?d15, ?e15, ?f15, ?g15, ?h15, ?i15, ?j15. ?idd <: Sid` exceeded recursion depth limit (400)
+//│ ║  l.229: 	id = idd
 //│ ║         	^^^^^^^^
-//│ ╟── type `‘a` is not a function
-//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
-//│ ║         	                  ^^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
-//│ ║         	                                    ^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
-//│ ╙──       	                             ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.262: 	id = idd
-//│ ║         	^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `'a`
-//│ ║  l.261: 	rec def idd x = if true then x else idd idd x
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.101: 	type Sid = forall 'a. 'a -> 'a
-//│ ╙──       	                  ^^
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2268'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2268'') => (α2269'' -> α2271''))  <!<  ((idd1448',) -> α2263')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2263')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2263')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2258'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2258'') => (α2259'' -> α2261''))  <!<  ((idd1448',) -> α2253')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2253')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2253')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2248'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2248'') => (α2249'' -> α2251''))  <!<  ((idd1448',) -> α2243')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2243')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2243')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2238'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2238'') => (α2239'' -> α2241''))  <!<  ((idd1448',) -> α2233')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2233')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2233')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2228'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2228'') => (α2229'' -> α2231''))  <!<  ((idd1448',) -> α2223')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2223')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2223')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2218'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2218'') => (α2219'' -> α2221''))  <!<  ((idd1448',) -> α2213')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2213')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2213')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2208'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2208'') => (α2209'' -> α2211''))  <!<  ((idd1448',) -> α2203')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2203')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2203')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2198'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2198'') => (α2199'' -> α2201''))  <!<  ((idd1448',) -> α2193')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2193')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2193')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2188'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2188'') => (α2189'' -> α2191''))  <!<  ((idd1448',) -> α2183')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2183')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2183')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2178'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2178'') => (α2179'' -> α2181''))  <!<  ((idd1448',) -> α2173')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2173')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2173')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2168'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2168'') => (α2169'' -> α2171''))  <!<  ((idd1448',) -> α2163')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2163')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2163')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2158'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2158'') => (α2159'' -> α2161''))  <!<  ((idd1448',) -> α2153')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2153')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2153')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2148'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2148'') => (α2149'' -> α2151''))  <!<  ((idd1448',) -> α2143')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2143')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2143')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2138'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2138'') => (α2139'' -> α2141''))  <!<  ((idd1448',) -> α2133')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2133')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2133')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2128'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2128'') => (α2129'' -> α2131''))  <!<  ((idd1448',) -> α2123')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2123')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2123')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2118'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2118'') => (α2119'' -> α2121''))  <!<  ((idd1448',) -> α2113')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2113')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2113')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2108'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2108'') => (α2109'' -> α2111''))  <!<  ((idd1448',) -> α2103')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2103')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2103')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2098'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2098'') => (α2099'' -> α2101''))  <!<  ((idd1448',) -> α2093')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2093')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2093')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2088'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2088'') => (α2089'' -> α2091''))  <!<  ((idd1448',) -> α2083')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2083')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2083')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2078'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2078'') => (α2079'' -> α2081''))  <!<  ((idd1448',) -> α2073')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2073')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2073')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2068'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2068'') => (α2069'' -> α2071''))  <!<  ((idd1448',) -> α2063')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2063')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2063')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2058'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2058'') => (α2059'' -> α2061''))  <!<  ((idd1448',) -> α2053')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2053')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2053')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2048'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2048'') => (α2049'' -> α2051''))  <!<  ((idd1448',) -> α2043')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2043')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2043')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2038'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2038'') => (α2039'' -> α2041''))  <!<  ((idd1448',) -> α2033')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2033')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2033')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2028'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2028'') => (α2029'' -> α2031''))  <!<  ((idd1448',) -> α2023')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2023')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2023')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2018'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2018'') => (α2019'' -> α2021''))  <!<  ((idd1448',) -> α2013')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2013')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2013')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2008'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α2008'') => (α2009'' -> α2011''))  <!<  ((idd1448',) -> α2003')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α2003')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α2003')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1998'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1998'') => (α1999'' -> α2001''))  <!<  ((idd1448',) -> α1993')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1993')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1993')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1988'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1988'') => (α1989'' -> α1991''))  <!<  ((idd1448',) -> α1983')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1983')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1983')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1978'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1978'') => (α1979'' -> α1981''))  <!<  ((idd1448',) -> α1973')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1973')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1973')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1968'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1968'') => (α1969'' -> α1971''))  <!<  ((idd1448',) -> α1963')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1963')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1963')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1958'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1958'') => (α1959'' -> α1961''))  <!<  ((idd1448',) -> α1953')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1953')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1953')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1948'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1948'') => (α1949'' -> α1951''))  <!<  ((idd1448',) -> α1943')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1943')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1943')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1938'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1938'') => (α1939'' -> α1941''))  <!<  ((idd1448',) -> α1933')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1933')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1933')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1928'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1928'') => (α1929'' -> α1931''))  <!<  ((idd1448',) -> α1923')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1923')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1923')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1918'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1918'') => (α1919'' -> α1921''))  <!<  ((idd1448',) -> α1913')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1913')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1913')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1908'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1908'') => (α1909'' -> α1911''))  <!<  ((idd1448',) -> α1903')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1903')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1903')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1898'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1898'') => (α1899'' -> α1901''))  <!<  ((idd1448',) -> α1893')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1893')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1893')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1888'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1888'') => (α1889'' -> α1891''))  <!<  ((idd1448',) -> α1883')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1883')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1883')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1878'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1878'') => (α1879'' -> α1881''))  <!<  ((idd1448',) -> α1873')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1873')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1873')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1868'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1868'') => (α1869'' -> α1871''))  <!<  ((idd1448',) -> α1863')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1863')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1863')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1858'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1858'') => (α1859'' -> α1861''))  <!<  ((idd1448',) -> α1853')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1853')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1853')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1848'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1848'') => (α1849'' -> α1851''))  <!<  ((idd1448',) -> α1843')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1843')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1843')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1838'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1838'') => (α1839'' -> α1841''))  <!<  ((idd1448',) -> α1833')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1833')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1833')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1828'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1828'') => (α1829'' -> α1831''))  <!<  ((idd1448',) -> α1823')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1823')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1823')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1818'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1818'') => (α1819'' -> α1821''))  <!<  ((idd1448',) -> α1813')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1813')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1813')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1808'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1808'') => (α1809'' -> α1811''))  <!<  ((idd1448',) -> α1803')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1803')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1803')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1798'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1798'') => (α1799'' -> α1801''))  <!<  ((idd1448',) -> α1793')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1793')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1793')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1788'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1788'') => (α1789'' -> α1791''))  <!<  ((idd1448',) -> α1783')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1783')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1783')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1778'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1778'') => (α1779'' -> α1781''))  <!<  ((idd1448',) -> α1773')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1773')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1773')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1768'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1768'') => (α1769'' -> α1771''))  <!<  ((idd1448',) -> α1763')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1763')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1763')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1758'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1758'') => (α1759'' -> α1761''))  <!<  ((idd1448',) -> α1753')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1753')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1753')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1748'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1748'') => (α1749'' -> α1751''))  <!<  ((idd1448',) -> α1743')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1743')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1743')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1738'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1738'') => (α1739'' -> α1741''))  <!<  ((idd1448',) -> α1733')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1733')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1733')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1728'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1728'') => (α1729'' -> α1731''))  <!<  ((idd1448',) -> α1723')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1723')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1723')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1718'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1718'') => (α1719'' -> α1721''))  <!<  ((idd1448',) -> α1713')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1713')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1713')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1708'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1708'') => (α1709'' -> α1711''))  <!<  ((idd1448',) -> α1703')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1703')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1703')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1698'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1698'') => (α1699'' -> α1701''))  <!<  ((idd1448',) -> α1693')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1693')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1693')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1688'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1688'') => (α1689'' -> α1691''))  <!<  ((idd1448',) -> α1683')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1683')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1683')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1678'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1678'') => (α1679'' -> α1681''))  <!<  ((idd1448',) -> α1673')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1673')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1673')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1668'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1668'') => (α1669'' -> α1671''))  <!<  ((idd1448',) -> α1663')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1663')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1663')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1658'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1658'') => (α1659'' -> α1661''))  <!<  ((idd1448',) -> α1653')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1653')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1653')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1648'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1648'') => (α1649'' -> α1651''))  <!<  ((idd1448',) -> α1643')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1643')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1643')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1638'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1638'') => (α1639'' -> α1641''))  <!<  ((idd1448',) -> α1633')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1633')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1633')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1628'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1628'') => (α1629'' -> α1631''))  <!<  ((idd1448',) -> α1623')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1623')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1623')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1618'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1618'') => (α1619'' -> α1621''))  <!<  ((idd1448',) -> α1613')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1613')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1613')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1608'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1608'') => (α1609'' -> α1611''))  <!<  ((idd1448',) -> α1603')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1603')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1603')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1598'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1598'') => (α1599'' -> α1601''))  <!<  ((idd1448',) -> α1593')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1593')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1593')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1588'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1588'') => (α1589'' -> α1591''))  <!<  ((idd1448',) -> α1583')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1583')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1583')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1578'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1578'') => (α1579'' -> α1581''))  <!<  ((idd1448',) -> α1573')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1573')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1573')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1568'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1568'') => (α1569'' -> α1571''))  <!<  ((idd1448',) -> α1563')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1563')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1563')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1558'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1558'') => (α1559'' -> α1561''))  <!<  ((idd1448',) -> α1553')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1553')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1553')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1548'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1548'') => (α1549'' -> α1551''))  <!<  ((idd1448',) -> α1543')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1543')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1543')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1538'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1538'') => (α1539'' -> α1541''))  <!<  ((idd1448',) -> α1533')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1533')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1533')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1528'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1528'') => (α1529'' -> α1531''))  <!<  ((idd1448',) -> α1523')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1523')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1523')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1518'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1518'') => (α1519'' -> α1521''))  <!<  ((idd1448',) -> α1513')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1513')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1513')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1508'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1508'') => (α1509'' -> α1511''))  <!<  ((idd1448',) -> α1503')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1448',) -> α1503')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1503')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1448',) -> α1498'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1448',) -> α1498'') => (α1499'' -> α1501''))  <!<  ((idd1492',) -> α1493')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1448',) -> α1453'') => (α1449'' -> α1455''))›  <!<  ((idd1492',) -> α1493')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1492',) -> α1493')
+//│ ╟── while constraining:  idd1448'  <!<  ((idd1486'',) -> α1487'')
+//│ ╟── while constraining:  (idd1448' <: ((idd1486'',) -> α1487'') => (α1488'' -> α1490''))  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 1. (idd1448' <: ((idd1480'',) -> α1481'') => (α1482'' -> α1484''))›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  idd1480''  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 0. idd1448'›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. idd1448'››  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. idd1448'››  <!<  ‹∀ 0. ('a188' -> 'a188')›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. idd1448'››  <!<  Sid
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. idd1448'››  <!<  ‹∀ 0. Sid›
 //│   = [Function: idd]
 
 // emulates annotated rec def
@@ -316,13 +916,17 @@ def id x = if true then x else id id x
 // (*        then    (Exist 'a . 'a * 'a * ('a -> 'a -> bool))   *)
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: ('a, 'a -> 'c,) -> (forall 'b. (forall 'a0. ('a0, 'a0 -> 'c,) -> 'b) -> 'b)
+//│ make_ex1: 'b -> (forall 'a, 'c, 'd. ((forall 'a0. ('a0, 'a0 -> 'c,) -> 'd) -> 'd
+//│   where
+//│     'b <: ('a, 'a -> 'c,)))
 //│         = [Function: make_ex1]
 
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: ('a, 'a, 'a -> 'a -> 'c,) -> (forall 'b. (forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'b) -> 'b)
+//│ make_ex2: 'b -> (forall 'a, 'c, 'd. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'd) -> 'd
+//│   where
+//│     'b <: ('a, 'a, 'a -> 'a -> 'c,)))
 //│         = [Function: make_ex2]
 
 // let ex_list1 = [ make_ex1 ("A String", print_string) ; 
@@ -333,7 +937,9 @@ def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
 ex_list1 = cons (make_ex1 (("A String", print_string)))
   (cons (make_ex1 ((8250, print_int)))
   (cons (make_ex1 ((true, print_bool))) nil))
-//│ ex_list1: List[(forall 'a, 'a0, 'a1. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b & ('a1, 'a1 -> unit,) -> 'b) -> 'b]
+//│ ex_list1: List[forall 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0 -> 'c,) -> 'b) -> 'b
+//│   where
+//│     'd <: ('a, 'a -> 'c,))]
 
 // let ex_list2 = [ make_ex2 ("String", "String", eqstring) ;
 // 		 make_ex2 ( 1250, 4890, eqint) ;
@@ -342,7 +948,9 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[(forall 'a, 'a0, 'a1. ('a, 'a, 'a -> 'a -> bool,) -> 'b & ('a0, 'a0, 'a0 -> 'a0 -> bool,) -> 'b & ('a1, 'a1, 'a1 -> 'a1 -> bool,) -> 'b) -> 'b]
+//│ ex_list2: List[forall 'a, 'c, 'b. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'b) -> 'b
+//│   where
+//│     'd <: ('a, 'a, 'a -> 'a -> 'c,))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -356,7 +964,182 @@ ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
 // ;;
 :ng
 test1 = listiter (fun ex -> ex (fun p -> p._2 p._1)) ex_list1
-//│ test1: null
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?c, ?d, ?e, ?b. ?d) -> ?f` exceeded recursion depth limit (400)
+//│ ║  l.284: 	test1 = listiter (fun ex -> ex (fun p -> p._2 p._1)) ex_list1
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. (α2655'' -> α2660'')›  <!<  ((α3337',) -> α3339')
+//│ ╟── while constraining:  ‹∀ 1. (α2655'' -> α2660'')›  <!<  α3336'
+//│ ╟── while constraining:  α3312'  <!<  α3336'
+//│ ╟── while constraining:  (α3312',)  <!<  (α3336',)
+//│ ╟── while constraining:  (α3336' -> ‹∀ 2. (listiter324' <: ((α3336',) -> α3340''') => (α3346''' -> α3345'''))›)  <!<  ((α3312',) -> α3327')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3312',) -> α3327')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3312',) -> α3327')
+//│ ╟── while constraining:  (listiter324' <: ((α3312',) -> α3327') => (α3333' -> α3332'))  <!<  ((α3304',) -> α3306')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3312',) -> α3316''') => (α3322''' -> α3321'''))›  <!<  ((α3304',) -> α3306')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3312',) -> α3316''') => (α3322''' -> α3321'''))›  <!<  α3303'
+//│ ╟── while constraining:  (α3312' -> ‹∀ 2. (listiter324' <: ((α3312',) -> α3316''') => (α3322''' -> α3321'''))›)  <!<  ((α3288',) -> α3303')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3288',) -> α3303')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3288',) -> α3303')
+//│ ╟── while constraining:  (listiter324' <: ((α3288',) -> α3303') => (α3309' -> α3308'))  <!<  ((α3280',) -> α3282')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3288',) -> α3292''') => (α3298''' -> α3297'''))›  <!<  ((α3280',) -> α3282')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3288',) -> α3292''') => (α3298''' -> α3297'''))›  <!<  α3279'
+//│ ╟── while constraining:  (α3288' -> ‹∀ 2. (listiter324' <: ((α3288',) -> α3292''') => (α3298''' -> α3297'''))›)  <!<  ((α3264',) -> α3279')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3264',) -> α3279')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3264',) -> α3279')
+//│ ╟── while constraining:  (listiter324' <: ((α3264',) -> α3279') => (α3285' -> α3284'))  <!<  ((α3256',) -> α3258')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3264',) -> α3268''') => (α3274''' -> α3273'''))›  <!<  ((α3256',) -> α3258')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3264',) -> α3268''') => (α3274''' -> α3273'''))›  <!<  α3255'
+//│ ╟── while constraining:  (α3264' -> ‹∀ 2. (listiter324' <: ((α3264',) -> α3268''') => (α3274''' -> α3273'''))›)  <!<  ((α3240',) -> α3255')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3240',) -> α3255')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3240',) -> α3255')
+//│ ╟── while constraining:  (listiter324' <: ((α3240',) -> α3255') => (α3261' -> α3260'))  <!<  ((α3232',) -> α3234')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3240',) -> α3244''') => (α3250''' -> α3249'''))›  <!<  ((α3232',) -> α3234')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3240',) -> α3244''') => (α3250''' -> α3249'''))›  <!<  α3231'
+//│ ╟── while constraining:  (α3240' -> ‹∀ 2. (listiter324' <: ((α3240',) -> α3244''') => (α3250''' -> α3249'''))›)  <!<  ((α3216',) -> α3231')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3216',) -> α3231')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3216',) -> α3231')
+//│ ╟── while constraining:  (listiter324' <: ((α3216',) -> α3231') => (α3237' -> α3236'))  <!<  ((α3208',) -> α3210')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3216',) -> α3220''') => (α3226''' -> α3225'''))›  <!<  ((α3208',) -> α3210')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3216',) -> α3220''') => (α3226''' -> α3225'''))›  <!<  α3207'
+//│ ╟── while constraining:  (α3216' -> ‹∀ 2. (listiter324' <: ((α3216',) -> α3220''') => (α3226''' -> α3225'''))›)  <!<  ((α3192',) -> α3207')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3192',) -> α3207')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3192',) -> α3207')
+//│ ╟── while constraining:  (listiter324' <: ((α3192',) -> α3207') => (α3213' -> α3212'))  <!<  ((α3184',) -> α3186')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3192',) -> α3196''') => (α3202''' -> α3201'''))›  <!<  ((α3184',) -> α3186')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3192',) -> α3196''') => (α3202''' -> α3201'''))›  <!<  α3183'
+//│ ╟── while constraining:  (α3192' -> ‹∀ 2. (listiter324' <: ((α3192',) -> α3196''') => (α3202''' -> α3201'''))›)  <!<  ((α3168',) -> α3183')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3168',) -> α3183')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3168',) -> α3183')
+//│ ╟── while constraining:  (listiter324' <: ((α3168',) -> α3183') => (α3189' -> α3188'))  <!<  ((α3160',) -> α3162')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3168',) -> α3172''') => (α3178''' -> α3177'''))›  <!<  ((α3160',) -> α3162')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3168',) -> α3172''') => (α3178''' -> α3177'''))›  <!<  α3159'
+//│ ╟── while constraining:  (α3168' -> ‹∀ 2. (listiter324' <: ((α3168',) -> α3172''') => (α3178''' -> α3177'''))›)  <!<  ((α3144',) -> α3159')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3144',) -> α3159')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3144',) -> α3159')
+//│ ╟── while constraining:  (listiter324' <: ((α3144',) -> α3159') => (α3165' -> α3164'))  <!<  ((α3136',) -> α3138')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3144',) -> α3148''') => (α3154''' -> α3153'''))›  <!<  ((α3136',) -> α3138')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3144',) -> α3148''') => (α3154''' -> α3153'''))›  <!<  α3135'
+//│ ╟── while constraining:  (α3144' -> ‹∀ 2. (listiter324' <: ((α3144',) -> α3148''') => (α3154''' -> α3153'''))›)  <!<  ((α3120',) -> α3135')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3120',) -> α3135')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3120',) -> α3135')
+//│ ╟── while constraining:  (listiter324' <: ((α3120',) -> α3135') => (α3141' -> α3140'))  <!<  ((α3112',) -> α3114')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3120',) -> α3124''') => (α3130''' -> α3129'''))›  <!<  ((α3112',) -> α3114')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3120',) -> α3124''') => (α3130''' -> α3129'''))›  <!<  α3111'
+//│ ╟── while constraining:  (α3120' -> ‹∀ 2. (listiter324' <: ((α3120',) -> α3124''') => (α3130''' -> α3129'''))›)  <!<  ((α3096',) -> α3111')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3096',) -> α3111')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3096',) -> α3111')
+//│ ╟── while constraining:  (listiter324' <: ((α3096',) -> α3111') => (α3117' -> α3116'))  <!<  ((α3088',) -> α3090')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3096',) -> α3100''') => (α3106''' -> α3105'''))›  <!<  ((α3088',) -> α3090')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3096',) -> α3100''') => (α3106''' -> α3105'''))›  <!<  α3087'
+//│ ╟── while constraining:  (α3096' -> ‹∀ 2. (listiter324' <: ((α3096',) -> α3100''') => (α3106''' -> α3105'''))›)  <!<  ((α3072',) -> α3087')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3072',) -> α3087')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3072',) -> α3087')
+//│ ╟── while constraining:  (listiter324' <: ((α3072',) -> α3087') => (α3093' -> α3092'))  <!<  ((α3064',) -> α3066')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3072',) -> α3076''') => (α3082''' -> α3081'''))›  <!<  ((α3064',) -> α3066')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3072',) -> α3076''') => (α3082''' -> α3081'''))›  <!<  α3063'
+//│ ╟── while constraining:  (α3072' -> ‹∀ 2. (listiter324' <: ((α3072',) -> α3076''') => (α3082''' -> α3081'''))›)  <!<  ((α3048',) -> α3063')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3048',) -> α3063')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3048',) -> α3063')
+//│ ╟── while constraining:  (listiter324' <: ((α3048',) -> α3063') => (α3069' -> α3068'))  <!<  ((α3040',) -> α3042')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3048',) -> α3052''') => (α3058''' -> α3057'''))›  <!<  ((α3040',) -> α3042')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3048',) -> α3052''') => (α3058''' -> α3057'''))›  <!<  α3039'
+//│ ╟── while constraining:  (α3048' -> ‹∀ 2. (listiter324' <: ((α3048',) -> α3052''') => (α3058''' -> α3057'''))›)  <!<  ((α3024',) -> α3039')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3024',) -> α3039')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3024',) -> α3039')
+//│ ╟── while constraining:  (listiter324' <: ((α3024',) -> α3039') => (α3045' -> α3044'))  <!<  ((α3016',) -> α3018')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3024',) -> α3028''') => (α3034''' -> α3033'''))›  <!<  ((α3016',) -> α3018')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3024',) -> α3028''') => (α3034''' -> α3033'''))›  <!<  α3015'
+//│ ╟── while constraining:  (α3024' -> ‹∀ 2. (listiter324' <: ((α3024',) -> α3028''') => (α3034''' -> α3033'''))›)  <!<  ((α3000',) -> α3015')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α3000',) -> α3015')
+//│ ╟── while constraining:  listiter324'  <!<  ((α3000',) -> α3015')
+//│ ╟── while constraining:  (listiter324' <: ((α3000',) -> α3015') => (α3021' -> α3020'))  <!<  ((α2992',) -> α2994')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3000',) -> α3004''') => (α3010''' -> α3009'''))›  <!<  ((α2992',) -> α2994')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α3000',) -> α3004''') => (α3010''' -> α3009'''))›  <!<  α2991'
+//│ ╟── while constraining:  (α3000' -> ‹∀ 2. (listiter324' <: ((α3000',) -> α3004''') => (α3010''' -> α3009'''))›)  <!<  ((α2976',) -> α2991')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2976',) -> α2991')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2976',) -> α2991')
+//│ ╟── while constraining:  (listiter324' <: ((α2976',) -> α2991') => (α2997' -> α2996'))  <!<  ((α2968',) -> α2970')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2976',) -> α2980''') => (α2986''' -> α2985'''))›  <!<  ((α2968',) -> α2970')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2976',) -> α2980''') => (α2986''' -> α2985'''))›  <!<  α2967'
+//│ ╟── while constraining:  (α2976' -> ‹∀ 2. (listiter324' <: ((α2976',) -> α2980''') => (α2986''' -> α2985'''))›)  <!<  ((α2952',) -> α2967')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2952',) -> α2967')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2952',) -> α2967')
+//│ ╟── while constraining:  (listiter324' <: ((α2952',) -> α2967') => (α2973' -> α2972'))  <!<  ((α2944',) -> α2946')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2952',) -> α2956''') => (α2962''' -> α2961'''))›  <!<  ((α2944',) -> α2946')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2952',) -> α2956''') => (α2962''' -> α2961'''))›  <!<  α2943'
+//│ ╟── while constraining:  (α2952' -> ‹∀ 2. (listiter324' <: ((α2952',) -> α2956''') => (α2962''' -> α2961'''))›)  <!<  ((α2928',) -> α2943')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2928',) -> α2943')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2928',) -> α2943')
+//│ ╟── while constraining:  (listiter324' <: ((α2928',) -> α2943') => (α2949' -> α2948'))  <!<  ((α2920',) -> α2922')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2928',) -> α2932''') => (α2938''' -> α2937'''))›  <!<  ((α2920',) -> α2922')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2928',) -> α2932''') => (α2938''' -> α2937'''))›  <!<  α2919'
+//│ ╟── while constraining:  (α2928' -> ‹∀ 2. (listiter324' <: ((α2928',) -> α2932''') => (α2938''' -> α2937'''))›)  <!<  ((α2904',) -> α2919')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2904',) -> α2919')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2904',) -> α2919')
+//│ ╟── while constraining:  (listiter324' <: ((α2904',) -> α2919') => (α2925' -> α2924'))  <!<  ((α2896',) -> α2898')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2904',) -> α2908''') => (α2914''' -> α2913'''))›  <!<  ((α2896',) -> α2898')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2904',) -> α2908''') => (α2914''' -> α2913'''))›  <!<  α2895'
+//│ ╟── while constraining:  (α2904' -> ‹∀ 2. (listiter324' <: ((α2904',) -> α2908''') => (α2914''' -> α2913'''))›)  <!<  ((α2880',) -> α2895')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2880',) -> α2895')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2880',) -> α2895')
+//│ ╟── while constraining:  (listiter324' <: ((α2880',) -> α2895') => (α2901' -> α2900'))  <!<  ((α2872',) -> α2874')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2880',) -> α2884''') => (α2890''' -> α2889'''))›  <!<  ((α2872',) -> α2874')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2880',) -> α2884''') => (α2890''' -> α2889'''))›  <!<  α2871'
+//│ ╟── while constraining:  (α2880' -> ‹∀ 2. (listiter324' <: ((α2880',) -> α2884''') => (α2890''' -> α2889'''))›)  <!<  ((α2856',) -> α2871')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2856',) -> α2871')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2856',) -> α2871')
+//│ ╟── while constraining:  (listiter324' <: ((α2856',) -> α2871') => (α2877' -> α2876'))  <!<  ((α2848',) -> α2850')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2856',) -> α2860''') => (α2866''' -> α2865'''))›  <!<  ((α2848',) -> α2850')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2856',) -> α2860''') => (α2866''' -> α2865'''))›  <!<  α2847'
+//│ ╟── while constraining:  (α2856' -> ‹∀ 2. (listiter324' <: ((α2856',) -> α2860''') => (α2866''' -> α2865'''))›)  <!<  ((α2832',) -> α2847')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2832',) -> α2847')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2832',) -> α2847')
+//│ ╟── while constraining:  (listiter324' <: ((α2832',) -> α2847') => (α2853' -> α2852'))  <!<  ((α2824',) -> α2826')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2832',) -> α2836''') => (α2842''' -> α2841'''))›  <!<  ((α2824',) -> α2826')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2832',) -> α2836''') => (α2842''' -> α2841'''))›  <!<  α2823'
+//│ ╟── while constraining:  (α2832' -> ‹∀ 2. (listiter324' <: ((α2832',) -> α2836''') => (α2842''' -> α2841'''))›)  <!<  ((α2808',) -> α2823')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2808',) -> α2823')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2808',) -> α2823')
+//│ ╟── while constraining:  (listiter324' <: ((α2808',) -> α2823') => (α2829' -> α2828'))  <!<  ((α2800',) -> α2802')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2808',) -> α2812''') => (α2818''' -> α2817'''))›  <!<  ((α2800',) -> α2802')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2808',) -> α2812''') => (α2818''' -> α2817'''))›  <!<  α2799'
+//│ ╟── while constraining:  (α2808' -> ‹∀ 2. (listiter324' <: ((α2808',) -> α2812''') => (α2818''' -> α2817'''))›)  <!<  ((α2784',) -> α2799')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2784',) -> α2799')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2784',) -> α2799')
+//│ ╟── while constraining:  (listiter324' <: ((α2784',) -> α2799') => (α2805' -> α2804'))  <!<  ((α2776',) -> α2778')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2784',) -> α2788''') => (α2794''' -> α2793'''))›  <!<  ((α2776',) -> α2778')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2784',) -> α2788''') => (α2794''' -> α2793'''))›  <!<  α2775'
+//│ ╟── while constraining:  (α2784' -> ‹∀ 2. (listiter324' <: ((α2784',) -> α2788''') => (α2794''' -> α2793'''))›)  <!<  ((α2760',) -> α2775')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2760',) -> α2775')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2760',) -> α2775')
+//│ ╟── while constraining:  (listiter324' <: ((α2760',) -> α2775') => (α2781' -> α2780'))  <!<  ((α2752',) -> α2754')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2760',) -> α2764''') => (α2770''' -> α2769'''))›  <!<  ((α2752',) -> α2754')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2760',) -> α2764''') => (α2770''' -> α2769'''))›  <!<  α2751'
+//│ ╟── while constraining:  (α2760' -> ‹∀ 2. (listiter324' <: ((α2760',) -> α2764''') => (α2770''' -> α2769'''))›)  <!<  ((α2736',) -> α2751')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2736',) -> α2751')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2736',) -> α2751')
+//│ ╟── while constraining:  (listiter324' <: ((α2736',) -> α2751') => (α2757' -> α2756'))  <!<  ((α2728',) -> α2730')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2736',) -> α2740''') => (α2746''' -> α2745'''))›  <!<  ((α2728',) -> α2730')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2736',) -> α2740''') => (α2746''' -> α2745'''))›  <!<  α2727'
+//│ ╟── while constraining:  (α2736' -> ‹∀ 2. (listiter324' <: ((α2736',) -> α2740''') => (α2746''' -> α2745'''))›)  <!<  ((α2712',) -> α2727')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2712',) -> α2727')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2712',) -> α2727')
+//│ ╟── while constraining:  (listiter324' <: ((α2712',) -> α2727') => (α2733' -> α2732'))  <!<  ((α2704',) -> α2706')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2712',) -> α2716''') => (α2722''' -> α2721'''))›  <!<  ((α2704',) -> α2706')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2712',) -> α2716''') => (α2722''' -> α2721'''))›  <!<  α2703'
+//│ ╟── while constraining:  (α2712' -> ‹∀ 2. (listiter324' <: ((α2712',) -> α2716''') => (α2722''' -> α2721'''))›)  <!<  ((α2688',) -> α2703')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2688',) -> α2703')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2688',) -> α2703')
+//│ ╟── while constraining:  (listiter324' <: ((α2688',) -> α2703') => (α2709' -> α2708'))  <!<  ((α2680',) -> α2682')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2688',) -> α2692''') => (α2698''' -> α2697'''))›  <!<  ((α2680',) -> α2682')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2688',) -> α2692''') => (α2698''' -> α2697'''))›  <!<  α2679'
+//│ ╟── while constraining:  (α2688' -> ‹∀ 2. (listiter324' <: ((α2688',) -> α2692''') => (α2698''' -> α2697'''))›)  <!<  ((α2663',) -> α2679')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α2663',) -> α2679')
+//│ ╟── while constraining:  listiter324'  <!<  ((α2663',) -> α2679')
+//│ ╟── while constraining:  (listiter324' <: ((α2663',) -> α2679') => (α2685' -> α2684'))  <!<  ((‹∀ 0. α2601'›,) -> α2678')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α2663',) -> α2667''') => (α2673''' -> α2672'''))›  <!<  ((‹∀ 0. α2601'›,) -> α2678')
+//│ ╙── while constraining:  α2661'  <!<  ((‹∀ 0. α2601'›,) -> α2678')
+//│ test1: error
 
 // let test2 = listiter (fun ex -> ex (fun t -> 
 //   let arg1 = fst t
@@ -365,6 +1148,7 @@ test1 = listiter (fun ex -> ex (fun p -> p._2 p._1)) ex_list1
 //   let areequal = eqf arg1 arg2
 //   in print_bool areequal )) ex_list2
 // ;;
+:e
 :ng
 test2 = listiter (fun ex -> ex (fun t ->
   let arg1 = t._1 in
@@ -372,7 +1156,192 @@ test2 = listiter (fun ex -> ex (fun t ->
   let eqf = t._3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal )) ex_list2
-//│ test2: null
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?c, ?d, ?e, ?b. ?d) -> ?f` exceeded recursion depth limit (400)
+//│ ║  l.471: 	test2 = listiter (fun ex -> ex (fun t ->
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.472: 	  let arg1 = t._1 in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.473: 	  let arg2 = t._2 in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.474: 	  let eqf = t._3 in
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.475: 	  let areequal = eqf arg1 arg2 in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.476: 	  print_bool areequal )) ex_list2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. (α3510'' -> α3525'')›  <!<  ((α4785',) -> α4787')
+//│ ╟── while constraining:  ‹∀ 1. (α3510'' -> α3525'')›  <!<  α4784'
+//│ ╟── while constraining:  α4760'  <!<  α4784'
+//│ ╟── while constraining:  (α4760',)  <!<  (α4784',)
+//│ ╟── while constraining:  (α4784' -> ‹∀ 2. (listiter324' <: ((α4784',) -> α4788''') => (α4794''' -> α4793'''))›)  <!<  ((α4760',) -> α4775')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4760',) -> α4775')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4760',) -> α4775')
+//│ ╟── while constraining:  (listiter324' <: ((α4760',) -> α4775') => (α4781' -> α4780'))  <!<  ((α4752',) -> α4754')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4760',) -> α4764''') => (α4770''' -> α4769'''))›  <!<  ((α4752',) -> α4754')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4760',) -> α4764''') => (α4770''' -> α4769'''))›  <!<  α4751'
+//│ ╟── while constraining:  (α4760' -> ‹∀ 2. (listiter324' <: ((α4760',) -> α4764''') => (α4770''' -> α4769'''))›)  <!<  ((α4736',) -> α4751')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4736',) -> α4751')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4736',) -> α4751')
+//│ ╟── while constraining:  (listiter324' <: ((α4736',) -> α4751') => (α4757' -> α4756'))  <!<  ((α4728',) -> α4730')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4736',) -> α4740''') => (α4746''' -> α4745'''))›  <!<  ((α4728',) -> α4730')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4736',) -> α4740''') => (α4746''' -> α4745'''))›  <!<  α4727'
+//│ ╟── while constraining:  (α4736' -> ‹∀ 2. (listiter324' <: ((α4736',) -> α4740''') => (α4746''' -> α4745'''))›)  <!<  ((α4712',) -> α4727')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4712',) -> α4727')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4712',) -> α4727')
+//│ ╟── while constraining:  (listiter324' <: ((α4712',) -> α4727') => (α4733' -> α4732'))  <!<  ((α4704',) -> α4706')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4712',) -> α4716''') => (α4722''' -> α4721'''))›  <!<  ((α4704',) -> α4706')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4712',) -> α4716''') => (α4722''' -> α4721'''))›  <!<  α4703'
+//│ ╟── while constraining:  (α4712' -> ‹∀ 2. (listiter324' <: ((α4712',) -> α4716''') => (α4722''' -> α4721'''))›)  <!<  ((α4688',) -> α4703')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4688',) -> α4703')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4688',) -> α4703')
+//│ ╟── while constraining:  (listiter324' <: ((α4688',) -> α4703') => (α4709' -> α4708'))  <!<  ((α4680',) -> α4682')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4688',) -> α4692''') => (α4698''' -> α4697'''))›  <!<  ((α4680',) -> α4682')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4688',) -> α4692''') => (α4698''' -> α4697'''))›  <!<  α4679'
+//│ ╟── while constraining:  (α4688' -> ‹∀ 2. (listiter324' <: ((α4688',) -> α4692''') => (α4698''' -> α4697'''))›)  <!<  ((α4664',) -> α4679')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4664',) -> α4679')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4664',) -> α4679')
+//│ ╟── while constraining:  (listiter324' <: ((α4664',) -> α4679') => (α4685' -> α4684'))  <!<  ((α4656',) -> α4658')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4664',) -> α4668''') => (α4674''' -> α4673'''))›  <!<  ((α4656',) -> α4658')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4664',) -> α4668''') => (α4674''' -> α4673'''))›  <!<  α4655'
+//│ ╟── while constraining:  (α4664' -> ‹∀ 2. (listiter324' <: ((α4664',) -> α4668''') => (α4674''' -> α4673'''))›)  <!<  ((α4640',) -> α4655')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4640',) -> α4655')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4640',) -> α4655')
+//│ ╟── while constraining:  (listiter324' <: ((α4640',) -> α4655') => (α4661' -> α4660'))  <!<  ((α4632',) -> α4634')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4640',) -> α4644''') => (α4650''' -> α4649'''))›  <!<  ((α4632',) -> α4634')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4640',) -> α4644''') => (α4650''' -> α4649'''))›  <!<  α4631'
+//│ ╟── while constraining:  (α4640' -> ‹∀ 2. (listiter324' <: ((α4640',) -> α4644''') => (α4650''' -> α4649'''))›)  <!<  ((α4616',) -> α4631')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4616',) -> α4631')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4616',) -> α4631')
+//│ ╟── while constraining:  (listiter324' <: ((α4616',) -> α4631') => (α4637' -> α4636'))  <!<  ((α4608',) -> α4610')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4616',) -> α4620''') => (α4626''' -> α4625'''))›  <!<  ((α4608',) -> α4610')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4616',) -> α4620''') => (α4626''' -> α4625'''))›  <!<  α4607'
+//│ ╟── while constraining:  (α4616' -> ‹∀ 2. (listiter324' <: ((α4616',) -> α4620''') => (α4626''' -> α4625'''))›)  <!<  ((α4592',) -> α4607')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4592',) -> α4607')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4592',) -> α4607')
+//│ ╟── while constraining:  (listiter324' <: ((α4592',) -> α4607') => (α4613' -> α4612'))  <!<  ((α4584',) -> α4586')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4592',) -> α4596''') => (α4602''' -> α4601'''))›  <!<  ((α4584',) -> α4586')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4592',) -> α4596''') => (α4602''' -> α4601'''))›  <!<  α4583'
+//│ ╟── while constraining:  (α4592' -> ‹∀ 2. (listiter324' <: ((α4592',) -> α4596''') => (α4602''' -> α4601'''))›)  <!<  ((α4568',) -> α4583')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4568',) -> α4583')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4568',) -> α4583')
+//│ ╟── while constraining:  (listiter324' <: ((α4568',) -> α4583') => (α4589' -> α4588'))  <!<  ((α4560',) -> α4562')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4568',) -> α4572''') => (α4578''' -> α4577'''))›  <!<  ((α4560',) -> α4562')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4568',) -> α4572''') => (α4578''' -> α4577'''))›  <!<  α4559'
+//│ ╟── while constraining:  (α4568' -> ‹∀ 2. (listiter324' <: ((α4568',) -> α4572''') => (α4578''' -> α4577'''))›)  <!<  ((α4544',) -> α4559')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4544',) -> α4559')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4544',) -> α4559')
+//│ ╟── while constraining:  (listiter324' <: ((α4544',) -> α4559') => (α4565' -> α4564'))  <!<  ((α4536',) -> α4538')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4544',) -> α4548''') => (α4554''' -> α4553'''))›  <!<  ((α4536',) -> α4538')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4544',) -> α4548''') => (α4554''' -> α4553'''))›  <!<  α4535'
+//│ ╟── while constraining:  (α4544' -> ‹∀ 2. (listiter324' <: ((α4544',) -> α4548''') => (α4554''' -> α4553'''))›)  <!<  ((α4520',) -> α4535')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4520',) -> α4535')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4520',) -> α4535')
+//│ ╟── while constraining:  (listiter324' <: ((α4520',) -> α4535') => (α4541' -> α4540'))  <!<  ((α4512',) -> α4514')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4520',) -> α4524''') => (α4530''' -> α4529'''))›  <!<  ((α4512',) -> α4514')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4520',) -> α4524''') => (α4530''' -> α4529'''))›  <!<  α4511'
+//│ ╟── while constraining:  (α4520' -> ‹∀ 2. (listiter324' <: ((α4520',) -> α4524''') => (α4530''' -> α4529'''))›)  <!<  ((α4496',) -> α4511')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4496',) -> α4511')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4496',) -> α4511')
+//│ ╟── while constraining:  (listiter324' <: ((α4496',) -> α4511') => (α4517' -> α4516'))  <!<  ((α4488',) -> α4490')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4496',) -> α4500''') => (α4506''' -> α4505'''))›  <!<  ((α4488',) -> α4490')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4496',) -> α4500''') => (α4506''' -> α4505'''))›  <!<  α4487'
+//│ ╟── while constraining:  (α4496' -> ‹∀ 2. (listiter324' <: ((α4496',) -> α4500''') => (α4506''' -> α4505'''))›)  <!<  ((α4472',) -> α4487')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4472',) -> α4487')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4472',) -> α4487')
+//│ ╟── while constraining:  (listiter324' <: ((α4472',) -> α4487') => (α4493' -> α4492'))  <!<  ((α4464',) -> α4466')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4472',) -> α4476''') => (α4482''' -> α4481'''))›  <!<  ((α4464',) -> α4466')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4472',) -> α4476''') => (α4482''' -> α4481'''))›  <!<  α4463'
+//│ ╟── while constraining:  (α4472' -> ‹∀ 2. (listiter324' <: ((α4472',) -> α4476''') => (α4482''' -> α4481'''))›)  <!<  ((α4448',) -> α4463')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4448',) -> α4463')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4448',) -> α4463')
+//│ ╟── while constraining:  (listiter324' <: ((α4448',) -> α4463') => (α4469' -> α4468'))  <!<  ((α4440',) -> α4442')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4448',) -> α4452''') => (α4458''' -> α4457'''))›  <!<  ((α4440',) -> α4442')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4448',) -> α4452''') => (α4458''' -> α4457'''))›  <!<  α4439'
+//│ ╟── while constraining:  (α4448' -> ‹∀ 2. (listiter324' <: ((α4448',) -> α4452''') => (α4458''' -> α4457'''))›)  <!<  ((α4424',) -> α4439')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4424',) -> α4439')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4424',) -> α4439')
+//│ ╟── while constraining:  (listiter324' <: ((α4424',) -> α4439') => (α4445' -> α4444'))  <!<  ((α4416',) -> α4418')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4424',) -> α4428''') => (α4434''' -> α4433'''))›  <!<  ((α4416',) -> α4418')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4424',) -> α4428''') => (α4434''' -> α4433'''))›  <!<  α4415'
+//│ ╟── while constraining:  (α4424' -> ‹∀ 2. (listiter324' <: ((α4424',) -> α4428''') => (α4434''' -> α4433'''))›)  <!<  ((α4400',) -> α4415')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4400',) -> α4415')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4400',) -> α4415')
+//│ ╟── while constraining:  (listiter324' <: ((α4400',) -> α4415') => (α4421' -> α4420'))  <!<  ((α4392',) -> α4394')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4400',) -> α4404''') => (α4410''' -> α4409'''))›  <!<  ((α4392',) -> α4394')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4400',) -> α4404''') => (α4410''' -> α4409'''))›  <!<  α4391'
+//│ ╟── while constraining:  (α4400' -> ‹∀ 2. (listiter324' <: ((α4400',) -> α4404''') => (α4410''' -> α4409'''))›)  <!<  ((α4376',) -> α4391')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4376',) -> α4391')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4376',) -> α4391')
+//│ ╟── while constraining:  (listiter324' <: ((α4376',) -> α4391') => (α4397' -> α4396'))  <!<  ((α4368',) -> α4370')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4376',) -> α4380''') => (α4386''' -> α4385'''))›  <!<  ((α4368',) -> α4370')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4376',) -> α4380''') => (α4386''' -> α4385'''))›  <!<  α4367'
+//│ ╟── while constraining:  (α4376' -> ‹∀ 2. (listiter324' <: ((α4376',) -> α4380''') => (α4386''' -> α4385'''))›)  <!<  ((α4352',) -> α4367')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4352',) -> α4367')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4352',) -> α4367')
+//│ ╟── while constraining:  (listiter324' <: ((α4352',) -> α4367') => (α4373' -> α4372'))  <!<  ((α4344',) -> α4346')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4352',) -> α4356''') => (α4362''' -> α4361'''))›  <!<  ((α4344',) -> α4346')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4352',) -> α4356''') => (α4362''' -> α4361'''))›  <!<  α4343'
+//│ ╟── while constraining:  (α4352' -> ‹∀ 2. (listiter324' <: ((α4352',) -> α4356''') => (α4362''' -> α4361'''))›)  <!<  ((α4328',) -> α4343')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4328',) -> α4343')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4328',) -> α4343')
+//│ ╟── while constraining:  (listiter324' <: ((α4328',) -> α4343') => (α4349' -> α4348'))  <!<  ((α4320',) -> α4322')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4328',) -> α4332''') => (α4338''' -> α4337'''))›  <!<  ((α4320',) -> α4322')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4328',) -> α4332''') => (α4338''' -> α4337'''))›  <!<  α4319'
+//│ ╟── while constraining:  (α4328' -> ‹∀ 2. (listiter324' <: ((α4328',) -> α4332''') => (α4338''' -> α4337'''))›)  <!<  ((α4304',) -> α4319')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4304',) -> α4319')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4304',) -> α4319')
+//│ ╟── while constraining:  (listiter324' <: ((α4304',) -> α4319') => (α4325' -> α4324'))  <!<  ((α4296',) -> α4298')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4304',) -> α4308''') => (α4314''' -> α4313'''))›  <!<  ((α4296',) -> α4298')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4304',) -> α4308''') => (α4314''' -> α4313'''))›  <!<  α4295'
+//│ ╟── while constraining:  (α4304' -> ‹∀ 2. (listiter324' <: ((α4304',) -> α4308''') => (α4314''' -> α4313'''))›)  <!<  ((α4280',) -> α4295')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4280',) -> α4295')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4280',) -> α4295')
+//│ ╟── while constraining:  (listiter324' <: ((α4280',) -> α4295') => (α4301' -> α4300'))  <!<  ((α4272',) -> α4274')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4280',) -> α4284''') => (α4290''' -> α4289'''))›  <!<  ((α4272',) -> α4274')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4280',) -> α4284''') => (α4290''' -> α4289'''))›  <!<  α4271'
+//│ ╟── while constraining:  (α4280' -> ‹∀ 2. (listiter324' <: ((α4280',) -> α4284''') => (α4290''' -> α4289'''))›)  <!<  ((α4256',) -> α4271')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4256',) -> α4271')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4256',) -> α4271')
+//│ ╟── while constraining:  (listiter324' <: ((α4256',) -> α4271') => (α4277' -> α4276'))  <!<  ((α4248',) -> α4250')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4256',) -> α4260''') => (α4266''' -> α4265'''))›  <!<  ((α4248',) -> α4250')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4256',) -> α4260''') => (α4266''' -> α4265'''))›  <!<  α4247'
+//│ ╟── while constraining:  (α4256' -> ‹∀ 2. (listiter324' <: ((α4256',) -> α4260''') => (α4266''' -> α4265'''))›)  <!<  ((α4232',) -> α4247')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4232',) -> α4247')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4232',) -> α4247')
+//│ ╟── while constraining:  (listiter324' <: ((α4232',) -> α4247') => (α4253' -> α4252'))  <!<  ((α4224',) -> α4226')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4232',) -> α4236''') => (α4242''' -> α4241'''))›  <!<  ((α4224',) -> α4226')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4232',) -> α4236''') => (α4242''' -> α4241'''))›  <!<  α4223'
+//│ ╟── while constraining:  (α4232' -> ‹∀ 2. (listiter324' <: ((α4232',) -> α4236''') => (α4242''' -> α4241'''))›)  <!<  ((α4208',) -> α4223')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4208',) -> α4223')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4208',) -> α4223')
+//│ ╟── while constraining:  (listiter324' <: ((α4208',) -> α4223') => (α4229' -> α4228'))  <!<  ((α4200',) -> α4202')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4208',) -> α4212''') => (α4218''' -> α4217'''))›  <!<  ((α4200',) -> α4202')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4208',) -> α4212''') => (α4218''' -> α4217'''))›  <!<  α4199'
+//│ ╟── while constraining:  (α4208' -> ‹∀ 2. (listiter324' <: ((α4208',) -> α4212''') => (α4218''' -> α4217'''))›)  <!<  ((α4184',) -> α4199')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4184',) -> α4199')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4184',) -> α4199')
+//│ ╟── while constraining:  (listiter324' <: ((α4184',) -> α4199') => (α4205' -> α4204'))  <!<  ((α4176',) -> α4178')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4184',) -> α4188''') => (α4194''' -> α4193'''))›  <!<  ((α4176',) -> α4178')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4184',) -> α4188''') => (α4194''' -> α4193'''))›  <!<  α4175'
+//│ ╟── while constraining:  (α4184' -> ‹∀ 2. (listiter324' <: ((α4184',) -> α4188''') => (α4194''' -> α4193'''))›)  <!<  ((α4160',) -> α4175')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4160',) -> α4175')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4160',) -> α4175')
+//│ ╟── while constraining:  (listiter324' <: ((α4160',) -> α4175') => (α4181' -> α4180'))  <!<  ((α4152',) -> α4154')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4160',) -> α4164''') => (α4170''' -> α4169'''))›  <!<  ((α4152',) -> α4154')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4160',) -> α4164''') => (α4170''' -> α4169'''))›  <!<  α4151'
+//│ ╟── while constraining:  (α4160' -> ‹∀ 2. (listiter324' <: ((α4160',) -> α4164''') => (α4170''' -> α4169'''))›)  <!<  ((α4136',) -> α4151')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4136',) -> α4151')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4136',) -> α4151')
+//│ ╟── while constraining:  (listiter324' <: ((α4136',) -> α4151') => (α4157' -> α4156'))  <!<  ((α4128',) -> α4130')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4136',) -> α4140''') => (α4146''' -> α4145'''))›  <!<  ((α4128',) -> α4130')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4136',) -> α4140''') => (α4146''' -> α4145'''))›  <!<  α4127'
+//│ ╟── while constraining:  (α4136' -> ‹∀ 2. (listiter324' <: ((α4136',) -> α4140''') => (α4146''' -> α4145'''))›)  <!<  ((α4111',) -> α4127')
+//│ ╟── while constraining:  ‹∀ 1. (α325'' -> ‹∀ 2. (listiter324' <: ((α325'',) -> α342''') => (α326''' -> α346'''))›)›  <!<  ((α4111',) -> α4127')
+//│ ╟── while constraining:  listiter324'  <!<  ((α4111',) -> α4127')
+//│ ╟── while constraining:  (listiter324' <: ((α4111',) -> α4127') => (α4133' -> α4132'))  <!<  ((‹∀ 0. α2636'›,) -> α4126')
+//│ ╟── while constraining:  ‹∀ 2. (listiter324' <: ((α4111',) -> α4115''') => (α4121''' -> α4120'''))›  <!<  ((‹∀ 0. α2636'›,) -> α4126')
+//│ ╙── while constraining:  α3526'  <!<  ((‹∀ 0. α2636'›,) -> α4126')
+//│ test2: error
 
 
 // (* Some examples for MLF inspired by standard encoding in System F. *)
@@ -410,7 +1379,9 @@ def c_unit = fun x -> x
 // (* BOOLEANS, IFS, AND, OR, NOT. *)
 // let c_true  = fun a b -> a c_unit
 def c_true = fun a -> fun b -> a c_unit
-//│ c_true: ((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b
+//│ c_true: 'a -> ('a -> 'b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'c) -> 'b)
 //│       = [Function: c_true]
 
 // let c_false = fun a b -> b c_unit
@@ -421,33 +1392,53 @@ def c_false = fun a -> fun b -> b c_unit
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
 def c_if (cond: Fbool) c_then c_else = cond c_then c_else
 def c_if' cond c_then c_else = cond c_then c_else
-//│ c_if: Fbool -> (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ c_if: Fbool -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'd <: 'a -> 'b -> 'c)))
 //│     = [Function: c_if]
-//│ c_if': ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
+//│ c_if': 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd. ('c -> 'd
+//│   where
+//│     'a <: 'b -> 'c -> 'd)))
 //│      = [Function: c_if]
 
 // let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and (a: Fbool) (b: Fbool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and' a b = c_if a (fun z -> b) (fun z -> c_false)
-//│ c_and: Fbool -> Fbool -> (anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b | Fbool)
+//│ c_and: Fbool -> (Fbool -> 'a
+//│   where
+//│     'b <: (anything -> Fbool) -> (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> 'a)
 //│      = [Function: c_and]
-//│ c_and': Fbool -> (forall 'a. 'a -> (anything -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c | 'a))
+//│ c_and': Fbool -> (forall 'a. ('a -> 'b
+//│   where
+//│     'c <: (anything -> 'a) -> (anything -> anything -> ((forall 'd. 'd -> 'd) -> 'e) -> 'e) -> 'b))
 //│       = [Function: c_and]
 
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or' a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b | Fbool)
+//│ c_or: Fbool -> (forall 'a. (Fbool -> 'b
+//│   where
+//│     'c <: ('a -> (forall 'a. 'a -> ('a -> 'd
+//│   where
+//│     'a <: (forall 'e. 'e -> 'e) -> 'd))) -> ('a -> Fbool) -> 'b))
 //│     = [Function: c_or]
-//│ c_or': Fbool -> (forall 'a. 'a -> (((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c | 'a))
+//│ c_or': Fbool -> (forall 'a. ('b -> 'c
+//│   where
+//│     'd <: ('a -> (forall 'a. 'a -> ('a -> 'e
+//│   where
+//│     'a <: (forall 'f. 'f -> 'f) -> 'e))) -> ('a -> 'b) -> 'c))
 //│      = [Function: c_or]
 
 // let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not (a: Fbool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not' a = c_if a (fun z -> c_false) (fun z -> c_true)
-//│ c_not: Fbool -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'c) -> ('c | 'b)
+//│ c_not: Fbool -> (forall 'a. 'a -> (((forall 'b. 'b -> 'b) -> 'c) -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> 'b) -> 'c))
 //│      = [Function: c_not]
-//│ c_not': Fbool -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'c) -> ('c | 'b)
+//│ c_not': Fbool -> (forall 'a. 'a -> (((forall 'b. 'b -> 'b) -> 'c) -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> 'b) -> 'c))
 //│       = [Function: c_not]
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
@@ -516,7 +1507,9 @@ def c_3_3' t = t (fun x -> fun y -> fun z -> z)
 // (* CONSTRUCTOR FOR A BINARY SUM. *)
 // let c_sumg = fun x fg fd -> fg x
 def c_sumg = fun x -> fun fg -> fun fd -> fg x
-//│ c_sumg: 'a -> (forall 'b. ('a -> 'b) -> anything -> 'b)
+//│ c_sumg: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'b <: 'a -> 'c)))
 //│       = [Function: c_sumg]
 
 // let c_sumd = fun x fg fd -> fd x
@@ -529,9 +1522,13 @@ def c_sumd = fun x -> fun fg -> fun fd -> fd x
 // let c_case (s:Sum) g d = s g d
 def c_case (s: Sum) g d = s g d
 def c_case' s g d = s g d
-//│ c_case: Sum -> (Fint -> 'a) -> (Fint -> 'a) -> 'a
+//│ c_case: Sum -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'd <: 'a -> 'b -> 'c)))
 //│       = [Function: c_case]
-//│ c_case': ('a -> 'b -> 'c) -> 'a -> 'b -> 'c
+//│ c_case': 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd. ('c -> 'd
+//│   where
+//│     'a <: 'b -> 'c -> 'd)))
 //│        = [Function: c_case]
 
 
@@ -543,52 +1540,109 @@ def c_i0 = fun f -> fun x -> x
 
 // let c_i1 = fun f x -> f x
 def c_i1 = fun f -> fun x -> f x
-//│ c_i1: ('a -> 'b) -> 'a -> 'b
+//│ c_i1: 'a -> (forall 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 //│     = [Function: c_i1]
 
 // let c_i2 = fun f x -> f (f x)
 def c_i2 = fun f -> fun x -> f (f x)
-//│ c_i2: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ c_i2: 'a -> (forall 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'a <: 'b -> 'c & 'c -> 'd))
 //│     = [Function: c_i2]
 
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ' n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'b. ('b -> 'a & 'a -> 'a) -> 'b -> 'a)
+//│ c_succ: Fint -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b)))
 //│       = [Function: c_succ]
-//│ c_succ': ('a -> 'b -> 'c) -> (forall 'd. ('d -> 'b & 'a) -> 'd -> 'c)
+//│ c_succ': 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e. ('e -> 'd
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'e -> 'c)))
 //│        = [Function: c_succ]
 
 // let c_iszero (n:Int) = n (fun x -> c_false) c_true
 def c_iszero (n: Fint) = n (fun x -> c_false) c_true
 def c_iszero' n = n (fun x -> c_false) c_true
-//│ c_iszero: Fint -> ((forall 'a. 'a -> 'a) -> 'b) -> ((forall 'a. 'a -> 'a) -> 'c) -> ('c | 'b)
+//│ c_iszero: Fint -> ((forall 'a. 'a -> 'a) -> ‘a & 'b) -> (((forall 'a. 'a -> 'a) -> 'c) -> 'c
+//│   where
+//│     'b <: (forall 'a. 'a -> 'a) -> 'c)
 //│         = [Function: c_iszero]
-//│ c_iszero': ((anything -> anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b) -> (((forall 'a. 'a -> 'a) -> 'c) -> anything -> 'c) -> 'd) -> 'd
+//│ c_iszero': (('a -> 'a -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c) -> (((forall 'b. 'b -> 'b) -> ‘a & 'a) -> ('a -> 'd
+//│   where
+//│     'a <: (forall 'b. 'b -> 'b) -> 'd)) -> 'e) -> 'e
 //│          = [Function: c_iszero]
 
 // let c_add n (m:Int) = m c_succ n
 def c_add n (m: Fint) = m c_succ n
 def c_add' n m = m c_succ' n
-//│ c_add: (Fint & 'b) -> Fint -> (forall 'c, 'a. ('c -> 'a & 'a -> 'a) -> 'c -> 'a | 'b)
+//│ c_add: (Fint & 'a) -> (forall 'b. (Fint -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f. ('f -> 'e
+//│   where
+//│     'g <: 'c -> 'd -> 'e
+//│     'c <: 'f -> 'd)) | 'a)
+//│   where
+//│     'g <: (‘a -> ‘a) -> 'b -> ‘a
+//│     'c <: ‘a -> 'b))
 //│      = [Function: c_add]
-//│ c_add': 'a -> ((forall 'b, 'c, 'd. ('b -> 'c -> 'd) -> (forall 'e. ('e -> 'c & 'b) -> 'e -> 'd)) -> 'a -> 'f) -> 'f
+//│ c_add': 'a -> ((forall 'b. 'b -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f. ('f -> 'e
+//│   where
+//│     'b <: 'c -> 'd -> 'e
+//│     'c <: 'f -> 'd)))) -> 'a -> 'g) -> 'g
 //│       = [Function: c_add]
 
 // let c_mul n (m:Int) = m (c_add n) c_i0
 def c_mul m (n: Fint) = m (c_add n) c_i0
 def c_mul' m n = m (c_add' n) c_i0
-//│ c_mul: ((Fint -> (forall 'b, 'a. ('b -> 'a & 'a -> 'a) -> 'b -> 'a | Fint)) -> (anything -> (forall 'c. 'c -> 'c)) -> 'd) -> Fint -> 'd
+//│ c_mul: 'a -> (Fint -> 'b
+//│   where
+//│     'a <: (forall 'c. (Fint -> (forall 'd. 'd -> (forall 'd, 'e, 'f, 'g. ('g -> 'f
+//│   where
+//│     'h <: 'd -> 'e -> 'f
+//│     'd <: 'g -> 'e)) | Fint)
+//│   where
+//│     'h <: (‘a -> ‘a) -> 'c -> ‘a
+//│     'd <: ‘a -> 'c)) -> ('a -> (forall 'i. 'i -> 'i)) -> 'b)
 //│      = [Function: c_mul]
-//│ c_mul': ((((forall 'a, 'b, 'c. ('a -> 'b -> 'c) -> (forall 'd. ('d -> 'b & 'a) -> 'd -> 'c)) -> 'e -> 'f) -> 'f) -> (anything -> (forall 'g. 'g -> 'g)) -> 'h) -> (forall 'e. 'e -> 'h)
+//│ c_mul': 'a -> ('b -> 'c
+//│   where
+//│     'a <: (((forall 'd. 'd -> (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h. ('h -> 'g
+//│   where
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'h -> 'f)))) -> 'b -> 'i) -> 'i) -> ('d -> (forall 'j. 'j -> 'j)) -> 'c)
 //│       = [Function: c_mul]
 
 // let c_pow n (m:Int) = m (c_mul n) c_i1
 def c_pow m (n: Fint) = m (c_mul n) c_i1
 def c_pow' m n = m (c_mul' n) c_i1
-//│ c_pow: ((Fint -> (forall 'b, 'a. ('b -> 'a & 'a -> 'a) -> (forall 'b, 'a. 'b -> ('a | 'b)) | Fint)) -> (forall 'c, 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> Fint -> 'e
+//│ c_pow: 'a -> (Fint -> 'b
+//│   where
+//│     'a <: (Fint -> 'c
+//│   where
+//│     'd <: (forall 'e. (Fint -> (forall 'f. 'f -> (forall 'f, 'g, 'h, 'i. ('i -> 'h
+//│   where
+//│     'j <: 'f -> 'g -> 'h
+//│     'f <: 'i -> 'g)) | Fint)
+//│   where
+//│     'j <: (‘a -> ‘a) -> 'e -> ‘a
+//│     'f <: ‘a -> 'e)) -> ('k -> (forall 'l. 'l -> 'l)) -> 'c) -> (forall 'k. 'k -> (forall 'm, 'n. ('m -> 'n
+//│   where
+//│     'k <: 'm -> 'n))) -> 'b)
 //│      = [Function: c_pow]
-//│ c_pow': ((forall 'a. anything -> 'a) -> (forall 'b, 'c. ('b -> 'c) -> 'b -> 'c) -> 'd) -> ((((forall 'e, 'f, 'g. ('e -> 'f -> 'g) -> (forall 'h. ('h -> 'f & 'e) -> 'h -> 'g)) -> nothing -> 'i) -> 'i) -> (anything -> (forall 'j. 'j -> 'j)) -> 'a) -> 'd
+//│ c_pow': 'a -> ('b -> 'c
+//│   where
+//│     'a <: ('d -> 'e
+//│   where
+//│     'f <: (((forall 'g. 'g -> (forall 'h. 'h -> (forall 'h, 'i, 'j, 'k. ('k -> 'j
+//│   where
+//│     'g <: 'h -> 'i -> 'j
+//│     'h <: 'k -> 'i)))) -> 'd -> 'l) -> 'l) -> ('b -> (forall 'm. 'm -> 'm)) -> 'e) -> (forall 'b. 'b -> (forall 'n, 'o. ('n -> 'o
+//│   where
+//│     'b <: 'n -> 'o))) -> 'c)
 //│       = [Function: c_pow]
 
 
@@ -605,8 +1659,14 @@ def c_pred' n =
   let z = c_pair c_i0 c_i0 in
   c_1_2' (n s z)
 //│ c_pred: Fint -> Fint
+//│   where
+//│     'a <: (‘a -> ‘a) -> 'b -> ‘a & (‘a -> ‘a) -> 'c -> ‘a
+//│     'd <: ‘a -> 'b & ‘a -> 'c
 //│       = [Function: c_pred]
-//│ c_pred': ((forall 'a, 'b, 'c. ((anything -> (forall 'd. 'd -> 'd)) -> 'a -> 'b -> 'c & (anything -> (forall 'd. 'd -> 'd)) -> anything) -> (nothing -> (forall 'a, 'b, 'c, 'e. ('e -> 'b & 'a) -> 'e -> 'c) -> 'f) -> 'f) -> (((anything -> (forall 'g. 'g -> 'g)) -> (anything -> (forall 'g. 'g -> 'g)) -> 'h) -> 'h) -> (forall 'i. 'i -> anything -> 'i) -> 'j) -> 'j
+//│ c_pred': ((((anything -> (forall 'a. 'a -> 'a)) -> anything) -> (nothing -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e. ('e -> 'd
+//│   where
+//│     'f <: 'b -> 'c -> 'd
+//│     'b <: 'e -> 'c))) -> 'g) -> 'g) -> (((anything -> (forall 'h. 'h -> 'h)) -> (anything -> (forall 'h. 'h -> 'h)) -> 'i) -> 'i) -> (forall 'j. 'j -> anything -> 'j) -> 'k) -> 'k
 //│        = [Function: c_pred]
 
 
@@ -631,25 +1691,43 @@ def c_printint2' n = toString (n (fun x -> x + 1) 0)
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2' = c_succ' c_i1
-//│ c_i2: ('b -> 'a & 'a -> 'a) -> 'b -> 'a
+//│ c_i2: 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│     = [Function (anonymous)]
-//│ c_i2': ('a -> 'b & 'b -> 'c) -> 'a -> 'c
+//│ c_i2': 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│      = [Function (anonymous)]
 
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3' = c_succ' c_i2
-//│ c_i3: ('b -> 'a & 'a -> 'a) -> 'b -> 'a
+//│ c_i3: (‘a -> ‘a & 'a) -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│     = [Function (anonymous)]
-//│ c_i3': ('b -> 'c & 'c -> 'a & 'a -> 'a) -> 'b -> 'a
+//│ c_i3': 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│      = [Function (anonymous)]
 
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4' = c_succ' c_i3
-//│ c_i4: ('b -> 'a & 'a -> 'a) -> 'b -> 'a
+//│ c_i4: (‘a -> ‘a & 'a) -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│     = [Function (anonymous)]
-//│ c_i4': ('b -> 'c & 'c -> 'a & 'a -> 'a) -> 'b -> 'a
+//│ c_i4': 'a -> (forall 'a, 'b, 'c, 'd. ('d -> 'c
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'd -> 'b))
 //│      = [Function (anonymous)]
 
 
@@ -665,25 +1743,221 @@ rec def to_church n =
   else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ to_church: int -> Fint
 //│          = <missing implementation>
-//│ int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('c & 'b) -> ('c | 'a)))
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. (('c & 'd) -> 'c
+//│   where
+//│     'a <: 'b -> 'c
+//│     'to_church <: int -> 'a -> 'd -> 'b))) | 'to_church
 //│   <:  to_church:
 //│ int -> Fint
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.663: 	rec def to_church n =
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?to_church, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1, ?i1, ?j1, ?k1, ?l1, ?m1, ?n1, ?o1, ?p1, ?q1, ?r1, ?s1, ?t1, ?u1, ?v1, ?w1, ?x1, ?y1, ?z1, ?a2, ?b2, ?c2, ?d2, ?e2, ?f2, ?g2, ?h2, ?i2, ?j2, ?k2, ?l2, ?m2, ?n2, ?o2, ?p2, ?q2, ?r2, ?s2, ?t2, ?u2, ?v2, ?w2, ?x2, ?y2, ?z2, ?a3, ?b3, ?c3, ?d3, ?e3, ?f3, ?g3, ?h3, ?i3, ?j3, ?k3, ?l3, ?m3, ?n3, ?o3, ?p3, ?q3, ?r3, ?s3, ?t3, ?u3, ?v3, ?w3, ?x3, ?y3, ?z3, ?a4, ?b4, ?c4, ?d4, ?e4, ?f4, ?g4, ?h4, ?i4, ?j4, ?k4, ?l4, ?m4, ?n4, ?o4, ?p4, ?q4, ?r4, ?s4, ?t4, ?u4, ?v4, ?w4, ?x4, ?y4, ?z4, ?a5, ?b5, ?c5, ?d5, ?e5, ?f5, ?g5, ?h5, ?i5, ?j5, ?k5, ?l5, ?m5, ?n5, ?o5, ?p5, ?q5, ?r5, ?s5, ?t5, ?u5, ?v5, ?w5, ?x5, ?y5, ?z5, ?a6, ?b6, ?c6, ?d6, ?e6, ?f6. ?to_church <: int -> Fint` exceeded recursion depth limit (400)
+//│ ║  l.950: 	rec def to_church n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.664: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.951: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.665: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
+//│ ║  l.952: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.386: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.386: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.665: 	  else fun f -> fun x -> f ((to_church (n - 1)) f x)
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  α6473'  <!<  α6811'
+//│ ╟── while constraining:  α6504'  <!<  α6811'
+//│ ╟── while constraining:  α6535'  <!<  α6811'
+//│ ╟── while constraining:  α6566'  <!<  α6811'
+//│ ╟── while constraining:  α6597'  <!<  α6811'
+//│ ╟── while constraining:  α6628'  <!<  α6811'
+//│ ╟── while constraining:  α6659'  <!<  α6811'
+//│ ╟── while constraining:  α6690'  <!<  α6811'
+//│ ╟── while constraining:  α6721'  <!<  α6811'
+//│ ╟── while constraining:  α6752'  <!<  α6811'
+//│ ╟── while constraining:  α6783'  <!<  α6811'
+//│ ╟── while constraining:  α6814'  <!<  α6811'
+//│ ╟── while constraining:  α6814'  <!<  α6833''
+//│ ╟── while constraining:  (α6814',)  <!<  (α6833'',)
+//│ ╟── while constraining:  (α6833'' -> ‹∀ 3. (α6339''' <: ((α6834'''',) -> α6835''''), to_church6330' <: ((α6836'''',) -> α6837'''') => (α6839'''' -> α6835''''))›)  <!<  ((α6814',) -> α6826')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6814',) -> α6826')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6825'
+//│ ╟── while constraining:  α6830''  <!<  α6825'
+//│ ╟── while constraining:  (α6829'' -> α6830'')  <!<  ((α6824',) -> α6825')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6824',) -> α6825')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6824',) -> α6825')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6818'',) -> α6819'')
+//│ ╟── while constraining:  (α6811' <: ((α6816'',) -> α6817''), to_church6330' <: ((α6818'',) -> α6819'') => (α6821'' -> α6817''))  <!<  ((α6796',) -> α6797')
+//│ ╟── while constraining:  ‹∀ 3. (α6811' <: ((α6803'''',) -> α6804''''), to_church6330' <: ((α6812'''',) -> α6813'''') => (α6808'''' -> α6804''''))›  <!<  ((α6796',) -> α6797')
+//│ ╟── while constraining:  ‹∀ 3. (α6811' <: ((α6803'''',) -> α6804''''), to_church6330' <: ((α6812'''',) -> α6813'''') => (α6808'''' -> α6804''''))›  <!<  α6795'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6803'''',) -> α6804''''), to_church6330' <: ((α6805'''',) -> α6806'''') => (α6808'''' -> α6804''''))›  <!<  α6795'
+//│ ╟── while constraining:  (α6802'' -> ‹∀ 3. (α6339''' <: ((α6803'''',) -> α6804''''), to_church6330' <: ((α6805'''',) -> α6806'''') => (α6808'''' -> α6804''''))›)  <!<  ((α6783',) -> α6795')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6783',) -> α6795')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6794'
+//│ ╟── while constraining:  α6799''  <!<  α6794'
+//│ ╟── while constraining:  (α6798'' -> α6799'')  <!<  ((α6793',) -> α6794')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6793',) -> α6794')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6793',) -> α6794')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6787'',) -> α6788'')
+//│ ╟── while constraining:  (α6780' <: ((α6785'',) -> α6786''), to_church6330' <: ((α6787'',) -> α6788'') => (α6790'' -> α6786''))  <!<  ((α6765',) -> α6766')
+//│ ╟── while constraining:  ‹∀ 3. (α6780' <: ((α6772'''',) -> α6773''''), to_church6330' <: ((α6781'''',) -> α6782'''') => (α6777'''' -> α6773''''))›  <!<  ((α6765',) -> α6766')
+//│ ╟── while constraining:  ‹∀ 3. (α6780' <: ((α6772'''',) -> α6773''''), to_church6330' <: ((α6781'''',) -> α6782'''') => (α6777'''' -> α6773''''))›  <!<  α6764'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6772'''',) -> α6773''''), to_church6330' <: ((α6774'''',) -> α6775'''') => (α6777'''' -> α6773''''))›  <!<  α6764'
+//│ ╟── while constraining:  (α6771'' -> ‹∀ 3. (α6339''' <: ((α6772'''',) -> α6773''''), to_church6330' <: ((α6774'''',) -> α6775'''') => (α6777'''' -> α6773''''))›)  <!<  ((α6752',) -> α6764')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6752',) -> α6764')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6763'
+//│ ╟── while constraining:  α6768''  <!<  α6763'
+//│ ╟── while constraining:  (α6767'' -> α6768'')  <!<  ((α6762',) -> α6763')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6762',) -> α6763')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6762',) -> α6763')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6756'',) -> α6757'')
+//│ ╟── while constraining:  (α6749' <: ((α6754'',) -> α6755''), to_church6330' <: ((α6756'',) -> α6757'') => (α6759'' -> α6755''))  <!<  ((α6734',) -> α6735')
+//│ ╟── while constraining:  ‹∀ 3. (α6749' <: ((α6741'''',) -> α6742''''), to_church6330' <: ((α6750'''',) -> α6751'''') => (α6746'''' -> α6742''''))›  <!<  ((α6734',) -> α6735')
+//│ ╟── while constraining:  ‹∀ 3. (α6749' <: ((α6741'''',) -> α6742''''), to_church6330' <: ((α6750'''',) -> α6751'''') => (α6746'''' -> α6742''''))›  <!<  α6733'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6741'''',) -> α6742''''), to_church6330' <: ((α6743'''',) -> α6744'''') => (α6746'''' -> α6742''''))›  <!<  α6733'
+//│ ╟── while constraining:  (α6740'' -> ‹∀ 3. (α6339''' <: ((α6741'''',) -> α6742''''), to_church6330' <: ((α6743'''',) -> α6744'''') => (α6746'''' -> α6742''''))›)  <!<  ((α6721',) -> α6733')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6721',) -> α6733')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6732'
+//│ ╟── while constraining:  α6737''  <!<  α6732'
+//│ ╟── while constraining:  (α6736'' -> α6737'')  <!<  ((α6731',) -> α6732')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6731',) -> α6732')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6731',) -> α6732')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6725'',) -> α6726'')
+//│ ╟── while constraining:  (α6718' <: ((α6723'',) -> α6724''), to_church6330' <: ((α6725'',) -> α6726'') => (α6728'' -> α6724''))  <!<  ((α6703',) -> α6704')
+//│ ╟── while constraining:  ‹∀ 3. (α6718' <: ((α6710'''',) -> α6711''''), to_church6330' <: ((α6719'''',) -> α6720'''') => (α6715'''' -> α6711''''))›  <!<  ((α6703',) -> α6704')
+//│ ╟── while constraining:  ‹∀ 3. (α6718' <: ((α6710'''',) -> α6711''''), to_church6330' <: ((α6719'''',) -> α6720'''') => (α6715'''' -> α6711''''))›  <!<  α6702'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6710'''',) -> α6711''''), to_church6330' <: ((α6712'''',) -> α6713'''') => (α6715'''' -> α6711''''))›  <!<  α6702'
+//│ ╟── while constraining:  (α6709'' -> ‹∀ 3. (α6339''' <: ((α6710'''',) -> α6711''''), to_church6330' <: ((α6712'''',) -> α6713'''') => (α6715'''' -> α6711''''))›)  <!<  ((α6690',) -> α6702')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6690',) -> α6702')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6701'
+//│ ╟── while constraining:  α6706''  <!<  α6701'
+//│ ╟── while constraining:  (α6705'' -> α6706'')  <!<  ((α6700',) -> α6701')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6700',) -> α6701')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6700',) -> α6701')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6694'',) -> α6695'')
+//│ ╟── while constraining:  (α6687' <: ((α6692'',) -> α6693''), to_church6330' <: ((α6694'',) -> α6695'') => (α6697'' -> α6693''))  <!<  ((α6672',) -> α6673')
+//│ ╟── while constraining:  ‹∀ 3. (α6687' <: ((α6679'''',) -> α6680''''), to_church6330' <: ((α6688'''',) -> α6689'''') => (α6684'''' -> α6680''''))›  <!<  ((α6672',) -> α6673')
+//│ ╟── while constraining:  ‹∀ 3. (α6687' <: ((α6679'''',) -> α6680''''), to_church6330' <: ((α6688'''',) -> α6689'''') => (α6684'''' -> α6680''''))›  <!<  α6671'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6679'''',) -> α6680''''), to_church6330' <: ((α6681'''',) -> α6682'''') => (α6684'''' -> α6680''''))›  <!<  α6671'
+//│ ╟── while constraining:  (α6678'' -> ‹∀ 3. (α6339''' <: ((α6679'''',) -> α6680''''), to_church6330' <: ((α6681'''',) -> α6682'''') => (α6684'''' -> α6680''''))›)  <!<  ((α6659',) -> α6671')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6659',) -> α6671')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6670'
+//│ ╟── while constraining:  α6675''  <!<  α6670'
+//│ ╟── while constraining:  (α6674'' -> α6675'')  <!<  ((α6669',) -> α6670')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6669',) -> α6670')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6669',) -> α6670')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6663'',) -> α6664'')
+//│ ╟── while constraining:  (α6656' <: ((α6661'',) -> α6662''), to_church6330' <: ((α6663'',) -> α6664'') => (α6666'' -> α6662''))  <!<  ((α6641',) -> α6642')
+//│ ╟── while constraining:  ‹∀ 3. (α6656' <: ((α6648'''',) -> α6649''''), to_church6330' <: ((α6657'''',) -> α6658'''') => (α6653'''' -> α6649''''))›  <!<  ((α6641',) -> α6642')
+//│ ╟── while constraining:  ‹∀ 3. (α6656' <: ((α6648'''',) -> α6649''''), to_church6330' <: ((α6657'''',) -> α6658'''') => (α6653'''' -> α6649''''))›  <!<  α6640'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6648'''',) -> α6649''''), to_church6330' <: ((α6650'''',) -> α6651'''') => (α6653'''' -> α6649''''))›  <!<  α6640'
+//│ ╟── while constraining:  (α6647'' -> ‹∀ 3. (α6339''' <: ((α6648'''',) -> α6649''''), to_church6330' <: ((α6650'''',) -> α6651'''') => (α6653'''' -> α6649''''))›)  <!<  ((α6628',) -> α6640')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6628',) -> α6640')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6639'
+//│ ╟── while constraining:  α6644''  <!<  α6639'
+//│ ╟── while constraining:  (α6643'' -> α6644'')  <!<  ((α6638',) -> α6639')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6638',) -> α6639')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6638',) -> α6639')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6632'',) -> α6633'')
+//│ ╟── while constraining:  (α6625' <: ((α6630'',) -> α6631''), to_church6330' <: ((α6632'',) -> α6633'') => (α6635'' -> α6631''))  <!<  ((α6610',) -> α6611')
+//│ ╟── while constraining:  ‹∀ 3. (α6625' <: ((α6617'''',) -> α6618''''), to_church6330' <: ((α6626'''',) -> α6627'''') => (α6622'''' -> α6618''''))›  <!<  ((α6610',) -> α6611')
+//│ ╟── while constraining:  ‹∀ 3. (α6625' <: ((α6617'''',) -> α6618''''), to_church6330' <: ((α6626'''',) -> α6627'''') => (α6622'''' -> α6618''''))›  <!<  α6609'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6617'''',) -> α6618''''), to_church6330' <: ((α6619'''',) -> α6620'''') => (α6622'''' -> α6618''''))›  <!<  α6609'
+//│ ╟── while constraining:  (α6616'' -> ‹∀ 3. (α6339''' <: ((α6617'''',) -> α6618''''), to_church6330' <: ((α6619'''',) -> α6620'''') => (α6622'''' -> α6618''''))›)  <!<  ((α6597',) -> α6609')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6597',) -> α6609')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6608'
+//│ ╟── while constraining:  α6613''  <!<  α6608'
+//│ ╟── while constraining:  (α6612'' -> α6613'')  <!<  ((α6607',) -> α6608')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6607',) -> α6608')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6607',) -> α6608')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6601'',) -> α6602'')
+//│ ╟── while constraining:  (α6594' <: ((α6599'',) -> α6600''), to_church6330' <: ((α6601'',) -> α6602'') => (α6604'' -> α6600''))  <!<  ((α6579',) -> α6580')
+//│ ╟── while constraining:  ‹∀ 3. (α6594' <: ((α6586'''',) -> α6587''''), to_church6330' <: ((α6595'''',) -> α6596'''') => (α6591'''' -> α6587''''))›  <!<  ((α6579',) -> α6580')
+//│ ╟── while constraining:  ‹∀ 3. (α6594' <: ((α6586'''',) -> α6587''''), to_church6330' <: ((α6595'''',) -> α6596'''') => (α6591'''' -> α6587''''))›  <!<  α6578'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6586'''',) -> α6587''''), to_church6330' <: ((α6588'''',) -> α6589'''') => (α6591'''' -> α6587''''))›  <!<  α6578'
+//│ ╟── while constraining:  (α6585'' -> ‹∀ 3. (α6339''' <: ((α6586'''',) -> α6587''''), to_church6330' <: ((α6588'''',) -> α6589'''') => (α6591'''' -> α6587''''))›)  <!<  ((α6566',) -> α6578')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6566',) -> α6578')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6577'
+//│ ╟── while constraining:  α6582''  <!<  α6577'
+//│ ╟── while constraining:  (α6581'' -> α6582'')  <!<  ((α6576',) -> α6577')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6576',) -> α6577')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6576',) -> α6577')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6570'',) -> α6571'')
+//│ ╟── while constraining:  (α6563' <: ((α6568'',) -> α6569''), to_church6330' <: ((α6570'',) -> α6571'') => (α6573'' -> α6569''))  <!<  ((α6548',) -> α6549')
+//│ ╟── while constraining:  ‹∀ 3. (α6563' <: ((α6555'''',) -> α6556''''), to_church6330' <: ((α6564'''',) -> α6565'''') => (α6560'''' -> α6556''''))›  <!<  ((α6548',) -> α6549')
+//│ ╟── while constraining:  ‹∀ 3. (α6563' <: ((α6555'''',) -> α6556''''), to_church6330' <: ((α6564'''',) -> α6565'''') => (α6560'''' -> α6556''''))›  <!<  α6547'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6555'''',) -> α6556''''), to_church6330' <: ((α6557'''',) -> α6558'''') => (α6560'''' -> α6556''''))›  <!<  α6547'
+//│ ╟── while constraining:  (α6554'' -> ‹∀ 3. (α6339''' <: ((α6555'''',) -> α6556''''), to_church6330' <: ((α6557'''',) -> α6558'''') => (α6560'''' -> α6556''''))›)  <!<  ((α6535',) -> α6547')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6535',) -> α6547')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6546'
+//│ ╟── while constraining:  α6551''  <!<  α6546'
+//│ ╟── while constraining:  (α6550'' -> α6551'')  <!<  ((α6545',) -> α6546')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6545',) -> α6546')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6545',) -> α6546')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6539'',) -> α6540'')
+//│ ╟── while constraining:  (α6532' <: ((α6537'',) -> α6538''), to_church6330' <: ((α6539'',) -> α6540'') => (α6542'' -> α6538''))  <!<  ((α6517',) -> α6518')
+//│ ╟── while constraining:  ‹∀ 3. (α6532' <: ((α6524'''',) -> α6525''''), to_church6330' <: ((α6533'''',) -> α6534'''') => (α6529'''' -> α6525''''))›  <!<  ((α6517',) -> α6518')
+//│ ╟── while constraining:  ‹∀ 3. (α6532' <: ((α6524'''',) -> α6525''''), to_church6330' <: ((α6533'''',) -> α6534'''') => (α6529'''' -> α6525''''))›  <!<  α6516'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6524'''',) -> α6525''''), to_church6330' <: ((α6526'''',) -> α6527'''') => (α6529'''' -> α6525''''))›  <!<  α6516'
+//│ ╟── while constraining:  (α6523'' -> ‹∀ 3. (α6339''' <: ((α6524'''',) -> α6525''''), to_church6330' <: ((α6526'''',) -> α6527'''') => (α6529'''' -> α6525''''))›)  <!<  ((α6504',) -> α6516')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6504',) -> α6516')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6515'
+//│ ╟── while constraining:  α6520''  <!<  α6515'
+//│ ╟── while constraining:  (α6519'' -> α6520'')  <!<  ((α6514',) -> α6515')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6514',) -> α6515')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6514',) -> α6515')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6508'',) -> α6509'')
+//│ ╟── while constraining:  (α6501' <: ((α6506'',) -> α6507''), to_church6330' <: ((α6508'',) -> α6509'') => (α6511'' -> α6507''))  <!<  ((α6486',) -> α6487')
+//│ ╟── while constraining:  ‹∀ 3. (α6501' <: ((α6493'''',) -> α6494''''), to_church6330' <: ((α6502'''',) -> α6503'''') => (α6498'''' -> α6494''''))›  <!<  ((α6486',) -> α6487')
+//│ ╟── while constraining:  ‹∀ 3. (α6501' <: ((α6493'''',) -> α6494''''), to_church6330' <: ((α6502'''',) -> α6503'''') => (α6498'''' -> α6494''''))›  <!<  α6485'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6493'''',) -> α6494''''), to_church6330' <: ((α6495'''',) -> α6496'''') => (α6498'''' -> α6494''''))›  <!<  α6485'
+//│ ╟── while constraining:  (α6492'' -> ‹∀ 3. (α6339''' <: ((α6493'''',) -> α6494''''), to_church6330' <: ((α6495'''',) -> α6496'''') => (α6498'''' -> α6494''''))›)  <!<  ((α6473',) -> α6485')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6473',) -> α6485')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6484'
+//│ ╟── while constraining:  α6489''  <!<  α6484'
+//│ ╟── while constraining:  (α6488'' -> α6489'')  <!<  ((α6483',) -> α6484')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6483',) -> α6484')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6483',) -> α6484')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6477'',) -> α6478'')
+//│ ╟── while constraining:  (α6470' <: ((α6475'',) -> α6476''), to_church6330' <: ((α6477'',) -> α6478'') => (α6480'' -> α6476''))  <!<  ((α6455',) -> α6456')
+//│ ╟── while constraining:  ‹∀ 3. (α6470' <: ((α6462'''',) -> α6463''''), to_church6330' <: ((α6471'''',) -> α6472'''') => (α6467'''' -> α6463''''))›  <!<  ((α6455',) -> α6456')
+//│ ╟── while constraining:  ‹∀ 3. (α6470' <: ((α6462'''',) -> α6463''''), to_church6330' <: ((α6471'''',) -> α6472'''') => (α6467'''' -> α6463''''))›  <!<  α6454'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6462'''',) -> α6463''''), to_church6330' <: ((α6464'''',) -> α6465'''') => (α6467'''' -> α6463''''))›  <!<  α6454'
+//│ ╟── while constraining:  (α6461'' -> ‹∀ 3. (α6339''' <: ((α6462'''',) -> α6463''''), to_church6330' <: ((α6464'''',) -> α6465'''') => (α6467'''' -> α6463''''))›)  <!<  ((α6442',) -> α6454')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6442',) -> α6454')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6453'
+//│ ╟── while constraining:  α6458''  <!<  α6453'
+//│ ╟── while constraining:  (α6457'' -> α6458'')  <!<  ((α6452',) -> α6453')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6452',) -> α6453')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6452',) -> α6453')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6446'',) -> α6447'')
+//│ ╟── while constraining:  (α6439' <: ((α6444'',) -> α6445''), to_church6330' <: ((α6446'',) -> α6447'') => (α6449'' -> α6445''))  <!<  ((α6424',) -> α6425')
+//│ ╟── while constraining:  ‹∀ 3. (α6439' <: ((α6431'''',) -> α6432''''), to_church6330' <: ((α6440'''',) -> α6441'''') => (α6436'''' -> α6432''''))›  <!<  ((α6424',) -> α6425')
+//│ ╟── while constraining:  ‹∀ 3. (α6439' <: ((α6431'''',) -> α6432''''), to_church6330' <: ((α6440'''',) -> α6441'''') => (α6436'''' -> α6432''''))›  <!<  α6423'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6431'''',) -> α6432''''), to_church6330' <: ((α6433'''',) -> α6434'''') => (α6436'''' -> α6432''''))›  <!<  α6423'
+//│ ╟── while constraining:  (α6430'' -> ‹∀ 3. (α6339''' <: ((α6431'''',) -> α6432''''), to_church6330' <: ((α6433'''',) -> α6434'''') => (α6436'''' -> α6432''''))›)  <!<  ((α6411',) -> α6423')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6411',) -> α6423')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6422'
+//│ ╟── while constraining:  α6427''  <!<  α6422'
+//│ ╟── while constraining:  (α6426'' -> α6427'')  <!<  ((α6421',) -> α6422')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6421',) -> α6422')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6421',) -> α6422')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6415'',) -> α6416'')
+//│ ╟── while constraining:  (α6408' <: ((α6413'',) -> α6414''), to_church6330' <: ((α6415'',) -> α6416'') => (α6418'' -> α6414''))  <!<  ((α6393',) -> α6394')
+//│ ╟── while constraining:  ‹∀ 3. (α6408' <: ((α6400'''',) -> α6401''''), to_church6330' <: ((α6409'''',) -> α6410'''') => (α6405'''' -> α6401''''))›  <!<  ((α6393',) -> α6394')
+//│ ╟── while constraining:  ‹∀ 3. (α6408' <: ((α6400'''',) -> α6401''''), to_church6330' <: ((α6409'''',) -> α6410'''') => (α6405'''' -> α6401''''))›  <!<  α6392'
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6400'''',) -> α6401''''), to_church6330' <: ((α6402'''',) -> α6403'''') => (α6405'''' -> α6401''''))›  <!<  α6392'
+//│ ╟── while constraining:  (α6399'' -> ‹∀ 3. (α6339''' <: ((α6400'''',) -> α6401''''), to_church6330' <: ((α6402'''',) -> α6403'''') => (α6405'''' -> α6401''''))›)  <!<  ((α6391',) -> α6392')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((α6391',) -> α6392')
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  α6390'
+//│ ╟── while constraining:  α6396''  <!<  α6390'
+//│ ╟── while constraining:  (α6395'' -> α6396'')  <!<  ((α6389',) -> α6390')
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  ((α6389',) -> α6390')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6389',) -> α6390')
+//│ ╟── while constraining:  to_church6330'  <!<  ((α6385'',) -> α6386'')
+//│ ╟── while constraining:  (α6339''' <: ((α6383'',) -> α6384''), to_church6330' <: ((α6385'',) -> α6386'') => (α6388'' -> α6384''))  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 3. (α6339''' <: ((α6377'''',) -> α6378''''), to_church6330' <: ((α6379'''',) -> α6380'''') => (α6382'''' -> α6378''''))›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  (α6376'' -> ‹∀ 3. (α6339''' <: ((α6377'''',) -> α6378''''), to_church6330' <: ((α6379'''',) -> α6380'''') => (α6382'''' -> α6378''''))›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  ‹∀ 0. (('a4967' -> 'a4967') -> ('a4967' -> 'a4967'))›
+//│ ╟── while constraining:  ‹∀ 2. (α6339''' -> ‹∀ 3. (α6339''' <: ((α6345'''',) -> α6346''''), to_church6330' <: ((α6342'''',) -> α6343'''') => (α6340'''' -> α6346''''))›)›  <!<  Fint
+//│ ╟── while constraining:  α6373'  <!<  Fint
+//│ ╟── while constraining:  (α6372' -> α6373')  <!<  (Int -> Fint)
+//│ ╟── while constraining:  ‹∀ 1. (α6331'' -> α6347'')›  <!<  (Int -> Fint)
+//│ ╟── while constraining:  to_church6371'  <!<  (Int -> Fint)
+//│ ╟── while constraining:  ‹∀ 0. to_church6330'›  <!<  (Int -> Fint)
+//│ ╙── while constraining:  ‹∀ 0. to_church6330'›  <!<  ‹∀ 0. (Int -> Fint)›
 //│          = [Function: to_church]
 
 
@@ -693,7 +1967,9 @@ rec def to_church n =
 rec def to_church' n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1)) f x)
-//│ to_church': int -> (forall 'a, 'b. ('a -> 'b & 'a -> 'a) -> (forall 'c. ('c & 'a) -> ('c | 'b)))
+//│ to_church': int -> (forall 'b. 'b -> (forall 'a, 'c. (('c & 'a) -> 'c
+//│   where
+//│     'b <: 'a -> 'a & 'a -> 'c)))
 //│           = [Function: to_church]
 
 
@@ -706,11 +1982,30 @@ rec def c_fact (n: Fint) =
 rec def c_fact' n =
   c_if' (c_iszero' n) (fun _ -> c_i1)
     (fun _ -> c_mul' n (c_fact' (c_pred' n)))
-//│ c_fact: Fint -> (forall 'b, 'c, 'd, 'a. ('b -> 'c & 'd -> 'a & 'a -> 'a) -> (forall 'd, 'a. ('b & 'd) -> ('a | 'c | 'd)) | Fint)
-//│       = [Function: c_fact]
-//│ c_fact': 'a -> 'b
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1184: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║          	  ^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `'a`
+//│ ║  l.674: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.674: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ║         	                    ^^
+//│ ╟── from application:
+//│ ║  l.699: 	def c_true = fun a -> fun b -> a c_unit
+//│ ╙──       	                               ^^^^^^^^
+//│ c_fact: Fint -> (forall 'b. (‘a -> ‘a & 'b) -> (forall 'c, 'd. ('c -> 'd
 //│   where
-//│     'a <: (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> (((forall 'c. 'c -> 'c) -> 'e) -> anything -> 'e) -> (anything -> (forall 'f, 'g. ('f -> 'g) -> 'f -> 'g)) -> (anything -> 'h) -> 'b & (forall 'i, 'j, 'k. ((anything -> (forall 'l. 'l -> 'l)) -> 'i -> 'j -> 'k & (anything -> (forall 'l. 'l -> 'l)) -> anything) -> (nothing -> (forall 'i, 'j, 'k, 'm. ('m -> 'j & 'i) -> 'm -> 'k) -> 'n) -> 'n) -> (((anything -> (forall 'o. 'o -> 'o)) -> (anything -> (forall 'o. 'o -> 'o)) -> 'p) -> 'p) -> (forall 'q. 'q -> anything -> 'q) -> 'a & (((forall 'r, 's, 't. ('r -> 's -> 't) -> (forall 'u. ('u -> 's & 'r) -> 'u -> 't)) -> nothing -> 'v) -> 'v) -> (anything -> (forall 'o. 'o -> 'o)) -> 'h
+//│     'b <: 'c -> 'd)) | error) | 'c_fact
+//│   where
+//│     'e <: (forall 'f. 'f -> 'f) -> ‘a
+//│     'a := ‘a
+//│     'a0 := ‘a
+//│     'c_fact <: Fint -> Fint
+//│       = [Function: c_fact]
+//│ c_fact': (('a -> 'a -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c) -> (((forall 'b. 'b -> 'b) -> ‘a & 'a) -> ('a -> 'd
+//│   where
+//│     'a <: (forall 'b. 'b -> 'b) -> 'd)) -> 'a) -> nothing
 //│        = [Function: c_fact]
 
 
@@ -734,6 +2029,15 @@ def print_fact' n =
   let _ = print_string " = " in
   let _ = c_printint' (c_fact' (to_church' n)) in
           print_string "\n"
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1219: 	  let _ = c_printint (c_fact (to_church n)) in
+//│ ║          	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ print_fact: int -> unit
 //│ print_fact': int -> unit
 
@@ -747,7 +2051,21 @@ def print_fact2' n =
   concat (toString n) (
   concat " = "
          (c_printint2' (c_fact' (to_church' n))) ))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1556: 	         (c_printint2 (c_fact (to_church n))) ))
+//│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `'a`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ print_fact2: int -> string
+//│   where
+//│     'b <: ‘a -> ‘a
+//│     'a := ‘a
+//│     'a0 := ‘a
+//│     'c_fact <: Fint -> Fint
 //│            = [Function: print_fact2]
 //│ print_fact2': int -> string
 //│             = [Function: print_fact2]
@@ -776,8 +2094,77 @@ this_should_be_98' =
   let c_99' = c_add' (c_mul' c_i9' c_i10') c_i9' in
   let c_98' = c_pred' c_99' in
   c_printint2' c_98'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1587: 	  let c_i5 = c_add c_i3 c_i2 in
+//│ ║          	             ^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `'a`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1588: 	  let c_i10 = c_mul c_i5 c_i2 in
+//│ ║          	              ^^^^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `'a`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1589: 	  let c_i9 = c_pred c_i10 in
+//│ ║          	             ^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1590: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║          	                    ^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1590: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║          	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1591: 	  let c_98 = c_pred c_99 in
+//│ ║          	             ^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ this_should_be_98: string
 //│                  = '98'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1594: 	  let c_i5' = c_add' c_i3' c_i2 in
+//│ ║          	              ^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b, ?c, ?d, ?e. (?d -> ?c
+//│   where
+//│     ?f <: ?a -> ?e
+//│     ?g <: ?d -> ?b))` is not an instance of type `'a`
+//│ ║  l.843: 	def c_succ' n = fun f -> fun x -> n f (f x)
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── from application:
+//│ ║  l.842: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
+//│ ╙──       	                                              ^^^
 //│ this_should_be_98': string
 //│                   = '98'
 
@@ -796,19 +2183,82 @@ print_fact2 3
 print_fact2 4
 print_fact2 5
 print_fact2 6
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1679: 	print_fact2 0
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 0 = 1'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1680: 	print_fact2 1
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 1 = 1'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1681: 	print_fact2 2
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 2 = 2'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1682: 	print_fact2 3
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 3 = 6'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1683: 	print_fact2 4
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 4 = 24'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1684: 	print_fact2 5
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 5 = 120'
-//│ res: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1685: 	print_fact2 6
+//│ ║          	^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.673: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ res: error
 //│    = 'Factorial 6 = 720'
 
 print_fact2' 0

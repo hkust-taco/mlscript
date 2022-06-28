@@ -30,7 +30,9 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: ('a -> 'b) -> 'a -> 'b
+//│ app: 'a -> (forall 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -70,7 +72,10 @@ choose id
 //│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> ('a1 -> 'a1 & 'a1) -> 'a1
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'e <: 'b -> 'c -> 'd
+//│     'f <: 'b -> 'c))
 
 choose id succ
 //│ res: int -> int
@@ -100,7 +105,7 @@ id auto
 //│ res: 'a -> 'a
 
 app auto id
-//│ res: 'a -> 'a
+//│ res: nothing
 
 // ------------ Sec 5.2 ------------
 
@@ -210,8 +215,12 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'a -> 'b
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'a -> 'b
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise
@@ -262,5 +271,14 @@ let f = fun x -> id in g f
 
 // FreezeML D4
 app runST argST
-//│ res: int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.264: 	app runST argST
+//│ ║         	^^^^^^^^^
+//│ ╟── function of type `?a -> ?a` is not an instance of type `ST`
+//│ ║  l.26: 	def id x = x
+//│ ║        	       ^^^^^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.58: 	def runST: (forall 's. ST['s, 'v]) -> 'v
+//│ ╙──      	                       ^^^^^^^^^^
+//│ res: error
 

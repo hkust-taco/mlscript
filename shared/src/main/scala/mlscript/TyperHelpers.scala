@@ -417,6 +417,8 @@ abstract class TyperHelpers { Typer: Typer =>
           val tmp = tv.lowerBounds.exists(this <:< _)
           if (tmp) cache(this -> that) = true
           tmp
+        case (ConstrainedType(Nil, bod), rhs) => bod <:< that
+        case (_, ConstrainedType(cs, bod)) => this <:< bod // could assume cs here
         case (ProxyType(und), _) => und <:< that
         case (_, ProxyType(und)) => this <:< und
         case (_, NegType(und)) => (this & und) <:< BotType
@@ -436,6 +438,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
+        case (_: Overload, _) | (_, _: Overload) => false // TODO
+        case (_: ConstrainedType, _) => false
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)

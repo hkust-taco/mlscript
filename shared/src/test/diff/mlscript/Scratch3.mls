@@ -1,0 +1,17 @@
+
+:GeneralizeCurriedFunctions
+
+def foo f x = f x
+//│ foo: 'a -> (forall 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│    = [Function: foo]
+
+
+def s n = fun f -> fun x -> f (n f x)
+//│ s: 'a -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│  = [Function: s]
+

@@ -77,7 +77,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   
   // case class ConstrainedType(constraints: List[ST -> ST], body: ST) extends SimpleType { // TODO add own prov?
-  case class ConstrainedType(constraints: List[TV -> List[(Bool -> ST)]], body: ST) extends SimpleType { // TODO add own prov?
+  type Constr = List[(Bool -> ST)]
+  type Constrs = List[TV -> Constr]
+  case class ConstrainedType(constraints: Constrs, body: ST) extends SimpleType { // TODO add own prov?
     val prov: TypeProvenance = body.prov
     // lazy val level =
     //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.level).max
@@ -92,6 +94,11 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case (true, b) => s"${vbs._1} :> $b"
         case (false, b) => s"${vbs._1} <: $b"
       }).mkString(", ")} => $body)"
+  }
+  object ConstrainedType {
+    def mk(constraints: Constrs, body: ST): ST =
+      if (constraints.isEmpty) body
+      else ConstrainedType(constraints, body)
   }
   
   /** `body.get._1`: implicit `this` parameter

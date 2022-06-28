@@ -275,7 +275,7 @@ f0 = f0
 //│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  'a113'
 //│ ╟── while constraining:  'a112'  <!<  'a113'
 //│ ╟── while constraining:  ('a112',)  <!<  ('a113',)
-//│ ╟── while constraining:  ('a113' -> int<TypeName(number)>)  <!<  ('a112' -> int<TypeName(number)>)
+//│ ╟── while constraining:  ('a113' -> int<number>)  <!<  ('a112' -> int<number>)
 //│ ╟── while constraining:  ('a113' -> Int)  <!<  (‘a' | ('a112' -> Int))
 //│ ╟── while constraining:  'a113'  <!<  (‘a' | ('a112' -> Int))
 //│ ╟── while constraining:  ‹∀ 0. 'a102'›  <!<  (‘a' | ('a112' -> Int))

@@ -68,7 +68,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /* To solve constraints that are more tricky. */
     def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
-      constrainDNF(DNF.mkDeep(MaxLevel, lhs, true), DNF.mkDeep(MaxLevel, rhs, false), rhs)
+      constrainDNF(DNF.mkDeep(MaxLevel, Nil, lhs, true), DNF.mkDeep(MaxLevel, Nil, rhs, false), rhs)
     
     def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
     // trace(s"ARGH  $lhs  <!  $rhs") {
@@ -84,8 +84,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
           case N =>
             implicit val etf: ExpandTupleFields = true
-            val fullRhs = nvars.iterator.map(DNF.mkDeep(MaxLevel, _, true))
-              .foldLeft(rhs | DNF.mkDeep(MaxLevel, rnf.toType(), false))(_ | _)
+            val fullRhs = nvars.iterator.map(DNF.mkDeep(MaxLevel, Nil, _, true))
+              .foldLeft(rhs | DNF.mkDeep(MaxLevel, Nil, rnf.toType(), false))(_ | _)
             println(s"Consider ${lnf} <: ${fullRhs}")
             
             // The following crutch is necessary because the pesky Without types may get stuck
@@ -395,7 +395,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
-          case (lhs0, _: TypeVariable) if extrusionContext.nonEmpty => ???
+          case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty =>
+            // ???
+            val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
+            buf += true -> lhs0
+            ()
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
             println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
