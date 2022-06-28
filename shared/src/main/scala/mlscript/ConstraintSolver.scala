@@ -13,7 +13,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def depthLimit: Int = 200
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
+  def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = { val outerCtx = ctx ; {
+    val ctx = ()
+    
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
@@ -29,7 +31,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     val ret = () => return
     
-    def consumeFuel()(implicit cctx: ConCtx) = {
+    def consumeFuel()(implicit cctx: ConCtx, ctx: Ctx) = {
       def msgHead = msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}`"
       if (stack.size > depthLimit) {
         err(
@@ -66,7 +68,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       constrainDNF(DNF.mkDeep(MaxLevel, lhs, true), DNF.mkDeep(MaxLevel, rhs, false), rhs)
     
     def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
-    trace(s"ARGH  $lhs  <!  $rhs") {
+    // trace(s"ARGH  $lhs  <!  $rhs") {
+    trace(s"${lvl}. ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
       
@@ -148,11 +151,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit cctx: ConCtx, ctx: Ctx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
         consumeFuel()
-        annoyingImpl(ls, done_ls, rs, done_rs)(cctx, dbgHelp)
+        annoyingImpl(ls, done_ls, rs, done_rs)//(cctx, dbgHelp)
       }
     
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
+          (implicit cctx: ConCtx, ctx: Ctx, dbgHelp: Str = "Case"): Unit = trace(s"${lvl}. A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
         def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
         tys.reduceOption(_ | _).getOrElse(BotType)
@@ -305,7 +308,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (Some(l), None) =>
             if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty) reportError()
             else reportError(S(msg"is not mutable"))(
-              (rhs.ub.withProv(rhs.prov) :: l.withProv(lhs.prov) :: Nil, l.withProv(noProv) :: Nil)
+              (rhs.ub.withProv(rhs.prov) :: l.withProv(lhs.prov) :: Nil, l.withProv(noProv) :: Nil), ctx
             )
           case (None, Some(_)) | (None, None) => ()
         }
@@ -335,6 +338,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit =
     // trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs    (${cache.size})") {
+    // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
     trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
@@ -488,7 +492,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
     }}()
     
-    def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
+    def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx, ctx: Ctx): Unit = {
       val lhs = cctx._1.head
       val rhs = cctx._2.head
       
@@ -620,8 +624,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil, ctx)
-  }
+    rec(lhs, rhs, true)(raise, Nil -> Nil, outerCtx)
+  }}
   
   
   def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)

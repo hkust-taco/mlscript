@@ -312,7 +312,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       // }, (td.targs.lazyZip(targs) ++ td.tvars.map(tv =>
       //   tv -> tv.freshenAbove(MinLevel, rigidify = false)(tv.level, MutMap.empty))).toMap)
       }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
-    }
+    } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def mkTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
