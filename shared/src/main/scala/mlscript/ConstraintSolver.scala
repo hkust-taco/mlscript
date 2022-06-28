@@ -710,6 +710,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
         PolymorphicType(polymLevel, extrude(body, lvl, pol, upperLvl = polymLevel))
+      case ConstrainedType(cs, bod) =>
+        ConstrainedType(cs.map { case (tv, bs) =>
+          val nv = extrude(tv, lvl, pol, upperLvl).asInstanceOf[TV] // FIXME
+          nv -> bs.map {
+            case (pol, b) => (pol, extrude(b, lvl, pol, upperLvl))
+          } }, extrude(bod, lvl, pol, upperLvl))
       case o @ Overload(alts) => Overload(alts.map(extrude(_, lvl, pol, upperLvl).asInstanceOf[FunctionType]))(o.prov)
     }
     // }(r => s"=> $r"))

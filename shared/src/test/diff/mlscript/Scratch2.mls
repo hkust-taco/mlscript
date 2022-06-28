@@ -55,5 +55,51 @@ succ = s
 //│ ChurchInt -> ChurchInt
 //│     = [Function: s]
 
+def z f x = x
+//│ z: anything -> (forall 'a. 'a -> 'a)
+//│  = [Function: z]
+
+def zero: ChurchInt
+//│ zero: ChurchInt
+//│     = <missing implementation>
+
+def zero = z
+//│ anything -> (forall 'a. 'a -> 'a)
+//│   <:  zero:
+//│ ChurchInt
+//│     = [Function: z]
+
+// Seems to run out of depth:
+// :ns
+// rec def to_ch n =
+//   if n == 0 then zero
+//   else succ (to_ch (n - 1))
+
+// rec def to_ch n =
+//   (if n == 0 then zero
+//   else succ (to_ch (n - 1) : ChurchInt)): ChurchInt
+
+def to_church: int -> ChurchInt
+//│ to_church: int -> ChurchInt
+//│          = <missing implementation>
+
+def to_church n =
+  if n == 0 then zero
+  else succ (to_church (n - 1))
+//│ int -> ChurchInt
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│          = <no result>
+//│            to_church is not implemented
+
+to_church = to_ch
+//│ ╔══[ERROR] identifier not found: to_ch
+//│ ║  l.308: 	to_church = to_ch
+//│ ╙──       	            ^^^^^
+//│ error
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ Code generation encountered an error:
+//│   unresolved symbol to_ch
 
 
