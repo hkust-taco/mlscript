@@ -12,7 +12,7 @@ def z f x = x
 //│ z: anything -> (forall 'a. 'a -> 'a)
 //│  = [Function: z]
 
-def s n = fun f -> fun x -> f (n f x)
+def s n f x = f (n f x)
 //│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
@@ -142,13 +142,25 @@ n1 wrap 0
 //│ res: {x: 0}
 //│    = { x: 0 }
 
+res.x + 1
+//│ res: int
+//│    = 1
+
 n2 wrap 0
 //│ res: {x: {x: 0}}
 //│    = { x: { x: 0 } }
 
+res.x.x + 1
+//│ res: int
+//│    = 1
+
 n3 wrap 0
 //│ res: {x: {x: {x: 0}}}
 //│    = { x: { x: { x: 0 } } }
+
+res.x.x.x + 1
+//│ res: int
+//│    = 1
 
 
 // * With distributivity, it works!:
@@ -162,5 +174,26 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│     = [Function: s]
+
+
+type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ Defined type alias ChurchInt
+
+:stats
+z: ChurchInt
+//│ res: ChurchInt
+//│    = [Function: z]
+//│ constrain calls  : 15
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
+
+:stats
+s: ChurchInt -> ChurchInt
+//│ res: ChurchInt -> ChurchInt
+//│    = [Function: s]
+//│ constrain calls  : 62
+//│ annoying  calls  : 0
+//│ subtyping calls  : 0
+
 
 

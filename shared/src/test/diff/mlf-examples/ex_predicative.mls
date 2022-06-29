@@ -149,7 +149,6 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // (* Factorial of two and three *)
 // (* Only ONE annotation ! *)
 // let t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n:Int) -> n (fun v -> k') k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k') (fun f -> fun x -> f (p k' f x))) (fun s -> s k' k') k) g) x)) two ;;
-// FIXME
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ t: 'a -> (forall 'b, 'c. (('d -> 'e & 'f) -> ('d & 'g) -> ('e | 'h)
@@ -169,9 +168,8 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 
 // FIXME
 t id succ 0
-t2 id succ 0
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (int -> int) -> ?b` exceeded recursion depth limit (400)
-//│ ║  l.171: 	t id succ 0
+//│ ║  l.170: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── while constraining:  (‹∀ 0. (α407' -> (α408' -> α408'))›,)  <!<  (α1229',)
 //│ ╟── while constraining:  (α1229' -> α1229')  <!<  ((‹∀ 0. (α407' -> (α408' -> α408'))›,) -> α1227')
@@ -207,11 +205,12 @@ t2 id succ 0
 //│ ╙── while constraining:  α793  <!<  (((int<number> -> int<number>),) -> α857)
 //│ res: error
 //│    = 2
+
+t2 id succ 0
 //│ res: int
 //│    = 2
 
 // let t y = (fun h -> h (h (h (h (fun x -> y))))) (fun f -> fun (n:Int) -> n (fun v -> k') k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k') (fun f -> fun x -> f (p k' f x))) (fun s -> s k' k') k) g) x)) three
-// FIXME
 def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ t: 'a -> (forall 'b, 'c, 'd, 'e, 'f. (('g -> 'h & 'd) -> ('g & 'i) -> ('h | 'j)
@@ -235,9 +234,9 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 // (* We test that the result is 6: *)
 // let succ n = n + 1 ;;
 // t id succ 0 ;;
+
 // FIXME
 t id succ 0
-t2 id succ 0
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (int -> int) -> ?b` exceeded recursion depth limit (400)
 //│ ║  l.239: 	t id succ 0
 //│ ║         	^^^^^^^^^
@@ -275,6 +274,8 @@ t2 id succ 0
 //│ ╙── while constraining:  α1765  <!<  (((int<number> -> int<number>),) -> α1829)
 //│ res: error
 //│    = 6
+
+t2 id succ 0
 //│ res: int
 //│    = 6
 
@@ -302,7 +303,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (400)
-//│ ║  l.303: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.304: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  ‹∀ 0. (α2579' -> α2580')›  <!<  α2604
 //│ ╟── while constraining:  α2602  <!<  α2604
@@ -380,7 +381,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e. (?e -> ?d
 //│   where
 //│     ?f <: ?c -> ?d)) -> ?g` exceeded recursion depth limit (400)
-//│ ║  l.379: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.380: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  ‹∀ 0. {(α2753' -> α2755') where: α2749 <: ((α2754',) -> α2755')}›  <!<  α2792
 //│ ╟── while constraining:  α2789  <!<  α2792
@@ -417,4 +418,5 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
+
 
