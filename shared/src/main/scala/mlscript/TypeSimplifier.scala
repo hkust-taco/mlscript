@@ -76,7 +76,22 @@ trait TypeSimplifier { self: Typer =>
         }
       })(ty.prov)
       
-      case _ => ty.mapPol(N)((_, ty) => process(ty, N))
+      case PolymorphicType(plvl, bod) =>
+        PolymorphicType.mk(plvl, process(bod, parent))
+      
+      // case ConstrainedType(cs, body) =>
+      //   val rw 
+      
+      // case _ => ty.mapPol(N)((_, ty) => process(ty, N))
+      case _ =>
+        
+        val rw = ty match {
+          case ConstrainedType(cs, body) =>
+            ConstrainedType(cs.map(_.mapFirst(renew)), body)
+          case _ => ty
+        }
+        
+        rw.mapPol(N, smart = true)((_, ty) => process(ty, N))
       
     }
     // }(r => s"= $r")
@@ -270,15 +285,18 @@ trait TypeSimplifier { self: Typer =>
         }, sort = true)
       }.foldLeft(BotType: ST)(_ | _) |> factorize(ctx)
       val res = otherCs2 | csNegs2
-      PolymorphicType.mk(dnf.polymLevel, res)
+      val cons = dnf.cons.map(_.mapSecond(_.map{case(p,b)=>p->go(b,S(p))})
+        // .mapFirst(v => renew(v))
+        )
+      PolymorphicType.mk(dnf.polymLevel, ConstrainedType.mk(cons, res))
     }
         
     def go(ty: ST, pol: Opt[Bool]): ST = trace(s"norm[${printPol(pol)}] $ty") {
       pol match {
-        case S(p) => helper(DNF.mk(MaxLevel, ty, p)(ctx, ptr = true, etf = false), pol)
+        case S(p) => helper(DNF.mk(MaxLevel, Nil, ty, p)(ctx, ptr = true, etf = false), pol)
         case N =>
-          val dnf1 = DNF.mk(MaxLevel, ty, false)(ctx, ptr = true, etf = false)
-          val dnf2 = DNF.mk(MaxLevel, ty, true)(ctx, ptr = true, etf = false)
+          val dnf1 = DNF.mk(MaxLevel, Nil, ty, false)(ctx, ptr = true, etf = false)
+          val dnf2 = DNF.mk(MaxLevel, Nil, ty, true)(ctx, ptr = true, etf = false)
           TypeBounds.mk(helper(dnf1, S(false)), helper(dnf2, S(true)))
       }
     }(r => s"~> $r")
@@ -307,6 +325,7 @@ trait TypeSimplifier { self: Typer =>
     
     val occNums: MutMap[(Bool, TypeVariable), Int] = LinkedHashMap.empty[(Bool, TypeVariable), Int].withDefaultValue(0)
     val occursInvariantly = MutSet.empty[TV]
+    val constrainedVars = MutSet.empty[TV]
     
     val analyzed1 = MutSet.empty[PolarVariable]
     
@@ -326,6 +345,10 @@ trait TypeSimplifier { self: Typer =>
               analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(S(true))) }
             if (pol =/= S(true))
               analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(S(false))) }
+          case ConstrainedType(cs, bod) =>
+            // occursInvariantly ++= cs.iterator.map(_._1)
+            constrainedVars ++= cs.iterator.map(_._1)
+            super.apply(pol)(st)
           case _ =>
             super.apply(pol)(st)
         }
@@ -376,6 +399,9 @@ trait TypeSimplifier { self: Typer =>
       case TypeBounds(lb, ub) =>
         if (pol) analyze2(ub, true) else analyze2(lb, false)
       case PolymorphicType(lvl, bod) => analyze2(bod, pol)
+      case ConstrainedType(cs, bod) =>
+        cs.foreach(_._2.foreach(pb => analyze2(pb._2, pb._1)))
+        analyze2(bod, pol)
     }
     }
     }()
@@ -434,17 +460,21 @@ trait TypeSimplifier { self: Typer =>
     
     // val allVars = st.getVars
     val allVars = analyzed1.iterator.map(_._1).toSortedSet
+    val rewritableVars = allVars.filterNot(constrainedVars)
     
     var recVars = MutSet.from(allVars.iterator.filter(_.isRecursive_$))
     
     println(s"[vars] ${allVars}")
+    println(s"[rw vars] ${rewritableVars}")
     println(s"[rec] ${recVars}")
     // println(s"[bounds] ${st.showBounds}")
     
     // * Remove polar type variables that only occur once, including if they are part of a recursive bounds graph:
     if (inlineBounds) occNums.iterator.foreach { case (k @ (pol, tv), num) =>
       assert(num > 0)
-      if (num === 1 && !occNums.contains(!pol -> tv)) {
+      if (num === 1 && !occNums.contains(!pol -> tv)
+            && rewritableVars(tv) // or !constrainedVars(tv)
+          ) {
         println(s"0[1] $tv")
         varSubst += tv -> None
       }
@@ -452,7 +482,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Simplify away those non-recursive variables that only occur in positive or negative positions
     // *  (i.e., polar ones):
-    allVars.foreach { case v0 => if (!recVars.contains(v0)) {
+    rewritableVars.foreach { case v0 => if (!recVars.contains(v0)) {
       (coOccurrences.get(true -> v0), coOccurrences.get(false -> v0)) match {
         case (Some(_), None) | (None, Some(_)) =>
           if (removePolarVars) {
@@ -465,7 +495,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Remove variables that are 'dominated' by another type or variable
     // *  A variable v dominated by T if T is in both of v's positive and negative cooccurrences
-    allVars.foreach { case v => if (!varSubst.contains(v)) {
+    rewritableVars.foreach { case v => if (!varSubst.contains(v)) {
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
@@ -500,7 +530,7 @@ trait TypeSimplifier { self: Typer =>
     }}
     
     // * Unify equivalent variables based on polar co-occurrence analysis:
-    { val pols = true :: false :: Nil; allVars.foreach { case v => if (!varSubst.contains(v)) {
+    { val pols = true :: false :: Nil; rewritableVars.foreach { case v => if (!varSubst.contains(v)) {
       println(s"3[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       pols.foreach { pol =>
@@ -654,6 +684,12 @@ trait TypeSimplifier { self: Typer =>
         pol.fold[ST](TypeBounds.mk(transform(lb, S(false), parent), transform(ub, S(true), parent), noProv))(pol =>
           if (pol) transform(ub, S(true), parent) else transform(lb, S(false), parent))
       case PolymorphicType(lvl, bod) => PolymorphicType.mk(lvl, transform(bod, pol, parent)) // FIXME? parent or None?
+      case ConstrainedType(cs, bod) =>
+        ConstrainedType(
+        cs.map { case (tv, bs) =>
+          (transform(tv, N, N).asInstanceOf[TV] // FIXME
+            ) -> bs.map{case (p, b) => p -> transform(b, S(p), N) }}
+        , transform(bod, pol, parent)) // FIXME? parent or None?
     }
     }(r => s"~> $r")
     

@@ -4,40 +4,12 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = <missing implementation>
 
-:e
+// :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║       	                                   ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α34'  <:  ((α34',) -> α37')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α34'  <:  ((α34',) -> α36'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║       	                                  ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α37'  <:  ((α35'',) -> α38'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α36''  <:  ((α35'',) -> α38'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║       	                                                                   ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α40''  <:  ((α40'',) -> α43'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α40''  <:  ((α40'',) -> α42''')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║       	                                                                  ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α43''  <:  ((α41''',) -> α44''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α42'''  <:  ((α41''',) -> α44''')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ║       	                                                      ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α33'  <:  ((∀ 2. (α41''' -> α44'''),) -> α46')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α33'  <:  ((∀ 2. (α41''' -> α44'''),) -> α45'')
-//│ ((anything -> error) -> 'a) -> 'a
+//│ ((forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z]

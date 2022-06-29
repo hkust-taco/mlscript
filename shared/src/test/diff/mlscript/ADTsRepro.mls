@@ -15,8 +15,8 @@ e2 : Add['e] as 'e
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. 'e23'  <:  'e29    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ∀ 0. 'e23'  <:  'e23'
+//│ ╟── this constraint:  ‹∀ 0. 'e23'›  <:  'e29    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. 'e23'›  <:  'e23'
 //│ res: 'e
 //│   where
 //│     'e :> forall 'e0. 'e0 | error | Add['e]
@@ -48,14 +48,14 @@ f0 = f0
 //│ ║  l.39: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. 'a40'  <:  'a51    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ∀ 0. 'a40'  <:  'a40'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a40'››  <:  'a51'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a40'››  <:  'a40'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.39: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ('a50 -> int<TypeName(number)>)  <:  ('a51 -> int<TypeName(number)>)    FunctionType  FunctionType
-//│ ╙──  ... looks like:  ('a40' -> int<TypeName(number)>)  <:  ('a40' -> int<TypeName(number)>)
+//│ ╟── this constraint:  ('a50' -> int<number>)  <:  ('a51' -> int<number>)    FunctionType  FunctionType
+//│ ╙──  ... looks like:  ('a40' -> int<number>)  <:  ('a40' -> int<number>)
 //│   = <no result>
 //│     f0 is not implemented
 

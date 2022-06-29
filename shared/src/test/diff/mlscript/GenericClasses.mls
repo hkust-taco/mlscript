@@ -164,32 +164,13 @@ mrg: Foo2[int]
 //│    = <no result>
 //│      mrg is not implemented
 
-:e
+// * This no longer causes an error because it treats `mrg` as polymorphic and it separately satisfies each side of `Foo2[Int] & Foo2[String]`...
+// * In the future we shouldn't generalize values.
+// :e
 mrg = Foo2{}
 //│ Foo2['A]
 //│   <:  mrg:
 //│ Foo2[in int | string out nothing]
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `string` is not an instance of type `int`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
-//│ ║         	                          ^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
-//│ ║         	              ^^^
-//│ ╟── Note: class type parameter A is defined at:
-//│ ║  l.110: 	class Foo2[A]
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.168: 	mrg = Foo2{}
-//│ ║         	^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of type `string`
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
-//│ ║         	              ^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	def mrg: Foo2[int] & Foo2[string]
-//│ ╙──       	                          ^^^^^^
 //│    = Foo2 {}
 
 def mrg: Foo2[int] | Foo2[string]
@@ -271,10 +252,10 @@ def mrg: Foo2_Co[int] | Foo2_Co[string]
 class Foo2_Bi[A]
 //│ Defined class Foo2_Bi[±A]
 //│ ╔══[WARNING] Type definition Foo2_Bi has bivariant type parameters:
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.252: 	class Foo2_Bi[A]
 //│ ║         	      ^^^^^^^
 //│ ╟── A is irrelevant and may be removed
-//│ ║  l.271: 	class Foo2_Bi[A]
+//│ ║  l.252: 	class Foo2_Bi[A]
 //│ ╙──       	              ^
 
 Foo2_Bi

@@ -1,5 +1,7 @@
 :NoJS
 
+:GeneralizeCurriedFunctions
+
 
 // ------------ Dummy classes to represent the types in the examples ------------
 
@@ -19,7 +21,7 @@ class ST[S, A]
 // ============ Type signatures for functions used in the examples ============
 
 def choose x y = if true then x else y
-//│ choose: 'a -> 'a -> 'a
+//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 
 def id x = x
 //│ id: 'a -> 'a
@@ -28,7 +30,9 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: ('a -> 'b) -> 'a -> 'b
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
 
 def inc: int -> int
 //│ inc: int -> int
@@ -62,12 +66,16 @@ def argST: ST['s, int]
 
 // ============ Raising ML to the power of System F (2003) ============
 
+// This used to be `'a -> (forall 'b. 'b -> 'b | 'a)`, now it's wrong!
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
+//│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> ('a1 -> 'a1 & 'a1) -> 'a1
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'e
+//│   where
+//│     'b <: 'c -> 'd -> 'e
+//│     'f <: 'c -> 'd))
 
 choose id succ
 //│ res: int -> int
@@ -105,10 +113,10 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.106: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.114: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.27: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -123,13 +131,13 @@ choose id auto2
 :e
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.124: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.124: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.124: 	res (choose id succ)
+//│ ║  l.132: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 
@@ -157,11 +165,11 @@ K x y = x
 
 (fun y -> let tmp = y I in y K) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.158: 	(fun y -> let tmp = y I in y K) (fun x -> x x)
+//│ ║  l.166: 	(fun y -> let tmp = y I in y K) (fun x -> x x)
 //│ ║         	                    ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α340  <:  ((∀ 0. (α330' -> α330'),) -> α342)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α340  <:  ((∀ 0. (α330' -> α330'),) -> α341')
+//│ ╟── this constraint:  α392'  <:  ((‹∀ 0. ‹∀ 1. (α382'' -> α382'')››,) -> α394')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α392'  <:  ((‹∀ 0. ‹∀ 1. (α382'' -> α382'')››,) -> α393'')
 //│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 // Note: reduces to
@@ -182,7 +190,7 @@ let tmp = I I in K K
 //│ res: (42, "foo",)
 
 (fun f -> (f succ, choose f auto)) (choose id)
-//│ res: (int -> int | 'b, (forall 'a. 'a -> 'a & 'b) -> (forall 'a. 'a -> 'a | int -> int | 'b),)
+//│ res: (forall 'b. (int & 'b) -> (int | 'b), (forall 'a, 'c. 'a -> 'a & 'c) -> (forall 'b, 'a, 'c. ('b & 'a) -> ('a | 'b) | 'c),)
 
 // ------------ Sec 2.3.1 ------------
 
@@ -213,8 +221,12 @@ fun z -> omega z
 
 (fun x -> fun y -> x y) omegad
 (fun x -> fun y -> x y) omega
-//│ res: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
-//│ res: ('a -> 'b & 'a) -> 'b
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'a -> 'b
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'a -> 'b
 
 // ------------ Sec 4.3 ------------
 // affects the order of bindings in the result type in MLF, not very interesting otherwise

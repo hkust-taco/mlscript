@@ -345,11 +345,40 @@ fun a -> a a
 //│ res: ('a -> 'b & 'a) -> 'b
 //│    = [Function: res]
 
+:e // Interestingly, unbound results are currently *not* generalized (despite the pretty-printing)
 self1 = res
 //│ ('a -> 'b & 'a) -> 'b
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.349: 	self1 = res
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `‘a -> ‘b & ‘a` does not match type `nothing`
+//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║         	           ^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ╙──       	            ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.349: 	self1 = res
+//│ ║         	^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ╙──       	                              ^^
 //│      = [Function: res]
+
+r = fun a -> a a
+//│ r: ('a -> 'b & 'a) -> 'b
+//│  = [Function: r]
+
+self1 = r
+//│ ('a -> 'b & 'a) -> 'b
+//│   <:  self1:
+//│ ('a -> 'b & 'a) -> 'b
+//│      = [Function: r]
 
 def self2: 'a -> 'b as 'a
 //│ self2: 'a
@@ -365,18 +394,18 @@ def self2 = self1
 //│   where
 //│     'a := 'a -> 'b
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.361: 	def self2 = self1
+//│ ║  l.390: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <:  (('a346 -> 'b347) & 'a346)    PolymorphicType  ComposedType
-//│ ╙──  ... looks like:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <:  (('a279' -> 'b280') & 'a279')
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a368' -> 'b369') & 'a368')    PolymorphicType  ComposedType
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')››  <:  (('a279' -> 'b280') & 'a279')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.361: 	def self2 = self1
+//│ ║  l.390: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a & ('a343 -> ‘b))  <:  (('a346 -> 'b347) & 'a346)    ComposedType  ComposedType
-//│ ╙──  ... looks like:  (‘a & ('a323' -> ‘b))  <:  (('a279' -> 'b280') & 'a279')
-//│      = [Function: res]
+//│ ╟── this constraint:  (‘a' & ('a365' -> ‘b'))  <:  (('a368' -> 'b369') & 'a368')    ComposedType  ComposedType
+//│ ╙──  ... looks like:  (‘a' & ('a345' -> ‘b'))  <:  (('a279' -> 'b280') & 'a279')
+//│      = [Function: r]
 
 
 fun p -> fun q -> p q p

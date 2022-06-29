@@ -441,17 +441,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   /** `polymLevel` denotes the level at which this type is quantified (MaxLevel if it is not) */
-  case class DNF(polymLevel: Int, cs: Ls[Conjunct]) {
+  case class DNF(polymLevel: Int, cons: Constrs, cs: Ls[Conjunct]) {
     assert(polymLevel <= MaxLevel, polymLevel)
-    def levelBelow(ub: Level): Level =
-      cs.iterator.map(_.levelBelow(polymLevel)(MutSet.empty)).maxOption.getOrElse(MinLevel)
+    private def levelBelow(ub: Level): Level =
+      cs.iterator.map(_.levelBelow(ub)(MutSet.empty)).maxOption.getOrElse(MinLevel)
     lazy val levelBelowPolym = levelBelow(polymLevel)
     def isBot: Bool = cs.isEmpty
-    def toType(sort: Bool = false): SimpleType = if (cs.isEmpty) BotType else {
+    def toType(sort: Bool = false): SimpleType = ConstrainedType.mk(cons, if (cs.isEmpty) BotType else {
       val css = if (sort) cs.sorted else cs
       PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
       // css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _)
-    }
+    })
     def level: Int = cs.maxByOption(_.level).fold(0)(_.level)
     def isPolymorphic: Bool = level > polymLevel
     def instantiate(implicit lvl: Level): Ls[Conjunct] =
@@ -466,9 +466,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       } else cs
     def & (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)
-      thatCs.map(DNF(newLvl, thisCs) & _).foldLeft(DNF.extr(false))(_ | _)
+      thatCs.map(DNF(newLvl, cons ::: that.cons, thisCs) & _).foldLeft(DNF.extr(false))(_ | _)
     }
-    private def levelWith(that: DNF): (Level, Ls[Conjunct], Ls[Conjunct]) =
+    private def levelWith(that: DNF): (Level, Ls[Conjunct], Ls[Conjunct]) = {
         if (levelBelowPolym <= that.polymLevel && that.levelBelowPolym <= polymLevel)
           (polymLevel min that.polymLevel, cs, that.cs)
         else if (levelBelow(that.polymLevel) <= polymLevel)
@@ -480,12 +480,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         else if (polymLevel > that.polymLevel)
           (polymLevel max that.polymLevel, cs, that.cs.map(_.freshenAbove(that.polymLevel, polymLevel + 1)))
         else (polymLevel, cs, that.cs) ensuring (that.polymLevel === polymLevel)
+    }
     def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = {
       val (newLvl, thisCs, thatCs) = levelWith(that)
-      thatCs.foldLeft(DNF(newLvl, thisCs))(_ | _)
+      thatCs.foldLeft(DNF(newLvl,
+        cons ::: that.cons, // FIXME?!
+        // ???,
+        thisCs))(_ | _)
     }
     def & (that: Conjunct)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
-      DNF(polymLevel, cs.flatMap(_ & that)) // TODO may need further simplif afterward
+      DNF(polymLevel, cons, cs.flatMap(_ & that)) // TODO may need further simplif afterward
     // def & (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
     //   that.cs.map(this & _).foldLeft(DNF.extr(false))(_ | _)
     // def | (that: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = that.cs.foldLeft(this)(_ | _)
@@ -506,9 +510,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case Nil => (toMerge :: acc).reverse
       }
       // }(r => s"go!! $r")
-      DNF(polymLevel, go(cs, Nil, that))
+      DNF(polymLevel,
+        cons, // FIXME?!
+        go(cs, Nil, that))
     }
-    override def toString: Str = s"DNF($polymLevel, ${cs.mkString(" | ")})"
+    override def toString: Str = s"DNF${
+      if (cons.isEmpty) ""
+      else s"{${cons.mkString(", ")}}"
+    }($polymLevel, ${cs.mkString(" | ")})"
   }
   
   object DNF {
@@ -517,54 +526,55 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     // def of(tt: TraitTag): DNF = DNF.of(LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
     // def of(rcd: RecordType): DNF = DNF.of(LhsRefined(N, ssEmp, rcd, smEmp))
     // def of(tvs: SortedSet[TypeVariable]): DNF = DNF(Conjunct.of(tvs) :: Nil)
-    def of(polymLvl: Level, lnf: LhsNf): DNF = DNF(polymLvl, Conjunct(lnf, ssEmp, RhsBot, ssEmp) :: Nil)
+    def of(polymLvl: Level, cons: Constrs, lnf: LhsNf): DNF = DNF(polymLvl, cons, Conjunct(lnf, ssEmp, RhsBot, ssEmp) :: Nil)
     // def extr(pol: Bool): DNF = if (pol) of(LhsTop) else DNF(Nil)
-    def extr(pol: Bool): DNF = if (pol) of(MaxLevel, LhsTop) else DNF(MaxLevel, Nil)
+    def extr(pol: Bool): DNF = if (pol) of(MaxLevel, Nil, LhsTop) else DNF(MaxLevel, Nil, Nil)
     def merge(pol: Bool)(l: DNF, r: DNF)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF = if (pol) l | r else l & r
     
-    def mkDeep(polymLvl: Level, ty: SimpleType, pol: Bool)
+    def mkDeep(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)
           (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF = {
-      mk(polymLvl, mkDeepST(polymLvl, ty, pol), pol)
+      mk(polymLvl, cons, mkDeepST(polymLvl, cons, ty, pol), pol)
     }
-    def mkDeepST(polymLvl: Level, ty: SimpleType, pol: Bool)
+    def mkDeepST(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)
           (implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): ST = ty match {
       case ProvType(und) =>
-        mkDeepST(polymLvl, und, pol).withProv(ty.prov)
-      case TypeBounds(lb, ub) => mkDeepST(polymLvl, if (pol) ub else lb, pol).withProv(ty.prov)
+        mkDeepST(polymLvl, cons, und, pol).withProv(ty.prov)
+      case TypeBounds(lb, ub) => mkDeepST(polymLvl, cons, if (pol) ub else lb, pol).withProv(ty.prov)
       case _ =>
-        val dnf = mk(polymLvl, ty, pol)
+        val dnf = mk(polymLvl, cons, ty, pol)
         def go(polo: Opt[Bool], st: ST): ST = polo match {
           case _ if st === ty => ty.mapPol(polo)(go)
-          case S(pol) => mkDeepST(polymLvl, st, pol)(ctx, ptr = true, etf = false)
+          case S(pol) => mkDeepST(polymLvl, cons, st, pol)(ctx, ptr = true, etf = false)
           case N => TypeBounds.mk(
-            mkDeepST(polymLvl, st, false)(ctx, ptr = true, etf = false),
-            mkDeepST(polymLvl, st, false)(ctx, ptr = true, etf = false))
+            mkDeepST(polymLvl, cons, st, false)(ctx, ptr = true, etf = false),
+            mkDeepST(polymLvl, cons, st, false)(ctx, ptr = true, etf = false))
         }
         dnf.toType().mapPol(S(pol))(go)
     }
     
-    def mk(polymLvl: Level, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
+    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs = false, etf: ExpandTupleFields = true): DNF =
         // trace(s"DNF[$pol,$ptr,$etf](${ty})") {
         (if (pol) ty.pushPosWithout else ty) match {
       // case bt: BaseType => of(bt)
       // case bt: TraitTag => of(bt)
       // case rt @ RecordType(fs) => of(rt)
-      case bt: BaseType => DNF.of(polymLvl, LhsRefined(S(bt), ssEmp, if (expandTupleFields) bt.toRecord else RecordType.empty, smEmp))
-      case tt: TraitTag => DNF.of(polymLvl, LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
-      case rcd: RecordType => DNF.of(polymLvl, LhsRefined(N, ssEmp, rcd, smEmp))
+      case bt: BaseType => DNF.of(polymLvl, cons, LhsRefined(S(bt), ssEmp, if (expandTupleFields) bt.toRecord else RecordType.empty, smEmp))
+      case tt: TraitTag => DNF.of(polymLvl, cons, LhsRefined(N, SortedSet.single(tt), RecordType.empty, smEmp))
+      case rcd: RecordType => DNF.of(polymLvl, cons, LhsRefined(N, ssEmp, rcd, smEmp))
       case ExtrType(pol) => extr(!pol)
-      case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, l, pol), mk(polymLvl, r, pol))
-      case NegType(und) => DNF(polymLvl, CNF.mk(polymLvl, und, !pol).ds.map(_.neg))
+      case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
+      case NegType(und) => DNF(polymLvl, cons, CNF.mk(polymLvl, Nil, und, !pol).ds.map(_.neg))
       // case tv: TypeVariable => of(SortedSet.single(tv))
-      case tv: TypeVariable => DNF(polymLvl, Conjunct.of(SortedSet.single(tv)) :: Nil)
-      case ProxyType(underlying) => mk(polymLvl, underlying, pol)
+      case tv: TypeVariable => DNF(polymLvl, cons, Conjunct.of(SortedSet.single(tv)) :: Nil)
+      case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
       case tr @ TypeRef(defn, targs) =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
         if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
-          of(polymLvl, LhsRefined(tr.mkTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-        } else mk(polymLvl, tr.expand, pol)
-      case TypeBounds(lb, ub) => mk(polymLvl, if (pol) ub else lb, pol)
-      case PolymorphicType(lvl, bod) => mk(lvl, bod, pol)
+          of(polymLvl, cons, LhsRefined(tr.mkTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
+        } else mk(polymLvl, cons, tr.expand, pol)
+      case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
+      case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
+      case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
     }
     // }(r => s"= $r")
   }
@@ -589,7 +599,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       Disjunct(RhsField(f._1, f._2), ssEmp, LhsTop, ssEmp)).toList)
     def extr(pol: Bool): CNF = if (pol) CNF(Nil) else of(RhsBot)
     def merge(pol: Bool)(l: CNF, r: CNF)(implicit ctx: Ctx, etf: ExpandTupleFields): CNF = if (pol) l | r else l & r
-    def mk(polymLvl: Level, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
+    def mk(polymLvl: Level, cons: Constrs, ty: SimpleType, pol: Bool)(implicit ctx: Ctx, ptr: PreserveTypeRefs, etf: ExpandTupleFields): CNF =
       // trace(s"?CNF $ty") {
       ty match {
         case bt: BaseType => of(bt)
@@ -601,16 +611,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         // case ProxyType(underlying) => mk(underlying, pol)
         // case tr @ TypeRef(defn, targs) => mk(tr.expand, pol) // TODO try to keep them?
         // case TypeBounds(lb, ub) => mk(if (pol) ub else lb, pol)
-        case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, l, pol), mk(polymLvl, r, pol))
-        case NegType(und) => CNF(DNF.mk(polymLvl, und, !pol).cs.map(_.neg))
+        case ty @ ComposedType(p, l, r) => merge(p)(mk(polymLvl, cons, l, pol), mk(polymLvl, cons, r, pol))
+        case NegType(und) => CNF(DNF.mk(polymLvl, cons, und, !pol).cs.map(_.neg))
         case tv: TypeVariable => of(SortedSet.single(tv))
-        case ProxyType(underlying) => mk(polymLvl, underlying, pol)
+        case ProxyType(underlying) => mk(polymLvl, cons, underlying, pol)
         case tr @ TypeRef(defn, targs) =>
           if (preserveTypeRefs && !primitiveTypes.contains(defn.name)) {
             CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
-          } else mk(polymLvl, tr.expand, pol)
-        case TypeBounds(lb, ub) => mk(polymLvl, if (pol) ub else lb, pol)
-        case PolymorphicType(lvl, bod) => mk(lvl, bod, pol)
+          } else mk(polymLvl, cons, tr.expand, pol)
+        case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
+        case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
+        case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
       }
       // }(r => s"!CNF $r")
   }

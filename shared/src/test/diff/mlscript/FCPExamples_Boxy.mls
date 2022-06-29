@@ -1,5 +1,7 @@
 :NoJS
 
+:GeneralizeCurriedFunctions
+
 // ============ Dummy classes to represent the types in the examples ============
 // Char is represented as String
 // All type constructors beside arrow are invariant in Boxy

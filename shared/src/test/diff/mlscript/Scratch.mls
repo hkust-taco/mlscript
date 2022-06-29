@@ -1,0 +1,83 @@
+
+// TODO clean this afterwards
+
+:GeneralizeCurriedFunctions
+
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias ChurchInt
+
+def zero: forall 'a. ('a -> 'a) -> ('a -> 'a)
+def zero f = fun x -> x
+//│ zero: ('a -> 'a) -> 'a -> 'a
+//│     = <missing implementation>
+//│ anything -> (forall 'a. 'a -> 'a)
+//│   <:  zero:
+//│ ('a -> 'a) -> 'a -> 'a
+//│     = [Function: zero]
+
+def id: forall 'a. 'a -> 'a
+//│ id: 'a -> 'a
+//│   = <missing implementation>
+
+def id x = x
+//│ 'a -> 'a
+//│   <:  id:
+//│ 'a -> 'a
+//│   = [Function: id1]
+
+
+rec def foo x y =
+  let tmp = foo x y in (x, y,)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.30: 	  let tmp = foo x y in (x, y,)
+//│ ║        	            ^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  foo50'  <:  ((α51',) -> α54')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  foo50'  <:  ((α51',) -> α53'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.30: 	  let tmp = foo x y in (x, y,)
+//│ ║        	            ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α54'  <:  ((α52',) -> α55'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α53''  <:  ((α52',) -> α55'')
+//│ foo: 'a -> 'b -> ('a, 'b,)
+//│    = [Function: foo]
+
+// rec def foo x y z =
+//   let tmp = foo x y z in (x, y, z)
+
+// :d
+foo
+//│ res: 'a -> 'b -> ('a, 'b,)
+//│    = [Function: foo]
+
+def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = <missing implementation>
+
+// def foo_ty: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('a, 'b, 'c,)))
+
+// :d
+foo_ty = foo
+//│ 'a -> 'b -> ('a, 'b,)
+//│   <:  foo_ty:
+//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = [Function: foo]
+
+
+// :d
+// rec def r x = let tmp = x in x
+
+// :d
+// :ds
+// rec def x = x
+
+
+// rec def lr1 = { head = 0; tail = lr1 }
+
+// // class Cons[A]: List[A] & { head: A; tail: List[A] }
+// class Cons: { tail: anything }
+
+// :ds
+// rec def lr1 = Cons { tail = lr1 }
+

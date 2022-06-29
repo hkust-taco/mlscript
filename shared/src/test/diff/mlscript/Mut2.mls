@@ -16,8 +16,8 @@
 //│ ║  l.8: 	((fun t -> let tmp = t._1 <- 3 in t) ((mut 1, mut 2))): MutArray['a]
 //│ ║       	                     ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  3<TypeName(int),TypeName(number)>  <:  α31    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  3<TypeName(int),TypeName(number)>  <:  α30'
+//│ ╟── this constraint:  3<int,number>  <:  α31    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  3<int,number>  <:  α30'
 //│ res: MutArray['a]
 //│   where
 //│     'a :> 1 | 2
@@ -34,8 +34,8 @@
 //│ ║  l.26: 	((fun t -> let tmp = t._1 + 1 in t) ((mut 1, mut 2))): MutArray['a]
 //│ ║        	                     ^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α43  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α42'  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α43  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α42'  <:  int<number>
 //│ res: MutArray['a]
 //│   where
 //│     'a :> 1 | 2

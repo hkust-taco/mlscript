@@ -30,14 +30,14 @@ def test f =
 //│ ║  l.27: 	  let local g = g (f 1)
 //│ ║        	                   ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α37'  <:  ((1<TypeName(int),TypeName(number)>,) -> α40')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α37'  <:  ((1<TypeName(int),TypeName(number)>,) -> α39'')
+//│ ╟── this constraint:  α37'  <:  ((1<int,number>,) -> α40')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α37'  <:  ((1<int,number>,) -> α39'')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.28: 	  in local succ
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α40'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α39''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α40'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α39''  <:  int<number>
 //│ test: anything -> (error | int)
 //│     = [Function: test1]
 
@@ -54,8 +54,8 @@ def test f =
 //│ ║  l.46: 	  in local succ
 //│ ║        	     ^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α53'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α51''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α53'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α51''  <:  int<number>
 //│ test: anything -> (anything -> int | error)
 //│     = [Function: test2]
 
@@ -72,8 +72,8 @@ def test f =
 //│ ║  l.64: 	  in local add
 //│ ║        	     ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α70'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α68''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α70'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α68''  <:  int<number>
 //│ test: anything -> (anything -> int -> int | error)
 //│     = [Function: test3]
 
@@ -90,14 +90,14 @@ def test f =
 //│ ║  l.82: 	  in local add 1
 //│ ║        	     ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α87'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α85''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α87'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α85''  <:  int<number>
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.82: 	  in local add 1
 //│ ║        	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<TypeName(int),TypeName(number)>  <:  α86'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<TypeName(int),TypeName(number)>  <:  α84''
+//│ ╟── this constraint:  1<int,number>  <:  α86'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  1<int,number>  <:  α84''
 //│ test: anything -> (int -> int | error)
 //│     = [Function: test4]
 
@@ -114,14 +114,14 @@ def test f =
 //│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
 //│ ║         	      ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α102'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α100''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α102'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α100''  <:  int<number>
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<TypeName(int),TypeName(number)>  <:  α101'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<TypeName(int),TypeName(number)>  <:  α99''
+//│ ╟── this constraint:  1<int,number>  <:  α101'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  1<int,number>  <:  α99''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -132,8 +132,8 @@ def test f =
 //│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  2<TypeName(int),TypeName(number)>  <:  α101'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  2<TypeName(int),TypeName(number)>  <:  α99''
+//│ ╟── this constraint:  2<int,number>  <:  α101'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  2<int,number>  <:  α99''
 //│ test: anything -> (int -> int | error, int -> int | error,)
 //│     = [Function: test5]
 
@@ -164,14 +164,14 @@ def test f =
 //│ ║  l.156: 	  in (local add 1, local concat "ok")
 //│ ║         	      ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α160'  <:  int<TypeName(number)>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α158''  <:  int<TypeName(number)>
+//│ ╟── this constraint:  α160'  <:  int<number>    TypeVariable  ClassTag
+//│ ╙──  ... looks like:  α158''  <:  int<number>
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.156: 	  in (local add 1, local concat "ok")
 //│ ║         	      ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<TypeName(int),TypeName(number)>  <:  α159'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<TypeName(int),TypeName(number)>  <:  α157''
+//│ ╟── this constraint:  1<int,number>  <:  α159'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  1<int,number>  <:  α157''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.156: 	  in (local add 1, local concat "ok")
 //│ ║         	                   ^^^^^^^^^^^^
@@ -182,8 +182,8 @@ def test f =
 //│ ║  l.156: 	  in (local add 1, local concat "ok")
 //│ ║         	                   ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  "ok"<TypeName(string)>  <:  α159'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  "ok"<TypeName(string)>  <:  α157''
+//│ ╟── this constraint:  "ok"<string>  <:  α159'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  "ok"<string>  <:  α157''
 //│ test: anything -> (int -> int | error, string -> string | error,)
 //│     = [Function: test6]
 
@@ -236,8 +236,8 @@ def test =
 //│ ║  l.227: 	    in local add "1"
 //│ ║         	       ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (int<TypeName(number)> -> int<TypeName(number)>)  <:  α222'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (int<TypeName(number)> -> int<TypeName(number)>)  <:  α220''
+//│ ╟── this constraint:  (int<number> -> int<number>)  <:  α222'    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (int<number> -> int<number>)  <:  α220''
 //│ test: anything -> int -> error
 //│     = [Function: test9]
 

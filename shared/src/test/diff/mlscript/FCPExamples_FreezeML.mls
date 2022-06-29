@@ -86,7 +86,7 @@ def argST: ST['s, int]
 
 // A1
 const2 x y = y
-//│ const2: anything -> 'a -> 'a
+//│ const2: anything -> (forall 'a. 'a -> 'a)
 
 // A2
 choose id
@@ -232,11 +232,11 @@ def lst: List[forall 'a. int -> 'a -> 'a]
 
 // E1
 k h lst
-//│ res: int -> 'a -> 'a
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E2
 k (fun x -> h x) lst
-//│ res: int -> 'a -> 'a
+//│ res: int -> (forall 'a. 'a -> 'a)
 
 // E3
 def r: (forall 'a. 'a -> (forall 'b. 'b -> 'b)) -> int
@@ -294,26 +294,40 @@ a id
 
 // ============ Expected error cases (useful for regression-testing error messages) ============
 
-:e
-choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
+
+// * FIXME: without constrained types, the type of argument x was not polymorphic enough
+// * I guess we're swallowing/delaying a constraint?
+// :e
+:ns
+choose id (fun (x: ('a -> 'a)) -> auto' x)
+//│ res: 'c
+//│   where
+//│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. (('a0 -> 'a0) -> 'd
+//│   where
+//│     'a0 := ‘a))
+//│     'd :> 'b -> 'b
+
+:e // * ^ Here you go:
+res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.298: 	choose id (fun (x: ('a -> 'a)) -> auto' x)  // Note: the type of argument x is not polymorphic enough
-//│ ║         	                                  ^^^^^^^
+//│ ║  l.311: 	res id
+//│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║        	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──      	                    ^^
-//│ res: (anything -> nothing & 'a) -> ('a | 'b -> 'b | error)
+//│ res: 'a -> 'a | error
+
 
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.311: 	a (fun x -> { u = x })
+//│ ║  l.325: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.311: 	a (fun x -> { u = x })
+//│ ║  l.325: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b

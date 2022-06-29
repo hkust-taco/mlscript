@@ -147,6 +147,9 @@ object Polyfill {
     buffer += BuiltinFunc("gt", makeBinaryFunc(">"))
     buffer += BuiltinFunc("not", makeUnaryFunc("!"))
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
+    buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
+    buffer += BuiltinFunc("unit", makeUnaryFunc("undefined"))
+    buffer += BuiltinFunc("log", makeUnaryFunc("console.log"))
     buffer.toList
   }
 

@@ -16,55 +16,76 @@ test f =
 //│     = <no result>
 //│       inc is not implemented
 
-// Here, notice the imprecise `(0 | true) -> 'a` type.
-// In a system with inferred first-class constraints, this could be avoided.
+// * Precise type:
+test f = (f 0, f True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test]
+
+// * Imprecise type (notice the `(0 | true)`):
+// * Note: With inferred first-class constraints and generalized curried functions,
+// *  this approximation be avoided (see below).
 test f =
   let r x = f x
   in (r 0, r True)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.22: 	  let r x = f x
+//│ ║  l.28: 	  let r x = f x
 //│ ║        	            ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α40'  <:  ((α43',) -> α44')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α40'  <:  ((α41'',) -> α42'')
+//│ ╟── this constraint:  α50'  <:  ((α53',) -> α54')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α50'  <:  ((α51'',) -> α52'')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.23: 	  in (r 0, r True)
+//│ ║  l.29: 	  in (r 0, r True)
 //│ ║        	      ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  0<TypeName(int),TypeName(number)>  <:  α43'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  0<TypeName(int),TypeName(number)>  <:  α41''
+//│ ╟── this constraint:  0<int,number>  <:  α53'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  0<int,number>  <:  α51''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.23: 	  in (r 0, r True)
+//│ ║  l.29: 	  in (r 0, r True)
 //│ ║        	           ^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. true<TypeName(bool)>  <:  α43'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ∀ 0. true<TypeName(bool)>  <:  α41''
+//│ ╟── this constraint:  ‹∀ 0. true<bool>›  <:  α53'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. true<bool>›  <:  α51''
 //│ test: anything -> (error, error,)
-//│     = [Function: test]
+//│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.47: 	  let r = fun x -> fun g -> (g x, f x)
+//│ ║  l.53: 	  let r = fun x -> fun g -> (g x, f x)
 //│ ║        	                                  ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α54'  <:  ((α59',) -> α60')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α54'  <:  ((α55'',) -> α58'')
+//│ ╟── this constraint:  α64'  <:  ((α69',) -> α70')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α64'  <:  ((α65'',) -> α68'')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.48: 	  in (r 0 inc, r True not)
+//│ ║  l.54: 	  in (r 0 inc, r True not)
 //│ ║        	      ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  0<TypeName(int),TypeName(number)>  <:  α59'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  0<TypeName(int),TypeName(number)>  <:  α55''
+//│ ╟── this constraint:  0<int,number>  <:  α69'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  0<int,number>  <:  α65''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.48: 	  in (r 0 inc, r True not)
+//│ ║  l.54: 	  in (r 0 inc, r True not)
 //│ ║        	               ^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. true<TypeName(bool)>  <:  α59'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ∀ 0. true<TypeName(bool)>  <:  α55''
+//│ ╟── this constraint:  ‹∀ 0. true<bool>›  <:  α69'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. true<bool>›  <:  α65''
 //│ test: anything -> ((int, error,) | error, (bool, error,) | error,)
 //│     = <no result>
 //│       inc is not implemented
 
+
+:GeneralizeCurriedFunctions
+
+test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test2]
+
+// * Even works with recursive definition because the constrained type is strictly local to the body!
+rec def test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test3]

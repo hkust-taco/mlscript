@@ -430,6 +430,11 @@ trait FieldImpl extends Located { self: Field =>
 trait Located {
   def children: List[Located]
   
+  lazy val freeVars: Set[Var] = this match {
+    case v: Var => Set.single(v)
+    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+  }
+  
   private var spanStart: Int = -1
   private var spanEnd: Int = -1
   private var origin: Opt[Origin] = N
