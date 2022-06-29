@@ -43,7 +43,7 @@ def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock[+T]
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined Lock.Map: Lock['T] -> ('T -> 'pins) -> Lock['pins]
+//│ Defined Lock.Map: Lock['T] -> (forall 'pins. ('T -> 'pins) -> Lock['pins])
 //│ Defined class Bank
 //│ Declared Bank.Potential: Bank -> int
 //│ Declared Bank.Better: Bank -> Bank -> bool
@@ -85,7 +85,7 @@ def Some v = Some { value = v }
 //│ Defined type alias Option[+T]
 //│ Defined class LinkedList[=T]
 //│ Declared LinkedList.Append: LinkedList['T] -> 'T -> LinkedList['T]
-//│ Defined LinkedList.Append: (LinkedList['T] & 'this) -> ('T & 'head) -> (LinkedList['T] with {head: 'head, tail: Some[LinkedList['T]] & {value: LinkedList['T] & 'this}})
+//│ Defined LinkedList.Append: (LinkedList['T] & 'this) -> (forall 'head. ('T & 'head) -> (LinkedList['T] with {head: 'head, tail: Some[LinkedList['T]] & {value: LinkedList['T] & 'this}}))
 //│ None: None
 //│ Some: 'value -> Some['value]
 //│ // start ts

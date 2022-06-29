@@ -44,7 +44,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 //│ Defined class Cons[+A]
 //│ Defined Cons.Size: Cons[?] -> int
 //│ Defined Cons.HeadOption: Cons['A] -> Some['A]
-//│ Defined Cons.Map: Cons['A] -> ('A -> ('B & 'A0) & 'A -> ('A0 & 'head)) -> (Cons['A0] with {head: 'head, tail: List['B]})
+//│ Defined Cons.Map: Cons['A] -> (forall 'B, 'A0, 'head. ('A -> ('B & 'A0) & 'A -> ('A0 & 'head)) -> (Cons['A0] with {head: 'head, tail: List['B]}))
 
 // Note that the useless `with {tail: List['A]}` refinement is kept
 //  because the approximate subtyping check `list & {List#A = 'A} <: List['A]` currently returns false

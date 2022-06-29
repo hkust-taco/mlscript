@@ -27,14 +27,14 @@ test f = (f 0, f True)
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
 //│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
-//│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
+//│ test: (true -> 'a & 0 -> 'b) -> ((int, 'b,), (bool, 'a,),)
 //│     = <no result>
 //│       inc is not implemented
 

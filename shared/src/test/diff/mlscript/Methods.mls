@@ -8,13 +8,13 @@ class Foo[A, B]: { x: A; y: B }
 class Bar: Foo[int, bool]
     method Fun f = f
 //│ Defined class Bar
-//│ Defined Bar.Fun: Bar -> 'a -> 'a
+//│ Defined Bar.Fun: Bar -> (forall 'a. 'a -> 'a)
 
 Foo.Fun
 Bar.Fun
 //│ res: Foo['A, 'B] -> ('A -> 'B -> 'C) -> 'A -> 'B -> 'C
 //│    = undefined
-//│ res: Bar -> 'a -> 'a
+//│ res: Bar -> (forall 'a. 'a -> 'a)
 //│    = undefined
 
 f = Foo { x = 1; y = 2 }
@@ -84,26 +84,26 @@ class Wrapper[A]: { x: A }
     // method Apply f = Wrapper { x = f this.x }
 //│ Defined class Wrapper[+A]
 //│ Declared Wrapper.Apply: Wrapper['A] -> ('A -> 'B) -> Wrapper['B]
-//│ Defined Wrapper.Apply: Wrapper['A] -> ('A -> 'x) -> Wrapper['x]
+//│ Defined Wrapper.Apply: Wrapper['A] -> (forall 'x. ('A -> 'x) -> Wrapper['x])
 
 class IntWrapper: Wrapper[int]
     method Apply f = Wrapper { x = f this.x }
 //│ Defined class IntWrapper
-//│ Defined IntWrapper.Apply: IntWrapper -> (int -> 'x) -> Wrapper['x]
+//│ Defined IntWrapper.Apply: IntWrapper -> (forall 'x. (int -> 'x) -> Wrapper['x])
 
 class Psyduck[B]: Wrapper[B]
     method Apply[A]: (B -> A) -> Psyduck[A]
     method Apply f = Psyduck { x = f this.x }
 //│ Defined class Psyduck[+B]
 //│ Declared Psyduck.Apply: Psyduck['B] -> ('B -> 'A) -> Psyduck['A]
-//│ Defined Psyduck.Apply: Psyduck['B] -> ('B -> 'x) -> Psyduck['x]
+//│ Defined Psyduck.Apply: Psyduck['B] -> (forall 'x. ('B -> 'x) -> Psyduck['x])
 
 class WrapperWrapper[A]: Wrapper[Wrapper[A]]
     method Apply2[B]: (A -> B) -> WrapperWrapper[B]
     method Apply2 f = WrapperWrapper { x = this.x.Apply f }
 //│ Defined class WrapperWrapper[+A]
 //│ Declared WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> WrapperWrapper['B]
-//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> ('A -> 'B) -> WrapperWrapper['B]
+//│ Defined WrapperWrapper.Apply2: WrapperWrapper['A] -> (forall 'B. ('A -> 'B) -> WrapperWrapper['B])
 
 WrapperWrapper { x = Psyduck { x = 0 } }
 //│ res: WrapperWrapper[0] with {x: Psyduck[0]}
@@ -155,7 +155,7 @@ class Pair[A, B]: AbstractPair[A, B]
     method Map fx fy = Pair { x = fx this.x; y = fy this.y }
 //│ Defined class Pair[+A, +B]
 //│ Defined Pair.Test: Pair['A, 'B] -> ('A -> 'B -> bool) -> bool
-//│ Defined Pair.Map: Pair['A, 'B] -> ('A -> 'x) -> ('B -> 'y) -> Pair['x, 'y]
+//│ Defined Pair.Map: Pair['A, 'B] -> (forall 'x, 'y. ('A -> 'x) -> ('B -> 'y) -> Pair['x, 'y])
 
 class Tru[A, B]: Pair[A, B]
     method Test f = true
@@ -380,13 +380,13 @@ trait Test5B: { tag: int }
 class Test5C[A]: Test5A[A] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.a }
 //│ Defined class Test5C[+A]
-//│ Defined Test5C.Mth5A: Test5C['A] -> ('A -> 'a) -> 'a
+//│ Defined Test5C.Mth5A: Test5C['A] -> (forall 'a. ('A -> 'a) -> 'a)
 
 
 class Test5D: Test5A[int] & Test5B
     method Mth5A f = case this.Mth5B of { 0 -> f this.a | _ -> f this.Mth5B }
 //│ Defined class Test5D
-//│ Defined Test5D.Mth5A: Test5D -> (int -> 'a) -> 'a
+//│ Defined Test5D.Mth5A: Test5D -> (forall 'a. (int -> 'a) -> 'a)
 
 
 

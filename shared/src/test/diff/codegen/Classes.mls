@@ -11,7 +11,7 @@ class Box[T]: { inner: T }
   method Get = this.inner
 //│ Defined class Box[+T]
 //│ Declared Box.Map: Box['T] -> ('T -> 'a) -> Box['a]
-//│ Defined Box.Map: Box['T] -> ('T -> 'inner) -> Box['inner]
+//│ Defined Box.Map: Box['T] -> (forall 'inner. ('T -> 'inner) -> Box['inner])
 //│ Defined Box.Get: Box['T] -> 'T
 //│ // Prelude
 //│ class Box {
@@ -67,7 +67,7 @@ class MyBox: Box[int] & { info: string }
   method Inc = MyBox { inner = this.inner + 1; info = this.info }
 def MyBox inner info = MyBox { inner; info }
 //│ Defined class MyBox
-//│ Defined MyBox.Map: MyBox -> (int -> 'inner) -> (Box['inner] & {info: string})
+//│ Defined MyBox.Map: MyBox -> (forall 'inner. (int -> 'inner) -> (Box['inner] & {info: string}))
 //│ Defined MyBox.Inc: MyBox -> MyBox
 //│ // Prelude
 //│ class MyBox extends Box {

@@ -49,38 +49,38 @@ self self
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (400)
 //│ ║  l.48: 	self self
 //│ ║        	^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α126
-//│ ╟── while constraining:  α124  <!<  α126
-//│ ╟── while constraining:  (α124,)  <!<  (α126,)
-//│ ╟── while constraining:  (α126 -> α127)  <!<  ((α124,) -> α125)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α124,) -> α125)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α124
-//│ ╟── while constraining:  α122  <!<  α124
-//│ ╟── while constraining:  (α122,)  <!<  (α124,)
-//│ ╟── while constraining:  (α124 -> α125)  <!<  ((α122,) -> α123)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α122,) -> α123)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α122
-//│ ╟── while constraining:  α120  <!<  α122
-//│ ╟── while constraining:  (α120,)  <!<  (α122,)
-//│ ╟── while constraining:  (α122 -> α123)  <!<  ((α120,) -> α121)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α120,) -> α121)
+//│ ╟── while constraining:  (α129 -> α130)  <!<  ((α127,) -> α128)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((α127,) -> α128)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((α127,) -> α128)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  α127
+//│ ╟── while constraining:  α125  <!<  α127
+//│ ╟── while constraining:  (α125,)  <!<  (α127,)
+//│ ╟── while constraining:  (α127 -> α128)  <!<  ((α125,) -> α126)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((α125,) -> α126)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((α125,) -> α126)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  α125
+//│ ╟── while constraining:  α123  <!<  α125
+//│ ╟── while constraining:  (α123,)  <!<  (α125,)
+//│ ╟── while constraining:  (α125 -> α126)  <!<  ((α123,) -> α124)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((α123,) -> α124)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((α123,) -> α124)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α106,) -> α107)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α106
-//│ ╟── while constraining:  α104  <!<  α106
-//│ ╟── while constraining:  (α104,)  <!<  (α106,)
-//│ ╟── while constraining:  (α106 -> α107)  <!<  ((α104,) -> α105)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α104,) -> α105)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α104
-//│ ╟── while constraining:  α102  <!<  α104
-//│ ╟── while constraining:  (α102,)  <!<  (α104,)
-//│ ╟── while constraining:  (α104 -> α105)  <!<  ((α102,) -> α103)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α102,) -> α103)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α102
-//│ ╟── while constraining:  (‹∀ 0. (α93' -> α94')›,)  <!<  (α102,)
-//│ ╟── while constraining:  (α102 -> α103)  <!<  ((‹∀ 0. (α93' -> α94')›,) -> α101)
-//│ ╙── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((‹∀ 0. (α93' -> α94')›,) -> α101)
+//│ ╟── while constraining:  (α107,)  <!<  (α109,)
+//│ ╟── while constraining:  (α109 -> α110)  <!<  ((α107,) -> α108)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((α107,) -> α108)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((α107,) -> α108)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  α107
+//│ ╟── while constraining:  α105  <!<  α107
+//│ ╟── while constraining:  (α105,)  <!<  (α107,)
+//│ ╟── while constraining:  (α107 -> α108)  <!<  ((α105,) -> α106)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((α105,) -> α106)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((α105,) -> α106)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  α105
+//│ ╟── while constraining:  (‹∀ 0. ‹∀ 1. (α96'' -> α97'')››,)  <!<  (α105,)
+//│ ╟── while constraining:  (α105 -> α106)  <!<  ((‹∀ 0. ‹∀ 1. (α96'' -> α97'')››,) -> α104)
+//│ ╟── while constraining:  ‹∀ 1. (α96'' -> α97'')›  <!<  ((‹∀ 0. ‹∀ 1. (α96'' -> α97'')››,) -> α104)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 1. (α96'' -> α97'')››  <!<  ((‹∀ 0. ‹∀ 1. (α96'' -> α97'')››,) -> α104)
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

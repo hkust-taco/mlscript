@@ -30,7 +30,7 @@ class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
 def Complex real imaginary = Complex { real; imaginary }
 //│ Defined class Complex[+A]
-//│ Defined Complex.Map: Complex['A] -> ('A -> ('imaginary & 'A0) & 'A -> ('A0 & 'real)) -> (Complex['A0] with {imaginary: 'imaginary, real: 'real})
+//│ Defined Complex.Map: Complex['A] -> (forall 'imaginary, 'A0, 'real. ('A -> ('imaginary & 'A0) & 'A -> ('A0 & 'real)) -> (Complex['A0] with {imaginary: 'imaginary, real: 'real}))
 //│ Complex: ('real & 'A) -> ('A & 'imaginary) -> (Complex['A] with {imaginary: 'imaginary, real: 'real})
 //│        = [Function: Complex1]
 
@@ -244,6 +244,6 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╙──      	                                                 ^^^^^^^^^
 //│ Defined class ComplexMonoid_bad_2[=A]
 //│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> Complex['A]
-//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[{imaginary: 'A0, real: 'A0}] -> Complex[{imaginary: 'A0, real: 'A0}] -> (Complex[Complex['A0] | error] with {imaginary: Complex['A0] | error, real: Complex['A0] | error})
+//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> (forall 'A0. Complex[{imaginary: 'A0, real: 'A0}] -> Complex[{imaginary: 'A0, real: 'A0}] -> (Complex[Complex['A0] | error] with {imaginary: Complex['A0] | error, real: Complex['A0] | error}))
 
 

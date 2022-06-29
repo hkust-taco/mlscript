@@ -91,7 +91,7 @@ class Bar
 //│ ╙──      	                       ^
 //│ Defined class Bar
 //│ Declared Bar.Map: Bar -> 'B -> 'B
-//│ Defined Bar.Map: Bar -> (1 -> 'a) -> 'a
+//│ Defined Bar.Map: Bar -> (forall 'a. (1 -> 'a) -> 'a)
 
 
 def boom: anything
