@@ -15,6 +15,10 @@ def zero: ChurchInt
 //│ zero: ChurchInt
 //│     = <missing implementation>
 
+def to_church: int -> ChurchInt
+//│ to_church: int -> ChurchInt
+//│          = <missing implementation>
+
 rec def to_ch n =
   if n == 0 then zero
   else s (to_ch (n - 1))
@@ -25,11 +29,7 @@ rec def to_ch n =
 //│      = <no result>
 //│        zero is not implemented
 
-def to_church: int -> ChurchInt
-//│ to_church: int -> ChurchInt
-//│          = <missing implementation>
-
-// FIXME why does this one crash but the same in Scratch2 doesn't?!
+// * NOTE this crashes due to the use of `s` rather than an annotated `succ`:
 to_church = to_ch
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
