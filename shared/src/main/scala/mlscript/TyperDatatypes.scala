@@ -456,6 +456,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     def original: TV = originalTV.getOrElse(this)
+    // def original: TV = originalTV.filter(_.originalTV.nonEmpty).getOrElse(this)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // if (cache(this)) MinLevel else {
       //   cache += this

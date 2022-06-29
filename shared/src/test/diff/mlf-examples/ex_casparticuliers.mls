@@ -151,16 +151,17 @@ to_church_ty = to_church_2
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1) : Int) f x)
 // ;;
+
 :e // FIXME?
 rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.155: 	rec def to_church_3 n =
+//│ ║  l.156: 	rec def to_church_3 n =
 //│ ║         	                    ^^^
-//│ ║  l.156: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.157: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.157: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.158: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -188,6 +189,7 @@ rec def to_church_4 n =
 //   if n = 0 then fun f x -> x
 //   else fun f x -> f ((to_church (n-1)) f x)
 // ;;
+
 rec def to_church_5 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_5 (n - 1)) f x)
@@ -201,7 +203,7 @@ to_church_ty = to_church_1
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.199: 	to_church_ty = to_church_1
+//│ ║  l.201: 	to_church_ty = to_church_1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -210,7 +212,7 @@ to_church_ty = to_church_1
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.199: 	to_church_ty = to_church_1
+//│ ║  l.201: 	to_church_ty = to_church_1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not match type `nothing`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -240,7 +242,7 @@ to_church_ty = to_church_3
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.238: 	to_church_ty = to_church_3
+//│ ║  l.240: 	to_church_ty = to_church_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -249,7 +251,7 @@ to_church_ty = to_church_3
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.238: 	to_church_ty = to_church_3
+//│ ║  l.240: 	to_church_ty = to_church_3
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not match type `nothing`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -258,7 +260,7 @@ to_church_ty = to_church_3
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                        ^^
 //│ ╟── from application:
-//│ ║  l.157: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
+//│ ║  l.158: 	  else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│             = [Function: to_church_3]
 
@@ -268,7 +270,7 @@ to_church_ty = to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.266: 	to_church_ty = to_church_4
+//│ ║  l.268: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `(?a -> ?a) -> ?a -> ?a` is not an instance of type `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -277,7 +279,7 @@ to_church_ty = to_church_4
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.266: 	to_church_ty = to_church_4
+//│ ║  l.268: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -286,7 +288,7 @@ to_church_ty = to_church_4
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from application:
-//│ ║  l.181: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
+//│ ║  l.182: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
 //│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│             = [Function: to_church_4]
 
@@ -336,7 +338,7 @@ def to_church_ty n =
 :e // FIXME?
 def tc n = to_church_1 n : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.337: 	def tc n = to_church_1 n : ChurchInt
+//│ ║  l.339: 	def tc n = to_church_1 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `'a`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
