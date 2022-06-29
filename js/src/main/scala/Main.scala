@@ -191,12 +191,13 @@ object Main {
     
     implicit val raise: Raise = throw _
     implicit var ctx: Ctx =
-      try processTypeDefs(typeDefs)(Ctx.init, raise)
+      try processTypeDefs(typeDefs)(Ctx.init, raise, extrCtx = N)
       catch {
         case err: TypeError =>
           res ++= formatError("class definitions", err)
           Ctx.init
       }
+    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     
     val curBlockTypeDefs = typeDefs.flatMap(td => ctx.tyDefs.get(td.nme.name))
     typer.computeVariances(curBlockTypeDefs, ctx)
@@ -306,7 +307,7 @@ object Main {
           val exp = getType(ty_sch)
           declared.get(nme) match {
             case S(sign) =>
-              subsume(ty_sch, sign)(ctx, raise, TypeProvenance(d.toLoc, "def definition"))
+              subsume(ty_sch, sign)(ctx, raise, extrCtx = N, TypeProvenance(d.toLoc, "def definition"))
               // Note: keeping the less precise declared type signature here (no ctx update)
             case N =>
               ctx += nme.name -> ty_sch
@@ -324,6 +325,7 @@ object Main {
             case N => ()
           }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
+            extrCtx = N,
             vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
               ) -> freshVar(noProv/*FIXME*/)(1)).toMap))
           ctx += nme.name -> ty_sch

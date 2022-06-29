@@ -36,6 +36,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     val diff3MidMarker = "|||||||" // appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
     val diffEndMarker = ">>>>>>>"
     
+    val exitMarker = "=" * 100
+    
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
     val strw = new java.io.StringWriter
@@ -56,6 +58,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var declared: Map[Str, typer.PolymorphicType] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    implicit val extrCtx: Opt[typer.ExtrCtx] = N
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -92,6 +95,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var noProvs = false
     var allowRuntimeErrors = false
     var generalizeCurriedFunctions = false
+    var distributeForalls = false
+    // distributeForalls = true
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -119,6 +124,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "NoJS" => noJavaScript = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
+          case "DistributeForalls" => distributeForalls = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -129,7 +135,8 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "ShowRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "exit" =>
-            ls.tails.foreach {
+            out.println(exitMarker)
+            ls.dropWhile(_ =:= exitMarker).tails.foreach {
               case Nil =>
               case lastLine :: Nil => out.print(lastLine)
               case l :: _ => out.println(l)
@@ -209,6 +216,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
+            typer.distributeForalls = distributeForalls
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout
@@ -287,7 +295,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             }
             
             val oldCtx = ctx
-            ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
+            ctx = typer.processTypeDefs(typeDefs)(ctx, raise, extrCtx)
             
             def getType(ty: typer.TypeScheme): Type = {
               // val wty = ty.instantiate(0)
@@ -540,7 +548,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               case Def(isrec, nme, R(PolyType(tps, rhs))) =>
                 typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(typer.MinLevel,
-                  typer.typeType(rhs)(ctx.nextLevel, raise, vars = tps.collect {
+                  typer.typeType(rhs)(ctx.nextLevel, raise, extrCtx, vars = tps.collect {
                       case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)
                     }.toMap))
                 ctx += nme.name -> ty_sch
@@ -575,14 +583,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                     output(s"  <:  $nme:")
                     output(sign_exp.show)
                     typer.dbg = mode.dbg
-                    typer.subsume(ty_sch, sign)(ctx, raise, typer.TypeProvenance(d.toLoc, "def definition"))
+                    typer.subsume(ty_sch, sign)(ctx, raise, extrCtx, typer.TypeProvenance(d.toLoc, "def definition"))
                     if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                 }
                 showFirstResult(nme.name.length())
               case desug: DesugaredStatement =>
                 var prefixLength = 0
                 typer.dbg = mode.dbg
-                typer.typeStatement(desug, allowPure = true)(ctx, raise) match {
+                typer.typeStatement(desug, allowPure = true)(ctx, raise, extrCtx = N) match {
                   // when does this happen??
                   case R(binds) =>
                     binds.foreach {

@@ -16,13 +16,19 @@ test f =
 //│     = <no result>
 //│       inc is not implemented
 
-// Here, notice the imprecise `(0 | true) -> 'a` type.
-// In a system with inferred first-class constraints, this could be avoided.
+// * Precise type:
+test f = (f 0, f True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test]
+
+// * Imprecise type (notice the `(0 | true)`):
+// * Note: With inferred first-class constraints and generalized curried functions,
+// *  this approximation be avoided (see below).
 test f =
   let r x = f x
   in (r 0, r True)
 //│ test: ((0 | true) -> 'a) -> ('a, 'a,)
-//│     = [Function: test]
+//│     = [Function: test1]
 
 // Same example, a little elaborated
 test f =
@@ -32,3 +38,18 @@ test f =
 //│     = <no result>
 //│       inc is not implemented
 
+
+:GeneralizeCurriedFunctions
+
+test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test2]
+
+// * Even works with recursive definition because the constrained type is strictly local to the body!
+rec def test f =
+  let r x = f x
+  in (r 0, r True)
+//│ test: (true -> 'a & 0 -> 'b) -> ('b, 'a,)
+//│     = [Function: test3]

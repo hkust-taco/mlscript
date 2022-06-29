@@ -28,7 +28,7 @@ def id x = x
 
 rec def foo x y =
   let tmp = foo x y in (x, y,)
-//│ foo: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ foo: 'a -> 'b -> ('a, 'b,)
 //│    = [Function: foo]
 
 // rec def foo x y z =
@@ -36,7 +36,7 @@ rec def foo x y =
 
 // :d
 foo
-//│ res: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ res: 'a -> 'b -> ('a, 'b,)
 //│    = [Function: foo]
 
 def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
@@ -47,7 +47,7 @@ def foo_ty: 'a -> (forall 'b. 'b -> ('a, 'b,))
 
 // :d
 foo_ty = foo
-//│ 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│ 'a -> 'b -> ('a, 'b,)
 //│   <:  foo_ty:
 //│ 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = [Function: foo]

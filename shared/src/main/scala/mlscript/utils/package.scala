@@ -54,7 +54,9 @@ package object utils {
     def firstSome: Opt[A] = self.iterator.collectFirst { case Some(v) => v }
   }
   implicit class PairIterableOps[A, B](private val self: IterableOnce[A -> B]) extends AnyVal {
+    def mapKeys[C](f: A => C): List[C -> B] = mapKeysIter(f).toList
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
+    def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
     def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
   }
   

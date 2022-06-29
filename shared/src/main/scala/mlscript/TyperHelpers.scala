@@ -291,6 +291,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProxyType(underlying) => f(underlying) // TODO different?
       case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
+      case ConstrainedType(cs, bod) => ConstrainedType(cs.mapValues(_.mapValues(f)), f(bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     def mapPol(pol: Opt[Bool], smart: Bool = false)(f: (Opt[Bool], SimpleType) => SimpleType)
@@ -313,6 +314,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs(pol)(f))(prov)
       case PolymorphicType(plvl, und) =>
         if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
+      case ConstrainedType(cs, bod) =>
+        // ConstrainedType(cs.map(tvbs => tvbs.mapV), f(pol, bod))
+        ConstrainedType(cs.mapValues(_.map(b => b._1 -> f.tupled(b.mapFirst(some)))), f(pol, bod))
       case _: TypeVariable | _: ObjectTag | _: ExtrType => this
     }
     
@@ -413,6 +417,8 @@ abstract class TyperHelpers { Typer: Typer =>
           val tmp = tv.lowerBounds.exists(this <:< _)
           if (tmp) cache(this -> that) = true
           tmp
+        case (ConstrainedType(Nil, bod), rhs) => bod <:< that
+        case (_, ConstrainedType(cs, bod)) => this <:< bod // could assume cs here
         case (ProxyType(und), _) => und <:< that
         case (_, ProxyType(und)) => this <:< und
         case (_, NegType(und)) => (this & und) <:< BotType
@@ -432,6 +438,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, _: TypeRef) =>
           false // TODO try to expand them (this requires populating the cache because of recursive types)
         case (_: PolymorphicType, _) | (_, _: PolymorphicType) => false
+        case (_: Overload, _) | (_, _: Overload) => false // TODO
+        case (_: ConstrainedType, _) => false
         case (_: Without, _) | (_, _: Without)
           | (_: ArrayBase, _) | (_, _: ArrayBase)
           | (_: TraitTag, _) | (_, _: TraitTag)
@@ -572,6 +580,16 @@ abstract class TyperHelpers { Typer: Typer =>
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
+        case ConstrainedType(cs, bod) =>
+          // cs.flatMap(_._2.unzip._2) ::: bod :: Nil
+          // cs.flatMap(vbs => vbs._2.map {
+          //   case (true, b) => 
+          // }) ::: bod :: Nil
+          
+          // cs.map(_._1) ::: 
+          cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          
+          // ???
     }}
     
     def getVarsPol(pol: Opt[Bool])(implicit ctx: Ctx): SortedMap[TypeVariable, Opt[Bool]] = {
@@ -618,6 +636,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
+      // case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
+      case ConstrainedType(cs, und) =>
+        cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
     }
     
     def getVars: SortedSet[TypeVariable] = {
@@ -707,6 +728,11 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => apply(S(false))(lb); apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
+      case ConstrainedType(cs, bod) =>
+        cs.foreach(_._2.foreach{
+          case (pol, b) => apply(S(pol))(b)
+        })
+        apply(pol)(bod)
     }
     def applyField(pol: Opt[Bool])(fld: FieldType): Unit = {
       fld.lb.foreach(apply(pol.map(!_)))
@@ -718,6 +744,15 @@ abstract class TyperHelpers { Typer: Typer =>
       override def applyField(pol: Opt[Bool])(fld: FieldType): Unit =
         if (fld.lb.exists(_ === fld.ub)) apply(N)(fld.ub)
         else super.applyField(pol)(fld)
+    }
+  }
+  
+  
+  object AliasOf {
+    def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = ty match {
+      case tr: TypeRef => unapply(tr.expand)
+      case proxy: ProxyType => unapply(proxy.underlying)
+      case _ => S(ty)
     }
   }
   

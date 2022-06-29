@@ -48,11 +48,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def instantiate(implicit lvl: Int): SimpleType = {
       // val res = freshenAbove(polymLevel, body)
       implicit val state: MutMap[TV, ST] = MutMap.empty
-      val res = body.freshenAbove(polymLevel, rigidify = false)
       // println(s"INST  $this  ~>  $res")
       // println(s"  where  ${res.showBounds}")
-      println(s"INST [${level}]   $this")
+      // println(s"INST [${level}]   $this")
+      println(s"INST [${polymLevel}]   $this")
       println(s"  where  ${showBounds}")
+      val res = body.freshenAbove(polymLevel, rigidify = false)
       println(s"TO [${lvl}] ~>  $res")
       println(s"  where  ${res.showBounds}")
       res
@@ -74,6 +75,42 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
         case _ => PolymorphicType(polymLevel, body)
       }
     }
+  }
+  
+  // case class ConstrainedType(constraints: List[ST -> ST], body: ST) extends SimpleType { // TODO add own prov?
+  type Constr = List[(Bool -> ST)]
+  type Constrs = List[TV -> Constr]
+  case class ConstrainedType(constraints: Constrs, body: ST) extends SimpleType { // TODO add own prov?
+    val prov: TypeProvenance = body.prov
+    // lazy val level =
+    //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.level).max
+    // def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+    //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.levelBelow(ub)).max
+    lazy val level =
+      // (body.level :: constraints.flatMap(_._2.unzip._2.map(_.level))).max
+      children(false).iterator.map(_.level).max
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+      // (body.levelBelow(ub) :: constraints.flatMap(_._2.unzip._2.map(_.levelBelow(ub)))).max
+      children(false).iterator.map(_.levelBelow(ub)).max
+      // {
+      // println("???",this,children(false))
+      // children(false).iterator.map(_.levelBelow(ub)).max
+      // }
+    // override def toString: Str =
+    //   s"(${constraints.flatMap(vbs => vbs._2.map {
+    //     case (true, b) => s"${vbs._1} :> $b"
+    //     case (false, b) => s"${vbs._1} <: $b"
+    //   }).mkString(", ")} => $body)"
+    override def toString: Str =
+      s"{$body where: ${constraints.flatMap(vbs => vbs._2.map {
+        case (true, b) => s"${vbs._1} :> $b"
+        case (false, b) => s"${vbs._1} <: $b"
+      }).mkString(", ")}}"
+  }
+  object ConstrainedType {
+    def mk(constraints: Constrs, body: ST): ST =
+      if (constraints.isEmpty) body
+      else ConstrainedType(constraints, body)
   }
   
   /** `body.get._1`: implicit `this` parameter
@@ -364,7 +401,7 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): this.type = this
     // override def freshenAbove(lim: Int, rigidify: Bool)(implicit lvl: Level, freshened: MutMap[TV, ST]): this.type = this
-    override def toString = showProvOver(false)(id.idStr+s"<${parents.mkString(",")}>")
+    override def toString = showProvOver(false)(id.idStr+s"<${parents.map(_.name).mkString(",")}>")
   }
   
   case class TraitTag(level: Level, id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
@@ -414,7 +451,8 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val level: Level,
       var lowerBounds: List[SimpleType],
       var upperBounds: List[SimpleType],
-      val nameHint: Opt[Str] = N
+      val nameHint: Opt[Str] = N,
+      val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // if (cache(this)) MinLevel else {
@@ -457,9 +495,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   }
   type TV = TypeVariable
   private var freshCount = 0
-  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil)
+  def freshVar(p: TypeProvenance, nameHint: Opt[Str] = N, lbs: Ls[ST] = Nil, ubs: Ls[ST] = Nil, recPlaceholder: Bool = false)
         (implicit lvl: Int): TypeVariable =
-    new TypeVariable(lvl, lbs, ubs, nameHint)(p)
+    new TypeVariable(lvl, lbs, ubs, nameHint, recPlaceholder)(p)
   def resetState(): Unit = {
     freshCount = 0
   }

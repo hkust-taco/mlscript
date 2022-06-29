@@ -72,8 +72,9 @@ def match_list: forall 'a 'b. List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
 // (I guess)
 
 def mem[a]: a -> List[a] -> bool
-rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
 //│ mem: anything -> List[?] -> bool
+
+rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
 //│ anything -> List[?] -> bool
 //│   <:  mem:
 //│ anything -> List[?] -> bool
@@ -86,14 +87,13 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ fl: ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('c | 'd))
+//│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 
-// :d
 def fold_left = fl
-//│ ('b -> 'a -> ('b & 'c)) -> (forall 'd. ('b & 'd) -> List['a] -> ('c | 'd))
+//│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
@@ -112,20 +112,24 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> ('a0 -> 'a -> ('a0 & 'a1)) -> (forall 'b. ('a0 & 'b) -> ('a1 | 'b))
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'a, 'b, 'a0. ('a0 -> 'a0
+//│   where
+//│     'b <: 'a0 -> 'a -> 'a0)))
 
 def coll_mem c x = c.Mem x
-//│ coll_mem: Collection[?] -> anything -> bool
+//│ coll_mem: 'a -> (forall 'a. ('a -> bool
+//│   where
+//│     'a <: Collection['a]))
 
 // typo in the paper? it was `fun x -> fun y -> ...`
 def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> cons x y) nil in
   let l2 = c.Fold (fun y -> fun x -> cons ((x, x),) y) nil in
   (l1, l2)
-//│ simple_and_double: Collection['a | 'a0] -> (List['a0], List[('a, 'a,)],)
+//│ simple_and_double: Collection[?] -> (List[nothing], List[(nothing, nothing,)],)
 
 simple_and_double (Collection{l = cons 1 nil})
-//│ res: (List[1], List[(1, 1,)],)
+//│ res: (List[nothing], List[(nothing, nothing,)],)
 
 // ------------ subtyping & methods ------------
 

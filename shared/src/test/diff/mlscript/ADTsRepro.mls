@@ -11,68 +11,26 @@ def e2: Add['e] as 'e
 // :d
 // FIXME
 e2 : Add['e] as 'e
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e. ?e <: ?e0` exceeded recursion depth limit (200)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e. ?e <: ?e0` exceeded recursion depth limit (400)
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e34 -> 'e34)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e35
-//│ ╟── while constraining:  'e34  <!<  'e35
-//│ ╟── while constraining:  ('e34,)  <!<  ('e35,)
-//│ ╟── while constraining:  ('e35 -> 'e35)  <!<  ('e34 -> 'e34)
-//│ ╟── while constraining:  {x: ('e35 -> 'e35)}  <!<  {x: ('e34 -> 'e34)}
-//│ ╟── while constraining:  Add['e35]  <!<  {x: ('e34 -> 'e34)}
-//│ ╟── while constraining:  'e35  <!<  {x: ('e34 -> 'e34)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e34 -> 'e34)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e34]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e34
-//│ ╟── while constraining:  'e33  <!<  'e34
-//│ ╟── while constraining:  ('e33,)  <!<  ('e34,)
-//│ ╟── while constraining:  ('e34 -> 'e34)  <!<  ('e33 -> 'e33)
-//│ ╟── while constraining:  {x: ('e34 -> 'e34)}  <!<  {x: ('e33 -> 'e33)}
-//│ ╟── while constraining:  Add['e34]  <!<  {x: ('e33 -> 'e33)}
-//│ ╟── while constraining:  'e34  <!<  {x: ('e33 -> 'e33)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e33 -> 'e33)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e33]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e33
-//│ ╟── while constraining:  'e32  <!<  'e33
-//│ ╟── while constraining:  ('e32,)  <!<  ('e33,)
-//│ ╟── while constraining:  ('e33 -> 'e33)  <!<  ('e32 -> 'e32)
-//│ ╟── while constraining:  {x: ('e33 -> 'e33)}  <!<  {x: ('e32 -> 'e32)}
-//│ ╟── while constraining:  Add['e33]  <!<  {x: ('e32 -> 'e32)}
-//│ ╟── while constraining:  'e33  <!<  {x: ('e32 -> 'e32)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e32 -> 'e32)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e32]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e32
-//│ ╟── while constraining:  'e31  <!<  'e32
-//│ ╟── while constraining:  ('e31,)  <!<  ('e32,)
-//│ ╟── while constraining:  ('e32 -> 'e32)  <!<  ('e31 -> 'e31)
-//│ ╟── while constraining:  {x: ('e32 -> 'e32)}  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  Add['e32]  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  'e32  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e31]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e31
-//│ ╟── while constraining:  'e30  <!<  'e31
-//│ ╟── while constraining:  ('e30,)  <!<  ('e31,)
-//│ ╟── while constraining:  ('e31 -> 'e31)  <!<  ('e30 -> 'e30)
-//│ ╟── while constraining:  {x: ('e31 -> 'e31)}  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  Add['e31]  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  'e31  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e30]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e30
-//│ ╟── while constraining:  'e29  <!<  'e30
-//│ ╟── while constraining:  ('e29,)  <!<  ('e30,)
-//│ ╟── while constraining:  ('e30 -> 'e30)  <!<  ('e29 -> 'e29)
-//│ ╟── while constraining:  {x: ('e30 -> 'e30)}  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  Add['e30]  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  'e30  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e29]
-//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e29
-//│ ╟── while constraining:  'e28  <!<  'e29
-//│ ╟── while constraining:  ('e28,)  <!<  ('e29,)
-//│ ╟── while constraining:  ('e29 -> 'e29)  <!<  ('e28 -> 'e28)
+//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e39 -> 'e39)}
+//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e40
+//│ ╟── while constraining:  'e39  <!<  'e40
+//│ ╟── while constraining:  ('e39,)  <!<  ('e40,)
+//│ ╟── while constraining:  ('e40 -> 'e40)  <!<  ('e39 -> 'e39)
+//│ ╟── while constraining:  {x: ('e40 -> 'e40)}  <!<  {x: ('e39 -> 'e39)}
+//│ ╟── while constraining:  Add['e40]  <!<  {x: ('e39 -> 'e39)}
+//│ ╟── while constraining:  'e40  <!<  {x: ('e39 -> 'e39)}
+//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  {x: ('e39 -> 'e39)}
+//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  Add['e39]
+//│ ╟── while constraining:  ‹∀ 0. 'e23'›  <!<  'e39
+//│ ╟── while constraining:  'e38  <!<  'e39
+//│ ╟── while constraining:  ('e38,)  <!<  ('e39,)
+//│ ╟── while constraining:  ('e39 -> 'e39)  <!<  ('e38 -> 'e38)
+//│ ╟── while constraining:  {x: ('e39 -> 'e39)}  <!<  {x: ('e38 -> 'e38)}
+//│ ╟── ......
+//│ ╟── ......
 //│ ╟── while constraining:  {x: ('e29 -> 'e29)}  <!<  {x: ('e28 -> 'e28)}
 //│ ╟── while constraining:  Add['e29]  <!<  {x: ('e28 -> 'e28)}
 //│ ╟── while constraining:  'e29  <!<  {x: ('e28 -> 'e28)}
@@ -107,7 +65,17 @@ e2 : Add['e] as 'e
 //│     'e7 :> forall 'e0. 'e0 | error | Add['e7]
 //│         <: Add['e7] & {x: 'e6 -> 'e6} & 'e8
 //│     'e8 :> forall 'e0. 'e0 | error | Add['e8]
-//│         <: Add['e8] & {x: 'e7 -> 'e7}
+//│         <: Add['e8] & {x: 'e7 -> 'e7} & 'e9
+//│     'e9 :> forall 'e0. 'e0 | error | Add['e9]
+//│         <: Add['e9] & {x: 'e8 -> 'e8} & 'e10
+//│     'e10 :> forall 'e0. 'e0 | error | Add['e10]
+//│          <: Add['e10] & {x: 'e9 -> 'e9} & 'e11
+//│     'e11 :> forall 'e0. 'e0 | error | Add['e11]
+//│          <: Add['e11] & {x: 'e10 -> 'e10} & 'e12
+//│     'e12 :> forall 'e0. 'e0 | error | Add['e12]
+//│          <: Add['e12] & {x: 'e11 -> 'e11} & 'e13
+//│     'e13 :> forall 'e0. 'e0 | error | Add['e13]
+//│          <: Add['e13] & {x: 'e12 -> 'e12}
 //│     'e0 := Add['e0]
 //│    = <no result>
 //│      e2 is not implemented
@@ -129,69 +97,41 @@ f0 = f0
 //│ 'a
 //│   where
 //│     'a := 'a -> int
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: forall ?a0. ?a0` exceeded recursion depth limit (200)
-//│ ║  l.124: 	f0 = f0
-//│ ║         	^^^^^^^
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a94' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a95'
-//│ ╟── while constraining:  'a94'  <!<  'a95'
-//│ ╟── while constraining:  ('a94',)  <!<  ('a95',)
-//│ ╟── while constraining:  ('a95' -> Int)  <!<  ('a94' -> Int)
-//│ ╟── while constraining:  'a95'  <!<  ('a94' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a94' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a94' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a94'
-//│ ╟── while constraining:  'a93'  <!<  'a94'
-//│ ╟── while constraining:  ('a93',)  <!<  ('a94',)
-//│ ╟── while constraining:  ('a94' -> Int)  <!<  ('a93' -> Int)
-//│ ╟── while constraining:  'a94'  <!<  ('a93' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a93' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a93' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a93'
-//│ ╟── while constraining:  'a92'  <!<  'a93'
-//│ ╟── while constraining:  ('a92',)  <!<  ('a93',)
-//│ ╟── while constraining:  ('a93' -> Int)  <!<  ('a92' -> Int)
-//│ ╟── while constraining:  'a93'  <!<  ('a92' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a92' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a92' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a92'
-//│ ╟── while constraining:  'a91'  <!<  'a92'
-//│ ╟── while constraining:  ('a91',)  <!<  ('a92',)
-//│ ╟── while constraining:  ('a92' -> Int)  <!<  ('a91' -> Int)
-//│ ╟── while constraining:  'a92'  <!<  ('a91' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a91' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a91' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a91'
-//│ ╟── while constraining:  'a90'  <!<  'a91'
-//│ ╟── while constraining:  ('a90',)  <!<  ('a91',)
-//│ ╟── while constraining:  ('a91' -> Int)  <!<  ('a90' -> Int)
-//│ ╟── while constraining:  'a91'  <!<  ('a90' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a90' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a90' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a90'
-//│ ╟── while constraining:  'a89'  <!<  'a90'
-//│ ╟── while constraining:  ('a89',)  <!<  ('a90',)
-//│ ╟── while constraining:  ('a90' -> Int)  <!<  ('a89' -> Int)
-//│ ╟── while constraining:  'a90'  <!<  ('a89' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a89' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a89' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a89'
-//│ ╟── while constraining:  'a88'  <!<  'a89'
-//│ ╟── while constraining:  ('a88',)  <!<  ('a89',)
-//│ ╟── while constraining:  ('a89' -> Int)  <!<  ('a88' -> Int)
-//│ ╟── while constraining:  'a89'  <!<  ('a88' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  ('a88' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ('a88' -> Int)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a88'
-//│ ╟── while constraining:  'a87'  <!<  'a88'
-//│ ╟── while constraining:  ('a87',)  <!<  ('a88',)
-//│ ╟── while constraining:  ('a88' -> int<TypeName(number)>)  <!<  ('a87' -> int<TypeName(number)>)
-//│ ╟── while constraining:  ('a88' -> Int)  <!<  (‘a' | ('a87' -> Int))
-//│ ╟── while constraining:  'a88'  <!<  (‘a' | ('a87' -> Int))
-//│ ╟── while constraining:  ‹∀ 0. 'a77'›  <!<  (‘a' | ('a87' -> Int))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  (‘a' | ('a87' -> Int))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  'a87'
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. 'a77'››  <!<  ‹∀ 0. 'a77'›
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: forall ?a0. ?a0` exceeded recursion depth limit (400)
+//│ ║  l.92: 	f0 = f0
+//│ ║        	^^^^^^^
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  ('a124' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  'a125'
+//│ ╟── while constraining:  'a124'  <!<  'a125'
+//│ ╟── while constraining:  ('a124',)  <!<  ('a125',)
+//│ ╟── while constraining:  ('a125' -> Int)  <!<  ('a124' -> Int)
+//│ ╟── while constraining:  'a125'  <!<  ('a124' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a102'›  <!<  ('a124' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  ('a124' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  'a124'
+//│ ╟── while constraining:  'a123'  <!<  'a124'
+//│ ╟── while constraining:  ('a123',)  <!<  ('a124',)
+//│ ╟── while constraining:  ('a124' -> Int)  <!<  ('a123' -> Int)
+//│ ╟── while constraining:  'a124'  <!<  ('a123' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a102'›  <!<  ('a123' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  ('a123' -> Int)
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ('a113',)  <!<  ('a114',)
+//│ ╟── while constraining:  ('a114' -> Int)  <!<  ('a113' -> Int)
+//│ ╟── while constraining:  'a114'  <!<  ('a113' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. 'a102'›  <!<  ('a113' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  ('a113' -> Int)
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  'a113'
+//│ ╟── while constraining:  'a112'  <!<  'a113'
+//│ ╟── while constraining:  ('a112',)  <!<  ('a113',)
+//│ ╟── while constraining:  ('a113' -> int<number>)  <!<  ('a112' -> int<number>)
+//│ ╟── while constraining:  ('a113' -> Int)  <!<  (‘a' | ('a112' -> Int))
+//│ ╟── while constraining:  'a113'  <!<  (‘a' | ('a112' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. 'a102'›  <!<  (‘a' | ('a112' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  (‘a' | ('a112' -> Int))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  'a112'
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. 'a102'››  <!<  ‹∀ 0. 'a102'›
 //│   = <no result>
 //│     f0 is not implemented
 
