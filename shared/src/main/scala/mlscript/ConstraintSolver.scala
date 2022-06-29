@@ -397,11 +397,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
+          // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
+          // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)

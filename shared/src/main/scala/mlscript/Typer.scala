@@ -45,7 +45,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     * The public helper functions should be preferred for manipulating `mthEnv`
    */
   case class Ctx(parent: Opt[Ctx], env: MutMap[Str, TypeInfo], mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
-      lvl: Level, inPattern: Bool, tyDefs: Map[Str, TypeDef]) {
+      lvl: Level, inPattern: Bool, tyDefs: Map[Str, TypeDef], inRecursiveDef: Opt[Var]) {
     assert(lvl < MaxLevel, lvl)
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
@@ -73,6 +73,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       lvl = MinLevel,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
+      inRecursiveDef = N,
     )
     val empty: Ctx = init
   }
@@ -416,9 +417,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       // constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx)
       
       val oldLvl = lvl
-      ctx.nextLevel |> { implicit ctx: Ctx =>
+      ctx.nextLevel.copy(inRecursiveDef = S(Var(nme))) |> { implicit ctx: Ctx =>
         implicit val extrCtx: Opt[ExtrCtx] = N
-        val ty = typeTerm(rhs)
+        val rhs_ty = typeTerm(rhs)
+        
+        implicit val prov: TP = noProv // TODO
+        val processed = MutSet.empty[TV]
+        def destroyConstrainedTypes(ty: ST): ST = ty match {
+          case ConstrainedType(cs, body) =>
+            cs.foreach { case (tv, bs) => bs.foreach {
+              case (true, b) => constrain(b, tv)
+              case (false, b) => constrain(tv, b)
+            }}
+            body
+          case tv: TV =>
+            processed.setAndIfUnset(tv) {
+              tv.lowerBounds = tv.lowerBounds.map(destroyConstrainedTypes)
+              tv.upperBounds = tv.upperBounds.map(destroyConstrainedTypes)
+            }
+            tv
+          case _ => ty.map(destroyConstrainedTypes)
+        }
+        val ty = trace(s"Destroying constrained types...") {
+          destroyConstrainedTypes(rhs_ty)
+        }(r => s"=> $r")
+        
         // val ty_sch = PolymorphicType(lvl, ty)
         val ty_sch = ty
         constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx, extrCtx)
@@ -639,7 +662,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) if genLambdas =>
+      case Lam(pat, body) if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+        println(s"TYPING POLY LAM")
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
         val newCtx = ctx.nest.nextLevel

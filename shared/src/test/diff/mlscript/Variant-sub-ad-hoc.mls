@@ -53,7 +53,7 @@ rec def evalOpt = fun x -> case x of {
 //│   where
 //│     'a <: Lit & {v: int} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string}
 //│        = [Function: evalOpt]
-//│ constrain calls  : 832
+//│ constrain calls  : 830
 //│ annoying  calls  : 178
 //│ subtyping calls  : 712
 
@@ -61,7 +61,7 @@ rec def evalOpt = fun x -> case x of {
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})
 //│ res: None & {err: string} | Some & {v: int}
 //│    = Some { v: 4 }
-//│ constrain calls  : 111
+//│ constrain calls  : 113
 //│ annoying  calls  : 34
 //│ subtyping calls  : 318
 

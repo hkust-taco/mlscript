@@ -30,6 +30,7 @@ def to_church: int -> ChurchInt
 //│ to_church: int -> ChurchInt
 //│          = <missing implementation>
 
+// :d
 // rec def to_ch n =
 //   if n == 0 then zero
 //   else s (to_ch (n - 1))
@@ -39,71 +40,39 @@ rec def to_ch n =
   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ to_ch: 'a -> (forall 'b, 'c, 'd. ('c -> 'd
-//│   where
-//│     'b <: 'c -> 'd)) | 'to_ch
-//│   where
-//│     'to_ch <: 'a -> 'b
+//│ to_ch: anything -> anything -> nothing
 //│      = [Function: to_ch]
 
 :ns
 to_ch
-//│ res: forall 'to_ch. 'to_ch
+//│ res: forall 'a, 'b, 'c, 'd, 'e. forall 'to_ch, 'f, 'a, 'g, 'b, 'c, 'd, 'e. 'to_ch
 //│   where
-//│     'to_ch :> 'a -> 'b
-//│   where
-//│     'to_ch <: 'a -> 'c
-//│     'c <: 'd
-//│     'b :> forall 'e, 'f. ('e -> 'f
-//│   where
-//│     'd <: 'e -> 'f)
+//│     'to_ch :> 'f -> 'g
+//│            <: 'f -> 'a
+//│     'g :> forall 'h, 'i. 'h -> 'i
+//│        <: 'a
+//│     'a :> forall 'h, 'i. 'h -> 'i
+//│        <: 'b
+//│     'b :> forall 'h, 'i. 'h -> 'i
+//│        <: 'c -> 'd
+//│     'i :> 'd
+//│     'h <: 'c
+//│     'c <: 'e
+//│     'e <: 'c
 //│    = [Function: to_ch]
 
-// * NOTE this crashes due to the use of `s` rather than an annotated `succ`:
+:re
+to_ch 1 2
+//│ res: nothing
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+
+// * NOTE the crash was due to the use of `s` rather than an annotated `succ`:
 // :d
 to_church = to_ch
-//│ 'a -> (forall 'b, 'c, 'd. ('c -> 'd
-//│   where
-//│     'b <: 'c -> 'd)) | 'to_ch
-//│   where
-//│     'to_ch <: 'a -> 'b
+//│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch, ?to_ch0, ?a, ?b. ?to_ch0 <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.64: 	to_church = to_ch
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  to_ch76'  <!<  ((α671',) -> α672')
-//│ ╟── while constraining:  {(α671' -> α674') where: to_ch76' <: ((α671',) -> α672')}  <!<  ((α665',) -> α666')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α665',) -> α666')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α665',) -> α666')
-//│ ╟── while constraining:  {(α665' -> α668') where: to_ch76' <: ((α665',) -> α666')}  <!<  ((α659',) -> α660')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α659',) -> α660')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α659',) -> α660')
-//│ ╟── while constraining:  {(α659' -> α662') where: to_ch76' <: ((α659',) -> α660')}  <!<  ((α653',) -> α654')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α653',) -> α654')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α653',) -> α654')
-//│ ╟── while constraining:  {(α653' -> α656') where: to_ch76' <: ((α653',) -> α654')}  <!<  ((α647',) -> α648')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α647',) -> α648')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α647',) -> α648')
-//│ ╟── while constraining:  {(α647' -> α650') where: to_ch76' <: ((α647',) -> α648')}  <!<  ((α641',) -> α642')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α641',) -> α642')
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  {(α101' -> α104') where: to_ch76' <: ((α101',) -> α102')}  <!<  ((α95',) -> α96')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α95',) -> α96')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α95',) -> α96')
-//│ ╟── while constraining:  {(α95' -> α98') where: to_ch76' <: ((α95',) -> α96')}  <!<  ((α89',) -> α90')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α89',) -> α90')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α89',) -> α90')
-//│ ╟── while constraining:  {(α89' -> α92') where: to_ch76' <: ((α89',) -> α90')}  <!<  ((α83',) -> α84')
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  ((α83',) -> α84')
-//│ ╟── while constraining:  to_ch76'  <!<  ((α83',) -> α84')
-//│ ╟── while constraining:  {(α83' -> α86') where: to_ch76' <: ((α83',) -> α84')}  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 1. {(α77'' -> α80'') where: to_ch76' <: ((α77'',) -> α78'')}›  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  to_ch76'  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. to_ch35'›  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│          = [Function: to_ch]
 
 
