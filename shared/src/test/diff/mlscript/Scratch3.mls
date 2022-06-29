@@ -19,6 +19,58 @@ def s n = fun f -> fun x -> f (n f x)
 //│     'b <: 'd -> 'e)))
 //│  = [Function: s]
 
+
+def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = <missing implementation>
+
+
+// * This one requires distributing the RHS forall to rigidify it earlier:
+
+// * Failure comes from:
+// | | | C ‹∀ 1. (α27'' -> ‹∀ 2. (α28''' -> ‹∀ 3. {(α29'''' -> α32'''') where: α27'' <: ((α28''',) -> α30''''), α28''' <: ((α31'''',) -> α32'''')}›)›)› <! (‹∀ 1. (('N95'' -> 'N95'') -> ('N95'' -> 'N95''))› -> ‹∀ 1. (('M96'' -> 'M96'') -> ('M96'' -> 'M96''))›)  PolymorphicType  FunctionType
+// :d
+:e
+succ = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.34: 	succ = s
+//│ ║        	^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                  ^^
+//│     = [Function: s]
+
+
+// * Manually distributing fixes the error:
+
+def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('M -> 'M))
+//│ succ0: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
+//│      = <missing implementation>
+
+succ0 = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│   <:  succ0:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> ('M -> 'M) -> 'M -> 'M
+//│      = [Function: s]
+
+
+
+
 // :d
 n1 = s z
 //│ n1: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e

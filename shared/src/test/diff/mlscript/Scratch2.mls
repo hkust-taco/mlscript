@@ -23,7 +23,7 @@ test2 (fun value -> { value })
 //│    = [ undefined, undefined ]
 
 
-type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ Defined type alias ChurchInt
 
 // :ns
@@ -41,6 +41,7 @@ def succ: ChurchInt -> ChurchInt
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
 
+// TODO requires forall/-> distrib.
 :ns
 succ = s
 //│ forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f. ('c -> 'f
@@ -52,15 +53,29 @@ succ = s
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.45: 	succ = s
+//│ ║  l.46: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.26: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
 //│     = [Function: s]
+
+def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ succD: ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│      = <missing implementation>
+
+succD = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│   <:  succD:
+//│ ChurchInt -> ('M -> 'M) -> 'M -> 'M
+//│      = [Function: s]
+
 
 def z f x = x
 //│ z: anything -> (forall 'a. 'a -> 'a)
@@ -164,5 +179,34 @@ to_church = to_ch
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch]
+
+
+
+// rec def to_ch n =
+//   if n == 0 then zero
+//   else succD (to_ch (n - 1))
+
+// rec def to_ch n =
+//   succD (to_ch (n - 1))
+
+// TODO probably need to distribute back here too
+rec def to_ch n =
+  succD (to_ch n)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.193: 	rec def to_ch n =
+//│ ║         	              ^^^
+//│ ║  l.194: 	  succD (to_ch n)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.66: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ╙──      	                  ^^
+//│ to_ch: anything -> ('M -> 'M) -> 'M -> 'M
+//│      = [Function: to_ch1]
 
 

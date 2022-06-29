@@ -342,8 +342,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs    (${cache.size})") {
     // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
+    // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
+    trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
@@ -748,7 +748,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def freshenAbove(above: Int, ty: SimpleType, rigidify: Bool = false, below: Int = MaxLevel)
         (implicit lvl: Int, freshened: MutMap[TV, ST]): SimpleType = {
     def freshenImpl(ty: SimpleType, below: Int): SimpleType =
-    (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
+    // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
       if (
@@ -828,7 +828,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs.mapKeys(freshen(_).asInstanceOf[TV]).mapValues(_.mapValues(freshen)), freshen(bod))
       case o @ Overload(alts) => Overload(alts.map(freshen(_).asInstanceOf[FunctionType]))(o.prov)
     }}
-    (r => s"=> $r"))
+    // (r => s"=> $r"))
     freshenImpl(ty, below)
   }
   
