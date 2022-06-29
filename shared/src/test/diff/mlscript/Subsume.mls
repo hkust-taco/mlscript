@@ -364,53 +364,18 @@ def self2 = self1
 //│ 'a
 //│   where
 //│     'a := 'a -> 'b
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. (?a -> ?b & ?a) -> ?b <: ?a0` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.361: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  ('a380 -> 'b381)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a380 -> 'b381) & 'a380)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a378
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a378 -> 'b379) & 'a378)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a376
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a376 -> 'b377) & 'a376)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a374
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a374 -> 'b375) & 'a374)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a372
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a372 -> 'b373) & 'a372)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a370
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a370 -> 'b371) & 'a370)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a368
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a368 -> 'b369) & 'a368)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a366
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a366 -> 'b367) & 'a366)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a364
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a364 -> 'b365) & 'a364)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a362
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a362 -> 'b363) & 'a362)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a360
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a360 -> 'b361) & 'a360)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a358
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a358 -> 'b359) & 'a358)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a356
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a356 -> 'b357) & 'a356)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a354
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a354 -> 'b355) & 'a354)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a352
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a352 -> 'b353) & 'a352)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a350
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a350 -> 'b351) & 'a350)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a348
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a348 -> 'b349) & 'a348)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a346
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a346 -> 'b347) & 'a346)
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a344
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (('a344 -> 'b345) & 'a344)
-//│ ╟── while constraining:  'a343  <!<  (('a344 -> 'b345) & 'a344)
-//│ ╟── while constraining:  ('a343,)  <!<  ((('a344 -> 'b345) & 'a344),)
-//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  ('a343 -> ‘b)
-//│ ╟── while constraining:  ((('a344 -> 'b345) & 'a344) -> 'b345)  <!<  (‘a | ('a343 -> ‘b))
-//│ ╟── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  (‘a | ('a343 -> ‘b))
-//│ ╙── while constraining:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <!<  'a343
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <:  (('a346 -> 'b347) & 'a346)    PolymorphicType  ComposedType
+//│ ╙──  ... looks like:  ∀ 0. ((('a279' -> 'b280') & 'a279') -> 'b280')  <:  (('a279' -> 'b280') & 'a279')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.361: 	def self2 = self1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a & ('a343 -> ‘b))  <:  (('a346 -> 'b347) & 'a346)    ComposedType  ComposedType
+//│ ╙──  ... looks like:  (‘a & ('a323' -> ‘b))  <:  (('a279' -> 'b280') & 'a279')
 //│      = [Function: res]
 
 

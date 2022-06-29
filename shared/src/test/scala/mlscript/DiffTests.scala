@@ -534,7 +534,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                 typer.dbg = mode.dbg
                 val ty_sch = typer.PolymorphicType(typer.MinLevel,
                   typer.typeType(rhs)(ctx.nextLevel, raise, vars = tps.collect {
-                      case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/)(1)
+                      case L(tp: TypeName) => tp.name -> typer.freshVar(typer.noProv/*FIXME*/, N)(1)
                     }.toMap))
                 ctx += nme.name -> ty_sch
                 declared += nme.name -> ty_sch

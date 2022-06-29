@@ -7,38 +7,13 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 :e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g. ?c -> ?g) -> ?h` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.9: 	  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ║       	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α76'
-//│ ╟── while constraining:  α71'  <!<  α76'
-//│ ╟── while constraining:  (α71',)  <!<  (α76',)
-//│ ╟── while constraining:  (α76' -> α80')  <!<  ((α71',) -> α72')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α71',) -> α72')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α71'
-//│ ╟── while constraining:  α66'  <!<  α71'
-//│ ╟── while constraining:  (α66',)  <!<  (α71',)
-//│ ╟── while constraining:  (α71' -> α75')  <!<  ((α66',) -> α67')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α66',) -> α67')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α66'
-//│ ╟── while constraining:  α61'  <!<  α66'
-//│ ╟── while constraining:  (α61',)  <!<  (α66',)
-//│ ╟── while constraining:  (α66' -> α70')  <!<  ((α61',) -> α62')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α61',) -> α62')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α61'
-//│ ╟── while constraining:  α56'  <!<  α61'
-//│ ╟── while constraining:  (α56',)  <!<  (α61',)
-//│ ╟── while constraining:  (α61' -> α65')  <!<  ((α56',) -> α57')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α56',) -> α57')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α56'
-//│ ╟── while constraining:  α34'  <!<  α56'
-//│ ╟── while constraining:  (α34',)  <!<  (α56',)
-//│ ╟── while constraining:  (α56' -> α60')  <!<  ((α34',) -> α37')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  ((α34',) -> α37')
-//│ ╟── while constraining:  ∀ 1. (α42'' -> α49'')  <!<  α34'
-//│ ╟── while constraining:  (∀ 1. (α42'' -> α49''),)  <!<  (α34',)
-//│ ╙── while constraining:  (α34' -> α41')  <!<  ((∀ 1. (α42'' -> α49''),) -> α55')
-//│ ((anything -> nothing) -> anything) -> error
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 1. (α42'' -> α49'')  <:  ((α61',) -> α62')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 1. (α42'' -> α49'')  <:  ((α42'',) -> α45'')
+//│ (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
 //│   <:  z:
 //│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = [Function: z]

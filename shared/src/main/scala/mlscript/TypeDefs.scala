@@ -52,7 +52,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
     //   MethodType(pt.polymLevel, S((thisTy(prov), pt.body)), nme :: Nil, isInherited = false)(prov)
     
     
-    val thisTv: TypeVariable = freshVar(noProv, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1)
+    val thisTv: TypeVariable = freshVar(noProv, N, S("this"), Nil, TypeRef(nme, targs)(noProv) :: Nil)(1) // FIXME coudl N here result in divergence? cf. absence of shadow
     var tvarVariances: Opt[VarianceStore] = N
     def getVariancesOrDefault: collection.Map[TV, VarianceInfo] =
       tvarVariances.getOrElse(Map.empty[TV, VarianceInfo].withDefaultValue(VarianceInfo.in))
@@ -182,7 +182,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
         case _ =>
       }
       val dummyTargs = td.tparams.map(p =>
-        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), S(p.name))(ctx.lvl + 1))
+        freshVar(originProv(p.toLoc, s"${td.kind.str} type parameter", p.name), N, S(p.name))(ctx.lvl + 1))
       val tparamsargs = td.tparams.lazyZip(dummyTargs)
       val (bodyTy, tvars) = 
         typeType2(td.body, simplify = false)(ctx.copy(lvl = 0), raise, tparamsargs.map(_.name -> _).toMap, newDefsInfo)
@@ -306,7 +306,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                       val fieldsRefined = fields.iterator.map(f =>
                         if (f._1.name.isCapitalized) f
                         else {
-                          val fv = freshVar(noProv,
+                          val fv = freshVar(noProv, N,
                             S(f._1.name.drop(f._1.name.indexOf('#') + 1)) // strip any "...#" prefix
                           )(1).tap(_.upperBounds ::= f._2.ub)
                           f._1 -> (
@@ -324,7 +324,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
                       )(originProv(td.nme.toLoc, "class constructor", td.nme.name)))
                     case Trt =>
                       val nomTag = trtNameToNomTag(td)(originProv(td.nme.toLoc, "trait", td.nme.name), ctx)
-                      val tv = freshVar(noProv)(1)
+                      val tv = freshVar(noProv, N)(1)
                       tv.upperBounds ::= td.bodyTy
                       PolymorphicType(MinLevel, FunctionType(
                         singleTup(tv), tv & nomTag & RecordType.mk(tparamTags)(noProv)
@@ -521,7 +521,7 @@ class TypeDefs extends ConstraintSolver { self: Typer =>
               TraitTag(MinLevel, Var(p.name))(originProv(p.toLoc, "method type parameter", p.name)))
             val targsMap2 = targsMap ++ tparams.iterator.map(_.name).zip(dummyTargs2).toMap
             val reverseRigid2 = reverseRigid ++ dummyTargs2.map(t => t ->
-              freshVar(t.prov, S(t.id.idStr))(thisCtx.lvl + 1)) +
+              freshVar(t.prov, N, S(t.id.idStr))(thisCtx.lvl + 1)) +
                 (thisTag -> td.thisTv) +
                 (td.thisTv -> td.thisTv) // needed to prevent the type variable from being refreshed during substitution!
             val bodyTy = subst(rhs.fold(term =>

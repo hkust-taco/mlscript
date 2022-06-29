@@ -47,75 +47,23 @@ e1 = add (lit 1) (add (lit 2) (lit 3))
 
 :e
 eval1 eval1 e1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?lhs, ?rhs, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i. ?a -> ?f -> (?val | ?i) <: (forall ?val, ?lhs, ?rhs, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r. ?j -> ?o -> (?val | ?r)) -> ?s` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.49: 	eval1 eval1 e1
 //│ ║        	^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α212
-//│ ╟── while constraining:  α200  <!<  α212
-//│ ╟── while constraining:  (α200,)  <!<  (α212,)
-//│ ╟── while constraining:  (α212 -> (α219 -> (val221 | α223)))  <!<  ((α200,) -> α201)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α200,) -> α201)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α200
-//│ ╟── while constraining:  α188  <!<  α200
-//│ ╟── while constraining:  (α188,)  <!<  (α200,)
-//│ ╟── while constraining:  (α200 -> (α207 -> (val209 | α211)))  <!<  ((α188,) -> α189)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α188,) -> α189)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α188
-//│ ╟── while constraining:  α176  <!<  α188
-//│ ╟── while constraining:  (α176,)  <!<  (α188,)
-//│ ╟── while constraining:  (α188 -> (α195 -> (val197 | α199)))  <!<  ((α176,) -> α177)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α176,) -> α177)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α176
-//│ ╟── while constraining:  α164  <!<  α176
-//│ ╟── while constraining:  (α164,)  <!<  (α176,)
-//│ ╟── while constraining:  (α176 -> (α183 -> (val185 | α187)))  <!<  ((α164,) -> α165)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α164,) -> α165)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α164
-//│ ╟── while constraining:  α152  <!<  α164
-//│ ╟── while constraining:  (α152,)  <!<  (α164,)
-//│ ╟── while constraining:  (α164 -> (α171 -> (val173 | α175)))  <!<  ((α152,) -> α153)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α152,) -> α153)
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α152
-//│ ╟── while constraining:  (∀ 0. (α53' -> (α54' -> (val56' | α65'))),)  <!<  (α152,)
-//│ ╟── while constraining:  (α152 -> (α159 -> (val161 | α163)))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α151)
-//│ ╙── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α151)
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <:  ((α164,) -> α165)    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <:  ((α53',) -> α62')
 //│ res: error
 //│    = 6
 
 :e
 def eval1_fixed_1 = eval1 eval1
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?val, ?lhs, ?rhs, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i. ?a -> ?f -> (?val | ?i) <: (forall ?val, ?lhs, ?rhs, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q, ?r. ?j -> ?o -> (?val | ?r)) -> ?s` exceeded recursion depth limit (100)
-//│ ║  l.86: 	def eval1_fixed_1 = eval1 eval1
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.60: 	def eval1_fixed_1 = eval1 eval1
 //│ ║        	                    ^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α305'
-//│ ╟── while constraining:  α293'  <!<  α305'
-//│ ╟── while constraining:  (α293',)  <!<  (α305',)
-//│ ╟── while constraining:  (α305' -> (α312' -> (val314' | α316')))  <!<  ((α293',) -> α294')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α293',) -> α294')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α293'
-//│ ╟── while constraining:  α281'  <!<  α293'
-//│ ╟── while constraining:  (α281',)  <!<  (α293',)
-//│ ╟── while constraining:  (α293' -> (α300' -> (val302' | α304')))  <!<  ((α281',) -> α282')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α281',) -> α282')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α281'
-//│ ╟── while constraining:  α269'  <!<  α281'
-//│ ╟── while constraining:  (α269',)  <!<  (α281',)
-//│ ╟── while constraining:  (α281' -> (α288' -> (val290' | α292')))  <!<  ((α269',) -> α270')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α269',) -> α270')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α269'
-//│ ╟── while constraining:  α257'  <!<  α269'
-//│ ╟── while constraining:  (α257',)  <!<  (α269',)
-//│ ╟── while constraining:  (α269' -> (α276' -> (val278' | α280')))  <!<  ((α257',) -> α258')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α257',) -> α258')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α257'
-//│ ╟── while constraining:  α245'  <!<  α257'
-//│ ╟── while constraining:  (α245',)  <!<  (α257',)
-//│ ╟── while constraining:  (α257' -> (α264' -> (val266' | α268')))  <!<  ((α245',) -> α246')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((α245',) -> α246')
-//│ ╟── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  α245'
-//│ ╟── while constraining:  (∀ 0. (α53' -> (α54' -> (val56' | α65'))),)  <!<  (α245',)
-//│ ╟── while constraining:  (α245' -> (α252' -> (val254' | α256')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α244')
-//│ ╙── while constraining:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <!<  ((∀ 0. (α53' -> (α54' -> (val56' | α65'))),) -> α244')
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <:  ((α227',) -> α228')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 0. (α53' -> (α54' -> (val56' | α65')))  <:  ((α53',) -> α62')
 //│ eval1_fixed_1: error
 //│              = [Function (anonymous)]
 
@@ -140,41 +88,17 @@ eval1_fixed_2 e1
 def eval1_fixed_3 =
   let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
   in fixed fixed
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?rhs0, ?i, ?j, ?k, ?val0, ?l, ?rhs1, ?lhs0, ?lhs1, ?m, ?n, ?o, ?val1, ?p, ?rhs2, ?lhs2, ?q. ?a -> ?e <: (forall ?rhs, ?lhs, ?val, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?rhs3, ?z, ?a1, ?b1, ?val2, ?c1, ?rhs4, ?lhs3, ?lhs4, ?d1, ?e1, ?f1, ?val3, ?g1, ?rhs5, ?lhs5, ?h1. ?r -> ?v) -> ?i1` exceeded recursion depth limit (100)
-//│ ║  l.142: 	  in fixed fixed
-//│ ║         	     ^^^^^^^^^^^
-//│ ╟── while constraining:  (α616',)  <!<  (α644',)
-//│ ╟── while constraining:  (α644' -> α650')  <!<  ((α616',) -> α617')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α616',) -> α617')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α616'
-//│ ╟── while constraining:  α588'  <!<  α616'
-//│ ╟── while constraining:  (α588',)  <!<  (α616',)
-//│ ╟── while constraining:  (α616' -> α622')  <!<  ((α588',) -> α589')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α588',) -> α589')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α588'
-//│ ╟── while constraining:  α560'  <!<  α588'
-//│ ╟── while constraining:  (α560',)  <!<  (α588',)
-//│ ╟── while constraining:  (α588' -> α594')  <!<  ((α560',) -> α561')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α560',) -> α561')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α560'
-//│ ╟── while constraining:  α532'  <!<  α560'
-//│ ╟── while constraining:  (α532',)  <!<  (α560',)
-//│ ╟── while constraining:  (α560' -> α566')  <!<  ((α532',) -> α533')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α532',) -> α533')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α532'
-//│ ╟── while constraining:  α504'  <!<  α532'
-//│ ╟── while constraining:  (α504',)  <!<  (α532',)
-//│ ╟── while constraining:  (α532' -> α538')  <!<  ((α504',) -> α505')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((α504',) -> α505')
-//│ ╟── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  α504'
-//│ ╟── while constraining:  (∀ 1. (α454'' -> α474''),)  <!<  (α504',)
-//│ ╟── while constraining:  (α504' -> α510')  <!<  ((∀ 1. (α454'' -> α474''),) -> α503')
-//│ ╙── while constraining:  ∀ 1. (α454'' -> α474'')  <!<  ((∀ 1. (α454'' -> α474''),) -> α503')
-//│ eval1_fixed_3: error
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.90: 	  in fixed fixed
+//│ ║        	     ^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 1. (α394'' -> α414'')  <:  ((α472',) -> α473')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 1. (α394'' -> α414'')  <:  ((α394'',) -> α397'')
+//│ eval1_fixed_3: (Add[?] & {lhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit} | (Lit with {val: 'val})) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
 eval1_fixed_3 e1
-//│ res: error
+//│ res: error | int
 //│    = 6
 
 
@@ -214,32 +138,12 @@ e2 = add (lit 1) (nega e1)
 
 :e
 def eval2_fixed_1 = eval2 eval2
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?arg, ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n, ?o, ?p, ?q. ?a -> ?i -> (?o | ?p) <: (forall ?arg, ?rhs, ?lhs, ?val, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1, ?c1, ?d1, ?e1, ?f1, ?g1, ?h1. ?r -> ?z -> (?f1 | ?g1)) -> ?i1` exceeded recursion depth limit (100)
-//│ ║  l.216: 	def eval2_fixed_1 = eval2 eval2
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α938'
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α937'
-//│ ╟── while constraining:  α917'  <!<  α937'
-//│ ╟── while constraining:  (α917',)  <!<  (α937',)
-//│ ╟── while constraining:  (α937' -> (α948' -> (α955' | α956')))  <!<  ((α917',) -> α918')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α917',) -> α918')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α917'
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α916'
-//│ ╟── while constraining:  α896'  <!<  α916'
-//│ ╟── while constraining:  (α896',)  <!<  (α916',)
-//│ ╟── while constraining:  (α916' -> (α927' -> (α934' | α935')))  <!<  ((α896',) -> α897')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α896',) -> α897')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α896'
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α895'
-//│ ╟── while constraining:  α875'  <!<  α895'
-//│ ╟── while constraining:  (α875',)  <!<  (α895',)
-//│ ╟── while constraining:  (α895' -> (α906' -> (α913' | α914')))  <!<  ((α875',) -> α876')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((α875',) -> α876')
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α875'
-//│ ╟── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  α874'
-//│ ╟── while constraining:  (∀ 0. (α739' -> (α740' -> (α746' | α761'))),)  <!<  (α874',)
-//│ ╟── while constraining:  (α874' -> (α885' -> (α892' | α893')))  <!<  ((∀ 0. (α739' -> (α740' -> (α746' | α761'))),) -> α873')
-//│ ╙── while constraining:  ∀ 0. (α739' -> (α740' -> (α746' | α761')))  <!<  ((∀ 0. (α739' -> (α740' -> (α746' | α761'))),) -> α873')
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. (α621' -> (α622' -> (α628' | α643')))  <:  ((α778',) -> α779')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 0. (α621' -> (α622' -> (α628' | α643')))  <:  ((α631',) -> α632')
 //│ eval2_fixed_1: error
 //│              = [Function (anonymous)]
 
@@ -252,47 +156,97 @@ eval2_fixed_1 e2
 
 :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e. ?a -> ?e <: (forall ?f, ?g, ?h, ?i, ?j. ?f -> ?j) -> ?k` exceeded recursion depth limit (100)
-//│ ║  l.254: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.158: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ║         	                                                         ^^^^^^^^^^^
-//│ ╟── while constraining:  (α1034',)  <!<  (α1039',)
-//│ ╟── while constraining:  (α1039' -> α1043')  <!<  ((α1034',) -> α1035')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1034',) -> α1035')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1034'
-//│ ╟── while constraining:  α1029'  <!<  α1034'
-//│ ╟── while constraining:  (α1029',)  <!<  (α1034',)
-//│ ╟── while constraining:  (α1034' -> α1038')  <!<  ((α1029',) -> α1030')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1029',) -> α1030')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1029'
-//│ ╟── while constraining:  α1024'  <!<  α1029'
-//│ ╟── while constraining:  (α1024',)  <!<  (α1029',)
-//│ ╟── while constraining:  (α1029' -> α1033')  <!<  ((α1024',) -> α1025')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1024',) -> α1025')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1024'
-//│ ╟── while constraining:  α1019'  <!<  α1024'
-//│ ╟── while constraining:  (α1019',)  <!<  (α1024',)
-//│ ╟── while constraining:  (α1024' -> α1028')  <!<  ((α1019',) -> α1020')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1019',) -> α1020')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1019'
-//│ ╟── while constraining:  α1014'  <!<  α1019'
-//│ ╟── while constraining:  (α1014',)  <!<  (α1019',)
-//│ ╟── while constraining:  (α1019' -> α1023')  <!<  ((α1014',) -> α1015')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((α1014',) -> α1015')
-//│ ╟── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  α1014'
-//│ ╟── while constraining:  (∀ 1. (α1000'' -> α1007''),)  <!<  (α1014',)
-//│ ╟── while constraining:  (α1014' -> α1018')  <!<  ((∀ 1. (α1000'' -> α1007''),) -> α1013')
-//│ ╙── while constraining:  ∀ 1. (α1000'' -> α1007'')  <!<  ((∀ 1. (α1000'' -> α1007''),) -> α1013')
-//│ fix: ((anything -> nothing) -> anything) -> error
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 1. (α869'' -> α876'')  <:  ((α888',) -> α889')    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 1. (α869'' -> α876'')  <:  ((α869'',) -> α872'')
+//│ fix: (('a -> 'b) -> ('a -> 'b & 'c)) -> (error | 'c)
 //│    = [Function: fix]
 
 def eval2_fixed_2 = fix eval2f
-//│ eval2_fixed_2: error
+//│ eval2_fixed_2: 'a -> int | error
+//│   where
+//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│              = [Function (anonymous)]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?arg, ?d, ?e, ?f, ?g, ?h, ?val, ?i, ?rhs, ?lhs, ?j, ?k. ?a <: (forall ?l, ?lhs0, ?val0, ?E, ?lhs1, ?val1, ?E0, ?val2, ?rhs0, ?rhs1. ?l) -> ?m` exceeded recursion depth limit (100)
+//│ ║  l.174: 	eval2_fixed_2 e1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  α966
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  α965
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  ((nega<> & α961) | (α965 & ~(nega<>)))
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  α960
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  α964
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  α963
+//│ ╟── while constraining:  (lit<> & {val: val982})  <!<  rhs970
+//│ ╟── while constraining:  rhs983  <!<  rhs970
+//│ ╟── while constraining:  (add<> & {Add#E: mut E981..E981, lhs: lhs979, rhs: rhs983})  <!<  {rhs: rhs970}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E981..E981, lhs: lhs979, rhs: rhs983})  <!<  α969
+//│ ╟── while constraining:  (add<> & {Add#E: mut E981..E981, lhs: lhs979, rhs: rhs983})  <!<  ((lit<> & α967) | ((add<> & α969) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E981..E981, lhs: lhs979, rhs: rhs983})  <!<  α966
+//│ ╟── while constraining:  (add<> & {Add#E: mut E981..E981, lhs: lhs979, rhs: rhs983})  <!<  α965
+//│ ╟── while constraining:  (add<> & {lhs: lhs979, rhs: rhs983, Add#E: mut E981..E981})  <!<  ((nega<> & α961) | (α965 & ~(nega<>)))
+//│ ╟── while constraining:  (add<> & {lhs: lhs979, rhs: rhs983, Add#E: mut E981..E981})  <!<  α960
+//│ ╟── while constraining:  (add<> & {lhs: lhs979, rhs: rhs983, Add#E: mut E981..E981})  <!<  α964
+//│ ╟── while constraining:  (add<> & {lhs: lhs979, rhs: rhs983, Add#E: mut E981..E981})  <!<  α963
+//│ ╟── while constraining:  (add<> & {lhs: lhs979, rhs: rhs983, Add#E: mut E981..E981})  <!<  rhs970
+//│ ╟── while constraining:  rhs984  <!<  rhs970
+//│ ╟── while constraining:  (add<> & {Add#E: mut E978..E978, lhs: lhs976, rhs: rhs984})  <!<  {rhs: rhs970}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E978..E978, lhs: lhs976, rhs: rhs984})  <!<  α969
+//│ ╟── while constraining:  (add<> & {Add#E: mut E978..E978, lhs: lhs976, rhs: rhs984})  <!<  ((lit<> & α967) | ((add<> & α969) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E978..E978, lhs: lhs976, rhs: rhs984})  <!<  α966
+//│ ╟── while constraining:  (add<> & {Add#E: mut E978..E978, lhs: lhs976, rhs: rhs984})  <!<  α965
+//│ ╟── while constraining:  (add<> & {lhs: lhs976, rhs: rhs984, Add#E: mut E978..E978})  <!<  ((nega<> & α961) | (α965 & ~(nega<>)))
+//│ ╟── while constraining:  α975  <!<  ((nega<> & α961) | (α965 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  ((nega<> & α961) | (α965 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  α960
+//│ ╟── while constraining:  (∀ 0. α140',)  <!<  (α960,)
+//│ ╟── while constraining:  (α960 -> (α972 | α973))  <!<  ((∀ 0. α140',) -> α958)
+//│ ╟── while constraining:  α959  <!<  ((∀ 0. α140',) -> α958)
+//│ ╙── while constraining:  ∀ 0. α909'  <!<  ((∀ 0. α140',) -> α958)
 //│ res: error
 //│    = 6
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?arg, ?d, ?e, ?f, ?g, ?h, ?val, ?i, ?rhs, ?lhs, ?j, ?k. ?a <: (forall ?l, ?E, ?E0. ?l) -> ?m` exceeded recursion depth limit (100)
+//│ ║  l.175: 	eval2_fixed_2 e2
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1040..E1040, lhs: lhs1038, rhs: rhs1046})  <!<  {rhs: rhs1025}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1040..E1040, lhs: lhs1038, rhs: rhs1046})  <!<  α1024
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1040..E1040, lhs: lhs1038, rhs: rhs1046})  <!<  ((lit<> & α1022) | ((add<> & α1024) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1040..E1040, lhs: lhs1038, rhs: rhs1046})  <!<  α1021
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1040..E1040, lhs: lhs1038, rhs: rhs1046})  <!<  α1020
+//│ ╟── while constraining:  (add<> & {lhs: lhs1038, rhs: rhs1046, Add#E: mut E1040..E1040})  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  α1037  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  α1015
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  α1019
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  α1018
+//│ ╟── while constraining:  ∀ 0. α140'  <!<  arg1017
+//│ ╟── while constraining:  arg1034  <!<  arg1017
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  {arg: arg1017}
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  α1016
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  α1015
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  α1019
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  α1018
+//│ ╟── while constraining:  (nega<> & {arg: arg1034, Nega#E: mut E1035..E1035})  <!<  rhs1025
+//│ ╟── while constraining:  rhs1036  <!<  rhs1025
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1033..E1033, lhs: lhs1031, rhs: rhs1036})  <!<  {rhs: rhs1025}
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1033..E1033, lhs: lhs1031, rhs: rhs1036})  <!<  α1024
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1033..E1033, lhs: lhs1031, rhs: rhs1036})  <!<  ((lit<> & α1022) | ((add<> & α1024) & ~(lit<>)))
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1033..E1033, lhs: lhs1031, rhs: rhs1036})  <!<  α1021
+//│ ╟── while constraining:  (add<> & {Add#E: mut E1033..E1033, lhs: lhs1031, rhs: rhs1036})  <!<  α1020
+//│ ╟── while constraining:  (add<> & {lhs: lhs1031, rhs: rhs1036, Add#E: mut E1033..E1033})  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  α1030  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α737'  <!<  ((nega<> & α1016) | (α1020 & ~(nega<>)))
+//│ ╟── while constraining:  ∀ 0. α737'  <!<  α1015
+//│ ╟── while constraining:  (∀ 0. α737',)  <!<  (α1015,)
+//│ ╟── while constraining:  (α1015 -> (α1027 | α1028))  <!<  ((∀ 0. α737',) -> α1013)
+//│ ╟── while constraining:  α1014  <!<  ((∀ 0. α737',) -> α1013)
+//│ ╙── while constraining:  ∀ 0. α909'  <!<  ((∀ 0. α737',) -> α1013)
 //│ res: error
 //│    = -5
 
@@ -425,32 +379,12 @@ def eval2_broken eval2 e = case e of {
 
 :e
 eval2_broken eval2_broken e2
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?arg, ?rhs, ?lhs, ?val, ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?n. ?a -> ?g -> (?arg | ?m) <: (forall ?arg, ?rhs, ?lhs, ?val, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y, ?z, ?a1, ?b1. ?o -> ?u -> (?arg | ?a1)) -> ?c1` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1545
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1544
-//│ ╟── while constraining:  α1527  <!<  α1544
-//│ ╟── while constraining:  (α1527,)  <!<  (α1544,)
-//│ ╟── while constraining:  (α1544 -> (α1552 -> (arg1554 | α1560)))  <!<  ((α1527,) -> α1528)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1527,) -> α1528)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1527
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1526
-//│ ╟── while constraining:  α1509  <!<  α1526
-//│ ╟── while constraining:  (α1509,)  <!<  (α1526,)
-//│ ╟── while constraining:  (α1526 -> (α1534 -> (arg1536 | α1542)))  <!<  ((α1509,) -> α1510)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1509,) -> α1510)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1509
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1508
-//│ ╟── while constraining:  α1491  <!<  α1508
-//│ ╟── while constraining:  (α1491,)  <!<  (α1508,)
-//│ ╟── while constraining:  (α1508 -> (α1516 -> (arg1518 | α1524)))  <!<  ((α1491,) -> α1492)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((α1491,) -> α1492)
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1491
-//│ ╟── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  α1490
-//│ ╟── while constraining:  (∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),)  <!<  (α1490,)
-//│ ╟── while constraining:  (α1490 -> (α1498 -> (arg1500 | α1506)))  <!<  ((∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),) -> α1489)
-//│ ╙── while constraining:  ∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462')))  <!<  ((∀ 0. (α1444' -> (α1445' -> (arg1447' | α1462'))),) -> α1489)
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. (α1432' -> (α1433' -> (arg1435' | α1450')))  <:  ((α1497,) -> α1498)    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 0. (α1432' -> (α1433' -> (arg1435' | α1450')))  <:  ((α1438',) -> α1439')
 //│ res: error
 
 
@@ -462,6 +396,18 @@ def eval2f_oops eval2 e = case e of {
 
 // :e
 fix eval2f_oops e2
-//│ res: error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	fix eval2f_oops e2
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` does not match type `Add[?] & ?c | Lit & ?d`
+//│ ║  l.158: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║         	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.18: 	def eval1 eval1 e = case e of {
+//│ ║        	                         ^
+//│ ╟── from reference:
+//│ ║  l.391: 	def eval2f_oops eval2 e = case e of {
+//│ ╙──       	                               ^
+//│ res: error | int
 
 

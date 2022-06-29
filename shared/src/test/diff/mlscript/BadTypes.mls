@@ -167,6 +167,12 @@ def someRec: { x: 'a; y: 'a } as 'a
 //│        = <missing implementation>
 
 someRec: BadRec
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
+//│ ║  l.+1: 	someRec: BadRec
+//│ ║        	^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  {x: 'a51, y: 'a51}  <:  {x: 'a52, y: BadRec}    RecordType  RecordType
+//│ ╙──  ... looks like:  {x: 'a46', y: 'a46'}  <:  {x: 'a34, y: BadRec}
 //│ res: BadRec
 //│    = <no result>
 //│      someRec is not implemented

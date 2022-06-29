@@ -12,8 +12,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def startingFuel: Int = 2000
   def depthLimit: Int = 100
   
+  protected var currentConstrainingRun = 0
+  
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType)(implicit raise: Raise, prov: TypeProvenance, ctx: Ctx): Unit = {
+    currentConstrainingRun += 1
+    
     // We need a cache to remember the subtyping tests in process; we also make the cache remember
     // past subtyping tests for performance reasons (it reduces the complexity of the algoritghm):
     val cache: MutSet[(SimpleType, SimpleType)] = MutSet.empty
@@ -25,6 +29,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     println(s"  where ${FunctionType(lhs, rhs)(noProv).showBounds}")
     
     type ConCtx = Ls[SimpleType] -> Ls[SimpleType]
+    
+    type Shadows = Set[ST -> ST]
     
     
     val ret = () => return
@@ -62,10 +68,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
     /* To solve constraints that are more tricky. */
-    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
+    def goToWork(lhs: ST, rhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
       constrainDNF(DNF.mkDeep(MaxLevel, lhs, true), DNF.mkDeep(MaxLevel, rhs, false), rhs)
     
-    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx): Unit =
+    def constrainDNF(lhs: DNF, rhs: DNF, oldRhs: ST)(implicit cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     trace(s"ARGH  $lhs  <!  $rhs") {
       annoyingCalls += 1
       consumeFuel()
@@ -145,14 +151,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
     def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, ctx: Ctx, dbgHelp: Str = "Case"): Unit = {
+          (implicit cctx: ConCtx, shadows: Shadows, ctx: Ctx, dbgHelp: Str = "Case"): Unit = {
         annoyingCalls += 1
         consumeFuel()
-        annoyingImpl(ls, done_ls, rs, done_rs)(cctx, dbgHelp)
+        annoyingImpl(ls, done_ls, rs, done_rs)(cctx, shadows, dbgHelp)
       }
     
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
-          (implicit cctx: ConCtx, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
+          (implicit cctx: ConCtx, shadows: Shadows, dbgHelp: Str = "Case"): Unit = trace(s"A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
       def mkRhs(ls: Ls[SimpleType]): SimpleType = {
         def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
         tys.reduceOption(_ | _).getOrElse(BotType)
@@ -299,7 +305,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     /** Helper function to constrain Field lower bounds. */
     def recLb(lhs: FieldType, rhs: FieldType)
-      (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit = {
+      (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
           case (Some(l), None) =>
@@ -313,9 +319,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     def rec(lhs: SimpleType, rhs: SimpleType, sameLevel: Bool)
           // (implicit raise: Raise, cctx: ConCtx): Unit = {
-          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit = {
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit = {
       constrainCalls += 1
       val lhs_rhs = lhs -> rhs
+      // if (shadows.contains(lhs_rhs)) {
+      //   err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
+      //   ()
+      //   // return ()
+      // // } else (shadows + lhs_rhs) |> { implicit shadows: Shadows =>
+      // } else (lhs_rhs match {
+      //   case (_: ProvType, _) | (_, _: ProvType) => shadows
+      //   case _ => shadows + lhs_rhs
+      // }) |> { implicit shadows: Shadows =>
       stack.push(lhs_rhs)
       // println(stack.size)
       consumeFuel()
@@ -326,13 +341,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           ->
           (if (cctx._2.headOption.exists(_ is rhs)) cctx._2 else rhs :: cctx._2)
         else (lhs :: Nil) -> (rhs :: Nil),
-        ctx
+        ctx, shadows
       )
       stack.pop()
       ()
     }
     def recImpl(lhs: SimpleType, rhs: SimpleType)
-          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx): Unit =
+          (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"C $lhs <! $rhs") {
     trace(s"C $lhs <! $rhs    (${cache.size})") {
     // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
@@ -347,8 +362,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       else {
         if (lhs is rhs) return
         val lhs_rhs = lhs -> rhs
-        lhs_rhs match {
-          case (_: ProvType, _) | (_, _: ProvType) => ()
+        (lhs_rhs match {
+          case (_: ProvType, _) | (_, _: ProvType) => shadows
+          // case (_: ErrorType, _) | (_, _: ErrorType) => shadows
           // * Note: contrary to Simple-sub, we do have to remember subtyping tests performed
           // *    between things that are not syntactically type variables or type references.
           // *  Indeed, due to the normalization of unions and intersections in the wriong polarity,
@@ -356,8 +372,25 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // *    and not plain type variables.
           case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
+            val shadow = lhs.shadow -> rhs.shadow
+            println(s"SH: $shadow")
+            // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
+            // if (shadows.contains(shadow)) {
+            if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
+              println(s"SHADOWING DETECTED!")
+              // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
+              err(msg"Cyclic-looking constraint while typing ${prov.desc}" -> prov.loco ::
+                // msg"this constraint:  ${lhs.expPos}  <:  ${rhs.expNeg}" -> N ::
+                // msg" ... looks like:  ${shadow._1.expPos}  <:  ${shadow._2.expNeg}" -> N ::
+                msg"————————— Additional debugging info: —————————" -> N ::
+                msg"this constraint:  ${lhs.toString}  <:  ${rhs.toString}    ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}" -> N ::
+                msg" ... looks like:  ${shadow._1.toString}  <:  ${shadow._2.toString}" -> N ::
+                Nil)
+              return ()
+            }
             cache += lhs_rhs
-        }
+            shadows + shadow
+        }) |> { implicit shadows: Shadows =>
         lhs_rhs match {
           case (ExtrType(true), _) => ()
           case (_, ExtrType(false) | RecordType(Nil)) => ()
@@ -484,7 +517,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
             goToWork(lhs, rhs)
           case _ => reportError()
-      }
+      }}
     }}()
     
     def reportError(failureOpt: Opt[Message] = N)(implicit cctx: ConCtx): Unit = {
@@ -619,7 +652,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       raise(TypeError(msgs))
     }
     
-    rec(lhs, rhs, true)(raise, Nil -> Nil, ctx)
+    rec(lhs, rhs, true)(raise, Nil -> Nil, ctx, Set.empty)
   }
   
   
@@ -649,14 +682,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         //  so all we need to do is copy this TV along (it is not extruded).
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
         else cache.getOrElse(tv -> true, {
-          val nv = freshVar(tv.prov, tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
           cache += tv -> true -> nv
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true))
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false))
           nv
         })
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
-        val nv = freshVar(tv.prov, tv.nameHint)(lvl)
+        val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
         cache += tv -> pol -> nv
         if (pol) {
           tv.upperBounds ::= nv
@@ -741,12 +774,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           val rv = TraitTag( // Rigid type variables (ie, skolems) are encoded as TraitTag-s
             lvl,
             // tv.level,
-            Var(tv.nameHint.getOrElse("_"+freshVar(noProv).toString).toString))(tv.prov)
+            Var(tv.nameHint.getOrElse("_"+freshVar(noProv,N).toString).toString))(tv.prov)
           if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
             //    (if there is no recursion, it will just be a useless type variable)
-            val tv2 = freshVar(tv.prov, tv.nameHint)
+            val tv2 = freshVar(tv.prov, S(tv), tv.nameHint)
             freshened += tv -> tv2
             // Assuming there were no recursive bounds, given L <: tv <: U,
             //    we essentially need to turn tv's occurrence into the type-bounds (rv | L)..(rv & U),
@@ -763,7 +796,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rv
           }
         case None =>
-          val v = freshVar(tv.prov, tv.nameHint)
+          val v = freshVar(tv.prov, S(tv), tv.nameHint) // FIXME coudl N here result in divergence? cf. absence of shadow
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
@@ -771,7 +804,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }
       case t @ TypeBounds(lb, ub) =>
         if (rigidify) {
-          val tv = freshVar(t.prov)
+          val tv = freshVar(t.prov, N) // FIXME coudl N here result in divergence? cf. absence of shadow
           tv.lowerBounds ::= freshen(lb)
           tv.upperBounds ::= freshen(ub)
           tv

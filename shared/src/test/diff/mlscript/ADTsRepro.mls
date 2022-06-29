@@ -11,70 +11,18 @@ def e2: Add['e] as 'e
 // :d
 // FIXME
 e2 : Add['e] as 'e
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?e. ?e <: ?e0` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  'e32
-//│ ╟── while constraining:  'e31  <!<  'e32
-//│ ╟── while constraining:  ('e31,)  <!<  ('e32,)
-//│ ╟── while constraining:  ('e32 -> 'e32)  <!<  ('e31 -> 'e31)
-//│ ╟── while constraining:  {x: ('e32 -> 'e32)}  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  Add['e32]  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  'e32  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e31 -> 'e31)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  Add['e31]
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  'e31
-//│ ╟── while constraining:  'e30  <!<  'e31
-//│ ╟── while constraining:  ('e30,)  <!<  ('e31,)
-//│ ╟── while constraining:  ('e31 -> 'e31)  <!<  ('e30 -> 'e30)
-//│ ╟── while constraining:  {x: ('e31 -> 'e31)}  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  Add['e31]  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  'e31  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e30 -> 'e30)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  Add['e30]
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  'e30
-//│ ╟── while constraining:  'e29  <!<  'e30
-//│ ╟── while constraining:  ('e29,)  <!<  ('e30,)
-//│ ╟── while constraining:  ('e30 -> 'e30)  <!<  ('e29 -> 'e29)
-//│ ╟── while constraining:  {x: ('e30 -> 'e30)}  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  Add['e30]  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  'e30  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e29 -> 'e29)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  Add['e29]
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  'e29
-//│ ╟── while constraining:  'e28  <!<  'e29
-//│ ╟── while constraining:  ('e28,)  <!<  ('e29,)
-//│ ╟── while constraining:  ('e29 -> 'e29)  <!<  ('e28 -> 'e28)
-//│ ╟── while constraining:  {x: ('e29 -> 'e29)}  <!<  {x: ('e28 -> 'e28)}
-//│ ╟── while constraining:  Add['e29]  <!<  {x: ('e28 -> 'e28)}
-//│ ╟── while constraining:  'e29  <!<  {x: ('e28 -> 'e28)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e28 -> 'e28)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  Add['e28]
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  'e28
-//│ ╟── while constraining:  'e27  <!<  'e28
-//│ ╟── while constraining:  ('e27,)  <!<  ('e28,)
-//│ ╟── while constraining:  ('e28 -> 'e28)  <!<  ('e27 -> 'e27)
-//│ ╟── while constraining:  {x: ('e28 -> 'e28)}  <!<  {x: ('e27 -> 'e27)}
-//│ ╟── while constraining:  Add['e28]  <!<  {x: ('e27 -> 'e27)}
-//│ ╟── while constraining:  'e28  <!<  {x: ('e27 -> 'e27)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  {x: ('e27 -> 'e27)}
-//│ ╟── while constraining:  ∀ 0. 'e23'  <!<  Add['e27]
-//│ ╙── while constraining:  ∀ 0. 'e23'  <!<  'e27
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. 'e23'  <:  Add['e29]    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ∀ 0. 'e23'  <:  Add['e23']
 //│ res: 'e
 //│   where
 //│     'e :> forall 'e0. 'e0 | error | Add['e]
 //│        <: Add['e] & 'e1
 //│     'e1 :> forall 'e0. 'e0 | error | Add['e1]
-//│         <: Add['e1] & {x: 'e -> 'e} & 'e2
-//│     'e2 :> forall 'e0. 'e0 | error | Add['e2]
-//│         <: Add['e2] & {x: 'e1 -> 'e1} & 'e3
-//│     'e3 :> forall 'e0. 'e0 | error | Add['e3]
-//│         <: Add['e3] & {x: 'e2 -> 'e2} & 'e4
-//│     'e4 :> forall 'e0. 'e0 | error | Add['e4]
-//│         <: Add['e4] & {x: 'e3 -> 'e3} & 'e5
-//│     'e5 :> forall 'e0. 'e0 | error | Add['e5]
-//│         <: Add['e5] & {x: 'e4 -> 'e4}
+//│         <: Add['e1] & {x: 'e1 -> 'e1} & {x: 'e -> 'e}
 //│     'e0 := Add['e0]
 //│    = <no result>
 //│      e2 is not implemented
@@ -96,47 +44,18 @@ f0 = f0
 //│ 'a
 //│   where
 //│     'a := 'a -> int
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a. ?a <: ?a0` exceeded recursion depth limit (100)
-//│ ║  l.91: 	f0 = f0
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.39: 	f0 = f0
 //│ ║        	^^^^^^^
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a78
-//│ ╟── while constraining:  'a77  <!<  'a78
-//│ ╟── while constraining:  ('a77,)  <!<  ('a78,)
-//│ ╟── while constraining:  ('a78 -> Int)  <!<  ('a77 -> Int)
-//│ ╟── while constraining:  'a78  <!<  ('a77 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a77 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a77
-//│ ╟── while constraining:  'a76  <!<  'a77
-//│ ╟── while constraining:  ('a76,)  <!<  ('a77,)
-//│ ╟── while constraining:  ('a77 -> Int)  <!<  ('a76 -> Int)
-//│ ╟── while constraining:  'a77  <!<  ('a76 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a76 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a76
-//│ ╟── while constraining:  'a75  <!<  'a76
-//│ ╟── while constraining:  ('a75,)  <!<  ('a76,)
-//│ ╟── while constraining:  ('a76 -> Int)  <!<  ('a75 -> Int)
-//│ ╟── while constraining:  'a76  <!<  ('a75 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a75 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a75
-//│ ╟── while constraining:  'a74  <!<  'a75
-//│ ╟── while constraining:  ('a74,)  <!<  ('a75,)
-//│ ╟── while constraining:  ('a75 -> Int)  <!<  ('a74 -> Int)
-//│ ╟── while constraining:  'a75  <!<  ('a74 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a74 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a74
-//│ ╟── while constraining:  'a73  <!<  'a74
-//│ ╟── while constraining:  ('a73,)  <!<  ('a74,)
-//│ ╟── while constraining:  ('a74 -> Int)  <!<  ('a73 -> Int)
-//│ ╟── while constraining:  'a74  <!<  ('a73 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  ('a73 -> Int)
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  'a73
-//│ ╟── while constraining:  'a72  <!<  'a73
-//│ ╟── while constraining:  ('a72,)  <!<  ('a73,)
-//│ ╟── while constraining:  ('a73 -> int<TypeName(number)>)  <!<  ('a72 -> int<TypeName(number)>)
-//│ ╟── while constraining:  ('a73 -> Int)  <!<  (‘a | ('a72 -> Int))
-//│ ╟── while constraining:  'a73  <!<  (‘a | ('a72 -> Int))
-//│ ╟── while constraining:  ∀ 0. 'a62'  <!<  (‘a | ('a72 -> Int))
-//│ ╙── while constraining:  ∀ 0. 'a62'  <!<  'a72
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ('a51,)  <:  ('a52,)    TupleType  TupleType
+//│ ╙──  ... looks like:  ('a40',)  <:  ('a40',)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.39: 	f0 = f0
+//│ ║        	^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ('a50 -> int<TypeName(number)>)  <:  ('a51 -> int<TypeName(number)>)    FunctionType  FunctionType
+//│ ╙──  ... looks like:  ('a40' -> int<TypeName(number)>)  <:  ('a40' -> int<TypeName(number)>)
 //│   = <no result>
 //│     f0 is not implemented
 

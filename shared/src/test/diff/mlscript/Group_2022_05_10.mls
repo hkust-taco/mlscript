@@ -44,38 +44,12 @@ self x = x x
 
 :e
 self self
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b. ?b -> ?a <: (forall ?a, ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (100)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.46: 	self self
 //│ ║        	^^^^^^^^^
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α114
-//│ ╟── while constraining:  α112  <!<  α114
-//│ ╟── while constraining:  (α112,)  <!<  (α114,)
-//│ ╟── while constraining:  (α114 -> α115)  <!<  ((α112,) -> α113)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((α112,) -> α113)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α112
-//│ ╟── while constraining:  α110  <!<  α112
-//│ ╟── while constraining:  (α110,)  <!<  (α112,)
-//│ ╟── while constraining:  (α112 -> α113)  <!<  ((α110,) -> α111)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((α110,) -> α111)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α110
-//│ ╟── while constraining:  α108  <!<  α110
-//│ ╟── while constraining:  (α108,)  <!<  (α110,)
-//│ ╟── while constraining:  (α110 -> α111)  <!<  ((α108,) -> α109)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((α108,) -> α109)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α108
-//│ ╟── while constraining:  α106  <!<  α108
-//│ ╟── while constraining:  (α106,)  <!<  (α108,)
-//│ ╟── while constraining:  (α108 -> α109)  <!<  ((α106,) -> α107)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((α106,) -> α107)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α106
-//│ ╟── while constraining:  α104  <!<  α106
-//│ ╟── while constraining:  (α104,)  <!<  (α106,)
-//│ ╟── while constraining:  (α106 -> α107)  <!<  ((α104,) -> α105)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((α104,) -> α105)
-//│ ╟── while constraining:  ∀ 0. (α95' -> α96')  <!<  α104
-//│ ╟── while constraining:  (∀ 0. (α95' -> α96'),)  <!<  (α104,)
-//│ ╟── while constraining:  (α104 -> α105)  <!<  ((∀ 0. (α95' -> α96'),) -> α103)
-//│ ╙── while constraining:  ∀ 0. (α95' -> α96')  <!<  ((∀ 0. (α95' -> α96'),) -> α103)
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. (α95' -> α96')  <:  ((α106,) -> α107)    PolymorphicType  FunctionType
+//│ ╙──  ... looks like:  ∀ 0. (α95' -> α96')  <:  ((α95',) -> α96')
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

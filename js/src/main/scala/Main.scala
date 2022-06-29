@@ -325,7 +325,7 @@ object Main {
           }
           val ty_sch = PolymorphicType(0, typeType(rhs)(ctx.nextLevel, raise,
             vars = tps.map(tp => tp.fold(_.name, _ => ??? // FIXME
-              ) -> freshVar(noProv/*FIXME*/)(1)).toMap))
+              ) -> freshVar(noProv/*FIXME*/, N)(1)).toMap))
           ctx += nme.name -> ty_sch
           declared += nme -> ty_sch
           results append S(d.nme.name) -> getType(ty_sch).show

@@ -25,7 +25,7 @@ trait TypeSimplifier { self: Typer =>
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
         if (inPlace) tv
-        else freshVar(noProv, tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
+        else freshVar(noProv, S(tv), tv.nameHint)(tv.level) tap { fv => println(s"Renewed $tv ~> $fv") })
     
     def process(ty: ST, parent: Opt[Bool -> TV]): ST =
         // trace(s"process($ty)") {
@@ -595,7 +595,7 @@ trait TypeSimplifier { self: Typer =>
             var wasDefined = true
             val res = renewals.getOrElseUpdate(tv, {
               wasDefined = false
-              val nv = freshVar(noProv, tv.nameHint)(tv.level)
+              val nv = freshVar(noProv, S(tv), tv.nameHint)(tv.level)
               println(s"Renewed $tv ~> $nv")
               nv
             })

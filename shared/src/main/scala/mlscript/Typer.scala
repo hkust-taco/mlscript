@@ -126,7 +126,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     TypeDef(Cls, TypeName("error"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     TypeDef(Cls, TypeName("unit"), Nil, Nil, TopType, Nil, Nil, Set.empty, N) ::
     {
-      val tv = freshVar(noTyProv)(1)
+      val tv = freshVar(noTyProv, N)(1)
       val tyDef = TypeDef(Als, TypeName("Array"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(None, tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
         // * ^ Note that the `noTyProv` here is kind of a problem
@@ -139,7 +139,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       tyDef
     } ::
     {
-      val tv = freshVar(noTyProv)(1)
+      val tv = freshVar(noTyProv, N)(1)
       val tyDef = TypeDef(Als, TypeName("MutArray"), List(TypeName("A") -> tv), Nil,
         ArrayType(FieldType(Some(tv), tv)(noTyProv))(noTyProv), Nil, Nil, Set.empty, N)
       tyDef.tvarVariances = S(MutMap(tv -> VarianceInfo.in))
@@ -151,7 +151,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   val builtinBindings: Bindings = {
-    val tv = freshVar(noProv)(1)
+    val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
     val intBinOpTy = fun(singleTup(IntType), fun(singleTup(IntType), IntType)(noProv))(noProv)
     val intBinPred = fun(singleTup(IntType), fun(singleTup(IntType), BoolType)(noProv))(noProv)
@@ -177,11 +177,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "ge" -> intBinPred,
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
       "eq" -> {
-        val v = freshVar(noProv)(1)
+        val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "ne" -> {
-        val v = freshVar(noProv)(1)
+        val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
@@ -197,11 +197,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "&&" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "||" -> fun(singleTup(BoolType), fun(singleTup(BoolType), BoolType)(noProv))(noProv),
       "id" -> {
-        val v = freshVar(noProv)(1)
+        val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), v)(noProv))
       },
       "if" -> {
-        val v = freshVar(noProv)(1)
+        val v = freshVar(noProv, N)(1)
         // PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
         PolymorphicType(MinLevel, fun(BoolType, fun(v, fun(v, v)(noProv))(noProv))(noProv))
       },
@@ -304,8 +304,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         }
       case tv: TypeVar =>
         // assert(ty.toLoc.isDefined)
+        // recVars.getOrElse(tv,
+        //   localVars.getOrElseUpdate(tv, freshVar(noProv, S(tv), tv.identifier.toOption)(outerCtxLvl))
+        //     .withProv(tyTp(ty.toLoc, "type variable")))
         recVars.getOrElse(tv,
-          localVars.getOrElseUpdate(tv, freshVar(noProv, tv.identifier.toOption)(outerCtxLvl))
+          localVars.getOrElseUpdate(tv, freshVar(noProv, N, tv.identifier.toOption)(outerCtxLvl)) // ????
             .withProv(tyTp(ty.toLoc, "type variable")))
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
@@ -314,13 +317,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             val realTargs = if (targs.size === tpnum) targs.map(rec) else {
               err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${
                   targs.size.toString}", ty.toLoc)(raise)
-              (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv))).take(tpnum).toList
+              (targs.iterator.map(rec) ++ Iterator.continually(freshVar(noProv, N))).take(tpnum).toList
             }
             TypeRef(base, realTargs)(prov)
           case L(e) => e()
         }
       case Recursive(uv, body) =>
-        val tv = freshVar(tyTp(ty.toLoc, "local type binding"), uv.identifier.toOption)
+        val tv = freshVar(tyTp(ty.toLoc, "local type binding"), N, uv.identifier.toOption)
         val bod = rec(body)(ctx, recVars + (uv -> tv))
         tv.upperBounds ::= bod
         tv.lowerBounds ::= bod
@@ -338,9 +341,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ctx.nextLevel |> { implicit ctx =>
           var newVars = recVars
           val tvs = vars.map {
-            case L(tn) => freshVar(tyTp(tn.toLoc, "quantified type name"), S(tn.name)) // this probably never happens...
+            case L(tn) => freshVar(tyTp(tn.toLoc, "quantified type name"), N, S(tn.name)) // this probably never happens...
             case R(tv) =>
-              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), tv.identifier.toOption)
+              // val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), S(tv), tv.identifier.toOption)
+              val nv = freshVar(tyTp(tv.toLoc, "quantified type variable"), N, tv.identifier.toOption) // ????
               newVars += tv -> nv
               nv
           }
@@ -400,6 +404,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //    or it will obscure the true provenance of constraints causing errors
         //    across recursive references.
         noProv,
+        N,
         // TypeProvenance(rhs.toLoc, "let-bound value"),
         S(nme)
       )(lvl + 1)
@@ -497,7 +502,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     }
     term match {
       case v @ Var("_") =>
-        if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"))
+        if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
       case Asc(trm, ty) =>
         val trm_ty = typeTerm(trm)
@@ -510,7 +515,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val prov = tp(if (verboseConstraintProvenanceHints) v.toLoc else N, "variable")
         // Note: only look at ctx.env, and not the outer ones!
         ctx.env.get(nme).collect { case ts: TypeScheme => ts }
-          .getOrElse(new TypeVariable(lvl, Nil, Nil)(prov).tap(ctx += nme -> _))
+          .getOrElse(new TypeVariable(lvl, Nil, Nil, N)(prov).tap(ctx += nme -> _))
       case v @ ValidVar(name) =>
         val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): TypeScheme) {
           case AbstractConstructor(absMths, traitWithMths) =>
@@ -551,7 +556,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(App(n, t).toLoc, (if (mut) "mutable " else "") + "record field")
           if (mut) {
-            val res = freshVar(fprov, S(n.name))
+            val res = freshVar(fprov, N, S(n.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -563,7 +568,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val tym = typeTerm(t)
           val fprov = tp(t.toLoc, (if (mut) "mutable " else "") + "tuple field")
           if (mut) {
-            val res = freshVar(fprov, n.map(_.name))
+            val res = freshVar(fprov, N, n.map(_.name))
             val rs = con(tym, res, res)
             (n, FieldType(Some(rs), rs)(fprov))
           } else (n, tym.toUpper(fprov))
@@ -575,7 +580,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val t_a = typeTerm(a)
         val t_i = typeTerm(i)
         con(t_i, IntType, TopType)
-        val elemType = freshVar(prov)
+        val elemType = freshVar(prov, N)
         elemType.upperBounds ::=
           // * We forbid using [⋅] indexing to access elements that possibly have `undefined` value,
           // *  which could result in surprising behavior and bugs in the presence of parametricity!
@@ -588,7 +593,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
-        val fieldType = freshVar(sprov, Opt.when(!f.name.startsWith("_"))(f.name))
+        val fieldType = freshVar(sprov, N, Opt.when(!f.name.startsWith("_"))(f.name))
         val obj_ty =
           // Note: this proxy does not seem to make any difference:
           mkProxy(o_ty, tp(r.toCoveringLoc, "receiver"))
@@ -600,7 +605,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case Assign(s @ Subs(a, i), rhs) => 
         val a_ty = typeTerm(a)
         val sprov = tp(s.toLoc, "assigned array element")
-        val elemType = freshVar(sprov)
+        val elemType = freshVar(sprov, N)
         val arr_ty =
             // Note: this proxy does not seem to make any difference:
             mkProxy(a_ty, tp(a.toCoveringLoc, "receiver"))
@@ -643,7 +648,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case App(f, a) =>
         val f_ty = typeTerm(f)
         val a_ty = typePolymorphicTerm(a)
-        val res = freshVar(prov)
+        val res = freshVar(prov, N)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default
         val funProv = tp(f.toCoveringLoc, "applied expression")
@@ -663,7 +668,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //   Returns a function expecting an additional argument of type `Class` before the method arguments
         def rcdSel(obj: Term, fieldName: Var) = {
           val o_ty = typeTerm(obj)
-          val res = freshVar(prov, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
+          val res = freshVar(prov, N, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           val rcd_ty = RecordType.mk(
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)
@@ -685,7 +690,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                   })
               }
               val o_ty = typeTerm(obj)
-              val res = freshVar(prov)
+              val res = freshVar(prov, N)
               con(mth_ty.toPT.instantiate, FunctionType(singleTup(o_ty), res)(prov), res)
             case N =>
               if (fieldName.name.isCapitalized) err(msg"Method ${fieldName.name} not found", term.toLoc)
@@ -744,7 +749,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       : Ls[SimpleType -> SimpleType] -> SimpleType = arms match {
     case NoCases => Nil -> BotType
     case Wildcard(b) =>
-      val fv = freshVar(tp(arms.toLoc, "wildcard pattern"))
+      val fv = freshVar(tp(arms.toLoc, "wildcard pattern"), N)
       val newCtx = ctx.nest
       scrutVar match {
         case Some(v) =>
@@ -776,7 +781,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       val newCtx = ctx.nest
       val (req_ty, bod_ty, (tys, rest_ty)) = scrutVar match {
         case S(v) =>
-          val tv = freshVar(tp(v.toLoc, "refined scrutinee"),
+          val tv = freshVar(tp(v.toLoc, "refined scrutinee"), N,
             // S(v.name), // this one seems a bit excessive
           )
           newCtx += v.name -> tv
@@ -817,7 +822,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           val prov = tp(trm.toLoc, "parameter type")
           val t_ty =
             // TODO in positive position, this should create a new VarType instead! (i.e., an existential)
-            new TypeVariable(lvl, Nil, Nil)(prov)//.tap(ctx += nme -> _)
+            new TypeVariable(lvl, Nil, Nil, N)(prov)//.tap(ctx += nme -> _)
           
           // constrain(ty, t_ty)(raise, prov)
           constrain(t_ty, ty)(raise, prov, ctx)

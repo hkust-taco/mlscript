@@ -82,7 +82,7 @@ abstract class TyperHelpers { Typer: Typer =>
             cache += tv -> tv
             tv
           case tv: TypeVariable => cache.getOrElse(tv, {
-            val v = freshVar(tv.prov, tv.nameHint)(tv.level)
+            val v = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
             cache += tv -> v
             v.lowerBounds = tv.lowerBounds.map(subst(_, map, substInMap))
             v.upperBounds = tv.upperBounds.map(subst(_, map, substInMap))
@@ -276,10 +276,23 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     // }(r => s"= $r")
     
-    lazy val shadow: ST = this match {
+    // lazy val shadow: ST = this match {
+    //   case tv: TV => tv.original
+    //   case _ => map(_.shadow)
+    // }
+    val initialRun = currentConstrainingRun
+    private var shadowRun = initialRun - 1
+    private var _shadow: ST = this
+    private def computeShadow: ST = this match {
       case tv: TV => tv.original
       case _ => map(_.shadow)
     }
+    def shadow: ST =
+      if (currentConstrainingRun === shadowRun) _shadow else {
+        _shadow = computeShadow
+        shadowRun = currentConstrainingRun
+        _shadow
+      }
     
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds(f(lb), f(ub))(prov)
@@ -683,8 +696,9 @@ abstract class TyperHelpers { Typer: Typer =>
   }
   
   
+  // TODO rm?
   def shallowCopy(st: ST)(implicit cache: MutMap[TV, TV] = MutMap.empty): ST = st match {
-    case tv: TV => cache.getOrElseUpdate(tv, freshVar(tv.prov, tv.nameHint, Nil, Nil)(tv.level))
+    case tv: TV => cache.getOrElseUpdate(tv, freshVar(tv.prov, S(tv), tv.nameHint, Nil, Nil)(tv.level))
     case _ => st.map(shallowCopy)
   }
   
