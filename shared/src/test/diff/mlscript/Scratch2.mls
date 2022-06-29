@@ -55,30 +55,15 @@ succ = s
 //│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.51: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N161'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N160''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.51: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N163'  <:  α159'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N160''  <:  α154''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.51: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N162'  <:  α159'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N160''  <:  α154''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.51: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N161'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N160''
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
 //│     = [Function: s]
 
 def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
@@ -212,30 +197,15 @@ to_church = to_ch_s_mix
 //│     'a <: 'd -> 'e)))
 //│   <:  to_church:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.208: 	to_church = to_ch_s_mix
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.193: 	to_church = to_ch_s_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N566'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N565''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.208: 	to_church = to_ch_s_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N568'  <:  α564'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N565''  <:  α559''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.208: 	to_church = to_ch_s_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N567'  <:  α564'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N565''  <:  α559''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.208: 	to_church = to_ch_s_mix
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N566'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N565''
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
 //│          = [Function: to_ch_s_mix]
 
 :e // * Needs distrib (see below)
@@ -244,7 +214,7 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.242: 	to_church = to_ch_s
+//│ ║  l.212: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -269,7 +239,7 @@ to_church = to_ch_mix
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.267: 	to_church = to_ch_mix
+//│ ║  l.237: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -291,9 +261,9 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.291: 	rec def to_ch n =
+//│ ║  l.261: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.292: 	  succD (to_ch n)
+//│ ║  l.262: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -302,7 +272,7 @@ rec def to_ch n =
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.84: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ║  l.69: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
 //│ to_ch: anything -> (anything -> nothing) -> nothing -> anything
 //│      = [Function: to_ch1]

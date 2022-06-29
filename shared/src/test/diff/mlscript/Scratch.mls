@@ -28,18 +28,6 @@ def id x = x
 
 rec def foo x y =
   let tmp = foo x y in (x, y,)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.30: 	  let tmp = foo x y in (x, y,)
-//│ ║        	            ^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  foo50'  <:  ((α51',) -> α54')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  foo50'  <:  ((α51',) -> α53'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.30: 	  let tmp = foo x y in (x, y,)
-//│ ║        	            ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α54'  <:  ((α52',) -> α55'')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α53''  <:  ((α52',) -> α55'')
 //│ foo: 'a -> 'b -> ('a, 'b,)
 //│    = [Function: foo]
 

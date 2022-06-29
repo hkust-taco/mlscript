@@ -166,6 +166,7 @@ def someRec: { x: 'a; y: 'a } as 'a
 //│     'a :> {x: 'a, y: 'a}
 //│        = <missing implementation>
 
+:e // TODO try without cycle check
 someRec: BadRec
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
 //│ ║  l.+1: 	someRec: BadRec

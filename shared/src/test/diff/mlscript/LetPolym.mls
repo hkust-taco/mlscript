@@ -26,127 +26,43 @@ test "hi"
 def test f =
   let local g = g (f 1)
   in local succ
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.27: 	  let local g = g (f 1)
-//│ ║        	                   ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α37'  <:  ((1<int,number>,) -> α40')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α37'  <:  ((1<int,number>,) -> α39'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.28: 	  in local succ
-//│ ║        	     ^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α40'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α39''  <:  int<number>
-//│ test: anything -> (error | int)
+//│ test: (1 -> int) -> int
 //│     = [Function: test1]
 
 def test f =
   let local g x = g (f x)
   in local succ
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.45: 	  let local g x = g (f x)
-//│ ║        	                     ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α48'  <:  ((α52',) -> α53')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α48'  <:  ((α50'',) -> α51'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.46: 	  in local succ
-//│ ║        	     ^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α53'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α51''  <:  int<number>
-//│ test: anything -> (anything -> int | error)
+//│ test: ('a -> int) -> 'a -> int
 //│     = [Function: test2]
 
 def test f =
   let local g x = g (f x)
   in local add
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.63: 	  let local g x = g (f x)
-//│ ║        	                     ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α65'  <:  ((α69',) -> α70')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α65'  <:  ((α67'',) -> α68'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.64: 	  in local add
-//│ ║        	     ^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α70'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α68''  <:  int<number>
-//│ test: anything -> (anything -> int -> int | error)
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function: test3]
 
 def test f =
   let local g x = g (f x)
   in local add 1
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.81: 	  let local g x = g (f x)
-//│ ║        	                     ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α82'  <:  ((α86',) -> α87')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α82'  <:  ((α84'',) -> α85'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.82: 	  in local add 1
-//│ ║        	     ^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α87'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α85''  <:  int<number>
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.82: 	  in local add 1
-//│ ║        	     ^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<int,number>  <:  α86'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<int,number>  <:  α84''
-//│ test: anything -> (int -> int | error)
+//│ test: (1 -> int) -> int -> int
 //│     = [Function: test4]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.105: 	  let local g x = g (f x)
-//│ ║         	                     ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α97'  <:  ((α101',) -> α102')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α97'  <:  ((α99'',) -> α100'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ ║         	      ^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α102'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α100''  <:  int<number>
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ ║         	      ^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<int,number>  <:  α101'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<int,number>  <:  α99''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α102'  <:  α119'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  α100''  <:  α110''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.106: 	  in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  2<int,number>  <:  α101'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  2<int,number>  <:  α99''
-//│ test: anything -> (int -> int | error, int -> int | error,)
+//│ test: ((1 | 2) -> int) -> (int -> int, int -> int,)
 //│     = [Function: test5]
 
 :re // TODO
 f_g = test succ
 f_g._1 42
 f_g._2 42
-//│ f_g: (int -> int | error, int -> int | error,)
+//│ f_g: (int -> int, int -> int,)
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
-//│ res: error | int
+//│ res: int
 //│ Runtime error:
 //│   TypeError: f_g._1 is not a function
-//│ res: error | int
+//│ res: int
 //│ Runtime error:
 //│   TypeError: f_g._2 is not a function
 
@@ -154,42 +70,18 @@ f_g._2 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.155: 	  let local g x = g (f x)
-//│ ║         	                     ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α155'  <:  ((α159',) -> α160')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α155'  <:  ((α157'',) -> α158'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.156: 	  in (local add 1, local concat "ok")
-//│ ║         	      ^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α160'  <:  int<number>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α158''  <:  int<number>
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.156: 	  in (local add 1, local concat "ok")
-//│ ║         	      ^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  1<int,number>  <:  α159'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  1<int,number>  <:  α157''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.156: 	  in (local add 1, local concat "ok")
-//│ ║         	                   ^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α160'  <:  string<>    TypeVariable  ClassTag
-//│ ╙──  ... looks like:  α158''  <:  string<>
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.156: 	  in (local add 1, local concat "ok")
-//│ ║         	                   ^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  "ok"<string>  <:  α159'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  "ok"<string>  <:  α157''
-//│ test: anything -> (int -> int | error, string -> string | error,)
+//│ test: (("ok" | 1) -> nothing) -> (int -> int, string -> string,)
 //│     = [Function: test6]
 
 :e
 test succ
-//│ res: (int -> int | error, string -> string | error,)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.77: 	test succ
+//│ ║        	^^^^^^^^^
+//│ ╟── string literal of type `"ok"` is not an instance of type `int`
+//│ ║  l.72: 	  in (local add 1, local concat "ok")
+//│ ╙──      	                                ^^^^
+//│ res: (int -> int, string -> string,) | error
 //│    = [ [Function (anonymous)], [Function (anonymous)] ]
 
 
@@ -198,13 +90,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.198: 	    let local g x = f (g x)
-//│ ║         	                    ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α184'  <:  ((α189',) -> α190')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α184'  <:  ((α187'',) -> α188'')
-//│ test: ('a -> anything) -> 'a -> error
+//│ test: ('a -> int) -> 'a -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -212,13 +98,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.212: 	    let local g = f (g x)
-//│ ║         	                  ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α201'  <:  ((α206',) -> α207')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α201'  <:  ((α204'',) -> α205'')
-//│ test: ("1" -> anything) -> error
+//│ test: ("1" -> int) -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -226,60 +106,54 @@ def test =
     let local g = f (g x)
     in local add "1"
   )
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.226: 	    let local g = f (g x)
-//│ ║         	                  ^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α217'  <:  ((α222',) -> α223')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α217'  <:  ((α220'',) -> α221'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.227: 	    in local add "1"
-//│ ║         	       ^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (int<number> -> int<number>)  <:  α222'    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (int<number> -> int<number>)  <:  α220''
-//│ test: anything -> int -> error
+//│ test: ((int -> int) -> "1" -> 'a) -> int -> 'a
 //│     = [Function: test9]
 
 fun f -> fun x ->
   let local = (fun y -> f y) x
   in ()
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.245: 	  let local = (fun y -> f y) x
-//│ ║         	                        ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α232  <:  ((α236,) -> α237)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α232  <:  ((α234',) -> α235')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.245: 	  let local = (fun y -> f y) x
-//│ ║         	              ^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α233  <:  α236    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  α233  <:  α234'
-//│ res: anything -> anything -> ()
+//│ res: ('a -> anything) -> 'a -> ()
 //│    = [Function: res]
 
 :e
 res add "1"
-//│ res: ()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	res add "1"
+//│ ║         	^^^^^^^^^^^
+//│ ╟── string literal of type `"1"` is not an instance of type `int`
+//│ ║  l.119: 	res add "1"
+//│ ║         	        ^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.113: 	  let local = (fun y -> f y) x
+//│ ║         	                          ^
+//│ ╟── from reference:
+//│ ║  l.113: 	  let local = (fun y -> f y) x
+//│ ╙──       	                             ^
+//│ res: () | error
 //│    = []
 
 
 fun f -> fun x ->
   let local = f ((fun y -> y) x)
   in ()
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.269: 	  let local = f ((fun y -> y) x)
-//│ ║         	              ^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α244  <:  ((α250,) -> α251)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α244  <:  ((α247',) -> α249')
-//│ res: anything -> anything -> ()
+//│ res: ('a -> anything) -> 'a -> ()
 //│    = [Function: res]
 
 :e
 res add "1"
-//│ res: ()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.143: 	res add "1"
+//│ ║         	^^^^^^^^^^^
+//│ ╟── string literal of type `"1"` is not an instance of type `int`
+//│ ║  l.143: 	res add "1"
+//│ ║         	        ^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.137: 	  let local = f ((fun y -> y) x)
+//│ ║         	                 ^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.137: 	  let local = f ((fun y -> y) x)
+//│ ╙──       	                              ^
+//│ res: () | error
 //│    = []
 
 def id: 'a -> 'a
@@ -289,13 +163,7 @@ def id: 'a -> 'a
 fun f -> fun x ->
   let local = f (id x)
   in ()
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.290: 	  let local = f (id x)
-//│ ║         	              ^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α261  <:  ((α266,) -> α267)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α261  <:  ((α263',) -> α265')
-//│ res: anything -> anything -> ()
+//│ res: ('a -> anything) -> 'a -> ()
 //│    = <no result>
 //│      id is not implemented
 

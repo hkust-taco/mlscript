@@ -730,16 +730,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         //  so all we need to do is copy this TV along (it is not extruded).
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
         else cache.getOrElse(tv -> true, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
-          // val nv = freshVar(tv.prov, N, tv.nameHint)(tv.level)
+          // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, N, tv.nameHint)(tv.level)
           cache += tv -> true -> nv
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true, upperLvl))
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false, upperLvl))
           nv
         })
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
-        val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
-        // val nv = freshVar(tv.prov, N, tv.nameHint)(lvl)
+        // val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
+        val nv = freshVar(tv.prov, N, tv.nameHint)(lvl)
         cache += tv -> pol -> nv
         if (pol) {
           tv.upperBounds ::= nv

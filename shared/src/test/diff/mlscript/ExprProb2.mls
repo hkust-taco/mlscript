@@ -157,26 +157,22 @@ eval2_fixed_1 e2
 // FIXME strange type
 // :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.159: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ ║         	                                                         ^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α1054'' -> α1058'')›  <:  α1059'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α1054'' -> α1058'')›  <:  α1054''
 //│ fix: ((forall 'a, 'b, 'c. ('b -> 'c
 //│   where
-//│     'a <: 'a -> 'b -> 'c)) -> anything) -> error
+//│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
 //│    = [Function: fix]
 
 def eval2_fixed_2 = fix eval2f
-//│ eval2_fixed_2: error
+//│ eval2_fixed_2: 'a -> int
+//│   where
+//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
 //│              = [Function (anonymous)]
 
 eval2_fixed_2 e1
 eval2_fixed_2 e2
-//│ res: error
+//│ res: int
 //│    = 6
-//│ res: error
+//│ res: int
 //│    = -5
 
 
@@ -312,8 +308,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1455' -> (α1456' -> (arg1458' | α1473')))›  <:  α1519    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1455' -> (α1456' -> (arg1458' | α1473')))›  <:  α1455'
+//│ ╟── this constraint:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1614    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -324,7 +320,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.304: 	  | Nega -> e.arg
+//│ ║  l.300: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -337,6 +333,12 @@ def eval2f_oops eval2 e = case e of {
 
 // :e
 fix eval2f_oops e2
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	fix eval2f_oops e2
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α1754 -> (α1761 | α1762))  <:  α1779    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α1683' -> (α1688' | α1703'))  <:  α1741'''
 //│ res: error
 
 

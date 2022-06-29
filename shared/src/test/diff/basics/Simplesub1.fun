@@ -253,27 +253,8 @@ let f = x => x; {a: f 0, b: f true}
 y => (let f = x => x; {a: f y, b: f true})
 //│ res: 'a -> {a: 'a, b: true}
 
-:e
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
-//│ ║        	                   ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α393  <:  (α396 -> α397)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α393  <:  (α394' -> α395')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
-//│ ║        	                            ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  0<int,number>  <:  α396    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  0<int,number>  <:  α394'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
-//│ ║        	                                    ^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  true<bool>  <:  α396    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  true<bool>  <:  α394'
-//│ res: anything -> {a: error, b: error}
+//│ res: ((0 | true) -> 'a) -> {a: 'a, b: 'a}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
@@ -315,30 +296,23 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Type mismatch in binding of block of statements:
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
+//│ ║        	                                           ^
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                    ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  x485'  <:  (y488' -> α489')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  x485'  <:  (y486'' -> α487'')
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
+//│ ╟── from reference:
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                         ^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  {u: y486'', v: α487''}  <:  y488'    RecordType  TypeVariable
-//│ ╙──  ... looks like:  {u: y486'', v: α487''}  <:  y486''
+//│ ╙──      	                                    ^
 //│ x: 0
 //│ res: 0
 
-:e
 (x => (let y = (x x); 0))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(x => (let y = (x x); 0))
-//│ ║        	                ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α491  <:  (α491 -> α493)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α491  <:  (α491 -> α492')
-//│ res: anything -> 0
+//│ res: ('a -> anything & 'a) -> 0
 
 // TODO simplify more
 (let rec x = (y => (y (x x))); x)
@@ -361,25 +335,17 @@ next => 0
 x => (y => (x (y y)))
 //│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
 
-:e
 (let rec x = (let y = (x x); (z => z)); x)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(let rec x = (let y = (x x); (z => z)); x)
-//│ ║        	                       ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  x542'  <:  (x542' -> α544')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  x542'  <:  (x542' -> α543'')
-//│ res: 'a -> 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
-:e
 (let rec x = (y => (let z = (x x); y)); x)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(let rec x = (y => (let z = (x x); y)); x)
-//│ ║        	                             ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  x550'  <:  (x550' -> α553')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  x550'  <:  (x550' -> α552'')
-//│ res: 'a -> 'a
+//│ res: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
 
 (let rec x = (y => {u: y, v: (x x)}); x)
 //│ res: 'x
@@ -395,53 +361,31 @@ x => (y => (x (y y)))
 //│     'b :> {u: 'b, v: 'a}
 //│     'a :> 'x
 
-:e
 (let rec x = (y => (let z = (y x); y)); x)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(let rec x = (y => (let z = (y x); y)); x)
-//│ ║        	                             ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α583'  <:  (x582' -> α585')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α583'  <:  (x582' -> α584'')
-//│ res: 'a -> 'a
-
-:e
-(x => (let y = (x x.v); 0))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing field selection
-//│ ║  l.+1: 	(x => (let y = (x x.v); 0))
-//│ ║        	                   ^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α590  <:  {v: v592}    TypeVariable  RecordType
-//│ ╙──  ... looks like:  α590  <:  {v: v591'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(x => (let y = (x x.v); 0))
-//│ ║        	                ^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α590  <:  (v594 -> α595)    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α590  <:  (v591' -> α593')
-//│ res: anything -> 0
-
-:e
-let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ ║        	                      ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  x597'  <:  (x597' -> α599')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  x597'  <:  (x597' -> α598'')
-//│ x: 'a -> 'a
-//│ res: {u: 'u} -> 'u
-
-:e
-:ns
-let rec x = (let y = (x x); (z => z))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	let rec x = (let y = (x x); (z => z))
-//│ ║        	                      ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  x615'  <:  (x615' -> α617')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  x615'  <:  (x615' -> α616'')
-//│ x: forall 'x, 'a. 'x
+//│ res: 'x
 //│   where
 //│     'x :> 'a -> 'a
+//│     'a <: 'x -> anything
+
+(x => (let y = (x x.v); 0))
+//│ res: ('v -> anything & {v: 'v}) -> 0
+
+let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
+//│ x: 'x
+//│   where
+//│     'x :> 'a -> 'a
+//│     'a :> 'x
+//│ res: 'a
+//│   where
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+
+:ns
+let rec x = (let y = (x x); (z => z))
+//│ x: forall 'x, 'a, 'b. 'x
+//│   where
+//│     'x :> 'b -> 'b
+//│        <: 'b & 'x -> 'a
+//│     'b :> 'b -> 'b
+//│        <: 'a
+//│     'a :> 'b -> 'b
 

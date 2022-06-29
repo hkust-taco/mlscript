@@ -164,12 +164,6 @@ K x y = x
 //│ K: 'a -> anything -> 'a
 
 (fun y -> let tmp = y I in y K) (fun x -> x x)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.166: 	(fun y -> let tmp = y I in y K) (fun x -> x x)
-//│ ║         	                    ^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α392'  <:  ((‹∀ 0. ‹∀ 1. (α382'' -> α382'')››,) -> α394')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α392'  <:  ((‹∀ 0. ‹∀ 1. (α382'' -> α382'')››,) -> α393'')
 //│ res: anything -> (forall 'a. 'a -> anything -> 'a)
 
 // Note: reduces to

@@ -36,6 +36,7 @@ class Plus
 
 // * Note: had to increase fuel and depth limit for this case...
 // * why does it seem to take more steps now?
+:e // TODO try without cycle check
 :stats
 rec def evalOpt = fun x -> case x of {
   | Lit ->
@@ -50,141 +51,141 @@ rec def evalOpt = fun x -> case x of {
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.40: 	rec def evalOpt = fun x -> case x of {
+//│ ║  l.41: 	rec def evalOpt = fun x -> case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	  | Lit ->
+//│ ║  l.42: 	  | Lit ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	      Some x.v
+//│ ║  l.43: 	      Some x.v
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.43: 	  | Neg ->
+//│ ║  l.44: 	  | Neg ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+//│ ║  l.45: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  | Var ->
+//│ ║  l.46: 	  | Var ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.46: 	      None with {err = concat "free var: " x.nme}
+//│ ║  l.47: 	      None with {err = concat "free var: " x.nme}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  | Plus ->
+//│ ║  l.48: 	  | Plus ->
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.48: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║  l.49: 	      flatMap (fun l -> flatMap (fun r ->
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	        Some (l + r)
+//│ ║  l.50: 	        Some (l + r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║  l.51: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  }
+//│ ║  l.52: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (α142' | α145')  <:  ((some<> & α158') | (α159' & ~(some<>)))    ComposedType  ComposedType
 //│ ╙──  ... looks like:  (α35' | α36')  <:  ((some<> & α33') | (α36' & ~(some<>)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.40: 	rec def evalOpt = fun x -> case x of {
+//│ ║  l.41: 	rec def evalOpt = fun x -> case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	  | Lit ->
+//│ ║  l.42: 	  | Lit ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	      Some x.v
+//│ ║  l.43: 	      Some x.v
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.43: 	  | Neg ->
+//│ ║  l.44: 	  | Neg ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+//│ ║  l.45: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  | Var ->
+//│ ║  l.46: 	  | Var ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.46: 	      None with {err = concat "free var: " x.nme}
+//│ ║  l.47: 	      None with {err = concat "free var: " x.nme}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  | Plus ->
+//│ ║  l.48: 	  | Plus ->
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.48: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║  l.49: 	      flatMap (fun l -> flatMap (fun r ->
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	        Some (l + r)
+//│ ║  l.50: 	        Some (l + r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║  l.51: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  }
+//│ ║  l.52: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (α142' | α145')  <:  ((some<> & α144') | (α145' & ~(some<>)))    ComposedType  ComposedType
 //│ ╙──  ... looks like:  (α35' | α36')  <:  ((some<> & α33') | (α36' & ~(some<>)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.40: 	rec def evalOpt = fun x -> case x of {
+//│ ║  l.41: 	rec def evalOpt = fun x -> case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	  | Lit ->
+//│ ║  l.42: 	  | Lit ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	      Some x.v
+//│ ║  l.43: 	      Some x.v
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.43: 	  | Neg ->
+//│ ║  l.44: 	  | Neg ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+//│ ║  l.45: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  | Var ->
+//│ ║  l.46: 	  | Var ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.46: 	      None with {err = concat "free var: " x.nme}
+//│ ║  l.47: 	      None with {err = concat "free var: " x.nme}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  | Plus ->
+//│ ║  l.48: 	  | Plus ->
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.48: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║  l.49: 	      flatMap (fun l -> flatMap (fun r ->
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	        Some (l + r)
+//│ ║  l.50: 	        Some (l + r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║  l.51: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  }
+//│ ║  l.52: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (none<> & {err: α168'})  <:  α145'    ComposedType  TypeVariable
 //│ ╙──  ... looks like:  (none<> & {err: α130'})  <:  α36'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.40: 	rec def evalOpt = fun x -> case x of {
+//│ ║  l.41: 	rec def evalOpt = fun x -> case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	  | Lit ->
+//│ ║  l.42: 	  | Lit ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	      Some x.v
+//│ ║  l.43: 	      Some x.v
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.43: 	  | Neg ->
+//│ ║  l.44: 	  | Neg ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+//│ ║  l.45: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  | Var ->
+//│ ║  l.46: 	  | Var ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.46: 	      None with {err = concat "free var: " x.nme}
+//│ ║  l.47: 	      None with {err = concat "free var: " x.nme}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  | Plus ->
+//│ ║  l.48: 	  | Plus ->
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.48: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║  l.49: 	      flatMap (fun l -> flatMap (fun r ->
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	        Some (l + r)
+//│ ║  l.50: 	        Some (l + r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║  l.51: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  }
+//│ ║  l.52: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (none<> & {err: α168'})  <:  α159'    ComposedType  TypeVariable
 //│ ╙──  ... looks like:  (none<> & {err: α130'})  <:  α36'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.40: 	rec def evalOpt = fun x -> case x of {
+//│ ║  l.41: 	rec def evalOpt = fun x -> case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	  | Lit ->
+//│ ║  l.42: 	  | Lit ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.42: 	      Some x.v
+//│ ║  l.43: 	      Some x.v
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.43: 	  | Neg ->
+//│ ║  l.44: 	  | Neg ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.44: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
+//│ ║  l.45: 	      flatMap (fun s -> Some (0 - s)) (evalOpt x.sub)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  | Var ->
+//│ ║  l.46: 	  | Var ->
 //│ ║        	^^^^^^^^^^
-//│ ║  l.46: 	      None with {err = concat "free var: " x.nme}
+//│ ║  l.47: 	      None with {err = concat "free var: " x.nme}
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  | Plus ->
+//│ ║  l.48: 	  | Plus ->
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.48: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║  l.49: 	      flatMap (fun l -> flatMap (fun r ->
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.49: 	        Some (l + r)
+//│ ║  l.50: 	        Some (l + r)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.50: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║  l.51: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.51: 	  }
+//│ ║  l.52: 	  }
 //│ ║        	^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (α142' | α145')  <:  ((some<> & α118') | (α119' & ~(some<>)))    ComposedType  ComposedType

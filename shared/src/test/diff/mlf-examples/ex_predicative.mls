@@ -172,8 +172,8 @@ t id succ 0
 //│ ║  l.170: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α912  <:  α904    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  α911'  <:  α896'
+//│ ╟── this constraint:  α868  <:  ((‹∀ 0. (α407' -> (α408' -> α408'))›,) -> α914')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α477''''  <:  ((‹∀ 0. (α407' -> (α408' -> α408'))›,) -> α872''''')
 //│ res: error
 //│    = 2
 
@@ -212,23 +212,24 @@ t id succ 0
 //│ ║  l.210: 	t id succ 0
 //│ ║         	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α1673  <:  α1665    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  α1672'  <:  α1657'
+//│ ╟── this constraint:  α1682  <:  ((‹∀ 0. (α407' -> (α408' -> α408'))›,) -> α1729')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1238''''  <:  ((‹∀ 0. (α407' -> (α408' -> α408'))›,) -> α1686''''')
 //│ res: error
 //│    = 6
 
+:e // TODO try without cycle check
 t2 id succ 0
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.220: 	t2 id succ 0
+//│ ║  l.221: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  int<number>  <:  α2001    ClassTag  TypeVariable
+//│ ╟── this constraint:  int<number>  <:  α2066    ClassTag  TypeVariable
 //│ ╙──  ... looks like:  int<number>  <:  α408'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.220: 	t2 id succ 0
+//│ ║  l.221: 	t2 id succ 0
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  0<int,number>  <:  α2001    ClassTag  TypeVariable
+//│ ╟── this constraint:  0<int,number>  <:  α2066    ClassTag  TypeVariable
 //│ ╙──  ... looks like:  0<int,number>  <:  α408'
 //│ res: error | int
 //│    = 6
@@ -254,57 +255,60 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 
 //     * Untypable at any rank
 //       (fun x -> x x) (fun x -> x x)
-:e
+:e // TODO show failure without cycle check
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.258: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.259: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α2069' -> α2070')›  <:  α2074    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α2069' -> α2070')›  <:  α2069'
+//│ ╟── this constraint:  ‹∀ 0. (α2134' -> α2135')›  <:  α2139    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α2134' -> α2135')›  <:  α2134'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
 //     * Rank 3, untypable in F2 but F3
 //       (fun f x -> f (f x)) (fun f x -> f (f x)) (fun v w -> v)
+:e // TODO try without cycle check
 (fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.271: 	(fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.273: 	(fun f -> fun x -> f (f x)) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2098 -> α2097)  <:  α2088    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2095' -> α2094')  <:  α2084'
+//│ ╟── this constraint:  (α2163 -> α2162)  <:  α2153    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2160' -> α2159')  <:  α2149'
 //│ res: anything -> nothing | error
 //│    = [Function (anonymous)]
 
 //     * Rank 4, alternate formulation, untypeable in F2, but F3
 //       (fun two k -> two two k)(fun f x -> f (f x)) (fun v w -> v)
+:e // TODO try without cycle check
 (fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.283: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.286: 	(fun two -> fun k -> two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2131 -> α2130)  <:  α2121    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2128' -> α2127')  <:  α2113'
+//│ ╟── this constraint:  (α2196 -> α2195)  <:  α2186    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2193' -> α2192')  <:  α2178'
 //│ res: anything -> nothing | error
 //│    = [Function (anonymous)]
 
 //     * Rank 5, causes huge blowup. Do not attempt to output skeletons !
 //       (fun two k -> two two two k)(fun f -x -> f (f x)) (fun v w -> v)
+:e // TODO try without cycle check
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.295: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.299: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α2164 -> α2163)  <:  α2155    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α2145' -> α2147')  <:  α2147'
+//│ ╟── this constraint:  (α2229 -> α2228)  <:  α2220    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (α2210' -> α2212')  <:  α2212'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.295: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║  l.299: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α2169' -> (α2170' -> α2169'))›  <:  α2160    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α2169' -> (α2170' -> α2169'))›  <:  α2145'
+//│ ╟── this constraint:  ‹∀ 0. (α2234' -> (α2235' -> α2234'))›  <:  α2225    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α2234' -> (α2235' -> α2234'))›  <:  α2210'
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -318,11 +322,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 :e
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.319: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║  l.323: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α2177' -> α2179') where: α2173 <: ((α2178',) -> α2179')}›  <:  α2186    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α2177' -> α2179') where: α2173 <: ((α2178',) -> α2179')}›  <:  α2177'
+//│ ╟── this constraint:  ‹∀ 0. {(α2242' -> α2244') where: α2238 <: ((α2243',) -> α2244')}›  <:  α2251    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. {(α2242' -> α2244') where: α2238 <: ((α2243',) -> α2244')}›  <:  α2242'
 //│ res: 'a -> 'b -> 'c | error
 //│   where
 //│     'd <: 'e -> 'a -> 'f

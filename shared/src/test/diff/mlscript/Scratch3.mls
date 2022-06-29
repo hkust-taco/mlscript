@@ -38,30 +38,18 @@ succ = s
 //│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.34: 	succ = s
 //│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N99'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N98''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.34: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N101'  <:  α97'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N98''  <:  α92''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.34: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N100'  <:  α97'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N98''  <:  α92''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.34: 	succ = s
-//│ ║        	^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N99'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N98''
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                  ^^
 //│     = [Function: s]
 
 
@@ -91,30 +79,18 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 //│     'a <: 'd -> 'e)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.87: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.75: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N202'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N201''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.87: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N204'  <:  α200'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N201''  <:  α195''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.87: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'N203'  <:  α200'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'N201''  <:  α195''
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.87: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ⊤  <:  'N202'    ExtrType  TypeVariable
-//│ ╙──  ... looks like:  ⊤  <:  'N201''
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.23: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.75: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
+//│ ╙──      	                     ^^
 //│     = [Function: succ2]
 
 
