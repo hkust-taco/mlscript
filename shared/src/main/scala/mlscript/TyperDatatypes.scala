@@ -87,9 +87,15 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     // def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
     //   (body :: constraints.flatMap(c => c._1 :: c._2 :: Nil)).iterator.map(_.levelBelow(ub)).max
     lazy val level =
-      (body.level :: constraints.flatMap(_._2.unzip._2.map(_.level))).max
+      // (body.level :: constraints.flatMap(_._2.unzip._2.map(_.level))).max
+      children(false).iterator.map(_.level).max
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
-      (body.levelBelow(ub) :: constraints.flatMap(_._2.unzip._2.map(_.levelBelow(ub)))).max
+      // (body.levelBelow(ub) :: constraints.flatMap(_._2.unzip._2.map(_.levelBelow(ub)))).max
+      children(false).iterator.map(_.levelBelow(ub)).max
+      // {
+      // println("???",this,children(false))
+      // children(false).iterator.map(_.levelBelow(ub)).max
+      // }
     // override def toString: Str =
     //   s"(${constraints.flatMap(vbs => vbs._2.map {
     //     case (true, b) => s"${vbs._1} :> $b"

@@ -30,7 +30,7 @@ def auto (x: forall 'a. 'a -> 'a) = x x
 //│ auto: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 
 def app f x = f x
-//│ app: 'a -> (forall 'b, 'c. ('b -> 'c
+//│ app: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 
@@ -72,10 +72,10 @@ choose id
 //│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd. ('b -> 'd
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd, 'e, 'f. ('c -> 'e
 //│   where
-//│     'e <: 'b -> 'c -> 'd
-//│     'f <: 'b -> 'c))
+//│     'b <: 'c -> 'd -> 'e
+//│     'f <: 'c -> 'd))
 
 choose id succ
 //│ res: int -> int
@@ -105,7 +105,7 @@ id auto
 //│ res: 'a -> 'a
 
 app auto id
-//│ res: nothing
+//│ res: 'a -> 'a
 
 // ------------ Sec 5.2 ------------
 
@@ -271,14 +271,5 @@ let f = fun x -> id in g f
 
 // FreezeML D4
 app runST argST
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.273: 	app runST argST
-//│ ║         	^^^^^^^^^
-//│ ╟── function of type `?a -> ?a` is not an instance of type `ST`
-//│ ║  l.26: 	def id x = x
-//│ ║        	       ^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.60: 	def runST: (forall 's. ST['s, 'v]) -> 'v
-//│ ╙──      	                       ^^^^^^^^^^
-//│ res: error
+//│ res: int
 

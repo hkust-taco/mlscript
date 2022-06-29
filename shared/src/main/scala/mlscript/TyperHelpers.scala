@@ -585,7 +585,10 @@ abstract class TyperHelpers { Typer: Typer =>
           // cs.flatMap(vbs => vbs._2.map {
           //   case (true, b) => 
           // }) ::: bod :: Nil
+          
+          // cs.map(_._1) ::: 
           cs.flatMap(vbs => vbs._2.mapKeys(some)) ::: pol -> bod :: Nil
+          
           // ???
     }}
     
@@ -633,7 +636,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
-      case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
+      // case ConstrainedType(cs, und) => cs.flatMap(_._2.unzip._2) ::: und :: Nil
+      case ConstrainedType(cs, und) =>
+        cs.map(_._1) ::: cs.flatMap(_._2.unzip._2) ::: und :: Nil
     }
     
     def getVars: SortedSet[TypeVariable] = {
