@@ -34,7 +34,13 @@ def g x = x (fun x -> x)
 
 
 def g x y = x (fun x -> y x)
-//│ g: (('a -> 'b) -> 'c) -> ('a -> 'b) -> 'c
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.36: 	def g x y = x (fun x -> y x)
+//│ ║        	                        ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α76'  <:  ((α79',) -> α80')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α76'  <:  ((α77'',) -> α78'')
+//│ g: ((anything -> error) -> 'a) -> anything -> 'a
 //│  = [Function: g1]
 
 
@@ -45,11 +51,11 @@ self x = x x
 :e
 self self
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.46: 	self self
+//│ ║  l.52: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α95' -> α96')  <:  ((α106,) -> α107)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α95' -> α96')  <:  ((α95',) -> α96')
+//│ ╟── this constraint:  ∀ 0. (α91' -> α92')  <:  α102    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α91' -> α92')  <:  α91'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

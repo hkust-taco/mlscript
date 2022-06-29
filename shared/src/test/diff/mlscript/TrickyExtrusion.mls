@@ -21,14 +21,50 @@ test f =
 test f =
   let r x = f x
   in (r 0, r True)
-//│ test: ((0 | true) -> 'a) -> ('a, 'a,)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.22: 	  let r x = f x
+//│ ║        	            ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α40'  <:  ((α43',) -> α44')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α40'  <:  ((α41'',) -> α42'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.23: 	  in (r 0, r True)
+//│ ║        	      ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  0<TypeName(int),TypeName(number)>  <:  α43'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  0<TypeName(int),TypeName(number)>  <:  α41''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.23: 	  in (r 0, r True)
+//│ ║        	           ^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. true<TypeName(bool)>  <:  α43'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. true<TypeName(bool)>  <:  α41''
+//│ test: anything -> (error, error,)
 //│     = [Function: test]
 
 // Same example, a little elaborated
 test f =
   let r = fun x -> fun g -> (g x, f x)
   in (r 0 inc, r True not)
-//│ test: ((0 | true) -> 'a) -> ((int, 'a,), (bool, 'a,),)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.47: 	  let r = fun x -> fun g -> (g x, f x)
+//│ ║        	                                  ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α54'  <:  ((α59',) -> α60')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α54'  <:  ((α55'',) -> α58'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.48: 	  in (r 0 inc, r True not)
+//│ ║        	      ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  0<TypeName(int),TypeName(number)>  <:  α59'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  0<TypeName(int),TypeName(number)>  <:  α55''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.48: 	  in (r 0 inc, r True not)
+//│ ║        	               ^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ∀ 0. true<TypeName(bool)>  <:  α59'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. true<TypeName(bool)>  <:  α55''
+//│ test: anything -> ((int, error,) | error, (bool, error,) | error,)
 //│     = <no result>
 //│       inc is not implemented
 

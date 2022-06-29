@@ -28,9 +28,9 @@ eval eval
 //│ ║  l.26: 	eval eval
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  ((α94,) -> α95)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  ((α48',) -> α57')
-//│ res: error
+//│ ╟── this constraint:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  α94    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  α48'
+//│ res: ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val})) -> (int | 'val) | error
 //│    = [Function (anonymous)]
 
 class Neg: Expr & { underlying: Expr }
@@ -49,9 +49,9 @@ evalN evalN
 //│ ║  l.47: 	evalN evalN
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α145' -> (α146' -> (α152' | α167')))  <:  ((α222,) -> α223)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α145' -> (α146' -> (α152' | α167')))  <:  ((α155',) -> α156')
-//│ res: error
+//│ ╟── this constraint:  ∀ 0. (α142' -> (α143' -> (α149' | α164')))  <:  α218    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α142' -> (α143' -> (α149' | α164')))  <:  α142'
+//│ res: ((Add with {lhs: Add | Lit | Neg, rhs: Add | Lit | Neg}) | (Lit with {val: 'val}) | (Neg with {underlying: Add | Lit | Neg})) -> (int | 'val) | error
 //│    = [Function (anonymous)]
 
 e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
@@ -64,9 +64,9 @@ evalN evalN e
 //│ ║  l.62: 	evalN evalN e
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α145' -> (α146' -> (α152' | α167')))  <:  ((α344,) -> α345)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α145' -> (α146' -> (α152' | α167')))  <:  ((α155',) -> α156')
-//│ res: error
+//│ ╟── this constraint:  ∀ 0. (α142' -> (α143' -> (α149' | α164')))  <:  α364    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α142' -> (α143' -> (α149' | α164')))  <:  α142'
+//│ res: error | int
 //│    = -1
 
 
@@ -90,9 +90,9 @@ def evalN2 evalN2 x = case x of {
 //│ ║  l.+3: 	  | _ -> eval eval x
 //│ ║        	         ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  ((α451',) -> α452')    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  ((α48',) -> α57')
-//│ evalN2: ('a -> 'underlying -> int & 'a) -> ((Neg with {underlying: 'underlying}) | ~Neg) -> (error | int)
+//│ ╟── this constraint:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  α461'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α48' -> (α49' -> (val51' | α60')))  <:  α48'
+//│ evalN2: ('a -> 'underlying -> int & 'a) -> ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (error | int | 'val)
 
 :e
 evalN2 evalN2 e
@@ -100,8 +100,20 @@ evalN2 evalN2 e
 //│ ║  l.+1: 	evalN2 evalN2 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α429' -> (α430' -> (α436' | α499')))  <:  ((α523,) -> α524)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α429' -> (α430' -> (α436' | α499')))  <:  ((α429',) -> α433')
+//│ ╟── this constraint:  ∀ 0. (α439' -> (α440' -> (α446' | α485')))  <:  α549    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α439' -> (α440' -> (α446' | α485')))  <:  α439'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	evalN2 evalN2 e
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── application of type `Neg & {underlying: ?underlying}` does not match type `Add & ?a | Lit & ?b`
+//│ ║  l.57: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.18: 	def eval eval x = case x of {
+//│ ║        	                       ^
+//│ ╟── from field selection:
+//│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
+//│ ╙──      	                                       ^^^^^
 //│ res: error | int
 
 
@@ -138,8 +150,8 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α610' -> (α611' -> (α616' | α631')))  <:  ((α684,) -> α685)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α610' -> (α611' -> (α616' | α631')))  <:  ((α619',) -> α620')
-//│ res: error
+//│ ╟── this constraint:  ∀ 0. (α696' -> (α697' -> (α702' | α717')))  <:  α769    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α696' -> (α697' -> (α702' | α717')))  <:  α696'
+//│ res: error | int
 
 

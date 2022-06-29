@@ -187,8 +187,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α224' -> α225')  <:  (α229 -> α230)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α224' -> α225')  <:  (α224' -> α225')
+//│ ╟── this constraint:  ∀ 0. (α224' -> α225')  <:  α229    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α224' -> α225')  <:  α224'
 //│ res: error
 
 
@@ -202,35 +202,87 @@ x => {l: x x, r: x }
 (f => (x => f (x x)) (x => f (x x)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
+//│ ║        	                           ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α240  <:  (α247 -> α248)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α240  <:  (α245' -> α246')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α244' -> α246')  <:  (α253 -> α254)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α244' -> α246')  <:  (α244' -> α245')
-//│ res: ('a -> 'a & 'a -> 'b) -> (error | 'b)
+//│ ╟── this constraint:  ∀ 0. (α244' -> α246')  <:  α253    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. (α244' -> α246')  <:  α244'
+//│ res: (error -> anything) -> error
 
 // Z combinator:
 :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                     ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α276' -> α283')  <:  (α295 -> α296)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α276' -> α283')  <:  (α276' -> α279')
-//│ res: (('a -> 'b) -> ('c -> 'd & 'a -> 'b) & ('c -> 'd) -> 'e) -> (error | 'e)
+//│ ╟── this constraint:  α261  <:  (α261 -> α264)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α261  <:  (α261 -> α263')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	                    ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α264  <:  (α262' -> α265')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α263'  <:  (α262' -> α265')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	                                             ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α267'  <:  (α267' -> α270')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α267'  <:  (α267' -> α269'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	                                            ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α270'  <:  (α268'' -> α271'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α269''  <:  (α268'' -> α271'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
+//│ ║        	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α260  <:  (∀ 1. (α268'' -> α271'') -> α273)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α260  <:  (∀ 1. (α268'' -> α271'') -> α272')
+//│ res: ((error -> error) -> 'a) -> 'a
 
 // Function that takes arbitrarily many arguments:
 :e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                     ^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. (α335' -> α342')  <:  (α354 -> α355)    PolymorphicType  FunctionType
-//│ ╙──  ... looks like:  ∀ 0. (α335' -> α342')  <:  (α335' -> α338')
-//│ res: 'a | error
-//│   where
-//│     'a :> anything -> 'a
+//│ ╟── this constraint:  α283  <:  (α283 -> α286)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α283  <:  (α283 -> α285')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	                    ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α286  <:  (α284' -> α287')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α285'  <:  (α284' -> α287')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	                                             ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α289'  <:  (α289' -> α292')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α289'  <:  (α289' -> α291'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	                                            ^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α292'  <:  (α290'' -> α293'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α291''  <:  (α290'' -> α293'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
+//│ ║        	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α282  <:  (∀ 1. (α290'' -> α293'') -> α295)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α282  <:  (∀ 1. (α290'' -> α293'') -> α294')
+//│ res: anything -> error -> error
 
 
 let rec trutru = g => trutru (g true)
@@ -258,7 +310,25 @@ y => (let f = x => x; {a: f y, b: f true})
 
 :e
 y => (let f = x => y x; {a: f 0, b: f true})
-//│ res: ((0 | true) -> 'a) -> {a: 'a, b: 'a}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
+//│ ║        	                   ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α352  <:  (α355 -> α356)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α352  <:  (α353' -> α354')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
+//│ ║        	                            ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  0<TypeName(int),TypeName(number)>  <:  α355    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  0<TypeName(int),TypeName(number)>  <:  α353'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	y => (let f = x => y x; {a: f 0, b: f true})
+//│ ║        	                                    ^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  true<TypeName(bool)>  <:  α355    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  true<TypeName(bool)>  <:  α353'
+//│ res: anything -> {a: error, b: error}
 
 y => (let f = x => x y; {a: f (z => z), b: f (z => true)})
 //│ res: 'a -> {a: 'a, b: true}
@@ -300,128 +370,30 @@ let rec recursive_monster = x => { thing: x, self: recursive_monster x }
 
 :e
 let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╔══[ERROR] Subtyping constraint of the form `{u: ?y, v: ?a} <: ?y0` exceeded recursion depth limit (100)
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                         ^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  {u: y722'', v: α723''}  <!<  y524'
-//│ ╟── while constraining:  {u: y720'', v: α721''}  <!<  y524'
-//│ ╟── while constraining:  {u: y718'', v: α719''}  <!<  y524'
-//│ ╟── while constraining:  {u: y716'', v: α717''}  <!<  y524'
-//│ ╟── while constraining:  {u: y714'', v: α715''}  <!<  y524'
-//│ ╟── while constraining:  {u: y712'', v: α713''}  <!<  y524'
-//│ ╟── while constraining:  {u: y710'', v: α711''}  <!<  y524'
-//│ ╟── while constraining:  {u: y708'', v: α709''}  <!<  y524'
-//│ ╟── while constraining:  {u: y706'', v: α707''}  <!<  y524'
-//│ ╟── while constraining:  {u: y704'', v: α705''}  <!<  y524'
-//│ ╟── while constraining:  {u: y702'', v: α703''}  <!<  y524'
-//│ ╟── while constraining:  {u: y700'', v: α701''}  <!<  y524'
-//│ ╟── while constraining:  {u: y698'', v: α699''}  <!<  y524'
-//│ ╟── while constraining:  {u: y696'', v: α697''}  <!<  y524'
-//│ ╟── while constraining:  {u: y694'', v: α695''}  <!<  y524'
-//│ ╟── while constraining:  {u: y692'', v: α693''}  <!<  y524'
-//│ ╟── while constraining:  {u: y690'', v: α691''}  <!<  y524'
-//│ ╟── while constraining:  {u: y688'', v: α689''}  <!<  y524'
-//│ ╟── while constraining:  {u: y686'', v: α687''}  <!<  y524'
-//│ ╟── while constraining:  {u: y684'', v: α685''}  <!<  y524'
-//│ ╟── while constraining:  {u: y682'', v: α683''}  <!<  y524'
-//│ ╟── while constraining:  {u: y680'', v: α681''}  <!<  y524'
-//│ ╟── while constraining:  {u: y678'', v: α679''}  <!<  y524'
-//│ ╟── while constraining:  {u: y676'', v: α677''}  <!<  y524'
-//│ ╟── while constraining:  {u: y674'', v: α675''}  <!<  y524'
-//│ ╟── while constraining:  {u: y672'', v: α673''}  <!<  y524'
-//│ ╟── while constraining:  {u: y670'', v: α671''}  <!<  y524'
-//│ ╟── while constraining:  {u: y668'', v: α669''}  <!<  y524'
-//│ ╟── while constraining:  {u: y666'', v: α667''}  <!<  y524'
-//│ ╟── while constraining:  {u: y664'', v: α665''}  <!<  y524'
-//│ ╟── while constraining:  {u: y662'', v: α663''}  <!<  y524'
-//│ ╟── while constraining:  {u: y660'', v: α661''}  <!<  y524'
-//│ ╟── while constraining:  {u: y658'', v: α659''}  <!<  y524'
-//│ ╟── while constraining:  {u: y656'', v: α657''}  <!<  y524'
-//│ ╟── while constraining:  {u: y654'', v: α655''}  <!<  y524'
-//│ ╟── while constraining:  {u: y652'', v: α653''}  <!<  y524'
-//│ ╟── while constraining:  {u: y650'', v: α651''}  <!<  y524'
-//│ ╟── while constraining:  {u: y648'', v: α649''}  <!<  y524'
-//│ ╟── while constraining:  {u: y646'', v: α647''}  <!<  y524'
-//│ ╟── while constraining:  {u: y644'', v: α645''}  <!<  y524'
-//│ ╟── while constraining:  {u: y642'', v: α643''}  <!<  y524'
-//│ ╟── while constraining:  {u: y640'', v: α641''}  <!<  y524'
-//│ ╟── while constraining:  {u: y638'', v: α639''}  <!<  y524'
-//│ ╟── while constraining:  {u: y636'', v: α637''}  <!<  y524'
-//│ ╟── while constraining:  {u: y634'', v: α635''}  <!<  y524'
-//│ ╟── while constraining:  {u: y632'', v: α633''}  <!<  y524'
-//│ ╟── while constraining:  {u: y630'', v: α631''}  <!<  y524'
-//│ ╟── while constraining:  {u: y628'', v: α629''}  <!<  y524'
-//│ ╟── while constraining:  {u: y626'', v: α627''}  <!<  y524'
-//│ ╟── while constraining:  {u: y624'', v: α625''}  <!<  y524'
-//│ ╟── while constraining:  {u: y622'', v: α623''}  <!<  y524'
-//│ ╟── while constraining:  {u: y620'', v: α621''}  <!<  y524'
-//│ ╟── while constraining:  {u: y618'', v: α619''}  <!<  y524'
-//│ ╟── while constraining:  {u: y616'', v: α617''}  <!<  y524'
-//│ ╟── while constraining:  {u: y614'', v: α615''}  <!<  y524'
-//│ ╟── while constraining:  {u: y612'', v: α613''}  <!<  y524'
-//│ ╟── while constraining:  {u: y610'', v: α611''}  <!<  y524'
-//│ ╟── while constraining:  {u: y608'', v: α609''}  <!<  y524'
-//│ ╟── while constraining:  {u: y606'', v: α607''}  <!<  y524'
-//│ ╟── while constraining:  {u: y604'', v: α605''}  <!<  y524'
-//│ ╟── while constraining:  {u: y602'', v: α603''}  <!<  y524'
-//│ ╟── while constraining:  {u: y600'', v: α601''}  <!<  y524'
-//│ ╟── while constraining:  {u: y598'', v: α599''}  <!<  y524'
-//│ ╟── while constraining:  {u: y596'', v: α597''}  <!<  y524'
-//│ ╟── while constraining:  {u: y594'', v: α595''}  <!<  y524'
-//│ ╟── while constraining:  {u: y592'', v: α593''}  <!<  y524'
-//│ ╟── while constraining:  {u: y590'', v: α591''}  <!<  y524'
-//│ ╟── while constraining:  {u: y588'', v: α589''}  <!<  y524'
-//│ ╟── while constraining:  {u: y586'', v: α587''}  <!<  y524'
-//│ ╟── while constraining:  {u: y584'', v: α585''}  <!<  y524'
-//│ ╟── while constraining:  {u: y582'', v: α583''}  <!<  y524'
-//│ ╟── while constraining:  {u: y580'', v: α581''}  <!<  y524'
-//│ ╟── while constraining:  {u: y578'', v: α579''}  <!<  y524'
-//│ ╟── while constraining:  {u: y576'', v: α577''}  <!<  y524'
-//│ ╟── while constraining:  {u: y574'', v: α575''}  <!<  y524'
-//│ ╟── while constraining:  {u: y572'', v: α573''}  <!<  y524'
-//│ ╟── while constraining:  {u: y570'', v: α571''}  <!<  y524'
-//│ ╟── while constraining:  {u: y568'', v: α569''}  <!<  y524'
-//│ ╟── while constraining:  {u: y566'', v: α567''}  <!<  y524'
-//│ ╟── while constraining:  {u: y564'', v: α565''}  <!<  y524'
-//│ ╟── while constraining:  {u: y562'', v: α563''}  <!<  y524'
-//│ ╟── while constraining:  {u: y560'', v: α561''}  <!<  y524'
-//│ ╟── while constraining:  {u: y558'', v: α559''}  <!<  y524'
-//│ ╟── while constraining:  {u: y556'', v: α557''}  <!<  y524'
-//│ ╟── while constraining:  {u: y554'', v: α555''}  <!<  y524'
-//│ ╟── while constraining:  {u: y552'', v: α553''}  <!<  y524'
-//│ ╟── while constraining:  {u: y550'', v: α551''}  <!<  y524'
-//│ ╟── while constraining:  {u: y548'', v: α549''}  <!<  y524'
-//│ ╟── while constraining:  {u: y546'', v: α547''}  <!<  y524'
-//│ ╟── while constraining:  {u: y544'', v: α545''}  <!<  y524'
-//│ ╟── while constraining:  {u: y542'', v: α543''}  <!<  y524'
-//│ ╟── while constraining:  {u: y540'', v: α541''}  <!<  y524'
-//│ ╟── while constraining:  {u: y538'', v: α539''}  <!<  y524'
-//│ ╟── while constraining:  {u: y536'', v: α537''}  <!<  y524'
-//│ ╟── while constraining:  {u: y534'', v: α535''}  <!<  y524'
-//│ ╟── while constraining:  {u: y532'', v: α533''}  <!<  y524'
-//│ ╟── while constraining:  {u: y530'', v: α531''}  <!<  y524'
-//│ ╟── while constraining:  {u: y528'', v: α529''}  <!<  y524'
-//│ ╟── while constraining:  {u: y526'', v: α527''}  <!<  y524'
-//│ ╟── while constraining:  {u: y522'', v: α523''}  <!<  y524'
-//│ ╙── while constraining:  {u: y522'', v: α523''}  <!<  y522''
-//│ ╔══[ERROR] Type mismatch in binding of block of statements:
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not a function
-//│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ║        	                                           ^
-//│ ╟── Note: constraint arises from application:
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
 //│ ║        	                                    ^^^
-//│ ╟── from reference:
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  x444'  <:  (y447' -> α448')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  x444'  <:  (y445'' -> α446'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
 //│ ║  l.+1: 	let rec x = (let rec y = {u: y, v: (x y)}; 0); 0
-//│ ╙──      	                                    ^
+//│ ║        	                         ^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  {u: y445'', v: α446''}  <:  y447'    RecordType  TypeVariable
+//│ ╙──  ... looks like:  {u: y445'', v: α446''}  <:  y445''
 //│ x: 0
 //│ res: 0
 
 :e
 (x => (let y = (x x); 0))
-//│ res: ('a -> anything & 'a) -> 0
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(x => (let y = (x x); 0))
+//│ ║        	                ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α450  <:  (α450 -> α452)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α450  <:  (α450 -> α451')
+//│ res: anything -> 0
 
 // TODO simplify more
 (let rec x = (y => (y (x x))); x)
@@ -446,17 +418,23 @@ x => (y => (x (y y)))
 
 :e
 (let rec x = (let y = (x x); (z => z)); x)
-//│ res: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(let rec x = (let y = (x x); (z => z)); x)
+//│ ║        	                       ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  x501'  <:  (x501' -> α503')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  x501'  <:  (x501' -> α502'')
+//│ res: 'a -> 'a
 
 :e
 (let rec x = (y => (let z = (x x); y)); x)
-//│ res: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(let rec x = (y => (let z = (x x); y)); x)
+//│ ║        	                             ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  x509'  <:  (x509' -> α512')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  x509'  <:  (x509' -> α511'')
+//│ res: 'a -> 'a
 
 (let rec x = (y => {u: y, v: (x x)}); x)
 //│ res: 'x
@@ -474,33 +452,51 @@ x => (y => (x (y y)))
 
 :e
 (let rec x = (y => (let z = (y x); y)); x)
-//│ res: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a <: 'x -> anything
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(let rec x = (y => (let z = (y x); y)); x)
+//│ ║        	                             ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α542'  <:  (x541' -> α544')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α542'  <:  (x541' -> α543'')
+//│ res: 'a -> 'a
 
 :e
 (x => (let y = (x x.v); 0))
-//│ res: ('v -> anything & {v: 'v}) -> 0
+//│ ╔══[ERROR] Cyclic-looking constraint while typing field selection
+//│ ║  l.+1: 	(x => (let y = (x x.v); 0))
+//│ ║        	                   ^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α549  <:  {v: v551}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α549  <:  {v: v550'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(x => (let y = (x x.v); 0))
+//│ ║        	                ^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α549  <:  (v553 -> α554)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α549  <:  (v550' -> α552')
+//│ res: anything -> 0
 
 :e
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
-//│ x: 'x
-//│   where
-//│     'x :> 'a -> 'a
-//│     'a :> 'x
-//│ res: 'a
-//│   where
-//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
+//│ ║        	                      ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  x556'  <:  (x556' -> α558')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  x556'  <:  (x556' -> α557'')
+//│ x: 'a -> 'a
+//│ res: {u: 'u} -> 'u
 
 :e
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'x, 'a, 'b. 'x
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	let rec x = (let y = (x x); (z => z))
+//│ ║        	                      ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  x574'  <:  (x574' -> α576')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  x574'  <:  (x574' -> α575'')
+//│ x: forall 'x, 'a. 'x
 //│   where
-//│     'x :> 'b -> 'b
-//│        <: 'b & 'x -> 'a
-//│     'b :> 'b -> 'b
-//│        <: 'a
-//│     'a :> 'b -> 'b
+//│     'x :> 'a -> 'a
 

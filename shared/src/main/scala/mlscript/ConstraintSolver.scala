@@ -375,8 +375,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val shadow = lhs.shadow -> rhs.shadow
             println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
-            // if (shadows.contains(shadow)) {
-            if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
+            if (shadows.contains(shadow)) {
+            // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
               err(msg"Cyclic-looking constraint while typing ${prov.desc}" -> prov.loco ::
@@ -683,6 +683,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
         else cache.getOrElse(tv -> true, {
           val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          // val nv = freshVar(tv.prov, N, tv.nameHint)(tv.level)
           cache += tv -> true -> nv
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lvl, true))
           nv.upperBounds = tv.upperBounds.map(extrude(_, lvl, false))
@@ -690,6 +691,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         })
       case tv: TypeVariable => cache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lvl)
+        // val nv = freshVar(tv.prov, N, tv.nameHint)(lvl)
         cache += tv -> pol -> nv
         if (pol) {
           tv.upperBounds ::= nv

@@ -15,13 +15,13 @@ e2 : Add['e] as 'e
 //│ ║  l.13: 	e2 : Add['e] as 'e
 //│ ║        	^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ∀ 0. 'e23'  <:  Add['e29]    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ∀ 0. 'e23'  <:  Add['e23']
+//│ ╟── this constraint:  ∀ 0. 'e23'  <:  'e29    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. 'e23'  <:  'e23'
 //│ res: 'e
 //│   where
 //│     'e :> forall 'e0. 'e0 | error | Add['e]
 //│        <: Add['e] & 'e1
-//│     'e1 :> forall 'e0. 'e0 | error | Add['e1]
+//│     'e1 :> Add['e1] | (forall 'e0. 'e0 | error | Add['e1])
 //│         <: Add['e1] & {x: 'e1 -> 'e1} & {x: 'e -> 'e}
 //│     'e0 := Add['e0]
 //│    = <no result>
@@ -48,8 +48,8 @@ f0 = f0
 //│ ║  l.39: 	f0 = f0
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ('a51,)  <:  ('a52,)    TupleType  TupleType
-//│ ╙──  ... looks like:  ('a40',)  <:  ('a40',)
+//│ ╟── this constraint:  ∀ 0. 'a40'  <:  'a51    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ∀ 0. 'a40'  <:  'a40'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.39: 	f0 = f0
 //│ ║        	^^^^^^^

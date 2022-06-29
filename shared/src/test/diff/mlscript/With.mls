@@ -67,7 +67,13 @@ def f a b = (if true then a else b) with { x = "oops" }
 //│  = [Function: f2]
 
 def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
-//│ f: ({x: anything} & 'a) -> 'a -> ('a\x & {x: "oops"})
+//│ ╔══[ERROR] Cyclic-looking constraint while typing field selection
+//│ ║  l.69: 	def f a b = let tmp = a.x in (if true then a else b) with { x = "oops" }
+//│ ║        	                      ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α76'  <:  {x: x79'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α76'  <:  {x: x78''}
+//│ f: 'a -> 'a -> ('a\x & {x: "oops"})
 //│  = [Function: f3]
 
 
@@ -122,16 +128,16 @@ def foo x =
 :e
 foo 42
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.123: 	foo 42
+//│ ║  l.129: 	foo 42
 //│ ║         	^^^^^^
 //│ ╟── integer literal of type `42` does not have field 'f'
-//│ ║  l.123: 	foo 42
+//│ ║  l.129: 	foo 42
 //│ ║         	    ^^
 //│ ╟── Note: constraint arises from record literal:
-//│ ║  l.87: 	def getf { f } = f
+//│ ║  l.93: 	def getf { f } = f
 //│ ║        	         ^^^^^
 //│ ╟── from reference:
-//│ ║  l.118: 	  in { l = getf xf; r = getf x; s = x }
+//│ ║  l.124: 	  in { l = getf xf; r = getf x; s = x }
 //│ ╙──       	                             ^
 //│ res: error | {l: 42, r: nothing, s: 42}
 //│    = { l: 42, r: undefined, s: 42 }
@@ -156,13 +162,13 @@ add r.s 1
 :e
 res.z
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.157: 	res.z
+//│ ║  l.163: 	res.z
 //│ ║         	^^^^^
 //│ ╟── `with` extension of type `{x: 1, y: 2}` does not have field 'z'
-//│ ║  l.152: 	{} with { x = 1 } with { y = 2 }
+//│ ║  l.158: 	{} with { x = 1 } with { y = 2 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{z: ?z}`
-//│ ║  l.157: 	res.z
+//│ ║  l.163: 	res.z
 //│ ╙──       	^^^
 //│ res: error
 //│    = undefined

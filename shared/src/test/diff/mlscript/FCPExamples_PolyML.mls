@@ -74,14 +74,50 @@ def match_list: forall 'a 'b. List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
 def mem[a]: a -> List[a] -> bool
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
 //│ mem: anything -> List[?] -> bool
-//│ anything -> List[?] -> bool
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.75: 	rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
+//│ ║        	                                                                                          ^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  mem145'  <:  ((α146',) -> α161')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  mem145'  <:  ((α146',) -> α160'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.75: 	rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
+//│ ║        	                                                                                          ^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α161'  <:  ((α153'',) -> α162'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α160''  <:  ((α153'',) -> α162'')
+//│ anything -> List[?] -> (error | false | true)
 //│   <:  mem:
 //│ anything -> List[?] -> bool
 
 def fold_left[a, b]: (a -> b -> a) -> a -> List[b] -> a
 rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
-//│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.94: 	rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ ║        	                                                                  ^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  fold_left193'  <:  ((α194',) -> α204')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  fold_left193'  <:  ((α194',) -> α203'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.94: 	rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ ║        	                                                                               ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α194'  <:  ((α195',) -> α206')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α194'  <:  ((α195',) -> α205'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.94: 	rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ ║        	                                                                               ^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α206'  <:  ((α201'',) -> α207'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α205''  <:  ((α201'',) -> α207'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.94: 	rec def fold_left f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
+//│ ║        	                                                                  ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α204'  <:  ((α207'',) -> α208'')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α203''  <:  ((α207'',) -> α208'')
+//│ anything -> 'a -> List[?] -> (error | 'a)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 

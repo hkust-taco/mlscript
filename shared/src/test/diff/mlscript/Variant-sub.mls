@@ -73,11 +73,35 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (NoneBecause | Some[int])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing field selection
+//│ ║  l.74: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║        	                 ^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α201'  <:  {rhs: rhs223'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α201'  <:  {rhs: rhs222''}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.74: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║        	         ^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  evalOpt164'  <:  ((rhs225',) -> α226')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  evalOpt164'  <:  ((rhs222'',) -> α224'')
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.71: 	      flatMap (fun l -> flatMap (fun r ->
+//│ ║        	                        ^^^^^^^^^^^^^^^^^
+//│ ║  l.72: 	        // Some (add x.lhs x.rhs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.73: 	        Some (l + r)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.74: 	      ) (evalOpt x.rhs)) (evalOpt x.lhs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α226'  <:  α215''    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  α224''  <:  α38'
+//│ evalOpt: 'a -> (error | NoneBecause | Some[int])
 //│   where
-//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
+//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus\rhs with {lhs: 'a}) | Var
 //│        = [Function: evalOpt]
 
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | Some[int]
+//│ res: error | NoneBecause | Some[int]
 //│    = Some { v: 5 }

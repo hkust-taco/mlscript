@@ -90,7 +90,19 @@ def Some v = Some{v}
 def foo(x: Some['a]) =
   let _ = x.v : Some[?]
   in x: Some['a & some]
-//│ foo: Some[Some[nothing] & 'a] -> Some[Some[?] & 'a]
+//│ ╔══[ERROR] Cyclic-looking constraint while typing field selection
+//│ ║  l.91: 	  let _ = x.v : Some[?]
+//│ ║        	          ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α110'  <:  {v: v113'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α110'  <:  {v: v112''}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription
+//│ ║  l.91: 	  let _ = x.v : Some[?]
+//│ ║        	          ^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  v113'  <:  Some[⊥..⊤]    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  v112''  <:  Some[⊥..⊤]
+//│ foo: Some[Some[?] & 'a] -> Some[Some[?] & 'a]
 
 def f: Some['a]
 //│ f: Some[nothing]
