@@ -78,12 +78,49 @@ rec def to_church_1 n =
 //│ to_church_1: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
 //│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'a <: 'd -> 'e))) | 'to_church_1
+//│   where
+//│     'to_church_1 <: int -> ChurchInt
 //│            = [Function: to_church_1]
 
 rec def to_church_1_st n =
   if n == 0 then zero
   else succ_ty (to_church_1 (n - 1))
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_1, ?to_church_10, ?b, ?c, ?d, ?e. ?to_church_10 <: ?f -> ?g` exceeded recursion depth limit (400)
+//│ ║  l.88: 	  else succ_ty (to_church_1 (n - 1))
+//│ ║        	                ^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α844'',) -> α845'')
+//│ ╟── while constraining:  to_church_1841''  <!<  ((α844'',) -> α845'')
+//│ ╟── while constraining:  {(α846'' -> α847'') where: to_church_1841'' <: ((α844'',) -> α845'')}  <!<  ((α837'',) -> α838'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α837'',) -> α838'')
+//│ ╟── while constraining:  to_church_1834''  <!<  ((α837'',) -> α838'')
+//│ ╟── while constraining:  {(α839'' -> α840'') where: to_church_1834'' <: ((α837'',) -> α838'')}  <!<  ((α830'',) -> α831'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α830'',) -> α831'')
+//│ ╟── while constraining:  to_church_1827''  <!<  ((α830'',) -> α831'')
+//│ ╟── while constraining:  {(α832'' -> α833'') where: to_church_1827'' <: ((α830'',) -> α831'')}  <!<  ((α823'',) -> α824'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α823'',) -> α824'')
+//│ ╟── while constraining:  to_church_1820''  <!<  ((α823'',) -> α824'')
+//│ ╟── while constraining:  {(α825'' -> α826'') where: to_church_1820'' <: ((α823'',) -> α824'')}  <!<  ((α816'',) -> α817'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α816'',) -> α817'')
+//│ ╟── while constraining:  to_church_1813''  <!<  ((α816'',) -> α817'')
+//│ ╟── while constraining:  {(α818'' -> α819'') where: to_church_1813'' <: ((α816'',) -> α817'')}  <!<  ((α809'',) -> α810'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α179'',) -> α180'')
+//│ ╟── while constraining:  to_church_1176''  <!<  ((α179'',) -> α180'')
+//│ ╟── while constraining:  {(α181'' -> α182'') where: to_church_1176'' <: ((α179'',) -> α180'')}  <!<  ((α172'',) -> α173'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α172'',) -> α173'')
+//│ ╟── while constraining:  to_church_1169''  <!<  ((α172'',) -> α173'')
+//│ ╟── while constraining:  {(α174'' -> α175'') where: to_church_1169'' <: ((α172'',) -> α173'')}  <!<  ((α165'',) -> α166'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α165'',) -> α166'')
+//│ ╟── while constraining:  to_church_1162''  <!<  ((α165'',) -> α166'')
+//│ ╟── while constraining:  {(α167'' -> α168'') where: to_church_1162'' <: ((α165'',) -> α166'')}  <!<  ((α158'',) -> α159'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α158'',) -> α159'')
+//│ ╟── while constraining:  to_church_1155''  <!<  ((α158'',) -> α159'')
+//│ ╟── while constraining:  {(α160'' -> α161'') where: to_church_1155'' <: ((α158'',) -> α159'')}  <!<  ((α148'',) -> α149'')
+//│ ╟── while constraining:  ‹∀ 1. {(α153'' -> α154'') where: to_church_1150'' <: ((α151'',) -> α152'')}›  <!<  ((α148'',) -> α149'')
+//│ ╟── while constraining:  to_church_1150''  <!<  ((α148'',) -> α149'')
+//│ ╙── while constraining:  ‹∀ 0. to_church_1101'›  <!<  ((α148'',) -> α149'')
 //│ to_church_1_st: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
 //│               = <no result>
 //│                 succ_ty is not implemented
@@ -92,18 +129,57 @@ to_church_ty = to_church_1
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
 //│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'a <: 'd -> 'e))) | 'to_church_1
+//│   where
+//│     'to_church_1 <: int -> ChurchInt
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_1, ?to_church_10, ?b, ?c, ?d, ?e. ?to_church_10 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.128: 	to_church_ty = to_church_1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α1382'',) -> α1383'')
+//│ ╟── while constraining:  to_church_11381''  <!<  ((α1382'',) -> α1383'')
+//│ ╟── while constraining:  {(α1384'' -> α1385'') where: to_church_11381'' <: ((α1382'',) -> α1383'')}  <!<  ((α1377'',) -> α1378'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α1377'',) -> α1378'')
+//│ ╟── while constraining:  to_church_11376''  <!<  ((α1377'',) -> α1378'')
+//│ ╟── while constraining:  {(α1379'' -> α1380'') where: to_church_11376'' <: ((α1377'',) -> α1378'')}  <!<  ((α1372'',) -> α1373'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α1372'',) -> α1373'')
+//│ ╟── while constraining:  to_church_11371''  <!<  ((α1372'',) -> α1373'')
+//│ ╟── while constraining:  {(α1374'' -> α1375'') where: to_church_11371'' <: ((α1372'',) -> α1373'')}  <!<  ((α1367'',) -> α1368'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α1367'',) -> α1368'')
+//│ ╟── while constraining:  to_church_11366''  <!<  ((α1367'',) -> α1368'')
+//│ ╟── while constraining:  {(α1369'' -> α1370'') where: to_church_11366'' <: ((α1367'',) -> α1368'')}  <!<  ((α1362'',) -> α1363'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α1362'',) -> α1363'')
+//│ ╟── while constraining:  to_church_11361''  <!<  ((α1362'',) -> α1363'')
+//│ ╟── while constraining:  {(α1364'' -> α1365'') where: to_church_11361'' <: ((α1362'',) -> α1363'')}  <!<  ((α1357'',) -> α1358'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  to_church_1906''  <!<  ((α907'',) -> α908'')
+//│ ╟── while constraining:  {(α909'' -> α910'') where: to_church_1906'' <: ((α907'',) -> α908'')}  <!<  ((α902'',) -> α903'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α902'',) -> α903'')
+//│ ╟── while constraining:  to_church_1901''  <!<  ((α902'',) -> α903'')
+//│ ╟── while constraining:  {(α904'' -> α905'') where: to_church_1901'' <: ((α902'',) -> α903'')}  <!<  ((α897'',) -> α898'')
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  ((α897'',) -> α898'')
+//│ ╟── while constraining:  to_church_1896''  <!<  ((α897'',) -> α898'')
+//│ ╟── while constraining:  {(α899'' -> α900'') where: to_church_1896'' <: ((α897'',) -> α898'')}  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. {(α894'' -> α895'') where: to_church_1891'' <: ((α892'',) -> α893'')}›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_1891''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_1101'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_1]
 
 rec def to_church_2 n =
   if n == 0 then zero
   else succ' (to_church_2 (n - 1))
-//│ to_church_2: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'e) -> ('f | 'c)
+//│ to_church_2: int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. (('f & 'e) -> ('f | 'd)
 //│   where
-//│     'a <: 'b -> 'c
-//│     'd <: 'a -> 'e -> 'b)))
+//│     'a <: 'c -> 'd
+//│     'b <: 'a -> 'e -> 'c))) | 'to_church_2
+//│   where
+//│     'to_church_2 <: int -> 'b
 //│            = [Function: to_church_1]
 
 // FIXME see Scracth2_repro
@@ -117,9 +193,10 @@ rec def to_church_2 n =
 rec def to_church_3 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_3 (n - 1) : ChurchInt) f x)
-//│ to_church_3: int -> (forall 'b. 'b -> (forall 'b, 'a, 'c. (('c & 'a) -> 'c
+//│ to_church_3: int -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'to_church_3. (('c & 'a) -> 'c
 //│   where
-//│     'b <: 'a -> 'a & 'a -> 'c)))
+//│     'b <: 'a -> 'a & 'a -> 'c
+//│     'to_church_3 <: int -> ChurchInt))) | 'to_church_3
 //│            = [Function: to_church_3]
 
 // (* Ne Marche Pas *)
@@ -130,10 +207,10 @@ rec def to_church_3 n =
 rec def to_church_4 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ to_church_4: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> (ChurchInt | 'd)
+//│ to_church_4: int -> (forall 'a. 'a -> (forall 'a, 'to_church_4, 'b, 'c. ('b -> (ChurchInt | 'b)
 //│   where
-//│     'a <: 'b -> ChurchInt
-//│     'c <: 'a -> 'd -> 'b)))
+//│     'to_church_4 <: int -> 'a -> 'b -> 'c
+//│     'a <: 'c -> ChurchInt))) | 'to_church_4
 //│            = [Function: to_church_4]
 
 
@@ -145,10 +222,10 @@ rec def to_church_4 n =
 rec def to_church_5 n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_5 (n - 1)) f x)
-//│ to_church_5: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('c & 'e) -> 'c
+//│ to_church_5: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'to_church_5, 'd. (('c & 'd) -> 'c
 //│   where
 //│     'a <: 'b -> 'c
-//│     'd <: 'a -> 'e -> 'b)))
+//│     'to_church_5 <: int -> 'a -> 'd -> 'b))) | 'to_church_5
 //│            = [Function: to_church_5]
 
 
@@ -156,9 +233,46 @@ to_church_ty = to_church_1
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
 //│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'a <: 'd -> 'e))) | 'to_church_1
+//│   where
+//│     'to_church_1 <: int -> ChurchInt
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_1, ?to_church_10, ?b, ?c, ?d, ?e. ?to_church_10 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.232: 	to_church_ty = to_church_1
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α2075'',) -> α2076'')
+//│ ╟── while constraining:  to_church_12074''  <!<  ((α2075'',) -> α2076'')
+//│ ╟── while constraining:  {(α2077'' -> α2078'') where: to_church_12074'' <: ((α2075'',) -> α2076'')}  <!<  ((α2070'',) -> α2071'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α2070'',) -> α2071'')
+//│ ╟── while constraining:  to_church_12069''  <!<  ((α2070'',) -> α2071'')
+//│ ╟── while constraining:  {(α2072'' -> α2073'') where: to_church_12069'' <: ((α2070'',) -> α2071'')}  <!<  ((α2065'',) -> α2066'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α2065'',) -> α2066'')
+//│ ╟── while constraining:  to_church_12064''  <!<  ((α2065'',) -> α2066'')
+//│ ╟── while constraining:  {(α2067'' -> α2068'') where: to_church_12064'' <: ((α2065'',) -> α2066'')}  <!<  ((α2060'',) -> α2061'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α2060'',) -> α2061'')
+//│ ╟── while constraining:  to_church_12059''  <!<  ((α2060'',) -> α2061'')
+//│ ╟── while constraining:  {(α2062'' -> α2063'') where: to_church_12059'' <: ((α2060'',) -> α2061'')}  <!<  ((α2055'',) -> α2056'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α2055'',) -> α2056'')
+//│ ╟── while constraining:  to_church_12054''  <!<  ((α2055'',) -> α2056'')
+//│ ╟── while constraining:  {(α2057'' -> α2058'') where: to_church_12054'' <: ((α2055'',) -> α2056'')}  <!<  ((α2050'',) -> α2051'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  to_church_11599''  <!<  ((α1600'',) -> α1601'')
+//│ ╟── while constraining:  {(α1602'' -> α1603'') where: to_church_11599'' <: ((α1600'',) -> α1601'')}  <!<  ((α1595'',) -> α1596'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α1595'',) -> α1596'')
+//│ ╟── while constraining:  to_church_11594''  <!<  ((α1595'',) -> α1596'')
+//│ ╟── while constraining:  {(α1597'' -> α1598'') where: to_church_11594'' <: ((α1595'',) -> α1596'')}  <!<  ((α1590'',) -> α1591'')
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  ((α1590'',) -> α1591'')
+//│ ╟── while constraining:  to_church_11589''  <!<  ((α1590'',) -> α1591'')
+//│ ╟── while constraining:  {(α1592'' -> α1593'') where: to_church_11589'' <: ((α1590'',) -> α1591'')}  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. {(α1587'' -> α1588'') where: to_church_11584'' <: ((α1585'',) -> α1586'')}›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_11584''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_1101'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_1101'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_1]
 
 to_church_ty = to_church_1_st
@@ -170,158 +284,184 @@ to_church_ty = to_church_1_st
 
 :e
 to_church_ty = to_church_2
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'e) -> ('f | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'b, 'a, 'c, 'd, 'e, 'f. (('f & 'e) -> ('f | 'd)
 //│   where
-//│     'a <: 'b -> 'c
-//│     'd <: 'a -> 'e -> 'b)))
+//│     'a <: 'c -> 'd
+//│     'b <: 'a -> 'e -> 'c))) | 'to_church_2
+//│   where
+//│     'to_church_2 <: int -> 'b
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?to_church_2, ?d, ?e, ?f. ?to_church_2 <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.172: 	to_church_ty = to_church_2
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_2, ?to_church_20, ?a, ?b, ?c, ?d. ?to_church_20 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.286: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  ((α686'',) -> α687'')
-//│ ╟── while constraining:  α681''  <!<  ((α686'',) -> α687'')
-//│ ╟── while constraining:  {(α689'' -> α687'') where: α681'' <: ((α686'',) -> α687''), α544'' <: ((α681'',) -> α688'')}  <!<  ((α680'',) -> α677'')
-//│ ╟── while constraining:  ‹∀ 3. {(α685'''' -> α683'''') where: α681'' <: ((α682'''',) -> α683''''), α544'' <: ((α681'',) -> α684'''')}›  <!<  ((α680'',) -> α677'')
-//│ ╟── while constraining:  ‹∀ 3. {(α685'''' -> α683'''') where: α681'' <: ((α682'''',) -> α683''''), α544'' <: ((α681'',) -> α684'''')}›  <!<  α679''
-//│ ╟── while constraining:  (α681'' -> ‹∀ 3. {(α685'''' -> α683'''') where: α681'' <: ((α682'''',) -> α683''''), α544'' <: ((α681'',) -> α684'''')}›)  <!<  ((α672'',) -> α679'')
-//│ ╟── while constraining:  ‹∀ 2. (α543''' -> ‹∀ 3. {(α548'''' -> α546'''') where: α543''' <: ((α545'''',) -> α546''''), α544'' <: ((α543''',) -> α547'''')}›)›  <!<  ((α672'',) -> α679'')
-//│ ╟── while constraining:  α542''  <!<  ((α672'',) -> α679'')
-//│ ╟── while constraining:  α544''  <!<  ((α672'',) -> α679'')
-//│ ╟── while constraining:  {(α680'' -> α678'') where: α672'' <: ((α677'',) -> α678''), α544'' <: ((α672'',) -> α679'')}  <!<  ((α671'',) -> α668'')
-//│ ╟── while constraining:  ‹∀ 3. {(α676'''' -> α674'''') where: α672'' <: ((α673'''',) -> α674''''), α544'' <: ((α672'',) -> α675'''')}›  <!<  ((α671'',) -> α668'')
-//│ ╟── while constraining:  ‹∀ 3. {(α676'''' -> α674'''') where: α672'' <: ((α673'''',) -> α674''''), α544'' <: ((α672'',) -> α675'''')}›  <!<  α670''
-//│ ╟── while constraining:  (α672'' -> ‹∀ 3. {(α676'''' -> α674'''') where: α672'' <: ((α673'''',) -> α674''''), α544'' <: ((α672'',) -> α675'''')}›)  <!<  ((α663'',) -> α670'')
-//│ ╟── while constraining:  ‹∀ 2. (α543''' -> ‹∀ 3. {(α548'''' -> α546'''') where: α543''' <: ((α545'''',) -> α546''''), α544'' <: ((α543''',) -> α547'''')}›)›  <!<  ((α663'',) -> α670'')
-//│ ╟── while constraining:  α542''  <!<  ((α663'',) -> α670'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α3204'',) -> α3205'')
+//│ ╟── while constraining:  to_church_23203''  <!<  ((α3204'',) -> α3205'')
+//│ ╟── while constraining:  {(α3207'' -> α3208'') where: to_church_23203'' <: ((α3204'',) -> α3205'')}  <!<  ((α3193'',) -> α3194'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α3193'',) -> α3194'')
+//│ ╟── while constraining:  to_church_23192''  <!<  ((α3193'',) -> α3194'')
+//│ ╟── while constraining:  {(α3196'' -> α3197'') where: to_church_23192'' <: ((α3193'',) -> α3194'')}  <!<  ((α3182'',) -> α3183'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α3182'',) -> α3183'')
+//│ ╟── while constraining:  to_church_23181''  <!<  ((α3182'',) -> α3183'')
+//│ ╟── while constraining:  {(α3185'' -> α3186'') where: to_church_23181'' <: ((α3182'',) -> α3183'')}  <!<  ((α3171'',) -> α3172'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α3171'',) -> α3172'')
+//│ ╟── while constraining:  to_church_23170''  <!<  ((α3171'',) -> α3172'')
+//│ ╟── while constraining:  {(α3174'' -> α3175'') where: to_church_23170'' <: ((α3171'',) -> α3172'')}  <!<  ((α3160'',) -> α3161'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α3160'',) -> α3161'')
+//│ ╟── while constraining:  to_church_23159''  <!<  ((α3160'',) -> α3161'')
+//│ ╟── while constraining:  {(α3163'' -> α3164'') where: to_church_23159'' <: ((α3160'',) -> α3161'')}  <!<  ((α3149'',) -> α3150'')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  α542''  <!<  ((α555'',) -> α562'')
-//│ ╟── while constraining:  α541''  <!<  ((α555'',) -> α562'')
-//│ ╟── while constraining:  {(α563'' -> α561'') where: α555'' <: ((α560'',) -> α561''), α541'' <: ((α555'',) -> α562'')}  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  ‹∀ 3. {(α559'''' -> α557'''') where: α555'' <: ((α556'''',) -> α557''''), α541'' <: ((α555'',) -> α558'''')}›  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  (α555'' -> ‹∀ 3. {(α559'''' -> α557'''') where: α555'' <: ((α556'''',) -> α557''''), α541'' <: ((α555'',) -> α558'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  ‹∀ 2. (α540''' -> ‹∀ 3. {(α552'''' -> α550'''') where: α540''' <: ((α549'''',) -> α550''''), α541'' <: ((α540''',) -> α551'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  α539''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  (α538'' -> α539'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 1. (α521'' -> α522'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  to_church_2520''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. to_church_2249'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_2249'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_2249'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_2249'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_2249'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
+//│ ╟── while constraining:  to_church_22158''  <!<  ((α2159'',) -> α2160'')
+//│ ╟── while constraining:  {(α2162'' -> α2163'') where: to_church_22158'' <: ((α2159'',) -> α2160'')}  <!<  ((α2148'',) -> α2149'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α2148'',) -> α2149'')
+//│ ╟── while constraining:  to_church_22147''  <!<  ((α2148'',) -> α2149'')
+//│ ╟── while constraining:  {(α2151'' -> α2152'') where: to_church_22147'' <: ((α2148'',) -> α2149'')}  <!<  ((α2137'',) -> α2138'')
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  ((α2137'',) -> α2138'')
+//│ ╟── while constraining:  to_church_22136''  <!<  ((α2137'',) -> α2138'')
+//│ ╟── while constraining:  {(α2140'' -> α2141'') where: to_church_22136'' <: ((α2137'',) -> α2138'')}  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. {(α2129'' -> α2130'') where: to_church_22125'' <: ((α2126'',) -> α2127'')}›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_22125''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_21392'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21392'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21392'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21392'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_21392'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│ Runtime error:
 //│   ReferenceError: to_church_2 is not defined
 
 to_church_ty = to_church_3
-//│ int -> (forall 'b. 'b -> (forall 'b, 'a, 'c. (('c & 'a) -> 'c
+//│ int -> (forall 'b. 'b -> (forall 'b, 'a, 'c, 'to_church_3. (('c & 'a) -> 'c
 //│   where
-//│     'b <: 'a -> 'a & 'a -> 'c)))
+//│     'b <: 'a -> 'a & 'a -> 'c
+//│     'to_church_3 <: int -> ChurchInt))) | 'to_church_3
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_3, ?to_church_30. ?to_church_30 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.333: 	to_church_ty = to_church_3
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── while constraining:  (‘a^23 -> ‘a^23)  <!<  ('a3817^23 -> 'a3817^23)
+//│ ╟── while constraining:  α3815^23  <!<  ('a3817^23 -> 'a3817^23)
+//│ ╟── while constraining:  {(α3822^23 -> α3819^23) where: α3815^23 <: ('a3817^23 -> 'a3817^23), α3815^23 <: ((α3818^23,) -> α3819^23), to_church_33816^23 <: ((α3820^23,) -> α3821^23)}  <!<  (‘a^23 -> ‘a^23)
+//│ ╟── while constraining:  ‹∀ 3. {(α3814'''' -> α3811'''') where: α3807^23 <: ('a3809'''' -> 'a3809''''), α3807^23 <: ((α3810'''',) -> α3811''''), to_church_33808^22 <: ((α3812'''',) -> α3813'''')}›  <!<  (‘a^23 -> ‘a^23)
+//│ ╟── while constraining:  (α3807^23 -> ‹∀ 3. {(α3814'''' -> α3811'''') where: α3807^23 <: ('a3809'''' -> 'a3809''''), α3807^23 <: ((α3810'''',) -> α3811''''), to_church_33808^22 <: ((α3812'''',) -> α3813'''')}›)  <!<  ((‘a^23 -> ‘a^23) -> (‘a^23 -> ‘a^23))
+//│ ╟── while constraining:  ‹∀ 2. (α3799''' -> ‹∀ 3. {(α3806'''' -> α3803'''') where: α3799''' <: ('a3801'''' -> 'a3801''''), α3799''' <: ((α3802'''',) -> α3803''''), to_church_33800^22 <: ((α3804'''',) -> α3805'''')}›)›  <!<  ((‘a^23 -> ‘a^23) -> (‘a^23 -> ‘a^23))
+//│ ╟── while constraining:  ‹∀ 2. (α3799''' -> ‹∀ 3. {(α3806'''' -> α3803'''') where: α3799''' <: ('a3801'''' -> 'a3801''''), α3799''' <: ((α3802'''',) -> α3803''''), to_church_33800^22 <: ((α3804'''',) -> α3805'''')}›)›  <!<  ‹∀ 0. (('a49' -> 'a49') -> ('a49' -> 'a49'))›
+//│ ╟── while constraining:  ‹∀ 2. (α3799''' -> ‹∀ 3. {(α3806'''' -> α3803'''') where: α3799''' <: ('a3801'''' -> 'a3801''''), α3799''' <: ((α3802'''',) -> α3803''''), to_church_33800^22 <: ((α3804'''',) -> α3805'''')}›)›  <!<  ChurchInt
+//│ ╟── while constraining:  ‹∀ 2. (α3799''' -> ‹∀ 3. {(α3806'''' -> α3803'''') where: α3799''' <: ('a3801'''' -> 'a3801''''), α3799''' <: ((α3802'''',) -> α3803''''), to_church_33800^22 <: ((α3804'''',) -> α3805'''')}›)›  <!<  α3795^22
+//│ ╟── while constraining:  α3798^22  <!<  α3795^22
+//│ ╟── while constraining:  (α3797^22 -> α3798^22)  <!<  ((α3794^22,) -> α3795^22)
+//│ ╟── while constraining:  ‹∀ 1. (α3242'' -> α3243'')›  <!<  ((α3794^22,) -> α3795^22)
+//│ ╟── while constraining:  to_church_33790^22  <!<  ((α3794^22,) -> α3795^22)
+//│ ╟── while constraining:  {(α3796^22 -> α3793^22) where: α3789^22 <: ('a3791^22 -> 'a3791^22), α3789^22 <: ((α3792^22,) -> α3793^22), to_church_33790^22 <: ((α3794^22,) -> α3795^22)}  <!<  (‘a^22 -> ‘a^22)
+//│ ╟── while constraining:  ‹∀ 3. {(α3788'''' -> α3785'''') where: α3781^22 <: ('a3783'''' -> 'a3783''''), α3781^22 <: ((α3784'''',) -> α3785''''), to_church_33782^21 <: ((α3786'''',) -> α3787'''')}›  <!<  (‘a^22 -> ‘a^22)
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 1. (α3242'' -> α3243'')›  <!<  ((α3273'',) -> α3274'')
+//│ ╟── while constraining:  to_church_33254''  <!<  ((α3273'',) -> α3274'')
+//│ ╟── while constraining:  {(α3275'' -> α3272'') where: α3263'' <: ('a3270'' -> 'a3270''), α3263'' <: ((α3271'',) -> α3272''), to_church_33254'' <: ((α3273'',) -> α3274'')}  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 3. {(α3269'''' -> α3266'''') where: α3263'' <: ('a3264'''' -> 'a3264''''), α3263'' <: ((α3265'''',) -> α3266''''), to_church_33254'' <: ((α3267'''',) -> α3268'''')}›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  (α3263'' -> ‹∀ 3. {(α3269'''' -> α3266'''') where: α3263'' <: ('a3264'''' -> 'a3264''''), α3263'' <: ((α3265'''',) -> α3266''''), to_church_33254'' <: ((α3267'''',) -> α3268'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α3253''' -> ‹∀ 3. {(α3260'''' -> α3257'''') where: α3253''' <: ('a3255'''' -> 'a3255''''), α3253''' <: ((α3256'''',) -> α3257''''), to_church_33254'' <: ((α3258'''',) -> α3259'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  α3252''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  (α3251'' -> α3252'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. (α3242'' -> α3243'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_33241''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_31437'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_31437'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_31437'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_31437'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_31437'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_3]
 
 :e
 to_church_ty = to_church_4
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> (ChurchInt | 'd)
+//│ int -> (forall 'a. 'a -> (forall 'a, 'to_church_4, 'b, 'c. ('b -> (ChurchInt | 'b)
 //│   where
-//│     'a <: 'b -> ChurchInt
-//│     'c <: 'a -> 'd -> 'b)))
+//│     'to_church_4 <: int -> 'a -> 'b -> 'c
+//│     'a <: 'c -> ChurchInt))) | 'to_church_4
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.226: 	to_church_ty = to_church_4
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_4, ?to_church_40. ?to_church_40 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.378: 	to_church_ty = to_church_4
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not a function
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                        ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.132: 	  else fun f -> fun x -> f ((to_church_4 (n - 1)) f x) : ChurchInt
-//│ ╙──       	                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_4, ?b, ?c, ?d. ?to_church_4 <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.226: 	to_church_ty = to_church_4
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  ((α949'',) -> α950'')
-//│ ╟── while constraining:  α944''  <!<  ((α949'',) -> α950'')
-//│ ╟── while constraining:  {(α952'' -> ChurchInt) where: α944'' <: ((α949'',) -> α950''), α766'' <: ((α944'',) -> α951'')}  <!<  ((α943'',) -> α940'')
-//│ ╟── while constraining:  ‹∀ 3. {(α948'''' -> ChurchInt) where: α944'' <: ((α945'''',) -> α946''''), α766'' <: ((α944'',) -> α947'''')}›  <!<  ((α943'',) -> α940'')
-//│ ╟── while constraining:  ‹∀ 3. {(α948'''' -> ChurchInt) where: α944'' <: ((α945'''',) -> α946''''), α766'' <: ((α944'',) -> α947'''')}›  <!<  α942''
-//│ ╟── while constraining:  (α944'' -> ‹∀ 3. {(α948'''' -> ChurchInt) where: α944'' <: ((α945'''',) -> α946''''), α766'' <: ((α944'',) -> α947'''')}›)  <!<  ((α935'',) -> α942'')
-//│ ╟── while constraining:  ‹∀ 2. (α765''' -> ‹∀ 3. {(α770'''' -> ChurchInt) where: α765''' <: ((α767'''',) -> α768''''), α766'' <: ((α765''',) -> α769'''')}›)›  <!<  ((α935'',) -> α942'')
-//│ ╟── while constraining:  α766''  <!<  ((α935'',) -> α942'')
-//│ ╟── while constraining:  {(α943'' -> ChurchInt) where: α935'' <: ((α940'',) -> α941''), α766'' <: ((α935'',) -> α942'')}  <!<  ((α934'',) -> α931'')
-//│ ╟── while constraining:  ‹∀ 3. {(α939'''' -> ChurchInt) where: α935'' <: ((α936'''',) -> α937''''), α766'' <: ((α935'',) -> α938'''')}›  <!<  ((α934'',) -> α931'')
-//│ ╟── while constraining:  ‹∀ 3. {(α939'''' -> ChurchInt) where: α935'' <: ((α936'''',) -> α937''''), α766'' <: ((α935'',) -> α938'''')}›  <!<  α933''
-//│ ╟── while constraining:  (α935'' -> ‹∀ 3. {(α939'''' -> ChurchInt) where: α935'' <: ((α936'''',) -> α937''''), α766'' <: ((α935'',) -> α938'''')}›)  <!<  ((α926'',) -> α933'')
-//│ ╟── while constraining:  ‹∀ 2. (α765''' -> ‹∀ 3. {(α770'''' -> ChurchInt) where: α765''' <: ((α767'''',) -> α768''''), α766'' <: ((α765''',) -> α769'''')}›)›  <!<  ((α926'',) -> α933'')
-//│ ╟── while constraining:  α766''  <!<  ((α926'',) -> α933'')
-//│ ╟── while constraining:  {(α934'' -> ChurchInt) where: α926'' <: ((α931'',) -> α932''), α766'' <: ((α926'',) -> α933'')}  <!<  ((α925'',) -> α922'')
+//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  α4271''
+//│ ╟── while constraining:  α4248''  <!<  α4271''
+//│ ╟── while constraining:  (α4248'',)  <!<  (α4271'',)
+//│ ╟── while constraining:  (α4271'' -> ‹∀ 3. (α1483'''' -> α1483'''')›)  <!<  ((α4248'',) -> α4257'')
+//│ ╟── while constraining:  ‹∀ 2. (α1482''' -> ‹∀ 3. (α1483'''' -> α1483'''')›)›  <!<  ((α4248'',) -> α4257'')
+//│ ╟── while constraining:  ‹∀ 2. (α1482''' -> ‹∀ 3. (α1483'''' -> α1483'''')›)›  <!<  α4256''
+//│ ╟── while constraining:  α4262''  <!<  α4256''
+//│ ╟── while constraining:  (α4261'' -> α4262'')  <!<  ((α4255'',) -> α4256'')
+//│ ╟── while constraining:  ‹∀ 1. (α3852'' -> α3853'')›  <!<  ((α4255'',) -> α4256'')
+//│ ╟── while constraining:  to_church_44239''  <!<  ((α4255'',) -> α4256'')
+//│ ╟── while constraining:  {(α4258'' -> ChurchInt) where: to_church_44239'' <: ((α4255'',) -> α4256''), α4248'' <: ((α4259'',) -> α4260'')}  <!<  ((α4233'',) -> α4234'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4252'''' -> ChurchInt) where: to_church_44239'' <: ((α4249'''',) -> α4250''''), α4248'' <: ((α4253'''',) -> α4254'''')}›  <!<  ((α4233'',) -> α4234'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4252'''' -> ChurchInt) where: to_church_44239'' <: ((α4249'''',) -> α4250''''), α4248'' <: ((α4253'''',) -> α4254'''')}›  <!<  α4232''
+//│ ╟── while constraining:  (α4248'' -> ‹∀ 3. {(α4252'''' -> ChurchInt) where: to_church_44239'' <: ((α4249'''',) -> α4250''''), α4248'' <: ((α4253'''',) -> α4254'''')}›)  <!<  ((α4223'',) -> α4232'')
+//│ ╟── while constraining:  ‹∀ 2. (α4238''' -> ‹∀ 3. {(α4243'''' -> ChurchInt) where: to_church_44239'' <: ((α4240'''',) -> α4241''''), α4238''' <: ((α4244'''',) -> α4245'''')}›)›  <!<  ((α4223'',) -> α4232'')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 2. (α765''' -> ‹∀ 3. {(α770'''' -> ChurchInt) where: α765''' <: ((α767'''',) -> α768''''), α766'' <: ((α765''',) -> α769'''')}›)›  <!<  ((α773'',) -> α780'')
-//│ ╟── while constraining:  α766''  <!<  ((α773'',) -> α780'')
-//│ ╟── while constraining:  {(α781'' -> ChurchInt) where: α773'' <: ((α778'',) -> α779''), α766'' <: ((α773'',) -> α780'')}  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  ‹∀ 3. {(α777'''' -> ChurchInt) where: α773'' <: ((α774'''',) -> α775''''), α766'' <: ((α773'',) -> α776'''')}›  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  (α773'' -> ‹∀ 3. {(α777'''' -> ChurchInt) where: α773'' <: ((α774'''',) -> α775''''), α766'' <: ((α773'',) -> α776'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  ‹∀ 2. (α765''' -> ‹∀ 3. {(α770'''' -> ChurchInt) where: α765''' <: ((α767'''',) -> α768''''), α766'' <: ((α765''',) -> α769'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  α764''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  (α763'' -> α764'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 1. (α753'' -> α754'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  to_church_4752''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. to_church_4351'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_4351'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_4351'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_4351'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_4351'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
+//│ ╟── while constraining:  ‹∀ 1. (α3852'' -> α3853'')›  <!<  ((α3880'',) -> α3881'')
+//│ ╟── while constraining:  to_church_43864''  <!<  ((α3880'',) -> α3881'')
+//│ ╟── while constraining:  {(α3883'' -> ChurchInt) where: to_church_43864'' <: ((α3880'',) -> α3881''), α3873'' <: ((α3884'',) -> α3885'')}  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 3. {(α3877'''' -> ChurchInt) where: to_church_43864'' <: ((α3874'''',) -> α3875''''), α3873'' <: ((α3878'''',) -> α3879'''')}›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  (α3873'' -> ‹∀ 3. {(α3877'''' -> ChurchInt) where: to_church_43864'' <: ((α3874'''',) -> α3875''''), α3873'' <: ((α3878'''',) -> α3879'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α3863''' -> ‹∀ 3. {(α3868'''' -> ChurchInt) where: to_church_43864'' <: ((α3865'''',) -> α3866''''), α3863''' <: ((α3869'''',) -> α3870'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  α3862''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  (α3861'' -> α3862'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. (α3852'' -> α3853'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_43851''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_41477'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_41477'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_41477'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_41477'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_41477'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_4]
 
 :e
 to_church_ty = to_church_5
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('c & 'e) -> 'c
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'to_church_5, 'd. (('c & 'd) -> 'c
 //│   where
 //│     'a <: 'b -> 'c
-//│     'd <: 'a -> 'e -> 'b)))
+//│     'to_church_5 <: int -> 'a -> 'd -> 'b))) | 'to_church_5
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_5, ?b, ?c, ?d. ?to_church_5 <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.283: 	to_church_ty = to_church_5
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_5, ?to_church_50. ?to_church_50 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.423: 	to_church_ty = to_church_5
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  ((α1180'',) -> α1181'')
-//│ ╟── while constraining:  α1175''  <!<  ((α1180'',) -> α1181'')
-//│ ╟── while constraining:  {(α1183'' -> α1181'') where: α1175'' <: ((α1180'',) -> α1181''), α997'' <: ((α1175'',) -> α1182'')}  <!<  ((α1174'',) -> α1171'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1179'''' -> α1177'''') where: α1175'' <: ((α1176'''',) -> α1177''''), α997'' <: ((α1175'',) -> α1178'''')}›  <!<  ((α1174'',) -> α1171'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1179'''' -> α1177'''') where: α1175'' <: ((α1176'''',) -> α1177''''), α997'' <: ((α1175'',) -> α1178'''')}›  <!<  α1173''
-//│ ╟── while constraining:  (α1175'' -> ‹∀ 3. {(α1179'''' -> α1177'''') where: α1175'' <: ((α1176'''',) -> α1177''''), α997'' <: ((α1175'',) -> α1178'''')}›)  <!<  ((α1166'',) -> α1173'')
-//│ ╟── while constraining:  ‹∀ 2. (α996''' -> ‹∀ 3. {(α1001'''' -> α999'''') where: α996''' <: ((α998'''',) -> α999''''), α997'' <: ((α996''',) -> α1000'''')}›)›  <!<  ((α1166'',) -> α1173'')
-//│ ╟── while constraining:  α997''  <!<  ((α1166'',) -> α1173'')
-//│ ╟── while constraining:  {(α1174'' -> α1172'') where: α1166'' <: ((α1171'',) -> α1172''), α997'' <: ((α1166'',) -> α1173'')}  <!<  ((α1165'',) -> α1162'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1170'''' -> α1168'''') where: α1166'' <: ((α1167'''',) -> α1168''''), α997'' <: ((α1166'',) -> α1169'''')}›  <!<  ((α1165'',) -> α1162'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1170'''' -> α1168'''') where: α1166'' <: ((α1167'''',) -> α1168''''), α997'' <: ((α1166'',) -> α1169'''')}›  <!<  α1164''
-//│ ╟── while constraining:  (α1166'' -> ‹∀ 3. {(α1170'''' -> α1168'''') where: α1166'' <: ((α1167'''',) -> α1168''''), α997'' <: ((α1166'',) -> α1169'''')}›)  <!<  ((α1157'',) -> α1164'')
-//│ ╟── while constraining:  ‹∀ 2. (α996''' -> ‹∀ 3. {(α1001'''' -> α999'''') where: α996''' <: ((α998'''',) -> α999''''), α997'' <: ((α996''',) -> α1000'''')}›)›  <!<  ((α1157'',) -> α1164'')
-//│ ╟── while constraining:  α997''  <!<  ((α1157'',) -> α1164'')
-//│ ╟── while constraining:  {(α1165'' -> α1163'') where: α1157'' <: ((α1162'',) -> α1163''), α997'' <: ((α1157'',) -> α1164'')}  <!<  ((α1156'',) -> α1153'')
+//│ ╟── while constraining:  α4706''  <!<  ‘a''
+//│ ╟── while constraining:  (α4706'',)  <!<  (‘a'',)
+//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  ((α4706'',) -> α4707'')
+//│ ╟── while constraining:  α4699''  <!<  ((α4706'',) -> α4707'')
+//│ ╟── while constraining:  {(α4711'' -> α4707'') where: α4699'' <: ((α4706'',) -> α4707''), to_church_54690'' <: ((α4708'',) -> α4709'')}  <!<  ((α4686'',) -> α4681'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4705'''' -> α4701'''') where: α4699'' <: ((α4700'''',) -> α4701''''), to_church_54690'' <: ((α4702'''',) -> α4703'''')}›  <!<  ((α4686'',) -> α4681'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4705'''' -> α4701'''') where: α4699'' <: ((α4700'''',) -> α4701''''), to_church_54690'' <: ((α4702'''',) -> α4703'''')}›  <!<  α4685''
+//│ ╟── while constraining:  (α4699'' -> ‹∀ 3. {(α4705'''' -> α4701'''') where: α4699'' <: ((α4700'''',) -> α4701''''), to_church_54690'' <: ((α4702'''',) -> α4703'''')}›)  <!<  ((α4674'',) -> α4685'')
+//│ ╟── while constraining:  ‹∀ 2. (α4689''' -> ‹∀ 3. {(α4696'''' -> α4692'''') where: α4689''' <: ((α4691'''',) -> α4692''''), to_church_54690'' <: ((α4693'''',) -> α4694'''')}›)›  <!<  ((α4674'',) -> α4685'')
+//│ ╟── while constraining:  ‹∀ 2. (α4689''' -> ‹∀ 3. {(α4696'''' -> α4692'''') where: α4689''' <: ((α4691'''',) -> α4692''''), to_church_54690'' <: ((α4693'''',) -> α4694'''')}›)›  <!<  α4684''
+//│ ╟── while constraining:  α4688''  <!<  α4684''
+//│ ╟── while constraining:  (α4687'' -> α4688'')  <!<  ((α4683'',) -> α4684'')
+//│ ╟── while constraining:  ‹∀ 1. (α4303'' -> α4304'')›  <!<  ((α4683'',) -> α4684'')
+//│ ╟── while constraining:  to_church_54665''  <!<  ((α4683'',) -> α4684'')
+//│ ╟── while constraining:  {(α4686'' -> α4682'') where: α4674'' <: ((α4681'',) -> α4682''), to_church_54665'' <: ((α4683'',) -> α4684'')}  <!<  ((α4661'',) -> α4656'')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 2. (α996''' -> ‹∀ 3. {(α1001'''' -> α999'''') where: α996''' <: ((α998'''',) -> α999''''), α997'' <: ((α996''',) -> α1000'''')}›)›  <!<  ((α1004'',) -> α1011'')
-//│ ╟── while constraining:  α997''  <!<  ((α1004'',) -> α1011'')
-//│ ╟── while constraining:  {(α1012'' -> α1010'') where: α1004'' <: ((α1009'',) -> α1010''), α997'' <: ((α1004'',) -> α1011'')}  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1008'''' -> α1006'''') where: α1004'' <: ((α1005'''',) -> α1006''''), α997'' <: ((α1004'',) -> α1007'''')}›  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  (α1004'' -> ‹∀ 3. {(α1008'''' -> α1006'''') where: α1004'' <: ((α1005'''',) -> α1006''''), α997'' <: ((α1004'',) -> α1007'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  ‹∀ 2. (α996''' -> ‹∀ 3. {(α1001'''' -> α999'''') where: α996''' <: ((α998'''',) -> α999''''), α997'' <: ((α996''',) -> α1000'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  α995''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  (α994'' -> α995'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 1. (α984'' -> α985'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  to_church_5983''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. to_church_5393'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_5393'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_5393'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
-//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_5393'››  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_5393'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
+//│ ╟── while constraining:  ‹∀ 1. (α4303'' -> α4304'')›  <!<  ((α4333'',) -> α4334'')
+//│ ╟── while constraining:  to_church_54315''  <!<  ((α4333'',) -> α4334'')
+//│ ╟── while constraining:  {(α4336'' -> α4332'') where: α4324'' <: ((α4331'',) -> α4332''), to_church_54315'' <: ((α4333'',) -> α4334'')}  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4330'''' -> α4326'''') where: α4324'' <: ((α4325'''',) -> α4326''''), to_church_54315'' <: ((α4327'''',) -> α4328'''')}›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  (α4324'' -> ‹∀ 3. {(α4330'''' -> α4326'''') where: α4324'' <: ((α4325'''',) -> α4326''''), to_church_54315'' <: ((α4327'''',) -> α4328'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α4314''' -> ‹∀ 3. {(α4321'''' -> α4317'''') where: α4314''' <: ((α4316'''',) -> α4317''''), to_church_54315'' <: ((α4318'''',) -> α4319'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  α4313''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  (α4312'' -> α4313'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. (α4303'' -> α4304'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_54302''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_51516'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_51516'››  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_51516'››  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_church_51516'››  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_church_51516'››  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_5]
 
 
@@ -340,51 +480,51 @@ to_church_ty = to_church_5
 rec def to_church_ty n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
-//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. (('c & 'e) -> 'c
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'to_church_ty, 'd. (('c & 'd) -> 'c
 //│   where
 //│     'a <: 'b -> 'c
-//│     'd <: 'a -> 'e -> 'b)))
+//│     'to_church_ty <: int -> 'a -> 'd -> 'b))) | 'to_church_ty
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_ty, ?b, ?c, ?d. ?to_church_ty <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.340: 	rec def to_church_ty n =
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_ty, ?to_church_ty0. ?to_church_ty0 <: int -> ChurchInt` exceeded recursion depth limit (400)
+//│ ║  l.480: 	rec def to_church_ty n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.341: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.481: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.342: 	  else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
+//│ ║  l.482: 	  else fun f -> fun x -> f ((to_church_ty (n - 1)) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  ((α1432'',) -> α1433'')
-//│ ╟── while constraining:  α1427''  <!<  ((α1432'',) -> α1433'')
-//│ ╟── while constraining:  {(α1435'' -> α1433'') where: α1427'' <: ((α1432'',) -> α1433''), α1249'' <: ((α1427'',) -> α1434'')}  <!<  ((α1426'',) -> α1423'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1431'''' -> α1429'''') where: α1427'' <: ((α1428'''',) -> α1429''''), α1249'' <: ((α1427'',) -> α1430'''')}›  <!<  ((α1426'',) -> α1423'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1431'''' -> α1429'''') where: α1427'' <: ((α1428'''',) -> α1429''''), α1249'' <: ((α1427'',) -> α1430'''')}›  <!<  α1425''
-//│ ╟── while constraining:  (α1427'' -> ‹∀ 3. {(α1431'''' -> α1429'''') where: α1427'' <: ((α1428'''',) -> α1429''''), α1249'' <: ((α1427'',) -> α1430'''')}›)  <!<  ((α1418'',) -> α1425'')
-//│ ╟── while constraining:  ‹∀ 2. (α1248''' -> ‹∀ 3. {(α1253'''' -> α1251'''') where: α1248''' <: ((α1250'''',) -> α1251''''), α1249'' <: ((α1248''',) -> α1252'''')}›)›  <!<  ((α1418'',) -> α1425'')
-//│ ╟── while constraining:  α1249''  <!<  ((α1418'',) -> α1425'')
-//│ ╟── while constraining:  {(α1426'' -> α1424'') where: α1418'' <: ((α1423'',) -> α1424''), α1249'' <: ((α1418'',) -> α1425'')}  <!<  ((α1417'',) -> α1414'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1422'''' -> α1420'''') where: α1418'' <: ((α1419'''',) -> α1420''''), α1249'' <: ((α1418'',) -> α1421'''')}›  <!<  ((α1417'',) -> α1414'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1422'''' -> α1420'''') where: α1418'' <: ((α1419'''',) -> α1420''''), α1249'' <: ((α1418'',) -> α1421'''')}›  <!<  α1416''
-//│ ╟── while constraining:  (α1418'' -> ‹∀ 3. {(α1422'''' -> α1420'''') where: α1418'' <: ((α1419'''',) -> α1420''''), α1249'' <: ((α1418'',) -> α1421'''')}›)  <!<  ((α1409'',) -> α1416'')
-//│ ╟── while constraining:  ‹∀ 2. (α1248''' -> ‹∀ 3. {(α1253'''' -> α1251'''') where: α1248''' <: ((α1250'''',) -> α1251''''), α1249'' <: ((α1248''',) -> α1252'''')}›)›  <!<  ((α1409'',) -> α1416'')
-//│ ╟── while constraining:  α1249''  <!<  ((α1409'',) -> α1416'')
-//│ ╟── while constraining:  {(α1417'' -> α1415'') where: α1409'' <: ((α1414'',) -> α1415''), α1249'' <: ((α1409'',) -> α1416'')}  <!<  ((α1408'',) -> α1405'')
+//│ ╟── while constraining:  (‘a'' -> ‘a'')  <!<  α5179''
+//│ ╟── while constraining:  α5156''  <!<  α5179''
+//│ ╟── while constraining:  (α5156'',)  <!<  (α5179'',)
+//│ ╟── while constraining:  (α5179'' -> ‹∀ 3. (α4724'''' -> α4724'''')›)  <!<  ((α5156'',) -> α5167'')
+//│ ╟── while constraining:  ‹∀ 2. (α4723''' -> ‹∀ 3. (α4724'''' -> α4724'''')›)›  <!<  ((α5156'',) -> α5167'')
+//│ ╟── while constraining:  ‹∀ 2. (α4723''' -> ‹∀ 3. (α4724'''' -> α4724'''')›)›  <!<  α5166''
+//│ ╟── while constraining:  α5170''  <!<  α5166''
+//│ ╟── while constraining:  (α5169'' -> α5170'')  <!<  ((α5165'',) -> α5166'')
+//│ ╟── while constraining:  ‹∀ 1. (α4760'' -> α4761'')›  <!<  ((α5165'',) -> α5166'')
+//│ ╟── while constraining:  to_church_ty5147''  <!<  ((α5165'',) -> α5166'')
+//│ ╟── while constraining:  {(α5168'' -> α5164'') where: α5156'' <: ((α5163'',) -> α5164''), to_church_ty5147'' <: ((α5165'',) -> α5166'')}  <!<  ((α5143'',) -> α5138'')
+//│ ╟── while constraining:  ‹∀ 3. {(α5162'''' -> α5158'''') where: α5156'' <: ((α5157'''',) -> α5158''''), to_church_ty5147'' <: ((α5159'''',) -> α5160'''')}›  <!<  ((α5143'',) -> α5138'')
+//│ ╟── while constraining:  ‹∀ 3. {(α5162'''' -> α5158'''') where: α5156'' <: ((α5157'''',) -> α5158''''), to_church_ty5147'' <: ((α5159'''',) -> α5160'''')}›  <!<  α5142''
+//│ ╟── while constraining:  (α5156'' -> ‹∀ 3. {(α5162'''' -> α5158'''') where: α5156'' <: ((α5157'''',) -> α5158''''), to_church_ty5147'' <: ((α5159'''',) -> α5160'''')}›)  <!<  ((α5131'',) -> α5142'')
+//│ ╟── while constraining:  ‹∀ 2. (α5146''' -> ‹∀ 3. {(α5153'''' -> α5149'''') where: α5146''' <: ((α5148'''',) -> α5149''''), to_church_ty5147'' <: ((α5150'''',) -> α5151'''')}›)›  <!<  ((α5131'',) -> α5142'')
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  (α1265'' -> ‹∀ 3. {(α1269'''' -> α1267'''') where: α1265'' <: ((α1266'''',) -> α1267''''), α1249'' <: ((α1265'',) -> α1268'''')}›)  <!<  ((α1256'',) -> α1263'')
-//│ ╟── while constraining:  ‹∀ 2. (α1248''' -> ‹∀ 3. {(α1253'''' -> α1251'''') where: α1248''' <: ((α1250'''',) -> α1251''''), α1249'' <: ((α1248''',) -> α1252'''')}›)›  <!<  ((α1256'',) -> α1263'')
-//│ ╟── while constraining:  α1249''  <!<  ((α1256'',) -> α1263'')
-//│ ╟── while constraining:  {(α1264'' -> α1262'') where: α1256'' <: ((α1261'',) -> α1262''), α1249'' <: ((α1256'',) -> α1263'')}  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  ‹∀ 3. {(α1260'''' -> α1258'''') where: α1256'' <: ((α1257'''',) -> α1258''''), α1249'' <: ((α1256'',) -> α1259'''')}›  <!<  (‘a'' -> ‘a'')
-//│ ╟── while constraining:  (α1256'' -> ‹∀ 3. {(α1260'''' -> α1258'''') where: α1256'' <: ((α1257'''',) -> α1258''''), α1249'' <: ((α1256'',) -> α1259'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  ‹∀ 2. (α1248''' -> ‹∀ 3. {(α1253'''' -> α1251'''') where: α1248''' <: ((α1250'''',) -> α1251''''), α1249'' <: ((α1248''',) -> α1252'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  α1247''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
-//│ ╟── while constraining:  (α1246'' -> α1247'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 1. (α1236'' -> α1237'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  to_church_ty1235''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. to_church_ty1191'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
-//│ ╟── while constraining:  ‹∀ 0. to_church_ty1191'›  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
-//│ ╟── while constraining:  ‹∀ 0. to_church_ty1191'›  <!<  (Int -> ChurchInt)
-//│ ╙── while constraining:  ‹∀ 0. to_church_ty1191'›  <!<  ‹∀ 0. (Int -> ChurchInt)›
+//│ ╟── while constraining:  (α4794'' -> α4795'')  <!<  ((α4790'',) -> α4791'')
+//│ ╟── while constraining:  ‹∀ 1. (α4760'' -> α4761'')›  <!<  ((α4790'',) -> α4791'')
+//│ ╟── while constraining:  to_church_ty4772''  <!<  ((α4790'',) -> α4791'')
+//│ ╟── while constraining:  {(α4793'' -> α4789'') where: α4781'' <: ((α4788'',) -> α4789''), to_church_ty4772'' <: ((α4790'',) -> α4791'')}  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  ‹∀ 3. {(α4787'''' -> α4783'''') where: α4781'' <: ((α4782'''',) -> α4783''''), to_church_ty4772'' <: ((α4784'''',) -> α4785'''')}›  <!<  (‘a'' -> ‘a'')
+//│ ╟── while constraining:  (α4781'' -> ‹∀ 3. {(α4787'''' -> α4783'''') where: α4781'' <: ((α4782'''',) -> α4783''''), to_church_ty4772'' <: ((α4784'''',) -> α4785'''')}›)  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  ‹∀ 2. (α4771''' -> ‹∀ 3. {(α4778'''' -> α4774'''') where: α4771''' <: ((α4773'''',) -> α4774''''), to_church_ty4772'' <: ((α4775'''',) -> α4776'''')}›)›  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  α4770''  <!<  ((‘a'' -> ‘a'') -> (‘a'' -> ‘a''))
+//│ ╟── while constraining:  (α4769'' -> α4770'')  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 1. (α4760'' -> α4761'')›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  to_church_ty4759''  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_ty4718'›  <!<  (Int -> ((‘a'' -> ‘a'') -> (‘a'' -> ‘a'')))
+//│ ╟── while constraining:  ‹∀ 0. to_church_ty4718'›  <!<  ‹∀ 0. (Int -> (('a49' -> 'a49') -> ('a49' -> 'a49')))›
+//│ ╟── while constraining:  ‹∀ 0. to_church_ty4718'›  <!<  (Int -> ChurchInt)
+//│ ╙── while constraining:  ‹∀ 0. to_church_ty4718'›  <!<  ‹∀ 0. (Int -> ChurchInt)›
 //│             = [Function: to_church_ty6]
 
 // * ... since we can fix it by using the annotation for rec calls:
@@ -407,13 +547,83 @@ def tc n = to_church_2 n : ChurchInt
 def tc n = to_church_3 n : ChurchInt
 //│ tc: int -> ChurchInt
 //│   = [Function: tc]
-//│ tc: int -> ChurchInt
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_church_1, ?to_church_10, ?b, ?c, ?d, ?e. ?to_church_10 <: ?f -> ?g` exceeded recursion depth limit (400)
+//│ ║  l.545: 	def tc n = to_church_1 n : ChurchInt
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5933'',) -> α5934'')
+//│ ╟── while constraining:  to_church_15930''  <!<  ((α5933'',) -> α5934'')
+//│ ╟── while constraining:  {(α5935'' -> α5936'') where: to_church_15930'' <: ((α5933'',) -> α5934'')}  <!<  ((α5926'',) -> α5927'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5926'',) -> α5927'')
+//│ ╟── while constraining:  to_church_15923''  <!<  ((α5926'',) -> α5927'')
+//│ ╟── while constraining:  {(α5928'' -> α5929'') where: to_church_15923'' <: ((α5926'',) -> α5927'')}  <!<  ((α5919'',) -> α5920'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5919'',) -> α5920'')
+//│ ╟── while constraining:  to_church_15916''  <!<  ((α5919'',) -> α5920'')
+//│ ╟── while constraining:  {(α5921'' -> α5922'') where: to_church_15916'' <: ((α5919'',) -> α5920'')}  <!<  ((α5912'',) -> α5913'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5912'',) -> α5913'')
+//│ ╟── while constraining:  to_church_15909''  <!<  ((α5912'',) -> α5913'')
+//│ ╟── while constraining:  {(α5914'' -> α5915'') where: to_church_15909'' <: ((α5912'',) -> α5913'')}  <!<  ((α5905'',) -> α5906'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5905'',) -> α5906'')
+//│ ╟── while constraining:  to_church_15902''  <!<  ((α5905'',) -> α5906'')
+//│ ╟── while constraining:  {(α5907'' -> α5908'') where: to_church_15902'' <: ((α5905'',) -> α5906'')}  <!<  ((α5898'',) -> α5899'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5268'',) -> α5269'')
+//│ ╟── while constraining:  to_church_15265''  <!<  ((α5268'',) -> α5269'')
+//│ ╟── while constraining:  {(α5270'' -> α5271'') where: to_church_15265'' <: ((α5268'',) -> α5269'')}  <!<  ((α5261'',) -> α5262'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5261'',) -> α5262'')
+//│ ╟── while constraining:  to_church_15258''  <!<  ((α5261'',) -> α5262'')
+//│ ╟── while constraining:  {(α5263'' -> α5264'') where: to_church_15258'' <: ((α5261'',) -> α5262'')}  <!<  ((α5254'',) -> α5255'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5254'',) -> α5255'')
+//│ ╟── while constraining:  to_church_15251''  <!<  ((α5254'',) -> α5255'')
+//│ ╟── while constraining:  {(α5256'' -> α5257'') where: to_church_15251'' <: ((α5254'',) -> α5255'')}  <!<  ((α5247'',) -> α5248'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5247'',) -> α5248'')
+//│ ╟── while constraining:  to_church_15244''  <!<  ((α5247'',) -> α5248'')
+//│ ╟── while constraining:  {(α5249'' -> α5250'') where: to_church_15244'' <: ((α5247'',) -> α5248'')}  <!<  ((α5237'',) -> α5238'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5242'' -> α5243'') where: to_church_15239'' <: ((α5240'',) -> α5241'')}›  <!<  ((α5237'',) -> α5238'')
+//│ ╟── while constraining:  to_church_15239''  <!<  ((α5237'',) -> α5238'')
+//│ ╙── while constraining:  ‹∀ 0. to_church_1101'›  <!<  ((α5237'',) -> α5238'')
+//│ tc: anything -> ChurchInt
 //│   = [Function: tc1]
-//│ tc: int -> ChurchInt
-//│   where
-//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_church_2, ?to_church_20, ?a, ?b, ?c, ?d. ?to_church_20 <: ?e -> ?f` exceeded recursion depth limit (400)
+//│ ║  l.546: 	def tc n = to_church_2 n : ChurchInt
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α7234'',) -> α7235'')
+//│ ╟── while constraining:  to_church_27231''  <!<  ((α7234'',) -> α7235'')
+//│ ╟── while constraining:  {(α7237'' -> α7238'') where: to_church_27231'' <: ((α7234'',) -> α7235'')}  <!<  ((α7221'',) -> α7222'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α7221'',) -> α7222'')
+//│ ╟── while constraining:  to_church_27218''  <!<  ((α7221'',) -> α7222'')
+//│ ╟── while constraining:  {(α7224'' -> α7225'') where: to_church_27218'' <: ((α7221'',) -> α7222'')}  <!<  ((α7208'',) -> α7209'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α7208'',) -> α7209'')
+//│ ╟── while constraining:  to_church_27205''  <!<  ((α7208'',) -> α7209'')
+//│ ╟── while constraining:  {(α7211'' -> α7212'') where: to_church_27205'' <: ((α7208'',) -> α7209'')}  <!<  ((α7195'',) -> α7196'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α7195'',) -> α7196'')
+//│ ╟── while constraining:  to_church_27192''  <!<  ((α7195'',) -> α7196'')
+//│ ╟── while constraining:  {(α7198'' -> α7199'') where: to_church_27192'' <: ((α7195'',) -> α7196'')}  <!<  ((α7182'',) -> α7183'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α7182'',) -> α7183'')
+//│ ╟── while constraining:  to_church_27179''  <!<  ((α7182'',) -> α7183'')
+//│ ╟── while constraining:  {(α7185'' -> α7186'') where: to_church_27179'' <: ((α7182'',) -> α7183'')}  <!<  ((α7169'',) -> α7170'')
+//│ ╟── ......
+//│ ╟── ......
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α5999'',) -> α6000'')
+//│ ╟── while constraining:  to_church_25996''  <!<  ((α5999'',) -> α6000'')
+//│ ╟── while constraining:  {(α6002'' -> α6003'') where: to_church_25996'' <: ((α5999'',) -> α6000'')}  <!<  ((α5986'',) -> α5987'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α5986'',) -> α5987'')
+//│ ╟── while constraining:  to_church_25983''  <!<  ((α5986'',) -> α5987'')
+//│ ╟── while constraining:  {(α5989'' -> α5990'') where: to_church_25983'' <: ((α5986'',) -> α5987'')}  <!<  ((α5973'',) -> α5974'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α5973'',) -> α5974'')
+//│ ╟── while constraining:  to_church_25970''  <!<  ((α5973'',) -> α5974'')
+//│ ╟── while constraining:  {(α5976'' -> α5977'') where: to_church_25970'' <: ((α5973'',) -> α5974'')}  <!<  ((α5960'',) -> α5961'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α5960'',) -> α5961'')
+//│ ╟── while constraining:  to_church_25957''  <!<  ((α5960'',) -> α5961'')
+//│ ╟── while constraining:  {(α5963'' -> α5964'') where: to_church_25957'' <: ((α5960'',) -> α5961'')}  <!<  ((α5944'',) -> α5945'')
+//│ ╟── while constraining:  ‹∀ 1. {(α5950'' -> α5951'') where: to_church_25946'' <: ((α5947'',) -> α5948'')}›  <!<  ((α5944'',) -> α5945'')
+//│ ╟── while constraining:  to_church_25946''  <!<  ((α5944'',) -> α5945'')
+//│ ╙── while constraining:  ‹∀ 0. to_church_21392'›  <!<  ((α5944'',) -> α5945'')
+//│ tc: anything -> ChurchInt
 //│   = [Function: tc2]
 //│ tc: int -> ChurchInt
+//│   where
+//│     'to_church_3 <: int -> ChurchInt
 //│   = [Function: tc3]
 
 // (* Duplicate with to_church1 ("Marche") above *)
