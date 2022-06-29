@@ -748,6 +748,15 @@ abstract class TyperHelpers { Typer: Typer =>
   }
   
   
+  object AliasOf {
+    def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = ty match {
+      case tr: TypeRef => unapply(tr.expand)
+      case proxy: ProxyType => unapply(proxy.underlying)
+      case _ => S(ty)
+    }
+  }
+  
+  
   protected def showLevel(level: Level): Str =
     (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level)
   

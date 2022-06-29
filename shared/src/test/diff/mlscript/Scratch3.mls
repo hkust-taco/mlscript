@@ -151,4 +151,16 @@ n3 wrap 0
 //│    = { x: { x: { x: 0 } } }
 
 
+// * With distributivity, it works!:
+:DistributeForalls
+
+succ = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = [Function: s]
+
 

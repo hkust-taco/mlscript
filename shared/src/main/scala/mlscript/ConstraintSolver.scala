@@ -409,13 +409,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             ()
           case (_: TypeVariable, rhs0) =>
             val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
-            println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
+            // println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
+            println(s"EXTR RHS  ~>  $rhs  to ${lhs.level}")
             println(s" where ${rhs.showBounds}")
             println(s"   and ${rhs0.showBounds}")
             rec(lhs, rhs, true)
           case (lhs0, _: TypeVariable) =>
             val lhs = extrude(lhs0, rhs.level, true, MaxLevel)
-            println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
+            // println(s"EXTR LHS  $lhs0  ~>  $lhs  to ${rhs.level}")
+            println(s"EXTR LHS  ~>  $lhs  to ${rhs.level}")
             println(s" where ${lhs.showBounds}")
             println(s"   and ${lhs0.showBounds}")
             rec(lhs, rhs, true)
@@ -496,6 +498,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"BUMP TO LEVEL ${lvl}")
               rec(lhs, poly.rigidify, true)
             }
+          case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
+            val newRhs = if (param.level > plvl) ??? // TODO
+            else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))
+            // println(s"DISTRIB-R ${rhs} ~> $newRhs")
+            println(s"DISTRIB-R  ~>  $newRhs")
+            rec(lhs, newRhs, true)
+          case (AliasOf(PolymorphicType(plvl, FunctionType(param, bod))), _)
+          if distributeForalls
+          && param.level <= plvl => // TODO actually split type parameters that are quantified in body and NOT in param
+            val newLhs = FunctionType(param, PolymorphicType(plvl, bod))(rhs.prov)
+            // println(s"DISTRIB-L ${lhs} ~> $newLhs")
+            println(s"DISTRIB-L  ~>  $newLhs")
+            rec(newLhs, rhs, true)
           case (poly: PolymorphicType, _) =>
             // TODO Here it might actually be better to try and put poly into a TV if the RHS contains one
             //    Note: similar remark applies inside constrainDNF

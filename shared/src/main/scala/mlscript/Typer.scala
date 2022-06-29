@@ -22,6 +22,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   // def generalizeCurriedFunctions: Boolean = false
   var generalizeCurriedFunctions: Boolean = false
   
+  var distributeForalls: Boolean = false
+  
   var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit

@@ -41,15 +41,13 @@ def succ: ChurchInt -> ChurchInt
 //│ succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
 
-// TODO requires forall/-> distrib.
-:ns
+// :ns
+:e // * Needs distrib (see below)
 succ = s
-//│ forall 'a. 'a -> (forall 'b. 'b -> (forall 'c, 'd, 'e, 'f. ('c -> 'f
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
-//│     'a <: 'b -> 'd
-//│     'b <: 'e -> 'f)))
-//│   where
-//│     'd <: 'c -> 'e
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -181,7 +179,7 @@ to_church = to_ch
 
 // :s
 // :ns
-// TODO distrib
+:e // * Needs distrib (see below)
 to_church = to_ch_s
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
 //│   where
@@ -190,7 +188,7 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.185: 	to_church = to_ch_s
+//│ ║  l.183: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -203,13 +201,29 @@ to_church = to_ch_s
 rec def to_ch_mix n =
   if n == 0 then zero
   else s (to_ch (n - 1))
-  
-// TODO
-to_church = to_ch_mix
 //│ to_ch_mix: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e)) | ChurchInt)
+//│          = [Function: to_ch_mix]
+
+:e // * Needs distrib (see below)
+to_church = to_ch_mix
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.211: 	to_church = to_ch_mix
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
 //│          = [Function: to_ch_mix]
 
 
@@ -220,13 +234,13 @@ to_church = to_ch_mix
 // rec def to_ch n =
 //   succD (to_ch (n - 1))
 
-// TODO probably need to distribute back here too
+:e // * Needs to distribute back (in the other direction) here:
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.224: 	rec def to_ch n =
+//│ ║  l.238: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.225: 	  succD (to_ch n)
+//│ ║  l.239: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -235,9 +249,45 @@ rec def to_ch n =
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ║        	                        ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.66: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
+//│ ║  l.64: 	def succD: forall 'M. ChurchInt -> ('M -> 'M) -> ('M -> 'M)
 //│ ╙──      	                  ^^
 //│ to_ch: anything -> ('M -> 'M) -> 'M -> 'M
 //│      = [Function: to_ch1]
+
+
+// * With distributivity:
+:DistributeForalls
+
+succ = s
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│   <:  succ:
+//│ ChurchInt -> ChurchInt
+//│     = [Function: s]
+
+to_church = to_ch_s
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│          = [Function: to_ch_s]
+
+to_church = to_ch_mix
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│          = [Function: to_ch_mix]
+
+rec def to_ch n =
+  succD (to_ch n)
+//│ to_ch: anything -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│      = [Function: to_ch2]
 
 
