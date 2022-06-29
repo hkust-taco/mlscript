@@ -34,6 +34,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     
     val ret = () => return
     
+    def abbreviate(msgs: Ls[Message -> Opt[Loc]]) = {
+      val treshold = 15
+      if (msgs.sizeCompare(treshold) <= 0) msgs
+      else msgs.take(treshold) :::
+        msg"......" -> N :: msg"......" -> N :: msgs.reverseIterator.take(treshold).toList.reverse
+    }
+    
     def consumeFuel()(implicit cctx: ConCtx, ctx: Ctx) = {
       def msgHead = msg"Subtyping constraint of the form `${lhs.expPos} <: ${rhs.expNeg}`"
       if (stack.size > depthLimit) {
@@ -44,8 +51,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               msg"while constraining:  ${s"$l"}" -> l.prov.loco ::
               msg"                       <!<  ${s"$r"}" -> r.prov.loco ::
               Nil
-            } else stack.toList.filterOutConsecutive().map(c =>
-              msg"while constraining:  ${s"${c._1}  <!<  ${c._2}"}" -> N)
+            } else abbreviate(stack.toList.filterOutConsecutive().map(c =>
+              msg"while constraining:  ${s"${c._1}  <!<  ${c._2}"}" -> N))
           )
         )
         ret()

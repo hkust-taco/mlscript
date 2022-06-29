@@ -64,40 +64,8 @@ self self
 //│ ╟── while constraining:  (α120,)  <!<  (α122,)
 //│ ╟── while constraining:  (α122 -> α123)  <!<  ((α120,) -> α121)
 //│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α120,) -> α121)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α120
-//│ ╟── while constraining:  α118  <!<  α120
-//│ ╟── while constraining:  (α118,)  <!<  (α120,)
-//│ ╟── while constraining:  (α120 -> α121)  <!<  ((α118,) -> α119)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α118,) -> α119)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α118
-//│ ╟── while constraining:  α116  <!<  α118
-//│ ╟── while constraining:  (α116,)  <!<  (α118,)
-//│ ╟── while constraining:  (α118 -> α119)  <!<  ((α116,) -> α117)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α116,) -> α117)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α116
-//│ ╟── while constraining:  α114  <!<  α116
-//│ ╟── while constraining:  (α114,)  <!<  (α116,)
-//│ ╟── while constraining:  (α116 -> α117)  <!<  ((α114,) -> α115)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α114,) -> α115)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α114
-//│ ╟── while constraining:  α112  <!<  α114
-//│ ╟── while constraining:  (α112,)  <!<  (α114,)
-//│ ╟── while constraining:  (α114 -> α115)  <!<  ((α112,) -> α113)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α112,) -> α113)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α112
-//│ ╟── while constraining:  α110  <!<  α112
-//│ ╟── while constraining:  (α110,)  <!<  (α112,)
-//│ ╟── while constraining:  (α112 -> α113)  <!<  ((α110,) -> α111)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α110,) -> α111)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α110
-//│ ╟── while constraining:  α108  <!<  α110
-//│ ╟── while constraining:  (α108,)  <!<  (α110,)
-//│ ╟── while constraining:  (α110 -> α111)  <!<  ((α108,) -> α109)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α108,) -> α109)
-//│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α108
-//│ ╟── while constraining:  α106  <!<  α108
-//│ ╟── while constraining:  (α106,)  <!<  (α108,)
-//│ ╟── while constraining:  (α108 -> α109)  <!<  ((α106,) -> α107)
+//│ ╟── ......
+//│ ╟── ......
 //│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  ((α106,) -> α107)
 //│ ╟── while constraining:  ‹∀ 0. (α93' -> α94')›  <!<  α106
 //│ ╟── while constraining:  α104  <!<  α106

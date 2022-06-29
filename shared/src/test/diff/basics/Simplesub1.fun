@@ -201,22 +201,8 @@ x => y => x x y
 //│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α241
 //│ ╟── while constraining:  α239  <!<  α241
 //│ ╟── while constraining:  (α241 -> α242)  <!<  (α239 -> α240)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α239 -> α240)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α239
-//│ ╟── while constraining:  α237  <!<  α239
-//│ ╟── while constraining:  (α239 -> α240)  <!<  (α237 -> α238)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α237 -> α238)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α237
-//│ ╟── while constraining:  α235  <!<  α237
-//│ ╟── while constraining:  (α237 -> α238)  <!<  (α235 -> α236)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α235 -> α236)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α235
-//│ ╟── while constraining:  α233  <!<  α235
-//│ ╟── while constraining:  (α235 -> α236)  <!<  (α233 -> α234)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α233 -> α234)
-//│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α233
-//│ ╟── while constraining:  α231  <!<  α233
-//│ ╟── while constraining:  (α233 -> α234)  <!<  (α231 -> α232)
+//│ ╟── ......
+//│ ╟── ......
 //│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  (α231 -> α232)
 //│ ╟── while constraining:  ‹∀ 0. (α224' -> α225')›  <!<  α231
 //│ ╟── while constraining:  α229  <!<  α231
@@ -263,33 +249,8 @@ x => {l: x x, r: x }
 //│ ╟── while constraining:  (α306 -> α305)  <!<  (α303 -> α301)
 //│ ╟── while constraining:  {(α306 -> α305) where: α272 <: (α304 -> α305)}  <!<  (α303 -> α301)
 //│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α303 -> α301)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α303
-//│ ╟── while constraining:  α300  <!<  α303
-//│ ╟── while constraining:  (α303 -> α302)  <!<  (α300 -> α298)
-//│ ╟── while constraining:  {(α303 -> α302) where: α272 <: (α301 -> α302)}  <!<  (α300 -> α298)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α300 -> α298)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α300
-//│ ╟── while constraining:  α297  <!<  α300
-//│ ╟── while constraining:  (α300 -> α299)  <!<  (α297 -> α295)
-//│ ╟── while constraining:  {(α300 -> α299) where: α272 <: (α298 -> α299)}  <!<  (α297 -> α295)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α297 -> α295)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α297
-//│ ╟── while constraining:  α294  <!<  α297
-//│ ╟── while constraining:  (α297 -> α296)  <!<  (α294 -> α292)
-//│ ╟── while constraining:  {(α297 -> α296) where: α272 <: (α295 -> α296)}  <!<  (α294 -> α292)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α294 -> α292)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α294
-//│ ╟── while constraining:  α291  <!<  α294
-//│ ╟── while constraining:  (α294 -> α293)  <!<  (α291 -> α289)
-//│ ╟── while constraining:  {(α294 -> α293) where: α272 <: (α292 -> α293)}  <!<  (α291 -> α289)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α291 -> α289)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α291
-//│ ╟── while constraining:  α288  <!<  α291
-//│ ╟── while constraining:  (α291 -> α290)  <!<  (α288 -> α286)
-//│ ╟── while constraining:  {(α291 -> α290) where: α272 <: (α289 -> α290)}  <!<  (α288 -> α286)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α288 -> α286)
-//│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  α288
-//│ ╟── while constraining:  α285  <!<  α288
+//│ ╟── ......
+//│ ╟── ......
 //│ ╟── while constraining:  (α288 -> α287)  <!<  (α285 -> α283)
 //│ ╟── while constraining:  {(α288 -> α287) where: α272 <: (α286 -> α287)}  <!<  (α285 -> α283)
 //│ ╟── while constraining:  ‹∀ 0. {(α276' -> α278') where: α272 <: (α277' -> α278')}›  <!<  (α285 -> α283)

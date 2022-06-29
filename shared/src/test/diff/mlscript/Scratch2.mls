@@ -130,13 +130,11 @@ n3 = s (s (s z))
 
 // :ns
 // :d
-rec def to_ch_s n =
-  if n == 0 then zero
-  else to_ch_s n
+// rec def to_ch_s n =
+//   if n == 0 then zero
+//   else to_ch_s n
 // rec def to_ch_s n =
 //   to_ch_s n
-//│ to_ch_s: int -> ChurchInt
-//│        = [Function: to_ch_s]
 
 // :d
 // to_ch_s
@@ -148,6 +146,15 @@ rec def to_ch n =
   else succ (to_ch (n - 1))
 //│ to_ch: int -> ChurchInt
 //│      = [Function: to_ch]
+
+rec def to_ch_s n =
+  if n == 0 then z
+  else s (to_ch (n - 1))
+//│ to_ch_s: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
+//│        = [Function: to_ch_s]
 
 // rec def to_ch n =
 //   (if n == 0 then zero
@@ -166,20 +173,44 @@ def to_church n =
 //│          = <no result>
 //│            to_church is not implemented
 
-to_church = to_ch_s
-//│ int -> ChurchInt
-//│   <:  to_church:
-//│ int -> ChurchInt
-//│          = [Function: to_ch_s]
-
-// :s
-// :ns
 to_church = to_ch
 //│ int -> ChurchInt
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = [Function: to_ch]
 
+// :s
+// :ns
+// TODO distrib
+to_church = to_ch_s
+//│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e, 'f. (('f & 'c) -> ('f | 'e)
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.185: 	to_church = to_ch_s
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
+//│          = [Function: to_ch_s]
+
+rec def to_ch_mix n =
+  if n == 0 then zero
+  else s (to_ch (n - 1))
+  
+// TODO
+to_church = to_ch_mix
+//│ to_ch_mix: int -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)) | ChurchInt)
+//│          = [Function: to_ch_mix]
 
 
 // rec def to_ch n =
@@ -193,9 +224,9 @@ to_church = to_ch
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.193: 	rec def to_ch n =
+//│ ║  l.224: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.194: 	  succD (to_ch n)
+//│ ║  l.225: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
