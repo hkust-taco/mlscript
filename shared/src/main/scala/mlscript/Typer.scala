@@ -551,11 +551,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
     
     def instantiateForGoodMeasure(ty: ST): Unit = ty match {
       case ty @ PolymorphicType(plvl, _: ConstrainedType) =>
-        val ConstrainedType(cs, bod) = ty.instantiate
-        cs.foreach { case (tv, bs) => bs.foreach {
-          case (true, b) => con(b, tv, TopType)
-          case (false, b) => con(tv, b, TopType)
-        }}
+        trace(s"GOOD MEASURE") {
+          val ConstrainedType(cs, bod) = ty.instantiate
+          cs.foreach { case (tv, bs) => bs.foreach {
+            case (true, b) => con(b, tv, TopType)
+            case (false, b) => con(tv, b, TopType)
+          }}
+        }()
       case _ => ()
     }
     
