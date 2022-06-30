@@ -1,73 +1,392 @@
+:GeneralizeCurriedFunctions
+
+// ============ Dummy classes to represent the types in the examples ============
+
+class List[a]
+  method Head: a
+  method Tail: List[a]
+//│ Defined class List[+a]
+//│ Declared List.Head: List['a] -> 'a
+//│ Declared List.Tail: List['a] -> List['a]
+
+class Cons[a]: List[a] & { head: a; tail: List[a] }
+  method Head = this.head
+  method Tail = this.tail
+def cons[a]: a -> List[a] -> List[a]
+def cons head tail = Cons { head; tail }
+//│ Defined class Cons[+a]
+//│ Defined Cons.Head: Cons['a] -> 'a
+//│ Defined Cons.Tail: Cons['a] -> List['a]
+//│ cons: 'a -> List['a] -> List['a]
+//│     = <missing implementation>
+//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│   <:  cons:
+//│ 'a -> List['a] -> List['a]
+//│     = [Function: cons]
+
+class Nil[a]: List[a]
+  method Head = error
+  method Tail = this
+def nil: List['a]
+def nil = Nil {}
+//│ Defined class Nil[+a]
+//│ Defined Nil.Head: Nil[?] -> nothing
+//│ Defined Nil.Tail: (Nil['a] & 'this) -> (Nil['a] & 'this)
+//│ nil: List[nothing]
+//│    = <missing implementation>
+//│ Nil[nothing]
+//│   <:  nil:
+//│ List[nothing]
+//│    = Nil {}
+
+// ============ Type signatures for functions used in the examples ============
+
+def head: forall 'a. List['a] -> 'a
+def head l = l.Head
+//│ head: List['a] -> 'a
+//│     = <missing implementation>
+//│ List['a] -> 'a
+//│   <:  head:
+//│ List['a] -> 'a
+//│     = [Function: head]
+
+def tail: forall 'a. List['a] -> List['a]
+def tail l = l.Tail
+//│ tail: List['a] -> List['a]
+//│     = <missing implementation>
+//│ List['a] -> List['a]
+//│   <:  tail:
+//│ List['a] -> List['a]
+//│     = [Function: tail]
+
+def is_empty: forall 'a. List['a] -> bool
+def is_empty l = eq l nil
+//│ is_empty: List[?] -> bool
+//│         = <missing implementation>
+//│ anything -> bool
+//│   <:  is_empty:
+//│ List[?] -> bool
+//│         = [Function: is_empty]
+
+def concat: forall 'a. List['a] -> List['a] -> List['a]
+rec def concat l1 l2 =
+  if is_empty l1 then l2
+  else cons (head l1) (concat (tail l1) l2)
+//│ concat: List['a] -> List['a] -> List['a]
+//│       = <missing implementation>
+//│ List[?] -> List['a] -> List['a]
+//│   <:  concat:
+//│ List['a] -> List['a] -> List['a]
+//│       = [Function: concat1]
+
+def print_bool: bool -> unit
+def print_bool b = log b
+//│ print_bool: bool -> unit
+//│           = <missing implementation>
+//│ anything -> unit
+//│   <:  print_bool:
+//│ bool -> unit
+//│           = [Function: print_bool]
+
+def print_int: int -> unit
+def print_int i = log i
+//│ print_int: int -> unit
+//│          = <missing implementation>
+//│ anything -> unit
+//│   <:  print_int:
+//│ int -> unit
+//│          = [Function: print_int]
+
+def print_string: string -> unit
+def print_string s = log s
+//│ print_string: string -> unit
+//│             = <missing implementation>
+//│ anything -> unit
+//│   <:  print_string:
+//│ string -> unit
+//│             = [Function: print_string]
+
+def print x = log x
+//│ print: anything -> unit
+//│      = [Function: print]
+
+
+
 // (* Ces exemples permettent de tester durement le syst�me de types. *)
 
 // type id = ['a] 'a -> 'a
+type Id = forall 'a. 'a -> 'a
+//│ Defined type alias Id
 
 // let choose x y = if true then x else y
 // let succ n = n + 1
 // let z = (succ : int -> int)
+def choose x y = if true then x else y
+def succ n = n + 1
+def z = succ : int -> int
+//│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│       = [Function: choose]
+//│ succ: int -> int
+//│     = [Function: succ]
+//│ z: int -> int
+//│  = [Function: succ]
+
 // let id x = x
 // let z = choose (id:id) id
 // let z = (choose id succ) 10
 // let z = (choose succ id) 10
+def id x = x
+def z = choose (id : Id) id
+def z = (choose id succ) 10
+def z = (choose succ id) 10
+//│ id: 'a -> 'a
+//│   = [Function: id]
+//│ z: 'a -> 'a | Id
+//│  = [Function: id]
+//│ z: int
+//│  = 10
+//│ z: int
+//│  = 11
+
 // untype fun x -> x x
+fun x -> x x
+//│ res: ('a -> 'b & 'a) -> 'b
+//│    = [Function: res]
+
 // let delta (x:id) = x x
+def delta (x: Id) = x x
+def delta' x = x x
+//│ delta: Id -> Id
+//│      = [Function: delta]
+//│ delta': ('a -> 'b & 'a) -> 'b
+//│       = [Function: delta]
+
 // let z = delta (delta id)
+def z = delta (delta id)
+def z' = delta' (delta' id)
+//│ z: Id
+//│  = [Function: id]
+//│ z': 'a -> 'a
+//│   = [Function: id]
+
 // untype delta succ
+:e
+delta succ
+delta' succ
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.174: 	delta succ
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.118: 	type Id = forall 'a. 'a -> 'a
+//│ ║         	                 ^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.125: 	def succ n = n + 1
+//│ ╙──       	             ^
+//│ res: error | Id
+//│    = 'function succ(n) {  return n + 1;}1'
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.175: 	delta' succ
+//│ ║         	^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `int`
+//│ ║  l.125: 	def succ n = n + 1
+//│ ║         	         ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `int`
+//│ ║  l.175: 	delta' succ
+//│ ║         	       ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.125: 	def succ n = n + 1
+//│ ╙──       	             ^
+//│ res: error | int
+//│    = 'function succ(n) {  return n + 1;}1'
+
 // let z = delta (choose id id)
+def z = delta (choose id id)
+def z' = delta' (choose id id)
+//│ z: Id
+//│  = [Function: id]
+//│ z': 'a -> 'a
+//│   = [Function: id]
 
 // let step g = (g 1) - (g 0)
 // let apply_to_id f = f id
 // let test1 = apply_to_id step
 // let test2 = apply_to_id delta
+def step g = (g 1) - (g 0)
+def apply_to_id f = f id
+def test1 = apply_to_id step
+def test2 = apply_to_id delta
+def test2' = apply_to_id delta'
+//│ step: (0 -> int & 1 -> int) -> int
+//│     = [Function: step]
+//│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│            = [Function: apply_to_id]
+//│ test1: int
+//│      = 1
+//│ test2: Id
+//│      = [Function: id]
+//│ test2': 'a -> 'a
+//│       = [Function: id]
 
 // type s  = ['a] list ('a) -> bool
 // let annote_s (x:id) = (x : s -> s)
+type S = forall 'a. List['a] -> bool
+def annote_s (x: Id) = x : S -> S
+def annote_s' x = x : S -> S
+//│ Defined type alias S
+//│ annote_s: Id -> S -> S
+//│         = [Function: annote_s]
+//│ annote_s': (S -> S) -> S -> S
+//│          = [Function: annote_s]
 
 // let isnil l = l = []
+def isnil l = eq l nil
+//│ isnil: anything -> bool
+//│      = [Function: isnil]
 
 // passif value_restriction
 // let t = fun x y ->
 //   let isnil = (annote_s x) y in
 //   (isnil [ 1 ; 2 ; 3] , isnil [] , isnil ["ok"] , isnil [true])
 // in t id isnil
+let t = fun x -> fun y ->
+  let isnil = (annote_s x) y in
+    (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
+  in t id isnil
+let t = fun x -> fun y ->
+  let isnil = (annote_s' x) y in
+    (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
+  in t id isnil
+//│ res: (bool, bool, bool, bool,)
+//│    = [ false, true, false, false ]
+//│ res: (bool, bool, bool, bool,)
+//│    = [ false, true, false, false ]
 
 // untype fun x y ->
 //   let isnil = (x:id) y in
 //   (isnil [ 1 ; 2 ; 3] , isnil [] , isnil ["ok"] , isnil [true])
+fun x -> fun y ->
+  let isnil = (x : Id) y in
+    (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil))
+fun x -> fun y ->
+  let isnil = x y in
+    (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
+//│ res: Id -> (forall 'a, 'b, 'c, 'd. (List[1 | 2 | 3] -> 'a & List[nothing] -> 'b & List[true] -> 'c & List["ok"] -> 'd) -> ('a, 'b, 'd, 'c,))
+//│    = [Function: res]
+//│ res: ('a -> 'b) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('a -> ('c, 'd, 'e, 'f,)
+//│   where
+//│     'b <: List[1 | 2 | 3] -> 'c & List[nothing] -> 'd & List["ok"] -> 'e & List[true] -> 'f))
+//│    = [Function: res]
 
 // (*let t1 = f delta	
 // let t2 = f step*)
 
 // let partage x = choose id x
 // let departage x = choose id (x:id)
+def partage x = choose id x
+def departage x = choose id (x : Id)
+//│ partage: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│        = [Function: partage]
+//│ departage: Id -> (forall 'a. 'a -> 'a | Id)
+//│          = [Function: departage]
 
 // let delta' = fun x -> (departage x) x
 // untype fun x -> partage x x
+def delta2 = fun x -> (departage x) x
+def delta2' = fun x -> (partage x) x
+//│ delta2: (Id & 'a) -> 'a
+//│       = [Function: delta2]
+//│ delta2': ('a -> 'b & 'a & 'b) -> 'b
+//│        = [Function: delta2]
 
 // let t = fun x -> (x:id) x, x
 // let t = fun (x:id) -> x x, (x:id)
 // let t = fun (x:id) -> x x, x
 // untype fun x -> x (x:id), x
 // untype fun x -> x x, (x:id)
+def t = fun x -> ((x : Id) x, x)
+def t = fun (x: Id) -> (x x, (x : Id))
+def t = fun (x: Id) -> (x x, x)
+def t = fun x -> (x (x : Id), x)
+def t = fun x -> (x x, x : Id)
+def t' = fun x -> (x x, x)
+//│ t: (Id & 'a) -> ('a, 'a,)
+//│  = [Function: t]
+//│ t: Id -> (Id, Id,)
+//│  = [Function: t1]
+//│ t: Id -> (Id, Id,)
+//│  = [Function: t2]
+//│ t: (Id & Id -> 'a & 'b) -> ('a, 'b,)
+//│  = [Function: t3]
+//│ t: (Id & 'a -> 'b & 'a) -> ('b, Id,)
+//│  = [Function: t4]
+//│ t': ('a -> 'b & 'a) -> ('b, 'a,)
+//│   = [Function: t4]
+
 // untype fun x -> (x:id), x x
+fun x -> (x : Id, x x)
+//│ res: (Id & 'a -> 'b & 'a) -> (Id, 'b,)
+//│    = [Function: res]
 
 // let ig x = () (* ignore *)
+def ig x = null
+//│ ig: anything -> null
+//│   = [Function: ig]
 
 // (* The following is not typable in System F (afaik) *)
 // let aa f = f id
 // untype fun g -> ig (g delta) ; (fun t -> ig (g t) ; t succ) (fun x -> succ (x 8))
 // let ff = fun (g:['a > id] ['b] ('a -> 'b) -> 'b) ->
 //         ig (g delta) ; (fun t -> ig (g t) ; t succ) (fun x -> succ (x 8))
+def aa f = f id
+def ff = fun (g: forall 'a 'b. (('a | Id) -> 'b) -> 'b) ->
+  let _ = ig (g delta) in
+    (fun t ->
+      let _ = ig (g t) in
+      t succ
+    ) (fun x -> succ (x 8))
+def ff' = fun g ->
+  let _ = ig (g delta) in
+    (fun t ->
+      let _ = ig (g t) in
+      t succ
+    ) (fun x -> succ (x 8))
+//│ aa: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│   = [Function: aa]
+//│ ff: (forall 'b. (anything -> 'b) -> 'b) -> int
+//│   = [Function: ff]
+//│ ff': (((8 -> int) -> int) -> anything & (Id -> Id) -> anything) -> int
+//│    = [Function: ff]
 
 // let bigtest = ff aa
+def bigtest = ff aa
+def bigtest' = ff' aa
+//│ bigtest: int
+//│        = 10
+//│ bigtest': int
+//│         = 10
 
 // (* Variable libre / variable li�e dans les annotations. *)
 // let example f = (f:['a] 'a -> int -> 'b) f
 // let mkpair x y = (x,y)
+def example f = (f: forall 'a. 'a -> int -> 'b) f
+def example' f = f f
+def mkpair x y = (x, y)
+//│ example: (nothing -> int -> 'b) -> int -> 'b
+//│        = [Function: example]
+//│ example': ('a -> 'b & 'a) -> 'b
+//│         = [Function: example]
+//│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
+//│       = [Function: mkpair]
 
 // untype example mkpair
 // (* �a echoue parce qu'on instancie 'b avec un type contenant 'a *)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
+example mkpair
+example' mkpair
+//│ res: int -> (anything, int,)
+//│    = [Function (anonymous)]
+//│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
+//│    = [Function (anonymous)]
 
 
 
@@ -75,27 +394,96 @@
 
 // let rec x = 1 :: y
 // and     y = 2 :: x
+// FIXME
+rec def p = { x = cons 1 p.y; y = cons 2 p.x }
+def x = p.x
+def y = p.y
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
+//│ ║  l.398: 	rec def p = { x = cons 1 p.y; y = cons 2 p.x }
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  2<int,number>  <:  α991'    ClassTag  TypeVariable
+//│ ╙──  ... looks like:  2<int,number>  <:  α53'
+//│ p: {x: List[1 | 2], y: List[1 | 2]}
+//│ Runtime error:
+//│   ReferenceError: p is not defined
+//│ x: List[1 | 2]
+//│ Runtime error:
+//│   ReferenceError: p is not defined
+//│ y: List[1 | 2]
+//│ Runtime error:
+//│   ReferenceError: p is not defined
 
 // let print_int x = print_string "#"; print_int x; print_string " "
 // let intprint x = print_int x
+def print_int x =
+  let _ = print_string "#" in
+  let _ = print_int x in
+  print_string " "
+def intprint x = print_int x
+//│ int -> unit
+//│   <:  print_int:
+//│ int -> unit
+//│          = [Function: print_int1]
+//│ intprint: int -> unit
+//│         = [Function: intprint]
 
 // let myNil l = l = []
+def myNil l = eq l nil
+//│ myNil: anything -> bool
+//│      = [Function: myNil]
 
 // let rec append x l =
 //   if l = [] then [x]
 //   else (car l)::(append x (cdr l))
+rec def append x l =
+  if eq l nil then cons x nil
+  else cons (head l) (append x (tail l))
+//│ append: 'a -> List['a] -> List['a]
+//│       = [Function: append]
 
 // let rec map l f =
 //  if l = [] then []
 //  else (f (car l)) :: (map (cdr l) f)
+rec def map l f =
+  if eq l nil then nil
+  else cons (f (head l)) (map (tail l) f)
+//│ map: List['a] -> ('a -> 'b) -> List['b]
+//│    = [Function: map]
 
 // let message () = print "** MESSAGE **"
+def message (_: unit) = print "** MESSAGE **"
+//│ message: unit -> unit
+//│        = [Function: message]
 
 // let intfa f = f 15
+def intfa f = f 15
+//│ intfa: (15 -> 'a) -> 'a
+//│      = [Function: intfa]
 
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
+def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
+def polyann' a b f g = g (f 10) a b
+//│ polyann: 'x -> int -> (forall 'a. 'a -> (forall 'x, 'a, 'b. ((int -> 'x -> int -> 'b) -> 'b
+//│   where
+//│     'a <: 10 -> int)))
+//│        = [Function: polyann]
+//│ polyann': 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d -> 'a -> 'b -> 'e) -> 'e
+//│   where
+//│     'c <: 10 -> 'd))))
+//│         = [Function: polyann]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
+def voyage (f: 'p -> 'q) x y = (y, f x)
+def voyage' f x y = (y, f x)
+//│ voyage: (nothing -> anything) -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
+//│   where
+//│     'b <: 'a -> 'c)))
+//│       = [Function: voyage]
+//│ voyage': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
+//│   where
+//│     'a <: 'b -> 'c)))
+//│        = [Function: voyage]
 
 // let main =
 
@@ -108,18 +496,18 @@
 
 //       if not(n < 0) then
 
-// 	if nil l then print_string "]"
-// 	else 
-// 	  begin
-// 	    intprint (car l);
-// 	    print_string s;
-// 	    print_list (n-1) (cdr l)
-// 	  end
+//         if nil l then print_string "]"
+//         else 
+//           begin
+//             intprint (car l);
+//             print_string s;
+//             print_list (n-1) (cdr l)
+//           end
 //       else 
-// 	begin
-// 	  print_string ("... ]");
-// 	  (* failwith ("T�te de liste : "^(string_of_int (car l))) *)
-// 	end
+// 	       begin
+// 	         print_string ("... ]");
+// 	         (* failwith ("T�te de liste : "^(string_of_int (car l))) *)
+// 	       end
 //     in
 //     print_string "[";
 //     print_list max_depth l;
@@ -138,6 +526,67 @@
 //   print_sep "" x;
 
 //   ()
+
+// FIXME
+def main =
+  let print_sep = fun s -> fun l ->
+    let max_depth = 20 in
+      let rec p =
+        { alpha = p.print_list;
+          print_list = fun n -> fun l ->
+            if not (n < 0) then
+              if is_empty l then print_string "]"
+              else
+                let _ = intprint (head l) in
+                let _ = print_string s in
+                p.print_list (n - 1) (tail l)
+            else
+              print_string "... ]"
+        } in
+      let alpha = p.alpha in
+      let print_list = p.print_list in
+        let _ = print_string "[" in
+        print_list max_depth l
+  in
+    let _ = print (myNil (cons 1 (cons 2 nil))) in
+    let _ = print " " in
+    let _ = print (myNil (cons "foo" (cons "bar" nil))) in
+    let _ = print "\n" in
+    let ll = concat (cons 10 (cons 20 (cons 30 (cons 40 nil)))) (cons 50 (cons 60 (cons 70 nil))) in
+      let ll2 = append 80 ll in
+        let _ = print_sep "; " ll2 in
+        let _ = print_string "\n" in
+        let _ = print_sep "" x in
+        null
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
+//│ ║  l.535: 	        { alpha = p.print_list;
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.536: 	          print_list = fun n -> fun l ->
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.537: 	            if not (n < 0) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.538: 	              if is_empty l then print_string "]"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.539: 	              else
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.540: 	                let _ = intprint (head l) in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.541: 	                let _ = print_string s in
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.542: 	                p.print_list (n - 1) (tail l)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.543: 	            else
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.544: 	              print_string "... ]"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.545: 	        } in
+//│ ║         	^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  Unit  <:  α1222'''''    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  Unit  <:  α20'
+//│ main: null
+//│ Code generation encountered an error:
+//│   recursive non-function definition p is not supported
 
 // (* Des probl�mes d'unification � gogo. *)
 // type sid = ['a] 'a -> 'a

@@ -1,20 +1,57 @@
+:GeneralizeCurriedFunctions
+
 // type sid = ['a] 'a -> 'a;;
 // type nat = ['a] ('a -> 'a) -> 'a -> 'a
+type Sid = forall 'a. 'a -> 'a
+type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ Defined type alias Sid
+//│ Defined type alias ChurchInt
 
 // let auto (x:sid) = x x
 // let id x = x
 // let k x y = x
+def auto (x: Sid) = x x
+def auto' x = x x
+def id x = x
+def k x y = x
+//│ auto: Sid -> Sid
+//│     = [Function: auto]
+//│ auto': ('a -> 'b & 'a) -> 'b
+//│      = [Function: auto]
+//│ id: 'a -> 'a
+//│   = [Function: id]
+//│ k: 'a -> anything -> 'a
+//│  = [Function: k]
 
 // (* church_zero is like the sequence *)
 // let church_zero = fun f -> id
+def church_zero = fun f -> id
+//│ church_zero: anything -> (forall 'a. 'a -> 'a)
+//│            = [Function: church_zero]
 
 // (* church_un is like apply *)
 // let church_one = fun f x -> f x
+def church_one = fun f -> fun x -> f x
+//│ church_one: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│           = [Function: church_one]
 
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
+def church_two = fun f -> fun x -> f (f x)
+//│ church_two: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'a <: 'b -> 'c & 'c -> 'd))
+//│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
+def church_succ n = fun f -> fun x -> f (n f x)
+//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
 // type a1 = ['b] ['a > sid] ('a -> 'b) -> 'b
@@ -22,6 +59,56 @@
 // let a3 = (fun z z' -> z church_two);;
 // let a2 (x:a1) =  (x auto); (fun y -> x y; y church_succ) a3;;
 // let a0 = a2 a1;;
+type A1 = forall 'a 'b. (('a | Sid) -> 'b) -> 'b
+def a1 = fun f -> f id
+def a3 = fun z -> fun _ -> z church_two
+def a2 (x: A1) =
+  let _ = x auto in
+  (fun y ->
+    let _ = x y in
+    y church_succ
+  ) a3
+def a2' (x: A1) =
+  let _ = x auto' in
+  (fun y ->
+    let _ = x y in
+    y church_succ
+  ) a3
+def a0 = a2 a1
+def a0' = a2' a1
+//│ Defined type alias A1
+//│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│   = [Function: a1]
+//│ a3: 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│   = [Function: a3]
+//│ a2: A1 -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│   = [Function: a2]
+//│ a2': A1 -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│    = [Function: a2]
+//│ a0: 'a -> 'b
+//│   where
+//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│   = [Function (anonymous)]
+//│ a0': 'a -> 'b
+//│   where
+//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│    = [Function (anonymous)]
 
 // let test0 = 
 //   (fun f -> f (fun h -> h id))
@@ -30,6 +117,22 @@
 //         ((fun t -> (fun u v -> v) (g t) (t (fun f x -> x)))
 //            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
 // ;;
+def test0 =
+  (fun f -> f (fun h -> h id))
+    (fun (g: A1) ->
+      k (g (fun (x: Sid) -> x x))
+        ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
+          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
+def test0' =
+  (fun f -> f (fun h -> h id))
+    (fun g ->
+      k (g (fun x -> x x))
+        ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
+          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
+//│ test0: Sid
+//│      = [Function: id]
+//│ test0': 'a -> 'a
+//│       = [Function: id]
 
 
 // (** Encoding in F+eta **)
@@ -37,10 +140,32 @@
 
 // type a1_sid = ['b] ['a = sid] ('a -> 'b) -> 'b;;
 // type a1_nat = ['b] ['a = nat -> nat] ('a -> 'b) -> 'b;;
+type A1_sid = forall 'a 'b. (('a & Sid | Sid) -> 'b) -> 'b
+type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchInt) -> 'b) -> 'b
+//│ Defined type alias A1_sid
+//│ Defined type alias A1_nat
 
 // let a1_sid_to_nat (g : a1_sid) =
 //   let r = fun f -> g (fun (x : sid) -> f x) in
 //   (r : a1_nat);;
+def a1_sid_to_nat (g: A1_sid) =
+  let r = fun f -> g (fun (x: Sid) -> f x) in
+  (r: A1_nat)
+def a1_sid_to_nat' g =
+  let r = fun f -> g (fun x -> f x) in
+  r
+//│ a1_sid_to_nat: A1_sid -> A1_nat
+//│   where
+//│     'a <: (forall 'b, 'c. (Sid -> 'c
+//│   where
+//│     'b <: Sid -> 'c)) -> ‘b
+//│              = [Function: a1_sid_to_nat]
+//│ a1_sid_to_nat': 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│   where
+//│     'b <: 'd -> 'e)) -> 'c))
+//│               = [Function: a1_sid_to_nat]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
 
@@ -51,6 +176,22 @@
 //         ((fun t -> (fun u v -> v) ((a1_sid_to_nat g) t) (t (fun f x -> x)))
 //            (fun x -> ((fun f x -> f x) x) (fun f x -> x))))
 // ;;
+def test_in_F_eta = 
+  (fun f -> f (fun h -> h id))
+    (fun (g: A1_sid) ->
+      k (g (fun (x : Sid) -> x x))
+        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
+          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
+def test_in_F_eta' = 
+  (fun f -> f (fun h -> h id))
+    (fun g ->
+      k (g (fun x -> x x))
+        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat' g) t) (t (fun f -> fun x -> x)))
+          (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
+//│ test_in_F_eta: Sid
+//│              = [Function: id]
+//│ test_in_F_eta': 'a -> 'a
+//│               = [Function: id]
 
 // (*
 // (* Le terme dans la syntaxe de Joe Wells *)
@@ -67,14 +208,72 @@
 // *)
 
 // type a1' = ['a > sid] ('a -> 'a) -> 'a -> 'a;;
+type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
+//│ Defined type alias A1'
 
 // let either x y = if true then x else y;;
 // let a1' = fun f x -> f (f (either id x));;
 // let a2' (x:a1') = x auto id; (fun y -> x y church_two; y church_succ) a3;;
 // let a0' = a2' a1';;
+def either x y = if true then x else y
+def a1' = fun f -> fun x -> f (f (either id x))
+def a2' (x: A1') =
+  let _ = x auto id in
+  (fun y ->
+    let _ = x y church_two in
+    y church_succ
+  ) a3
+def a2'' x =
+  let _ = x auto' id in
+  (fun y ->
+    let _ = x y church_two in
+    y church_succ
+  ) a3
+def a0' = a2' a1'
+def a0'' = a2'' a1'
+//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│       = [Function: either]
+//│ a1': 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
+//│    = [Function: either]
+//│ a2': A1' -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│    = [Function: either]
+//│ a2'': ((forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))) -> (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & (forall 'g, 'h. ('g -> 'h & 'g) -> 'h) -> (forall 'i. 'i -> 'i) -> 'b) -> (forall 'j. ('b -> 'k
+//│   where
+//│     'j <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
+//│     = [Function: either]
+//│ a0': 'a -> 'b
+//│   where
+//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│    = [Function: either]
+//│ a0'': 'a -> 'b
+//│   where
+//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     = [Function: either]
 
 // type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;
 // type a1'_nat = ['a = nat] ('a -> 'a) -> 'a -> 'a;;
+type A1'_sid = forall 'a. (('a & Sid | Sid) -> ('a & Sid | Sid)) -> ('a & Sid | Sid) -> ('a & Sid | Sid)
+type A1'_nat = forall 'a. (('a & ChurchInt | ChurchInt) -> ('a & ChurchInt | ChurchInt)) -> ('a & ChurchInt | ChurchInt) -> ('a & ChurchInt | ChurchInt)
+//│ Defined type alias A1'_sid
+//│ Defined type alias A1'_nat
 
 // (* There is no coercion from a1'_sid to a1'_nat, hence we can conjecture that a0'
 //    is not in F+eta. *)

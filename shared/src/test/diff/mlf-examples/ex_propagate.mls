@@ -1,17 +1,55 @@
+:GeneralizeCurriedFunctions
+
 // (* Use option -pa *)
 
 // type sid = ['a] 'a -> 'a
+type Sid = forall 'a. 'a -> 'a
+//│ Defined type alias Sid
 
 // let delta = (fun x -> x x : sid -> 'b)
 // let k = ((fun x y -> y) : ['a] 'a -> sid)
+def delta = (fun x -> x x) : Sid -> 'b
+def delta' = fun x -> x x
+def k = (fun x -> fun y -> y) : forall 'a. 'a -> Sid
+def k = fun x -> fun y -> y
+//│ delta: Sid -> Sid
+//│      = [Function: delta]
+//│ delta': ('a -> 'b & 'a) -> 'b
+//│       = [Function: delta]
+//│ k: anything -> Sid
+//│  = [Function: k]
+//│ k: anything -> (forall 'a. 'a -> 'a)
+//│  = [Function: k1]
 
 // let id x = x
 // let id' = (id : sid -> sid)
+def id x = x
+def id' = id : Sid -> Sid
+//│ id: 'a -> 'a
+//│   = [Function: id]
+//│ id': Sid -> Sid
+//│    = [Function: id]
 
 // (* Next: We do not give enough information. *)
 // untype fun x -> ((fun y -> y y) : 'a -> sid)
+fun x -> ((fun y -> y y) : 'a -> Sid)
+fun x -> (fun y -> y y)
+//│ res: anything -> ('a -> Sid & 'a) -> Sid
+//│    = [Function: res]
+//│ res: anything -> (forall 'a, 'b. ('a -> 'b & 'a) -> 'b)
+//│    = [Function: res]
 
 // let (delta:sid -> sid) = fun x -> x x
+def delta = (fun x -> x x) : Sid -> Sid
+//│ delta: Sid -> Sid
+//│      = [Function: delta1]
+
 // let (delta:sid -> 'b) = fun x -> x x
+def delta = (fun x -> x x) : Sid -> 'b
+//│ delta: Sid -> Sid
+//│      = [Function: delta2]
 
 // untype let (delta:'a -> sid) = fun x -> x x in delta
+let delta = (fun x -> x x) : 'a -> Sid in delta
+//│ res: ('a -> Sid & 'a) -> Sid
+//│    = [Function (anonymous)]
