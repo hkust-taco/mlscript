@@ -52,11 +52,10 @@ rec def map f l = case l of
   { Nil -> Nil
   | Cons -> Cons (f l.head, map f l.tail)
   }
-//│ map: ((forall 'a, 'head. ('head
+//│ map: ('head -> 'head0) -> 'a -> 'tail
 //│   where
-//│     'a <: {head: 'head})) -> 'b & (forall 'head. 'head) -> 'a) -> (Cons['a] & 'a | Nil) -> 'tail
-//│   where
-//│     'tail :> (Cons['b] with {tail: 'tail}) | Nil
+//│     'tail :> (Cons['head0] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil
 //│    = [Function: map]
 :NoRecursiveTypes
 

@@ -695,13 +695,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body)
       if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      // if genLambdas && ctx.inRecursiveDef.isEmpty => // this simplif does not seem to bring much benefit
       // if genLambdas =>
         println(s"TYPING POLY LAM")
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
         val newCtx = ctx.nest.nextLevel
         val ec: ExtrCtx = MutMap.empty
-        val extrCtx: Opt[ExtrCtx] = S(ec)
+        val extrCtx: Opt[ExtrCtx] =
+          S(ec)
+          // Option.when(ctx.inRecursiveDef.isEmpty)(ec)
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
         // newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
@@ -711,6 +714,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         //   if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
         PolymorphicType.mk(ctx.lvl,
           ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+            // * Feels like we should be doing this, but it produces pretty horrible results
+            // *  and does not seem required for soundness (?)
+            //.tap(instantiateForGoodMeasure)
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
@@ -722,7 +728,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
       case App(f, a) =>
-        val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
+        // val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
+        val genArgs = ctx.inRecursiveDef.isEmpty
+        
         val f_ty = typeTerm(f)
         // val a_ty = typePolymorphicTerm(a)
         val a_ty =
@@ -752,7 +760,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
             a match {
               case Tup(as) =>
                 TupleType(as.map { case (n, (a, mut)) =>
-                  assert(!mut)
+                  // assert(!mut)
                   val fprov = tp(a.toLoc, "argument")
                   val tym = typeArg(a)
                   (n, tym.toUpper(fprov))

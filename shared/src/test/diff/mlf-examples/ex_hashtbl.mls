@@ -109,9 +109,7 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ find: (List['a] & 'a) -> 'a -> (None | Some[forall 'a, 'b. ('b
-//│   where
-//│     'a <: List[{_2: 'b}])])
+//│ find: List[?] -> anything -> (None | Some[nothing])
 //│     = [Function: find]
 :NoRecursiveTypes
 
@@ -121,9 +119,7 @@ rec def find table key =
 
 :ng
 find(error:List[(int, string)])(unit)
-//│ res: None | Some[forall 'a. ('a
-//│   where
-//│     'b <: List[{_2: 'a}])]
+//│ res: None | Some[string]
 
 // let nfind table key =
 //   begin match find table key with
@@ -136,10 +132,7 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> (forall 'a, 'b, 'c. (anything -> (forall 'd. 'd -> 'd) | 'b
-//│   where
-//│     'a <: List[{_2: 'b}]
-//│     'c <: List[{_2: 'b}]))
+//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -223,31 +216,31 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // FIXME?
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.217: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                        ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.217: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                        ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.217: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                        ^^
 //│ zog: error
 //│    = '0'

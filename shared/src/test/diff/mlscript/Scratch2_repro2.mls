@@ -194,6 +194,10 @@ rec def id x = let tmp = id id x in x
 //│        <: 'a -> anything
 //│   = [Function: id1]
 
+// * ^ If we disable lambda constrained-type-gen in rec defs,
+// *    the above then infers `id: 'a -> 'a` (after much simplif.)
+// *    and the below then checks:
+
 // FIXME
 id_ty = id
 //│ 'id
@@ -204,7 +208,7 @@ id_ty = id
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	id_ty = id
+//│ ║  l.202: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not a function
 //│ ║  l.184: 	def id_ty: forall 'a. 'a -> 'a
@@ -216,7 +220,7 @@ id_ty = id
 //│ ║  l.189: 	rec def id x = let tmp = id id x in x
 //│ ╙──       	                                    ^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.198: 	id_ty = id
+//│ ║  l.202: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `'a`
 //│ ║  l.189: 	rec def id x = let tmp = id id x in x

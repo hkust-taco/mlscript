@@ -263,26 +263,26 @@ to_church_ty = to_church_2
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α688''    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α657'''
+//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α684''    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α653'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α697''    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α657'''
+//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α693''    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α653'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α691''    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  α659''''
+//│ ╟── this constraint:  ‘a''  <:  α687''    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  α655''''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α700''    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  α659''''
+//│ ╟── this constraint:  ‘a''  <:  α696''    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  α655''''
 
 :e // FIXME?
 to_church_ty = to_church_3
@@ -410,8 +410,8 @@ def tc n = to_church_2 n : ChurchInt
 //│ ║  l.408: 	def tc n = to_church_2 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a''' -> ‘a''')  <:  α1010'''    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a''' -> ‘a''')  <:  α961'''
+//│ ╟── this constraint:  (‘a''' -> ‘a''')  <:  α1005'''    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a''' -> ‘a''')  <:  α956'''
 //│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 

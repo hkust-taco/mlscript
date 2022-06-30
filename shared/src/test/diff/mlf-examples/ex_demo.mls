@@ -217,12 +217,12 @@ rec def listiter f ll =
   else
     let _ = ignore (f (head ll)) in 
     listiter f (tail ll)
-//│ listiter: (nothing -> anything) -> List[?] -> unit
+//│ listiter: ('a -> anything) -> List['a] -> unit
 //│         = [Function: listiter]
 :NoRecursiveTypes
 
 listiterA = listiter
-//│ (nothing -> anything) -> List[?] -> unit
+//│ ('a -> anything) -> List['a] -> unit
 //│   <:  listiterA:
 //│ ('a -> unit) -> List['a] -> unit
 //│          = [Function: listiter]
@@ -288,8 +288,8 @@ id1 id
 //│ ║  l.286: 	id1 id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α443    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α410'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α430    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α397'
 //│ res: error
 //│    = [Function: id]
 
@@ -307,8 +307,8 @@ id1 id1
 //│ ║  l.305: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1407'›  <:  α456    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1407'›  <:  α410'
+//│ ╟── this constraint:  ‹∀ 0. id1394'›  <:  α443    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1394'›  <:  α397'
 //│ res: error
 //│    = [Function: id1]
 
@@ -496,7 +496,7 @@ test1 = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│ true
 
 test1_ = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1))
-//│ test1_: List[?] -> unit
+//│ test1_: List[(forall 'a, 'b. ('a, 'a -> 'b,) -> 'b) -> anything] -> unit
 //│       = [Function (anonymous)]
 
 // FIXME? now fails with constrained-arg-gen
@@ -569,10 +569,10 @@ test2 = listiterA (fun ex -> ex (fun ((t1, t2, t3)) ->
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.558: 	  print_bool areequal )) ex_list2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `unit` does not match type `_α1340'' | ‘b`
+//│ ╟── type `unit` does not match type `_α1313'' | ‘b`
 //│ ║  l.71: 	def print_bool: bool -> unit
 //│ ║        	                        ^^^^
-//│ ╟── but it flows into application with expected type `_α1340'' | ‘b`
+//│ ╟── but it flows into application with expected type `_α1313'' | ‘b`
 //│ ║  l.558: 	  print_bool areequal )) ex_list2
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
@@ -591,7 +591,7 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
   let eqf = t3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal ))
-//│ test2_: List[?] -> unit
+//│ test2_: List[(forall 'a, 'b. ('a, 'b, 'a -> 'b -> bool,) -> unit) -> anything] -> unit
 //│       = [Function (anonymous)]
 
 // * Also fails:
@@ -1254,19 +1254,19 @@ rec def c_fact_ n =
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
 //│ c_fact_: 'a -> 'b
 //│   where
-//│     'a <: (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> (((forall 'c. 'c -> 'c) -> 'e) -> anything -> 'e) -> anything & (((forall 'f. ('f -> (forall 'f, 'g, 'h. ('h
+//│     'a <: (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> (((forall 'c. 'c -> 'c) -> 'e) -> anything -> 'e) -> (anything -> (forall 'f, 'g. ('f -> 'g) -> 'f -> 'g)) -> (anything -> 'h) -> 'b & (((forall 'i. ('i -> (forall 'i, 'j, 'k. ('k
 //│   where
-//│     'f <: 'g -> 'h)) -> 'i) -> (forall 'j. ('j -> anything & 'f) -> ('g & 'j) -> 'i)) -> nothing -> 'k) -> 'k) -> (anything -> (forall 'l. 'l -> 'l)) -> 'm & (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> (((forall 'c. 'c -> 'c) -> 'e) -> anything -> 'e) -> (anything -> (forall 'n, 'o. ('n -> 'o) -> 'n -> 'o)) -> (anything -> 'm) -> 'b & (((anything -> (forall 'p. 'p -> 'p)) -> anything) -> (nothing -> (forall 'q. 'q -> (forall 'q, 'r. ('s -> 't
-//│   where
-//│     'r <: 'q -> (forall 'q, 's, 'u. ('u
-//│   where
-//│     'q <: 's -> 'u)) -> 't
-//│     'q <: 's -> anything))) -> 'v) -> 'v) -> (((anything -> (forall 'l. 'l -> 'l)) -> (anything -> (forall 'l. 'l -> 'l)) -> 'w) -> 'w) -> (forall 'x. 'x -> anything -> 'x) -> 'a & (((anything -> (forall 'p. 'p -> 'p)) -> anything) -> (nothing -> (forall 'q. 'q -> (forall 'q, 'r. ('s -> 't
+//│     'i <: 'j -> 'k)) -> 'l) -> (forall 'm. ('m -> anything & 'i) -> ('j & 'm) -> 'l)) -> nothing -> 'n) -> 'n) -> (anything -> (forall 'o. 'o -> 'o)) -> 'h & (((anything -> (forall 'p. 'p -> 'p)) -> anything) -> (nothing -> (forall 'q. 'q -> (forall 'q, 'r. ('s -> 't
 //│   where
 //│     'r <: 'q -> (forall 'q, 's, 'u. ('u
 //│   where
 //│     'q <: 's -> 'u)) -> 't
-//│     'q <: 's -> anything))) -> 'v) -> 'v) -> (((anything -> (forall 'l. 'l -> 'l)) -> (anything -> (forall 'l. 'l -> 'l)) -> 'w) -> 'w) -> anything
+//│     'q <: 's -> anything))) -> 'v) -> 'v) -> (((anything -> (forall 'o. 'o -> 'o)) -> (anything -> (forall 'o. 'o -> 'o)) -> 'w) -> 'w) -> (forall 'x. 'x -> anything -> 'x) -> 'a & (((anything -> (forall 'p. 'p -> 'p)) -> anything) -> (nothing -> (forall 'q. 'q -> (forall 'q, 'r. ('s -> 't
+//│   where
+//│     'r <: 'q -> (forall 'q, 's, 'u. ('u
+//│   where
+//│     'q <: 's -> 'u)) -> 't
+//│     'q <: 's -> anything))) -> 'v) -> 'v) -> (((anything -> (forall 'o. 'o -> 'o)) -> (anything -> (forall 'o. 'o -> 'o)) -> 'w) -> 'w) -> anything
 //│        = [Function: c_fact_]
 
 
@@ -1439,8 +1439,8 @@ this_should_be_98_ =
 //│ ║  l.1432: 	  let c_i5_ = c_add_ c_i3_ c_i2_ in
 //│ ║          	              ^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 4. {α5389''''' where: α5387'' <: ((α5383'',) -> α5389''''')}›  <:  α5189''    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 4. {α5384''''' where: α5387'' <: ((α3036',) -> α5384''''')}›  <:  α3786''
+//│ ╟── this constraint:  ‹∀ 4. {α5328''''' where: α5326'' <: ((α5322'',) -> α5328''''')}›  <:  α5128''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 4. {α5323''''' where: α5326'' <: ((α3007',) -> α5323''''')}›  <:  α3746''
 //│ this_should_be_98_: string
 //│                   = '98'
 
