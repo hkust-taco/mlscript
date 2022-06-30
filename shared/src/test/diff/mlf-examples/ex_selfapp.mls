@@ -53,13 +53,13 @@ type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //   fun (g : ['b] (('a -> 'b -> 'b) -> 'b -> 'b)) -> 
 //     g (fun x xs -> Cons (x,xs)) Nil
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
-def build' = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> 'tail
 //│   where
 //│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
 //│      = [Function: build]
-//│ build': ((forall 'b. 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
-//│       = [Function: build]
+//│ build_: ((forall 'b. 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
+//│       = [Function: build_]
 
 // let rec foldr =
 //   fun k z xs -> 
@@ -82,11 +82,11 @@ rec def foldr = fun k -> fun z -> fun xs ->
 
 // let (z : baa) = fun c n -> n
 def z = (fun c -> fun n -> n) : Baa
-def z' = fun c -> fun n -> n
+def z_ = fun c -> fun n -> n
 //│ z: Baa
 //│  = [Function: z]
-//│ z': anything -> (forall 'a. 'a -> 'a)
-//│   = [Function: z]
+//│ z_: anything -> (forall 'a. 'a -> 'a)
+//│   = [Function: z_]
 
 // let rec (k : int -> ba -> ba) = fun x (xs : ba) c n -> c (x+1) (xs k z c n)
 // FIXME
@@ -120,9 +120,9 @@ rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╙──      	                 ^^
 //│  = [Function: k]
 
-rec def k' = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z' c n)
-//│ k': int -> ((int -> Ba -> Ba) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (forall 'e. (int -> 'd -> 'e & 'b) -> 'c -> 'e)
-//│   = [Function: k]
+rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ k_: int -> ((int -> Ba -> Ba) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (forall 'e. (int -> 'd -> 'e & 'b) -> 'c -> 'e)
+//│   = [Function: k_]
 
 
 // (* untyped terms *)
@@ -148,23 +148,23 @@ def bfoo xs = build (foldr k z xs)
 //│     = [Function: bfoo]
 
 // FIXME
-def bfoo' xs = build' (foldr k' z' xs)
+def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.151: 	def bfoo' xs = build' (foldr k' z' xs)
+//│ ║  l.151: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
-//│ ║  l.85: 	def z' = fun c -> fun n -> n
+//│ ║  l.85: 	def z_ = fun c -> fun n -> n
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.13: 	type List[a] = Nil | Cons[a]
 //│ ║        	               ^^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.56: 	def build' = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ║  l.56: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╙──      	                                                     ^^
-//│ bfoo': 'a -> error
+//│ bfoo_: 'a -> error
 //│   where
 //│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
-//│      = [Function: bfoo]
+//│      = [Function: bfoo_]
 
 
 // (* test run *)
@@ -201,7 +201,7 @@ foo lst0
 
 // bfoo lst0;;
 bfoo lst0
-bfoo' lst0
+bfoo_ lst0
 //│ res: 'tail
 //│   where
 //│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
@@ -266,6 +266,6 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ╙──      	                  ^^
 //│  = [Function: k1]
 
-rec def k' = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ k': int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
-//│   = [Function: k1]
+rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ k_: int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
+//│   = [Function: k_1]

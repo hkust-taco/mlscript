@@ -11,13 +11,13 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let id x = x
 // let k x y = x
 def auto (x: Sid) = x x
-def auto' x = x x
+def auto_ x = x x
 def id x = x
 def k x y = x
 //│ auto: Sid -> Sid
 //│     = [Function: auto]
-//│ auto': ('a -> 'b & 'a) -> 'b
-//│      = [Function: auto]
+//│ auto_: ('a -> 'b & 'a) -> 'b
+//│      = [Function: auto_]
 //│ id: 'a -> 'a
 //│   = [Function: id]
 //│ k: 'a -> anything -> 'a
@@ -68,14 +68,14 @@ def a2 (x: A1) =
     let _ = x y in
     y church_succ
   ) a3
-def a2' (x: A1) =
-  let _ = x auto' in
+def a2_ (x: A1) =
+  let _ = x auto_ in
   (fun y ->
     let _ = x y in
     y church_succ
   ) a3
 def a0 = a2 a1
-def a0' = a2' a1
+def a0_ = a2_ a1
 //│ Defined type alias A1
 //│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│   = [Function: a1]
@@ -91,19 +91,19 @@ def a0' = a2' a1
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
 //│   = [Function: a2]
-//│ a2': A1 -> (forall 'a. ('b -> 'c
+//│ a2_: A1 -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
-//│    = [Function: a2]
+//│    = [Function: a2_]
 //│ a0: 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│   = [Function (anonymous)]
-//│ a0': 'a -> 'b
+//│ a0_: 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
@@ -123,7 +123,7 @@ def test0 =
       k (g (fun (x: Sid) -> x x))
         ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-def test0' =
+def test0_ =
   (fun f -> f (fun h -> h id))
     (fun g ->
       k (g (fun x -> x x))
@@ -131,7 +131,7 @@ def test0' =
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
 //│ test0: Sid
 //│      = [Function: id]
-//│ test0': 'a -> 'a
+//│ test0_: 'a -> 'a
 //│       = [Function: id]
 
 
@@ -151,7 +151,7 @@ type A1_nat = forall 'a 'b. (('a & ChurchInt -> ChurchInt | ChurchInt -> ChurchI
 def a1_sid_to_nat (g: A1_sid) =
   let r = fun f -> g (fun (x: Sid) -> f x) in
   (r: A1_nat)
-def a1_sid_to_nat' g =
+def a1_sid_to_nat_ g =
   let r = fun f -> g (fun x -> f x) in
   r
 //│ a1_sid_to_nat: A1_sid -> A1_nat
@@ -160,12 +160,12 @@ def a1_sid_to_nat' g =
 //│   where
 //│     'b <: Sid -> 'c)) -> ‘b
 //│              = [Function: a1_sid_to_nat]
-//│ a1_sid_to_nat': 'a -> (forall 'a. ('b -> 'c
+//│ a1_sid_to_nat_: 'a -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
 //│   where
 //│     'b <: 'd -> 'e)) -> 'c))
-//│               = [Function: a1_sid_to_nat]
+//│               = [Function: a1_sid_to_nat_]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
 
@@ -182,15 +182,15 @@ def test_in_F_eta =
       k (g (fun (x : Sid) -> x x))
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-def test_in_F_eta' = 
+def test_in_F_eta_ = 
   (fun f -> f (fun h -> h id))
     (fun g ->
       k (g (fun x -> x x))
-        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat' g) t) (t (fun f -> fun x -> x)))
+        ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat_ g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
 //│ test_in_F_eta: Sid
 //│              = [Function: id]
-//│ test_in_F_eta': 'a -> 'a
+//│ test_in_F_eta_: 'a -> 'a
 //│               = [Function: id]
 
 // (*
@@ -223,14 +223,14 @@ def a2' (x: A1') =
     let _ = x y church_two in
     y church_succ
   ) a3
-def a2'' x =
-  let _ = x auto' id in
+def a2'_ x =
+  let _ = x auto_ id in
   (fun y ->
     let _ = x y church_two in
     y church_succ
   ) a3
 def a0' = a2' a1'
-def a0'' = a2'' a1'
+def a0'_ = a2'_ a1'
 //│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: either]
 //│ a1': 'a -> (forall 'a. ('b -> 'c
@@ -243,7 +243,7 @@ def a0'' = a2'' a1'
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
 //│    = [Function: either]
-//│ a2'': ((forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ a2'_: ((forall 'a. 'a -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
@@ -261,7 +261,7 @@ def a0'' = a2'' a1'
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│    = [Function: either]
-//│ a0'': 'a -> 'b
+//│ a0'_: 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where

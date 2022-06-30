@@ -155,24 +155,24 @@ fun x -> x x
 
 // let delta (x:id) = x x
 def delta (x: Id) = x x
-def delta' x = x x
+def delta_ x = x x
 //│ delta: Id -> Id
 //│      = [Function: delta]
-//│ delta': ('a -> 'b & 'a) -> 'b
-//│       = [Function: delta]
+//│ delta_: ('a -> 'b & 'a) -> 'b
+//│       = [Function: delta_]
 
 // let z = delta (delta id)
 def z = delta (delta id)
-def z' = delta' (delta' id)
+def z_ = delta_ (delta_ id)
 //│ z: Id
 //│  = [Function: id]
-//│ z': 'a -> 'a
+//│ z_: 'a -> 'a
 //│   = [Function: id]
 
 // untype delta succ
 :e
 delta succ
-delta' succ
+delta_ succ
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.174: 	delta succ
 //│ ║         	^^^^^^^^^^
@@ -185,13 +185,13 @@ delta' succ
 //│ res: error | Id
 //│    = 'function succ(n) {  return n + 1;}1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.175: 	delta' succ
+//│ ║  l.175: 	delta_ succ
 //│ ║         	^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?b` is not an instance of type `int`
 //│ ║  l.125: 	def succ n = n + 1
 //│ ║         	         ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.175: 	delta' succ
+//│ ║  l.175: 	delta_ succ
 //│ ║         	       ^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.125: 	def succ n = n + 1
@@ -201,10 +201,10 @@ delta' succ
 
 // let z = delta (choose id id)
 def z = delta (choose id id)
-def z' = delta' (choose id id)
+def z_ = delta_ (choose id id)
 //│ z: Id
 //│  = [Function: id]
-//│ z': 'a -> 'a
+//│ z_: 'a -> 'a
 //│   = [Function: id]
 
 // let step g = (g 1) - (g 0)
@@ -215,7 +215,7 @@ def step g = (g 1) - (g 0)
 def apply_to_id f = f id
 def test1 = apply_to_id step
 def test2 = apply_to_id delta
-def test2' = apply_to_id delta'
+def test2_ = apply_to_id delta_
 //│ step: (0 -> int & 1 -> int) -> int
 //│     = [Function: step]
 //│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
@@ -224,19 +224,19 @@ def test2' = apply_to_id delta'
 //│      = 1
 //│ test2: Id
 //│      = [Function: id]
-//│ test2': 'a -> 'a
+//│ test2_: 'a -> 'a
 //│       = [Function: id]
 
 // type s  = ['a] list ('a) -> bool
 // let annote_s (x:id) = (x : s -> s)
 type S = forall 'a. List['a] -> bool
 def annote_s (x: Id) = x : S -> S
-def annote_s' x = x : S -> S
+def annote_s_ x = x : S -> S
 //│ Defined type alias S
 //│ annote_s: Id -> S -> S
 //│         = [Function: annote_s]
-//│ annote_s': (S -> S) -> S -> S
-//│          = [Function: annote_s]
+//│ annote_s_: (S -> S) -> S -> S
+//│          = [Function: annote_s_]
 
 // let isnil l = l = []
 def isnil l = eq l nil
@@ -253,7 +253,7 @@ let t = fun x -> fun y ->
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
   in t id isnil
 let t = fun x -> fun y ->
-  let isnil = (annote_s' x) y in
+  let isnil = (annote_s_ x) y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
   in t id isnil
 //│ res: (bool, bool, bool, bool,)
@@ -291,12 +291,12 @@ def departage x = choose id (x : Id)
 
 // let delta' = fun x -> (departage x) x
 // untype fun x -> partage x x
-def delta2 = fun x -> (departage x) x
-def delta2' = fun x -> (partage x) x
-//│ delta2: (Id & 'a) -> 'a
-//│       = [Function: delta2]
-//│ delta2': ('a -> 'b & 'a & 'b) -> 'b
-//│        = [Function: delta2]
+def delta' = fun x -> (departage x) x
+def delta'_ = fun x -> (partage x) x
+//│ delta': (Id & 'a) -> 'a
+//│       = [Function: departage]
+//│ delta'_: ('a -> 'b & 'a & 'b) -> 'b
+//│        = [Function: departage]
 
 // let t = fun x -> (x:id) x, x
 // let t = fun (x:id) -> x x, (x:id)
@@ -308,7 +308,7 @@ def t = fun (x: Id) -> (x x, (x : Id))
 def t = fun (x: Id) -> (x x, x)
 def t = fun x -> (x (x : Id), x)
 def t = fun x -> (x x, x : Id)
-def t' = fun x -> (x x, x)
+def t_ = fun x -> (x x, x)
 //│ t: (Id & 'a) -> ('a, 'a,)
 //│  = [Function: t]
 //│ t: Id -> (Id, Id,)
@@ -319,8 +319,8 @@ def t' = fun x -> (x x, x)
 //│  = [Function: t3]
 //│ t: (Id & 'a -> 'b & 'a) -> ('b, Id,)
 //│  = [Function: t4]
-//│ t': ('a -> 'b & 'a) -> ('b, 'a,)
-//│   = [Function: t4]
+//│ t_: ('a -> 'b & 'a) -> ('b, 'a,)
+//│   = [Function: t_]
 
 // untype fun x -> (x:id), x x
 fun x -> (x : Id, x x)
@@ -344,7 +344,7 @@ def ff = fun (g: forall 'a 'b. (('a | Id) -> 'b) -> 'b) ->
       let _ = ig (g t) in
       t succ
     ) (fun x -> succ (x 8))
-def ff' = fun g ->
+def ff_ = fun g ->
   let _ = ig (g delta) in
     (fun t ->
       let _ = ig (g t) in
@@ -354,27 +354,27 @@ def ff' = fun g ->
 //│   = [Function: aa]
 //│ ff: (forall 'b. (anything -> 'b) -> 'b) -> int
 //│   = [Function: ff]
-//│ ff': (((8 -> int) -> int) -> anything & (Id -> Id) -> anything) -> int
-//│    = [Function: ff]
+//│ ff_: (((8 -> int) -> int) -> anything & (Id -> Id) -> anything) -> int
+//│    = [Function: ff_]
 
 // let bigtest = ff aa
 def bigtest = ff aa
-def bigtest' = ff' aa
+def bigtest_ = ff_ aa
 //│ bigtest: int
 //│        = 10
-//│ bigtest': int
+//│ bigtest_: int
 //│         = 10
 
 // (* Variable libre / variable li�e dans les annotations. *)
 // let example f = (f:['a] 'a -> int -> 'b) f
 // let mkpair x y = (x,y)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
-def example' f = f f
+def example_ f = f f
 def mkpair x y = (x, y)
 //│ example: (nothing -> int -> 'b) -> int -> 'b
 //│        = [Function: example]
-//│ example': ('a -> 'b & 'a) -> 'b
-//│         = [Function: example]
+//│ example_: ('a -> 'b & 'a) -> 'b
+//│         = [Function: example_]
 //│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = [Function: mkpair]
 
@@ -382,7 +382,7 @@ def mkpair x y = (x, y)
 // (* �a echoue parce qu'on instancie 'b avec un type contenant 'a *)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 example mkpair
-example' mkpair
+example_ mkpair
 //│ res: int -> (anything, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
@@ -463,27 +463,27 @@ def intfa f = f 15
 
 // let polyann (a:'x) (b:int) f (g:int -> 'x -> 'y) = g (f 10) a b
 def polyann (a: 'x) (b: int) f (g: int -> 'x -> 'y) = g (f 10) a b
-def polyann' a b f g = g (f 10) a b
+def polyann_ a b f g = g (f 10) a b
 //│ polyann: 'x -> int -> (forall 'a. 'a -> (forall 'x, 'a, 'b. ((int -> 'x -> int -> 'b) -> 'b
 //│   where
 //│     'a <: 10 -> int)))
 //│        = [Function: polyann]
-//│ polyann': 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d -> 'a -> 'b -> 'e) -> 'e
+//│ polyann_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. (('d -> 'a -> 'b -> 'e) -> 'e
 //│   where
 //│     'c <: 10 -> 'd))))
-//│         = [Function: polyann]
+//│         = [Function: polyann_]
 
 // let voyage (f:'p -> 'q) x y = (y, f x)
 def voyage (f: 'p -> 'q) x y = (y, f x)
-def voyage' f x y = (y, f x)
+def voyage_ f x y = (y, f x)
 //│ voyage: (nothing -> anything) -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
 //│     'b <: 'a -> 'c)))
 //│       = [Function: voyage]
-//│ voyage': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
+//│ voyage_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d -> ('d, 'c,)
 //│   where
 //│     'a <: 'b -> 'c)))
-//│        = [Function: voyage]
+//│        = [Function: voyage_]
 
 // let main =
 

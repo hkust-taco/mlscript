@@ -52,7 +52,7 @@ type Sid = forall 'a. 'a -> 'a
 def choose x y = if true then x else y
 def choose3 x y z = choose (choose x y) z
 def id = (fun x -> x) : Sid
-def id' = fun x -> x
+def id_ = fun x -> x
 def succ n = n + 1
 //│ choose: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: choose]
@@ -60,24 +60,24 @@ def succ n = n + 1
 //│        = [Function: choose3]
 //│ id: Sid
 //│   = [Function: id]
-//│ id': 'a -> 'a
-//│    = [Function: id]
+//│ id_: 'a -> 'a
+//│    = [Function: id_]
 //│ succ: int -> int
 //│     = [Function: succ]
 
 // let test = choose3 id
 // let test2 = test succ
 def test = choose3 id
+def test_ = choose3 id_
 def test2 = test succ
-def test' = choose3 id'
-def test2' = test' succ
+def test2_ = test_ succ
 //│ test: anything -> (forall 'a. 'a -> (Sid | 'a))
 //│     = [Function (anonymous)]
+//│ test_: anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
+//│      = [Function (anonymous)]
 //│ test2: 'a -> (Sid | 'a)
 //│      = [Function (anonymous)]
-//│ test': anything -> (forall 'a. 'a -> (forall 'a, 'b. 'b -> 'b | 'a))
-//│      = [Function (anonymous)]
-//│ test2': 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
+//│ test2_: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 //│       = [Function (anonymous)]
 
 // (* Messages d'erreur foireux : *)
@@ -104,12 +104,12 @@ fun x -> fun y -> ((x : S1), (y : S2), x x)
 // let example f = (f:['a] 'a -> int -> 'b) f
 // let mkpair x y = (x,y)
 def example f = (f: forall 'a. 'a -> int -> 'b) f
-def example' f = f f
+def example_ f = f f
 def mkpair x y = (x, y)
 //│ example: (nothing -> int -> 'b) -> int -> 'b
 //│        = [Function: example]
-//│ example': ('a -> 'b & 'a) -> 'b
-//│         = [Function: example]
+//│ example_: ('a -> 'b & 'a) -> 'b
+//│         = [Function: example_]
 //│ mkpair: 'a -> (forall 'b. 'b -> ('a, 'b,))
 //│       = [Function: mkpair]
 
@@ -118,7 +118,7 @@ def mkpair x y = (x, y)
 // (* Il faudrait que le message d'erreur soit plus clair. *)
 // *)
 example mkpair
-example' mkpair
+example_ mkpair
 //│ res: int -> (anything, int,)
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> ('b, 'c,)), 'a,)
