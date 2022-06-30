@@ -362,9 +362,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs    (${cache.size})") {
+    trace(s"$lvl. C $lhs <! $rhs") {
     // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
+    // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
@@ -387,7 +387,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
-            println(s"SH: $shadow")
+            // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
             if (shadows.contains(shadow)) {
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
@@ -419,11 +419,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (prim: ClassTag, ot: ObjectTag)
             if prim.parentsST.contains(ot.id) => ()
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
+            println(s"NEW $lhs UB (${rhs.level})")
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
+            println(s"NEW $rhs LB (${lhs.level})")
             // println(lhs, rhs, lhs.level, rhs.level)
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
@@ -432,12 +434,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
+            println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
           // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
           case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
+            println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0
             ()
@@ -532,6 +536,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               println(s"BUMP TO LEVEL ${lvl}")
               rec(lhs, poly.rigidify, true)
             }
+          case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl => rec(bod, rhs, true)
           case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
             val newRhs = if (param.level > plvl) ??? // TODO
             else PolymorphicType(plvl, FunctionType(param, bod)(rhs.prov))

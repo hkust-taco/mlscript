@@ -104,35 +104,10 @@ def hashtbl_add table key element = cons ((key, element)) table
 //   else if fst (car table) = key then Some (snd (car table))
 //   else find (cdr table) key
 
-:e // TODO try without cycle check
 rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. α173'›  <:  α214'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. α173'›  <:  α20'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (some<> & {val: val227', Some#a: mut a228'..a228'})  <:  α214'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (some<> & {val: val177'', Some#a: mut a178''..a178''})  <:  α20'
 //│ find: List[?] -> anything -> (None | Some[nothing])
 //│     = [Function: find]
 
@@ -159,37 +134,37 @@ def find_A table key =
 //│   <:  find_A:
 //│ List['a] -> anything -> (None | Some['a])
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.152: 	def find_A table key =
+//│ ║  l.127: 	def find_A table key =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	  if is_empty table then None
+//│ ║  l.128: 	  if is_empty table then None
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║  l.129: 	  else if eq (head table)._1 key then Some (head table)._2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.155: 	  else find_A (tail table) key
+//│ ║  l.130: 	  else find_A (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not have field '_1'
-//│ ║  l.147: 	def find_A: List['a] -> anything -> (None | Some['a])
+//│ ║  l.122: 	def find_A: List['a] -> anything -> (None | Some['a])
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.154: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║  l.129: 	  else if eq (head table)._1 key then Some (head table)._2
 //│ ║         	             ^^^^^^^^^^^^^^^
 //│ ╟── from quantified type variable:
 //│ ║  l.45: 	def head: forall 'a. List['a] -> 'a
 //│ ╙──      	                 ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.152: 	def find_A table key =
+//│ ║  l.127: 	def find_A table key =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	  if is_empty table then None
+//│ ║  l.128: 	  if is_empty table then None
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║  l.129: 	  else if eq (head table)._1 key then Some (head table)._2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.155: 	  else find_A (tail table) key
+//│ ║  l.130: 	  else find_A (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not have field '_2'
-//│ ║  l.147: 	def find_A: List['a] -> anything -> (None | Some['a])
+//│ ║  l.122: 	def find_A: List['a] -> anything -> (None | Some['a])
 //│ ║         	                 ^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.154: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║  l.129: 	  else if eq (head table)._1 key then Some (head table)._2
 //│ ║         	                                           ^^^^^^^^^^^^^^^
 //│ ╟── from quantified type variable:
 //│ ║  l.45: 	def head: forall 'a. List['a] -> 'a

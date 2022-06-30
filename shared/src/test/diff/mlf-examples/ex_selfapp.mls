@@ -1,3 +1,6 @@
+:GeneralizeCurriedFunctions
+// :DistributeForalls
+
 // (*
 //  * This example was written by Susumu NISHIMURA 
 //  * According to him, it requires impredicative polymorphism.
@@ -6,6 +9,18 @@
 // (* my list definition *)
 
 // type mylist ('b) = Nil | Cons of ('b * mylist ('b));;
+class Nil
+class Cons[a]: { head: a; tail: List[a] }
+type List[a] = Nil | Cons[a]
+def Nil = Nil {}
+def Cons (head, tail) = Cons { head; tail }
+//│ Defined class Nil
+//│ Defined class Cons[+a]
+//│ Defined type alias List[+a]
+//│ Nil: Nil
+//│    = Nil {}
+//│ Cons: ('head & 'a, List['a] & 'tail,) -> (Cons['a] with {head: 'head, tail: 'tail})
+//│     = [Function: Cons1]
 
 // let rec foo =
 //   fun xs ->
@@ -13,6 +28,15 @@
 //       Nil -> Nil
 //     | Cons (x,xs) -> Cons (x+1, foo (foo xs))
 //     end
+rec def foo = fun xs -> case xs of
+  { Nil -> Nil
+  | Cons -> Cons (xs.head + 1, foo (foo xs.tail))
+  }
+//│ foo: 'a -> 'tail
+//│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│    = [Function: foo]
 
 
 
@@ -20,11 +44,42 @@
 // type ba = ['b] (int -> 'b -> 'b) -> 'b -> 'b
 // (* z can be typed more polymorphic. *)
 // type baa = ['a, 'b] ('a  -> 'b -> 'b)-> 'b -> 'b 
+type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ Defined type alias Ba
+//│ Defined type alias Baa
+
+
+// LP: this Baa type is a bit weird. It's equivalent to:
+def b: (nothing -> 'b -> 'b) -> 'b -> 'b
+//│ b: (nothing -> 'b -> 'b) -> 'b -> 'b
+//│  = <missing implementation>
+
+// LP: indeed:
+b: Baa
+//│ res: Baa
+//│    = <no result>
+//│      b is not implemented
+:ng
+b = error: Baa
+//│ Baa
+//│   <:  b:
+//│ (nothing -> 'b -> 'b) -> 'b -> 'b
+
+
 
 // (* build and foldr *)
 // let build = 
 //   fun (g : ['b] (('a -> 'b -> 'b) -> 'b -> 'b)) -> 
 //     g (fun x xs -> Cons (x,xs)) Nil
+def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> 'tail
+//│   where
+//│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
+//│      = [Function: build]
+//│ build_: ((forall 'b. 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))) -> Nil -> 'c) -> 'c
+//│       = [Function: build_]
 
 // let rec foldr =
 //   fun k z xs -> 
@@ -32,12 +87,134 @@
 //       Nil -> z
 //     | Cons (x, xs) -> k x (foldr k z xs)
 //     end
+rec def foldr = fun k -> fun z -> fun xs ->
+  case xs of
+    { Nil -> z
+    | Cons -> k xs.head (foldr k z xs.tail)
+    }
+//│ foldr: ('head -> 'a -> 'a) -> 'a -> 'b -> 'a
+//│   where
+//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
+//│      = [Function: foldr]
 
 
 // (* encoding `foo' with foldr *)
 
 // let (z : baa) = fun c n -> n
+def z = (fun c -> fun n -> n) : Baa
+def z_ = fun c -> fun n -> n
+//│ z: Baa
+//│  = [Function: z]
+//│ z_: anything -> (forall 'a. 'a -> 'a)
+//│   = [Function: z_]
+
+
 // let rec (k : int -> ba -> ba) = fun x (xs : ba) c n -> c (x+1) (xs k z c n)
+
+def k: int -> Ba -> Ba
+//│ k: int -> Ba -> Ba
+//│  = <missing implementation>
+
+// FIXME
+rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.119: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                     ^^
+//│ int -> Ba -> (nothing -> anything -> nothing & int -> anything -> nothing) -> anything -> anything
+//│   <:  k:
+//│ int -> Ba -> Ba
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.119: 	rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                 ^^
+//│  = [Function: k]
+
+:e
+rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ 'k
+//│   where
+//│     'k :> int -> ('k -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (int -> 'd -> 'e & 'b) -> 'c -> 'e
+//│   <:  k:
+//│ int -> Ba -> Ba
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> (forall ?b. ?b -> ?b)` does not match type `nothing`
+//│ ║  l.105: 	def z_ = fun c -> fun n -> n
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                                                                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?a -> ?b -> ?c` does not match type `nothing`
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `nothing`
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── from application:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not a function
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                                                            ^^^^
+//│ ╟── from application:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` is not a function
+//│ ║  l.47: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                 ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ║         	                                                            ^^^^^^^^^
+//│ ╟── from application:
+//│ ║  l.147: 	rec def k = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ ╙──       	                                                 ^^^^^^^^^^^^^^^^^^^^^^^
+//│  = [Function: k1]
+
+rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
+//│ k_: int -> ((int -> Ba -> Ba) -> (anything -> (forall 'a. 'a -> 'a)) -> 'b -> 'c -> 'd) -> (forall 'e. (int -> 'd -> 'e & 'b) -> 'c -> 'e)
+//│   = [Function: k_]
 
 
 // (* untyped terms *)
@@ -55,17 +232,127 @@
 
 // (* definition with build and foldr *)
 // let bfoo xs = build (foldr k z xs)
+def bfoo xs = build (foldr k z xs)
+//│ bfoo: 'a -> 'tail
+//│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     = [Function: bfoo]
 
+// FIXME
+def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.243: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
+//│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
+//│ ║  l.105: 	def z_ = fun c -> fun n -> n
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.14: 	type List[a] = Nil | Cons[a]
+//│ ║        	               ^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.76: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
+//│ ╙──      	                                                     ^^
+//│ bfoo_: 'a -> error
+//│   where
+//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│      = [Function: bfoo_]
+
+
+def lst = Cons (0, Cons (0, Cons (0, Nil)))
+//│ lst: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}
+//│    = Cons {
+//│        head: 0,
+//│        tail: Cons { head: 0, tail: Cons { head: 0, tail: Nil {} } }
+//│      }
 
 // (* test run *)
 // let lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))));;
+def lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))))
+//│ lst0: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}}
+//│     = Cons {
+//│         head: 0,
+//│         tail: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } }
+//│       }
 
 // foo lst0;;
+foo lst0
+//│ res: 'tail
+//│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
+//│    = Cons {
+//│        head: 1,
+//│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }
+//│      }
 
 // bfoo lst0;;
+bfoo lst0
+bfoo_ lst0
+//│ res: 'tail
+//│   where
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
+//│    = Cons {
+//│        head: 1,
+//│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }
+//│      }
+//│ res: error
+//│    = Cons {
+//│        head: 1,
+//│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }
+//│      }
 
 
 // (* This does not type :
 // type baa = ['a, 'b] ('a  -> 'b -> 'b)-> 'b -> 'b
 //   let rec (k : int -> baa -> baa) = fun x (xs : baa) c n -> c (x+1) (xs k z c n)
 // *)
+:e
+def k: int -> Baa -> Baa
+rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ k: int -> Baa -> Baa
+//│  = <missing implementation>
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                     ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                     ^^
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` does not match type `nothing`
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	                                                           ^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                  ^^
+//│ int -> Baa -> (nothing -> anything -> nothing & int -> anything -> nothing) -> anything -> anything
+//│   <:  k:
+//│ int -> Baa -> Baa
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ║        	                     ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                     ^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `int` does not match type `nothing`
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║         	                                                           ^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
+//│ ╙──      	                  ^^
+//│  = [Function: k2]
+
+rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ k_: int -> (forall 'a, 'b, 'c. ((int -> Baa -> Baa) -> Baa -> 'a -> 'b -> 'c) -> (forall 'd. (int -> 'c -> 'd & 'a) -> 'b -> 'd))
+//│   = [Function: k_1]
+

@@ -406,7 +406,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
   
   case class TraitTag(level: Level, id: SimpleTerm)(val prov: TypeProvenance) extends BaseTypeOrTag with ObjectTag with Factorizable {
     // def level: Level = MinLevel
-    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
+      // MinLevel
+      if (level <= ub) level else MinLevel
     override def toString = (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
   }
   
@@ -455,8 +457,12 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
       val nameHint: Opt[Str] = N,
       val recPlaceholder: Bool = false
   )(val prov: TypeProvenance) extends SimpleType with CompactTypeOrVariable with Ordered[TypeVariable] with Factorizable {
-    def original: TV = originalTV.getOrElse(this)
-    // def original: TV = originalTV.filter(_.originalTV.nonEmpty).getOrElse(this)
+    
+    private val creationRun = currentConstrainingRun
+    def original: TV =
+      if (currentConstrainingRun === creationRun) originalTV.getOrElse(this)
+      else this
+    
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // if (cache(this)) MinLevel else {
       //   cache += this

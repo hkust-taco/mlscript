@@ -353,7 +353,7 @@ self1 = res
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.349: 	self1 = res
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `‘a -> ‘b & ‘a` does not match type `nothing`
+//│ ╟── type `nothing -> anything` does not match type `nothing`
 //│ ║  l.334: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:

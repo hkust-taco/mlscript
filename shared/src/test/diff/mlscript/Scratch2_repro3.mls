@@ -1,0 +1,89 @@
+
+:GeneralizeCurriedFunctions
+// :DistributeForalls
+
+// def s n = fun f -> fun x -> f (n f x)
+// def s n = fun f -> f (n f)
+// def s n = fun f -> fun x -> (n f x)
+def s n = fun f -> n f
+// def s n = n
+//│ s: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│  = [Function: s]
+
+:ns
+s
+//│ res: forall 'a. 'a -> (forall 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│    = [Function: s]
+
+type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ Defined type alias ChurchInt
+
+def zero: ChurchInt
+//│ zero: ChurchInt
+//│     = <missing implementation>
+
+// def z f x = x
+
+// def succ: ChurchInt -> ChurchInt
+
+def to_church: int -> ChurchInt
+//│ to_church: int -> ChurchInt
+//│          = <missing implementation>
+
+// :d
+// rec def to_ch n =
+//   if n == 0 then zero
+//   else s (to_ch (n - 1))
+// rec def to_ch n =
+//   if n == 0 then zero
+//   else s (to_ch n)
+rec def to_ch n =
+  if true then zero
+  else s (to_ch n)
+// rec def to_ch n =
+//   s (to_ch (n - 1))
+// rec def to_ch n =
+//   s (to_ch n)
+// rec def to_ch n =
+//   to_ch n
+//│ to_ch: anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
+//│      = <no result>
+//│        zero is not implemented
+
+// :ns
+// to_ch
+
+// :re
+// to_ch 1 2
+
+// :d
+// FIXME?
+to_church = to_ch
+//│ anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.65: 	to_church = to_ch
+//│ ║        	^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.22: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.22: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                        ^^
+//│          = <no result>
+//│            to_ch and zero are not implemented
+
+:DistributeForalls
+
+to_church = to_ch
+//│ anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
+//│   <:  to_church:
+//│ int -> ChurchInt
+//│          = <no result>
+//│            to_ch and zero are not implemented
+
