@@ -394,18 +394,13 @@ example_ mkpair
 
 // let rec x = 1 :: y
 // and     y = 2 :: x
+:ng
 rec def p = { x = cons 1 p.y; y = cons 2 p.x }
 def x = p.x
 def y = p.y
 //│ p: {x: List[1 | 2], y: List[1 | 2]}
-//│ Runtime error:
-//│   ReferenceError: p is not defined
 //│ x: List[1 | 2]
-//│ Runtime error:
-//│   ReferenceError: p is not defined
 //│ y: List[1 | 2]
-//│ Runtime error:
-//│   ReferenceError: p is not defined
 
 // let print_int x = print_string "#"; print_int x; print_string " "
 // let intprint x = print_int x
