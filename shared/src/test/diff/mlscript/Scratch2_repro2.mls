@@ -1,0 +1,40 @@
+
+:GeneralizeCurriedFunctions
+// :DistributeForalls
+
+def s n = fun f -> fun x -> f (n f x)
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e)))
+//│  = [Function: s]
+
+// type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+
+def zero: ('N -> 'N) -> ('N -> 'N)
+//│ zero: ('N -> 'N) -> 'N -> 'N
+//│     = <missing implementation>
+
+type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ Defined type alias ChI
+
+// FIXME:
+// :d
+s zero : ChI
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.23: 	s zero : ChI
+//│ ║        	^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.18: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                   ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.18: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                   ^^
+//│ ╟── from type variable:
+//│ ║  l.14: 	def zero: ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	                 ^^
+//│ res: ChI
+//│    = <no result>
+//│      zero is not implemented
+
+

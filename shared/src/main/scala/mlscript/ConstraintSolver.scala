@@ -362,9 +362,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           (implicit raise: Raise, cctx: ConCtx, ctx: Ctx, shadows: Shadows): Unit =
     // trace(s"C $lhs <! $rhs") {
     // trace(s"C $lhs <! $rhs    (${cache.size})") {
+    trace(s"$lvl. C $lhs <! $rhs") {
     // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    // trace(s"$lvl. C $lhs <! $rhs    (${cache.size})") {
-    trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
+    // trace(s"C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       // println(s"[[ ${cctx._1.map(_.prov).mkString(", ")}  <<  ${cctx._2.map(_.prov).mkString(", ")} ]]")
       // println(s"{{ ${cache.mkString(", ")} }}")
       
@@ -387,7 +387,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case _ =>
             if (cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
-            println(s"SH: $shadow")
+            // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
             if (shadows.contains(shadow)) {
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
