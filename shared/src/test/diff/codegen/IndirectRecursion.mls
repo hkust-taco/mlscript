@@ -7,7 +7,7 @@ def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ z: (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
 //│  = <missing implementation>
 
-// :e
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
@@ -81,7 +81,7 @@ oops 1
 
 :NoRecursiveTypes
 
-// :e
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
@@ -209,8 +209,8 @@ def z =
 
 :NoCycleCheck
 
-// // Exceeds recursion depth limit:
-// :e
+// Exceeds recursion depth limit:
+:e
 def z =
   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j. (?k -> ?j
@@ -321,4 +321,27 @@ def z =
 //│ ╟── while constraining:  ‹∀ 0. (α622' -> α647')›  <!<  (((‘a' -> ‘b') -> ((‘a' -> ‘b') & ‘c')) -> ‘c')
 //│ ╙── while constraining:  ‹∀ 0. (α622' -> α647')›  <!<  ‹∀ 0. ((('a21' -> 'b22') -> (('a21' -> 'b22') & 'c23')) -> 'c23')›
 //│  = [Function: z2]
+
+
+// :NoConstrainnedTypes // doesn't help
+:NoArgGen
+
+:CycleCheck
+:RecursiveTypes // necessary or we get cycle error
+
+def z =
+  (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+//│ ((forall 'a, 'b, 'c. ('b -> 'c
+//│   where
+//│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
+//│   <:  z:
+//│ (('a -> 'b) -> ('a -> 'b & 'c)) -> 'c
+//│  = [Function: z3]
+
+// * Diverges:
+// :NoCycleCheck
+// :NoRecursiveTypes
+// def z =
+//   (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+
 

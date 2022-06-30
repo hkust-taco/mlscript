@@ -100,6 +100,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var noCycleCheck = false
     var noRecursiveTypes = false
     var noConstrainnedTypes = false
+    var noArgGen = false
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -129,9 +130,14 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DistributeForalls" => distributeForalls = true; mode
           case "NoCycleCheck" => noCycleCheck = true; mode
+          case "CycleCheck" => noCycleCheck = false; mode
           case "RecursiveTypes" => noRecursiveTypes = false; mode
           case "NoRecursiveTypes" => noRecursiveTypes = true; mode
           case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
+          case "NoArgGen" => noArgGen = true; mode
+          case str @ "Fuel" =>
+            // println("'"+line.drop(str.length + 2)+"'")
+            typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -227,6 +233,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.noCycleCheck = noCycleCheck
             typer.noRecursiveTypes = noRecursiveTypes
             typer.noConstrainnedTypes = noConstrainnedTypes
+            typer.noArgGen = noArgGen
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout

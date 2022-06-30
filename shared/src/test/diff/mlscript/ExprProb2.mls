@@ -183,7 +183,7 @@ eval2_fixed_1 e2
 //│    = -5
 
 // FIXME strange type
-// :e
+:e // Worked without generalized args (I think)
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.187: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
@@ -196,9 +196,10 @@ def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
 //│     'a <: 'a -> 'b -> 'c)) -> ('a -> anything & 'd)) -> (error | 'd)
 //│    = [Function: fix]
 
+:e // Worked without generalized args
 def eval2_fixed_2 = fix eval2f
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.199: 	def eval2_fixed_2 = fix eval2f
+//│ ║  l.200: 	def eval2_fixed_2 = fix eval2f
 //│ ║         	                    ^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 1. (α1536'' -> α1540'')›  <:  α1584'    PolymorphicType  TypeVariable

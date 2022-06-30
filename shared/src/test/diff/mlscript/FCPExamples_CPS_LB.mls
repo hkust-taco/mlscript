@@ -70,19 +70,34 @@ s x x (s x x e)
 //│     'b <: List[?]
 
 
+:stats
 def test8  = (s x x (s x x e) x (s x x x e) e)
 //│ test8: () -> (forall 'b. 'b -> (forall 'b. ((() -> (forall 'b, 'a. (List['a | string]
 //│   where
 //│     'b <: List['a])) -> 'c) -> 'c
 //│   where
 //│     'b <: List['b])))
+//│ constrain calls  : 4585
+//│ annoying  calls  : 942
+//│ subtyping calls  : 1735
 
 print test8
 
 
+//  ===========================
+
+
+// * Note: The definitions below work much better (basically seamlessly) if we don't contraint-generalize arguments:
+
+// * These need lots of fuel...
+
+// This fixes `test14`, but it takes close to a minute on my laptop:
+// :Fuel 5000000
+
+:e
 def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (10000)
-//│ ║  l.83: 	def test14 = (s x x x x x x x x x x x x x x e)
+//│ ║  l.98: 	def test14 = (s x x x x x x x x x x x x x x e)
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟──  + (list<> & {List#a: mut ..'a3649'})
 //│ ╟──  + List['a3649']
@@ -106,58 +121,12 @@ def test14 = (s x x x x x x x x x x x x x x e)
 //│ ╙──      	                ^^^^^^^^
 //│ test14: error
 
-def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (10000)
-//│ ║  l.109: 	def test16 = (s x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (list<> & {List#a: mut ..'a6245'})
-//│ ╟──  + List['a6245']
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.31: 	def s k = k () nil
-//│ ║        	               ^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ╟──  + α3690'
-//│ ╟──  - {List#a: mut ..'a6242'}
-//│ ╟──  - (list<> & {List#a: mut ..'a6242'})
-//│ ╟──  - List['a6242']
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                ^^^^^^^^
-//│ test16: error
+// def test14 = (s x x x x x x x x x x x x x x e)
+
+// def test16 = (s x x x x x x x x x x x x x x x x e)
 
 // (* This is too much for the type-checker. *)
-def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b. () -> ?b) -> ?c` took too many steps and ran out of fuel (10000)
-//│ ║  l.136: 	def test18 = (s x x x x x x x x x x x x x x x x x x e)
-//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟──  + (list<> & {List#a: mut ..'a8843'})
-//│ ╟──  + List['a8843']
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.20: 	def nil: List['a]
-//│ ║        	         ^^^^^^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ║  l.31: 	def s k = k () nil
-//│ ║        	               ^^^
-//│ ╟──  + ‹∀ 0. List['a31']›
-//│ ╟──  + α6288'
-//│ ╟──  - {List#a: mut ..'a8840'}
-//│ ╟──  - (list<> & {List#a: mut ..'a8840'})
-//│ ╟──  - List['a8840']
-//│ ║  l.16: 	def cons: 'a -> List['a] -> List['a]
-//│ ╙──      	                ^^^^^^^^
-//│ test18: error
+// def test18 = (s x x x x x x x x x x x x x x x x x x e)
 
 
 // (* A function that receives a token *)
@@ -241,4 +210,74 @@ def h t = g t t
 //│     'd <: List['a1])) -> 'f) -> 'f
 //│   where
 //│     'd <: List['d])))) -> 'k & 'h) -> 'k
+
+
+//  ===========================
+
+// * Now these work fine with either `:NoConstrainnedTypes` or `:NoArgGen`:
+
+:NoConstrainnedTypes
+// :NoArgGen
+
+def s k = k () nil
+def insert v () acu k = k () (cons v acu)
+def x () = insert "x" ()
+//│ s: (() -> List[nothing] -> 'a) -> 'a
+//│ insert: 'b -> () -> (forall 'a. List['a] -> (forall 'c. (() -> List['a | 'b] -> 'c) -> 'c))
+//│ x: () -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))
+
+def test14 = (s x x x x x x x x x x x x x x e)
+//│ test14: () -> (forall 'b. 'b -> (forall 'b. ((() -> (forall 'b, 'a. (List['a | string]
+//│   where
+//│     'b <: List['a])) -> 'c) -> 'c
+//│   where
+//│     'b <: List['b])))
+
+def test16 = (s x x x x x x x x x x x x x x x x e)
+//│ test16: () -> (forall 'b. 'b -> (forall 'b. ((() -> (forall 'b, 'a. (List['a | string]
+//│   where
+//│     'b <: List['a])) -> 'c) -> 'c
+//│   where
+//│     'b <: List['b])))
+
+// (* This is too much for the type-checker. *)
+def test18 = (s x x x x x x x x x x x x x x x x x x e)
+//│ test18: () -> (forall 'b. 'b -> (forall 'b. ((() -> (forall 'b, 'a. (List['a | string]
+//│   where
+//│     'b <: List['a])) -> 'c) -> 'c
+//│   where
+//│     'b <: List['b])))
+
+
+// (* A function that receives a token *)
+def f t = (s x x t x x e)
+//│ f: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'c. 'c -> (forall 'c. ((() -> (forall 'c, 'a0. (List['a0 | string]
+//│   where
+//│     'c <: List['a0])) -> 'd) -> 'd
+//│   where
+//│     'c <: List['c])))) -> 'e) -> 'e
+
+// (* If the token is used twice, we must reveive two arguments *)
+def g t1 t2 = (s x x t1 x (s x t2 x e) e)
+//│ g: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> 'c -> (() -> List[string] -> () -> (forall 'd. 'd -> (forall 'd. ((() -> (forall 'd, 'a0. (List['a0 | string]
+//│   where
+//│     'd <: List['a0])) -> 'e) -> 'e
+//│   where
+//│     'd <: List['d])))) -> 'f) -> (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'd. 'd -> (forall 'd. ((() -> (forall 'd, 'a0. (List['a0 | string]
+//│   where
+//│     'd <: List['a0])) -> 'e) -> 'e
+//│   where
+//│     'd <: List['d])))) -> 'c) -> 'f
+
+// (* This does not type. It requires first-class polymorphism. *)
+def h t = g t t
+//│ h: (() -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> (() -> List[string] -> () -> (forall 'c. 'c -> (forall 'c. ((() -> (forall 'c, 'a0. (List['a0 | string]
+//│   where
+//│     'c <: List['a0])) -> 'd) -> 'd
+//│   where
+//│     'c <: List['c])))) -> 'e & () -> List["x"] -> (() -> (forall 'a. List['a] -> (forall 'b. (() -> List["x" | 'a] -> 'b) -> 'b))) -> 'e -> (() -> List[string] -> () -> (forall 'c. 'c -> (forall 'c. ((() -> (forall 'c, 'a0. (List['a0 | string]
+//│   where
+//│     'c <: List['a0])) -> 'd) -> 'd
+//│   where
+//│     'c <: List['c])))) -> 'f) -> 'f
 

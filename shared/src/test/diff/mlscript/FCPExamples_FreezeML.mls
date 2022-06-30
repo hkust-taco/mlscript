@@ -144,10 +144,11 @@ f (choose id) ids
 //│ ╙──  ... looks like:  ‹∀ 1. ('a76'' -> 'a76'')›  <:  'a226
 //│ res: 'a -> 'a | error
 
-// ^ Strangely, this one works with recursive types:
+// * ^ Strangely, this one works with recursive types:
 :RecursiveTypes
 f (choose id) ids
 //│ res: 'a -> 'a
+:NoRecursiveTypes
 
 // A10
 poly id
@@ -319,11 +320,12 @@ a id
 
 // * FIXME: without constrained types, the type of argument x was not polymorphic enough
 // * I guess we're swallowing/delaying a constraint?
-// :e
+// * EDIT: no longer – now it fails as expected
+:e
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto' x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.324: 	choose id (fun (x: ('a -> 'a)) -> auto' x)
+//│ ║  l.326: 	choose id (fun (x: ('a -> 'a)) -> auto' x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -341,7 +343,7 @@ choose id (fun (x: ('a -> 'a)) -> auto' x)
 :e // * ^ Here you go:
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.342: 	res id
+//│ ║  l.344: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -355,10 +357,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.356: 	a (fun x -> { u = x })
+//│ ║  l.358: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.356: 	a (fun x -> { u = x })
+//│ ║  l.358: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b

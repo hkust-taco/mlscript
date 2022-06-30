@@ -213,7 +213,7 @@ to_church = to_ch
 
 // :s
 // :ns
-:e // * Needs distrib (see below)
+// :e // * Needs distrib (see below)
 to_church = to_ch_s_mix
 //│ int -> (forall 'a. 'a -> (forall 'a, 'b, 'c. (('d & 'c) -> ('d | 'e)
 //│   where
@@ -225,6 +225,7 @@ to_church = to_ch_s_mix
 //│ int -> ChurchInt
 //│          = [Function: to_ch_s_mix]
 
+// FIXME why doesn't this raise a cycle error?
 :e // * Needs distrib (see below)
 to_church = to_ch_s
 //│ int -> ((forall 'a, 'b, 'c, 'd. ('d
@@ -235,7 +236,7 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?b, ?c, ?d, ?e, ?f, ?g, ?h, ?i, ?j, ?k, ?l, ?m, ?to_ch_s, ?n, ?o, ?p, ?q, ?r, ?s, ?t, ?u, ?v, ?w, ?x, ?y. ?to_ch_s <: int -> ChurchInt` exceeded recursion depth limit (400)
-//│ ║  l.229: 	to_church = to_ch_s
+//│ ║  l.230: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── while constraining:  (⊥ -> ⊤)  <!<  ((‹∀ 4. {α844''''' where: α746' <: ((α845',) -> α846''''')}›,) -> α755')
 //│ ╟── while constraining:  α776'  <!<  ((‹∀ 4. {α844''''' where: α746' <: ((α845',) -> α846''''')}›,) -> α755')
@@ -287,7 +288,7 @@ to_church = to_ch_mix
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.283: 	to_church = to_ch_mix
+//│ ║  l.284: 	to_church = to_ch_mix
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -309,9 +310,9 @@ to_church = to_ch_mix
 rec def to_ch n =
   succD (to_ch n)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.309: 	rec def to_ch n =
+//│ ║  l.310: 	rec def to_ch n =
 //│ ║         	              ^^^
-//│ ║  l.310: 	  succD (to_ch n)
+//│ ║  l.311: 	  succD (to_ch n)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.26: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -362,6 +363,7 @@ to_church = to_ch_s_mix
 //│ int -> ChurchInt
 //│          = [Function: to_ch_s_mix]
 
+:e // With distrib, the depth problem becomes a cycle problem...
 to_church = to_ch_s
 //│ int -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
@@ -371,25 +373,25 @@ to_church = to_ch_s
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.365: 	to_church = to_ch_s
+//│ ║  l.367: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (‘N'' -> ‘N'')  <:  α1210''    FunctionType  TypeVariable
 //│ ╙──  ... looks like:  (‘N'' -> ‘N'')  <:  α1179'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.365: 	to_church = to_ch_s
+//│ ║  l.367: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  (‘N'' -> ‘N'')  <:  α1219''    FunctionType  TypeVariable
 //│ ╙──  ... looks like:  (‘N'' -> ‘N'')  <:  α1179'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.365: 	to_church = to_ch_s
+//│ ║  l.367: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‘N''  <:  α1213''    TraitTag  TypeVariable
 //│ ╙──  ... looks like:  ‘N''  <:  α1181''''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.365: 	to_church = to_ch_s
+//│ ║  l.367: 	to_church = to_ch_s
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‘N''  <:  α1222''    TraitTag  TypeVariable

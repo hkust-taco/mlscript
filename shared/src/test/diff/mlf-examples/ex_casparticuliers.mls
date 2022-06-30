@@ -81,7 +81,7 @@ def to_church_ty: int -> ChurchInt
 // * NOTE:
 // *  The type inferred for the succ version with *annotated* param seems less powerful
 // *  as the following only successfully type checks with `:DistributeForalls`:
-// :e // FIXME?
+:e // FIXME?
 // * Note: this specific case seems to work if we disable the rec-occurrence lambda generalization condition
 rec def to_church_1 n =
   if n == 0 then zero
@@ -104,7 +104,7 @@ rec def to_church_1 n =
 //│     'a <: 'b -> 'c -> 'd)) -> 'e & anything -> nothing & 'b) -> (forall 'c, 'e. ('e & 'c) -> 'e)
 //│            = [Function: to_church_1]
 
-// :e // FIXME?
+:e // FIXME?
 rec def to_church_1_st n =
   if n == 0 then zero
   else succ_ty (to_church_1 (n - 1))
@@ -121,7 +121,7 @@ rec def to_church_1_st n =
 //│               = <no result>
 //│                 succ_ty is not implemented
 
-// :e // FIXME?
+:e // FIXME?
 to_church_ty = to_church_1
 //│ int -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
@@ -214,7 +214,7 @@ rec def to_church_5 n =
 //│            = [Function: to_church_5]
 
 
-// :e // FIXME?
+:e // FIXME?
 to_church_ty = to_church_1
 //│ int -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
@@ -386,7 +386,7 @@ def to_church_ty n =
 // (* �a coince. *)
 // let tc n = (to_church n : Int);;
 
-// :e // FIXME?
+:e // FIXME?
 def tc n = to_church_1 n : ChurchInt
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.390: 	def tc n = to_church_1 n : ChurchInt

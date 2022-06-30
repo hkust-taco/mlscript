@@ -1428,6 +1428,7 @@ this_should_be_98 =
 //│                  = '98'
 
 // * Note: we get a recursive depth excess when using `c_i2_` instead of `c_i2`:
+:e // Worked without generalized args
 this_should_be_98_ =
   let c_i5_ = c_add_ c_i3_ c_i2_ in
   let c_i10_ = c_mul_ c_i5_ c_i2_ in
@@ -1436,7 +1437,7 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.1432: 	  let c_i5_ = c_add_ c_i3_ c_i2_ in
+//│ ║  l.1433: 	  let c_i5_ = c_add_ c_i3_ c_i2_ in
 //│ ║          	              ^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  ‹∀ 4. {α5328''''' where: α5326'' <: ((α5322'',) -> α5328''''')}›  <:  α5128''    PolymorphicType  TypeVariable

@@ -28,6 +28,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var noRecursiveTypes: Boolean = false
   
   var noConstrainnedTypes: Boolean = false
+  var noArgGen: Boolean = false
   
   var recordProvenances: Boolean = true
   
@@ -745,7 +746,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // // }
           // else {
             {
-            def typeArg(a: Term): ST = if (!genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd))) typePolymorphicTerm(a) else {
+            def typeArg(a: Term): ST =
+                  if (noArgGen
+                  || !genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd))
+                  // || !generalizeCurriedFunctions
+                  ) typePolymorphicTerm(a) else {
               val newCtx = ctx.nextLevel
               val ec: ExtrCtx = MutMap.empty
               val extrCtx: Opt[ExtrCtx] = S(ec)

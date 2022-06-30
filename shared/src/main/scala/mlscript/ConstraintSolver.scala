@@ -9,7 +9,8 @@ import mlscript.Message._
 
 class ConstraintSolver extends NormalForms { self: Typer =>
   def verboseConstraintProvenanceHints: Bool = verbose
-  def startingFuel: Int = 10000
+  // def startingFuel: Int = 10000
+  var startingFuel: Int = 10000
   def depthLimit: Int = 400
   
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound

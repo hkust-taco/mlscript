@@ -219,7 +219,7 @@ x => {l: x x, r: x }
 
 // Z combinator:
 // * FIXME simplified type
-// :e
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v)))
@@ -239,7 +239,7 @@ x => {l: x x, r: x }
 
 // * Function that takes arbitrarily many arguments:
 // * FIXME type of result shouldn't be `nothing`
-// :e
+:e
 (f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
@@ -251,6 +251,7 @@ x => {l: x x, r: x }
 //│   where
 //│     'c <: 'c -> 'a -> 'b)) | error
 
+:e
 res 1 2
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.+1: 	res 1 2

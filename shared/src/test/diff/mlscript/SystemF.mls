@@ -43,14 +43,19 @@ iter4() = iter2 iter2
 //│ iter4: () -> nothing -> anything -> nothing
 //│      = [Function: iter4]
 
+iter16() = iter2 (iter4()) // 2^4 = 16.
+//│ iter16: () -> nothing -> anything -> nothing
+//│       = [Function: iter16]
+
+:e // * Perhaps this would type check if app params/results were constrained independently
 iter256() = iter4() (iter4()) // 4^4 = 256.
 // iter256() as [X] -> (X -> X) -> X -> X
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.46: 	iter256() = iter4() (iter4()) // 4^4 = 256.
+//│ ║  l.51: 	iter256() = iter4() (iter4()) // 4^4 = 256.
 //│ ║        	            ^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {α178'' where: α176'' <: ((α177'',) -> α178'')}›  <:  α640'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {α178'' where: α176'' <: ((α177'',) -> α178'')}›  <:  α192''
+//│ ╟── this constraint:  ‹∀ 1. {α504'' where: α502'' <: ((α503'',) -> α504'')}›  <:  α966'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {α504'' where: α502'' <: ((α503'',) -> α504'')}›  <:  α518''
 //│ iter256: () -> error
 //│        = [Function: iter256]
 
