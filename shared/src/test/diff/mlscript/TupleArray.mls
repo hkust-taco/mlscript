@@ -139,6 +139,7 @@ f(1,2,3) : 1 | 2 | 3
 //│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
 //│ ║         	^^^^^^^^
 //│ ╟── tuple literal of type `(1, 2, 3,)` does not match type `(?a,)`
+//│ ╟── but it flows into argument with expected type `(?a,)`
 //│ ║  l.137: 	f(1,2,3) : 1 | 2 | 3
 //│ ╙──       	 ^^^^^^^
 //│ res: 1 | 2 | 3
@@ -147,19 +148,19 @@ f(1,2,3) : 1 | 2 | 3
 :e
 (arr[0])[1][2]
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.149: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `int` does not match type `Array[?a]`
 //│ ║  l.57: 	def arr: Array[int]
 //│ ║        	               ^^^
 //│ ╟── but it flows into array access with expected type `Array[?b]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.149: 	(arr[0])[1][2]
 //│ ╙──       	 ^^^^^^
 //│ ╔══[ERROR] Type mismatch in array access:
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.149: 	(arr[0])[1][2]
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `Array[?a]`
-//│ ║  l.148: 	(arr[0])[1][2]
+//│ ║  l.149: 	(arr[0])[1][2]
 //│ ╙──       	^^^^^^^^^^^
 //│ res: error | undefined
 //│ Runtime error:
@@ -311,13 +312,13 @@ a2.x
 :e
 a2._1
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.312: 	a2._1
+//│ ║  l.313: 	a2._1
 //│ ║         	^^^^^
 //│ ╟── type `Array[?a]` does not match type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.289: 	def rep5: 'a -> Array['a]
+//│ ║  l.290: 	def rep5: 'a -> Array['a]
 //│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{_1: ?b} | ~{_2: true, x: "haha"}`
-//│ ║  l.312: 	a2._1
+//│ ║  l.313: 	a2._1
 //│ ╙──       	^^
 //│ res: error
 //│    = undefined

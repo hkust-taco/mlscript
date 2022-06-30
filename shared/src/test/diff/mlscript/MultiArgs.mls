@@ -129,6 +129,7 @@ f(1, 2)
 //│ ║  l.127: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── tuple literal of type `(1, 2,)` does not match type `((?a, ?b,),)`
+//│ ╟── but it flows into argument with expected type `((?c, ?d,),)`
 //│ ║  l.127: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ res: error | int

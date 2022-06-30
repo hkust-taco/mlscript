@@ -8,7 +8,7 @@ def s n = fun f -> fun x -> f (n f x)
 // def s n = n
 //│ s: 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'b <: (forall 'a, 'b, 'c, 'e. (('e,)
+//│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
 //│  = [Function: s]
@@ -30,7 +30,7 @@ sz = s zero
 //│   where
 //│     'a :> forall 'c. 'c -> ('d -> 'e
 //│   where
-//│     'c <: (('f,)
+//│     'c <: ('f
 //│   where
 //│     'b <: 'c -> 'g) -> 'e)
 //│     'g <: 'd -> 'f
@@ -41,7 +41,7 @@ sz = s zero
 sz1 = sz 1
 //│ sz1: 'a -> 'b
 //│   where
-//│     'c <: (forall 'c, 'd, 'a, 'e. (('e,)
+//│     'c <: (forall 'c, 'd, 'a, 'e. ('e
 //│   where
 //│     'd <: 'c -> 'a -> 'e)) -> 'b
 //│    = <no result>
@@ -65,7 +65,7 @@ sz1 2
 sz true
 //│ res: 'a -> 'b
 //│   where
-//│     'c <: (forall 'd. (('d,)
+//│     'c <: (forall 'd. ('d
 //│   where
 //│     'e <: 'c -> 'a -> 'd)) -> 'b
 //│    = <no result>
@@ -79,7 +79,7 @@ sz: ChI
 s zero
 //│ res: 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'a, 'd. (('d,)
+//│     'a <: (forall 'a, 'd. ('d
 //│   where
 //│     'e <: 'a -> 'b -> 'd)) -> 'c))
 //│    = <no result>

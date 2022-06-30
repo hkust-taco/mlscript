@@ -11,13 +11,13 @@ def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ((forall 'a, 'value. (('value,)
+//│ flatMap: ((forall 'a, 'value. ('value
 //│   where
 //│     'a <: {value: 'value})) -> 'b) -> (None | Some['a] & 'a) -> (None | 'b)
 //│        = [Function: flatMap]
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ((forall 'a, 'value. (('value,)
+//│ flatMap2: ((forall 'a, 'value. ('value
 //│   where
 //│     'a <: {value: 'value})) -> 'b) -> (Some['a] & 'a | 'b & ~some) -> 'b
 //│         = [Function: flatMap2]
@@ -40,10 +40,10 @@ rec def map2 f ls = case ls of {
   | Cons -> Cons{value = f ls.value; tail = map2 f ls.tail}
   | None -> None{}
   }
-//│ map2: ('value -> 'value0) -> 'a -> 'tail
+//│ map2: ('value -> 'value0) -> 'tail -> 'tail0
 //│   where
-//│     'tail :> (Cons['value0] with {tail: 'tail}) | None
-//│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
+//│     'tail0 :> (Cons['value0] with {tail: 'tail0}) | None
+//│     'tail <: (Cons[?] with {tail: 'tail, value: 'value}) | None
 //│     = [Function: map2]
 
 

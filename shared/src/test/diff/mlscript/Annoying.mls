@@ -266,12 +266,14 @@ idx idx.x
 //│ res: 1
 
 def indirect i = i i.x
-//│ indirect: ((forall 'a, 'x. (('x,)
+//│ indirect: ((forall 'a, 'x. ('x
 //│   where
 //│     'a <: {x: 'x})) -> 'b & 'a) -> 'b
 
 indirect idx
-//│ res: 1
+//│ res: 'x
+//│   where
+//│     'a <: {x: 'x}
 
 if true then id else idx
 //│ res: 'a -> 'a
@@ -283,26 +285,28 @@ r r.x
 //│ res: "a" | 1
 
 indirect r
-//│ res: "a" | 1
+//│ res: 'x
+//│   where
+//│     'a <: {x: 'x}
 
 def takeFunOrRecord: (int -> int | { x: int }) -> int
 //│ takeFunOrRecord: anything -> int
 
 :pe
 takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "{ x = v } " at l.292:33: takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x = v } " at l.296:33: takeFunOrRecord x = case x of { { x = v } -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "{ x } -> 0" at l.296:33: takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "{ x } -> 0" at l.300:33: takeFunOrRecord x = case x of { { x } -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "(int -> in" at l.300:33: takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(int -> in" at l.304:33: takeFunOrRecord x = case x of { (int -> int) -> 0 | _ -> 1 }
 
 :pe
 takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
-//│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.304:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
+//│ /!\ Parse error: Expected "}":1:33, found "(->) -> 0 " at l.308:33: takeFunOrRecord x = case x of { (->) -> 0 | _ -> 1 }
 
 
 class AA
@@ -321,16 +325,16 @@ ty = ty2
 //│   <:  ty:
 //│ AA
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.319: 	ty = ty2
+//│ ║  l.323: 	ty = ty2
 //│ ║         	^^^^^^^^
 //│ ╟── type `TT & {x: int}` does not match type `AA | ‘a\x`
-//│ ║  l.311: 	def ty2: TT & { x: int }
+//│ ║  l.315: 	def ty2: TT & { x: int }
 //│ ║         	         ^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `AA | ‘a\x`
-//│ ║  l.319: 	ty = ty2
+//│ ║  l.323: 	ty = ty2
 //│ ║         	     ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.310: 	def ty: AA | ('a \ x)
+//│ ║  l.314: 	def ty: AA | ('a \ x)
 //│ ╙──       	        ^^^^^^^^^^^^^
 
 

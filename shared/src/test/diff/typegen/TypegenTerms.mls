@@ -148,7 +148,7 @@ def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
 def l: ((1, 2), (3, 4)) -> 5
 //│ g: (int, int,) -> int
 //│ h: (int, ('a -> int, 'a,),) -> int
-//│ k: (int, ('a, int,),) -> (int, int -> (forall 'a, 'b. (('b,)
+//│ k: (int, ('a, int,),) -> (int, int -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: int -> 'b)) -> 'c, int,) -> 'c
 //│ l: ((1, 2,), (3, 4,),) -> 5

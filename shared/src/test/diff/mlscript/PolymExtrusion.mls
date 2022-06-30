@@ -19,19 +19,7 @@ foo id
 
 // Notice `f` is passed an arg of locally-quantified type 'a, which is extruded to `anything`:
 bar f = foo (fun x -> let tmp = f x in x)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.21: 	bar f = foo (fun x -> let tmp = f x in x)
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
-//│ ║       	                 ^^
-//│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.21: 	bar f = foo (fun x -> let tmp = f x in x)
-//│ ║        	                                       ^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.5: 	def foo: (forall 'a. 'a -> 'a) -> int
-//│ ╙──     	                 ^^
-//│ bar: (anything -> anything) -> (error | int)
+//│ bar: (anything -> anything) -> int
 //│    = [Function: bar]
 
 
@@ -54,13 +42,13 @@ foo id
 :e
 foo (fun a -> a + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	foo (fun a -> a + 1)
+//│ ║  l.43: 	foo (fun a -> a + 1)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` is not an instance of type `int`
-//│ ║  l.43: 	def foo: (forall 'a. 'a -> 'b) -> 'b
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.31: 	def foo: (forall 'a. 'a -> 'b) -> 'b
 //│ ║        	                 ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.55: 	foo (fun a -> a + 1)
+//│ ║  l.43: 	foo (fun a -> a + 1)
 //│ ╙──      	              ^
 //│ res: error | int
 //│    = <no result>

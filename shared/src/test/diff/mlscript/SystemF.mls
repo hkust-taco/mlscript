@@ -6,37 +6,13 @@ def succ: int -> int
 
 
 (fun f -> f succ(f 0)) (fun x -> x)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.8: 	(fun f -> f succ(f 0)) (fun x -> x)
-//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not a function
-//│ ║  l.8: 	(fun f -> f succ(f 0)) (fun x -> x)
-//│ ║       	                   ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.8: 	(fun f -> f succ(f 0)) (fun x -> x)
-//│ ║       	          ^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.8: 	(fun f -> f succ(f 0)) (fun x -> x)
-//│ ╙──     	                                 ^
-//│ res: error | int
+//│ res: int
 //│    = <no result>
 //│      succ is not implemented
 
 // Note: does not type check without precise function type intersections
 (fun f -> f succ (f 0)) (fun x -> x)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.26: 	(fun f -> f succ (f 0)) (fun x -> x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not a function
-//│ ║  l.26: 	(fun f -> f succ (f 0)) (fun x -> x)
-//│ ║        	                    ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.26: 	(fun f -> f succ (f 0)) (fun x -> x)
-//│ ║        	          ^^^^^^^^^^^^
-//│ ╟── from reference:
-//│ ║  l.26: 	(fun f -> f succ (f 0)) (fun x -> x)
-//│ ╙──      	                                  ^
-//│ res: error | int
+//│ res: int
 //│    = <no result>
 //│      succ is not implemented
 
@@ -57,23 +33,27 @@ iter2 f x = f(f x)
 // iter2 as [X] -> (X -> X) -> X -> X
 //│ res: 'a -> 'a
 //│    = [Function: id]
-//│ iter2: ((forall 'a, 'b, 'c. (('c,)
+//│ iter2: ((forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: iter2]
 
 iter4() = iter2 iter2
 // iter4() as [X] -> (X -> X) -> X -> X
-//│ iter4: () -> ((forall 'a, 'b, 'c. (('c,)
+//│ iter4: () -> ((forall 'a. ('b
 //│   where
-//│     'a <: 'b -> 'c)) -> ('b & 'd) & 'a) -> 'b -> 'd
+//│     'a <: (forall 'c, 'd, 'e. ('e
+//│   where
+//│     'c <: 'd -> 'e)) -> 'b)) -> 'f & 'a) -> 'd -> 'f
 //│      = [Function: iter4]
 
 iter256() = iter4() (iter4()) // 4^4 = 256.
 // iter256() as [X] -> (X -> X) -> X -> X
-//│ iter256: () -> ((forall 'a, 'b. (('b,)
+//│ iter256: () -> ((forall 'a. ('b
 //│   where
-//│     'a <: nothing -> 'b)) -> 'c) -> anything -> 'c
+//│     'a <: (forall 'c, 'd. ('d
+//│   where
+//│     'c <: nothing -> 'd)) -> 'b)) -> 'e) -> anything -> 'e
 //│        = [Function: iter256]
 
 n0 s z = z // Church numerals.
@@ -83,25 +63,25 @@ n0 s z = z // Church numerals.
 
 S n s z = s (n s z)
 // S as ([X] -> (X -> X) -> X -> X) -> ([X] -> (X -> X) -> X -> X)
-//│ S: 'a -> ((forall 'a, 'b, 'c, 'd. (('d,)
+//│ S: 'a -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'a <: 'b -> 'c -> 'd)) -> 'e & 'b) -> 'c -> 'e
 //│  = [Function: S]
 
 res1() = iter4() S n0
 res2() = iter256() S n0
-//│ res1: () -> ((forall 'a, 'b, 'c, 'd. (('d,)
+//│ res1: () -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'a <: 'b -> 'c -> 'd)) -> 'e & 'b) -> 'c -> 'e
 //│     = [Function: res1]
-//│ res2: () -> ((forall 'a, 'b, 'c, 'd. (('d,)
+//│ res2: () -> ((forall 'a, 'b, 'c, 'd. ('d
 //│   where
 //│     'a <: 'b -> 'c -> 'd)) -> 'e & 'b) -> 'c -> 'e
 //│     = [Function: res2]
 
 
 S (S n0)
-//│ res: ((forall 'a. (('a,)
+//│ res: ((forall 'a. ('a
 //│   where
 //│     'b <: 'c -> 'd -> 'a)) -> 'e & 'c) -> 'd -> 'e
 //│    = [Function (anonymous)]

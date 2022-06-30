@@ -724,15 +724,31 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           //     ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
           // }
           else {
-            val newCtx = ctx.nextLevel
-            val ec: ExtrCtx = MutMap.empty
-            val extrCtx: Opt[ExtrCtx] = S(ec)
-            val innerTy =
-              typeTerm(a)(newCtx, raise, extrCtx, vars,
-              // genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
-              )
-            PolymorphicType.mk(ctx.lvl,
-              ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+            def typeArg(a: Term): ST = {
+              val newCtx = ctx.nextLevel
+              val ec: ExtrCtx = MutMap.empty
+              val extrCtx: Opt[ExtrCtx] = S(ec)
+              val innerTy =
+                typeTerm(a)(newCtx, raise, extrCtx, vars,
+                // genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
+                )
+              PolymorphicType.mk(ctx.lvl,
+                ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+            }
+            a match {
+              case Tup(as) =>
+                TupleType(as.map { case (n, (a, mut)) =>
+                  assert(!mut)
+                  val fprov = tp(a.toLoc, "argument")
+                  val tym = typeArg(a)
+                  (n, tym.toUpper(fprov))
+                })(as match { // TODO dedup w/ general Tup case
+                  case Nil | ((N, _) :: Nil) => noProv
+                  case _ => tp(term.toLoc, "tuple literal")
+                })
+              case _ => // can happen in the old parser
+                typeArg(a)
+            }
           }
         val res = freshVar(prov, N)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))

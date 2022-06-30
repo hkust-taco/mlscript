@@ -170,7 +170,9 @@ fun f -> (f 1, f true)
 
 // B2
 fun xs -> poly (head xs)
-//│ res: List[forall 'a. 'a -> 'a] -> (int, bool,)
+//│ res: 'a -> (int, bool,)
+//│   where
+//│     'a <: List[‘a -> ‘a]
 
 
 // ============ C. functions on polymorphic lists ============
@@ -330,7 +332,7 @@ choose id (fun (x: ('a -> 'a)) -> auto' x)
 :e // * ^ Here you go:
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.331: 	res id
+//│ ║  l.333: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -344,10 +346,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.345: 	a (fun x -> { u = x })
+//│ ║  l.347: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.345: 	a (fun x -> { u = x })
+//│ ║  l.347: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b

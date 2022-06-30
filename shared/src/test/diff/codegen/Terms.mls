@@ -480,7 +480,7 @@ xpp a1
 //│ // Query 2
 //│ res = xpp(a1);
 //│ // End of generated code
-//│ xpp: ({mut x: int} & 'a) -> 'a
+//│ xpp: 'a -> 'a
 //│    = [Function: xpp]
 //│ res: M with {mut x: 'x}
 //│   where

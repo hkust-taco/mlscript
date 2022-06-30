@@ -106,7 +106,7 @@ def test =
     let local g = f (g x)
     in local add "1"
   )
-//│ test: ((forall 'a, 'b, 'c. (('c,)
+//│ test: ((forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c)) -> "1" -> 'd) -> 'b -> 'd
 //│     = [Function: test9]

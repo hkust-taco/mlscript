@@ -43,17 +43,17 @@ def r4 = addOne (selectBoolOrInt 1)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.42: 	def r4 = addOne (selectBoolOrInt 1)
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `int`
+//│ ╟── integer literal of type `1` is not an instance of type `bool`
 //│ ║  l.15: 	def selectBoolOrInt = fun x -> if isInt x then 1 else true
-//│ ║        	                                                      ^^^^
-//│ ╟── but it flows into application with expected type `int`
+//│ ║        	                                               ^
+//│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.42: 	def r4 = addOne (selectBoolOrInt 1)
 //│ ║        	                 ^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	def addOneI = fun x -> add x 1
-//│ ║        	                           ^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.3: 	def bb = (fun a -> fun b -> toBool (if b then not a else not a)) true
+//│ ║       	                                       ^
 //│ ╟── from reference:
-//│ ║  l.33: 	    then addOneI x 
+//│ ║  l.34: 	    else addOneB x
 //│ ╙──      	                 ^
 //│ r4: error | int | true
 //│   = 2

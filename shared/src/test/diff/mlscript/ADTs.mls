@@ -24,9 +24,9 @@ rec def evalStub1 e = case e of {
 rec def evalStub2 e = case e of {
   Lit -> e.val | Nega -> 0 - (evalStub2 e.arg)
   }
-//│ evalStub2: 'a -> int
+//│ evalStub2: 'arg -> int
 //│   where
-//│     'a <: Lit | Nega[?] & {arg: 'a}
+//│     'arg <: Lit | Nega[?] & {arg: 'arg}
 //│          = [Function: evalStub2]
 
 rec def eval e = case e of {
@@ -34,9 +34,9 @@ rec def eval e = case e of {
   | Add -> eval e.lhs + eval e.rhs
   | Nega -> 0 - (eval e.arg)
   }
-//│ eval: 'a -> int
+//│ eval: 'rhs -> int
 //│   where
-//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
+//│     'rhs <: Add[?] & {lhs: 'rhs, rhs: 'rhs} | Lit | Nega[?] & {arg: 'rhs}
 //│     = [Function: eval]
 
 def ex = add (lit 2) (lit 2)

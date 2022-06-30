@@ -290,7 +290,7 @@ def g a = add a 1
 
 
 def twice f x = f (f x)
-//│ twice: ((forall 'a, 'b, 'c. (('c,)
+//│ twice: ((forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 //│      = [Function: twice]
@@ -318,13 +318,13 @@ ty2 = ty1
 
 ty1 = twice
 ty2 = twice
-//│ ((forall 'a, 'b, 'c. (('c,)
+//│ ((forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
-//│ ((forall 'a, 'b, 'c. (('c,)
+//│ ((forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 //│   <:  ty2:

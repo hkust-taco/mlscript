@@ -27,17 +27,21 @@ rec def mem x l = case l of
   { Nil -> false
   | Cons -> if eq l.head x then true else mem x l.tail
   }
-//│ mem: anything -> 'a -> bool
+//│ mem: anything -> 'tail -> bool
 //│   where
-//│     'a <: (Cons[?] with {tail: 'a}) | Nil
+//│     'tail <: (Cons[?]\head with {tail: 'tail}) | Nil
 
 rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: ('a -> (forall 'b, 'head. (('head,)
+//│ fold_left: 'a -> 'b -> (Cons['c] & 'c | Nil) -> 'b
 //│   where
-//│     'b <: {head: 'head})) -> 'a) -> 'a -> (Cons['b] & 'b | Nil) -> 'a
+//│     'b :> forall 'a, 'b. ('d
+//│   where
+//│     'a <: 'b -> (forall 'c, 'head. ('head
+//│   where
+//│     'c <: {head: 'head})) -> 'd)
 
 // ------------ polymorphic methods ------------
 
@@ -48,11 +52,13 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection['a] -> (forall 'a. 'a -> (forall 'a, 'b. ('b -> 'b
+//│ Defined Collection.Fold: Collection[?] -> anything -> (forall 'a. 'a -> 'a)
 //│   where
-//│     'a <: 'b -> (forall 'c, 'head. (('head,)
+//│     'a :> forall 'a, 'b. ('c
 //│   where
-//│     'c <: {head: 'head})) -> 'b)))
+//│     'b <: 'a -> (forall 'd, 'head. ('head
+//│   where
+//│     'd <: {head: 'head})) -> 'c)
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: 'a -> (forall 'a. ('a -> bool
@@ -64,7 +70,10 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. 'a, forall 'b. 'b,)
+//│ simple_and_double: Collection[?] -> (forall 'a. Nil | 'a, forall 'a. Nil | 'a,)
 //│   where
-//│     'b :> (Cons[(nothing, nothing,)] with {tail: 'b}) | Nil
-//│     'a :> (Cons[nothing] with {tail: 'a}) | Nil
+//│     'a :> forall 'a, 'b. ('c
+//│   where
+//│     'b <: 'a -> (forall 'd, 'head. ('head
+//│   where
+//│     'd <: {head: 'head})) -> 'c)

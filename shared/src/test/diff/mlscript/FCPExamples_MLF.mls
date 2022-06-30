@@ -75,7 +75,7 @@ choose id
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
 //│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c. ('c -> 'd
 //│   where
-//│     'b <: 'c -> (forall 'c, 'e, 'f. (('f,)
+//│     'b <: 'c -> (forall 'c, 'e, 'f. ('f
 //│   where
 //│     'e <: 'c -> 'f)) -> 'd))
 
@@ -135,12 +135,12 @@ res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.134: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int -> int` is not an instance of type `int`
+//│ ╟── function of type `?a -> ?a` is not an instance of type `int`
+//│ ║  l.27: 	def id x = x
+//│ ║        	       ^^^^^
+//│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.134: 	res (choose id succ)
-//│ ║         	               ^^^^
-//│ ╟── but it flows into application with expected type `int`
-//│ ║  l.134: 	res (choose id succ)
-//│ ╙──       	     ^^^^^^^^^^^^^^
+//│ ╙──       	            ^^
 //│ res: int -> int | error | int
 
 // Didier Le Botlan suggested this fix by email:
@@ -243,7 +243,7 @@ poly = fun f -> (f 1, f true)
 
 // FreezeML B2
 polyL = fun xs -> poly (head xs)
-//│ polyL: List[true -> 'a & 1 -> 'b] -> ('b, 'a,)
+//│ polyL: List[nothing -> ('a | 'b)] -> ('a, 'b,)
 
 let ids = single id in (polyL ids, append ids (single inc))
 //│ res: ((1, true,), List[int -> int],)
