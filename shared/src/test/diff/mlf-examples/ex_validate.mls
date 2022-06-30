@@ -394,16 +394,9 @@ example_ mkpair
 
 // let rec x = 1 :: y
 // and     y = 2 :: x
-// FIXME
 rec def p = { x = cons 1 p.y; y = cons 2 p.x }
 def x = p.x
 def y = p.y
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
-//│ ║  l.398: 	rec def p = { x = cons 1 p.y; y = cons 2 p.x }
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  2<int,number>  <:  α991'    ClassTag  TypeVariable
-//│ ╙──  ... looks like:  2<int,number>  <:  α53'
 //│ p: {x: List[1 | 2], y: List[1 | 2]}
 //│ Runtime error:
 //│   ReferenceError: p is not defined
@@ -527,7 +520,7 @@ def voyage_ f x y = (y, f x)
 
 //   ()
 
-// FIXME
+:ng
 def main =
   let print_sep = fun s -> fun l ->
     let max_depth = 20 in
@@ -558,35 +551,7 @@ def main =
         let _ = print_string "\n" in
         let _ = print_sep "" x in
         null
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of record
-//│ ║  l.535: 	        { alpha = p.print_list;
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.536: 	          print_list = fun n -> fun l ->
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.537: 	            if not (n < 0) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.538: 	              if is_empty l then print_string "]"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.539: 	              else
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.540: 	                let _ = intprint (head l) in
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.541: 	                let _ = print_string s in
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.542: 	                p.print_list (n - 1) (tail l)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.543: 	            else
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.544: 	              print_string "... ]"
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.545: 	        } in
-//│ ║         	^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  Unit  <:  α1222'''''    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  Unit  <:  α20'
 //│ main: null
-//│ Code generation encountered an error:
-//│   recursive non-function definition p is not supported
 
 // (* Des probl�mes d'unification � gogo. *)
 // type sid = ['a] 'a -> 'a

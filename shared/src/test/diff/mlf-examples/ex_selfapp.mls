@@ -259,37 +259,17 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│      = [Function: bfoo_]
 
 
-// FIXME (sytrangely, two Cons works...)
-def lst0 = Cons (0, Cons (0, Cons (0, Nil)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.263: 	def lst0 = Cons (0, Cons (0, Cons (0, Nil)))
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head538', tail: tail541', Cons#a: mut a539'..a539'})  <:  List[a555']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head33'', tail: tail35'', Cons#a: mut a34''..a34''})  <:  List[a34'']
-//│ lst0: (Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}) | error
-//│     = Cons {
-//│         head: 0,
-//│         tail: Cons { head: 0, tail: Cons { head: 0, tail: Nil {} } }
-//│       }
+def lst = Cons (0, Cons (0, Cons (0, Nil)))
+//│ lst: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}
+//│    = Cons {
+//│        head: 0,
+//│        tail: Cons { head: 0, tail: Cons { head: 0, tail: Nil {} } }
+//│      }
 
 // (* test run *)
 // let lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))));;
-// FIXME: spurious cycle
 def lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.279: 	def lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))))
-//│ ║         	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head572', tail: tail575', Cons#a: mut a573'..a573'})  <:  List[a589']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head33'', tail: tail35'', Cons#a: mut a34''..a34''})  <:  List[a34'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.279: 	def lst0 = Cons (0, Cons (0, Cons (0, Cons (0, Nil))))
-//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head580', tail: tail583', Cons#a: mut a581'..a581'})  <:  List[a596']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head33'', tail: tail35'', Cons#a: mut a34''..a34''})  <:  List[a34'']
-//│ lst0: (Cons[0] with {tail: (Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}) | error}) | error
+//│ lst0: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Cons[0] with {tail: Nil}}}}
 //│     = Cons {
 //│         head: 0,
 //│         tail: Cons { head: 0, tail: Cons { head: 0, tail: [Cons] } }
@@ -332,7 +312,7 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ k: int -> Baa -> Baa
 //│  = <missing implementation>
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -341,10 +321,10 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                     ^^
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `nothing`
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                           ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -353,7 +333,7 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│   <:  k:
 //│ int -> Baa -> Baa
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
@@ -362,10 +342,10 @@ rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                     ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` does not match type `nothing`
-//│ ║  l.331: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
+//│ ║  l.311: 	rec def k = fun x -> fun (xs: Baa) -> fun c -> fun n -> c (x + 1) (xs k z c n)
 //│ ║         	                                                           ^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.48: 	type Baa = forall 'a 'b. ('a -> 'b -> 'b) -> 'b -> 'b
