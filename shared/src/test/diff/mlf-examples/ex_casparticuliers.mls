@@ -31,9 +31,14 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 
 // let zero f x = x
 // ;;
+
 def zero f x = x
 //│ zero: anything -> (forall 'a. 'a -> 'a)
 //│     = [Function: zero]
+
+def zero_ty: ChurchInt
+//│ zero_ty: ChurchInt
+//│        = <missing implementation>
 
 // let succ (n:Int) = fun f x -> f (n f x)
 // ;;
@@ -56,9 +61,22 @@ def succ' n = fun f -> fun x -> f (n f x)
 // * Note: without constrained types we wouldn't get the principal type of succ'
 
 // * Require distrib – see Scratch3
-// :e
-// succ_ty = succ
-// succ_ty = succ'
+succ_ty = succ
+succ_ty = succ'
+//│ ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│   where
+//│     'b <: 'a -> 'c -> 'd
+//│     'a <: 'd -> 'e)))
+//│   <:  succ_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: succ]
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│   where
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> 'e -> 'c)))
+//│   <:  succ_ty:
+//│ ChurchInt -> ChurchInt
+//│        = [Function: succ]
 
 // let rec to_church n =
 //   if n = 0 then zero
@@ -77,11 +95,11 @@ rec def to_church_1 n =
   if n == 0 then zero
   else succ (to_church_1 (n - 1))
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.76: 	rec def to_church_1 n =
+//│ ║  l.94: 	rec def to_church_1 n =
 //│ ║        	                    ^^^
-//│ ║  l.77: 	  if n == 0 then zero
+//│ ║  l.95: 	  if n == 0 then zero
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	  else succ (to_church_1 (n - 1))
+//│ ║  l.96: 	  else succ (to_church_1 (n - 1))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -91,6 +109,57 @@ rec def to_church_1 n =
 //│ ╙──      	                        ^^
 //│ to_church_1: int -> (forall 'a. (nothing -> 'a & anything -> nothing) -> (forall 'a. 'a -> 'a))
 //│            = [Function: to_church_1]
+
+rec def to_church_1 n =
+  if n == 0 then zero
+  else succ_ty (to_church_1 (n - 1))
+//│ to_church_1: int -> (anything -> (forall 'a. 'a -> 'a) | ChurchInt)
+//│            = [Function: to_church_11]
+
+rec def to_church_1 n =
+  if n == 0 then zero_ty
+  else succ_ty (to_church_1 (n - 1))
+//│ to_church_1: int -> ChurchInt
+//│            = <no result>
+//│              zero_ty is not implemented
+
+// def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+
+// * Error happens when destroyign constrained types, hinting that this is probably related to polym-recur
+// :d
+:e
+// rec def to_church_1 n =
+//   succ (to_church_1 n)
+rec def to_church_1 =
+  succ to_church_1
+//│ ╔══[ERROR] Type mismatch in binding of application:
+//│ ║  l.134: 	  succ to_church_1
+//│ ║         	  ^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║        	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.29: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──      	                        ^^
+//│ to_church_1: (anything -> nothing & nothing -> 'a) -> anything -> 'a
+//│ Runtime error:
+//│   ReferenceError: to_church_13 is not defined
+
+// * The one with annotated rec occurrence works...
+def to_church_1 n =
+  succ (to_church_ty n)
+//│ to_church_1: int -> (forall 'a, 'b, 'c. (anything -> nothing & 'a -> 'b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. ('e -> ('b | 'g)
+//│   where
+//│     'd <: 'c -> 'e -> ('a & 'f)
+//│     'c <: 'f -> 'g)))
+//│            = <no result>
+//│              to_church_ty is not implemented
+
+
+:exit
+====================================================================================================
+
+
 
 :e // FIXME?
 rec def to_church_1_st n =
