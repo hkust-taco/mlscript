@@ -385,11 +385,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // *    cycles in regular trees may only ever go through unions or intersections,
           // *    and not plain type variables.
           case _ =>
-            if (cache(lhs_rhs)) return println(s"Cached!")
+            if (!noRecursiveTypes && cache(lhs_rhs)) return println(s"Cached!")
             val shadow = lhs.shadow -> rhs.shadow
             // println(s"SH: $shadow")
             // println(s"ALLSH: ${shadows.iterator.map(s => s._1 + "<:" + s._2).mkString(", ")}")
-            if (shadows.contains(shadow)) {
+            if (!noCycleCheck && shadows.contains(shadow)) {
             // if (!lhs.isInstanceOf[TV] && !rhs.isInstanceOf[TV] && shadows.contains(shadow)) { // FIXME there are cyclic constraints like this; find a better way of allowing recursion after extrusion!
               println(s"SHADOWING DETECTED!")
               // err(msg"Cyclic-looking constraint ${lhs_rhs.toString}" -> prov.loco :: Nil)
@@ -402,7 +402,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 Nil)
               return ()
             }
-            cache += lhs_rhs
+            if (!noRecursiveTypes) cache += lhs_rhs
             shadows + shadow
         }) |> { implicit shadows: Shadows =>
         lhs_rhs match {
@@ -432,14 +432,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.lowerBounds ::= newBound // update the bound
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
           // case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (tv: TypeVariable, rhs0) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+          case (tv: TypeVariable, rhs0) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += false -> rhs0
             ()
           // case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty && !tv.recPlaceholder =>
-          case (lhs0, tv: TypeVariable) if extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
+          case (lhs0, tv: TypeVariable) if !noConstrainnedTypes && extrusionContext.nonEmpty /* && !tv.recPlaceholder */ =>
             // ???
             println(s"STASHING $tv bound in extr ctx")
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)

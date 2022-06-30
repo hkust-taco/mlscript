@@ -389,3 +389,24 @@ let rec x = (let y = (x x); (z => z))
 //│        <: 'a
 //│     'a :> 'b -> 'b
 
+
+
+// Converges under normal-order reduction, but type inference follows more of an applicative order:
+
+:e
+(w => x => x) ((y => y y) (y => y y))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α661    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
+//│ res: 'a -> 'a
+
+:NoCycleCheck
+
+// Exceeds recursion depth limit:
+// :e
+// (w => x => x) ((y => y y) (y => y y))
+
+

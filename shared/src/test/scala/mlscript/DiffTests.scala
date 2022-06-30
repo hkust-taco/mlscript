@@ -97,6 +97,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
     var generalizeCurriedFunctions = false
     var distributeForalls = false
     // distributeForalls = true
+    var noCycleCheck = false
+    var noRecursiveTypes = false
+    var noConstrainnedTypes = false
 
     val backend = new JSTestBackend()
     val host = ReplHost()
@@ -125,6 +128,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DistributeForalls" => distributeForalls = true; mode
+          case "NoCycleCheck" => noCycleCheck = true; mode
+          case "NoRecursiveTypes" => noRecursiveTypes = true; mode
+          case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -217,6 +223,9 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
             typer.distributeForalls = distributeForalls
+            typer.noCycleCheck = noCycleCheck
+            typer.noRecursiveTypes = noRecursiveTypes
+            typer.noConstrainnedTypes = noConstrainnedTypes
             typer.verbose = mode.verbose
             typer.explainErrors = mode.explainErrors
             stdout = mode.stdout

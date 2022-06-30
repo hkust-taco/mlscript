@@ -24,6 +24,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   
   var distributeForalls: Boolean = false
   
+  var noCycleCheck: Boolean = false
+  var noRecursiveTypes: Boolean = false
+  
+  var noConstrainnedTypes: Boolean = false
+  
   var recordProvenances: Boolean = true
   
   type Raise = Diagnostic => Unit
