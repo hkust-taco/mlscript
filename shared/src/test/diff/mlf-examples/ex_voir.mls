@@ -1,3 +1,4 @@
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 
 // ============ Dummy classes to represent the types in the examples ============

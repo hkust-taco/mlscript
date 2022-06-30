@@ -129,6 +129,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DistributeForalls" => distributeForalls = true; mode
           case "NoCycleCheck" => noCycleCheck = true; mode
+          case "RecursiveTypes" => noRecursiveTypes = false; mode
           case "NoRecursiveTypes" => noRecursiveTypes = true; mode
           case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
           case "ne" => mode.copy(noExecution = true)

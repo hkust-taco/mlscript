@@ -1,3 +1,4 @@
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 // :NoJS
 
@@ -137,13 +138,13 @@ test1 = delta id
 :e
 delta succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.138: 	delta succ
+//│ ║  l.139: 	delta succ
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.127: 	def succ n = n + 1
+//│ ║  l.128: 	def succ n = n + 1
 //│ ╙──       	             ^
 //│ res: error | Sid
 //│    = 'function succ(n) {  return n + 1;}1'
@@ -157,13 +158,13 @@ test2 = delta (choose id id)
 :e
 delta (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	delta (choose id succ)
+//│ ║  l.159: 	delta (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.105: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.127: 	def succ n = n + 1
+//│ ║  l.128: 	def succ n = n + 1
 //│ ╙──       	             ^
 //│ res: error | Sid
 //│    = [Function: id]
@@ -209,6 +210,8 @@ def listiterA: ('a -> unit) -> List['a] -> unit
 //   if ll = [] then ()
 //   else begin ignore (f (car ll)) ; listiter f (cdr ll) end
 // ;;
+
+:RecursiveTypes // needed for this recursive def
 rec def listiter f ll =
   if eq ll nil then unit
   else
@@ -216,6 +219,7 @@ rec def listiter f ll =
     listiter f (tail ll)
 //│ listiter: ('a -> anything) -> List['a] -> unit
 //│         = [Function: listiter]
+:NoRecursiveTypes
 
 listiterA = listiter
 //│ ('a -> anything) -> List['a] -> unit
@@ -228,7 +232,9 @@ listiterA = listiter
 // (* Polymorphic recursion. *)
 // untype let rec id x = if true then x else id id x in id
 
-// * This does not actually seem to require general polymorphic recursion:
+// * This does not actually seem to require general polymorphic recursion,
+// *  but it does need recursive types:
+:RecursiveTypes
 rec def id1 x = if true then x else id1 id1 x
 //│ id1: 'id1
 //│   where
@@ -238,6 +244,7 @@ rec def id1 x = if true then x else id1 id1 x
 //│     'b :> 'id1
 //│        <: 'a -> 'b
 //│    = [Function: id1]
+:NoRecursiveTypes
 
 // ^ FIXME type pp – id1 is not shown to have an upper bound!
 :ns
@@ -261,44 +268,37 @@ id1
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.269: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.232: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.238: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.269: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.269: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
 //│    = [Function: id1]
 
+:e // * Works with `:RecursiveTypes`
 id1 id
-//│ res: 'a
-//│   where
-//│     'a := 'b -> 'a
-//│     'b :> 'b -> 'a
-//│        <: 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.286: 	id1 id
+//│ ║         	^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α425    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α190'' -> α190'')››  <:  α392'
+//│ res: error
 //│    = [Function: id]
 
 res id
-//│ res: ('a & 'b) -> ('b | 'c) | 'd
-//│   where
-//│     'a :> ('a & 'b) -> ('b | 'c)
-//│        <: 'c
-//│     'c :> ('a & 'b) -> ('b | 'c)
-//│        <: (forall 'b. 'b -> 'b) -> 'd & 'a -> 'c & 'd
+//│ res: error
 //│    = [Function: id]
 
 res id
-//│ res: ('a & 'b) -> ('b | 'c) | 'd
-//│   where
-//│     'a :> ('a & 'b) -> ('b | 'c)
-//│        <: 'c
-//│     'c :> ('a & 'b) -> ('b | 'c)
-//│        <: 'a -> 'c & (forall 'b. 'b -> 'b) -> (forall 'b. 'b -> 'b) -> 'd & (forall 'b. 'b -> 'b) -> 'd & 'd
+//│ res: error
 //│    = [Function: id]
 
 :e // FIXME?
@@ -307,8 +307,8 @@ id1 id1
 //│ ║  l.305: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1388'›  <:  α493    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1388'›  <:  α389'
+//│ ╟── this constraint:  ‹∀ 0. id1389'›  <:  α438    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1389'›  <:  α392'
 //│ res: error
 //│    = [Function: id1]
 
@@ -957,23 +957,31 @@ def to_church: int -> Fint
 //│ to_church: int -> Fint
 //│          = <missing implementation>
 
+
+
+// * The following tests don't benefit from `:RecursiveTypes`
+// *  (except `print_fact_` and `print_fact2_`),
+// *  but they produce LOTS of spammy error messages unless we enable it:
+:RecursiveTypes
+
+
 // * See to_church_3 in `ex_casparticuliers.mls`
 :e
 rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.962: 	rec def to_church n =
+//│ ║  l.970: 	rec def to_church n =
 //│ ║         	                  ^^^
-//│ ║  l.963: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.971: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.964: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.972: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.963: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.971: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	                                   ^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -982,17 +990,17 @@ rec def to_church n =
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.962: 	rec def to_church n =
+//│ ║  l.970: 	rec def to_church n =
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.963: 	  if n == 0 then fun f -> fun x -> x
+//│ ║  l.971: 	  if n == 0 then fun f -> fun x -> x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.964: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.972: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── but it flows into application with expected type `nothing`
-//│ ║  l.964: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║  l.972: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1022,11 +1030,11 @@ rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.1021: 	rec def c_fact (n: Fint) =
+//│ ║  l.1029: 	rec def c_fact (n: Fint) =
 //│ ║          	               ^^^^^^^^^^^
-//│ ║  l.1022: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║  l.1030: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1023: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
+//│ ║  l.1031: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1055,11 +1063,11 @@ def c_fact_A n =
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1046: 	def c_fact_A n =
+//│ ║  l.1054: 	def c_fact_A n =
 //│ ║          	^^^^^^^^^^^^^^^^
-//│ ║  l.1047: 	  c_if (c_iszero n) (fun u -> c_i1)
+//│ ║  l.1055: 	  c_if (c_iszero n) (fun u -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1048: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
+//│ ║  l.1056: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1097,7 +1105,7 @@ def print_fact n =
   let _ = c_printint (c_fact (to_church n)) in
           print_string "\n"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1097: 	  let _ = c_printint (c_fact (to_church n)) in
+//│ ║  l.1105: 	  let _ = c_printint (c_fact (to_church n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1158,7 +1166,7 @@ this_should_be_98 =
   let c_98 = c_pred c_99 in
   c_printint2 c_98
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1155: 	  let c_i10 = c_mul c_i5 c_i2 in
+//│ ║  l.1163: 	  let c_i10 = c_mul c_i5 c_i2 in
 //│ ║          	              ^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1170,7 +1178,7 @@ this_should_be_98 =
 //│ ║  l.784: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1157: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║  l.1165: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
 //│ ║          	                    ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not a function
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1182,7 +1190,7 @@ this_should_be_98 =
 //│ ║  l.784: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1158: 	  let c_98 = c_pred c_99 in
+//│ ║  l.1166: 	  let c_98 = c_pred c_99 in
 //│ ║          	             ^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1224,7 +1232,7 @@ print_fact2 4
 print_fact2 5
 print_fact2 6
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1219: 	print_fact2 0
+//│ ║  l.1227: 	print_fact2 0
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1235,7 +1243,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 0 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1220: 	print_fact2 1
+//│ ║  l.1228: 	print_fact2 1
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1246,7 +1254,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 1 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1221: 	print_fact2 2
+//│ ║  l.1229: 	print_fact2 2
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1257,7 +1265,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 2 = 2'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1222: 	print_fact2 3
+//│ ║  l.1230: 	print_fact2 3
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1268,7 +1276,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 3 = 6'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1223: 	print_fact2 4
+//│ ║  l.1231: 	print_fact2 4
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1279,7 +1287,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 4 = 24'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1224: 	print_fact2 5
+//│ ║  l.1232: 	print_fact2 5
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1290,7 +1298,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 5 = 120'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1225: 	print_fact2 6
+//│ ║  l.1233: 	print_fact2 6
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.591: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)

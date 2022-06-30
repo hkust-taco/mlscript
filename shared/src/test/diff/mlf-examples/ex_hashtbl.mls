@@ -1,3 +1,4 @@
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 
 // ============ Dummy classes to represent the types in the examples ============
@@ -102,12 +103,15 @@ def hashtbl_add table key element = cons ((key, element)) table
 //   if nil table then None
 //   else if fst (car table) = key then Some (snd (car table))
 //   else find (cdr table) key
+
+:RecursiveTypes // needed for this recursive def
 rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
 //│ find: List[?] -> anything -> (None | Some[nothing])
 //│     = [Function: find]
+:NoRecursiveTypes
 
 // ^ FIXME type pp error
 // :ns
@@ -143,10 +147,10 @@ def succ' n = fun f -> fun x -> f (n f x)
 //│     'b <: 'a -> 'c -> 'd
 //│     'a <: 'd -> 'e)))
 //│     = [Function: succ]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> 'e -> 'c)))
 //│      = [Function: succ]
 
 // let add (n:Int) (m:Int) = n succ m
@@ -161,10 +165,10 @@ def add' n m = n succ' m
 //│    = [Function: add]
 //│ add': 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('f -> 'h
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('h -> 'g
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'g -> 'h)))) -> 'b -> 'c))
+//│     'e <: 'f -> 'g
+//│     'd <: 'e -> 'h -> 'f)))) -> 'b -> 'c))
 //│     = [Function: add]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -202,24 +206,15 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // FIXME?
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.203: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║  l.207: 	zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.135: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.135: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                        ^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.203: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.135: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.135: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                        ^^
-//│ zog: error | string
+//│ zog: string
 //│    = '0'
 
 zog' = printInt' (add' (nfind table "one") (nfind table "two"))

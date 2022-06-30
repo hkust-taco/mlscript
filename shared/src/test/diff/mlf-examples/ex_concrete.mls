@@ -1,3 +1,6 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
 // type mylist ('b) = Nil | Cons of ('b * mylist ('b))
 // ;;
 class Nil
@@ -44,6 +47,7 @@ def id x = x
 //   | Nil -> Nil
 //   | Cons (car,cdr) -> Cons (f car, mymap f cdr) 
 //   end
+:RecursiveTypes // needed for this recursive def
 rec def map f l = case l of
   { Nil -> Nil
   | Cons -> Cons (f l.head, map f l.tail)
@@ -53,6 +57,7 @@ rec def map f l = case l of
 //│     'tail :> (Cons['head0] with {tail: 'tail}) | Nil
 //│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil
 //│    = [Function: map]
+:NoRecursiveTypes
 
 
 

@@ -1,4 +1,5 @@
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 // ============ Sec 1.1 ============
 
@@ -74,10 +75,12 @@ def match_list: forall 'a 'b. List['a] -> 'b -> ('a -> List['a] -> 'b) -> 'b
 def mem[a]: a -> List[a] -> bool
 //│ mem: anything -> List[?] -> bool
 
+:RecursiveTypes // needed for this recursive def
 rec def mem x l = match_list l false (fun head -> fun tail -> if eq head x then true else mem x tail)
 //│ anything -> List[?] -> bool
 //│   <:  mem:
 //│ anything -> List[?] -> bool
+:NoRecursiveTypes
 
 
 
@@ -92,10 +95,12 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))
 
+:RecursiveTypes // needed for this recursive def
 def fold_left = fl
 //│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
+:NoRecursiveTypes
 
 def fold_left = fl2
 //│ ('c -> 'b -> 'a & 'a -> 'b -> 'a) -> (forall 'd. ('c & 'd) -> List['b] -> ('a | 'd))

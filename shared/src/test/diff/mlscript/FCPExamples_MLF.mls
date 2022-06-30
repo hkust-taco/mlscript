@@ -1,6 +1,7 @@
 :NoJS
 
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 
 // ------------ Dummy classes to represent the types in the examples ------------
@@ -113,10 +114,10 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.114: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.115: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.29: 	def auto (x: forall 'a. 'a -> 'a) = x x
+//│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
 //│ res: int -> int | error
 
@@ -131,13 +132,13 @@ choose id auto2
 :e
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.132: 	res (choose id succ)
+//│ ║  l.133: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `int -> int` is not an instance of type `int`
-//│ ║  l.132: 	res (choose id succ)
+//│ ║  l.133: 	res (choose id succ)
 //│ ║         	               ^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.132: 	res (choose id succ)
+//│ ║  l.133: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
 //│ res: int -> int | error | int
 

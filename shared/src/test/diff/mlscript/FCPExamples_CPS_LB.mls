@@ -2,6 +2,7 @@
 
 // TODO investigate why this makes many tests fail:
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 
 // ------------ Dummy classes to represent the types in the examples ------------

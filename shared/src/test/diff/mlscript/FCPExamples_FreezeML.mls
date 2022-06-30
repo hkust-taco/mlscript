@@ -1,6 +1,7 @@
 :NoJS
 
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 
 // ============ Dummy classes to represent the types in the examples ============
@@ -125,8 +126,27 @@ choose id auto'
 
 // A9
 def f: ('a -> 'a) -> List['a] -> 'a
-f (choose id) ids
 //│ f: ('a -> 'a) -> List['a] -> 'a
+
+:e
+f (choose id) ids
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.132: 	f (choose id) ids
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ('a80' -> 'a80')›  <:  'a226    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ('a80' -> 'a80')›  <:  'a219'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.132: 	f (choose id) ids
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. ('a76'' -> 'a76'')›  <:  'a226    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a76'' -> 'a76'')›  <:  'a226
+//│ res: 'a -> 'a | error
+
+// ^ Strangely, this one works with recursive types:
+:RecursiveTypes
+f (choose id) ids
 //│ res: 'a -> 'a
 
 // A10
@@ -310,13 +330,13 @@ choose id (fun (x: ('a -> 'a)) -> auto' x)
 :e // * ^ Here you go:
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.311: 	res id
+//│ ║  l.331: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ║        	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──      	                    ^^
 //│ res: 'a -> 'a | error
 
@@ -324,13 +344,13 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.325: 	a (fun x -> { u = x })
+//│ ║  l.345: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.325: 	a (fun x -> { u = x })
+//│ ║  l.345: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.42: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──      	                    ^^
 //│ res: ('b & 'a) -> ('b | {u: 'a}) | error
 

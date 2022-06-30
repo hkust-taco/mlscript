@@ -1,3 +1,4 @@
+:NoRecursiveTypes
 :GeneralizeCurriedFunctions
 
 // type sid = ['a] 'a -> 'a;;
@@ -215,34 +216,36 @@ type A1' = forall 'a. (('a | Sid) -> ('a | Sid)) -> ('a | Sid) -> ('a | Sid)
 // let a1' = fun f x -> f (f (either id x));;
 // let a2' (x:a1') = x auto id; (fun y -> x y church_two; y church_succ) a3;;
 // let a0' = a2' a1';;
+
 def either x y = if true then x else y
+//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
+//│       = [Function: either]
+
 def a1' = fun f -> fun x -> f (f (either id x))
+//│ a1': 'a -> (forall 'a. ('b -> 'c
+//│   where
+//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
+//│    = [Function: either]
+
 def a2' (x: A1') =
   let _ = x auto id in
   (fun y ->
     let _ = x y church_two in
     y church_succ
   ) a3
-def a2'_ x =
-  let _ = x auto_ id in
-  (fun y ->
-    let _ = x y church_two in
-    y church_succ
-  ) a3
-def a0' = a2' a1'
-def a0'_ = a2'_ a1'
-//│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
-//│       = [Function: either]
-//│ a1': 'a -> (forall 'a. ('b -> 'c
-//│   where
-//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
-//│    = [Function: either]
 //│ a2': A1' -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
 //│    = [Function: either]
+
+def a2'_ x =
+  let _ = x auto_ id in
+  (fun y ->
+    let _ = x y church_two in
+    y church_succ
+  ) a3
 //│ a2'_: ((forall 'a. 'a -> (forall 'a. ('b -> 'c
 //│   where
 //│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
@@ -255,18 +258,41 @@ def a0'_ = a2'_ a1'
 //│   where
 //│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
 //│     = [Function: either]
+
+def a0' = a2' a1'
 //│ a0': 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│    = [Function: either]
+
+:e
+def a0'_ = a2'_ a1'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.271: 	def a0'_ = a2'_ a1'
+//│ ║         	           ^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  α939'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  α29''
+//│ a0'_: 'a -> 'b | error
+//│   where
+//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│   where
+//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     = [Function: either]
+
+// ^ Strangely, this one works with recursive types:
+
+:RecursiveTypes
+def a0'_ = a2'_ a1'
 //│ a0'_: 'a -> 'b
 //│   where
 //│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
 //│   where
 //│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
 //│     = [Function: either]
+:NoRecursiveTypes
 
 // type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;
 // type a1'_nat = ['a = nat] ('a -> 'a) -> 'a -> 'a;;

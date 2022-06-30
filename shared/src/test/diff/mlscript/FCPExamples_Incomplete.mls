@@ -1,5 +1,6 @@
 :GeneralizeCurriedFunctions
 :DistributeForalls
+:NoRecursiveTypes
 
 
 
@@ -67,13 +68,13 @@ ty_2 = ty_1
 //│   <:  ty_2:
 //│ nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.65: 	ty_2 = ty_1
+//│ ║  l.66: 	ty_2 = ty_1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.58: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ║  l.59: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ║        	                                                            ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.58: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ║  l.59: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
 //│ ╙──      	                                                            ^^
 //│     = <no result>
 //│       ty_1 is not implemented

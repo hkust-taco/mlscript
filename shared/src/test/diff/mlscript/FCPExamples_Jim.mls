@@ -1,5 +1,6 @@
 
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 
 // TODO also try stuff from his intersection type systems

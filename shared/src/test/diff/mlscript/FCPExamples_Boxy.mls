@@ -1,6 +1,7 @@
 :NoJS
 
 :GeneralizeCurriedFunctions
+:NoRecursiveTypes
 
 // ============ Dummy classes to represent the types in the examples ============
 // Char is represented as String

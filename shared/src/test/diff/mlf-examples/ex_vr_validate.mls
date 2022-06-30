@@ -1,3 +1,6 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
 // (* Value restriction. *)
 // let id x = x 
 def id x = x

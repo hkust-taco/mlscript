@@ -1,3 +1,6 @@
+:NoRecursiveTypes
+:GeneralizeCurriedFunctions
+
 // (* Value restriction. *)
 // let id x = x 
 // let x = id id in x 1, x true
