@@ -109,102 +109,6 @@ rec def find table key =
   if is_empty table then None
   else if eq (head table)._1 key then Some (head table)._2
   else find (tail table) key
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a270']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a274']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a278']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a282']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a286']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a290']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a294']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.108: 	rec def find table key =
-//│ ║         	             ^^^^^^^^^^^
-//│ ║  l.109: 	  if is_empty table then None
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.111: 	  else find (tail table) key
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a298']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a258'']
 //│ find: (List['a] & 'a) -> 'a -> (None | Some[forall 'a, 'b. ('b
 //│   where
 //│     'a <: List[{_2: 'b}])])
@@ -318,22 +222,37 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 
 :e // FIXME?
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.320: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>
-//│ zog: string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.224: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                        ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.146: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                        ^^
+//│ zog: error
 //│    = '0'
 
 zog' = printInt' (add' (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.330: 	zog' = printInt' (add' (nfind table "one") (nfind table "two"))
-//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>    PolymorphicType  ClassTag
-//│ ╙──  ... looks like:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>
 //│ zog': string
 //│     = '0'
 

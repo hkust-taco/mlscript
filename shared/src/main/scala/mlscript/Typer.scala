@@ -722,6 +722,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
       case App(f, a) =>
+        val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
         val f_ty = typeTerm(f)
         // val a_ty = typePolymorphicTerm(a)
         val a_ty =
@@ -736,13 +737,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           // // }
           // else {
             {
-            def typeArg(a: Term): ST = if (ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd))) typePolymorphicTerm(a) else {
+            def typeArg(a: Term): ST = if (!genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd))) typePolymorphicTerm(a) else {
               val newCtx = ctx.nextLevel
               val ec: ExtrCtx = MutMap.empty
               val extrCtx: Opt[ExtrCtx] = S(ec)
               val innerTy =
                 typeTerm(a)(newCtx, raise, extrCtx, vars,
-                // genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
+                genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
                 )
               PolymorphicType.mk(ctx.lvl,
                 ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)) tap

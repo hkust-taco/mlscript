@@ -72,13 +72,13 @@ addOne1 (Integer { value = 1; addOne = id })
 rec def mkInteger value = Integer { value; addOne = fun n -> mkInteger (n.value + 1) }
 //│ mkInteger: int -> 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│          = [Function: mkInteger]
 
 n = mkInteger 42
 //│ n: 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│  = Integer { value: 42, addOne: [Function: addOne] }
 
 n : Integer
@@ -88,7 +88,7 @@ n : Integer
 m = addOne1 n
 //│ m: 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│  = Integer { value: 43, addOne: [Function: addOne] }
 
 m : Integer
@@ -104,7 +104,7 @@ def mkInteger2 = mkInteger
 //│           = <missing implementation>
 //│ int -> 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkInteger2:
 //│ int -> Integer
 //│           = [Function: mkInteger]
@@ -120,7 +120,7 @@ rec def mkInteger_oops value = Integer { value; addOne = fun n -> mkInteger_oops
 //│               = <missing implementation>
 //│ int -> 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkInteger_oops:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -188,7 +188,7 @@ def mkIntegerPrecise3 = mkInteger
 //│                  = <missing implementation>
 //│ int -> 'a
 //│   where
-//│     'a :> Integer with {addOne: anything -> 'a}
+//│     'a :> Integer with {addOne: {value: int} -> 'a}
 //│   <:  mkIntegerPrecise3:
 //│ (int & 'a) -> (Integer\addOne with {value: 'a})
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -243,7 +243,7 @@ rec def mkStr value = Str { value; addOne = fun s -> mkStr (concat s.value "1") 
 //│      = <missing implementation>
 //│ string -> 'a
 //│   where
-//│     'a :> Str with {addOne: anything -> 'a}
+//│     'a :> Str with {addOne: {value: string} -> 'a}
 //│   <:  mkStr:
 //│ string -> Str
 //│      = [Function: mkStr]

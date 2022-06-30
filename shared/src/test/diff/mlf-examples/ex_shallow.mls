@@ -307,7 +307,7 @@ def a0'_ = a2'_ a1'
 //│ ║  l.305: 	def a0'_ = a2'_ a1'
 //│ ║         	           ^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  ((α1038',) -> α1039')    PolymorphicType  FunctionType
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  ((α1014',) -> α1015')    PolymorphicType  FunctionType
 //│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α37'' -> α37'')››  <:  ((α29'',) -> α30'')
 //│ a0'_: 'a -> 'b | error
 //│   where

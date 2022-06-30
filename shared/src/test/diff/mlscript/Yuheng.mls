@@ -107,9 +107,9 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ eval: 'rhs -> 'value
+//│ eval: 'a -> 'value
 //│   where
-//│     'rhs <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'rhs, rhs: 'rhs})
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
 //│     'value :> ('value, 'value,)
 //│     = [Function: eval]
 
@@ -118,9 +118,9 @@ rec def eval(e) = case e of
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ eval: 'rhs -> 'value
+//│ eval: 'a -> 'value
 //│   where
-//│     'rhs <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'rhs, rhs: 'rhs}) | ~IntLit & ~Pair[?, ?]
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
 //│     'value :> ('value, 'value,)
 //│     = [Function: eval1]
 
@@ -213,9 +213,9 @@ ep[0]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.+1: 	ep[0]
 //│ ║        	^^^^^
-//│ ╟── integer literal of type `3` does not match type `Array[?a]`
-//│ ║  l.145: 	    rhs = IntLit { value = 3 } } }
-//│ ║         	                           ^
+//│ ╟── integer literal of type `1` does not match type `Array[?a]`
+//│ ║  l.142: 	  lhs = IntLit { value = 1 };
+//│ ║         	                         ^
 //│ ╟── but it flows into reference with expected type `Array[?b]`
 //│ ║  l.+1: 	ep[0]
 //│ ╙──      	^^
@@ -267,9 +267,9 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ 'rhs -> 'value
+//│ 'a -> 'value
 //│   where
-//│     'rhs <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'rhs, rhs: 'rhs})
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
 //│     'value :> ('value, 'value,)
 //│   <:  eval:
 //│ Expr[?] -> nothing
@@ -286,38 +286,6 @@ rec def eval(e) = case e of
 //│ ║  l.263: 	def eval: Expr['a] -> 'a
 //│ ║         	          ^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+2: 	  { IntLit -> e.value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+4: 	  }
-//│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'lhs'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                  ^^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+2: 	  { IntLit -> e.value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+4: 	  }
-//│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'rhs'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                              ^^^^^
-//│ ╟── from refined scrutinee:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ╙──      	                       ^
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -389,48 +357,12 @@ rec def eval(e) = case e of
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ 'rhs -> 'value
+//│ 'a -> 'value
 //│   where
-//│     'rhs <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'rhs, rhs: 'rhs}) | ~IntLit & ~Pair[?, ?]
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
 //│     'value :> ('value, 'value,)
 //│   <:  eval:
 //│ Expr[?] -> nothing
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+2: 	  { IntLit -> e.value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+4: 	  | _ -> error
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.+5: 	  }
-//│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'lhs'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                  ^^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+2: 	  { IntLit -> e.value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.+4: 	  | _ -> error
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.+5: 	  }
-//│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'rhs'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                              ^^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.+1: 	rec def eval(e) = case e of
-//│ ╙──      	                       ^
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -263,25 +263,25 @@ to_church_ty = to_church_2
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α687''    FunctionType  TypeVariable
+//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α688''    FunctionType  TypeVariable
 //│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α657'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α696''    FunctionType  TypeVariable
+//│ ╟── this constraint:  (‘a'' -> ‘a'')  <:  α697''    FunctionType  TypeVariable
 //│ ╙──  ... looks like:  (‘a'' -> ‘a'')  <:  α657'''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α690''    TraitTag  TypeVariable
+//│ ╟── this constraint:  ‘a''  <:  α691''    TraitTag  TypeVariable
 //│ ╙──  ... looks like:  ‘a''  <:  α659''''
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.254: 	to_church_ty = to_church_2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α699''    TraitTag  TypeVariable
+//│ ╟── this constraint:  ‘a''  <:  α700''    TraitTag  TypeVariable
 //│ ╙──  ... looks like:  ‘a''  <:  α659''''
 
 :e // FIXME?
@@ -410,8 +410,8 @@ def tc n = to_church_2 n : ChurchInt
 //│ ║  l.408: 	def tc n = to_church_2 n : ChurchInt
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a''' -> ‘a''')  <:  α1004'''    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (‘a''' -> ‘a''')  <:  α956'''
+//│ ╟── this constraint:  (‘a''' -> ‘a''')  <:  α1010'''    FunctionType  TypeVariable
+//│ ╙──  ... looks like:  (‘a''' -> ‘a''')  <:  α961'''
 //│ tc: int -> ChurchInt
 //│   = [Function: tc2]
 

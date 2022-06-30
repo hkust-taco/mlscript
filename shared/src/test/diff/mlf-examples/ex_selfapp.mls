@@ -34,10 +34,10 @@ rec def foo = fun xs -> case xs of
   { Nil -> Nil
   | Cons -> Cons (xs.head + 1, foo (foo xs.tail))
   }
-//│ foo: 'tail -> 'tail0
+//│ foo: 'a -> 'tail
 //│   where
-//│     'tail0 :> (Cons[int] with {tail: 'tail0}) | Nil
-//│     'tail <: (Cons[?] with {head: int, tail: 'tail}) | Nil
+//│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
 //│    = [Function: foo]
 :NoRecursiveTypes
 
@@ -82,8 +82,8 @@ def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun 
 //│ ║  l.80: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ║        	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (cons<> & {head: head142'', tail: tail139'', Cons#a: mut a140''..a140''})  <:  List[a140'']    ComposedType  TypeRef
-//│ ╙──  ... looks like:  (cons<> & {head: head136''''', tail: tail133''''', Cons#a: mut a134'''''..a134'''''})  <:  List[a134''''']
+//│ ╟── this constraint:  (cons<> & {head: head139'', tail: tail136'', Cons#a: mut a137''..a137''})  <:  List[a137'']    ComposedType  TypeRef
+//│ ╙──  ... looks like:  (cons<> & {head: head133'''', tail: tail130'''', Cons#a: mut a131''''..a131''''})  <:  List[a131'''']
 //│ build: (forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> ((Cons['a] with {tail: 'tail}) | error | Nil)
 //│   where
 //│     'tail :> (Cons['a] with {tail: 'tail}) | Nil
@@ -113,9 +113,9 @@ rec def foldr = fun k -> fun z -> fun xs ->
     { Nil -> z
     | Cons -> k xs.head (foldr k z xs.tail)
     }
-//│ foldr: ('head -> 'a -> 'a) -> 'a -> 'tail -> 'a
+//│ foldr: ('head -> 'a -> 'a) -> 'a -> 'b -> 'a
 //│   where
-//│     'tail <: (Cons[?] with {head: 'head, tail: 'tail}) | Nil
+//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
 //│      = [Function: foldr]
 
 
@@ -262,9 +262,9 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 def bfoo xs = build (foldr k z xs)
 //│ bfoo: 'a -> 'tail
 //│   where
-//│     'a <: 'tail0
+//│     'a <: 'b
 //│   where
-//│     'tail0 <: (Cons['a] with {tail: 'tail0}) | Nil
+//│     'b <: (Cons['a] with {tail: 'b}) | Nil
 //│     'tail :> (Cons[int] with {tail: 'tail}) | Nil
 //│     = [Function: bfoo]
 
@@ -282,9 +282,8 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╟── from quantified type variable:
 //│ ║  l.50: 	type Ba = forall 'b. (int -> 'b -> 'b) -> 'b -> 'b
 //│ ╙──      	                 ^^
-//│ bfoo_: 'tail -> error
+//│ bfoo_: 'a -> error
 //│   where
-//│     'a :> int -> ‘b -> ‘b
 //│     'c := ‘b
 //│     'd <: (int -> Ba -> Ba) -> (anything -> (forall 'e. 'e -> 'e)) -> (int -> Ba -> Ba) -> (anything -> (forall 'e. 'e -> 'e)) -> (int -> ‘b -> ‘b) -> ‘b -> ‘b
 //│     'b := ‘b
@@ -292,8 +291,9 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│     'g := ‘b
 //│     'h <: (int -> Ba -> Ba) -> (anything -> (forall 'e. 'e -> 'e)) -> (int -> Ba -> Ba) -> (anything -> (forall 'e. 'e -> 'e)) -> (int -> ‘b -> ‘b) -> ‘b -> ‘b
 //│     'b0 := ‘b
+//│     'i :> int -> ‘b -> ‘b
 //│   where
-//│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
+//│     'a <: (Cons[?] with {tail: 'a}) | Nil
 //│      = [Function: bfoo_]
 
 

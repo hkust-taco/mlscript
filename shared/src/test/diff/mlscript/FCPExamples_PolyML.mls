@@ -92,17 +92,7 @@ def fold_left: forall 'a 'b. ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 //│ fold_left: ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 
 rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.94: 	rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {α219'' where: α208' <: ((α209',) -> α218'')}›  <:  α223'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {α219'' where: α208' <: ((α209',) -> α218'')}›  <:  α223'
-//│ fl: ('b -> 'a -> 'c & 'c) -> 'b -> List['a] -> 'b
-//│   where
-//│     'b :> forall 'b, 'c. ('d
-//│   where
-//│     'c <: 'b -> 'a -> 'd)
+//│ fl: ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
 //│ fl2: ('c -> 'b -> 'd & (forall 'c, 'b, 'd, 'e, 'a. ('a | 'e
@@ -114,11 +104,7 @@ rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x hea
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ ('b -> 'a -> 'c & 'c) -> 'b -> List['a] -> 'b
-//│   where
-//│     'b :> forall 'b, 'c. ('d
-//│   where
-//│     'c <: 'b -> 'a -> 'd)
+//│ ('b -> 'a -> 'b) -> 'b -> List['a] -> 'b
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes

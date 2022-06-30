@@ -10,9 +10,9 @@ rec def eval x = case x of {
   Lit -> x.val
   | Add -> eval x.lhs + eval x.rhs
   }
-//│ eval: 'rhs -> int
+//│ eval: 'a -> int
 //│   where
-//│     'rhs <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit
+//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
 //│     = [Function: eval]
 
 def eval eval x = case x of {
@@ -36,8 +36,8 @@ eval eval
 //│ ║  l.34: 	eval eval
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α128    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α54'
+//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α71')))›  <:  α122    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α48' -> (α49' -> (val51' | α71')))›  <:  α48'
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -57,8 +57,8 @@ evalN evalN
 //│ ║  l.55: 	evalN evalN
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α321    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α214'
+//│ ╟── this constraint:  ‹∀ 0. (α208' -> (α209' -> (α219' | α245')))›  <:  α315    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α208' -> (α209' -> (α219' | α245')))›  <:  α208'
 //│ res: error
 //│    = [Function (anonymous)]
 
@@ -72,8 +72,8 @@ evalN evalN e
 //│ ║  l.70: 	evalN evalN e
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α513    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α214'
+//│ ╟── this constraint:  ‹∀ 0. (α208' -> (α209' -> (α219' | α245')))›  <:  α507    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α208' -> (α209' -> (α219' | α245')))›  <:  α208'
 //│ res: error
 //│    = -1
 
@@ -98,8 +98,8 @@ def evalN2 evalN2 x = case x of {
 //│ ║  l.+3: 	  | _ -> eval eval x
 //│ ║        	         ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α687'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α54'
+//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α71')))›  <:  α681'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α48' -> (α49' -> (val51' | α71')))›  <:  α48'
 //│ evalN2: ('a -> (forall 'b, 'underlying. ('underlying
 //│   where
 //│     'b <: {underlying: 'underlying})) -> int & 'a -> (forall 'b, 'underlying. ('underlying
@@ -112,8 +112,8 @@ evalN2 evalN2 e
 //│ ║  l.+1: 	evalN2 evalN2 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α650' -> (α651' -> (α661' | α770')))›  <:  α802    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α650' -> (α651' -> (α661' | α770')))›  <:  α650'
+//│ ╟── this constraint:  ‹∀ 0. (α644' -> (α645' -> (α655' | α764')))›  <:  α796    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α644' -> (α645' -> (α655' | α764')))›  <:  α644'
 //│ res: error | int
 
 
@@ -186,8 +186,8 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α989' -> (α990' -> (α998' | α1023')))›  <:  α1095    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α989' -> (α990' -> (α998' | α1023')))›  <:  α989'
+//│ ╟── this constraint:  ‹∀ 0. (α983' -> (α984' -> (α992' | α1017')))›  <:  α1089    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α983' -> (α984' -> (α992' | α1017')))›  <:  α983'
 //│ res: error
 
 

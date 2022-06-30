@@ -264,13 +264,9 @@ res 1 2
 
 
 let rec trutru = g => trutru (g true)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.+1: 	let rec trutru = g => trutru (g true)
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α512'  <:  (true<bool> -> α517')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α512'  <:  (true<bool> -> α513'')
-//│ trutru: (true -> true -> anything & true -> anything) -> nothing
+//│ trutru: 'a -> nothing
+//│   where
+//│     'a <: true -> 'a
 
 i => if ((i i) true) then true else true
 //│ res: ('a -> true -> bool & 'a -> true -> anything & 'a) -> true
@@ -305,13 +301,9 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.+1: 	let rec f = x => f x.u
-//│ ║        	            ^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α627'  <:  {u: u632'}    TypeVariable  RecordType
-//│ ╙──  ... looks like:  α627'  <:  {u: u628''}
-//│ f: {u: {u: anything}} -> nothing
+//│ f: 'a -> nothing
+//│   where
+//│     'a <: {u: 'a}
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
@@ -369,18 +361,9 @@ next => 0
 //│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
-//│ ║  l.+1: 	(let rec x = (y => (x (y y))); x)
-//│ ║        	             ^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α701'  <:  (α701' -> α706')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α701'  <:  (α701' -> α702'')
 //│ res: 'a -> nothing
 //│   where
-//│     'a :> forall 'a. ('b
-//│   where
-//│     'a <: 'a -> 'b)
-//│        <: 'a -> 'a -> anything & 'a -> anything
+//│     'a <: 'a -> 'a
 
 x => (y => (x (y y)))
 //│ res: ((forall 'a. ('a
@@ -453,8 +436,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α837'' -> α838'')›  <:  α842'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α837'' -> α838'')›  <:  α837''
+//│ ╟── this constraint:  ‹∀ 1. (α826'' -> α827'')›  <:  α831'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α826'' -> α827'')›  <:  α826''
 //│ res: 'a -> 'a
 
 :NoCycleCheck
