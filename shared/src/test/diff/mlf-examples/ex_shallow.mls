@@ -283,7 +283,6 @@ def a0'_ = a2'_ a1'
 //│     = [Function: either]
 
 // ^ Strangely, this one works with recursive types:
-
 :RecursiveTypes
 def a0'_ = a2'_ a1'
 //│ a0'_: 'a -> 'b
