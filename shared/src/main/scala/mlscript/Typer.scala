@@ -686,11 +686,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val extrCtx: Opt[ExtrCtx] = S(ec)
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
         // newCtx ++= newBindings
-        val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
+        
+        // val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
+        val body_ty = if (!generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx, vars)
+            // else newCtx.nextLevel |> { implicit ctx =>
+            else newCtx.nextLevel |> { newCtx =>
+          val ec: ExtrCtx = MutMap.empty
+          val extrCtx: Opt[ExtrCtx] = S(ec)
+          val innerTy = typeTerm(body)(newCtx, raise, extrCtx, vars)
+          // PolymorphicType.mk(ctx.lvl,
+          PolymorphicType.mk(newCtx.lvl-1,
+            ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+        }
+        
         val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         PolymorphicType.mk(ctx.lvl,
           // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
-          if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
+          // if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
+          ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)

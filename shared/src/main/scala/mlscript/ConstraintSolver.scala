@@ -555,10 +555,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    Note: similar remark applies inside constrainDNF
             rec(poly.instantiate, rhs, true)
           case (ConstrainedType(cs, bod), _) =>
-            cs.foreach { case (tv, bs) => bs.foreach {
-              case (true, b) => rec(b, tv, false)
-              case (false, b) => rec(tv, b, false)
-            }}
+            trace(s"DISCHARGE CONSTRAINTS") {
+              cs.foreach { case (tv, bs) => bs.foreach {
+                case (true, b) => rec(b, tv, false)
+                case (false, b) => rec(tv, b, false)
+              }}
+            }()
             rec(bod, rhs, true)
           case (_, ComposedType(true, l, r)) =>
             goToWork(lhs, rhs)

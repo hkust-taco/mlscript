@@ -27,7 +27,10 @@ def cons head tail = Cons { head; tail }
 //│ Defined Cons.Tail: Cons['a] -> List['a]
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a, 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'a. (Cons['a | 'b] with {head: 'b, tail: 'c}
+//│   where
+//│     'c <: List['a]
+//│     'c <: List['a])))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -53,7 +56,9 @@ def head: forall 'a. List['a] -> 'a
 def head l = l.Head
 //│ head: List['a] -> 'a
 //│     = <missing implementation>
-//│ List['a] -> 'a
+//│ 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: List['b]))
 //│   <:  head:
 //│ List['a] -> 'a
 //│     = [Function: head]
@@ -62,7 +67,9 @@ def tail: forall 'a. List['a] -> List['a]
 def tail l = l.Tail
 //│ tail: List['a] -> List['a]
 //│     = <missing implementation>
-//│ List['a] -> List['a]
+//│ 'b -> (forall 'b, 'a. (List['a]
+//│   where
+//│     'b <: List['a]))
 //│   <:  tail:
 //│ List['a] -> List['a]
 //│     = [Function: tail]
@@ -112,9 +119,13 @@ def id = fun x -> x
 // let delta = fun (x:sid) -> x x
 def delta = fun (x: Sid) -> x x
 def delta_ = fun x -> x x
-//│ delta: Sid -> Sid
+//│ delta: Sid -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│      = [Function: delta]
-//│ delta_: ('a -> 'b & 'a) -> 'b
+//│ delta_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│       = [Function: delta_]
 
 // let choose x y = if true then x else y
@@ -130,42 +141,65 @@ def succ n = n + 1
 
 // let test1 = delta id
 test1 = delta id
-//│ test1: Sid
+//│ test1: 'a
+//│   where
+//│     'b <: 'b -> 'a
 //│      = [Function: id]
 
 // untype delta succ
 :e
 delta succ
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.138: 	delta succ
+//│ ║  l.151: 	delta succ
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
+//│ ║  l.111: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.127: 	def succ n = n + 1
+//│ ║  l.138: 	def succ n = n + 1
 //│ ╙──       	             ^
-//│ res: error | Sid
+//│ res: error | 'a
+//│   where
+//│     'b <: 'b -> 'a
 //│    = 'function succ(n) {  return n + 1;}1'
 
 // let test2 = delta (choose id id)
 test2 = delta (choose id id)
-//│ test2: Sid
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.167: 	test2 = delta (choose id id)
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.111: 	type Sid = forall 'a. 'a -> 'a
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.111: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│ test2: error | 'a
+//│   where
+//│     'b <: 'b -> 'a
+//│      = [Function: id]
+
+test2 = delta_ (choose id id)
+//│ test2: 'a
+//│   where
+//│     'b <: 'b -> 'a
 //│      = [Function: id]
 
 // untype delta (choose id succ)
 :e
 delta (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	delta (choose id succ)
+//│ ║  l.190: 	delta (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` is not an instance of type `int`
-//│ ║  l.104: 	type Sid = forall 'a. 'a -> 'a
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.111: 	type Sid = forall 'a. 'a -> 'a
 //│ ║         	                  ^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.127: 	def succ n = n + 1
-//│ ╙──       	             ^
-//│ res: error | Sid
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.111: 	type Sid = forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│ res: error | 'a
+//│   where
+//│     'b <: 'b -> 'a
 //│    = [Function: id]
 
 // let test3 = choose id succ
@@ -261,16 +295,16 @@ id1
 :e
 id1: nothing
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.296: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── function of type `?a -> ?b` does not match type `nothing`
-//│ ║  l.232: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.266: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.296: 	id1: nothing
 //│ ║         	^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.262: 	id1: nothing
+//│ ║  l.296: 	id1: nothing
 //│ ╙──       	     ^^^^^^^
 //│ res: nothing
 //│    = [Function: id1]
@@ -304,11 +338,11 @@ res id
 :e // FIXME?
 id1 id1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.305: 	id1 id1
+//│ ║  l.339: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1388'›  <:  α493    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1388'›  <:  α389'
+//│ ╟── this constraint:  ‹∀ 0. id1443'›  <:  α548    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1443'›  <:  α444'
 //│ res: error
 //│    = [Function: id1]
 
@@ -342,37 +376,44 @@ def id2 x = if true then x else id2 id2 x
 
 // let make_ex1 x (f:['a] ('a * ('a -> 'c)) -> 'b) = f x
 def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
-//│ make_ex1: 'b -> (forall 'b, 'a, 'c, 'd. ((forall 'a0. ('a0, 'a0 -> 'c,) -> 'd) -> 'd
+//│ make_ex1: 'b -> (forall 'a. ('a, 'a -> nothing,) -> anything) -> (forall 'b, 'c, 'd. ('d
 //│   where
-//│     'b <: ('a, 'a -> 'c,)))
+//│     'c <: 'b -> 'd))
 //│         = [Function: make_ex1]
 
 ex1_1 = make_ex1 (("A String", print_string))
-//│ ex1_1: (forall 'a. ('a, 'a -> 'c,) -> 'b) -> 'b
+//│ ex1_1: (forall 'a. ('a, 'a -> nothing,) -> anything) -> (forall 'b, 'c. ('c
 //│   where
-//│     'd <: ('a0, 'a0 -> 'c,)
+//│     'b <: ("A String", string -> unit,) -> 'c))
 //│      = [Function (anonymous)]
 
 ex1_1 (fun ((x, f)) -> f x)
-//│ = undefined
+//│ res: 'a
+//│   where
+//│     'b <: ("A String", string -> unit,) -> 'a
+//│    = undefined
 
 ex1_2 = if true then make_ex1 ((42, print_int)) else ex1_1
-//│ ex1_2: (forall 'a, 'a0. ('a, 'a -> 'c,) -> 'b & ('a0, 'a0 -> 'c0,) -> 'b) -> 'b
+//│ ex1_2: (forall 'a, 'a0. ('a, 'a -> nothing,) -> anything & ('a0, 'a0 -> nothing,) -> anything) -> (forall 'b, 'c, 'd. ('c
 //│   where
-//│     'd <: ('a1, 'a1 -> 'c,)
-//│     'e <: ('a2, 'a2 -> 'c0,)
+//│     'b <: (42, int -> unit,) -> 'c
+//│     'd <: ("A String", string -> unit,) -> 'c))
 //│      = [Function (anonymous)]
 
 ex1_2 (fun ((x, f)) -> f x)
-//│ = undefined
+//│ res: 'a
+//│   where
+//│     'b <: ("A String", string -> unit,) -> 'a
+//│     'c <: (42, int -> unit,) -> 'a
+//│    = undefined
 
 
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
 // ;;
 def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
-//│ make_ex2: 'b -> (forall 'b, 'a, 'c, 'd. ((forall 'a0. ('a0, 'a0, 'a0 -> 'a0 -> 'c,) -> 'd) -> 'd
+//│ make_ex2: 'b -> (forall 'a. ('a, 'a, 'a -> 'a -> nothing,) -> anything) -> (forall 'b, 'c, 'd. ('d
 //│   where
-//│     'b <: ('a, 'a, 'a -> 'a -> 'c,)))
+//│     'c <: 'b -> 'd))
 //│         = [Function: make_ex2]
 
 // let ex_list1 = [ make_ex1 ("A String", print_string) ; 
@@ -382,11 +423,11 @@ def make_ex2 x (f: forall 'a. (('a, 'a, 'a -> 'a -> 'c),) -> 'b) = f x
 ex_list1 = cons (make_ex1 (("A String", print_string)))
   (cons (make_ex1 ((8250, print_int)))
   (cons (make_ex1 ((true, print_bool))) nil))
-//│ ex_list1: List[forall 'b, 'a, 'c, 'd, 'a0, 'c0, 'e, 'a1, 'c1, 'f. ((forall 'a2, 'a3, 'a4. ('a2, 'a2 -> 'c1,) -> 'f & ('a3, 'a3 -> 'c,) -> 'f & ('a4, 'a4 -> 'c0,) -> 'f) -> 'f
+//│ ex_list1: List[(forall 'a, 'a0, 'a1. ('a, 'a -> nothing,) -> anything & ('a0, 'a0 -> nothing,) -> anything & ('a1, 'a1 -> nothing,) -> anything) -> (forall 'b, 'c, 'd, 'e. ('c
 //│   where
-//│     'b <: ('a, 'a -> 'c,)
-//│     'd <: ('a0, 'a0 -> 'c0,)
-//│     'e <: ('a1, 'a1 -> 'c1,))]
+//│     'b <: (8250, int -> unit,) -> 'c
+//│     'd <: (true, bool -> unit,) -> 'c
+//│     'e <: ("A String", string -> unit,) -> 'c))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -402,11 +443,11 @@ ex_list1 = cons (make_ex1 (("A String", print_string)))
 ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
   (cons (make_ex2 ((1250, 4890, eqint)))
   (cons (make_ex2 ((true, false, eqbool))) nil))
-//│ ex_list2: List[forall 'b, 'a, 'c, 'd, 'a0, 'c0, 'e, 'a1, 'c1, 'f. ((forall 'a2, 'a3, 'a4. ('a2, 'a2, 'a2 -> 'a2 -> 'c1,) -> 'f & ('a3, 'a3, 'a3 -> 'a3 -> 'c,) -> 'f & ('a4, 'a4, 'a4 -> 'a4 -> 'c0,) -> 'f) -> 'f
+//│ ex_list2: List[(forall 'a, 'a0, 'a1. ('a, 'a, 'a -> 'a -> nothing,) -> anything & ('a0, 'a0, 'a0 -> 'a0 -> nothing,) -> anything & ('a1, 'a1, 'a1 -> 'a1 -> nothing,) -> anything) -> (forall 'b, 'c, 'd, 'e. ('c
 //│   where
-//│     'b <: ('a, 'a, 'a -> 'a -> 'c,)
-//│     'd <: ('a0, 'a0, 'a0 -> 'a0 -> 'c0,)
-//│     'e <: ('a1, 'a1, 'a1 -> 'a1 -> 'c1,))]
+//│     'b <: (1250, 4890, int -> int -> bool,) -> 'c
+//│     'd <: (true, false, bool -> bool -> bool,) -> 'c
+//│     'e <: ("String", "String", string -> string -> bool,) -> 'c))]
 //│         = Cons {
 //│             head: [Function (anonymous)],
 //│             tail: Cons {
@@ -417,21 +458,38 @@ ex_list2 = cons (make_ex2 (("String", "String", eqstring)))
 
 
 h = head ex_list1
-//│ h: (forall 'a, 'a0, 'a1. ('a, 'a -> 'c,) -> 'b & ('a0, 'a0 -> 'c0,) -> 'b & ('a1, 'a1 -> 'c1,) -> 'b) -> 'b
+//│ h: (forall 'a, 'a0, 'a1. ('a, 'a -> nothing,) -> anything & ('a0, 'a0 -> nothing,) -> anything & ('a1, 'a1 -> nothing,) -> anything) -> (forall 'b, 'c, 'd, 'e. ('c
 //│   where
-//│     'd <: ('a2, 'a2 -> 'c0,)
-//│     'e <: ('a3, 'a3 -> 'c1,)
-//│     'f <: ('a4, 'a4 -> 'c,)
+//│     'b <: (8250, int -> unit,) -> 'c
+//│     'd <: (true, bool -> unit,) -> 'c
+//│     'e <: ("A String", string -> unit,) -> 'c))
 //│  = [Function (anonymous)]
 
 h (fun ((x, f)) -> f x)
-//│ = undefined
+//│ res: 'a
+//│   where
+//│     'b <: ("A String", string -> unit,) -> 'a
+//│     'c <: (true, bool -> unit,) -> 'a
+//│     'd <: (8250, int -> unit,) -> 'a
+//│    = undefined
 
 // * _n accessors not yet implemented in JS backend:
 // test1 = listiterA (fun ex -> ex (fun p -> p._2 p._1)) ex_list1
 
 test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
-//│ test1: unit
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.479: 	test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.378: 	def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
+//│ ║         	                          ^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.479: 	test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
+//│ ║         	                                                      ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.378: 	def make_ex1 x (f: forall 'a. (('a, 'a -> 'c),) -> 'b) = f x
+//│ ╙──       	                          ^^
+//│ test1: error | unit
 //│      = [Function: unit]
 
 // let test1 = listiter (fun ex -> ex (fun p -> (snd p) (fst p))) ex_list1
@@ -441,18 +499,27 @@ test1 = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│      = [Function: unit]
 
 test1_ = listiter (fun ex -> ex (fun ((p1, p2)) -> p2 p1))
-//│ test1_: List[(forall 'a, 'b. ('a, 'a -> 'b,) -> 'b) -> anything] -> unit
+//│ test1_: List[?] -> unit
 //│       = [Function (anonymous)]
 
 test1_ ex_list1
 //│ = [Function: unit]
 
 process ex = ex (fun ((p1, p2)) -> p2 p1)
-//│ process: ((forall 'a, 'b. ('a, 'a -> 'b,) -> 'b) -> 'c) -> 'c
+//│ process: 'a -> (forall 'a. ('b
+//│   where
+//│     'a <: (forall 'c, 'd. ('c, 'd,) -> (forall 'c, 'd, 'e. ('e
+//│   where
+//│     'd <: 'c -> 'e))) -> 'b))
 //│        = [Function: process]
 
 process h
-//│ = undefined
+//│ res: 'a
+//│   where
+//│     'b <: (forall 'c, 'd. ('c, 'd,) -> (forall 'c, 'd, 'e. ('e
+//│   where
+//│     'd <: 'c -> 'e))) -> 'a
+//│    = undefined
 
 // * Also fails:
 // listiter process ex_list1
@@ -480,7 +547,7 @@ test2_ = listiter (fun ex -> ex (fun ((t1, t2, t3)) ->
   let eqf = t3 in
   let areequal = eqf arg1 arg2 in
   print_bool areequal ))
-//│ test2_: List[(forall 'a, 'b. ('a, 'b, 'a -> 'b -> bool,) -> unit) -> anything] -> unit
+//│ test2_: List[?] -> unit
 //│       = [Function (anonymous)]
 
 // * Also fails:
@@ -499,8 +566,11 @@ ex1_1 = make_ex1 ("A String", print_string)
 //│        make_ex1 is not implemented
 
 ex1_1 (fun (x, f) -> f x)
-//│ = <no result>
-//│   ex1_1 and make_ex1 are not implemented
+//│ res: 'a
+//│   where
+//│     'b <: anything -> 'a
+//│    = <no result>
+//│      ex1_1 and make_ex1 are not implemented
 
 ex1_2 = if true then make_ex1 (42, print_int) else ex1_1
 //│ ex1_2: (forall 'a, 'a0. ('a, 'a -> unit,) -> 'b & ('a0, 'a0 -> unit,) -> 'b) -> 'b
@@ -508,8 +578,12 @@ ex1_2 = if true then make_ex1 (42, print_int) else ex1_1
 //│        make_ex1 is not implemented
 
 ex1_2 (fun (x, f) -> f x)
-//│ = <no result>
-//│   ex1_2 and make_ex1 are not implemented
+//│ res: 'a
+//│   where
+//│     'b <: anything -> 'a
+//│     'c <: anything -> 'a
+//│    = <no result>
+//│      ex1_2 and make_ex1 are not implemented
 
 
 // let make_ex2 x (f:['a] ('a * 'a * ('a -> 'a -> 'c)) -> 'b) = f x
@@ -544,7 +618,19 @@ ex_list2 = cons (make_ex2 ("String", "String", eqstring))
 // let test1 = listiter (fun ex -> ex (fun p -> (snd p) (fst p))) ex_list1
 // ;;
 test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
-//│ test1: unit
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.620: 	test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.559: 	def make_ex1: ('x, 'x -> 'c) -> (forall 'b. (forall 'a. ('a, 'a -> 'c) -> 'b) -> 'b)
+//│ ║         	                                                    ^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.620: 	test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
+//│ ║         	                                                 ^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.559: 	def make_ex1: ('x, 'x -> 'c) -> (forall 'b. (forall 'a. ('a, 'a -> 'c) -> 'b) -> 'b)
+//│ ╙──       	                                                    ^^
+//│ test1: error | unit
 //│      = <no result>
 //│        ex_list1 and make_ex1 are not implemented
 
@@ -591,65 +677,105 @@ def c_unit = fun x -> x
 // (* BOOLEANS, IFS, AND, OR, NOT. *)
 // let c_true  = fun a b -> a c_unit
 def c_true = fun a -> fun b -> a c_unit
-//│ c_true: 'a -> (forall 'a. ('a -> 'b
+//│ c_true: 'a -> 'a -> (forall 'a. ('b
 //│   where
 //│     'a <: (forall 'c. 'c -> 'c) -> 'b))
 //│       = [Function: c_true]
 
 // let c_false = fun a b -> b c_unit
 def c_false = fun a -> fun b -> b c_unit
-//│ c_false: anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ c_false: 'a -> (forall 'a. 'a -> (forall 'a. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'c) -> 'b)))
 //│        = [Function: c_false]
 
 // let c_if (cond:Bool) c_then c_else = cond c_then c_else 
 def c_if (cond: Fbool) c_then c_else = cond c_then c_else
 def c_if_ cond c_then c_else = cond c_then c_else
-//│ c_if: Fbool -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_if: Fbool -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'b <: 'a -> 'c -> 'd)))
+//│     'c <: 'a -> 'b -> 'd))))
 //│     = [Function: c_if]
-//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_if_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd))))
 //│      = [Function: c_if_]
 
 // let c_and (a:Bool) (b:Bool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and (a: Fbool) (b: Fbool) = c_if a (fun z -> b) (fun z -> c_false)
 def c_and_ a b = c_if a (fun z -> b) (fun z -> c_false)
-//│ c_and: Fbool -> Fbool -> (anything -> ((forall 'a. 'a -> 'a) -> 'b) -> 'b | Fbool)
+//│ c_and: Fbool -> Fbool -> (forall 'a, 'b. ('c
+//│   where
+//│     'a <: ('b -> Fbool) -> ('b -> 'b -> (forall 'b. 'b -> (forall 'b. ('d
+//│   where
+//│     'b <: (forall 'e. 'e -> 'e) -> 'd)))) -> 'c))
 //│      = [Function: c_and]
-//│ c_and_: Fbool -> (forall 'a. 'a -> (anything -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c | 'a))
+//│ c_and_: Fbool -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('d
+//│   where
+//│     'b <: ('c -> 'a) -> ('c -> 'c -> (forall 'c. 'c -> (forall 'c. ('e
+//│   where
+//│     'c <: (forall 'f. 'f -> 'f) -> 'e)))) -> 'd)))
 //│       = [Function: c_and_]
 
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or_ a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (forall 'a. 'a -> (forall 'a. ('a -> 'b
+//│ c_or: Fbool -> Fbool -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'c. 'c -> 'c) -> 'b)) | Fbool)
+//│     'a <: ('b -> (forall 'b. 'b -> 'b -> (forall 'b. ('d
+//│   where
+//│     'b <: (forall 'e. 'e -> 'e) -> 'd)))) -> ('b -> Fbool) -> 'c))
 //│     = [Function: c_or]
-//│ c_or_: Fbool -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'b. ('b -> 'c
+//│ c_or_: Fbool -> (forall 'a. 'a -> (forall 'b, 'c. ('d
 //│   where
-//│     'b <: (forall 'd. 'd -> 'd) -> 'c)) | 'a))
+//│     'b <: ('c -> (forall 'c. 'c -> 'c -> (forall 'c. ('e
+//│   where
+//│     'c <: (forall 'f. 'f -> 'f) -> 'e)))) -> ('c -> 'a) -> 'd)))
 //│      = [Function: c_or_]
 
 // let c_not (a:Bool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not (a: Fbool) = c_if a (fun z -> c_false) (fun z -> c_true)
 def c_not_ a = c_if a (fun z -> c_false) (fun z -> c_true)
-//│ c_not: Fbool -> (forall 'a. 'a -> (forall 'a. (((forall 'b. 'b -> 'b) -> 'c) -> 'c
+//│ c_not: Fbool -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> 'b) -> 'c)))
+//│     'a <: ('b -> 'b -> (forall 'd. 'd -> (forall 'd. ('e
+//│   where
+//│     'd <: (forall 'f. 'f -> 'f) -> 'e)))) -> ('b -> (forall 'b. 'b -> 'b -> (forall 'b. ('g
+//│   where
+//│     'b <: (forall 'f. 'f -> 'f) -> 'g)))) -> 'c))
 //│      = [Function: c_not]
-//│ c_not_: Fbool -> (forall 'a. 'a -> (forall 'a. (((forall 'b. 'b -> 'b) -> 'c) -> 'c
+//│ c_not_: Fbool -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> 'b) -> 'c)))
+//│     'a <: ('b -> 'b -> (forall 'd. 'd -> (forall 'd. ('e
+//│   where
+//│     'd <: (forall 'f. 'f -> 'f) -> 'e)))) -> ('b -> (forall 'b. 'b -> 'b -> (forall 'b. ('g
+//│   where
+//│     'b <: (forall 'f. 'f -> 'f) -> 'g)))) -> 'c))
 //│       = [Function: c_not_]
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
 def c_or2 = c_or : Fbool -> Fbool -> Fbool
 def c_or2_ = c_or_ : Fbool -> Fbool -> Fbool
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.757: 	def c_or2 = c_or : Fbool -> Fbool -> Fbool
+//│ ║         	            ^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ╙──       	                    ^^
 //│ c_or2: Fbool -> Fbool -> Fbool
 //│      = [Function: c_or]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.758: 	def c_or2_ = c_or_ : Fbool -> Fbool -> Fbool
+//│ ║         	             ^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
+//│ ╙──       	                    ^^
 //│ c_or2_: Fbool -> Fbool -> Fbool
 //│       = [Function: c_or_]
 
@@ -657,12 +783,16 @@ def c_or2_ = c_or_ : Fbool -> Fbool -> Fbool
 // (* CONSTRUCTORS FOR PAIRS ET TRIPLES. *)
 // let c_pair x y   = fun f -> f x y
 def c_pair x y = fun f -> f x y
-//│ c_pair: 'a -> (forall 'b. 'b -> (forall 'c. ('a -> 'b -> 'c) -> 'c))
+//│ c_pair: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
+//│   where
+//│     'c <: 'a -> 'b -> 'd))))
 //│       = [Function: c_pair]
 
 // let c_trip x y z = fun f -> f x y z
 def c_trip x y z = fun f -> f x y z
-//│ c_trip: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. ('a -> 'b -> 'c -> 'd) -> 'd)))
+//│ c_trip: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│   where
+//│     'd <: 'a -> 'b -> 'c -> 'e)))))
 //│       = [Function: c_trip]
 
 
@@ -670,55 +800,77 @@ def c_trip x y z = fun f -> f x y z
 // let c_1_2 (p:Pair) = p (fun x y -> x) 
 def c_1_2 (p: Pair) = p (fun x -> fun y -> x)
 def c_1_2_ p = p (fun x -> fun y -> x)
-//│ c_1_2: Pair -> Fint
+//│ c_1_2: Pair -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> anything -> 'c) -> 'b))
 //│      = [Function: c_1_2]
-//│ c_1_2_: ((forall 'a. 'a -> anything -> 'a) -> 'b) -> 'b
+//│ c_1_2_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'a -> 'c) -> 'b))
 //│       = [Function: c_1_2_]
 
 // let c_2_2 (p:Pair) = p (fun x y -> y) 
 def c_2_2 (t: Pair) = t (fun x -> fun y -> y)
 def c_2_2_ t = t (fun x -> fun y -> y)
-//│ c_2_2: Pair -> Fint
+//│ c_2_2: Pair -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (anything -> (forall 'c. 'c -> 'c)) -> 'b))
 //│      = [Function: c_2_2]
-//│ c_2_2_: ((anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ c_2_2_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: ('a -> (forall 'c. 'c -> 'c)) -> 'b))
 //│       = [Function: c_2_2_]
 
 // let c_1_3 (t:Triple) = t (fun x y z -> x)
 def c_1_3 (t: Triple) = t (fun x -> fun y -> fun z -> x)
 def c_1_3_ t = t (fun x -> fun y -> fun z -> x)
-//│ c_1_3: Triple -> Fint
+//│ c_1_3: Triple -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> anything -> anything -> 'c) -> 'b))
 //│      = [Function: c_1_3]
-//│ c_1_3_: ((forall 'a. 'a -> anything -> anything -> 'a) -> 'b) -> 'b
+//│ c_1_3_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'a -> 'a -> 'c) -> 'b))
 //│       = [Function: c_1_3_]
 
 // let c_2_3 (t:Triple) = t (fun x y z -> y) 
 def c_2_3 (t: Triple) = t (fun x -> fun y -> fun z -> y)
 def c_2_3_ t = t (fun x -> fun y -> fun z -> y)
-//│ c_2_3: Triple -> Fint
+//│ c_2_3: Triple -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (anything -> (forall 'c. 'c -> anything -> 'c)) -> 'b))
 //│      = [Function: c_2_3]
-//│ c_2_3_: ((anything -> (forall 'a. 'a -> anything -> 'a)) -> 'b) -> 'b
+//│ c_2_3_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: ('a -> (forall 'c. 'c -> 'a -> 'c)) -> 'b))
 //│       = [Function: c_2_3_]
 
 // let c_3_3 (t:Triple) = t (fun x y z -> z) 
 def c_3_3 (t: Triple) = t (fun x -> fun y -> fun z -> z)
 def c_3_3_ t = t (fun x -> fun y -> fun z -> z)
-//│ c_3_3: Triple -> Fint
+//│ c_3_3: Triple -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: (anything -> anything -> (forall 'c. 'c -> 'c)) -> 'b))
 //│      = [Function: c_3_3]
-//│ c_3_3_: ((anything -> anything -> (forall 'a. 'a -> 'a)) -> 'b) -> 'b
+//│ c_3_3_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: ('a -> 'a -> (forall 'c. 'c -> 'c)) -> 'b))
 //│       = [Function: c_3_3_]
 
 
 // (* CONSTRUCTOR FOR A BINARY SUM. *)
 // let c_sumg = fun x fg fd -> fg x
 def c_sumg = fun x -> fun fg -> fun fd -> fg x
-//│ c_sumg: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ c_sumg: 'a -> (forall 'b. 'b -> 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'b <: 'a -> 'c)))
 //│       = [Function: c_sumg]
 
 // let c_sumd = fun x fg fd -> fd x
 def c_sumd = fun x -> fun fg -> fun fd -> fd x
-//│ c_sumd: 'a -> anything -> (forall 'b. ('a -> 'b) -> 'b)
+//│ c_sumd: 'a -> 'b -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'c)))
 //│       = [Function: c_sumd]
 
 
@@ -726,13 +878,13 @@ def c_sumd = fun x -> fun fg -> fun fd -> fd x
 // let c_case (s:Sum) g d = s g d
 def c_case (s: Sum) g d = s g d
 def c_case_ s g d = s g d
-//│ c_case: Sum -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_case: Sum -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'b <: 'a -> 'c -> 'd)))
+//│     'c <: 'a -> 'b -> 'd))))
 //│       = [Function: c_case]
-//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
+//│ c_case_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c -> 'd)))
+//│     'a <: 'b -> 'c -> 'd))))
 //│        = [Function: c_case_]
 
 
@@ -744,100 +896,120 @@ def c_i0 = fun f -> fun x -> x
 
 // let c_i1 = fun f x -> f x
 def c_i1 = fun f -> fun x -> f x
-//│ c_i1: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ c_i1: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'b -> 'c)))
 //│     = [Function: c_i1]
 
 // let c_i2 = fun f x -> f (f x)
 def c_i2 = fun f -> fun x -> f (f x)
-//│ c_i2: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ c_i2: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'a <: 'b -> 'c & 'c -> 'd)))
 //│     = [Function: c_i2]
 
 // let c_succ (n:Int) = fun f x -> n f (f x)
 def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 def c_succ_ n = fun f -> fun x -> n f (f x)
-//│ c_succ: Fint -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_succ: Fint -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c)))
+//│     'c <: 'a -> 'd -> 'e
+//│     'a <: 'b -> 'd))))
 //│       = [Function: c_succ]
-//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'e -> 'c)))
+//│     'b <: 'c -> 'd
+//│     'a <: 'b -> 'd -> 'e))))
 //│        = [Function: c_succ_]
 
 // let c_iszero (n:Int) = n (fun x -> c_false) c_true
 def c_iszero (n: Fint) = n (fun x -> c_false) c_true
 def c_iszero_ n = n (fun x -> c_false) c_true
-//│ c_iszero: Fint -> (forall 'a. 'a -> (forall 'a. (((forall 'b. 'b -> 'b) -> 'c) -> 'c
+//│ c_iszero: Fint -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> 'b) -> 'c)))
+//│     'a <: ('b -> 'b -> (forall 'd. 'd -> (forall 'd. ('e
+//│   where
+//│     'd <: (forall 'f. 'f -> 'f) -> 'e)))) -> (forall 'b. 'b -> 'b -> (forall 'b. ('g
+//│   where
+//│     'b <: (forall 'f. 'f -> 'f) -> 'g))) -> 'c))
 //│         = [Function: c_iszero]
-//│ c_iszero_: (('a -> 'a -> ((forall 'b. 'b -> 'b) -> 'c) -> 'c) -> (forall 'a. 'a -> (forall 'a. ('a -> 'd
+//│ c_iszero_: 'a -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> 'b) -> 'd))) -> 'e) -> 'e
+//│     'a <: ('b -> 'b -> (forall 'd. 'd -> (forall 'd. ('e
+//│   where
+//│     'd <: (forall 'f. 'f -> 'f) -> 'e)))) -> (forall 'b. 'b -> 'b -> (forall 'b. ('g
+//│   where
+//│     'b <: (forall 'f. 'f -> 'f) -> 'g))) -> 'c))
 //│          = [Function: c_iszero_]
 
 // let c_add n (m:Int) = m c_succ n
 def c_add n (m: Fint) = m c_succ n
 def c_add_ n m = m c_succ_ n
-//│ c_add: (Fint & 'a) -> Fint -> (forall 'b. 'b -> (forall 'b, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ c_add: 'a -> Fint -> (forall 'b. ('c
 //│   where
-//│     'c <: 'b -> 'd -> 'e
-//│     'b <: 'f -> 'd)) | 'a)
+//│     'b <: (Fint -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('h
+//│   where
+//│     'f <: 'd -> 'g -> 'h
+//│     'd <: 'e -> 'g))))) -> 'a -> 'c))
 //│      = [Function: c_add]
-//│ c_add_: 'a -> ((forall 'b. 'b -> (forall 'c. 'c -> (forall 'b, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ c_add_: 'a -> (forall 'b. 'b -> (forall 'b. ('c
 //│   where
-//│     'b <: 'c -> 'd -> 'e
-//│     'c <: 'f -> 'd)))) -> 'a -> 'g) -> 'g
+//│     'b <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
+//│   where
+//│     'e <: 'f -> 'g
+//│     'd <: 'e -> 'g -> 'h))))) -> 'a -> 'c)))
 //│       = [Function: c_add_]
 
 // let c_mul n (m:Int) = m (c_add n) c_i0
 def c_mul m (n: Fint) = m (c_add n) c_i0
 def c_mul_ m n = m (c_add_ n) c_i0
-//│ c_mul: 'a -> (forall 'a. (Fint -> 'b
+//│ c_mul: 'a -> Fint -> (forall 'a. ('b
 //│   where
-//│     'a <: (Fint -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('g -> 'f
+//│     'a <: (Fint -> (forall 'c. ('d
 //│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'g -> 'e)) | Fint)) -> ('a -> (forall 'h. 'h -> 'h)) -> 'b))
+//│     'c <: (Fint -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'e, 'f, 'g, 'h, 'i. ('i
+//│   where
+//│     'g <: 'e -> 'h -> 'i
+//│     'e <: 'f -> 'h))))) -> Fint -> 'd))) -> ('a -> (forall 'j. 'j -> 'j)) -> 'b))
 //│      = [Function: c_mul]
-//│ c_mul_: 'a -> (forall 'a. ('b -> 'c
+//│ c_mul_: 'a -> (forall 'b. 'b -> (forall 'a. ('c
 //│   where
-//│     'a <: (((forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('h -> 'g
+//│     'a <: (forall 'd. 'd -> (forall 'd. ('e
 //│   where
-//│     'd <: 'e -> 'f -> 'g
-//│     'e <: 'h -> 'f)))) -> 'b -> 'i) -> 'i) -> ('d -> (forall 'j. 'j -> 'j)) -> 'c))
+//│     'd <: (forall 'f. 'f -> (forall 'g. 'g -> (forall 'h. 'h -> (forall 'f, 'g, 'h, 'i, 'j. ('j
+//│   where
+//│     'g <: 'h -> 'i
+//│     'f <: 'g -> 'i -> 'j))))) -> 'b -> 'e))) -> ('f -> (forall 'k. 'k -> 'k)) -> 'c)))
 //│       = [Function: c_mul_]
 
 // let c_pow n (m:Int) = m (c_mul n) c_i1
 def c_pow m (n: Fint) = m (c_mul n) c_i1
 def c_pow_ m n = m (c_mul_ n) c_i1
-//│ c_pow: 'a -> (forall 'a. (Fint -> 'b
+//│ c_pow: 'a -> Fint -> (forall 'a. ('b
 //│   where
-//│     'a <: (forall 'c. (Fint -> 'd
+//│     'a <: (Fint -> (forall 'c. ('d
 //│   where
-//│     'c <: (Fint -> (forall 'e. 'e -> (forall 'e, 'f, 'g, 'h, 'i. ('i -> 'h
+//│     'c <: (Fint -> (forall 'e. ('f
 //│   where
-//│     'f <: 'e -> 'g -> 'h
-//│     'e <: 'i -> 'g)) | Fint)) -> ('j -> (forall 'k. 'k -> 'k)) -> 'd)) -> (forall 'j. 'j -> (forall 'j, 'l, 'm. ('l -> 'm
+//│     'e <: (Fint -> (forall 'g. 'g -> (forall 'h. 'h -> (forall 'g, 'h, 'i, 'j, 'k. ('k
 //│   where
-//│     'j <: 'l -> 'm))) -> 'b))
+//│     'i <: 'g -> 'j -> 'k
+//│     'g <: 'h -> 'j))))) -> Fint -> 'f))) -> ('l -> (forall 'm. 'm -> 'm)) -> 'd))) -> (forall 'l. 'l -> (forall 'n. 'n -> (forall 'l, 'n, 'o. ('o
+//│   where
+//│     'l <: 'n -> 'o)))) -> 'b))
 //│      = [Function: c_pow]
-//│ c_pow_: 'a -> (forall 'a. ('b -> 'c
+//│ c_pow_: 'a -> 'b -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. ('d -> 'e
+//│     'a <: ('b -> (forall 'd. ('e
 //│   where
-//│     'b <: (((forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h, 'i, 'j. ('j -> 'i
+//│     'd <: (forall 'f. 'f -> (forall 'f. ('g
 //│   where
-//│     'f <: 'g -> 'h -> 'i
-//│     'g <: 'j -> 'h)))) -> nothing -> 'k) -> 'k) -> ('d -> (forall 'l. 'l -> 'l)) -> 'e)) -> (forall 'd. 'd -> (forall 'd, 'm, 'n. ('m -> 'n
+//│     'f <: (forall 'h. 'h -> (forall 'i. 'i -> (forall 'j. 'j -> (forall 'h, 'i, 'j, 'k, 'l. ('l
 //│   where
-//│     'd <: 'm -> 'n))) -> 'c))
+//│     'i <: 'j -> 'k
+//│     'h <: 'i -> 'k -> 'l))))) -> nothing -> 'g))) -> ('b -> (forall 'm. 'm -> 'm)) -> 'e))) -> (forall 'b. 'b -> (forall 'n. 'n -> (forall 'b, 'n, 'o. ('o
+//│   where
+//│     'b <: 'n -> 'o)))) -> 'c))
 //│       = [Function: c_pow_]
 
 
@@ -853,12 +1025,33 @@ def c_pred_ n =
   let s = fun p -> c_pair (c_2_2_ p) (c_succ_ (c_2_2_ p)) in
   let z = c_pair c_i0 c_i0 in
   c_1_2_ (n s z)
-//│ c_pred: Fint -> Fint
-//│       = [Function: c_pred]
-//│ c_pred_: ((forall 'a. (('a -> (forall 'b. 'b -> 'b)) -> 'a) -> (nothing -> (forall 'c. 'c -> (forall 'a, 'c, 'd, 'e, 'f. ('f -> 'e
+//│ c_pred: Fint -> (forall 'a, 'b, 'c, 'd. ('b
 //│   where
-//│     'a <: 'c -> 'd -> 'e
-//│     'c <: 'f -> 'd))) -> 'g) -> 'g) -> (forall 'a. (('a -> (forall 'h. 'h -> 'h)) -> ('a -> (forall 'h. 'h -> 'h)) -> 'i) -> 'i) -> (forall 'a, 'j. 'j -> 'a -> 'j) -> 'k) -> 'k
+//│     'a <: (forall 'e, 'f. 'e -> 'f -> 'e) -> 'b
+//│     'c <: (Pair -> (forall 'g. 'g -> (forall 'g, 'd. ('h
+//│   where
+//│     'g <: (forall 'f, 'i, 'd. ('d
+//│   where
+//│     'i <: ('f -> (forall 'j. 'j -> 'j)) -> 'd)) -> (forall 'k. 'k -> (forall 'l. 'l -> (forall 'k, 'l, 'm, 'n, 'o. ('o
+//│   where
+//│     'm <: 'k -> 'n -> 'o
+//│     'k <: 'l -> 'n)))) -> 'h)))) -> (forall 'f. 'f -> (forall 'f. ('p
+//│   where
+//│     'f <: ('f -> (forall 'q. 'q -> 'q)) -> ('f -> (forall 'q. 'q -> 'q)) -> 'p))) -> Pair))
+//│       = [Function: c_pred]
+//│ c_pred_: 'a -> (forall 'a, 'b, 'c, 'd. ('c
+//│   where
+//│     'b <: (forall 'e. 'e -> 'b -> 'e) -> 'c
+//│     'a <: ('b -> (forall 'f. 'f -> (forall 'f, 'd. ('g
+//│   where
+//│     'f <: (forall 'b, 'h, 'd. ('d
+//│   where
+//│     'h <: ('b -> (forall 'i. 'i -> 'i)) -> 'd)) -> (forall 'j. 'j -> (forall 'k. 'k -> (forall 'j, 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'j <: 'k -> 'l
+//│     'm <: 'j -> 'l -> 'n)))) -> 'g)))) -> (forall 'o. 'o -> (forall 'b, 'o. ('p
+//│   where
+//│     'o <: ('b -> (forall 'q. 'q -> 'q)) -> ('b -> (forall 'q. 'q -> 'q)) -> 'p))) -> 'b))
 //│        = [Function: c_pred_]
 
 
@@ -876,51 +1069,55 @@ def c_printint_ n =
 
 def c_printint2 (n: Fint) = toString (n (fun x -> x + 1) 0)
 def c_printint2_ n = toString (n (fun x -> x + 1) 0)
-//│ c_printint2: Fint -> string
+//│ c_printint2: Fint -> (forall 'a. (string
+//│   where
+//│     'a <: (int -> int) -> 0 -> anything))
 //│            = [Function: c_printint2]
-//│ c_printint2_: ((int -> int) -> 0 -> anything) -> string
+//│ c_printint2_: 'a -> (forall 'a. (string
+//│   where
+//│     'a <: (int -> int) -> 0 -> 'a))
 //│             = [Function: c_printint2_]
 
 // let c_i2 = c_succ c_i1
 def c_i2 = c_succ c_i1
 def c_i2_ = c_succ_ c_i1
-//│ c_i2: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i2: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'c <: 'a -> 'd -> 'e
+//│     'a <: 'b -> 'd)))
 //│     = [Function (anonymous)]
-//│ c_i2_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i2_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> 'c -> 'e)))
 //│      = [Function (anonymous)]
 
 // let c_i3 = c_succ c_i2
 def c_i3 = c_succ c_i2
 def c_i3_ = c_succ_ c_i2
-//│ c_i3: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i3: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'c <: 'a -> 'd -> 'e
+//│     'a <: 'b -> 'd)))
 //│     = [Function (anonymous)]
-//│ c_i3_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i3_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> 'c -> 'e)))
 //│      = [Function (anonymous)]
 
 // let c_i4 = c_succ c_i3
 def c_i4 = c_succ c_i3
 def c_i4_ = c_succ_ c_i3
-//│ c_i4: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i4: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'c <: 'a -> 'd -> 'e
+//│     'a <: 'b -> 'd)))
 //│     = [Function (anonymous)]
-//│ c_i4_: 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ c_i4_: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'e -> 'c))
+//│     'a <: 'b -> 'c
+//│     'd <: 'a -> 'c -> 'e)))
 //│      = [Function (anonymous)]
 
 
@@ -939,39 +1136,39 @@ rec def to_church n =
   if n == 0 then fun f -> fun x -> x
   else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.938: 	rec def to_church n =
-//│ ║         	                  ^^^
-//│ ║  l.939: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.940: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1135: 	rec def to_church n =
+//│ ║          	                  ^^^
+//│ ║  l.1136: 	  if n == 0 then fun f -> fun x -> x
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1137: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.939: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	                                   ^
+//│ ║  l.1136: 	  if n == 0 then fun f -> fun x -> x
+//│ ║          	                                   ^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│ int -> (anything -> nothing) -> anything -> anything
 //│   <:  to_church:
 //│ int -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.938: 	rec def to_church n =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.939: 	  if n == 0 then fun f -> fun x -> x
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.940: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1135: 	rec def to_church n =
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1136: 	  if n == 0 then fun f -> fun x -> x
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1137: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── but it flows into application with expected type `nothing`
-//│ ║  l.940: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
-//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1137: 	  else fun f -> fun x -> f ((to_church (n - 1) : Fint) f x)
+//│ ║          	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
 //│          = [Function: to_church]
 
@@ -997,20 +1194,38 @@ def to_church_ = to_church
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.997: 	rec def c_fact (n: Fint) =
-//│ ║         	               ^^^^^^^^^^^
-//│ ║  l.998: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.999: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.1195: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║          	  ^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.654: 	type Fbool = forall 'a. (Funit -> 'a) -> (Funit -> 'a) -> 'a
 //│ ╙──       	                    ^^
-//│ c_fact: Fint -> (forall 'a, 'b, 'c. ('a -> 'b & 'c -> anything & anything -> nothing) -> (forall 'c. ('a & 'c) -> ('b | 'c)) | Fint)
+//│ ╔══[ERROR] Type mismatch in binding of lambda expression:
+//│ ║  l.1194: 	rec def c_fact (n: Fint) =
+//│ ║          	               ^^^^^^^^^^^
+//│ ║  l.1195: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1196: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║         	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
+//│ c_fact: Fint -> (forall 'a. ('b -> (forall 'c. 'c -> (forall 'b, 'c, 'd. ('d
+//│   where
+//│     'b <: 'c -> 'd))) | error | 'e
+//│   where
+//│     'a <: (Fint -> (forall 'f. ('g
+//│   where
+//│     'f <: (Fint -> (forall 'h. 'h -> (forall 'i. 'i -> (forall 'h, 'i, 'j, 'k, 'l. ('l
+//│   where
+//│     'j <: 'h -> 'k -> 'l
+//│     'h <: 'i -> 'k))))) -> Fint -> 'g))) -> ('b -> (forall 'm. 'm -> 'm)) -> 'e))
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1022,39 +1237,72 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'a, 'b, 'c. ('a -> 'b & anything -> nothing & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f, 'g. (('a & 'g) -> 'f
+//│ Fint -> (forall 'a, 'b. ('c
 //│   where
-//│     'd <: 'c -> ('b | 'e) -> 'f
-//│     'c <: 'g -> 'e)) | Fint)) -> ('h -> (forall 'i. 'i -> 'i)) -> 'j) -> (forall 'h, 'k, 'l. ('k -> 'l & 'h) -> (forall 'h, 'k, 'l, 'm, 'n. (('k & 'm) -> ('l | 'n)
+//│     'a <: ('b -> (forall 'b. 'b -> (forall 'd. 'd -> (forall 'b, 'd, 'e. ('e
 //│   where
-//│     'h <: 'm -> 'n)) | 'j)
+//│     'b <: 'd -> 'e))))) -> ('b -> (forall 'f. ('g
+//│   where
+//│     'f <: (Fint -> (forall 'h. ('i
+//│   where
+//│     'h <: (Fint -> (forall 'j. 'j -> (forall 'k. 'k -> (forall 'j, 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'l <: 'j -> 'm -> 'n
+//│     'j <: 'k -> 'm))))) -> Fint -> 'i))) -> ('b -> (forall 'o. 'o -> 'o)) -> 'g))) -> 'c))
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1022: 	def c_fact_A n =
+//│ ║  l.1237: 	def c_fact_A n =
 //│ ║          	^^^^^^^^^^^^^^^^
-//│ ║  l.1023: 	  c_if (c_iszero n) (fun u -> c_i1)
+//│ ║  l.1238: 	  c_if (c_iszero n) (fun u -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1024: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
+//│ ║  l.1239: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│         = <no result>
 //│           c_fact_A is not implemented
 
 rec def c_fact_ n =
   c_if_ (c_iszero_ n) (fun _ -> c_i1)
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
-//│ c_fact_: 'a -> 'b
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.1270: 	rec def c_fact_ n =
+//│ ║          	                ^^^
+//│ ║  l.1271: 	  c_if_ (c_iszero_ n) (fun _ -> c_i1)
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1272: 	    (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α3978'  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α3998')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α3978'  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α3979''')
+//│ c_fact_: (('a -> (forall 'b. 'b -> (forall 'b, 'c. ('d
 //│   where
-//│     'a <: (anything -> anything -> ((forall 'c. 'c -> 'c) -> 'd) -> 'd) -> (((forall 'c. 'c -> 'c) -> 'e) -> anything -> 'e) -> (anything -> (forall 'f, 'g. ('f -> 'g) -> 'f -> 'g)) -> (anything -> 'h) -> 'b & (forall 'i, 'j. ((anything -> (forall 'k. 'k -> 'k)) -> 'i -> 'j -> 'l & (anything -> (forall 'k. 'k -> 'k)) -> anything) -> (nothing -> (forall 'i, 'j, 'm. ('m -> 'j & 'i) -> (forall 'l. 'm -> 'l)) -> 'n) -> 'n) -> (((anything -> (forall 'o. 'o -> 'o)) -> (anything -> (forall 'o. 'o -> 'o)) -> 'p) -> 'p) -> (forall 'q. 'q -> anything -> 'q) -> 'a & (((forall 'r, 's, 't. ('r -> 's -> 't) -> (forall 'u. ('u -> 's & 'r) -> 'u -> 't)) -> nothing -> 'v) -> 'v) -> (anything -> (forall 'o. 'o -> 'o)) -> 'h
+//│     'b <: (forall 'a, 'e, 'c. ('c
+//│   where
+//│     'e <: ('a -> (forall 'f. 'f -> 'f)) -> 'c)) -> (forall 'g. 'g -> (forall 'h. 'h -> (forall 'g, 'h, 'i, 'j, 'k. ('k
+//│   where
+//│     'g <: 'h -> 'i
+//│     'j <: 'g -> 'i -> 'k)))) -> 'd)))) -> (forall 'l. 'l -> (forall 'a, 'l. ('m
+//│   where
+//│     'l <: ('a -> (forall 'n. 'n -> 'n)) -> ('a -> (forall 'n. 'n -> 'n)) -> 'm))) -> 'a & ('a -> 'a -> (forall 'o. 'o -> (forall 'o. ('p
+//│   where
+//│     'o <: (forall 'q. 'q -> 'q) -> 'p)))) -> (forall 'a, 'r. 'r -> 'a -> (forall 'r. ('s
+//│   where
+//│     'r <: (forall 'q. 'q -> 'q) -> 's))) -> ('a -> (forall 't. 't -> (forall 'u. 'u -> (forall 't, 'u, 'v. ('v
+//│   where
+//│     't <: 'u -> 'v))))) -> ('a -> (forall 'w. ('x
+//│   where
+//│     'w <: (forall 'y. 'y -> (forall 'y. ('z
+//│   where
+//│     'y <: (forall 'a. 'a -> (forall 'a1. 'a1 -> (forall 'b1. 'b1 -> (forall 'a, 'a1, 'b1, 'c1, 'd1. ('d1
+//│   where
+//│     'a1 <: 'b1 -> 'c1
+//│     'a <: 'a1 -> 'c1 -> 'd1))))) -> nothing -> 'z))) -> ('a -> (forall 'n. 'n -> 'n)) -> 'x))) -> 'e1 & 'w) -> 'e1
 //│        = [Function: c_fact_]
 
 
@@ -1073,17 +1321,14 @@ def print_fact n =
   let _ = c_printint (c_fact (to_church n)) in
           print_string "\n"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1073: 	  let _ = c_printint (c_fact (to_church n)) in
+//│ ║  l.1321: 	  let _ = c_printint (c_fact (to_church n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `‘a` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ print_fact: int -> unit
 //│           = [Function: print_fact]
 
@@ -1093,6 +1338,12 @@ def print_fact_ n =
   let _ = print_string " = " in
   let _ = c_printint_ (c_fact_ (to_church_ n)) in
           print_string "\n"
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.1339: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
+//│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α4373''''  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α4379'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α4307''''  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α4308''')
 //│ print_fact_: int -> unit
 //│            = [Function: print_fact_]
 
@@ -1101,10 +1352,9 @@ def print_fact2 n =
   concat (toString n) (
   concat " = "
          (c_printint2 (c_fact (to_church n))) ))
-//│ print_fact2: int -> string
+//│ print_fact2: int -> (forall 'a. (string
 //│   where
-//│     'a := ‘a
-//│     'b <: ‘a
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a))
 //│            = [Function: print_fact2]
 
 def print_fact2_ n =
@@ -1112,6 +1362,14 @@ def print_fact2_ n =
   concat (toString n) (
   concat " = "
          (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.1363: 	  concat " = "
+//│ ║          	  ^^^^^^^^^^^^
+//│ ║  l.1364: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α4561'''  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α4567''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α4479'''  <:  ((‹∀ 3. ‹∀ 4. (α2928''''' -> ‹∀ 5. α2948^6›)››,) -> α4480''')
 //│ print_fact2_: int -> string
 //│             = [Function: print_fact2_]
 
@@ -1135,42 +1393,35 @@ this_should_be_98 =
   let c_98 = c_pred c_99 in
   c_printint2 c_98
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1132: 	  let c_i10 = c_mul c_i5 c_i2 in
-//│ ║          	              ^^^^^^^^^^^^^^^
+//│ ║  l.1391: 	  let c_i9 = c_pred c_i10 in
+//│ ║          	             ^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1134: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║  l.1392: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
 //│ ║          	                    ^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` is not a function
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
-//│ ╟── Note: constraint arises from function type:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from application:
-//│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1135: 	  let c_98 = c_pred c_99 in
+//│ ║  l.1393: 	  let c_98 = c_pred c_99 in
 //│ ║          	             ^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── from application:
-//│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
-//│ ╙──       	                                              ^^^
+//│ ║  l.653: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
+//│ ╙──       	                    ^^
 //│ this_should_be_98: string
+//│   where
+//│     'a <: (int -> int) -> 0 -> anything
 //│                  = '98'
 
 // * Note: we get a recursive depth excess when using `c_i2_` instead of `c_i2`:
@@ -1182,47 +1433,22 @@ this_should_be_98_ =
   let c_98_ = c_pred_ c_99_ in
   c_printint2_ c_98_
 //│ this_should_be_98_: string
+//│   where
+//│     'a <: (int -> int) -> 0 -> anything
 //│                   = '98'
 
 // This annot-mixed expression causes a stack overflow when increasing the depth limit:
 :e
 c_i5_ = c_add_ c_i3_ c_i2
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (forall ?b, ?c. ?c) -> ?d` exceeded recursion depth limit (300)
-//│ ║  l.1189: 	c_i5_ = c_add_ c_i3_ c_i2
-//│ ║          	        ^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 2. (α5199''' -> ‹∀ 3. {(α5205'''' -> α5204'''') where: α5194' <: ((α5199''',) -> α5202''''), α5199''' <: ((α5205'''',) -> α5203'''')}›)›  <!<  ((α5393',) -> α5400')
-//│ ╟── while constraining:  α5194'  <!<  ((α5393',) -> α5400')
-//│ ╟── while constraining:  {(α5403' -> α5402') where: α5194' <: ((α5393',) -> α5400'), α5393' <: ((α5403',) -> α5401')}  <!<  ((α5390',) -> α5391')
-//│ ╟── while constraining:  ‹∀ 3. {(α5399'''' -> α5398'''') where: α5194' <: ((α5393',) -> α5396''''), α5393' <: ((α5399'''',) -> α5397'''')}›  <!<  ((α5390',) -> α5391')
-//│ ╟── while constraining:  ‹∀ 3. {(α5399'''' -> α5398'''') where: α5194' <: ((α5393',) -> α5396''''), α5393' <: ((α5399'''',) -> α5397'''')}›  <!<  α5389'
-//│ ╟── while constraining:  (α5393' -> ‹∀ 3. {(α5399'''' -> α5398'''') where: α5194' <: ((α5393',) -> α5396''''), α5393' <: ((α5399'''',) -> α5397'''')}›)  <!<  ((α5382',) -> α5389')
-//│ ╟── while constraining:  ‹∀ 2. (α5199''' -> ‹∀ 3. {(α5205'''' -> α5204'''') where: α5194' <: ((α5199''',) -> α5202''''), α5199''' <: ((α5205'''',) -> α5203'''')}›)›  <!<  ((α5382',) -> α5389')
-//│ ╟── while constraining:  α5194'  <!<  ((α5382',) -> α5389')
-//│ ╟── while constraining:  {(α5392' -> α5391') where: α5194' <: ((α5382',) -> α5389'), α5382' <: ((α5392',) -> α5390')}  <!<  ((α5379',) -> α5380')
-//│ ╟── while constraining:  ‹∀ 3. {(α5388'''' -> α5387'''') where: α5194' <: ((α5382',) -> α5385''''), α5382' <: ((α5388'''',) -> α5386'''')}›  <!<  ((α5379',) -> α5380')
-//│ ╟── while constraining:  ‹∀ 3. {(α5388'''' -> α5387'''') where: α5194' <: ((α5382',) -> α5385''''), α5382' <: ((α5388'''',) -> α5386'''')}›  <!<  α5378'
-//│ ╟── while constraining:  (α5382' -> ‹∀ 3. {(α5388'''' -> α5387'''') where: α5194' <: ((α5382',) -> α5385''''), α5382' <: ((α5388'''',) -> α5386'''')}›)  <!<  ((α5371',) -> α5378')
-//│ ╟── while constraining:  ‹∀ 2. (α5199''' -> ‹∀ 3. {(α5205'''' -> α5204'''') where: α5194' <: ((α5199''',) -> α5202''''), α5199''' <: ((α5205'''',) -> α5203'''')}›)›  <!<  ((α5371',) -> α5378')
-//│ ╟── while constraining:  α5194'  <!<  ((α5371',) -> α5378')
-//│ ╟── while constraining:  {(α5381' -> α5380') where: α5194' <: ((α5371',) -> α5378'), α5371' <: ((α5381',) -> α5379')}  <!<  ((α5368',) -> α5369')
-//│ ╟── ......
-//│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 0. (('a1768' -> 'a1768') -> ('a1768' -> 'a1768'))›  <!<  ((α5184',) -> α5189')
-//│ ╟── while constraining:  Fint  <!<  ((α5184',) -> α5189')
-//│ ╟── while constraining:  α5179'  <!<  ((α5184',) -> α5189')
-//│ ╟── while constraining:  {(α5192' -> α5191') where: α5179' <: ((α5184',) -> α5189'), α5184' <: ((α5192',) -> α5190')}  <!<  ((α5169',) -> α5176')
-//│ ╟── while constraining:  ‹∀ 3. {(α5188'''' -> α5187'''') where: α5179' <: ((α5184',) -> α5185''''), α5184' <: ((α5188'''',) -> α5186'''')}›  <!<  ((α5169',) -> α5176')
-//│ ╟── while constraining:  ‹∀ 3. {(α5188'''' -> α5187'''') where: α5179' <: ((α5184',) -> α5185''''), α5184' <: ((α5188'''',) -> α5186'''')}›  <!<  α5175'
-//│ ╟── while constraining:  (α5184' -> ‹∀ 3. {(α5188'''' -> α5187'''') where: α5179' <: ((α5184',) -> α5185''''), α5184' <: ((α5188'''',) -> α5186'''')}›)  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5175')
-//│ ╟── while constraining:  ‹∀ 2. (α5178''' -> ‹∀ 3. {(α5183'''' -> α5182'''') where: α5179' <: ((α5178''',) -> α5180''''), α5178''' <: ((α5183'''',) -> α5181'''')}›)›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5175')
-//│ ╟── while constraining:  α5177'  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5175')
-//│ ╟── while constraining:  ‹∀ 0. α2957'›  <!<  ((‹∀ 0. ‹∀ 1. (α2349'' -> ‹∀ 2. (α2350''' -> ‹∀ 3. {(α2351'''' -> α2354'''') where: α2349'' <: ((α2350''',) -> α2352''''), α2350''' <: ((α2351'''',) -> α2353'''')}›)›)››,) -> α5175')
-//│ ╟── while constraining:  ‹∀ 0. α2957'›  <!<  α5174'
-//│ ╟── while constraining:  (‹∀ 0. α2957'›,)  <!<  (α5174',)
-//│ ╟── while constraining:  (α5174' -> α5176')  <!<  ((‹∀ 0. α2957'›,) -> α5173')
-//│ ╟── while constraining:  ‹∀ 2. (α5170''' -> α5172''')›  <!<  ((‹∀ 0. α2957'›,) -> α5173')
-//│ ╙── while constraining:  α5168'  <!<  ((‹∀ 0. α2957'›,) -> α5173')
-//│ c_i5_: error
+//│ c_i5_: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
+//│   where
+//│     'd <: 'e -> 'f
+//│     'c <: 'd -> 'f -> 'g))))) -> (forall 'h. 'h -> (forall 'i. 'i -> (forall 'h, 'i, 'j, 'k, 'l. ('l
+//│   where
+//│     'h <: 'i -> 'j
+//│     'k <: 'h -> 'j -> 'l)))) -> 'a
 //│      = [Function (anonymous)]
 
 //   print_fact2 0 ;
@@ -1241,82 +1467,33 @@ print_fact2 3
 print_fact2 4
 print_fact2 5
 print_fact2 6
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1237: 	print_fact2 0
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 0 = 1'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1238: 	print_fact2 1
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 1 = 1'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1239: 	print_fact2 2
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 2 = 2'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1240: 	print_fact2 3
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 3 = 6'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1241: 	print_fact2 4
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 4 = 24'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1242: 	print_fact2 5
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 5 = 120'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1243: 	print_fact2 6
-//│ ║          	^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                    ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                    ^^
-//│ res: error | string
+//│ res: string
+//│   where
+//│     'a <: (‘a -> ‘a) -> ‘a -> ‘a
 //│    = 'Factorial 6 = 720'
 
 print_fact2_ 0

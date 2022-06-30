@@ -1,0 +1,32 @@
+
+// type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
+
+// :ns
+def s n = fun f -> fun x -> f (n f x)
+//│ s: ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
+//│  = [Function: s]
+
+def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ succ: (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│     = <missing implementation>
+
+// :ns
+:e // * Needs distrib (see below)
+succ = s
+//│ ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd
+//│   <:  succ:
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.19: 	succ = s
+//│ ║        	^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.13: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.13: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║        	                                                           ^^
+//│ ╟── from quantified type variable:
+//│ ║  l.13: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ╙──      	                  ^^
+//│     = [Function: s]
+

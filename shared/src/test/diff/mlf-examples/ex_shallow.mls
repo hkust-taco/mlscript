@@ -14,9 +14,13 @@ def auto (x: Sid) = x x
 def auto_ x = x x
 def id x = x
 def k x y = x
-//│ auto: Sid -> Sid
+//│ auto: Sid -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│     = [Function: auto]
-//│ auto_: ('a -> 'b & 'a) -> 'b
+//│ auto_: 'a -> (forall 'a, 'b. ('b
+//│   where
+//│     'a <: 'a -> 'b))
 //│      = [Function: auto_]
 //│ id: 'a -> 'a
 //│   = [Function: id]
@@ -32,25 +36,25 @@ def church_zero = fun f -> id
 // (* church_un is like apply *)
 // let church_one = fun f x -> f x
 def church_one = fun f -> fun x -> f x
-//│ church_one: 'a -> (forall 'a, 'b, 'c. ('b -> 'c
+//│ church_one: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c))
+//│     'a <: 'b -> 'c)))
 //│           = [Function: church_one]
 
 // (* church_un is like apply_twice *)
 // let church_two = fun f x -> f (f x)
 def church_two = fun f -> fun x -> f (f x)
-//│ church_two: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│ church_two: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd))
+//│     'a <: 'b -> 'c & 'c -> 'd)))
 //│           = [Function: church_two]
 
 // let church_succ n = fun f x -> f (n f x)
 def church_succ n = fun f -> fun x -> f (n f x)
-//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ church_succ: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'd -> 'e)))
+//│     'b <: 'd -> 'e))))
 //│            = [Function: church_succ]
 
 // (* We build the a0 of the icfp version paper *)
@@ -77,37 +81,63 @@ def a2_ (x: A1) =
 def a0 = a2 a1
 def a0_ = a2_ a1
 //│ Defined type alias A1
-//│ a1: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ a1: 'a -> (forall 'a. ('b
+//│   where
+//│     'a <: (forall 'c. 'c -> 'c) -> 'b))
 //│   = [Function: a1]
-//│ a3: 'a -> (forall 'a. ('b -> 'c
+//│ a3: 'a -> 'b -> (forall 'a. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'b. 'b -> (forall 'd. 'd -> (forall 'b, 'd, 'e, 'f. ('f
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'b <: 'd -> 'e & 'e -> 'f)))) -> 'c))
 //│   = [Function: a3]
-//│ a2: A1 -> (forall 'a. ('b -> 'c
+//│ a2: A1 -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'c
+//│     'b :> 'd -> (forall 'i. ('j
+//│   where
+//│     'i <: (forall 'k. 'k -> (forall 'l. 'l -> (forall 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n)))) -> 'j))))
 //│   = [Function: a2]
-//│ a2_: A1 -> (forall 'a. ('b -> 'c
+//│ a2_: A1 -> (forall 'a, 'b. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'c
+//│     'b :> 'd -> (forall 'i. ('j
+//│   where
+//│     'i <: (forall 'k. 'k -> (forall 'l. 'l -> (forall 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n)))) -> 'j))))
 //│    = [Function: a2_]
-//│ a0: 'a -> 'b
+//│ a0: 'a
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'a
+//│     'b :> 'd -> (forall 'i. ('j
+//│   where
+//│     'i <: (forall 'k. 'k -> (forall 'l. 'l -> (forall 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n)))) -> 'j))
 //│   = [Function (anonymous)]
-//│ a0_: 'a -> 'b
+//│ a0_: 'a
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'a
+//│     'b :> 'd -> (forall 'i. ('j
+//│   where
+//│     'i <: (forall 'k. 'k -> (forall 'l. 'l -> (forall 'k, 'l, 'm, 'n. ('n
+//│   where
+//│     'k <: 'l -> 'm & 'm -> 'n)))) -> 'j))
 //│    = [Function (anonymous)]
 
 // let test0 = 
@@ -129,9 +159,17 @@ def test0_ =
       k (g (fun x -> x x))
         ((fun t -> (fun u -> fun v -> v) (g t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ test0: Sid
+//│ test0: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> (forall 'c. ('d
+//│   where
+//│     'c <: (forall 'e. 'e -> 'e) -> 'd))) -> 'a
 //│      = [Function: id]
-//│ test0_: 'a -> 'a
+//│ test0_: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> (forall 'c. ('d
+//│   where
+//│     'c <: (forall 'e. 'e -> 'e) -> 'd))) -> 'a
 //│       = [Function: id]
 
 
@@ -154,17 +192,17 @@ def a1_sid_to_nat (g: A1_sid) =
 def a1_sid_to_nat_ g =
   let r = fun f -> g (fun x -> f x) in
   r
-//│ a1_sid_to_nat: A1_sid -> A1_nat
+//│ a1_sid_to_nat: A1_sid -> (forall 'a. (A1_nat
 //│   where
-//│     'a <: (forall 'b, 'c. (Sid -> 'c
+//│     'a <: (Sid -> (forall 'b, 'c. ('c
 //│   where
-//│     'b <: Sid -> 'c)) -> ‘b
+//│     'b <: Sid -> 'c))) -> ‘b))
 //│              = [Function: a1_sid_to_nat]
-//│ a1_sid_to_nat_: 'a -> (forall 'a. ('b -> 'c
+//│ a1_sid_to_nat_: 'a -> (forall 'b. 'b -> (forall 'a. ('c
 //│   where
-//│     'a <: (forall 'b, 'd, 'e. ('d -> 'e
+//│     'a <: (forall 'd. 'd -> (forall 'b, 'd, 'e. ('e
 //│   where
-//│     'b <: 'd -> 'e)) -> 'c))
+//│     'b <: 'd -> 'e))) -> 'c)))
 //│               = [Function: a1_sid_to_nat_]
 
 // (* the term is as above but abstract over sb and uses the coercion *)
@@ -188,9 +226,17 @@ def test_in_F_eta_ =
       k (g (fun x -> x x))
         ((fun t -> (fun u -> fun v -> v) ((a1_sid_to_nat_ g) t) (t (fun f -> fun x -> x)))
           (fun x -> ((fun f -> fun x -> f x) x) (fun f -> fun x -> x))))
-//│ test_in_F_eta: Sid
+//│ test_in_F_eta: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> (forall 'c. ('d
+//│   where
+//│     'c <: (forall 'e. 'e -> 'e) -> 'd))) -> 'a
 //│              = [Function: id]
-//│ test_in_F_eta_: 'a -> 'a
+//│ test_in_F_eta_: 'a
+//│   where
+//│     'b <: (forall 'c. 'c -> (forall 'c. ('d
+//│   where
+//│     'c <: (forall 'e. 'e -> 'e) -> 'd))) -> 'a
 //│               = [Function: id]
 
 // (*
@@ -233,39 +279,47 @@ def a0' = a2' a1'
 def a0'_ = a2'_ a1'
 //│ either: 'a -> (forall 'b. 'b -> ('a | 'b))
 //│       = [Function: either]
-//│ a1': 'a -> (forall 'a. ('b -> 'c
+//│ a1': 'a -> (forall 'b. 'b -> (forall 'a. ('c
 //│   where
-//│     'a <: (forall 'd, 'b. 'd -> 'd | 'b) -> 'e & 'e -> 'c))
+//│     'a <: (forall 'b, 'd. 'd -> 'd | 'b) -> 'e & 'e -> 'c)))
 //│    = [Function: either]
-//│ a2': A1' -> (forall 'a. ('b -> 'c
+//│ a2': A1' -> (forall 'b, 'a. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'b <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'c
+//│     'a <: anything))
 //│    = [Function: either]
-//│ a2'_: ((forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ a2'_: ((forall 'a, 'b. 'a -> 'b -> (forall 'a. ('c
 //│   where
-//│     'a <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g. ('g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'c))) -> (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'd <: 'e -> 'f & 'f -> 'g)))) -> 'c))) -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g. ('g
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'b & (forall 'g, 'h. ('g -> 'h & 'g) -> 'h) -> (forall 'i. 'i -> 'i) -> 'b) -> (forall 'j. ('b -> 'k
+//│     'd <: 'e -> 'f & 'f -> 'g)))) -> 'b & (forall 'h. 'h -> (forall 'h, 'i. ('i
 //│   where
-//│     'j <: (forall 'b. 'b -> (forall 'b, 'd, 'e, 'f. ('d -> 'f
+//│     'h <: 'h -> 'i))) -> (forall 'j. 'j -> 'j) -> 'b) -> (forall 'k. ('l
 //│   where
-//│     'b <: 'd -> 'e & 'e -> 'f))) -> 'k))
+//│     'k <: (forall 'b. 'b -> (forall 'm. 'm -> (forall 'n. 'n -> (forall 'b, 'm, 'n, 'o, 'p. ('p
+//│   where
+//│     'b <: 'm -> 'n -> 'o
+//│     'm <: 'o -> 'p))))) -> 'l))
 //│     = [Function: either]
-//│ a0': 'a -> 'b
+//│ a0': 'b
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'c <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'f. 'f -> (forall 'd, 'e, 'f, 'g, 'h. ('h
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'd <: 'e -> 'f -> 'g
+//│     'e <: 'g -> 'h))))) -> 'b
+//│     'a <: anything
 //│    = [Function: either]
-//│ a0'_: 'a -> 'b
+//│ a0'_: 'a
 //│   where
-//│     'c <: (forall 'a. 'a -> (forall 'a, 'd, 'e, 'f. ('d -> 'f
+//│     'b <: (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'c, 'd, 'e, 'f, 'g. ('g
 //│   where
-//│     'a <: 'd -> 'e & 'e -> 'f))) -> 'b
+//│     'c <: 'd -> 'e -> 'f
+//│     'd <: 'f -> 'g))))) -> 'a
 //│     = [Function: either]
 
 // type a1'_sid = ['a = sid] ('a -> 'a) -> 'a -> 'a;;
