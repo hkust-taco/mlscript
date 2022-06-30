@@ -47,14 +47,18 @@ def to_church: int -> ChurchInt
 // rec def to_ch n =
 //   if true then zero
 //   else s (to_church n)
+// def to_ch n =
+//   if true then zero
+//   else s (to_church n)
 def to_ch n =
-  if true then zero
-  else s (to_church n)
-//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+  s (to_church n)
+// def to_ch =
+//   s (to_church 0)
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│      = <no result>
-//│        zero is not implemented
+//│        to_church is not implemented
 
 // rec def to_ch n =
 //   s (to_ch (n - 1))
@@ -65,14 +69,16 @@ def to_ch n =
 
 :ns
 to_ch
-//│ res: forall 'a. forall 'a. forall 'b, 'a, 'c. 'b -> 'c
+//│ res: forall 'a. forall 'a. forall 'b, 'c, 'a. 'b -> 'c
 //│   where
-//│     'c :> ChurchInt | (forall 'd, 'e. ('d -> 'e
+//│     'c :> forall 'd, 'e. ('d -> 'e
 //│   where
-//│     'a <: 'd -> 'e))
+//│     'a <: 'd -> 'e)
 //│     'b <: int
 //│    = <no result>
-//│      to_ch and zero are not implemented
+//│      to_ch and to_church are not implemented
+
+// to_ch: ChurchInt
 
 // :re
 // to_ch 1 2
@@ -80,13 +86,13 @@ to_ch
 // :d
 // FIXME?
 to_church = to_ch
-//│ int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+//│ int -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.82: 	to_church = to_ch
+//│ ║  l.88: 	to_church = to_ch
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.22: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -95,18 +101,18 @@ to_church = to_ch
 //│ ║  l.22: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                        ^^
 //│          = <no result>
-//│            to_ch and zero are not implemented
+//│            to_ch and to_church are not implemented
 
 :DistributeForalls
 
 to_church = to_ch
-//│ int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+//│ int -> (forall 'a, 'b, 'c. ('b -> 'c
 //│   where
 //│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = <no result>
-//│            to_ch and zero are not implemented
+//│            to_ch and to_church are not implemented
 
 
 
