@@ -99,8 +99,9 @@ class JSBackend {
         if JSBinary.operators contains op =>
       JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // If-expressions
-    case App(App(App(Var("if"), tst), con), alt) =>
+    case App(App(App(Var("if"), Tup((_, (tst, _)) :: Nil)), Tup((_, (con, _)) :: Nil)), Tup((_, (alt, _)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
+    case App(App(App(Var("if"), tst), con), alt) => die
     // Function invocation
     case App(trm, Tup(args)) =>
       val callee = trm match {

@@ -28,6 +28,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
   var noRecursiveTypes: Boolean = false
   
   var noConstrainnedTypes: Boolean = false
+  var noArgGen: Boolean = true
   
   var recordProvenances: Boolean = true
   
@@ -211,7 +212,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       "if" -> {
         val v = freshVar(noProv, N)(1)
         // PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
-        PolymorphicType(MinLevel, fun(BoolType, fun(v, fun(v, v)(noProv))(noProv))(noProv))
+        PolymorphicType(MinLevel, fun(singleTup(BoolType), fun(singleTup(v), fun(singleTup(v), v)(noProv))(noProv))(noProv))
       },
     ) ++ primTypes ++ primTypes.map(p => "" + p._1.capitalize -> p._2) // TODO settle on naming convention...
   }
@@ -547,6 +548,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }, prov, ctx, extrCtx) // Q: extrCtx here?
       res
     }
+    
+    // TODO use or rm?
+    def instantiateForGoodMeasure(ty: ST): Unit = ty match {
+      case ty @ PolymorphicType(plvl, _: ConstrainedType) =>
+        trace(s"GOOD MEASURE") {
+          val ConstrainedType(cs, bod) = ty.instantiate
+          cs.foreach { case (tv, bs) => bs.foreach {
+            case (true, b) => con(b, tv, TopType)
+            case (false, b) => con(tv, b, TopType)
+          }}
+        }()
+      case _ => ()
+    }
+    
     term match {
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
@@ -682,20 +697,30 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      case Lam(pat, body)
+      if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      // if genLambdas && ctx.inRecursiveDef.isEmpty => // this simplif does not seem to bring much benefit
+      // if genLambdas =>
         println(s"TYPING POLY LAM")
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
         val newCtx = ctx.nest.nextLevel
         val ec: ExtrCtx = MutMap.empty
-        val extrCtx: Opt[ExtrCtx] = S(ec)
+        val extrCtx: Opt[ExtrCtx] =
+          S(ec)
+          // Option.when(ctx.inRecursiveDef.isEmpty)(ec)
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
         // newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
         val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+        // PolymorphicType.mk(ctx.lvl,
+        //   // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
+        //   if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
         PolymorphicType.mk(ctx.lvl,
-          // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
-          if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
+          ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+            // * Feels like we should be doing this, but it produces pretty horrible results
+            // *  and does not seem required for soundness (?)
+            //.tap(instantiateForGoodMeasure)
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
@@ -707,8 +732,41 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val rhs_ty = typeTerm(lhs)
         ??? // TODO
       case App(f, a) =>
+        // val genArgs = ctx.inRecursiveDef.forall(rd => !f.freeVars.contains(rd))
+        val genArgs = !noArgGen && ctx.inRecursiveDef.isEmpty //&& !generalizeCurriedFunctions
+        
         val f_ty = typeTerm(f)
-        val a_ty = typePolymorphicTerm(a)
+        val a_ty = {
+          def typeArg(a: Term): ST =
+              if (!genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
+                typePolymorphicTerm(a)
+              else {
+            val newCtx = ctx.nextLevel
+            val ec: ExtrCtx = MutMap.empty
+            val extrCtx: Opt[ExtrCtx] = S(ec)
+            val innerTy =
+              typeTerm(a)(newCtx, raise, extrCtx, vars,
+              genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
+              )
+            PolymorphicType.mk(ctx.lvl,
+              ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)) tap
+                instantiateForGoodMeasure
+          }
+          a match {
+            case tup @ Tup(as) =>
+              TupleType(as.map { case (n, (a, mut)) => // TODO handle mut?
+                // assert(!mut)
+                val fprov = tp(a.toLoc, "argument")
+                val tym = typeArg(a)
+                (n, tym.toUpper(fprov))
+              })(as match { // TODO dedup w/ general Tup case
+                case Nil | ((N, _) :: Nil) => noProv
+                case _ => tp(tup.toLoc, "argument list")
+              })
+            case _ => // can happen in the old parser
+              typeArg(a)
+          }
+        }
         val res = freshVar(prov, N)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default

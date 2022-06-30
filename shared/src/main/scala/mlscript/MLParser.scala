@@ -21,9 +21,12 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (i0, n, i1) => n.withLoc(i0, i1, origin)
   }
   
+  def toParam(t: Term): Tup =
+    Tup((N, (t, false)) :: Nil)
+  
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
-    case _ => Tup((N, (t, false)) :: Nil)
+    case _ => toParam(t)
   }
   def toParamsTy(t: Type): Tuple = t match {
     case t: Tuple => t
@@ -91,7 +94,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     })
   
   def ite[p: P]: P[Term] = P( kw("if") ~/ term ~ kw("then") ~ term ~ kw("else") ~ term ).map(ite =>
-    App(App(App(Var("if"), ite._1), ite._2), ite._3))
+    App(App(App(Var("if"), toParam(ite._1)), toParam(ite._2)), toParam(ite._3)))
   
   def withsAsc[p: P]: P[Term] = P( withs ~ (":" ~/ ty).rep ).map {
     case (withs, ascs) => ascs.foldLeft(withs)(Asc)

@@ -185,7 +185,7 @@ h (fun x -> x[0])
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.184: 	h (fun x -> x[0])
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(1, true,)` does not match type `(?a,)`
+//│ ╟── argument list of type `(1, true,)` does not match type `(?a,)`
 //│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ╙──       	                            ^^^^^^^^
 //│ res: (undefined, undefined,) | error
@@ -196,7 +196,7 @@ h (fun (x, y) -> x)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.195: 	h (fun (x, y) -> x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── tuple literal of type `(1, 2, false,)` does not match type `(?a, ?b,)`
+//│ ╟── argument list of type `(1, 2, false,)` does not match type `(?a, ?b,)`
 //│ ║  l.179: 	def h f = (f (1,2,false), f (1,true))
 //│ ║         	             ^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:

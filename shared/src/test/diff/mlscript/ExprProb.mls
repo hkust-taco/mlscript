@@ -277,7 +277,7 @@ rec def prettier1 k ev e = case e of {
 //│   where
 //│     'b <: Add[?] & {lhs: 'lhs & 'b, rhs: 'rhs & 'b} | Lit | 'a & ~add & ~lit
 //│          = [Function: prettier1]
-//│ constrain calls  : 300
+//│ constrain calls  : 299
 //│ annoying  calls  : 0
 //│ subtyping calls  : 115
 
@@ -312,7 +312,7 @@ rec def prettier12 k ev e = case e of {
 //│     'g <: Add[?] & {lhs: 'g, rhs: 'g} | Lit | 'd & ~add & ~lit
 //│     'f <: Add[?] & {lhs: 'f, rhs: 'f} | Lit | 'a & ~add & ~lit
 //│           = [Function: prettier12]
-//│ constrain calls  : 169
+//│ constrain calls  : 170
 //│ annoying  calls  : 0
 //│ subtyping calls  : 281
 
@@ -395,7 +395,7 @@ rec def prettier2 k ev = prettier1 (fun x -> case x of {
 //│   where
 //│     'b <: Add[?] & {lhs: 'lhs & 'b, rhs: 'rhs & 'b} | Lit | Nega[?] & {arg: 'b} | 'a & ~add & ~lit & ~nega
 //│          = [Function: prettier2]
-//│ constrain calls  : 120
+//│ constrain calls  : 118
 //│ annoying  calls  : 0
 //│ subtyping calls  : 203
 
@@ -411,7 +411,7 @@ rec def prettier22 k ev = prettier12 (fun x -> case x of {
 //│     'e <: Nega[?] & {arg: 'c} | 'a & ~nega
 //│     'c <: Add[?] & 'b | Lit | 'e & ~add & ~lit
 //│           = [Function: prettier22]
-//│ constrain calls  : 178
+//│ constrain calls  : 177
 //│ annoying  calls  : 0
 //│ subtyping calls  : 317
 

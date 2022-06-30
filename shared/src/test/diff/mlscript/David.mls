@@ -86,7 +86,7 @@ def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0
 //│ ║  l.84: 	def r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `1` is not an instance of type `bool`
-//│ ╟── Note: constraint arises from argument:
+//│ ╟── Note: constraint arises from reference:
 //│ ║  l.3: 	def bb = (fun a -> fun b -> toBool (if b then not a else not a)) true
 //│ ║       	                                       ^
 //│ ╟── from refined scrutinee:
