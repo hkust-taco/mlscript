@@ -12,7 +12,9 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('v -> 'a) -> (None & 'a | (Some[?] with {v: 'v})) -> 'a
+//│ flatMap: ((forall 'a, 'v. (('v,)
+//│   where
+//│     'a <: {v: 'v})) -> 'b) -> (None & 'b | Some['a] & 'a) -> 'b
 //│        = [Function: flatMap]
 
 f x = Some x
@@ -28,10 +30,10 @@ flatMap f None
 :e
 flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.29: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` does not match type `None & ?a | Some[?] & ?b`
-//│ ║  l.29: 	flatMap f "oops"
+//│ ║  l.31: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
@@ -78,7 +80,7 @@ rec def evalOpt x = case x of {
 //│   where
 //│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
 //│        = [Function: evalOpt]
-//│ constrain calls  : 586
+//│ constrain calls  : 597
 //│ annoying  calls  : 97
 //│ subtyping calls  : 507
 
@@ -86,6 +88,6 @@ rec def evalOpt x = case x of {
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
 //│ res: NoneBecause | Some[int]
 //│    = Some { v: 5 }
-//│ constrain calls  : 172
+//│ constrain calls  : 166
 //│ annoying  calls  : 37
 //│ subtyping calls  : 390

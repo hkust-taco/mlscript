@@ -65,26 +65,26 @@ ty3A = ty3A
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a106'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a95'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a108'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ((int<number>, 'a105',) -> ())  <:  ((int<number>, 'a106',) -> ())    FunctionType  FunctionType
-//│ ╙──  ... looks like:  ((int<number>, 'a95',) -> ())  <:  ((int<number>, 'a95',) -> ())
+//│ ╟── this constraint:  ((int<number>, 'a107',) -> ())  <:  ((int<number>, 'a108',) -> ())    FunctionType  FunctionType
+//│ ╙──  ... looks like:  ((int<number>, 'a97',) -> ())  <:  ((int<number>, 'a97',) -> ())
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a106'  <:  'a105'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╟── this constraint:  'a108'  <:  'a107'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a106']  <:  'a106'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a108']  <:  'a108'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
 //│ constrain calls  : 56
 //│ annoying  calls  : 48
 //│ subtyping calls  : 114
@@ -108,572 +108,572 @@ ty3B = ty3A
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a119']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a121'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a95'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a123'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  {size: Int, set: ((Int, 'a120',) -> ()), get: (Int -> 'a120')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {size: Int, set: ((Int, 'a95',) -> ()), get: (Int -> 'a95')}
+//│ ╟── this constraint:  MyArray['a122']  <:  {size: Int, set: ((Int, 'a122',) -> ()), get: (Int -> 'a122')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {size: Int, set: ((Int, 'a97',) -> ()), get: (Int -> 'a97')}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a121'  <:  'a120'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╟── this constraint:  'a123'  <:  'a122'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a123']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  {size: Int, set: ((Int, 'a117',) -> ()), get: (Int -> 'a117')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
+//│ ╟── this constraint:  MyArray['a123']  <:  {size: Int, set: ((Int, 'a119',) -> ()), get: (Int -> 'a119')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  {MyArray#A: mut 'a120'..'a120'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {MyArray#A: mut 'a95'..'a95'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a121'  <:  'a122'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a122'  <:  'a121'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  {MyArray#A: mut 'a120'..'a120'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {MyArray#A: mut 'a95'..'a95'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a122'  <:  'a120'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a122'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a95'››  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  {size: Int, set: ((Int, 'a117',) -> ()), get: (Int -> 'a117')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray[MyArray['a117']])  <:  'a122'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‘a' & MyArray[MyArray['a107']])  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray[MyArray['a117']])  <:  'a121'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‘a' & MyArray[MyArray['a107']])  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  MyArray['a117']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a95']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  MyArray['a117']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a95']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a117'  <:  'a122'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a117'  <:  'a121'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a123']  <:  {MyArray#A: mut 'a122'..'a122'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {MyArray#A: mut 'a97'..'a97'}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  'a123'  <:  'a124'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  'a124'  <:  'a123'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a123'  <:  'a125'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╟── this constraint:  MyArray['a122']  <:  {MyArray#A: mut 'a122'..'a122'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {MyArray#A: mut 'a97'..'a97'}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a125'  <:  'a123'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
+//│ ╟── this constraint:  'a124'  <:  'a122'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a124'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a97'››  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  {size: Int, set: ((Int, 'a119',) -> ()), get: (Int -> 'a119')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray[MyArray['a119']])  <:  'a124'    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (‘a' & MyArray[MyArray['a109']])  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray[MyArray['a119']])  <:  'a123'    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (‘a' & MyArray[MyArray['a109']])  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  MyArray['a119']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a97']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  MyArray['a119']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a97']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a119'  <:  'a124'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a119'  <:  'a123'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a125'  <:  'a126'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a126'  <:  'a125'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a125'  <:  'a127'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a127'  <:  'a125'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  {MyArray#A: mut 'a119'..'a119'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a124'  <:  'a128'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a128'  <:  'a124'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a124'  <:  'a129'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a129'  <:  'a124'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  {MyArray#A: mut 'a119'..'a119'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a123'  <:  'a130'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a130'  <:  'a123'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a123'  <:  'a131'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a131'  <:  'a123'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  {MyArray#A: mut 'a119'..'a119'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a120'  <:  'a132'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a132'  <:  'a120'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a120'  <:  'a133'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a133'  <:  'a120'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a120']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a120']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a120']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a120']  <:  'a125'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a120']  <:  'a124'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a122']  <:  'a120'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a123']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a124']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a125']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3B = ty3A
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a119']  <:  'a123'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray['a120']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
+//│ ╟── this constraint:  MyArray['a122']  <:  (‘a' | MyArray[MyArray['a119']])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a97']  <:  (‘a' | MyArray[MyArray['a109']])
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a119']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3B = ty3A
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  {MyArray#A: mut 'a117'..'a117'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a122'  <:  'a126'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a126'  <:  'a122'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a122'  <:  'a127'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a127'  <:  'a122'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  {MyArray#A: mut 'a117'..'a117'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a121'  <:  'a128'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a128'  <:  'a121'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a121'  <:  'a129'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a129'  <:  'a121'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  {MyArray#A: mut 'a117'..'a117'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a118'  <:  'a130'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a130'  <:  'a118'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a118'  <:  'a131'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a131'  <:  'a118'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a123'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a122'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  'a118'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a121']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a122']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a123']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a121'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a120']  <:  (‘a' | MyArray[MyArray['a117']])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a95']  <:  (‘a' | MyArray[MyArray['a107']])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a117']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3B = ty3A
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a118']  <:  'a120'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a95']  <:  'a95'
+//│ ╟── this constraint:  MyArray['a120']  <:  'a122'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a97']  <:  'a97'
 //│ constrain calls  : 1692
 //│ annoying  calls  : 335
 //│ subtyping calls  : 1099
@@ -692,1280 +692,1280 @@ ty3A = ty3B
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a141'  <:  MyArray['a139']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  'a142'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  {size: Int, set: ((Int, MyArray['a141'],) -> ()), get: (Int -> MyArray['a141'])}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {size: Int, set: ((Int, MyArray['a107'],) -> ()), get: (Int -> MyArray['a107'])}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  {size: Int, set: ((Int, 'a139',) -> ()), get: (Int -> 'a139')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  {MyArray#A: mut MyArray['a141']..MyArray['a141']}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut MyArray['a107']..MyArray['a107']}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  {MyArray#A: mut MyArray['a141']..MyArray['a141']}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut MyArray['a107']..MyArray['a107']}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  'a143'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  {size: Int, set: ((Int, 'a139',) -> ()), get: (Int -> 'a139')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  'a143'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  'a142'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  'a139'    ComposedType  TypeVariable
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray['a143']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  {size: Int, set: ((Int, 'a143',) -> ()), get: (Int -> 'a143')}    ComposedType  RecordType
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
+//│ ╟── this constraint:  'a143'  <:  MyArray['a141']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  'a144'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  {size: Int, set: ((Int, MyArray['a143'],) -> ()), get: (Int -> MyArray['a143'])}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {size: Int, set: ((Int, MyArray['a109'],) -> ()), get: (Int -> MyArray['a109'])}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  {size: Int, set: ((Int, 'a141',) -> ()), get: (Int -> 'a141')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  {MyArray#A: mut MyArray['a143']..MyArray['a143']}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut MyArray['a109']..MyArray['a109']}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  {MyArray#A: mut MyArray['a143']..MyArray['a143']}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut MyArray['a109']..MyArray['a109']}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  'a145'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  {size: Int, set: ((Int, 'a141',) -> ()), get: (Int -> 'a141')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  'a145'    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  'a144'    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a143'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  'a141'    ComposedType  TypeVariable
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a143'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  {size: Int, set: ((Int, 'a145',) -> ()), get: (Int -> 'a145')}    ComposedType  RecordType
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a145']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a143'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  {size: Int, set: ((Int, 'a144',) -> ()), get: (Int -> 'a144')}    ComposedType  RecordType
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a144']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a143']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a143']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  {size: Int, set: ((Int, 'a142',) -> ()), get: (Int -> 'a142')}    ComposedType  RecordType
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a142']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & MyArray['a138'])  <:  {size: Int, set: ((Int, 'a141',) -> ()), get: (Int -> 'a141')}    ComposedType  RecordType
-//│ ╙──  ... looks like:  (‘a' & MyArray['a95'])  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a141']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a142']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a143']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a141']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a144']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a145']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  {size: Int, set: ((Int, 'a139',) -> ()), get: (Int -> 'a139')}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {size: Int, set: ((Int, 'a107',) -> ()), get: (Int -> 'a107')}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a138'  <:  'a139'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a95'  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a138'  <:  MyArray['a141']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a95'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray['a107']  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a146']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a141'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a141'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a141']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a142'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a142']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a143'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a143']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a139']]  <:  {MyArray#A: mut 'a139'..'a139'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a146'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a139'  <:  'a146'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  'a139'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a141']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a139'  <:  'a146'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  'a139'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  {MyArray#A: mut 'a139'..'a139'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a142']]  <:  {MyArray#A: mut 'a139'..'a139'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  {MyArray#A: mut 'a139'..'a139'}    TypeRef  RecordType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  {MyArray#A: mut 'a107'..'a107'}
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a147']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a147']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a148']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a138'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a138'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a95'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a139']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a141'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a141']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a142']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a142'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a143']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a143'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a146']]  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a146']]  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a146']]  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a146']]  <:  (‘a' | MyArray['a138'])    TypeRef  ComposedType
-//│ ╙──  ... looks like:  MyArray[MyArray['a107']]  <:  (‘a' | MyArray['a95'])
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a138'  <:  MyArray['a146']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a95'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray['a143']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (‘a' & MyArray['a140'])  <:  {size: Int, set: ((Int, 'a143',) -> ()), get: (Int -> 'a143')}    ComposedType  RecordType
+//│ ╙──  ... looks like:  (‘a' & MyArray['a97'])  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a143']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a144']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a145']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a143']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a146']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a147']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a147']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a138'  <:  MyArray['a143']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a95'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a142'  <:  MyArray['a143']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a141']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a142']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a149']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a149']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a150']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a150']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
-//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.+1: 	ty3A = ty3B
-//│ ║        	^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a141']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
 //│ ╟── this constraint:  MyArray['a143']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a141']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a139'  <:  'a143'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
+//│ ╟── this constraint:  MyArray['a141']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a143'  <:  'a139'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  {size: Int, set: ((Int, 'a141',) -> ()), get: (Int -> 'a141')}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {size: Int, set: ((Int, 'a109',) -> ()), get: (Int -> 'a109')}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a141']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  'a140'  <:  'a141'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a97'  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  'a140'  <:  MyArray['a143']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a97'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a146']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a141']  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray['a109']  <:  (‘a' | MyArray['a97'])
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a146']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a148']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  'a143'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a138'  <:  MyArray['a142']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a95'  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a148']  <:  'a143'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a141']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  'a148'  <:  MyArray['a143']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a139']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  'a144'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a139']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a148']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a143']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  'a148'  <:  MyArray['a144']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  'a145'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a141']    PolymorphicType  TypeRef
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a107'››  <:  MyArray['a107']
+//│ ╟── this constraint:  'a148'  <:  MyArray['a145']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a151']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray[MyArray['a141']]  <:  {MyArray#A: mut 'a141'..'a141'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut 'a109'..'a109'}
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a151']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a152']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a152']  <:  MyArray['a142']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a148']  <:  'a148'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  MyArray['a143']    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray['a107']  <:  MyArray['a107']
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a139'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a142']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a139'  <:  'a142'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a142'  <:  'a139'    TypeVariable  TypeVariable
-//│ ╙──  ... looks like:  'a107'  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  MyArray['a148']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a143'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  'a141'  <:  'a148'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray['a141']  <:  'a142'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray['a107']  <:  'a107'
+//│ ╟── this constraint:  'a148'  <:  'a141'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty3A = ty3B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  'a146'  <:  MyArray['a139']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  'a107'  <:  MyArray['a107']
+//│ ╟── this constraint:  'a148'  <:  MyArray['a143']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a141'  <:  'a148'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  'a141'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a143']]  <:  {MyArray#A: mut 'a141'..'a141'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a144']]  <:  {MyArray#A: mut 'a141'..'a141'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a145']]  <:  {MyArray#A: mut 'a141'..'a141'}    TypeRef  RecordType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  {MyArray#A: mut 'a109'..'a109'}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a149']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a149']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a150']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a150']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a140'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a140'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a97'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a141']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a143'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a143']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a144']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a144'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a145']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a145'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a148']]  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a148']]  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a148']]  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray[MyArray['a148']]  <:  (‘a' | MyArray['a140'])    TypeRef  ComposedType
+//│ ╙──  ... looks like:  MyArray[MyArray['a109']]  <:  (‘a' | MyArray['a97'])
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a140'  <:  MyArray['a148']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a97'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a140'  <:  MyArray['a145']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a97'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a144'  <:  MyArray['a145']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a143']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a144']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a151']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a151']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a152']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a152']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a141'  <:  'a145'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a145'  <:  'a141'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a148']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a148']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a140'  <:  MyArray['a144']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a97'  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a143']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a141']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a141']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a145']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a143']    PolymorphicType  TypeRef
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a109'››  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a153']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a153']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a154']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a154']  <:  MyArray['a144']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  MyArray['a145']    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray['a109']  <:  MyArray['a109']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a141'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a144']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a141'  <:  'a144'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a144'  <:  'a141'    TypeVariable  TypeVariable
+//│ ╙──  ... looks like:  'a109'  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a145'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  MyArray['a143']  <:  'a144'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray['a109']  <:  'a109'
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
+//│ ║  l.+1: 	ty3A = ty3B
+//│ ║        	^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  'a148'  <:  MyArray['a141']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  'a109'  <:  MyArray['a109']
 //│ constrain calls  : 2528
 //│ annoying  calls  : 537
 //│ subtyping calls  : 4427
@@ -1989,26 +1989,26 @@ ty4B = ty4B
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a153'››  <:  'a164'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a153'››  <:  'a153'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. 'a155'››  <:  'a166'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. 'a155'››  <:  'a155'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ((int<number>, MyArray[MyArray['a163']],) -> ())  <:  ((int<number>, MyArray[MyArray['a164']],) -> ())    FunctionType  FunctionType
-//│ ╙──  ... looks like:  ((int<number>, MyArray[MyArray['a153']],) -> ())  <:  ((int<number>, MyArray[MyArray['a153']],) -> ())
+//│ ╟── this constraint:  ((int<number>, MyArray[MyArray['a165']],) -> ())  <:  ((int<number>, MyArray[MyArray['a166']],) -> ())    FunctionType  FunctionType
+//│ ╙──  ... looks like:  ((int<number>, MyArray[MyArray['a155']],) -> ())  <:  ((int<number>, MyArray[MyArray['a155']],) -> ())
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray['a164']]  <:  MyArray[MyArray['a163']]    TypeRef  TypeRef
-//│ ╙──  ... looks like:  MyArray[MyArray['a153']]  <:  MyArray[MyArray['a153']]
+//│ ╟── this constraint:  MyArray[MyArray['a166']]  <:  MyArray[MyArray['a165']]    TypeRef  TypeRef
+//│ ╙──  ... looks like:  MyArray[MyArray['a155']]  <:  MyArray[MyArray['a155']]
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
 //│ ║  l.+1: 	ty4B = ty4B
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  MyArray[MyArray[MyArray['a164']]]  <:  'a164'    TypeRef  TypeVariable
-//│ ╙──  ... looks like:  MyArray[MyArray[MyArray['a153']]]  <:  'a153'
+//│ ╟── this constraint:  MyArray[MyArray[MyArray['a166']]]  <:  'a166'    TypeRef  TypeVariable
+//│ ╙──  ... looks like:  MyArray[MyArray[MyArray['a155']]]  <:  'a155'
 //│ constrain calls  : 64
 //│ annoying  calls  : 48
 //│ subtyping calls  : 85

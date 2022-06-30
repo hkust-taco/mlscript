@@ -6,7 +6,7 @@ let f = x =>
 let h = y =>
   succ / f y
 let mkArg = a => {prop: a}
-//│ f: {prop: int & 'prop} -> 'prop
+//│ f: {prop: 'prop} -> 'prop
 //│ h: {prop: int} -> int
 //│ mkArg: 'a -> {prop: 'a}
 
@@ -53,26 +53,30 @@ let arg2 = {fld: arg}
 let i = y =>
   succ / f y.fld
 let test = x => y => if x.prop then i x else y
-//│ f: {prop: int & 'prop} -> 'prop
+//│ f: {prop: 'prop} -> 'prop
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: {fld: {prop: int}, prop: bool} -> 'a -> (int | 'a)
+//│ test: ({prop: bool} & 'a) -> 'b -> (int | 'b
+//│   where
+//│     'a <: {fld: {prop: int}})
 
 :e
 :verbose
 test arg2
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	test arg2
+//│ ║  l.66: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── application of type `bool` is not an instance of type `int`
-//│ ║  l.51: 	let arg = {prop: not true}
-//│ ║        	                 ^^^^^^^^
-//│ ╟── Note: constraint arises from argument:
-//│ ║  l.54: 	  succ / f y.fld
-//│ ║        	         ^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.50: 	  x.prop
-//│ ╙──      	   ^^^^^
-//│ res: 'a -> (int | 'a) | error
+//│ ╟── record of type `{fld: forall ?a. {prop: ?a}}` does not have field 'prop'
+//│ ║  l.52: 	let arg2 = {fld: arg}
+//│ ║        	           ^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
+//│ ║  l.66: 	test arg2
+//│ ║        	     ^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.55: 	let test = x => y => if x.prop then i x else y
+//│ ╙──      	                         ^^^^^
+//│ res: 'a -> (int | 'a
+//│   where
+//│     'b <: {fld: {prop: int}}) | error
 

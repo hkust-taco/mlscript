@@ -4,11 +4,26 @@ def f x = (x 1, x "ok")
 //│  = [Function: f]
 
 f (fun x -> (x, x))
-//│ res: ((1, 1,), ("ok", "ok",),)
+//│ res: (("ok" | 1, "ok" | 1,), ("ok" | 1, "ok" | 1,),)
 //│    = [ [ 1, 1 ], [ 'ok', 'ok' ] ]
 
 (fun id -> id id 0) (fun x -> x)
-//│ res: 0
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.10: 	(fun id -> id id 0) (fun x -> x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.10: 	(fun id -> id id 0) (fun x -> x)
+//│ ║        	                 ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.10: 	(fun id -> id id 0) (fun x -> x)
+//│ ║        	           ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.10: 	(fun id -> id id 0) (fun x -> x)
+//│ ╙──      	                              ^
+//│ res: 'a -> 'a | 0 | error | 'b
+//│   where
+//│     'a :> 'a -> 'a | 0
+//│        <: 0 -> 'b & 'b
 //│    = 0
 
 fun id -> id id 0
@@ -29,12 +44,12 @@ fun x -> x
 
 
 def g x = x (fun x -> x)
-//│ g: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
+//│ g: ((forall 'a. ('a -> 'a,)) -> 'b) -> 'b
 //│  = [Function: g]
 
 
 def g x y = x (fun x -> y x)
-//│ g: ((forall 'a, 'b, 'c. ('b -> 'c
+//│ g: ((forall 'a, 'b, 'c. (('b -> 'c,)
 //│   where
 //│     'a <: 'b -> 'c)) -> 'd) -> 'a -> 'd
 //│  = [Function: g1]
@@ -47,11 +62,11 @@ self x = x x
 :e
 self self
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.48: 	self self
+//│ ║  l.63: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α93' -> α94')›  <:  α104    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α93' -> α94')›  <:  α93'
+//│ ╟── this constraint:  ‹∀ 0. (α97' -> α98')›  <:  α108    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α97' -> α98')›  <:  α97'
 //│ res: error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

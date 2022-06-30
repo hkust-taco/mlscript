@@ -49,19 +49,22 @@ def g = rcd with { y = "yeah" }
 :ts
 def f (a: int) (b: string) (c: bool) = if c then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
-def g x y = if x.b == 1 then x else x.a
-// miscellaneous functions
 //│ f: int -> string -> bool -> (int | string)
 //│ fact: int -> int
-//│ g: ({a: 'a, b: int} & 'a) -> anything -> 'a
 //│ // start ts
 //│ export declare const f: (arg: int) => (arg1: string) => (arg2: bool) => int | string
 //│ export declare const fact: (arg: int) => int
-//│ export declare const g<a>: (arg: {readonly a: a, readonly b: int} & a) => (arg1: unknown) => a
 //│ // end ts
 
-// FIXME
-:ts
+// :ts // FIXME constrained types
+def g x y = if x.b == 1 then x else x.a
+// miscellaneous functions
+//│ g: ({b: int} & 'b) -> anything -> ((forall 'b, 'a. ('a
+//│   where
+//│     'b <: {a: 'a})) | 'b)
+
+// // FIXME
+// :ts // FIXME constrained types
 rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 def f: ('c -> 'a as 'a) -> 'c -> int
@@ -69,26 +72,31 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ l: 'l
 //│   where
 //│     'l :> int -> 'l
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α111,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α111),Top)))
+//│ m: 'm
+//│   where
+//│     'm :> int -> int -> 'm
+//│ f: 'a -> 'c -> int
+//│   where
+//│     'a <: 'c -> 'a
 
 :ts
 :e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.76: 	1: ?
+//│ ║  l.84: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.76: 	1: ?
+//│ ║  l.84: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.77: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.85: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.77: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.85: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -96,16 +104,17 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 //│ export declare const res: {readonly a: string, readonly b: int}
 //│ // end ts
 
-:ts
+// :ts // FIXME constrained types
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ('a -> 'b & {a: int} & 'c) -> ({b: int} & 'a) -> (anything -> 'c | 'b)
-//│ g: nothing -> nothing -> nothing
-//│ // start ts
-//│ export declare const nonsense<a, b, c>: (arg: ((arg1: a) => b) & {readonly a: int} & c) => (arg2: {readonly b: int} & a) => ((arg3: unknown) => c) | b
-//│ export declare const g: (arg: never) => (arg1: never) => never
-//│ // end ts
+//│ nonsense: ({a: int} & 'a) -> ({b: int} & 'b) -> (forall 'a, 'b, 'c. (anything -> 'a | 'c
+//│   where
+//│     'a <: 'b -> 'c))
+//│ g: (int & 'a) -> (int & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c
+//│     'b <: 'a -> 'c))
 
 :ts
 def x: int | ~string
@@ -132,25 +141,21 @@ app 2 cont
 //│ export declare const res: int
 //│ // end ts
 
-:ts
+// :ts // FIXME constrained types
 def g (x, y) = x + y
 def h (x, (y, z)) = y z + x
 def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
 def l: ((1, 2), (3, 4)) -> 5
 //│ g: (int, int,) -> int
 //│ h: (int, ('a -> int, 'a,),) -> int
-//│ k: (int, (int -> 'a, int,),) -> (int, int -> 'a -> 'b, int,) -> 'b
+//│ k: (int, ('a, int,),) -> (int, int -> (forall 'a, 'b. (('b,)
+//│   where
+//│     'a <: int -> 'b)) -> 'c, int,) -> 'c
 //│ l: ((1, 2,), (3, 4,),) -> 5
-//│ // start ts
-//│ export declare const g: (arg: int, arg1: int) => int
-//│ export declare const h<a>: (arg: int, arg1: readonly [(arg2: a) => int, a]) => int
-//│ export declare const k<a, b>: (arg: int, arg1: readonly [(arg2: int) => a, int]) => (arg3: int, arg4: (arg5: int) => (arg6: a) => b, arg7: int) => b
-//│ export declare const l: (arg: readonly [1, 2], arg1: readonly [3, 4]) => 5
-//│ // end ts
 
 
-// FIXME
-:ts
+// // FIXME
+// :ts // FIXME constrained types
 def weird: ((int, int) -> 'a) as 'a
 def weird: ('a -> (int, int)) as 'a
 def weird: ((int, 'a) as 'a) -> int
@@ -158,6 +163,12 @@ def weird: ((int, bool) | 'a) -> 'a
 //│ weird: 'a
 //│   where
 //│     'a :> (int, int,) -> 'a
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α230,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α230),Top)))
+//│ weird: 'a
+//│   where
+//│     'a := 'a -> (int, int,)
+//│ weird: 'a -> int
+//│   where
+//│     'a <: (int, 'a,)
+//│ weird: ('a | (int, bool,)) -> 'a
 
 

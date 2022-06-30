@@ -1,0 +1,21 @@
+
+
+
+// :d
+foo x =
+  log (succ x.prop)
+//│ foo: anything -> unit
+//│    = [Function: foo]
+
+:ns
+foo x =
+  let _ = log (succ x.prop)
+  in x
+//│ foo: forall 'a. 'a -> 'a
+//│    = [Function: foo1]
+
+foo false
+//│ res: false
+//│    = false
+//│ output:
+//│ NaN

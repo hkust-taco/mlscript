@@ -682,7 +682,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      case Lam(pat, body)
+      if genLambdas && ctx.inRecursiveDef.forall(rd => !body.freeVars.contains(rd)) =>
+      // if genLambdas =>
         println(s"TYPING POLY LAM")
         // val newBindings = mutable.Map.empty[Str, TypeVariable]
         // val newCtx = ctx.nest
@@ -693,9 +695,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         // newCtx ++= newBindings
         val body_ty = typeTerm(body)(newCtx, raise, extrCtx, vars, genLambdas = generalizeCurriedFunctions)
         val innerTy = FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+        // PolymorphicType.mk(ctx.lvl,
+        //   // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
+        //   if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
         PolymorphicType.mk(ctx.lvl,
-          // if (ec.isEmpty) innerTy else ConstrainedType(ec.flatMap()))
-          if (ec.isEmpty) innerTy else ConstrainedType(ec.iterator.mapValues(_.toList).toList, innerTy))
+          ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
       case Lam(pat, body) =>
         val newCtx = ctx.nest
         val param_ty = typePattern(pat)(newCtx, raise, extrCtx, vars)
@@ -708,7 +712,28 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         ??? // TODO
       case App(f, a) =>
         val f_ty = typeTerm(f)
-        val a_ty = typePolymorphicTerm(a)
+        // val a_ty = typePolymorphicTerm(a)
+        val a_ty =
+          if (ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
+            typePolymorphicTerm(a)
+          // else ctx.nextLevel |> { implicit ctx =>
+          //   val ec: ExtrCtx = MutMap.empty
+          //   val extrCtx: Opt[ExtrCtx] = S(ec)
+          //   val ty = typeTerm(a)(ctx, raise, extrCtx, vars, genLambdas = false)
+          //   PolymorphicType.mk(ctx.lvl,
+          //     ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+          // }
+          else {
+            val newCtx = ctx.nextLevel
+            val ec: ExtrCtx = MutMap.empty
+            val extrCtx: Opt[ExtrCtx] = S(ec)
+            val innerTy =
+              typeTerm(a)(newCtx, raise, extrCtx, vars,
+              // genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
+              )
+            PolymorphicType.mk(ctx.lvl,
+              ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+          }
         val res = freshVar(prov, N)
         val arg_ty = mkProxy(a_ty, tp(a.toCoveringLoc, "argument"))
           // ^ Note: this no longer really makes a difference, due to tupled arguments by default

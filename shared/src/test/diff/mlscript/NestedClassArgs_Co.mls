@@ -195,10 +195,10 @@ L.Append
 
 
 def append ls elem = L { h = elem; t = S { v = ls } }
-//│ append: (L['T] & 'v) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['v]})
+//│ append: (L['T] & 'a) -> ('T & 'h) -> (L['T] with {h: 'h, t: S['a]})
 
 def append0 ls = L { h = 0; t = S { v = ls } }
-//│ append0: (L['T] & 'v) -> (L['T] with {h: 0, t: S['v]})
+//│ append0: (L['T] & 'a) -> (L['T] with {h: 0, t: S['a]})
 //│   where
 //│     'T :> 0
 

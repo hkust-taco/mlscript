@@ -59,17 +59,21 @@ def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs
   }
-//│ eval: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n})) -> (int | 'n)
+//│ eval: ('a -> (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int & 'a) -> (Add & 'b | (Lit with {n: 'n})) -> (int | 'n)
 //│     = [Function: eval1]
 
 :e
 eval eval e
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.66: 	eval eval e
+//│ ║  l.70: 	eval eval e
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α200    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
+//│ ╟── this constraint:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α216    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α164'
 //│ res: error | int
 //│    = 3
 
@@ -78,39 +82,45 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'e -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
+//│ evalN: ('a -> (forall 'b, 'e. (('e,)
+//│   where
+//│     'b <: {e: 'e})) -> int & 'a -> (forall 'c, 'rhs. (('rhs,)
+//│   where
+//│     'c <: {rhs: 'rhs})) -> int & 'a -> (forall 'c, 'lhs. (('lhs,)
+//│   where
+//│     'c <: {lhs: 'lhs})) -> int & 'a) -> (Add & 'c | (Lit with {n: 'n}) | Neg & 'b) -> (int | 'n)
 //│      = [Function: evalN]
 
 :e
 evalN eval e
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.85: 	evalN eval e
+//│ ║  l.95: 	evalN eval e
 //│ ║        	^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α321    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
+//│ ╟── this constraint:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α345    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α164'
 //│ res: error
 //│    = 3
 
 :e
 evalN eval e2
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.96: 	evalN eval e2
-//│ ║        	^^^^^^^^^^
+//│ ║  l.106: 	evalN eval e2
+//│ ║         	^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α417    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
+//│ ╟── this constraint:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α445    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α164' -> (α165' -> (n167' | α178')))›  <:  α164'
 //│ res: error
 //│    = -3
 
 :e
 ev = evalN evalN
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.107: 	ev = evalN evalN
+//│ ║  l.117: 	ev = evalN evalN
 //│ ║         	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α233' -> (α234' -> (α240' | α255')))›  <:  α501'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α233' -> (α234' -> (α240' | α255')))›  <:  α233'
+//│ ╟── this constraint:  ‹∀ 0. (α251' -> (α252' -> (α258' | α275')))›  <:  α533'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α251' -> (α252' -> (α258' | α275')))›  <:  α251'
 //│ ev: ((Add with {lhs: Add | Lit | Neg, rhs: Add | Lit | Neg}) | (Lit with {n: 'n}) | (Neg with {e: Add | Lit | Neg})) -> (int | 'n) | error
 //│   = [Function (anonymous)]
 
@@ -134,30 +144,40 @@ def evalN evalN k e = case e of {
   | Neg -> 0 - evalN evalN k e.e
   | _ -> k e
   }
-//│ evalN: ('a -> 'b -> 'e -> int & 'a) -> ('c -> 'd & 'b) -> ((Neg with {e: 'e}) | 'c & ~neg) -> (int | 'd)
+//│ evalN: ('a -> 'b -> (forall 'c, 'e. (('e,)
+//│   where
+//│     'c <: {e: 'e})) -> int & 'a) -> ('d -> 'f & 'b) -> (Neg & 'c | 'd & ~neg) -> (int | 'f)
 //│      = [Function: evalN1]
 
 
 :e
 def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.142: 	def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
+//│ ║  l.154: 	def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
 //│ ║         	                                ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α839'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793'
-//│ evalComposed: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a -> 'lhs0 -> int & 'a -> 'rhs0 -> int & 'a) -> (((Add with {lhs: 'lhs0, rhs: 'rhs0}) | (Lit with {n: 'n}) | (Neg with {e: (Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | Neg})) -> (int | 'n) | error)
+//│ ╟── this constraint:  ‹∀ 0. (α799' -> (α800' -> (α801' -> (α808' | α813'))))›  <:  α850'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α799' -> (α800' -> (α801' -> (α808' | α813'))))›  <:  α799'
+//│ evalComposed: ('a -> (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int & 'a -> (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a) -> ((Add & 'b | Lit | (Neg with {e: Add & 'b | Lit | Neg})) -> int | error)
 //│             = [Function: evalComposed]
 
 :e
 def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.153: 	def evalComposed evalComposed = evalN evalN (eval evalComposed)
+//│ ║  l.169: 	def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ║         	                                ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α956'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793'
-//│ evalComposed: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> (((Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | (Neg with {e: (Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | Neg})) -> int | error)
+//│ ╟── this constraint:  ‹∀ 0. (α799' -> (α800' -> (α801' -> (α808' | α813'))))›  <:  α937'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α799' -> (α800' -> (α801' -> (α808' | α813'))))›  <:  α799'
+//│ evalComposed: ('a -> (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int & 'a -> (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a) -> ((Add & 'b | Lit | (Neg with {e: Add & 'b | Lit | Neg})) -> int | error)
 //│             = [Function: evalComposed1]
 
 
@@ -167,11 +187,11 @@ def evalComposed evalComposed = evalN evalN (eval evalComposed)
 // *    once we inline, `b` we should get the expected simplified recursive type.
 ev2 = evalComposed evalComposed
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.168: 	ev2 = evalComposed evalComposed
+//│ ║  l.188: 	ev2 = evalComposed evalComposed
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α943' -> α980')›  <:  α1036'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α943' -> α980')›  <:  α943'
+//│ ╟── this constraint:  ‹∀ 0. (α924' -> α962')›  <:  α1031'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α924' -> α962')›  <:  α924'
 //│ ev2: ((Add with {lhs: Add | Lit | (Neg with {e: Add | Lit | Neg}), rhs: Add | Lit | (Neg with {e: Add | Lit | Neg})}) | Lit | (Neg with {e: (Add with {lhs: Add | Lit | (Neg with {e: Add | Lit | Neg}), rhs: Add | Lit | (Neg with {e: Add | Lit | Neg})}) | Lit | Neg})) -> int | error
 //│    = [Function (anonymous)]
 

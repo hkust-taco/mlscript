@@ -135,7 +135,7 @@ class BadSelf[A]: { x: A }
 
 c = BadSelf { x = fun x -> x }
 c.F
-//│ c: BadSelf[forall 'a. 'a -> 'a]
+//│ c: BadSelf['a -> 'a]
 //│ res: error
 
 

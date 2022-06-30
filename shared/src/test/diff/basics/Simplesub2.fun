@@ -9,7 +9,9 @@ let id = x => x
 //│ id: 'a -> 'a
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ twice: ((forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 
 let object1 = { x: 42, y: id }
 //│ object1: {x: 42, y: forall 'a. 'a -> 'a}
@@ -48,9 +50,13 @@ let rec consume = strm => add strm.head (consume strm.tail)
 //│ produce: int -> 'a
 //│   where
 //│     'a :> {head: int, tail: 'a}
-//│ consume: 'a -> int
-//│   where
-//│     'a <: {head: int, tail: 'a}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.49: 	let rec consume = strm => add strm.head (consume strm.tail)
+//│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α87'  <:  {tail: tail95'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α87'  <:  {tail: tail91''}
+//│ consume: {head: int, tail: {head: int}} -> int
 
 let codata = produce 42
 let res = consume codata
@@ -69,7 +75,7 @@ let res = consume codata2
 // TODO better parser error
 :pe
 let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let rec pr" at l.71:1: let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
+//│ /!\ Parse error: Expected let binding:1:1, found "let rec pr" at l.77:1: let rec produce3 = b => { head: 123, tail: if b then codata else codata2 }
 
 let rec produce3 = b => { head: 123, tail: (if b then codata else codata2) }
 let res = x => consume (produce3 x)
@@ -85,8 +91,18 @@ let consume2 =
   // go
 // let rec consume2 = strm => add strm.head (add strm.tail.head (consume2 strm.tail.tail))
 let res = consume2 codata2
-//│ consume2: 'a -> int
-//│   where
-//│     'a <: {head: int, tail: 'a}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.89: 	  let rec go = strm => add strm.head (add strm.tail.head (go strm.tail.tail))
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α185''  <:  {tail: tail197''}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α185''  <:  {tail: tail192'''}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.89: 	  let rec go = strm => add strm.head (add strm.tail.head (go strm.tail.tail))
+//│ ║        	               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α185''  <:  {tail: tail199''}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α185''  <:  {tail: tail192'''}
+//│ consume2: {head: int, tail: {head: int, tail: {head: int}}} -> int
 //│ res: int
 

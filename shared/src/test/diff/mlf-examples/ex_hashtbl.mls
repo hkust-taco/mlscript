@@ -142,15 +142,17 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
+//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'b <: 'a -> 'c -> 'd
-//│     'a <: 'd -> 'e)))
+//│     'a <: (forall 'a, 'd, 'b, 'e. (('e,)
+//│   where
+//│     'd <: 'a -> 'b -> 'e)) -> 'c)))
 //│     = [Function: succ]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e -> 'd
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
 //│   where
-//│     'b <: 'c -> 'd
-//│     'a <: 'b -> 'e -> 'c)))
+//│     'b <: (forall 'a, 'b, 'c, 'e. (('e,)
+//│   where
+//│     'a <: 'b -> 'c -> 'e)) -> 'd)))
 //│      = [Function: succ]
 
 // let add (n:Int) (m:Int) = n succ m
@@ -158,17 +160,19 @@ def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def add' n m = n succ' m
 //│ add: ChurchInt -> (forall 'a. (ChurchInt -> 'b
 //│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e, 'f, 'g. ('e -> 'g
+//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c. ('d -> 'e
 //│   where
-//│     'd <: 'c -> 'e -> 'f
-//│     'c <: 'f -> 'g)))) -> ChurchInt -> 'b))
+//│     'c <: (forall 'c, 'f, 'd, 'g. (('g,)
+//│   where
+//│     'f <: 'c -> 'd -> 'g)) -> 'e)))) -> ChurchInt -> 'b))
 //│    = [Function: add]
 //│ add': 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f, 'g, 'h. ('h -> 'g
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'e. ('f -> 'g
 //│   where
-//│     'e <: 'f -> 'g
-//│     'd <: 'e -> 'h -> 'f)))) -> 'b -> 'c))
+//│     'e <: (forall 'd, 'e, 'f, 'h. (('h,)
+//│   where
+//│     'd <: 'e -> 'f -> 'h)) -> 'g)))) -> 'b -> 'c))
 //│     = [Function: add]
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -191,10 +195,12 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│   where
 //│     'a <: 'b -> 'c)),)]
 //│      = Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
-//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'd
+//│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
 //│     'a <: 'c -> 'd
-//│     'b <: 'c -> 'e & 'e -> 'd)),)]
+//│     'b <: (forall 'b, 'c, 'e. (('e,)
+//│   where
+//│     'b <: 'c -> 'e)) -> 'd)),)]
 //│      = Cons {
 //│          head: [ 'two', [Function (anonymous)] ],
 //│          tail: Cons { head: [ 'one', [Function (anonymous)] ], tail: Nil {} }
@@ -206,15 +212,15 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 :e // FIXME?
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.213: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                        ^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.139: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                        ^^
-//│ zog: string
+//│ zog: error
 //│    = '0'
 
 zog' = printInt' (add' (nfind table "one") (nfind table "two"))

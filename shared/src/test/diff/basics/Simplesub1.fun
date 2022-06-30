@@ -23,10 +23,14 @@ x => x 42
 //│ res: 42
 
 f => x => f (f x)  // twice
-//│ res: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ res: ((forall 'a. ('a
+//│   where
+//│     'b <: 'c -> 'a)) -> 'd & 'b) -> 'c -> 'd
 
 let twice = f => x => f (f x)
-//│ twice: ('a -> 'b & 'c -> 'a) -> 'c -> 'b
+//│ twice: ((forall 'a, 'b, 'c. ('c
+//│   where
+//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
 
 
 
@@ -100,11 +104,8 @@ x => succ (not x)
 //│ ║        	                        ^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	(f => x => not (f x.u)) false
-//│ ║        	                ^^^^^
-//│ ╟── from reference:
-//│ ║  l.+1: 	(f => x => not (f x.u)) false
-//│ ╙──      	                ^
-//│ res: {u: anything} -> bool | error
+//│ ╙──      	                ^^^^^
+//│ res: anything -> bool | error
 
 
 
@@ -187,8 +188,8 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α224' -> α225')›  <:  α229    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α224' -> α225')›  <:  α224'
+//│ ╟── this constraint:  ‹∀ 0. (α230' -> α231')›  <:  α235    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α230' -> α231')›  <:  α230'
 //│ res: error
 
 
@@ -200,13 +201,9 @@ x => {l: x x, r: x }
 // Y combinator:
 :e // similarly to Omega
 (f => (x => f (x x)) (x => f (x x)))
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α253    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244'
-//│ res: ('a -> 'b & nothing -> 'c & 'c -> 'a) -> (error | 'b)
+//│ res: ((forall 'a. ('a
+//│   where
+//│     'b <: 'b -> 'a)) -> 'c) -> 'c
 
 // Z combinator:
 // * FIXME simplified type
@@ -231,9 +228,7 @@ res 1 2
 
 
 let rec trutru = g => trutru (g true)
-//│ trutru: 'a -> nothing
-//│   where
-//│     'a <: true -> 'a
+//│ trutru: anything -> nothing
 
 i => if ((i i) true) then true else true
 //│ res: ('a -> true -> bool & 'a) -> true
@@ -268,9 +263,7 @@ y => (let f = x => x y; {a: f (z => z), b: f (z => succ z)})
 
 
 let rec f = x => f x.u
-//│ f: 'a -> nothing
-//│   where
-//│     'a <: {u: 'a}
+//│ f: anything -> nothing
 
 
 // from https://www.cl.cam.ac.uk/~sd601/mlsub/
@@ -328,12 +321,12 @@ next => 0
 //│ res: 'a -> 'a
 
 (let rec x = (y => (x (y y))); x)
-//│ res: 'a -> nothing
-//│   where
-//│     'a <: 'a -> 'a
+//│ res: anything -> nothing
 
 x => (y => (x (y y)))
-//│ res: ('a -> 'b) -> ('c -> 'a & 'c) -> 'b
+//│ res: ((forall 'a. ('a
+//│   where
+//│     'b <: 'b -> 'a)) -> 'c) -> 'b -> 'c
 
 (let rec x = (let y = (x x); (z => z)); x)
 //│ res: 'x
@@ -368,7 +361,9 @@ x => (y => (x (y y)))
 //│     'a <: 'x -> anything
 
 (x => (let y = (x x.v); 0))
-//│ res: ('v -> anything & {v: 'v}) -> 0
+//│ res: ((forall 'v. ('v
+//│   where
+//│     'a <: {v: 'v})) -> 'a & 'a) -> 0
 
 let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│ x: 'x
@@ -399,8 +394,8 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α661    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
+//│ ╟── this constraint:  ‹∀ 1. (α643'' -> α644'')›  <:  α648'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α643'' -> α644'')›  <:  α643''
 //│ res: 'a -> 'a
 
 :NoCycleCheck

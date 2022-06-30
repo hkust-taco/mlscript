@@ -58,7 +58,7 @@ class Cons[A]: List[A] & { head: A; tail: List[A] }
 :stats
 l0 = Cons { head = 1; tail = Nil {} }
 //│ l0: Cons[1] with {tail: Nil[?]}
-//│ constrain calls  : 23
+//│ constrain calls  : 24
 //│ annoying  calls  : 2
 //│ subtyping calls  : 40
 
@@ -72,7 +72,7 @@ Cons.HeadOption l0
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
 //│ l1: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}
-//│ constrain calls  : 57
+//│ constrain calls  : 60
 //│ annoying  calls  : 6
 //│ subtyping calls  : 124
 
@@ -100,7 +100,7 @@ Cons.HeadOption l2
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}}
-//│ constrain calls  : 40
+//│ constrain calls  : 41
 //│ annoying  calls  : 2
 //│ subtyping calls  : 170
 

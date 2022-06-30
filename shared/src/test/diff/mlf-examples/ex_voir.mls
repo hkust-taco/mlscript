@@ -138,7 +138,7 @@ def make_ex3 x (f: forall 'a. ('a | Sid) -> 'b) = f x
 def ex_list3 = cons (make_ex3 succ) (
       cons (make_ex3 id) (
       cons (make_ex3 not) nil))
-//│ ex_list3: List[forall 'a, 'b, 'c, 'd. ((Sid -> 'd) -> 'd
+//│ ex_list3: List[forall 'a, 'b, 'c, 'd, 'e. ((forall 'f. Sid -> 'd & Sid -> 'e & Sid -> 'f) -> ('e | 'f | 'd)
 //│   where
 //│     'a <: anything
 //│     'b <: anything

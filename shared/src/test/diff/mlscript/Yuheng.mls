@@ -213,9 +213,9 @@ ep[0]
 //│ ╔══[ERROR] Type mismatch in array access:
 //│ ║  l.+1: 	ep[0]
 //│ ║        	^^^^^
-//│ ╟── integer literal of type `1` does not match type `Array[?a]`
-//│ ║  l.142: 	  lhs = IntLit { value = 1 };
-//│ ║         	                         ^
+//│ ╟── integer literal of type `3` does not match type `Array[?a]`
+//│ ║  l.145: 	    rhs = IntLit { value = 3 } } }
+//│ ║         	                           ^
 //│ ╟── but it flows into reference with expected type `Array[?b]`
 //│ ║  l.+1: 	ep[0]
 //│ ╙──      	^^
@@ -297,10 +297,10 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'rhs'
+//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'lhs'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                              ^^^^^
+//│ ║        	                  ^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ╙──      	                       ^
@@ -313,10 +313,10 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'lhs'
+//│ ╟── expression of type `Expr[?] & ~intLit` does not have field 'rhs'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                  ^^^^^
+//│ ║        	                              ^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ╙──      	                       ^
@@ -374,10 +374,10 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'rhs'
+//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'lhs'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                              ^^^^^
+//│ ║        	                  ^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ╙──      	                       ^
@@ -392,10 +392,10 @@ rec def eval(e) = case e of
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.+5: 	  }
 //│ ║        	^^^
-//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'lhs'
+//│ ╟── expression of type `Expr[?] & ~intLit & ~?a | Pair[?, ?]` does not have field 'rhs'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
-//│ ║        	                  ^^^^^
+//│ ║        	                              ^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.+1: 	rec def eval(e) = case e of
 //│ ╙──      	                       ^

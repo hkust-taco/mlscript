@@ -119,7 +119,10 @@ let take1 (x: 1) = 1
 //│ take1: (x: 1,) -> 1
 
 let takeWhat y = if y < 0 then take0 y else take1 y
-//│ takeWhat: nothing -> (0 | 1)
+//│ takeWhat: (int & 'a) -> (forall 'a. (0 | 1
+//│   where
+//│     'a <: (x: 0,)
+//│     'a <: (x: 1,)))
 
 let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
 //│ takeWhat: nothing -> (0 | 1)

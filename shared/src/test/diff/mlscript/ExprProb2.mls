@@ -19,22 +19,30 @@ def eval1 eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
   }
-//│ eval1: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1: ('a -> (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int & 'a) -> (Add['b] & 'b | (Lit with {val: 'val})) -> (int | 'val)
 //│      = [Function: eval1]
-//│ constrain calls  : 36
+//│ constrain calls  : 42
 //│ annoying  calls  : 0
-//│ subtyping calls  : 55
+//│ subtyping calls  : 36
 
 :stats
 def eval1f eval1 e = case e of {
   | Lit -> e.val
   | Add -> eval1 e.lhs + eval1 e.rhs
   }
-//│ eval1f: ('rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1f: ((forall 'a, 'rhs. (('rhs,)
+//│   where
+//│     'a <: {rhs: 'rhs})) -> int & (forall 'a, 'lhs. (('lhs,)
+//│   where
+//│     'a <: {lhs: 'lhs})) -> int) -> (Add['a] & 'a | (Lit with {val: 'val})) -> (int | 'val)
 //│       = [Function: eval1f]
-//│ constrain calls  : 32
+//│ constrain calls  : 38
 //│ annoying  calls  : 0
-//│ subtyping calls  : 52
+//│ subtyping calls  : 33
 
 
 e1 = add (lit 1) (add (lit 2) (lit 3))
@@ -48,22 +56,22 @@ e1 = add (lit 1) (add (lit 2) (lit 3))
 :e
 eval1 eval1 e1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.49: 	eval1 eval1 e1
+//│ ║  l.57: 	eval1 eval1 e1
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α164    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53'
+//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α67')))›  <:  α186    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α67')))›  <:  α53'
 //│ res: error | int
 //│    = 6
 
 :e
 def eval1_fixed_1 = eval1 eval1
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.60: 	def eval1_fixed_1 = eval1 eval1
+//│ ║  l.68: 	def eval1_fixed_1 = eval1 eval1
 //│ ║        	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α215'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α65')))›  <:  α53'
+//│ ╟── this constraint:  ‹∀ 0. (α53' -> (α54' -> (val56' | α67')))›  <:  α239'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α53' -> (α54' -> (val56' | α67')))›  <:  α53'
 //│ eval1_fixed_1: (Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | (Lit with {val: 'val})) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
@@ -89,12 +97,12 @@ def eval1_fixed_3 =
   let fixed fixed = eval1f (fun x -> eval1f (fixed fixed) x)
   in fixed fixed
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.90: 	  in fixed fixed
+//│ ║  l.98: 	  in fixed fixed
 //│ ║        	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. (α372'' -> α387'')›  <:  α456'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. (α372'' -> α387'')›  <:  α372''
-//│ eval1_fixed_3: (Add[?] & {lhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit, rhs: Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | Lit} | Lit} | (Lit with {val: 'val})) -> (int | 'val) | error
+//│ ╟── this constraint:  ‹∀ 1. (α396'' -> α412'')›  <:  α455'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. (α396'' -> α412'')›  <:  α396''
+//│ eval1_fixed_3: (Add[?] & {lhs: Add[?] | Lit, rhs: Add[?] | Lit} | (Lit with {val: 'val})) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
 eval1_fixed_3 e1
@@ -117,14 +125,26 @@ def eval2 eval2 e = case e of {
   | Nega -> 0 - (eval2 eval2 e.arg)
   | _ -> eval1 eval2 e
   }
-//│ eval2: ('a -> 'arg -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│ eval2: ('a -> (forall 'b, 'arg. (('arg,)
+//│   where
+//│     'b <: {arg: 'arg})) -> int & 'a -> (forall 'c, 'rhs. (('rhs,)
+//│   where
+//│     'c <: {rhs: 'rhs})) -> int & 'a -> (forall 'c, 'lhs. (('lhs,)
+//│   where
+//│     'c <: {lhs: 'lhs})) -> int & 'a) -> (Add['b] & 'c | (Lit with {val: 'val}) | Nega['b] & 'b) -> (int | 'val)
 //│      = [Function: eval2]
 
 def eval2f eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1f eval2 e
   }
-//│ eval2f: ('arg -> int & 'rhs -> int & 'lhs -> int) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│ eval2f: ((forall 'a, 'arg. (('arg,)
+//│   where
+//│     'a <: {arg: 'arg})) -> int & (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int) -> (Add['a] & 'b | (Lit with {val: 'val}) | Nega['a] & 'a) -> (int | 'val)
 //│       = [Function: eval2f]
 
 
@@ -139,11 +159,11 @@ e2 = add (lit 1) (nega e1)
 :e
 def eval2_fixed_1 = eval2 eval2
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.140: 	def eval2_fixed_1 = eval2 eval2
+//│ ║  l.160: 	def eval2_fixed_1 = eval2 eval2
 //│ ║         	                    ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α671' -> (α672' -> (α678' | α693')))›  <:  α827'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α671' -> (α672' -> (α678' | α693')))›  <:  α671'
+//│ ╟── this constraint:  ‹∀ 0. (α532' -> (α533' -> (α539' | α556')))›  <:  α704'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α532' -> (α533' -> (α539' | α556')))›  <:  α532'
 //│ eval2_fixed_1: (Add[?] & {lhs: Add[?] | Lit | Nega[?], rhs: Add[?] | Lit | Nega[?]} | (Lit with {val: 'val}) | Nega[?] & {arg: Add[?] | Lit | Nega[?]}) -> (int | 'val) | error
 //│              = [Function (anonymous)]
 
@@ -157,7 +177,7 @@ eval2_fixed_1 e2
 // FIXME strange type
 // :e
 def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
-//│ fix: ((forall 'a, 'b, 'c. ('b -> 'c
+//│ fix: ((forall 'a, 'b, 'c. (('b -> 'c,)
 //│   where
 //│     'a <: 'a -> 'b -> 'c)) -> 'd) -> 'd
 //│    = [Function: fix]
@@ -215,43 +235,59 @@ def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║  l.+1: 	def eval1_fixed = eval1f (fun x -> eval1f eval1f x)
 //│ ║        	                                   ^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` is not an instance of type `int`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.33: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.34: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.36: 	  }
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ╙──      	                         ^^^^^^^^^^^
-//│ eval1_fixed: (Add[?] & {lhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit, rhs: Add[?] & {lhs: nothing -> int, rhs: nothing -> int} | Lit} | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval1_fixed: (Add[?] & {lhs: Add[?] & {lhs: (forall 'a, 'rhs. (('rhs,)
+//│   where
+//│     'a <: {rhs: 'rhs})) -> int & (forall 'a, 'lhs. (('lhs,)
+//│   where
+//│     'a <: {lhs: 'lhs})) -> int, rhs: (forall 'b, 'rhs0. (('rhs0,)
+//│   where
+//│     'b <: {rhs: 'rhs0})) -> int & (forall 'b, 'lhs0. (('lhs0,)
+//│   where
+//│     'b <: {lhs: 'lhs0})) -> int} | Lit, rhs: Add[?] & {lhs: (forall 'a, 'rhs. (('rhs,)
+//│   where
+//│     'a <: {rhs: 'rhs})) -> int & (forall 'a, 'lhs. (('lhs,)
+//│   where
+//│     'a <: {lhs: 'lhs})) -> int, rhs: (forall 'b, 'rhs0. (('rhs0,)
+//│   where
+//│     'b <: {rhs: 'rhs0})) -> int & (forall 'b, 'lhs0. (('lhs0,)
+//│   where
+//│     'b <: {lhs: 'lhs0})) -> int} | Lit} | (Lit with {val: 'val})) -> (int | 'val)
 
 rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?val | ?b)` does not match type `Add[?] & ?c | Lit & ?d`
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.33: 	def eval1f eval1 e = case e of {
 //│ ║        	                 ^^^^^^^^^^^^^^^
-//│ ║  l.30: 	  | Lit -> e.val
+//│ ║  l.34: 	  | Lit -> e.val
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.32: 	  }
+//│ ║  l.36: 	  }
 //│ ║        	^^^
 //│ ╟── but it flows into application with expected type `Add[?] & ?e | Lit & ?f`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.29: 	def eval1f eval1 e = case e of {
+//│ ║  l.33: 	def eval1f eval1 e = case e of {
 //│ ╙──      	                          ^
 //│ ╔══[ERROR] Type mismatch in binding of application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f (fun x -> eval1_fixed eval1_fixed x)
@@ -267,13 +303,15 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `?rhs -> ?a`
+//│ ╟── but it flows into application with expected type `(forall ?rhs. ((?rhs,)
+//│   where
+//│     ?a <: {rhs: ?rhs})) -> ?b`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	                         ^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
@@ -282,13 +320,15 @@ rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `int` is not a function
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `?lhs -> ?a`
+//│ ╟── but it flows into application with expected type `(forall ?lhs. ((?lhs,)
+//│   where
+//│     ?a <: {lhs: ?lhs})) -> ?b`
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	  | Add -> eval1 e.lhs + eval1 e.rhs
+//│ ║  l.35: 	  | Add -> eval1 e.lhs + eval1 e.rhs
 //│ ║        	           ^^^^^^^^^^^
 //│ ╟── from reference:
 //│ ║  l.+1: 	rec def eval1_fixed = eval1f eval1_fixed e1
@@ -300,7 +340,11 @@ def eval2_broken eval2 e = case e of {
   | Nega -> e.arg
   | _ -> eval1 eval2 e
   }
-//│ eval2_broken: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'arg}) | (Nega[?] with {arg: 'arg})) -> ('arg | int)
+//│ eval2_broken: ('a -> (forall 'b, 'rhs. (('rhs,)
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'lhs. (('lhs,)
+//│   where
+//│     'b <: {lhs: 'lhs})) -> int & 'a) -> (Add['b] & 'b | (Lit with {val: 'arg}) | (Nega['b] with {arg: 'arg})) -> ('arg | int)
 
 :e
 eval2_broken eval2_broken e2
@@ -308,8 +352,8 @@ eval2_broken eval2_broken e2
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1614    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α1550' -> (α1551' -> (arg1553' | α1568')))›  <:  α1550'
+//│ ╟── this constraint:  ‹∀ 0. (α1377' -> (α1378' -> (arg1380' | α1395')))›  <:  α1443    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α1377' -> (α1378' -> (arg1380' | α1395')))›  <:  α1377'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval2_broken eval2_broken e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -320,7 +364,7 @@ eval2_broken eval2_broken e2
 //│ ║  l.20: 	  | Add -> eval1 eval1 e.lhs + eval1 eval1 e.rhs
 //│ ║        	                               ^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.300: 	  | Nega -> e.arg
+//│ ║  l.340: 	  | Nega -> e.arg
 //│ ╙──       	            ^^^^^
 //│ res: error | int
 
@@ -329,16 +373,28 @@ def eval2f_oops eval2 e = case e of {
   | Nega -> 0 - (eval2 e.arg)
   | _ -> eval1 eval2 e // should be: eval1f eval2 e
   }
-//│ eval2f_oops: ('arg -> int & 'a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> ((Add[?] with {lhs: 'lhs, rhs: 'rhs}) | (Lit with {val: 'val}) | (Nega[?] with {arg: 'arg})) -> (int | 'val)
+//│ eval2f_oops: ((forall 'a, 'arg. (('arg,)
+//│   where
+//│     'a <: {arg: 'arg})) -> int & 'b -> (forall 'c, 'rhs. (('rhs,)
+//│   where
+//│     'c <: {rhs: 'rhs})) -> int & 'b -> (forall 'c, 'lhs. (('lhs,)
+//│   where
+//│     'c <: {lhs: 'lhs})) -> int & 'b) -> (Add['a] & 'c | (Lit with {val: 'val}) | Nega['a] & 'a) -> (int | 'val)
 
 // :e
 fix eval2f_oops e2
-//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (α1754 -> (α1761 | α1762))  <:  α1779    FunctionType  TypeVariable
-//│ ╙──  ... looks like:  (α1683' -> (α1688' | α1703'))  <:  α1741'''
-//│ res: error
+//│ ╟── function of type `?a -> ?b` does not match type `Add[?] & ?c | Lit & ?d`
+//│ ║  l.179: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed
+//│ ║         	                                    ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.18: 	def eval1 eval1 e = case e of {
+//│ ║        	                         ^
+//│ ╟── from reference:
+//│ ║  l.372: 	def eval2f_oops eval2 e = case e of {
+//│ ╙──       	                               ^
+//│ res: error | int
 
 

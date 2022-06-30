@@ -11,11 +11,15 @@ def flatMap f opt = case opt of {
   | Some -> f opt.value
   | None -> None{}
   }
-//│ flatMap: ('value -> 'a) -> (None | (Some[?] with {value: 'value})) -> (None | 'a)
+//│ flatMap: ((forall 'a, 'value. (('value,)
+//│   where
+//│     'a <: {value: 'value})) -> 'b) -> (None | Some['a] & 'a) -> (None | 'b)
 //│        = [Function: flatMap]
 
 def flatMap2 f opt = case opt of { Some -> f opt.value | _ -> opt }
-//│ flatMap2: ('value -> 'a) -> ((Some[?] with {value: 'value}) | 'a & ~some) -> 'a
+//│ flatMap2: ((forall 'a, 'value. (('value,)
+//│   where
+//│     'a <: {value: 'value})) -> 'b) -> (Some['a] & 'a | 'b & ~some) -> 'b
 //│         = [Function: flatMap2]
 
 def flatMap3 f opt = case opt of { Some -> f opt | _ -> opt }
@@ -48,13 +52,13 @@ rec def map2 f ls = case ls of {
 :e
 def safeDiv x (y: ~0) = div x y
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.53: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                        ^^^^^^^
 //│ ╟── type `~0` is not an instance of type `int`
-//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.53: 	def safeDiv x (y: ~0) = div x y
 //│ ║        	                  ^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.49: 	def safeDiv x (y: ~0) = div x y
+//│ ║  l.53: 	def safeDiv x (y: ~0) = div x y
 //│ ╙──      	                              ^
 //│ safeDiv: int -> ~0 -> (error | int)
 //│        = [Function: safeDiv]
@@ -66,16 +70,16 @@ def safeDiv x (y: int & ~0) = div x y
 :e
 safeDiv 1 0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	safeDiv 1 0
+//│ ║  l.71: 	safeDiv 1 0
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `0` does not match type `~0`
-//│ ║  l.67: 	safeDiv 1 0
+//│ ║  l.71: 	safeDiv 1 0
 //│ ║        	          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.66: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.66: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: error | int
 //│    = Infinity
@@ -91,19 +95,19 @@ fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
 :e // we no longer refine x's type here, as that was rather unexpected
 fun (x: int) -> safeDiv 1 x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.96: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                ^^^^^^^^^^^
 //│ ╟── type `int` does not match type `~0`
-//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.96: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `~0`
-//│ ║  l.92: 	fun (x: int) -> safeDiv 1 x
+//│ ║  l.96: 	fun (x: int) -> safeDiv 1 x
 //│ ║        	                          ^
 //│ ╟── Note: constraint arises from type negation:
-//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.66: 	def safeDiv x (y: int & ~0) = div x y
 //│ ║        	                        ^^
 //│ ╟── from intersection type:
-//│ ║  l.62: 	def safeDiv x (y: int & ~0) = div x y
+//│ ║  l.66: 	def safeDiv x (y: int & ~0) = div x y
 //│ ╙──      	                  ^^^^^^^^
 //│ res: int -> (error | int)
 //│    = [Function: res]

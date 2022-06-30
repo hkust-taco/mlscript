@@ -47,24 +47,28 @@ def arg = if true then c else 0
 
 :ns
 def arg = if true then C{x = 42} else C{x = 1}
-//│ arg: forall 'x, 'A, 'x0, 'A0, 'a. 'a
+//│ arg: forall 'a. 'a
 //│   where
-//│     'a :> c & {x: 'x, C#A = 'A} | c & {x: 'x0, C#A = 'A0}
+//│     'a :> (forall 'b, 'x, 'A. 'b) | (forall 'c, 'x0, 'A0. 'c)
+//│     'c :> c & {x: 'x0, C#A = 'A0}
 //│     'x0 :> 1
 //│         <: 'A0
 //│     'A0 :> 1
+//│     'b :> c & {x: 'x, C#A = 'A}
 //│     'x :> 42
 //│        <: 'A
 //│     'A :> 42
 
 :ns
 arg
-//│ res: forall 'x, 'A, 'x0, 'A0, 'a. 'a
+//│ res: forall 'a. 'a
 //│   where
-//│     'a :> c & {x: 'x, C#A = 'A} | c & {x: 'x0, C#A = 'A0}
+//│     'a :> (forall 'b, 'x, 'A. 'b) | (forall 'c, 'x0, 'A0. 'c)
+//│     'c :> c & {x: 'x0, C#A = 'A0}
 //│     'x0 :> 1
 //│         <: 'A0
 //│     'A0 :> 1
+//│     'b :> c & {x: 'x, C#A = 'A}
 //│     'x :> 42
 //│        <: 'A
 //│     'A :> 42
@@ -91,7 +95,7 @@ arg.X
 :e
 arg: C[nothing]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.92: 	arg: C[nothing]
+//│ ║  l.96: 	arg: C[nothing]
 //│ ║        	^^^
 //│ ╟── integer literal of type `42` does not match type `nothing`
 //│ ║  l.49: 	def arg = if true then C{x = 42} else C{x = 1}
