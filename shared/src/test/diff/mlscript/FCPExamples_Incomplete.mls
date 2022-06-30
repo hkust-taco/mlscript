@@ -1,0 +1,104 @@
+:GeneralizeCurriedFunctions
+:DistributeForalls
+
+
+
+type A = forall 'b. 'b -> 'b
+//│ Defined type alias A
+
+
+
+// * ========= This naive version actually works fine because `forall 'a.` can be distributed. =========
+
+
+def ty_1: (nothing -> 'a) -> 'a
+//│ ty_1: (nothing -> 'a) -> 'a
+//│     = <missing implementation>
+
+def ty_2: (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ty_2: (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│     = <missing implementation>
+
+// * Works thanks to `:DistributeForalls`
+ty_2 = ty_1
+//│ (nothing -> 'a) -> 'a
+//│   <:  ty_2:
+//│ (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│     = <no result>
+//│       ty_1 is not implemented
+
+def ty_1_2: (nothing -> A) -> A
+//│ ty_1_2: (nothing -> A) -> A
+//│       = <missing implementation>
+
+ty_1_2 = ty_1
+//│ (nothing -> 'a) -> 'a
+//│   <:  ty_1_2:
+//│ (nothing -> A) -> A
+//│       = <no result>
+//│         ty_1 is not implemented
+
+ty_2 = ty_1_2
+//│ (nothing -> A) -> A
+//│   <:  ty_2:
+//│ (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│     = <no result>
+//│       ty_1_2 and ty_1 are not implemented
+
+
+
+// * ========= Here the `forall 'a.` can't be distributed. =========
+// * (Unless we somehow knew to widen the function to `nothing -> ...` and then distribute...)
+
+
+def ty_1: 'a -> (nothing -> 'a) -> 'a
+//│ ty_1: 'a -> (nothing -> 'a) -> 'a
+//│     = <missing implementation>
+
+def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│     = <missing implementation>
+
+// * This fails to constrain though the subtyping do be holdin
+// * For instance taking 'a := (forall 'b. 'b -> 'b)
+:e
+ty_2 = ty_1
+//│ 'a -> (nothing -> 'a) -> 'a
+//│   <:  ty_2:
+//│ nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.65: 	ty_2 = ty_1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.58: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ║        	                                                            ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.58: 	def ty_2: nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│ ╙──      	                                                            ^^
+//│     = <no result>
+//│       ty_1 is not implemented
+
+
+// * We can manually make it work by transiting through the right instantiation:
+
+def ty_1_2: A -> (nothing -> A) -> A
+//│ ty_1_2: A -> (nothing -> A) -> A
+//│       = <missing implementation>
+
+ty_1_2 = ty_1
+//│ 'a -> (nothing -> 'a) -> 'a
+//│   <:  ty_1_2:
+//│ A -> (nothing -> A) -> A
+//│       = <no result>
+//│         ty_1 is not implemented
+
+ty_2 = ty_1_2
+//│ A -> (nothing -> A) -> A
+//│   <:  ty_2:
+//│ nothing -> (forall 'c. 'c -> 'c -> 'c) -> (forall 'b. 'b -> 'b)
+//│     = <no result>
+//│       ty_1_2 and ty_1 are not implemented
+
+
+
+
