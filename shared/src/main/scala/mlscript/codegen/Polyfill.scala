@@ -149,7 +149,9 @@ object Polyfill {
     buffer += BuiltinFunc("negate", makeUnaryFunc("-"))
     buffer += BuiltinFunc("eq", makeBinaryFunc("==="))
     buffer += BuiltinFunc("unit", makeUnaryFunc("undefined"))
-    buffer += BuiltinFunc("log", makeUnaryFunc("console.log"))
+    buffer += BuiltinFunc(
+      "log", fn(_, param("x")) { `return` { id("console.info")(id("x")) } }
+    )
     buffer.toList
   }
 

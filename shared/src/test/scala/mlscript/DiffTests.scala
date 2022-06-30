@@ -430,9 +430,17 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
               report(diags)
             }
 
-            final case class ExecutedResult(var replies: Ls[ReplHost.Reply]) extends JSTestBackend.Result {
+            final case class ExecutedResult(var replies: Ls[(ReplHost.Reply, String)]) extends JSTestBackend.Result {
+              def outputLog(log: String): Unit = {
+                val loglines = log.split('\n').iterator.filter(_.nonEmpty)
+                if (loglines.nonEmpty) {
+                  output("output:")
+                  loglines.foreach(output)
+                }
+              }
+
               def showFirst(prefixLength: Int): Unit = replies match {
-                case ReplHost.Error(err) :: rest =>
+                case (ReplHost.Error(err), log) :: rest =>
                   if (!(mode.expectTypeErrors
                       || mode.expectRuntimeErrors
                       || allowRuntimeErrors
@@ -441,19 +449,23 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                   totalRuntimeErrors += 1
                   output("Runtime error:")
                   err.split('\n') foreach { s => output("  " + s) }
+                  outputLog(log)
                   replies = rest
-                case ReplHost.Unexecuted(reason) :: rest =>
+                case (ReplHost.Unexecuted(reason), log) :: rest =>
                   output(" " * prefixLength + "= <no result>")
                   output(" " * (prefixLength + 2) + reason)
+                  outputLog(log)
                   replies = rest
-                case ReplHost.Result(result) :: rest =>
+                case (ReplHost.Result(result), log) :: rest =>
                   result.split('\n').zipWithIndex foreach { case (s, i) =>
                     if (i =:= 0) output(" " * prefixLength + "= " + s)
                     else output(" " * (prefixLength + 2) + s)
                   }
+                  outputLog(log)
                   replies = rest
-                case ReplHost.Empty :: rest =>
+                case (ReplHost.Empty, log) :: rest =>
                   output(" " * prefixLength + "= <missing implementation>")
+                  outputLog(log)
                   replies = rest
                 case Nil => ()
               }
@@ -515,13 +527,13 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
                           println(s"$prefix Query ${i + 1}/${queries.length}: <aborted: $reason>")
                         }
-                        ReplHost.Unexecuted(reason)
+                        (ReplHost.Unexecuted(reason), "")
                       case (JSTestBackend.EmptyQuery, i) =>
                         if (mode.showRepl) {
                           val prefix = if (i + 1 == queries.length) "└──" else "├──"
                           println(s"$prefix Query ${i + 1}/${queries.length}: <empty>")
                         }
-                        ReplHost.Empty
+                        (ReplHost.Empty, "")
                     })
                   } else {
                     JSTestBackend.ResultNotExecuted
@@ -759,6 +771,7 @@ object DiffTests {
     private val stderr = new BufferedReader(new InputStreamReader(proc.getErrorStream))
 
     skipUntilPrompt()
+    execute("console.info = console.error")
 
     private def skipUntilPrompt(): Unit = {
       val buffer = new StringBuilder()
@@ -786,6 +799,13 @@ object DiffTests {
         ReplHost.Result(reply)
     }
 
+    private def consumeStderr(): String = {
+      val buffer = new StringBuilder()
+      while (stderr.ready())
+        buffer.append(stderr.read().toChar)
+      buffer.toString()
+    }
+
     private def send(code: Str, useEval: Bool = false): Unit = {
       stdin.write(
         if (useEval) "eval(" + JSLit.makeStringLiteral(code) + ")\n"
@@ -795,15 +815,15 @@ object DiffTests {
       stdin.flush()
     }
 
-    def query(prelude: Str, code: Str): ReplHost.Reply = {
+    def query(prelude: Str, code: Str): (ReplHost.Reply, String) = {
       val wrapped = s"$prelude try { $code } catch (e) { console.log('\\u200B' + e + '\\u200B'); }"
       send(wrapped)
-      consumeUntilPrompt() match {
+      (consumeUntilPrompt() match {
         case _: ReplHost.Result =>
           send("res")
           consumeUntilPrompt()
         case t => t
-      }
+      }, consumeStderr())
     }
 
     def execute(code: Str): Unit = {
