@@ -41,21 +41,38 @@ def to_church: int -> ChurchInt
 // rec def to_ch n =
 //   if n == 0 then zero
 //   else s (to_ch n)
-rec def to_ch n =
+// rec def to_ch n =
+//   if true then zero
+//   else s (to_ch n)
+// rec def to_ch n =
+//   if true then zero
+//   else s (to_church n)
+def to_ch n =
   if true then zero
-  else s (to_ch n)
+  else s (to_church n)
+//│ to_ch: int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+//│   where
+//│     'a <: 'b -> 'c))
+//│      = <no result>
+//│        zero is not implemented
+
 // rec def to_ch n =
 //   s (to_ch (n - 1))
 // rec def to_ch n =
 //   s (to_ch n)
 // rec def to_ch n =
 //   to_ch n
-//│ to_ch: anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
-//│      = <no result>
-//│        zero is not implemented
 
-// :ns
-// to_ch
+:ns
+to_ch
+//│ res: forall 'a. forall 'a. forall 'b, 'a, 'c. 'b -> 'c
+//│   where
+//│     'c :> ChurchInt | (forall 'd, 'e. ('d -> 'e
+//│   where
+//│     'a <: 'd -> 'e))
+//│     'b <: int
+//│    = <no result>
+//│      to_ch and zero are not implemented
 
 // :re
 // to_ch 1 2
@@ -63,11 +80,13 @@ rec def to_ch n =
 // :d
 // FIXME?
 to_church = to_ch
-//│ anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
+//│ int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+//│   where
+//│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.65: 	to_church = to_ch
+//│ ║  l.82: 	to_church = to_ch
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.22: 	type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
@@ -81,9 +100,18 @@ to_church = to_ch
 :DistributeForalls
 
 to_church = to_ch
-//│ anything -> (('N -> 'N) -> 'N -> 'N | ChurchInt)
+//│ int -> (forall 'a, 'b, 'c. ('b -> 'c | ChurchInt
+//│   where
+//│     'a <: 'b -> 'c))
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│          = <no result>
 //│            to_ch and zero are not implemented
+
+
+
+rec def to_ch_weird n =
+  s (to_ch_weird n)
+//│ to_ch_weird: anything -> anything -> nothing
+//│            = [Function: to_ch_weird]
 
