@@ -43,7 +43,7 @@ def Bank lock cash = Bank { lock = lock; cash = cash }
 let lockA = Lock 20 in let lockB = Lock 30 in (Bank lockA 2000).Better(Bank lockB 30000)
 //│ Defined class Lock[+T]
 //│ Declared Lock.Map: Lock['T] -> ('T -> 'a) -> Lock['a]
-//│ Defined Lock.Map: Lock['T] -> ('T -> 'pins) -> Lock['pins]
+//│ Defined Lock.Map: Lock['T] -> ('T -> 'pins & 'T -> anything) -> Lock['pins]
 //│ Defined class Bank
 //│ Declared Bank.Potential: Bank -> int
 //│ Declared Bank.Better: Bank -> Bank -> bool

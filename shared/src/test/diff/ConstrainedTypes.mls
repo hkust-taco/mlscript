@@ -4,18 +4,31 @@
 // :d
 foo x =
   log (succ x.prop)
-//│ foo: anything -> unit
+//│ foo: {prop: int} -> unit
 //│    = [Function: foo]
 
 :ns
 foo x =
   let _ = log (succ x.prop)
   in x
-//│ foo: forall 'a. 'a -> 'a
+//│ foo: forall 'a, 'prop, 'prop0. 'a -> 'a
+//│   where
+//│     'a <: {prop: 'prop0} & {prop: 'prop}
+//│     'prop0 <: int
 //│    = [Function: foo1]
 
+:e
 foo false
-//│ res: false
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.21: 	foo false
+//│ ║        	^^^^^^^^^
+//│ ╟── reference of type `false` does not have field 'prop'
+//│ ║  l.21: 	foo false
+//│ ║        	    ^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.12: 	  let _ = log (succ x.prop)
+//│ ╙──      	                    ^^^^^^
+//│ res: error | false
 //│    = false
 //│ output:
 //│ NaN

@@ -29,19 +29,20 @@ rec def mem x l = case l of
   }
 //│ mem: anything -> 'tail -> bool
 //│   where
-//│     'tail <: (Cons[?]\head with {tail: 'tail}) | Nil
+//│     'tail <: (Cons[?] with {tail: 'tail}) | Nil
 
 rec def fold_left f x l = case l of
   { Nil -> x
   | Cons -> fold_left f (f x l.head) l.tail
   }
-//│ fold_left: 'a -> 'b -> (Cons['c] & 'c | Nil) -> 'b
+//│ fold_left: ('a -> (forall 'head. 'head) -> 'b & 'c) -> 'a -> (Cons['b] & 'b | Nil) -> 'a
 //│   where
-//│     'b :> forall 'a, 'b. ('d
+//│     'a :> forall 'a, 'c, 'b. ('d
 //│   where
-//│     'a <: 'b -> (forall 'c, 'head. ('head
+//│     'c <: 'a -> (forall 'b, 'head. ('head
 //│   where
-//│     'c <: {head: 'head})) -> 'd)
+//│     'b <: {head: 'head})) -> 'd
+//│     'b <: {head: 'b})
 
 // ------------ polymorphic methods ------------
 
@@ -52,13 +53,17 @@ class Collection[a]: { l: List[a] }
   method Fold f x = fold_left f x this.l
 //│ Defined class Collection[+a]
 //│ Defined Collection.Mem: Collection[?] -> anything -> bool
-//│ Defined Collection.Fold: Collection[?] -> anything -> (forall 'a. 'a -> 'a)
+//│ Defined Collection.Fold: Collection['a] -> (forall 'b. 'b -> (forall 'b, 'c. ('c -> 'c
 //│   where
-//│     'a :> forall 'a, 'b. ('c
+//│     'b <: 'c -> (forall 'head. 'a | 'head) -> 'b)))
 //│   where
-//│     'b <: 'a -> (forall 'd, 'head. ('head
+//│     'c :> forall 'c, 'd, 'e. ('f
 //│   where
-//│     'd <: {head: 'head})) -> 'c)
+//│     'd <: 'c -> (forall 'a, 'e, 'head. ('a | 'head
+//│   where
+//│     'e <: {head: 'head}
+//│     'e <: {head: 'head})) -> 'f
+//│     'e <: {head: 'b})
 
 def coll_mem c x = c.Mem x
 //│ coll_mem: 'a -> (forall 'a. ('a -> bool
@@ -70,10 +75,19 @@ def simple_and_double c =
   let l1 = c.Fold (fun y -> fun x -> Cons x y) Nil in
   let l2 = c.Fold (fun y -> fun x -> Cons ((x, x),) y) Nil in
   (l1, l2)
-//│ simple_and_double: Collection[?] -> (forall 'a. Nil | 'a, forall 'a. Nil | 'a,)
+//│ simple_and_double: Collection['a | 'a0] -> (forall 'b. Nil | 'b, forall 'c. Nil | 'c,)
 //│   where
-//│     'a :> forall 'a, 'b. ('c
+//│     'c :> forall 'c, 'd, 'e. ('f
 //│   where
-//│     'b <: 'a -> (forall 'd, 'head. ('head
+//│     'd <: 'c -> (forall 'a, 'e, 'head. ('a | 'head
 //│   where
-//│     'd <: {head: 'head})) -> 'c)
+//│     'e <: {head: 'head}
+//│     'e <: {head: 'head})) -> 'f
+//│     'e <: {head: anything})
+//│     'b :> forall 'b, 'g, 'h. ('i
+//│   where
+//│     'g <: 'b -> (forall 'a0, 'h, 'head0. ('a0 | 'head0
+//│   where
+//│     'h <: {head: 'head0}
+//│     'h <: {head: 'head0})) -> 'i
+//│     'h <: {head: anything})

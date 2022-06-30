@@ -73,11 +73,12 @@ choose id
 //│ res: 'a -> (forall 'a, 'b. 'b -> 'b | 'a)
 
 fun (g: forall 'a. ('a -> 'a) -> ('a -> 'a)) -> fun (x: forall 'a. 'a -> 'a) -> fun a -> g a (x a)
-//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c. ('c -> 'd
+//│ res: (forall 'a. ('a -> 'a) -> 'a -> 'a) -> (forall 'a0. 'a0 -> 'a0) -> (forall 'b, 'c, 'd. ('c -> 'e
 //│   where
-//│     'b <: 'c -> (forall 'c, 'e, 'f. ('f
+//│     'b <: 'c -> (forall 'c, 'd, 'f. ('f
 //│   where
-//│     'e <: 'c -> 'f)) -> 'd))
+//│     'd <: 'c -> 'f)) -> 'e
+//│     'd <: 'c -> anything))
 
 choose id succ
 //│ res: int -> int
@@ -115,7 +116,7 @@ app auto id
 :e
 let f = choose id in (f auto) (f succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.116: 	let f = choose id in (f auto) (f succ)
+//│ ║  l.117: 	let f = choose id in (f auto) (f succ)
 //│ ║         	                     ^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` is not an instance of type `int`
 //│ ║  l.30: 	def auto (x: forall 'a. 'a -> 'a) = x x
@@ -133,13 +134,13 @@ choose id auto2
 :e
 res (choose id succ)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.134: 	res (choose id succ)
+//│ ║  l.135: 	res (choose id succ)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> ?a` is not an instance of type `int`
 //│ ║  l.27: 	def id x = x
 //│ ║        	       ^^^^^
 //│ ╟── but it flows into reference with expected type `int`
-//│ ║  l.134: 	res (choose id succ)
+//│ ║  l.135: 	res (choose id succ)
 //│ ╙──       	            ^^
 //│ res: int -> int | error | int
 
@@ -243,7 +244,7 @@ poly = fun f -> (f 1, f true)
 
 // FreezeML B2
 polyL = fun xs -> poly (head xs)
-//│ polyL: List[nothing -> ('a | 'b)] -> ('a, 'b,)
+//│ polyL: List[?] -> (nothing, nothing,)
 
 let ids = single id in (polyL ids, append ids (single inc))
 //│ res: ((1, true,), List[int -> int],)

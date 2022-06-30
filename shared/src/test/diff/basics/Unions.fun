@@ -298,7 +298,7 @@ x => bar(bar(x, 1), 0)
 
 
 let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ baz: (r: {_1: int} & 'a,) -> (forall 'a, 'b. ('b
+//│ baz: (r: {_1: int, _2: 'a} & 'a,) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: {_1: 'b}
 //│     'a <: {_2: 'b}))
@@ -308,22 +308,19 @@ baz(0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.307: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── integer literal of type `0` does not have field '_1'
+//│ ╟── integer literal of type `0` does not have field '_2'
 //│ ║  l.307: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `{_1: ?a}`
+//│ ╟── but it flows into argument with expected type `{_2: ?a}`
 //│ ║  l.307: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.300: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                             ^^^
+//│ ║         	                                                     ^^^
 //│ ╟── from binding:
 //│ ║  l.300: 	let baz(r: (0, 0) | _) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^
-//│ res: error | 'a
-//│   where
-//│     'b <: {_2: 'a}
-//│     'b <: {_1: 'a}
+//│ res: error
 
 baz(0, 0)
 baz(0, 1)
@@ -373,24 +370,21 @@ let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 baz(0)
 baz(0, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.373: 	baz(0)
+//│ ║  l.370: 	baz(0)
 //│ ║         	^^^^^^
-//│ ╟── integer literal of type `0` does not have field '_1'
-//│ ║  l.373: 	baz(0)
+//│ ╟── integer literal of type `0` does not have field '_2'
+//│ ║  l.370: 	baz(0)
 //│ ║         	    ^
-//│ ╟── but it flows into argument with expected type `{_1: ?a}`
-//│ ║  l.373: 	baz(0)
+//│ ╟── but it flows into argument with expected type `{_2: ?a}`
+//│ ║  l.370: 	baz(0)
 //│ ║         	   ^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
-//│ ║         	                                  ^^^
+//│ ║  l.363: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║         	                                                          ^^^
 //│ ╟── from binding:
-//│ ║  l.366: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
+//│ ║  l.363: 	let baz(r: (0, 0) | (1, _)) = if r._1 < 1 then r._1 else r._2
 //│ ╙──       	        ^^^^^^^^^^^^^^^^^^
-//│ res: error | 'a
-//│   where
-//│     'b <: {_2: 'a}
-//│     'b <: {_1: 'a}
+//│ res: error
 //│ res: 'a
 //│   where
 //│     'b <: {_2: 'a}

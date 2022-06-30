@@ -59,7 +59,7 @@ rec def fact x = if x == 1 then 1 else x * fact (x - 1)
 // :ts // FIXME constrained types
 def g x y = if x.b == 1 then x else x.a
 // miscellaneous functions
-//│ g: ({b: int} & 'b) -> anything -> ((forall 'b, 'a. ('a
+//│ g: ({a: anything, b: int} & 'b) -> anything -> ((forall 'b, 'a. ('a
 //│   where
 //│     'b <: {a: 'a})) | 'b)
 
@@ -108,10 +108,10 @@ def f: ('c -> 'a as 'a) -> 'c -> int
 def nonsense x y = if x.a == y.b then x y else fun y -> x
 def g = fun x -> fun y -> if x == y then x y else y x
 // complex types
-//│ nonsense: ({a: int} & 'a) -> ({b: int} & 'b) -> (forall 'a, 'b, 'c. (anything -> 'a | 'c
+//│ nonsense: ('a -> anything & {a: int} & 'b) -> ({b: int} & 'a) -> (forall 'a, 'b, 'c. (anything -> 'b | 'c
 //│   where
-//│     'a <: 'b -> 'c))
-//│ g: (int & 'a) -> (int & 'b) -> (forall 'a, 'b, 'c. ('c
+//│     'b <: 'a -> 'c))
+//│ g: nothing -> nothing -> (forall 'a, 'b, 'c. ('c
 //│   where
 //│     'a <: 'b -> 'c
 //│     'b <: 'a -> 'c))
@@ -147,8 +147,8 @@ def h (x, (y, z)) = y z + x
 def k (x, (y, z)) (l, (m), (n)) = (m (n + l)) (y (z + x))
 def l: ((1, 2), (3, 4)) -> 5
 //│ g: (int, int,) -> int
-//│ h: (int, ('a -> int, 'a,),) -> int
-//│ k: (int, ('a, int,),) -> (int, int -> (forall 'a, 'b. ('b
+//│ h: (int, ('a -> int & 'a -> anything, 'a,),) -> int
+//│ k: (int, (int -> 'a & 'a, int,),) -> (int, int -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: int -> 'b)) -> 'c, int,) -> 'c
 //│ l: ((1, 2,), (3, 4,),) -> 5

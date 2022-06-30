@@ -13,8 +13,9 @@ def z f x = x
 //│  = [Function: z]
 
 def s n f x = f (n f x)
-//│ s: 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
+//│     'a <: 'b -> 'c -> 'a
 //│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
@@ -33,24 +34,25 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :d
 :e
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
+//│     'a <: 'b -> 'c -> 'a
 //│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.35: 	succ = s
+//│ ║  l.36: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.24: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.25: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.24: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.25: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.24: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.25: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                  ^^
 //│     = [Function: s]
 
@@ -62,8 +64,9 @@ def succ0: forall 'M. (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (('M -> 'M) -> ('
 //│      = <missing implementation>
 
 succ0 = s
-//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
+//│     'a <: 'b -> 'c -> 'a
 //│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
@@ -76,24 +79,25 @@ succ0 = s
 // * This does not help; we still need distrib. It works in MLF – do they have distrib?!
 :e
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
-//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
-//│     'a <: (forall 'a, 'd, 'b, 'e. ('e
+//│     'b <: 'a -> 'c -> anything
+//│     'a <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'd <: 'a -> 'b -> 'e)) -> 'c)))
+//│     'b <: 'a -> 'c -> 'e)) -> 'd)))
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.78: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
+//│ ║  l.81: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.24: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.25: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.24: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.25: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── from quantified type variable:
-//│ ║  l.78: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
+//│ ║  l.81: 	def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
 //│ ╙──      	                     ^^
 //│     = [Function: succ2]
 
@@ -101,27 +105,30 @@ def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x
 
 // :d
 n1 = s z
-//│ n1: 'a -> (forall 'a. ('b -> 'c
+//│ n1: 'a -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
-//│     'a <: (forall 'a, 'd, 'b, 'e. ('e
+//│     'b <: 'a -> 'c -> anything
+//│     'a <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'd <: 'a -> 'b -> 'e)) -> 'c))
+//│     'b <: 'a -> 'c -> 'e)) -> 'd))
 //│   = [Function (anonymous)]
 
 n2 = s (s z)
-//│ n2: 'a -> (forall 'a. ('b -> 'c
+//│ n2: 'a -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
-//│     'a <: (forall 'a, 'd, 'b, 'e. ('e
+//│     'b <: 'a -> 'c -> anything
+//│     'a <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'd <: 'a -> 'b -> 'e)) -> 'c))
+//│     'b <: 'a -> 'c -> 'e)) -> 'd))
 //│   = [Function (anonymous)]
 
 n3 = s (s (s z))
-//│ n3: 'a -> (forall 'a. ('b -> 'c
+//│ n3: 'a -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
-//│     'a <: (forall 'a, 'd, 'b, 'e. ('e
+//│     'b <: 'a -> 'c -> anything
+//│     'a <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'd <: 'a -> 'b -> 'e)) -> 'c))
+//│     'b <: 'a -> 'c -> 'e)) -> 'd))
 //│   = [Function (anonymous)]
 
 // def wrap: 'WRA -> 'WRA
@@ -136,9 +143,10 @@ wrap x = { x }
 n1w = n1 wrap
 //│ n1w: 'a -> 'b
 //│   where
-//│     'c <: (forall 'c, 'd, 'a, 'e. ('e
+//│     'c <: 'd -> 'a -> anything
+//│     'd <: (forall 'c, 'd, 'a, 'e. ('e
 //│   where
-//│     'd <: 'c -> 'a -> 'e)) -> 'b
+//│     'c <: 'd -> 'a -> 'e)) -> 'b
 //│    = [Function (anonymous)]
 
 // :d
@@ -183,8 +191,9 @@ res.x.x.x + 1
 :DistributeForalls
 
 succ = s
-//│ 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
+//│     'a <: 'b -> 'c -> 'a
 //│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
@@ -208,7 +217,7 @@ z: ChurchInt
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 64
+//│ constrain calls  : 98
 //│ annoying  calls  : 0
 //│ subtyping calls  : 0
 

@@ -6,7 +6,7 @@ let f = x =>
 let h = y =>
   succ / f y
 let mkArg = a => {prop: a}
-//│ f: {prop: 'prop} -> 'prop
+//│ f: {prop: int & 'prop} -> 'prop
 //│ h: {prop: int} -> int
 //│ mkArg: 'a -> {prop: 'a}
 
@@ -20,11 +20,11 @@ h / mkArg false
 //│ ║  l.15: 	h / mkArg false
 //│ ║        	          ^^^^^
 //│ ╟── Note: constraint arises from argument:
-//│ ║  l.7: 	  succ / f y
-//│ ║       	         ^^^
+//│ ║  l.4: 	  log / succ x.prop
+//│ ║       	             ^^^^^^
 //│ ╟── from field selection:
-//│ ║  l.5: 	  x.prop
-//│ ╙──     	   ^^^^^
+//│ ║  l.4: 	  log / succ x.prop
+//│ ╙──     	              ^^^^^
 //│ res: error | int
 
 :v
@@ -53,13 +53,13 @@ let arg2 = {fld: arg}
 let i = y =>
   succ / f y.fld
 let test = x => y => if x.prop then i x else y
-//│ f: {prop: 'prop} -> 'prop
+//│ f: {prop: int & 'prop} -> 'prop
 //│ arg: {prop: bool}
 //│ arg2: {fld: {prop: bool}}
 //│ i: {fld: {prop: int}} -> int
-//│ test: ({prop: bool} & 'a) -> 'b -> (int | 'b
+//│ test: ({fld: {prop: int}, prop: bool} & 'a) -> 'b -> (int | 'b
 //│   where
-//│     'a <: {fld: {prop: int}})
+//│     'a <: {fld: {prop: 'a & int} & 'a & {prop: 'a} & {prop: int}})
 
 :e
 :verbose
@@ -67,15 +67,15 @@ test arg2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.66: 	test arg2
 //│ ║        	^^^^^^^^^
-//│ ╟── record of type `{fld: forall ?a. {prop: ?a}}` does not have field 'prop'
-//│ ║  l.52: 	let arg2 = {fld: arg}
-//│ ║        	           ^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `{prop: ?prop}`
-//│ ║  l.66: 	test arg2
-//│ ║        	     ^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.55: 	let test = x => y => if x.prop then i x else y
-//│ ╙──      	                         ^^^^^
+//│ ╟── application of type `bool` is not an instance of type `int`
+//│ ║  l.51: 	let arg = {prop: not true}
+//│ ║        	                 ^^^^^^^^
+//│ ╟── Note: constraint arises from argument:
+//│ ║  l.49: 	  log / succ x.prop
+//│ ║        	             ^^^^^^
+//│ ╟── from field selection:
+//│ ║  l.49: 	  log / succ x.prop
+//│ ╙──      	              ^^^^^
 //│ res: 'a -> (int | 'a
 //│   where
 //│     'b <: {fld: {prop: int}}) | error

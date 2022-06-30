@@ -2,7 +2,7 @@
 let twice f x = f / f x
 //│ twice: ((forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
+//│     'a <: 'b -> 'c)) -> 'd & 'b -> 'a & 'a) -> 'b -> 'd
 // Note: the pretty-printed type of `twice` *used to be* simplified to ('a -> ('a & 'b)) -> 'a -> 'b
 //    (another equivalent simplification is ('a | 'b -> 'a) -> 'b -> 'a);
 //    this simplification lost some information in the context of first-class polymorphism
@@ -13,11 +13,7 @@ twice(x => x + 1)
 //│ res: int -> int
 
 twice twice
-//│ res: (('a
-//│   where
-//│     'b <: (forall 'c. ('c
-//│   where
-//│     'd <: 'e -> 'c)) -> 'a) -> 'f & 'b) -> 'e -> 'f
+//│ res: nothing -> anything -> nothing
 
 let f = x => 1, x
 //│ f: 'a -> (1, 'a,)

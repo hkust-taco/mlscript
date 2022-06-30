@@ -84,9 +84,21 @@ let rec sumHeads = x => x.head + sumHeads x.tail
 //│ ║  l.82: 	let rec sumHeads = x => x.head + sumHeads x.tail
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α54'  <:  {tail: tail62'}    TypeVariable  RecordType
-//│ ╙──  ... looks like:  α54'  <:  {tail: tail58''}
-//│ sumHeads: {head: int, tail: {head: int}} -> int
+//│ ╟── this constraint:  α54'  <:  {tail: tail64'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α54'  <:  {tail: tail59''}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.82: 	let rec sumHeads = x => x.head + sumHeads x.tail
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α54'  <:  {tail: tail66'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α54'  <:  {tail: tail59''}
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.82: 	let rec sumHeads = x => x.head + sumHeads x.tail
+//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α54'  <:  {tail: tail68'}    TypeVariable  RecordType
+//│ ╙──  ... looks like:  α54'  <:  {tail: tail59''}
+//│ sumHeads: {head: int, tail: {head: int, tail: anything}} -> int
 
 let rec ouroboros = {head: 0, tail: ouroboros, eyes: {l: 1, r: 2}}
 //│ ouroboros: 'ouroboros
@@ -130,7 +142,7 @@ let r = {
   u: 1;
   v: 2;
 }
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.129:1: let r = {
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = {\n" at l.141:1: let r = {
 
 let r = {
   u:
@@ -174,7 +186,7 @@ let r = {
 let r = { u:
   1, v: 2 }
 //│ ╔══[WARNING] Missing name for record field
-//│ ║  l.175: 	  1, v: 2 }
+//│ ║  l.187: 	  1, v: 2 }
 //│ ╙──       	  ^
 //│ r: {u: {_1: 1, v: 2}}
 
@@ -249,7 +261,7 @@ let r = (
     x: 3,
     y: 4,
 )
-//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.243:1: let r = (
+//│ /!\ Parse error: Expected let binding:1:1, found "let r = (\n" at l.255:1: let r = (
 
 a:
   b:
@@ -290,11 +302,11 @@ a: {
   3
 }
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.286: 	  3
+//│ ║  l.298: 	  3
 //│ ╙──       	  ^
 //│ res: (a: 3,)
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.290: 	  3
+//│ ║  l.302: 	  3
 //│ ╙──       	  ^
 //│ res: (a: 3,)
 
@@ -318,7 +330,7 @@ let r =
   y: 2
   log y
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.319: 	  log y
+//│ ║  l.331: 	  log y
 //│ ╙──       	  ^^^^^
 //│ r: unit
 
@@ -329,7 +341,7 @@ let res =
   arg: 0
   arg + 1
 //│ ╔══[WARNING] Previous field definitions are discarded by this returned expression.
-//│ ║  l.330: 	  arg + 1
+//│ ║  l.342: 	  arg + 1
 //│ ╙──       	  ^^^^^^^
 //│ res: int
 

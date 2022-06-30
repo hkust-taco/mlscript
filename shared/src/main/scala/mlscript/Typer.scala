@@ -547,6 +547,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       }, prov, ctx, extrCtx) // Q: extrCtx here?
       res
     }
+    
+    def instantiateForGoodMeasure(ty: ST): Unit = ty match {
+      case ty @ PolymorphicType(plvl, _: ConstrainedType) =>
+        val ConstrainedType(cs, bod) = ty.instantiate
+        cs.foreach { case (tv, bs) => bs.foreach {
+          case (true, b) => con(b, tv, TopType)
+          case (false, b) => con(tv, b, TopType)
+        }}
+      case _ => ()
+    }
+    
     term match {
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
@@ -714,17 +725,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val f_ty = typeTerm(f)
         // val a_ty = typePolymorphicTerm(a)
         val a_ty =
-          if (ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
-            typePolymorphicTerm(a)
-          // else ctx.nextLevel |> { implicit ctx =>
-          //   val ec: ExtrCtx = MutMap.empty
-          //   val extrCtx: Opt[ExtrCtx] = S(ec)
-          //   val ty = typeTerm(a)(ctx, raise, extrCtx, vars, genLambdas = false)
-          //   PolymorphicType.mk(ctx.lvl,
-          //     ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
-          // }
-          else {
-            def typeArg(a: Term): ST = {
+          // if (ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
+          //   typePolymorphicTerm(a)
+          // // else ctx.nextLevel |> { implicit ctx =>
+          // //   val ec: ExtrCtx = MutMap.empty
+          // //   val extrCtx: Opt[ExtrCtx] = S(ec)
+          // //   val ty = typeTerm(a)(ctx, raise, extrCtx, vars, genLambdas = false)
+          // //   PolymorphicType.mk(ctx.lvl,
+          // //     ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+          // // }
+          // else {
+            {
+            def typeArg(a: Term): ST = if (ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd))) typePolymorphicTerm(a) else {
               val newCtx = ctx.nextLevel
               val ec: ExtrCtx = MutMap.empty
               val extrCtx: Opt[ExtrCtx] = S(ec)
@@ -733,7 +745,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
                 // genLambdas = false // currently can't do it because we don't yet push foralls into argument tuples
                 )
               PolymorphicType.mk(ctx.lvl,
-                ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
+                ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy)) tap
+                  instantiateForGoodMeasure
             }
             a match {
               case Tup(as) =>

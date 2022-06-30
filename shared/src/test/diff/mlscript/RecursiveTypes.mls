@@ -206,16 +206,16 @@ class C[A]: { a: A }
 
 :ns
 rec def foo (c: C['a]) = foo (c.a)
-//│ foo: forall 'foo, 'b, 'a, 'c, 'a0, 'a1, 'a2. 'foo
+//│ foo: forall 'foo, 'b, 'a, 'a0, 'c, 'a1, 'a2, 'a3. 'foo
 //│   where
 //│     'foo :> C['a] -> 'c
-//│          <: (forall 'a3. ('a3
+//│          <: (forall 'a4. ('a4
 //│   where
-//│     'b <: {a: 'a3})) -> 'c
-//│     'a <: 'a2 & 'a1 & 'a0
-//│     'a0 <: c
-//│     'a1 <: {a: 'a}
-//│     'a2 <: {C#A <: 'a}
+//│     'b <: {a: 'a4})) -> 'c
+//│     'a <: 'a3 & 'a2 & 'a1 & 'a0
+//│     'a1 <: c
+//│     'a2 <: {a: 'a}
+//│     'a3 <: {C#A <: 'a}
 //│    = [Function: foo]
 
 foo

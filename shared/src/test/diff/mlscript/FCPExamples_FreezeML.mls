@@ -322,6 +322,15 @@ a id
 // :e
 :ns
 choose id (fun (x: ('a -> 'a)) -> auto' x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.324: 	choose id (fun (x: ('a -> 'a)) -> auto' x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ║        	                    ^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
+//│ ╙──      	                    ^^
 //│ res: 'c
 //│   where
 //│     'c :> (forall 'a. 'a -> 'a) | (forall 'a0, 'd, 'b. (('a0 -> 'a0) -> 'd
@@ -332,7 +341,7 @@ choose id (fun (x: ('a -> 'a)) -> auto' x)
 :e // * ^ Here you go:
 res id
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.333: 	res id
+//│ ║  l.342: 	res id
 //│ ║         	^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b
@@ -346,10 +355,10 @@ res id
 :e
 a (fun x -> { u = x })
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.347: 	a (fun x -> { u = x })
+//│ ║  l.356: 	a (fun x -> { u = x })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{u: ?a}` is not an instance of type `'a`
-//│ ║  l.347: 	a (fun x -> { u = x })
+//│ ║  l.356: 	a (fun x -> { u = x })
 //│ ║         	            ^^^^^^^^^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.43: 	def auto' : (forall 'a. 'a -> 'a) -> 'b -> 'b

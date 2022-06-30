@@ -26,31 +26,31 @@ test "hi"
 def test f =
   let local g = g (f 1)
   in local succ
-//│ test: (1 -> int) -> int
+//│ test: (1 -> int & 1 -> anything) -> int
 //│     = [Function: test1]
 
 def test f =
   let local g x = g (f x)
   in local succ
-//│ test: ('a -> int) -> 'a -> int
+//│ test: ('a -> int & 'a -> anything) -> 'a -> int
 //│     = [Function: test2]
 
 def test f =
   let local g x = g (f x)
   in local add
-//│ test: ('a -> int) -> 'a -> int -> int
+//│ test: ('a -> int & 'a -> anything) -> 'a -> int -> int
 //│     = [Function: test3]
 
 def test f =
   let local g x = g (f x)
   in local add 1
-//│ test: (1 -> int) -> int -> int
+//│ test: (1 -> int & 1 -> anything) -> int -> int
 //│     = [Function: test4]
 
 def test f =
   let local g x = g (f x)
   in (local add 1, local (fun y -> fun z -> y + z) 2)
-//│ test: (2 -> int & 1 -> int) -> (int -> int, int -> int,)
+//│ test: ((1 | 2) -> anything & 2 -> int & 1 -> int) -> (int -> int, int -> int,)
 //│     = [Function: test5]
 
 :re // TODO
@@ -70,7 +70,7 @@ f_g._2 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ test: ("ok" -> string & 1 -> int) -> (int -> int, string -> string,)
+//│ test: (("ok" | 1) -> anything & "ok" -> string & 1 -> int) -> (int -> int, string -> string,)
 //│     = [Function: test6]
 
 :e
@@ -90,7 +90,7 @@ def test =
     let local g x = f (g x)
     in local
   ) add
-//│ test: ('a -> int) -> 'a -> int -> int
+//│ test: ('a -> int & 'b -> anything) -> ('a & 'b) -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -98,7 +98,7 @@ def test =
     let local g = f (g x)
     in local
   ) add "1"
-//│ test: ("1" -> int) -> int -> int
+//│ test: ("1" -> int & "1" -> anything) -> int -> int
 //│     = [Function (anonymous)]
 
 def test =
@@ -108,7 +108,7 @@ def test =
   )
 //│ test: ((forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)) -> "1" -> 'd) -> 'b -> 'd
+//│     'a <: 'b -> 'c)) -> "1" -> 'd) -> (int & 'b) -> 'd
 //│     = [Function: test9]
 
 fun f -> fun x ->

@@ -268,7 +268,7 @@ idx idx.x
 def indirect i = i i.x
 //│ indirect: ((forall 'a, 'x. ('x
 //│   where
-//│     'a <: {x: 'x})) -> 'b & 'a) -> 'b
+//│     'a <: {x: 'x})) -> 'b & {x: 'a} & 'a) -> 'b
 
 indirect idx
 //│ res: 'x

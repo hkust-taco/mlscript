@@ -19,22 +19,26 @@ def eval eval x = case x of {
   Lit -> x.val
   | Add -> eval eval x.lhs + eval eval x.rhs
   }
-//│ eval: ('a -> (forall 'b, 'rhs. ('rhs
+//│ eval: ('a -> (forall 'b, 'lhs. ('lhs
 //│   where
-//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'lhs. ('lhs
+//│     'b <: {lhs: 'lhs})) -> 'b & 'a -> (forall 'b, 'lhs. ('lhs
 //│   where
-//│     'b <: {lhs: 'lhs})) -> int & 'a) -> (Add & 'b | (Lit with {val: 'val})) -> (int | 'val)
+//│     'b <: {lhs: 'lhs})) -> int & 'a -> (forall 'b, 'rhs. ('rhs
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'rhs. ('rhs
+//│   where
+//│     'b <: {rhs: 'rhs})) -> 'b & 'a) -> (Add & 'b | (Lit with {val: 'val})) -> (int | 'val)
 //│     = [Function: eval1]
 
 :e
 eval eval
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.30: 	eval eval
+//│ ║  l.34: 	eval eval
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α50' -> (α51' -> (val53' | α64')))›  <:  α102    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α50' -> (α51' -> (val53' | α64')))›  <:  α50'
-//│ res: ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val})) -> (int | 'val) | error
+//│ ╟── this constraint:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α128    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α54'
+//│ res: error
 //│    = [Function (anonymous)]
 
 class Neg: Expr & { underlying: Expr }
@@ -44,24 +48,18 @@ def evalN evalN x = case x of {
   Neg -> 0 - (evalN evalN x.underlying)
   | _ -> eval evalN x
   }
-//│ evalN: ('a -> (forall 'b, 'underlying. ('underlying
-//│   where
-//│     'b <: {underlying: 'underlying})) -> int & 'a -> (forall 'c, 'rhs. ('rhs
-//│   where
-//│     'c <: {rhs: 'rhs})) -> int & 'a -> (forall 'c, 'lhs. ('lhs
-//│   where
-//│     'c <: {lhs: 'lhs})) -> int & 'a) -> (Add & 'c | (Lit with {val: 'val}) | Neg & 'b) -> (int | 'val)
+//│ evalN: nothing -> (Add | (Lit with {val: 'val}) | Neg) -> (int | 'val)
 //│      = [Function: evalN]
 
 :e
 evalN evalN
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.57: 	evalN evalN
+//│ ║  l.55: 	evalN evalN
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α146' -> (α147' -> (α153' | α170')))›  <:  α228    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α146' -> (α147' -> (α153' | α170')))›  <:  α146'
-//│ res: ((Add with {lhs: Add | Lit | Neg, rhs: Add | Lit | Neg}) | (Lit with {val: 'val}) | (Neg with {underlying: Add | Lit | Neg})) -> (int | 'val) | error
+//│ ╟── this constraint:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α321    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α214'
+//│ res: error
 //│    = [Function (anonymous)]
 
 e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
@@ -71,12 +69,12 @@ e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
 :e
 evalN evalN e
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
-//│ ║  l.72: 	evalN evalN e
+//│ ║  l.70: 	evalN evalN e
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α146' -> (α147' -> (α153' | α170')))›  <:  α372    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α146' -> (α147' -> (α153' | α170')))›  <:  α146'
-//│ res: error | int
+//│ ╟── this constraint:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α513    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α214' -> (α215' -> (α225' | α251')))›  <:  α214'
+//│ res: error
 //│    = -1
 
 
@@ -100,11 +98,13 @@ def evalN2 evalN2 x = case x of {
 //│ ║  l.+3: 	  | _ -> eval eval x
 //│ ║        	         ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α50' -> (α51' -> (val53' | α64')))›  <:  α474'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α50' -> (α51' -> (val53' | α64')))›  <:  α50'
+//│ ╟── this constraint:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α687'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α54' -> (α55' -> (val57' | α77')))›  <:  α54'
 //│ evalN2: ('a -> (forall 'b, 'underlying. ('underlying
 //│   where
-//│     'b <: {underlying: 'underlying})) -> int & 'a) -> ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val}) | Neg & 'b) -> (error | int | 'val)
+//│     'b <: {underlying: 'underlying})) -> int & 'a -> (forall 'b, 'underlying. ('underlying
+//│   where
+//│     'b <: {underlying: 'underlying})) -> 'b & 'a) -> (Neg & 'b | ~Neg) -> (error | int)
 
 :e
 evalN2 evalN2 e
@@ -112,20 +112,8 @@ evalN2 evalN2 e
 //│ ║  l.+1: 	evalN2 evalN2 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α450' -> (α451' -> (α457' | α500')))›  <:  α554    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α450' -> (α451' -> (α457' | α500')))›  <:  α450'
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+1: 	evalN2 evalN2 e
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── application of type `Neg & {underlying: ?underlying}` does not match type `Add & ?a | Lit & ?b`
-//│ ║  l.67: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
-//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.18: 	def eval eval x = case x of {
-//│ ║        	                       ^
-//│ ╟── from field selection:
-//│ ║  l.20: 	  | Add -> eval eval x.lhs + eval eval x.rhs
-//│ ╙──      	                                       ^^^^^
+//│ ╟── this constraint:  ‹∀ 0. (α650' -> (α651' -> (α661' | α770')))›  <:  α802    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α650' -> (α651' -> (α661' | α770')))›  <:  α650'
 //│ res: error | int
 
 
@@ -137,26 +125,42 @@ def evalN3 evalN3 x = case x of {
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── function of type `?a -> (?b | ?c)` is not an instance of type `int`
-//│ ║  l.95: 	def evalN2 evalN2 x = case x of {
+//│ ║  l.93: 	def evalN2 evalN2 x = case x of {
 //│ ║        	                  ^^^^^^^^^^^^^^^
-//│ ║  l.96: 	  Neg -> 0 - (evalN2 evalN2 x.underlying)
+//│ ║  l.94: 	  Neg -> 0 - (evalN2 evalN2 x.underlying)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.97: 	  | _ -> eval eval x
+//│ ║  l.95: 	  | _ -> eval eval x
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.98: 	  }
+//│ ║  l.96: 	  }
 //│ ║        	^^^
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^
-//│ evalN3: ('a -> (forall 'b, 'rhs. ('rhs
+//│ evalN3: ('a -> (forall 'b, 'lhs. ('lhs
 //│   where
-//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'lhs. ('lhs
+//│     'b <: {lhs: 'lhs})) -> 'c & 'a -> (forall 'b, 'lhs. ('lhs
 //│   where
-//│     'b <: {lhs: 'lhs})) -> int & 'a) -> (Add & 'b | (Lit with {val: 'val}) | (Neg with {underlying: (forall 'c, 'underlying. ('underlying
+//│     'b <: {lhs: 'lhs})) -> int & 'a -> (forall 'b, 'rhs. ('rhs
+//│   where
+//│     'b <: {rhs: 'rhs})) -> int & 'a -> (forall 'b, 'rhs. ('rhs
+//│   where
+//│     'b <: {rhs: 'rhs})) -> 'c & 'a) -> (Add & 'b | (Lit with {val: 'val}) | (Neg with {underlying: (forall 'c, 'underlying. ('underlying
 //│   where
 //│     'c <: {underlying: 'underlying})) -> (forall 'd, 'underlying0. ('underlying0
 //│   where
-//│     'd <: {underlying: 'underlying0})) -> int}) & 'c) -> (error | int | 'val)
+//│     'd <: {underlying: 'underlying0})) -> int & (forall 'c, 'underlying. ('underlying
+//│   where
+//│     'c <: {underlying: 'underlying})) -> (forall 'd, 'underlying0. ('underlying0
+//│   where
+//│     'd <: {underlying: 'underlying0})) -> 'c & (forall 'c, 'underlying. ('underlying
+//│   where
+//│     'c <: {underlying: 'underlying})) -> (forall 'e, 'underlying1. ('underlying1
+//│   where
+//│     'e <: {underlying: 'underlying1})) -> 'c & (forall 'c, 'underlying. ('underlying
+//│   where
+//│     'c <: {underlying: 'underlying})) -> (forall 'e, 'underlying1. ('underlying1
+//│   where
+//│     'e <: {underlying: 'underlying1})) -> int}) & 'c) -> (error | int | 'val)
 
 def evalN3 evalN3 x = case x of {
   Neg -> 0 - (evalN3 x.underlying)
@@ -164,11 +168,17 @@ def evalN3 evalN3 x = case x of {
   }
 //│ evalN3: ((forall 'a, 'underlying. ('underlying
 //│   where
-//│     'a <: {underlying: 'underlying})) -> int & 'b -> (forall 'c, 'rhs. ('rhs
+//│     'a <: {underlying: 'underlying})) -> 'a & (forall 'a, 'underlying. ('underlying
 //│   where
-//│     'c <: {rhs: 'rhs})) -> int & 'b -> (forall 'c, 'lhs. ('lhs
+//│     'a <: {underlying: 'underlying})) -> int & 'b -> (forall 'c, 'lhs. ('lhs
 //│   where
-//│     'c <: {lhs: 'lhs})) -> int & 'b) -> (Add & 'c | (Lit with {val: 'val}) | Neg & 'a) -> (int | 'val)
+//│     'c <: {lhs: 'lhs})) -> 'a & 'b -> (forall 'c, 'lhs. ('lhs
+//│   where
+//│     'c <: {lhs: 'lhs})) -> int & 'b -> (forall 'c, 'rhs. ('rhs
+//│   where
+//│     'c <: {rhs: 'rhs})) -> int & 'b -> (forall 'c, 'rhs. ('rhs
+//│   where
+//│     'c <: {rhs: 'rhs})) -> 'a & 'b) -> (Add & 'c | (Lit with {val: 'val}) | Neg & 'a) -> (int | 'val)
 
 :e
 evalN3 evalN3 e
@@ -176,8 +186,8 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α719' -> (α720' -> (α725' | α741')))›  <:  α797    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. (α719' -> (α720' -> (α725' | α741')))›  <:  α719'
-//│ res: error | int
+//│ ╟── this constraint:  ‹∀ 0. (α989' -> (α990' -> (α998' | α1023')))›  <:  α1095    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α989' -> (α990' -> (α998' | α1023')))›  <:  α989'
+//│ res: error
 
 

@@ -252,6 +252,15 @@ def f a b = if gt a b then a else b b // mistake!
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
 //│ ╙──       	                                  ^^^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int & ‘a` is not a function
+//│ ║  l.226: 	def f: (int & 'a) -> (int & 'a) -> 'a 
+//│ ║         	                     ^^^^^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.240: 	def f a b = if gt a b then a else b b // mistake!
+//│ ╙──       	                                  ^^^
 //│  = [Function: f4]
 
 f 1 
@@ -274,13 +283,13 @@ def g a = add a 1
 //│   <:  g:
 //│ (int & 'a) -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.270: 	def g a = add a 1
+//│ ║  l.279: 	def g a = add a 1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `int` is not an instance of type `'a`
-//│ ║  l.270: 	def g a = add a 1
+//│ ║  l.279: 	def g a = add a 1
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.269: 	def g: (int & 'a) -> 'a
+//│ ║  l.278: 	def g: (int & 'a) -> 'a
 //│ ╙──       	                     ^^
 //│  = [Function: g]
 
@@ -292,7 +301,7 @@ def g a = add a 1
 def twice f x = f (f x)
 //│ twice: ((forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
+//│     'a <: 'b -> 'c)) -> 'd & 'b -> 'a & 'a) -> 'b -> 'd
 //│      = [Function: twice]
 
 def ty1: (('b | 'c) -> 'c) -> 'b -> 'c
@@ -320,13 +329,13 @@ ty1 = twice
 ty2 = twice
 //│ ((forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
+//│     'a <: 'b -> 'c)) -> 'd & 'b -> 'a & 'a) -> 'b -> 'd
 //│   <:  ty1:
 //│ (('b | 'c) -> 'c) -> 'b -> 'c
 //│    = [Function: twice]
 //│ ((forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)) -> 'd & 'a) -> 'b -> 'd
+//│     'a <: 'b -> 'c)) -> 'd & 'b -> 'a & 'a) -> 'b -> 'd
 //│   <:  ty2:
 //│ ('b -> ('b & 'd)) -> 'b -> 'd
 //│    = [Function: twice]
@@ -356,22 +365,22 @@ self1 = res
 //│   <:  self1:
 //│ ('a -> 'b & 'a) -> 'b
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.354: 	self1 = res
+//│ ║  l.363: 	self1 = res
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `nothing -> anything` does not match type `nothing`
-//│ ║  l.339: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║  l.348: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ║         	           ^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.339: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║  l.348: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ╙──       	            ^^
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.354: 	self1 = res
+//│ ║  l.363: 	self1 = res
 //│ ║         	^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.339: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║  l.348: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ║         	                  ^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.339: 	def self1: ('a -> 'b & 'a) -> 'b
+//│ ║  l.348: 	def self1: ('a -> 'b & 'a) -> 'b
 //│ ╙──       	                              ^^
 //│      = [Function: res]
 
@@ -399,17 +408,17 @@ def self2 = self1
 //│   where
 //│     'a := 'a -> 'b
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.395: 	def self2 = self1
+//│ ║  l.404: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a294' -> 'b295') & 'a294') -> 'b295')››  <:  (('a383' -> 'b384') & 'a383')    PolymorphicType  ComposedType
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a294' -> 'b295') & 'a294') -> 'b295')››  <:  (('a294' -> 'b295') & 'a294')
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 0. ((('a302' -> 'b303') & 'a302') -> 'b303')››  <:  (('a391' -> 'b392') & 'a391')    PolymorphicType  ComposedType
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 0. ((('a302' -> 'b303') & 'a302') -> 'b303')››  <:  (('a302' -> 'b303') & 'a302')
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition
-//│ ║  l.395: 	def self2 = self1
+//│ ║  l.404: 	def self2 = self1
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  (‘a' & ('a380' -> ‘b'))  <:  (('a383' -> 'b384') & 'a383')    ComposedType  ComposedType
-//│ ╙──  ... looks like:  (‘a' & ('a360' -> ‘b'))  <:  (('a294' -> 'b295') & 'a294')
+//│ ╟── this constraint:  (‘a' & ('a388' -> ‘b'))  <:  (('a391' -> 'b392') & 'a391')    ComposedType  ComposedType
+//│ ╙──  ... looks like:  (‘a' & ('a368' -> ‘b'))  <:  (('a302' -> 'b303') & 'a302')
 //│      = [Function: r]
 
 

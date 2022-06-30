@@ -35,7 +35,7 @@ fun f -> f (g' f)
 //│    = [Function: res]
 //│ res: ((forall 'a, 'b. ('b
 //│   where
-//│     'a <: 'a -> 'b)) -> 'c & 'a) -> 'c
+//│     'a <: 'a -> 'b)) -> 'c & 'a -> anything & 'a) -> 'c
 //│    = [Function: res]
 
 // ============ Sec 4.1 ============
@@ -96,40 +96,40 @@ rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ ║  l.94: 	rec def fl f x l = match_list l x (fun head -> fun tail -> fl f (f x head) tail)
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. {α213'' where: α202' <: ((α203',) -> α212'')}›  <:  α215'    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. {α213'' where: α202' <: ((α203',) -> α212'')}›  <:  α215'
-//│ fl: 'a -> 'b -> List['c] -> 'b
+//│ ╟── this constraint:  ‹∀ 1. {α219'' where: α208' <: ((α209',) -> α218'')}›  <:  α223'    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. {α219'' where: α208' <: ((α209',) -> α218'')}›  <:  α223'
+//│ fl: ('b -> 'a -> 'c & 'c) -> 'b -> List['a] -> 'b
 //│   where
-//│     'b :> forall 'a, 'b. ('d
+//│     'b :> forall 'b, 'c. ('d
 //│   where
-//│     'a <: 'b -> 'c -> 'd)
+//│     'c <: 'b -> 'a -> 'd)
 
 rec def fl2 f x l = match_list l x (fun head -> fun tail -> fold_left f (f x head) tail)
-//│ fl2: ((forall 'c, 'd, 'b, 'e, 'a. ('a | 'e
+//│ fl2: ('c -> 'b -> 'd & (forall 'c, 'b, 'd, 'e, 'a. ('a | 'e
 //│   where
-//│     'c <: 'd -> 'b -> 'e)) -> 'b -> 'a & 'c) -> (forall 'f. ('d & 'f) -> (forall 'g. List['b & 'g] -> (forall 'c, 'd, 'b, 'e, 'a, 'f, 'g. ('a | 'e | 'f
+//│     'd <: 'c -> 'b -> 'e)) -> 'b -> 'a & 'd) -> (forall 'f. ('c & 'f) -> (forall 'g. List['b & 'g] -> (forall 'c, 'b, 'd, 'e, 'a, 'f, 'g. ('a | 'e | 'f
 //│   where
-//│     'c <: 'd -> 'b -> 'e
-//│     'c <: 'f -> 'g -> 'e))))
+//│     'd <: 'c -> 'b -> 'e
+//│     'd <: 'f -> 'g -> 'e))))
 
 :RecursiveTypes // needed for this recursive def
 def fold_left = fl
-//│ 'a -> 'b -> List['c] -> 'b
+//│ ('b -> 'a -> 'c & 'c) -> 'b -> List['a] -> 'b
 //│   where
-//│     'b :> forall 'a, 'b. ('d
+//│     'b :> forall 'b, 'c. ('d
 //│   where
-//│     'a <: 'b -> 'c -> 'd)
+//│     'c <: 'b -> 'a -> 'd)
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 :NoRecursiveTypes
 
 def fold_left = fl2
-//│ ((forall 'c, 'd, 'b, 'e, 'a. ('a | 'e
+//│ ('c -> 'b -> 'd & (forall 'c, 'b, 'd, 'e, 'a. ('a | 'e
 //│   where
-//│     'c <: 'd -> 'b -> 'e)) -> 'b -> 'a & 'c) -> (forall 'f. ('d & 'f) -> (forall 'g. List['b & 'g] -> (forall 'c, 'd, 'b, 'e, 'a, 'f, 'g. ('a | 'e | 'f
+//│     'd <: 'c -> 'b -> 'e)) -> 'b -> 'a & 'd) -> (forall 'f. ('c & 'f) -> (forall 'g. List['b & 'g] -> (forall 'c, 'b, 'd, 'e, 'a, 'f, 'g. ('a | 'e | 'f
 //│   where
-//│     'c <: 'd -> 'b -> 'e
-//│     'c <: 'f -> 'g -> 'e))))
+//│     'd <: 'c -> 'b -> 'e
+//│     'd <: 'f -> 'g -> 'e))))
 //│   <:  fold_left:
 //│ ('a -> 'b -> 'a) -> 'a -> List['b] -> 'a
 

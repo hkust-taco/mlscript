@@ -119,8 +119,8 @@ rec def find table key =
 //│ ║  l.111: 	  else find (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a250']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a237'']
+//│ ╟── this constraint:  α209'  <:  List['a270']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
 //│ ║  l.108: 	rec def find table key =
 //│ ║         	             ^^^^^^^^^^^
@@ -131,8 +131,8 @@ rec def find table key =
 //│ ║  l.111: 	  else find (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a254']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a237'']
+//│ ╟── this constraint:  α209'  <:  List['a274']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
 //│ ║  l.108: 	rec def find table key =
 //│ ║         	             ^^^^^^^^^^^
@@ -143,8 +143,8 @@ rec def find table key =
 //│ ║  l.111: 	  else find (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a258']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a237'']
+//│ ╟── this constraint:  α209'  <:  List['a278']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
 //│ ║  l.108: 	rec def find table key =
 //│ ║         	             ^^^^^^^^^^^
@@ -155,9 +155,59 @@ rec def find table key =
 //│ ║  l.111: 	  else find (tail table) key
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α209'  <:  List['a262']    TypeVariable  TypeRef
-//│ ╙──  ... looks like:  α209'  <:  List['a237'']
-//│ find: List[?] -> anything -> (None | Some[nothing])
+//│ ╟── this constraint:  α209'  <:  List['a282']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.108: 	rec def find table key =
+//│ ║         	             ^^^^^^^^^^^
+//│ ║  l.109: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  else find (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α209'  <:  List['a286']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.108: 	rec def find table key =
+//│ ║         	             ^^^^^^^^^^^
+//│ ║  l.109: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  else find (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α209'  <:  List['a290']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.108: 	rec def find table key =
+//│ ║         	             ^^^^^^^^^^^
+//│ ║  l.109: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  else find (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α209'  <:  List['a294']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
+//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression
+//│ ║  l.108: 	rec def find table key =
+//│ ║         	             ^^^^^^^^^^^
+//│ ║  l.109: 	  if is_empty table then None
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	  else if eq (head table)._1 key then Some (head table)._2
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	  else find (tail table) key
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α209'  <:  List['a298']    TypeVariable  TypeRef
+//│ ╙──  ... looks like:  α209'  <:  List['a258'']
+//│ find: (List['a] & 'a) -> 'a -> (None | Some[forall 'a, 'b. ('b
+//│   where
+//│     'a <: List[{_2: 'b}])])
 //│     = [Function: find]
 :NoRecursiveTypes
 
@@ -167,7 +217,9 @@ rec def find table key =
 
 :ng
 find(error:List[(int, string)])(unit)
-//│ res: None | Some[string]
+//│ res: None | Some[forall 'a. ('a
+//│   where
+//│     'b <: List[{_2: 'a}])]
 
 // let nfind table key =
 //   begin match find table key with
@@ -180,7 +232,10 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[?] -> anything -> anything -> (forall 'a. 'a -> 'a)
+//│ nfind: List[?] -> anything -> (forall 'a, 'b, 'c. (anything -> (forall 'd. 'd -> 'd) | 'b
+//│   where
+//│     'a <: List[{_2: 'b}]
+//│     'c <: List[{_2: 'b}]))
 //│      = [Function: nfind]
 
 // type Int = ['a] ('a -> 'a) -> ('a -> 'a)
@@ -190,14 +245,16 @@ type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
 // let succ (n:Int) = fun f x -> f (n f x)
 def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def succ' n = fun f -> fun x -> f (n f x)
-//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a. ('b -> 'c
+//│ succ: ChurchInt -> (forall 'a. 'a -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
-//│     'a <: (forall 'a, 'd, 'b, 'e. ('e
+//│     'b <: 'a -> 'c -> anything
+//│     'a <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
-//│     'd <: 'a -> 'b -> 'e)) -> 'c)))
+//│     'b <: 'a -> 'c -> 'e)) -> 'd)))
 //│     = [Function: succ]
-//│ succ': 'a -> (forall 'b. 'b -> (forall 'b. ('c -> 'd
+//│ succ': 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c -> 'd
 //│   where
+//│     'a <: 'b -> 'c -> 'a
 //│     'b <: (forall 'a, 'b, 'c, 'e. ('e
 //│   where
 //│     'a <: 'b -> 'c -> 'e)) -> 'd)))
@@ -208,16 +265,18 @@ def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def add' n m = n succ' m
 //│ add: ChurchInt -> (forall 'a. (ChurchInt -> 'b
 //│   where
-//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c. ('d -> 'e
+//│     'a <: (ChurchInt -> (forall 'c. 'c -> (forall 'c, 'd, 'e. ('e -> 'f
 //│   where
-//│     'c <: (forall 'c, 'f, 'd, 'g. ('g
+//│     'd <: 'c -> 'e -> anything
+//│     'c <: (forall 'c, 'd, 'e, 'g. ('g
 //│   where
-//│     'f <: 'c -> 'd -> 'g)) -> 'e)))) -> ChurchInt -> 'b))
+//│     'd <: 'c -> 'e -> 'g)) -> 'f)))) -> ChurchInt -> 'b))
 //│    = [Function: add]
 //│ add': 'a -> (forall 'a. ('b -> 'c
 //│   where
-//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'e. ('f -> 'g
+//│     'a <: (forall 'd. 'd -> (forall 'e. 'e -> (forall 'd, 'e, 'f. ('f -> 'g
 //│   where
+//│     'd <: 'e -> 'f -> 'd
 //│     'e <: (forall 'd, 'e, 'f, 'h. ('h
 //│   where
 //│     'd <: 'e -> 'f -> 'h)) -> 'g)))) -> 'b -> 'c))
@@ -228,7 +287,7 @@ def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
 def printInt' n = toString (n (fun x -> x + 1) 0)
 //│ printInt: ChurchInt -> string
 //│         = [Function: printInt]
-//│ printInt': anything -> string
+//│ printInt': ((int -> int) -> 0 -> anything) -> string
 //│          = [Function: printInt]
 
 // let table = create_hashtbl ()
@@ -246,7 +305,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[("one" | "two", forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c, 'd. ('c -> 'd
 //│   where
 //│     'a <: 'c -> 'd
-//│     'b <: (forall 'b, 'c, 'e. ('e
+//│     'b <: 'c -> 'b & (forall 'b, 'c, 'e. ('e
 //│   where
 //│     'b <: 'c -> 'e)) -> 'd)),)]
 //│      = Cons {
@@ -259,19 +318,22 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 
 :e // FIXME?
 zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.261: 	zog = printInt (add (nfind table "one") (nfind table "two"))
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.187: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ║         	                        ^^
-//│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.187: 	type ChurchInt = forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ ╙──       	                        ^^
-//│ zog: error
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.320: 	zog = printInt (add (nfind table "one") (nfind table "two"))
+//│ ║         	                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>
+//│ zog: string
 //│    = '0'
 
 zog' = printInt' (add' (nfind table "one") (nfind table "two"))
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.330: 	zog' = printInt' (add' (nfind table "one") (nfind table "two"))
+//│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>    PolymorphicType  ClassTag
+//│ ╙──  ... looks like:  ‹∀ 1. {α402'' where: α400'''' <: List['a401'']}›  <:  list<>
 //│ zog': string
 //│     = '0'
 

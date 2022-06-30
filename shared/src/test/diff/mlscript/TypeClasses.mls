@@ -30,7 +30,7 @@ class Complex[A]: { real: A; imaginary: A }
   method Map f = Complex { real = f this.real; imaginary = f this.imaginary }
 def Complex real imaginary = Complex { real; imaginary }
 //│ Defined class Complex[+A]
-//│ Defined Complex.Map: Complex['A] -> ('A -> ('imaginary & 'A0) & 'A -> ('A0 & 'real)) -> (Complex['A0] with {imaginary: 'imaginary, real: 'real})
+//│ Defined Complex.Map: Complex['A] -> ('A -> anything & 'A -> ('imaginary & 'A0) & 'A -> ('A0 & 'real)) -> (Complex['A0] with {imaginary: 'imaginary, real: 'real})
 //│ Complex: ('real & 'A) -> ('A & 'imaginary) -> (Complex['A] with {imaginary: 'imaginary, real: 'real})
 //│        = [Function: Complex1]
 
@@ -42,7 +42,7 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
     Complex (this.base.(Monoid.Add) self.real that.real) (this.base.(Monoid.Add) self.imaginary that.imaginary)
 //│ Defined class ComplexMonoid[=A]
 //│ Defined ComplexMonoid.Empty: ComplexMonoid['A] -> Complex['A]
-//│ Defined ComplexMonoid.Add: ComplexMonoid['A] -> 'a -> 'b -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
+//│ Defined ComplexMonoid.Add: ComplexMonoid['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
 //│   where
 //│     'a <: {imaginary: 'A}
 //│     'b <: {imaginary: 'A}
@@ -78,7 +78,7 @@ class ComplexMonoid[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│     'b <: {real: 'real}
 //│     'a <: {real: 'A}
 //│     'b <: {real: 'A})})
-//│ Defined ComplexMonoid.Add2: ComplexMonoid['A] -> Complex[?] -> Complex[?] -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
+//│ Defined ComplexMonoid.Add2: ComplexMonoid['A] -> Complex['A] -> Complex['A] -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
 //│   where
 //│     'a <: {imaginary: 'A}
 //│     'b <: {imaginary: 'A}
@@ -313,7 +313,7 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ╙──      	                                                 ^^^^^^^^^
 //│ Defined class ComplexMonoid_bad_2[=A]
-//│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> 'a -> 'b -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
+//│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> (Complex[forall 'A, 'a, 'b, 'imaginary, 'real. ('A | 'imaginary | 'real
 //│   where
 //│     'a <: {imaginary: 'A}
 //│     'b <: {imaginary: 'A}
@@ -349,143 +349,170 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│     'b <: {real: 'real}
 //│     'a <: {real: 'A}
 //│     'b <: {real: 'A})})
-//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[?] -> Complex[?] -> (Complex[(Complex[forall 'a, 'A0, 'b, 'imaginary, 'real, 'c, 'A1, 'd, 'imaginary0, 'real0. ('A1 | 'A0 | 'imaginary0 | 'imaginary | 'real0 | 'real
+//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[{imaginary: anything, real: anything}] -> Complex[{imaginary: anything, real: anything}] -> (Complex[forall 'a, 'A0, 'b, 'A1. ((Complex[forall 'A0, 'A1, 'c, 'd, 'imaginary, 'real, 'e, 'f, 'imaginary0, 'real0. ('A1 | 'A0 | 'imaginary0 | 'imaginary | 'real0 | 'real
 //│   where
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'a <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'b <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'c <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'd <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1})] with {imaginary: forall 'a, 'A0, 'b, 'imaginary, 'c, 'A1, 'd, 'imaginary0. ('A1 | 'A0 | 'imaginary0 | 'imaginary
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'c <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'd <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'e <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'f <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1})] with {imaginary: forall 'A0, 'A1, 'c, 'd, 'imaginary, 'e, 'f, 'imaginary0. ('A1 | 'A0 | 'imaginary0 | 'imaginary
 //│   where
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}), real: forall 'a, 'A0, 'b, 'real, 'c, 'A1, 'd, 'real0. ('A1 | 'A0 | 'real0 | 'real
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}), real: forall 'A0, 'A1, 'c, 'd, 'real, 'e, 'f, 'real0. ('A1 | 'A0 | 'real0 | 'real
 //│   where
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'a <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'b <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'c <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'd <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1})}) | error] with {imaginary: (Complex[forall 'a, 'A0, 'b, 'imaginary, 'real. ('A0 | 'imaginary | 'real
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'c <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'd <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'e <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'f <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1})}) | error
 //│   where
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'a <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'b <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0})] with {imaginary: forall 'a, 'A0, 'b, 'imaginary. ('A0 | 'imaginary
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}})] with {imaginary: forall 'a, 'A0, 'b. ((Complex[forall 'A0, 'c, 'd, 'imaginary, 'real. ('A0 | 'imaginary | 'real
 //│   where
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'a <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'imaginary}
-//│     'a <: {imaginary: 'A0}
-//│     'b <: {imaginary: 'A0}), real: forall 'a, 'A0, 'b, 'real. ('A0 | 'real
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'c <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'd <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0})] with {imaginary: forall 'A0, 'c, 'd, 'imaginary. ('A0 | 'imaginary
 //│   where
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'a <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0}
-//│     'b <: {real: 'real}
-//│     'a <: {real: 'A0}
-//│     'b <: {real: 'A0})}) | error, real: (Complex[forall 'c, 'A1, 'd, 'imaginary0, 'real0. ('A1 | 'imaginary0 | 'real0
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'c <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'imaginary}
+//│     'c <: {imaginary: 'A0}
+//│     'd <: {imaginary: 'A0}), real: forall 'A0, 'c, 'd, 'real. ('A0 | 'real
 //│   where
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'c <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'd <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1})] with {imaginary: forall 'c, 'A1, 'd, 'imaginary0. ('A1 | 'imaginary0
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'c <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0}
+//│     'd <: {real: 'real}
+//│     'c <: {real: 'A0}
+//│     'd <: {real: 'A0})}) | error
 //│   where
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'c <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'imaginary0}
-//│     'c <: {imaginary: 'A1}
-//│     'd <: {imaginary: 'A1}), real: forall 'c, 'A1, 'd, 'real0. ('A1 | 'real0
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'a <: {imaginary: {imaginary: 'A0, real: 'A0}}
+//│     'b <: {imaginary: {imaginary: 'A0, real: 'A0}}), real: forall 'a, 'b, 'A1. ((Complex[forall 'A1, 'e, 'f, 'imaginary0, 'real0. ('A1 | 'imaginary0 | 'real0
 //│   where
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'c <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1}
-//│     'd <: {real: 'real0}
-//│     'c <: {real: 'A1}
-//│     'd <: {real: 'A1})}) | error})
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'e <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'f <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1})] with {imaginary: forall 'A1, 'e, 'f, 'imaginary0. ('A1 | 'imaginary0
+//│   where
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'e <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'imaginary0}
+//│     'e <: {imaginary: 'A1}
+//│     'f <: {imaginary: 'A1}), real: forall 'A1, 'e, 'f, 'real0. ('A1 | 'real0
+//│   where
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'e <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1}
+//│     'f <: {real: 'real0}
+//│     'e <: {real: 'A1}
+//│     'f <: {real: 'A1})}) | error
+//│   where
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'a <: {real: {imaginary: 'A1, real: 'A1}}
+//│     'b <: {real: {imaginary: 'A1, real: 'A1}})})
 
 
