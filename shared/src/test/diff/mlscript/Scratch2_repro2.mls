@@ -3,6 +3,9 @@
 // :DistributeForalls
 
 def s n = fun f -> fun x -> f (n f x)
+// def s n = fun f -> fun x -> (n f x)
+// def s n = fun f -> n f
+// def s n = n
 //│ s: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('c -> 'e
 //│   where
 //│     'a <: 'b -> 'c -> 'd
@@ -12,29 +15,204 @@ def s n = fun f -> fun x -> f (n f x)
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
 def zero: ('N -> 'N) -> ('N -> 'N)
+// def zero: 'N -> 'N
 //│ zero: ('N -> 'N) -> 'N -> 'N
 //│     = <missing implementation>
 
 type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+// type ChI = (forall 'M. 'M -> 'M)
 //│ Defined type alias ChI
 
-// FIXME:
-// :d
-s zero : ChI
+:ns
+sz = s zero
+//│ sz: forall 'a, 'b. 'a
+//│   where
+//│     'a :> forall 'c. 'c -> ('d -> 'e
+//│   where
+//│     'b <: 'c -> 'f
+//│     'c <: 'g -> 'e)
+//│     'f <: 'd -> 'g
+//│   = <no result>
+//│     zero is not implemented
+
+// Note: the error is delayed...
+sz1 = sz 1
+//│ sz1: 'a -> 'b
+//│   where
+//│     'c <: 'd -> 'a -> 'e
+//│     'd <: 'e -> 'b
+//│    = <no result>
+//│      sz and zero are not implemented
+
+:e
+sz1 2
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.48: 	sz1 2
+//│ ║        	^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.39: 	sz1 = sz 1
+//│ ║        	         ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.17: 	def zero: ('N -> 'N) -> ('N -> 'N)
+//│ ╙──      	          ^^^^^^^^^^
+//│ res: error
+//│    = <no result>
+//│      sz1, sz and zero are not implemented
+
+sz true
+//│ res: 'a -> 'b
+//│   where
+//│     'c <: 'd -> 'a -> 'e
+//│     'd <: 'e -> 'b
+//│    = <no result>
+//│      sz and zero are not implemented
+
+sz: ChI
+//│ res: ChI
+//│    = <no result>
+//│      sz and zero are not implemented
+
+s zero
+//│ res: 'a -> (forall 'a, 'b, 'c, 'd. ('b -> 'd
+//│   where
+//│     'e <: 'a -> 'b -> 'c
+//│     'a <: 'c -> 'd))
+//│    = <no result>
+//│      zero is not implemented
+
+:e
+res: ChI
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.23: 	s zero : ChI
-//│ ║        	^^^^^^
+//│ ║  l.84: 	res: ChI
+//│ ║        	^^^
 //│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.18: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.18: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.22: 	type ChI = (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                   ^^
 //│ ╟── from type variable:
-//│ ║  l.14: 	def zero: ('N -> 'N) -> ('N -> 'N)
+//│ ║  l.17: 	def zero: ('N -> 'N) -> ('N -> 'N)
 //│ ╙──      	                 ^^
+//│ res: ChI
+//│    = [Function: s]
+
+let tmp = s zero in tmp: ChI
 //│ res: ChI
 //│    = <no result>
 //│      zero is not implemented
+
+// FIXedME:
+// :d
+s zero : ChI
+//│ res: ChI
+//│    = <no result>
+//│      zero is not implemented
+
+
+
+
+// def example f = (f: forall 'a. 'a -> int -> 'b) f
+// :ns
+// :d
+def example f = (f: forall 'a. 'a -> 'a)
+//│ example: (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
+//│        = [Function: example]
+
+:e
+example 1
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.123: 	example 1
+//│ ║         	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not a function
+//│ ║  l.123: 	example 1
+//│ ║         	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.118: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ║         	                               ^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.118: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ╙──       	                 ^
+//│ res: 'a -> 'a | error
+//│    = 1
+
+:e
+example succ
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.140: 	example succ
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `‘a` is not an instance of type `int`
+//│ ║  l.118: 	def example f = (f: forall 'a. 'a -> 'a)
+//│ ╙──       	                           ^^
+//│ res: 'a -> 'a | error
+//│    = [Function: succ]
+
+example id
+//│ res: 'a -> 'a
+//│    = [Function: id]
+
+
+// def example f = ((fun x -> x, f) : forall 'a. ('a -> 'a, 'a -> 'a))
+
+// FIXME: Rigid variable extrusion here! We should clean extr contexts of local rigids before returning them....
+def example f = ((0, f) : forall 'a. (0, 'a))
+//│ example: 'a -> (0, nothing,)
+//│   where
+//│     'a <: ‘a
+//│        = [Function: example1]
+
+// FIXME same
+def example f = ((0, f) : forall 'a. (0, 'a -> 'a))
+//│ example: 'b -> (forall 'a. (0, 'a -> 'a,))
+//│   where
+//│     'b <: ‘a -> ‘a
+//│        = [Function: example2]
+
+
+
+def id_ty: forall 'a. 'a -> 'a
+//│ id_ty: 'a -> 'a
+//│      = <missing implementation>
+
+// rec def id x = if true then x else id id x
+rec def id x = let tmp = id id x in x
+//│ id: 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
+//│   = [Function: id1]
+
+// FIXME
+id_ty = id
+//│ 'id
+//│   where
+//│     'id :> 'a -> 'a
+//│     'a :> 'id
+//│        <: 'a -> anything
+//│   <:  id_ty:
+//│ 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.187: 	id_ty = id
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `‘a` is not a function
+//│ ║  l.173: 	def id_ty: forall 'a. 'a -> 'a
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.178: 	rec def id x = let tmp = id id x in x
+//│ ║         	                         ^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.178: 	rec def id x = let tmp = id id x in x
+//│ ╙──       	                                    ^
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.187: 	id_ty = id
+//│ ║         	^^^^^^^^^^
+//│ ╟── function of type `?a -> ?a` is not an instance of type `'a`
+//│ ║  l.178: 	rec def id x = let tmp = id id x in x
+//│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from quantified type variable:
+//│ ║  l.173: 	def id_ty: forall 'a. 'a -> 'a
+//│ ╙──       	                  ^^
+//│      = [Function: id1]
 
 

@@ -452,7 +452,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         constrain(ty_sch, e_ty)(raise, TypeProvenance(rhs.toLoc, "binding of " + rhs.describe), ctx, extrCtx)
       }
       e_ty
-    } else typeTerm(rhs)(ctx.nextLevel, raise, extrCtx = N, vars)
+    } else typeTerm(rhs)(ctx.nextLevel, raise, extrCtx = N, vars) // Note: let polymorphism (`ctx.nextLevel`)
     PolymorphicType(lvl, res)
   }
   
@@ -546,8 +546,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
+        
+      // case Asc(trm, ty) if !ctx.inPattern && generalizeCurriedFunctions =>
+      //   val trm_ty = PolymorphicType(ctx.lvl, ctx.nextLevel |> { implicit ctx =>
+      //     typeTerm(trm)
+      //   })
+        
       case Asc(trm, ty) =>
-        val trm_ty = typeTerm(trm)
+        // val trm_ty = typeTerm(trm)
+        val trm_ty = if (ctx.inPattern /* || !generalizeCurriedFunctions */) typeTerm(trm)
+        else PolymorphicType.mk(ctx.lvl, ctx.nextLevel |> { implicit ctx =>
+          typeTerm(trm)
+        })
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, extrCtx, vars)
         con(trm_ty, ty_ty, ty_ty)
         if (ctx.inPattern)

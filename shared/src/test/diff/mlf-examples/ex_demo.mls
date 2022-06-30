@@ -948,6 +948,9 @@ rec def to_church n =
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ║         	                    ^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.939: 	  if n == 0 then fun f -> fun x -> x
+//│ ║         	                                   ^
 //│ ╟── Note: constraint arises from quantified type variable:
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
@@ -995,11 +998,11 @@ rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ╔══[ERROR] Type mismatch in binding of lambda expression:
-//│ ║  l.994: 	rec def c_fact (n: Fint) =
+//│ ║  l.997: 	rec def c_fact (n: Fint) =
 //│ ║         	               ^^^^^^^^^^^
-//│ ║  l.995: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
+//│ ║  l.998: 	  c_if (c_iszero n) (fun (u: Funit) -> c_i1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.996: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
+//│ ║  l.999: 	    (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1028,11 +1031,11 @@ def c_fact_A n =
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.1019: 	def c_fact_A n =
+//│ ║  l.1022: 	def c_fact_A n =
 //│ ║          	^^^^^^^^^^^^^^^^
-//│ ║  l.1020: 	  c_if (c_iszero n) (fun u -> c_i1)
+//│ ║  l.1023: 	  c_if (c_iszero n) (fun u -> c_i1)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1021: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
+//│ ║  l.1024: 	    (fun u -> c_mul n (c_fact_A (c_pred n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1070,7 +1073,7 @@ def print_fact n =
   let _ = c_printint (c_fact (to_church n)) in
           print_string "\n"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1070: 	  let _ = c_printint (c_fact (to_church n)) in
+//│ ║  l.1073: 	  let _ = c_printint (c_fact (to_church n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `‘a` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1100,8 +1103,8 @@ def print_fact2 n =
          (c_printint2 (c_fact (to_church n))) ))
 //│ print_fact2: int -> string
 //│   where
-//│     'b <: ‘a
 //│     'a := ‘a
+//│     'b <: ‘a
 //│            = [Function: print_fact2]
 
 def print_fact2_ n =
@@ -1131,7 +1134,7 @@ this_should_be_98 =
   let c_98 = c_pred c_99 in
   c_printint2 c_98
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1128: 	  let c_i10 = c_mul c_i5 c_i2 in
+//│ ║  l.1131: 	  let c_i10 = c_mul c_i5 c_i2 in
 //│ ║          	              ^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1143,7 +1146,7 @@ this_should_be_98 =
 //│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1130: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
+//│ ║  l.1133: 	  let c_99 = c_add (c_mul c_i9 c_i10) c_i9 in
 //│ ║          	                    ^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` is not a function
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1155,7 +1158,7 @@ this_should_be_98 =
 //│ ║  l.760: 	def c_succ (n: Fint) = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1131: 	  let c_98 = c_pred c_99 in
+//│ ║  l.1134: 	  let c_98 = c_pred c_99 in
 //│ ║          	             ^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1197,7 +1200,7 @@ print_fact2 4
 print_fact2 5
 print_fact2 6
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1192: 	print_fact2 0
+//│ ║  l.1195: 	print_fact2 0
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1208,7 +1211,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 0 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1193: 	print_fact2 1
+//│ ║  l.1196: 	print_fact2 1
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1219,7 +1222,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 1 = 1'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1194: 	print_fact2 2
+//│ ║  l.1197: 	print_fact2 2
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1230,7 +1233,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 2 = 2'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1195: 	print_fact2 3
+//│ ║  l.1198: 	print_fact2 3
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1241,7 +1244,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 3 = 6'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1196: 	print_fact2 4
+//│ ║  l.1199: 	print_fact2 4
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1252,7 +1255,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 4 = 24'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1197: 	print_fact2 5
+//│ ║  l.1200: 	print_fact2 5
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
@@ -1263,7 +1266,7 @@ print_fact2 6
 //│ res: error | string
 //│    = 'Factorial 5 = 120'
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1198: 	print_fact2 6
+//│ ║  l.1201: 	print_fact2 6
 //│ ║          	^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.567: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
