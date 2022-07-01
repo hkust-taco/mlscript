@@ -274,8 +274,8 @@ t id succ 0
 //│     'g <: ('i -> (forall 'k. 'k -> 'k)) -> 'm -> 'n -> 'p
 //│     'm <: 'p -> 'o)))) -> 'j)))) -> (forall 'i. 'i -> (forall 'i. ('q
 //│   where
-//│     'i <: ('i -> (forall 'k. 'k -> 'k)) -> ('i -> (forall 'k. 'k -> 'k)) -> 'q))) -> (forall 'i, 'r. 'r -> 'i -> 'r) -> 'd & 'e -> 0 -> 'a
-//│     's <: 0 -> 'b
+//│     'i <: ('i -> (forall 'k. 'k -> 'k)) -> ('i -> (forall 'k. 'k -> 'k)) -> 'q))) -> (forall 'i, 'r. 'r -> 'i -> 'r) -> 'd & 'e -> 0 -> 'b
+//│     's <: 0 -> 'a
 //│    = 2
 
 t2 id succ 0
@@ -355,7 +355,7 @@ t id succ 0
 //│     's <: 0 -> 'b
 //│    = 6
 
-:e // TODO try without cycle check
+// :e // TODO try without cycle check // works with quantif extrus
 t2 id succ 0
 //│ res: 'a
 //│   where
@@ -398,7 +398,8 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 
 //     * Untypable at any rank
 //       (fun x -> x x) (fun x -> x x)
-:e // TODO show failure without cycle check
+// :e // TODO show failure without cycle check // works with quantif extrus
+:re
 (fun x -> x x) (fun x -> x x)
 //│ res: 'a
 //│   where
@@ -438,7 +439,8 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //       (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 
 // *)
-:e
+// :e // works with quantif extrus
+:re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ res: 'a
 //│   where

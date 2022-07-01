@@ -68,7 +68,7 @@ eval eval e
 //│ ║  l.66: 	eval eval e
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α200    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154_200    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
 //│ res: error | int
 //│    = 3
@@ -87,7 +87,7 @@ evalN eval e
 //│ ║  l.85: 	evalN eval e
 //│ ║        	^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α321    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154_321    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
 //│ res: error
 //│    = 3
@@ -98,7 +98,7 @@ evalN eval e2
 //│ ║  l.96: 	evalN eval e2
 //│ ║        	^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α417    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154_417    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α154' -> (α155' -> (n157' | α166')))›  <:  α154'
 //│ res: error
 //│    = -3
@@ -109,7 +109,7 @@ ev = evalN evalN
 //│ ║  l.107: 	ev = evalN evalN
 //│ ║         	     ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α233' -> (α234' -> (α240' | α255')))›  <:  α501'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α233' -> (α234' -> (α240' | α255')))›  <:  α233_501'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α233' -> (α234' -> (α240' | α255')))›  <:  α233'
 //│ ev: ((Add with {lhs: Add | Lit | Neg, rhs: Add | Lit | Neg}) | (Lit with {n: 'n}) | (Neg with {e: Add | Lit | Neg})) -> (int | 'n) | error
 //│   = [Function (anonymous)]
@@ -144,7 +144,7 @@ def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
 //│ ║  l.142: 	def evalComposed evalComposed = evalN evalN (fun e -> eval evalComposed e)
 //│ ║         	                                ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α839'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793_839'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793'
 //│ evalComposed: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a -> 'lhs0 -> int & 'a -> 'rhs0 -> int & 'a) -> (((Add with {lhs: 'lhs0, rhs: 'rhs0}) | (Lit with {n: 'n}) | (Neg with {e: (Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | Neg})) -> (int | 'n) | error)
 //│             = [Function: evalComposed]
@@ -155,7 +155,7 @@ def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ║  l.153: 	def evalComposed evalComposed = evalN evalN (eval evalComposed)
 //│ ║         	                                ^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α956'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793_956'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α793' -> (α794' -> (α795' -> (α802' | α804'))))›  <:  α793'
 //│ evalComposed: ('a -> 'rhs -> int & 'a -> 'lhs -> int & 'a) -> (((Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | (Neg with {e: (Add with {lhs: 'lhs, rhs: 'rhs}) | Lit | Neg})) -> int | error)
 //│             = [Function: evalComposed1]
@@ -170,7 +170,7 @@ ev2 = evalComposed evalComposed
 //│ ║  l.168: 	ev2 = evalComposed evalComposed
 //│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α943' -> α980')›  <:  α1036'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α943' -> α980')›  <:  α943_1036'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α943' -> α980')›  <:  α943'
 //│ ev2: ((Add with {lhs: Add | Lit | (Neg with {e: Add | Lit | Neg}), rhs: Add | Lit | (Neg with {e: Add | Lit | Neg})}) | Lit | (Neg with {e: (Add with {lhs: Add | Lit | (Neg with {e: Add | Lit | Neg}), rhs: Add | Lit | (Neg with {e: Add | Lit | Neg})}) | Lit | Neg})) -> int | error
 //│    = [Function (anonymous)]

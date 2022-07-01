@@ -70,42 +70,43 @@ to_ch 1 2
 
 // * NOTE the crash was due to the use of `s` rather than an annotated `succ`:
 // :d
+:e // fails with quantif extrus
 to_church = to_ch
 //│ anything -> anything -> nothing
 //│   <:  to_church:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?a, ?to_ch, ?b, ?c, ?d, ?e, ?f, ?g. ?to_ch <: int -> ChurchInt` exceeded recursion depth limit (300)
-//│ ║  l.73: 	to_church = to_ch
+//│ ║  l.74: 	to_church = to_ch
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
-//│ ╟── while constraining:  α89'  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
-//│ ╟── while constraining:  α89'  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  α213^42  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  (‘N^42 -> ‘N^42)
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
-//│ ╟── while constraining:  α89'  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
-//│ ╟── while constraining:  α89'  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  α210^41  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  (‘N^41 -> ‘N^41)
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
-//│ ╟── while constraining:  α89'  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
-//│ ╟── while constraining:  α89'  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── while constraining:  α207^40  <!<  (‘N^40 -> ‘N^40)
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  (‘N^40 -> ‘N^40)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N214'' -> 'N215'')›
+//│ ╟── while constraining:  α43_89'  <!<  (‘N^42 -> ‘N^42)
+//│ ╟── while constraining:  α23_213^42  <!<  (‘N^42 -> ‘N^42)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^42 -> ‘N^42)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N211'' -> 'N212'')›
+//│ ╟── while constraining:  α43_89'  <!<  (‘N^41 -> ‘N^41)
+//│ ╟── while constraining:  α23_210^41  <!<  (‘N^41 -> ‘N^41)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^41 -> ‘N^41)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N208'' -> 'N209'')›
+//│ ╟── while constraining:  α43_89'  <!<  (‘N^40 -> ‘N^40)
+//│ ╟── while constraining:  α23_207^40  <!<  (‘N^40 -> ‘N^40)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N^40 -> ‘N^40)
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
-//│ ╟── while constraining:  α89'  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
-//│ ╟── while constraining:  α89'  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  α93''  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  ‹∀ 4. α88'''''›  <!<  (‘N'' -> ‘N'')
-//│ ╟── while constraining:  (α92'' -> ‹∀ 4. α88'''''›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α85'''' -> ‹∀ 4. α88'''''›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
-//│ ╟── while constraining:  ‹∀ 3. (α85'''' -> ‹∀ 4. α88'''''›)›  <!<  ‹∀ 0. (('N33' -> 'N33') -> ('N33' -> 'N33'))›
-//│ ╟── while constraining:  ‹∀ 3. (α85'''' -> ‹∀ 4. α88'''''›)›  <!<  ChurchInt
-//│ ╟── while constraining:  α84'  <!<  ChurchInt
-//│ ╟── while constraining:  (α83' -> α84')  <!<  (Int -> ChurchInt)
-//│ ╟── while constraining:  to_ch82'  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
+//│ ╟── while constraining:  α43_89'  <!<  ‹∀ 1. ('N94'' -> 'N95'')›
+//│ ╟── while constraining:  α43_89'  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  α23_93''  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  ‹∀ 4. α23_88'''''›  <!<  (‘N'' -> ‘N'')
+//│ ╟── while constraining:  (α22_92'' -> ‹∀ 4. α23_88'''''›)  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ((‘N'' -> ‘N'') -> (‘N'' -> ‘N''))
+//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ‹∀ 0. (('N33' -> 'N33') -> ('N33' -> 'N33'))›
+//│ ╟── while constraining:  ‹∀ 3. (α22_85'''' -> ‹∀ 4. α23_88'''''›)›  <!<  ChurchInt
+//│ ╟── while constraining:  α38_84'  <!<  ChurchInt
+//│ ╟── while constraining:  (α36_83' -> α38_84')  <!<  (Int -> ChurchInt)
+//│ ╟── while constraining:  to_ch35_82'  <!<  (Int -> ChurchInt)
 //│ ╟── while constraining:  ‹∀ 0. to_ch35'›  <!<  (Int -> ChurchInt)
 //│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  (Int -> ChurchInt)
 //│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. to_ch35'››  <!<  ‹∀ 0. (Int -> ChurchInt)›

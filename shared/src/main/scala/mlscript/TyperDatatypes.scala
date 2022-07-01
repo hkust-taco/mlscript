@@ -409,7 +409,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // MinLevel
       if (level <= ub) level else MinLevel
-    override def toString = (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
+    override def toString =
+      // (if (id.idStr.startsWith("'")) "‘"+id.idStr.tail else id.idStr) + showLevel(level)
+      "‘"+(if (id.idStr.startsWith("'")) id.idStr.tail else id.idStr) + showLevel(level)
   }
   
   /** `TypeBounds(lb, ub)` represents an unknown type between bounds `lb` and `ub`.
@@ -462,6 +464,9 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def original: TV =
       if (currentConstrainingRun === creationRun) originalTV.getOrElse(this)
       else this
+    // private def trueOriginal: TV = originalTV.fold(this)(_.trueOriginal)
+    private lazy val trueOriginal: Opt[TV] =
+      originalTV.flatMap(_.trueOriginal.orElse(originalTV))
     
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level =
       // if (cache(this)) MinLevel else {
@@ -489,7 +494,17 @@ abstract class TyperDatatypes extends TyperHelpers { self: Typer =>
     def compare(that: TV): Int = this.uid compare that.uid
     // override def toString: String = showProvOver(false)(nameHint.getOrElse("α") + uid + (if (level === MaxLevel) "^" else if (level > 5 ) "^" + level else "'" * level))
     override def toString: String =
-      showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level)) // + ":"+originalTV.getOrElse("")
+      // showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level)) // + ":"+originalTV.getOrElse("")
+      trueOriginal match {
+        case S(to) =>
+          assert(to.nameHint === nameHint)
+          // to.mkStr + ":" + uid + showLevel(level)
+          to.mkStr + "_" + uid + showLevel(level)
+        case N =>
+          // showProvOver(false)(nameHint.getOrElse("α") + uid + showLevel(level))
+          showProvOver(false)(mkStr + showLevel(level))
+      }
+    private def mkStr = nameHint.getOrElse("α") + uid
     
     def isRecursive_$(implicit ctx: Ctx) : Bool = (lbRecOccs_$, ubRecOccs_$) match {
       case (S(N | S(true)), _) | (_, S(N | S(false))) => true

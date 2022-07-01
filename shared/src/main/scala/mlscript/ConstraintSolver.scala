@@ -12,6 +12,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   var startingFuel: Int = 5000
   def depthLimit: Int = 300
   
+  def unifyInsteadOfExtrude: Bool = false
+  
   type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
@@ -445,11 +447,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val buf = extrusionContext.get.getOrElseUpdate(tv, Buffer.empty)
             buf += true -> lhs0
             ()
+            
+          // case (tv: TypeVariable, rhs0) if tv.lowerBounds.foreach(_.level) =>
+          case (tv: TypeVariable, rhs0) if unifyInsteadOfExtrude && tv.lowerBounds.nonEmpty =>
+            trace(s"NVM, unify") {
+              tv.lowerBounds.foreach(rec(tv, _, true))
+              // val lb = tv.lowerBounds.reduce(_ | _)
+              // rec(tv, lb)
+            }()
+            tv.lowerBounds.foreach(rec(_, rhs0, true))
+          case (lhs0, tv: TypeVariable) if unifyInsteadOfExtrude && tv.upperBounds.nonEmpty =>
+            trace(s"NVM, unify") {
+              tv.upperBounds.foreach(rec(_, tv, true))
+              // val lb = tv.upperBounds.reduce(_ & _)
+              // rec(tv, lb)
+            }()
+            tv.upperBounds.foreach(rec(lhs0, _, true))
+            
           case (_: TypeVariable, rhs0) =>
             // val rhs = extrude(rhs0, lhs.level, false, MaxLevel)
+            // val rhs = PolymorphicType.mk(lhs.level, {
+            //   implicit val flexifyRigids: Bool = true
+            //   extrude(rhs0, lhs.level, false, MaxLevel)
+            // })
             val rhs = PolymorphicType.mk(lhs.level, {
               implicit val flexifyRigids: Bool = true
               extrude(rhs0, lhs.level, false, MaxLevel)
+              // rhs0
             })
             // println(s"EXTR RHS  $rhs0  ~>  $rhs  to ${lhs.level}")
             println(s"EXTR RHS  ~>  $rhs  to ${lhs.level}")
@@ -541,8 +565,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, poly: PolymorphicType) =>
             // rec(lhs, poly.rigidify, true)
             ctx.nextLevel |> { implicit ctx =>
-              println(s"BUMP TO LEVEL ${lvl}")
-              rec(lhs, poly.rigidify, true)
+              val rigid = poly.rigidify
+              println(s"BUMP TO LEVEL ${lvl}  -->  $rigid")
+              println(s"where ${rigid.showBounds}")
+              // rec(lhs, poly.rigidify, true)
+              rec(lhs, rigid, true)
             }
           case (AliasOf(PolymorphicType(plvl, bod)), _) if bod.level <= plvl => rec(bod, rhs, true)
           case (_, FunctionType(param, AliasOf(PolymorphicType(plvl, bod)))) if distributeForalls =>
@@ -720,6 +747,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   def subsume(ty_sch: PolymorphicType, sign: PolymorphicType)
       (implicit ctx: Ctx, raise: Raise, extrCtx: Opt[ExtrCtx], prov: TypeProvenance): Unit = {
+    println(s"CHECKING SUBSUMPTION...")
     constrain(ty_sch, sign)
   }
   

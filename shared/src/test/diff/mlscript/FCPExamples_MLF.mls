@@ -147,11 +147,11 @@ def auto2 x = x x
 //│     'a <: 'a -> 'b))
 
 choose id auto2
-//│ res: 'a -> (forall 'a, 'b. ('a | 'b
+//│ res: 'a -> (forall 'a, 'b. ('b | 'a
 //│   where
 //│     'a <: 'a -> 'b))
 
-:e // FIXME? succeeds with genLamBodies
+//:e // FIXME? succeeds with genLamBodies
 res (choose id succ)
 //│ res: int -> int | 'a
 //│   where
@@ -165,7 +165,7 @@ let f = choose id in (f auto, f succ)
 //│     'c <: 'c -> 'd)), forall 'b. (int & 'b) -> (int | 'b),)
 
 let f = choose id in (f auto2, f succ)
-//│ res: (forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c. ('a | 'c
+//│ res: (forall 'a, 'b. ('a & 'b) -> (forall 'a, 'b, 'c. ('c | 'a
 //│   where
 //│     'b <: 'b -> 'c)), forall 'a. (int & 'a) -> (int | 'a),)
 

@@ -44,7 +44,7 @@ sz1 = sz 1
 //│    = <no result>
 //│      sz and zero are not implemented
 
-:e // FIXME? succeees with genLamBodies
+// :e // FIXME? succeeds with genLamBodies
 sz1 2
 //│ res: 'a
 //│   where
@@ -74,7 +74,7 @@ s zero
 //│    = <no result>
 //│      zero is not implemented
 
-:e
+// :e // works with quantif extrus
 res: ChI
 //│ res: ChI
 //│    = [Function: s]

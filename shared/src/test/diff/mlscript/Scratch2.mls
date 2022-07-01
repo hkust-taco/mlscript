@@ -59,7 +59,7 @@ def succ: ChurchInt -> ChurchInt
 //│     = <missing implementation>
 
 // :ns
-:e // * Needs distrib (see below)
+// :e // * Needs distrib (see below) // works with quantif extrus
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
@@ -161,7 +161,7 @@ rec def to_ch n =
 def to_ch_s_mix n =
   if n == 0 then z
   else s (to_ch (n - 1))
-//│ to_ch_s_mix: int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('b | 'e
+//│ to_ch_s_mix: int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e | 'b
 //│   where
 //│     'a <: 'd -> 'e
 //│     'f <: 'a -> 'c -> 'd))))
@@ -199,9 +199,9 @@ to_church = to_ch
 // :s
 // :ns
 // :e // * Needs distrib (see below)
-:e // FIXME? succeees with genLamBodies
+// :e // FIXME? succeeds with genLamBodies
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('b | 'e
+//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e | 'b
 //│   where
 //│     'a <: 'd -> 'e
 //│     'f <: 'a -> 'c -> 'd))))
@@ -331,7 +331,7 @@ succ = s'
 //│     = [Function: s]
 
 to_church = to_ch_s_mix
-//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('b | 'e
+//│ int -> (forall 'a. 'a -> (forall 'b, 'c. ('b & 'c) -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('e | 'b
 //│   where
 //│     'a <: 'd -> 'e
 //│     'f <: 'a -> 'c -> 'd))))

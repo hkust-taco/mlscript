@@ -2,6 +2,8 @@
 
 // type ChurchInt = forall 'N. ('N -> 'N) -> ('N -> 'N)
 
+// :ArgGen
+
 // :d
 // :ns
 // def s n = fun f -> fun x -> f (n f x)
@@ -20,7 +22,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // :DistributeForalls
 
 // :ns
-// :e // * Needs distrib (see below)
+:e // * Needs distrib (see below)
 // :d
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
@@ -29,13 +31,13 @@ succ = s
 //│   <:  succ:
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.25: 	succ = s
+//│ ║  l.27: 	succ = s
 //│ ║        	^^^^^^^^
 //│ ╟── type `anything` is not an instance of type `'M`
-//│ ║  l.16: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ║        	                                                           ^^
 //│ ╟── Note: constraint arises from quantified type variable:
-//│ ║  l.16: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
+//│ ║  l.18: 	def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M -> 'M))
 //│ ╙──      	                                                           ^^
 //│     = [Function: s]
 

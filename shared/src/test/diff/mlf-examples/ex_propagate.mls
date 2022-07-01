@@ -48,7 +48,7 @@ fun x_ -> (fun y -> y y)
 //│     'a <: 'a -> 'b)))
 //│    = [Function: res]
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 // let (delta:sid -> sid) = fun x -> x x
 def delta = (fun x -> x x) : Sid -> Sid
 //│ delta: Sid -> Sid

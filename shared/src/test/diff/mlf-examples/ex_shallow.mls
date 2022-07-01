@@ -320,7 +320,7 @@ def a0' = a2' a1'
 //│     'a <: anything
 //│    = [Function: either]
 
-:e
+// :e // works with quantif extrus
 def a0'_ = a2'_ a1'
 //│ a0'_: 'a
 //│   where

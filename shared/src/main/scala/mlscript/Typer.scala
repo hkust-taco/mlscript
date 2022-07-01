@@ -753,8 +753,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
         val f_ty = typeTerm(f)
         val a_ty = {
           def typeArg(a: Term): ST =
-              if (!genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
-                typePolymorphicTerm(a)
+              // if (!genArgs || ctx.inRecursiveDef.exists(rd => a.freeVars.contains(rd)))
+              //   typePolymorphicTerm(a)
+              if (!genArgs) typePolymorphicTerm(a)
               else {
             val newCtx = ctx.nextLevel
             val ec: ExtrCtx = MutMap.empty

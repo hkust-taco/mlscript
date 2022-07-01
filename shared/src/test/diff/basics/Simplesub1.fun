@@ -187,7 +187,7 @@ x => y => x x y
 //│ ║  l.+1: 	(x => x x) (x => x x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α224' -> α225')›  <:  α229    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α224' -> α225')›  <:  α224_229    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α224' -> α225')›  <:  α224'
 //│ res: error
 
@@ -204,7 +204,7 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (x x)) (x => f (x x)))
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α253    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244_253    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. {(α244' -> α246') where: α240 <: (α245' -> α246')}›  <:  α244'
 //│ res: ('a -> 'b & nothing -> 'c & 'c -> 'a) -> (error | 'b)
 
@@ -399,7 +399,7 @@ let rec x = (let y = (x x); (z => z))
 //│ ║  l.+1: 	(w => x => x) ((y => y y) (y => y y))
 //│ ║        	               ^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α661    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α654' -> α655')›  <:  α654_661    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α654' -> α655')›  <:  α654'
 //│ res: 'a -> 'a
 

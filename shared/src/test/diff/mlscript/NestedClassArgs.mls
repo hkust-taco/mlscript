@@ -226,18 +226,18 @@ c = e
 //│ ╟── while constraining:  'A465  <!<  ‹∀ 0. (('a558' | 'A439) | 'A439)›
 //│ ╟── ......
 //│ ╟── ......
-//│ ╟── while constraining:  (C5[C6['A439]] & {a: (C2[(((C5[C6['A439]] | (C5[C6['A439]] & ~(c5<>))) | C5[C6['A439]]) | (C5[C6['A439]] & ~({a: C2[C5[C6['A439]]]})))] & {a: 'a456})})  <!<  ‹∀ 0. ({a: C2[C5[C6['a457'..'a458']..C6['a459'..'a460']]..C5[C6['a461'..'a462']..C6['a463'..'a464']]]} | ~((c5<> & {C5#A: mut C6['A465..'A466]..C6['A465..'A466], a: C2[C5[C6['A465..'A466]..C6['A465..'A466]]..C5[C6['A465..'A466]..C6['A465..'A466]]]})))›
-//│ ╟── while constraining:  'a456  <!<  ‹∀ 0. ({a: C2[C5[C6['a457'..'a458']..C6['a459'..'a460']]..C5[C6['a461'..'a462']..C6['a463'..'a464']]]} | ~((c5<> & {C5#A: mut C6['A465..'A466]..C6['A465..'A466], a: C2[C5[C6['A465..'A466]..C6['A465..'A466]]..C5[C6['A465..'A466]..C6['A465..'A466]]]})))›
-//│ ╟── while constraining:  'a456  <!<  ({a: C2[C5[C6[‘a']]]} | ~((c5<> & {C5#A: mut C6['A452']..C6['A452'], a: C2[C5[C6['A452']]]})))
-//│ ╟── while constraining:  (C5[C6['A452']] & Inner)  <!<  {a: C2[C5[C6[‘a']]]}
-//│ ╟── while constraining:  (C5[C6['A452']] & Inner)  <!<  (c5<> & {a: C2[C5[C6[‘a']]]})
-//│ ╟── while constraining:  (C5[C6['A452']] & Inner)  <!<  ((c5<> & {a: C2[C5[C6[‘a']]]}) & {C5#A: mut C6[‘a']..C6[‘a']})
-//│ ╟── while constraining:  (C5[C6['A452']] & Inner)  <!<  C5[C6[‘a']]
-//│ ╟── while constraining:  (C6['A452'] & {a: Inner})  <!<  {a: C5[C6[‘a']]}
-//│ ╟── while constraining:  (C6['A452'] & {a: Inner})  <!<  (c6<> & {a: C5[C6[‘a']]})
-//│ ╟── while constraining:  (C6['A452'] & {a: Inner})  <!<  ((c6<> & {a: C5[C6[‘a']]}) & {C6#A: mut ‘a'..‘a'})
-//│ ╟── while constraining:  (C6['A452'] & {a: Inner})  <!<  C6[‘a']
-//│ ╟── while constraining:  (Anything -> (C6['A452'] & {a: Inner}))  <!<  (‘a' -> C6[‘a'])
+//│ ╟── while constraining:  (C5[C6['A439]] & {a: (C2[(((C5[C6['A439]] | (C5[C6['A439]] & ~(c5<>))) | C5[C6['A439]]) | (C5[C6['A439]] & ~({a: C2[C5[C6['A439]]]})))] & {a: 'a438_456})})  <!<  ‹∀ 0. ({a: C2[C5[C6['a457'..'a458']..C6['a459'..'a460']]..C5[C6['a461'..'a462']..C6['a463'..'a464']]]} | ~((c5<> & {C5#A: mut C6['A465..'A466]..C6['A465..'A466], a: C2[C5[C6['A465..'A466]..C6['A465..'A466]]..C5[C6['A465..'A466]..C6['A465..'A466]]]})))›
+//│ ╟── while constraining:  'a438_456  <!<  ‹∀ 0. ({a: C2[C5[C6['a457'..'a458']..C6['a459'..'a460']]..C5[C6['a461'..'a462']..C6['a463'..'a464']]]} | ~((c5<> & {C5#A: mut C6['A465..'A466]..C6['A465..'A466], a: C2[C5[C6['A465..'A466]..C6['A465..'A466]]..C5[C6['A465..'A466]..C6['A465..'A466]]]})))›
+//│ ╟── while constraining:  'a438_456  <!<  ({a: C2[C5[C6[‘a']]]} | ~((c5<> & {C5#A: mut C6['A442_452']..C6['A442_452'], a: C2[C5[C6['A442_452']]]})))
+//│ ╟── while constraining:  (C5[C6['A442_452']] & Inner)  <!<  {a: C2[C5[C6[‘a']]]}
+//│ ╟── while constraining:  (C5[C6['A442_452']] & Inner)  <!<  (c5<> & {a: C2[C5[C6[‘a']]]})
+//│ ╟── while constraining:  (C5[C6['A442_452']] & Inner)  <!<  ((c5<> & {a: C2[C5[C6[‘a']]]}) & {C5#A: mut C6[‘a']..C6[‘a']})
+//│ ╟── while constraining:  (C5[C6['A442_452']] & Inner)  <!<  C5[C6[‘a']]
+//│ ╟── while constraining:  (C6['A442_452'] & {a: Inner})  <!<  {a: C5[C6[‘a']]}
+//│ ╟── while constraining:  (C6['A442_452'] & {a: Inner})  <!<  (c6<> & {a: C5[C6[‘a']]})
+//│ ╟── while constraining:  (C6['A442_452'] & {a: Inner})  <!<  ((c6<> & {a: C5[C6[‘a']]}) & {C6#A: mut ‘a'..‘a'})
+//│ ╟── while constraining:  (C6['A442_452'] & {a: Inner})  <!<  C6[‘a']
+//│ ╟── while constraining:  (Anything -> (C6['A442_452'] & {a: Inner}))  <!<  (‘a' -> C6[‘a'])
 //│ ╟── while constraining:  ‹∀ 0. (Anything -> (C6['A442'] & {a: Inner}))›  <!<  (‘a' -> C6[‘a'])
 //│ ╟── while constraining:  ‹∀ 0. ‹∀ 0. (Anything -> (C6['A442'] & {a: Inner}))››  <!<  (‘a' -> C6[‘a'])
 //│ ╙── while constraining:  ‹∀ 0. ‹∀ 0. (Anything -> (C6['A442'] & {a: Inner}))››  <!<  ‹∀ 0. ('a365' -> C6['a365'])›

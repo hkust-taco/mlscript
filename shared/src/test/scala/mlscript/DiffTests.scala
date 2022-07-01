@@ -134,6 +134,7 @@ class DiffTests extends org.scalatest.funsuite.AnyFunSuite with org.scalatest.Pa
           case "RecursiveTypes" => noRecursiveTypes = false; mode
           case "NoRecursiveTypes" => noRecursiveTypes = true; mode
           case "NoConstrainnedTypes" => noConstrainnedTypes = true; mode
+          case "ArgGen" => noArgGen = false; mode
           case "NoArgGen" => noArgGen = true; mode
           case str @ "Fuel" =>
             // println("'"+line.drop(str.length + 2)+"'")

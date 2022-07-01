@@ -172,7 +172,7 @@ someRec: BadRec
 //│ ║  l.+1: 	someRec: BadRec
 //│ ║        	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  {x: 'a53, y: 'a53}  <:  {x: 'a54, y: BadRec}    RecordType  RecordType
+//│ ╟── this constraint:  {x: 'a48_53, y: 'a48_53}  <:  {x: 'a34_54, y: BadRec}    RecordType  RecordType
 //│ ╙──  ... looks like:  {x: 'a48', y: 'a48'}  <:  {x: 'a34, y: BadRec}
 //│ res: BadRec
 //│    = <no result>

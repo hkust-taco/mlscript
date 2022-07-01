@@ -164,7 +164,7 @@ delta succ
 //│     'b <: 'b -> 'a
 //│    = 'function succ(n) {  return n + 1;}1'
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 // let test2 = delta (choose id id)
 test2 = delta (choose id id)
 //│ test2: 'a
@@ -314,8 +314,8 @@ id1 id
 //│ ║  l.312: 	id1 id
 //│ ║         	^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α198'' -> α198'')››  <:  α488    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α198'' -> α198'')››  <:  α455'
+//│ ╟── this constraint:  ‹∀ 0. ‹∀ 1. (α198'' -> α198'')››  <:  α20_488    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. ‹∀ 1. (α198'' -> α198'')››  <:  α20_455'
 //│ res: error
 //│    = [Function: id]
 
@@ -333,8 +333,8 @@ id1 id1
 //│ ║  l.331: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. id1452'›  <:  α501    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 0. id1452'›  <:  α455'
+//│ ╟── this constraint:  ‹∀ 0. id1452'›  <:  α20_501    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. id1452'›  <:  α20_455'
 //│ res: error
 //│    = [Function: id1]
 
@@ -474,7 +474,7 @@ h (fun ((x, f)) -> f x)
 // * _n accessors not yet implemented in JS backend:
 // test1 = listiterA (fun ex -> ex (fun p -> p._2 p._1)) ex_list1
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.478: 	test1 = listiterA (fun ex -> ex (fun ((p1, p2)) -> p2 p1)) ex_list1
@@ -635,7 +635,7 @@ ex_list2 = cons (make_ex2 ("String", "String", eqstring))
 // let test1 = listiter (fun ex -> ex (fun p -> (snd p) (fst p))) ex_list1
 // ;;
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.639: 	test1 = listiterA (fun ex -> ex (fun (a, b) -> b a)) ex_list1
@@ -774,12 +774,12 @@ def c_not_ a = c_if a (fun z -> c_false) (fun z -> c_true)
 
 // let c_or = (c_or : Bool -> Bool -> Bool)
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 def c_or2 = c_or : Fbool -> Fbool -> Fbool
 //│ c_or2: Fbool -> Fbool -> Fbool
 //│      = [Function: c_or]
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 def c_or2_ = c_or_ : Fbool -> Fbool -> Fbool
 //│ c_or2_: Fbool -> Fbool -> Fbool
 //│       = [Function: c_or_]
@@ -1232,7 +1232,7 @@ def to_church_ = to_church
 //   c_if (c_iszero n) (fun (u:Unit) -> c_i1)
 //     (fun (u:Unit) -> c_mul n (c_fact (c_pred n)))
 
-:e // polym recur?
+// :e // polym recur? // works with quantif extrus
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
@@ -1253,7 +1253,7 @@ def c_fact_A: Fint -> Fint
 //│ c_fact_A: Fint -> Fint
 //│         = <missing implementation>
 
-:e // FIXME?
+// :e // FIXME? // works with quantif extrus
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
@@ -1274,7 +1274,7 @@ def c_fact_A n =
 //│         = <no result>
 //│           c_fact_A is not implemented
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 rec def c_fact_ n =
   c_if_ (c_iszero_ n) (fun _ -> c_i1)
     (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
@@ -1286,8 +1286,8 @@ rec def c_fact_ n =
 //│ ║  l.1280: 	    (fun _ -> c_mul_ n (c_fact_ (c_pred_ n)))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α3904'  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α3924')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α3904'  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α3905''')
+//│ ╟── this constraint:  α2925_3904'  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_3924')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α2925_3904'  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_3905''')
 //│ c_fact_: (('a -> (forall 'b. 'b -> (forall 'b, 'c. ('d
 //│   where
 //│     'b <: (forall 'a, 'e, 'c. ('c
@@ -1321,7 +1321,7 @@ rec def c_fact_ n =
 //   c_printint (c_fact (to_church n)) ;
 //   print_string "\n" ;
 //   ()
-:e
+// :e // works with quantif extrus
 def print_fact n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
@@ -1331,7 +1331,7 @@ def print_fact n =
 //│ print_fact: int -> unit
 //│           = [Function: print_fact]
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 def print_fact_ n =
   let _ = print_string "Factorial " in
   let _ = print_int n in
@@ -1342,8 +1342,8 @@ def print_fact_ n =
 //│ ║  l.1339: 	  let _ = c_printint_ (c_fact_ (to_church_ n)) in
 //│ ║          	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α4265''''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α4271'''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α4199''''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α4200''')
+//│ ╟── this constraint:  α2925_4265''''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_4271'''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α2925_4199''''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_4200''')
 //│ print_fact_: int -> unit
 //│            = [Function: print_fact_]
 
@@ -1357,7 +1357,7 @@ def print_fact2 n =
 //│     'a <: (‘a -> ‘a) -> ‘a -> ‘a))
 //│            = [Function: print_fact2]
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 def print_fact2_ n =
   concat "Factorial_ " (
   concat (toString n) (
@@ -1369,8 +1369,8 @@ def print_fact2_ n =
 //│ ║  l.1365: 	         (c_printint2_ (c_fact_ (to_church_ n))) ))
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  α4453'''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α4459''')    TypeVariable  FunctionType
-//│ ╙──  ... looks like:  α4371'''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α4372''')
+//│ ╟── this constraint:  α2925_4453'''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_4459''')    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α2925_4371'''  <:  ((‹∀ 3. ‹∀ 4. (α2926''''' -> ‹∀ 5. α2946^6›)››,) -> α2964_4372''')
 //│ print_fact2_: int -> string
 //│             = [Function: print_fact2_]
 
@@ -1439,7 +1439,7 @@ this_should_be_98_ =
 //│                   = '98'
 
 // This annot-mixed expression causes a stack overflow when increasing the depth limit:
-:e
+// :e // works with quantif extrus
 c_i5_ = c_add_ c_i3_ c_i2
 //│ c_i5_: 'a
 //│   where
@@ -1460,7 +1460,7 @@ c_i5_ = c_add_ c_i3_ c_i2
 //   print_fact2 5 ;
 //   print_fact2 6 ;
 //   ()
-:e // FIXME? succeeds with genLamBodies
+//:e // FIXME? succeeds with genLamBodies
 print_fact2 0
 print_fact2 1
 print_fact2 2

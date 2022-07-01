@@ -177,7 +177,7 @@ def delta_ x = x x
 
 // let z = delta (delta id)
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (delta id)
 //│ z: 'a
 //│   where
@@ -214,7 +214,7 @@ delta_ succ
 
 // let z = delta (choose id id)
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 def z = delta (choose id id)
 //│ z: 'a
 //│   where
@@ -1041,8 +1041,8 @@ rec def id x = if true then x else id id x
 //│ ║  l.1018: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‘a''  <:  α1918''    TraitTag  TypeVariable
-//│ ╙──  ... looks like:  ‘a''  <:  α1897'
+//│ ╟── this constraint:  ‘a''  <:  α20_1918''    TraitTag  TypeVariable
+//│ ╙──  ... looks like:  ‘a''  <:  α20_1897'
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.1018: 	rec def id x = if true then x else id id x
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

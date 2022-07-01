@@ -79,7 +79,7 @@ b = error: Baa
 //   fun (g : ['b] (('a -> 'b -> 'b) -> 'b -> 'b)) -> 
 //     g (fun x xs -> Cons (x,xs)) Nil
 
-:e
+// :e // works with quantif extrus
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ build: (forall 'b. (anything -> 'b -> 'b) -> 'b -> 'b) -> (forall 'c. ('d
 //│   where
@@ -314,7 +314,7 @@ rec def k_ = fun x -> fun xs -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 // (* definition with build and foldr *)
 // let bfoo xs = build (foldr k z xs)
 
-// :e // FIXME? fails with genLamBodies
+:e // FIXME? fails with genLamBodies
 def bfoo xs = build (foldr k z xs)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.318: 	def bfoo xs = build (foldr k z xs)
@@ -337,7 +337,7 @@ def bfoo xs = build (foldr k z xs)
 //│     'g <: (Cons['b] with {head: int, tail: 'g}) | Nil
 //│     = [Function: bfoo]
 
-// FIXME
+// FIXedME // works with quantif extrus
 def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ bfoo_: 'b -> (forall 'b, 'c. ('d
 //│   where

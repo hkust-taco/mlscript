@@ -30,7 +30,7 @@ def succ: (forall 'N. ('N -> 'N) -> ('N -> 'N)) -> (forall 'M. ('M -> 'M) -> ('M
 // * Failure comes from:
 // | | | C ‹∀ 1. (α27'' -> ‹∀ 2. (α28''' -> ‹∀ 3. {(α29'''' -> α32'''') where: α27'' <: ((α28''',) -> α30''''), α28''' <: ((α31'''',) -> α32'''')}›)›)› <! (‹∀ 1. (('N95'' -> 'N95'') -> ('N95'' -> 'N95''))› -> ‹∀ 1. (('M96'' -> 'M96'') -> ('M96'' -> 'M96''))›)  PolymorphicType  FunctionType
 // :d
-:e
+// :e // works with quantif extrus
 succ = s
 //│ 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e. ('e
 //│   where
@@ -59,7 +59,7 @@ succ0 = s
 
 
 // * This does not help; we still need distrib. It works in MLF – do they have distrib?!
-:e
+// :e // works with quantif extrus
 def succ (n: (forall 'N. ('N -> 'N) -> ('N -> 'N))) = fun f -> fun x -> f (n f x)
 //│ (forall 'N. ('N -> 'N) -> 'N -> 'N) -> (forall 'a. 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('d
 //│   where

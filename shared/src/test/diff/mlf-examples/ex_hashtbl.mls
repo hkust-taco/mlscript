@@ -275,7 +275,7 @@ table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 // * Note: this one requires `:DistributeForalls`
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ zog: string
@@ -285,7 +285,7 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 
 // Repro:
 
-// :e // FIXME? fails with genLamBodies
+// :e // FIXME? failed with genLamBodies but works with quantif extrus
 a = add (nfind table "one")
 //│ a: ChurchInt -> (forall 'a. ('b
 //│   where

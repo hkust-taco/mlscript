@@ -28,7 +28,7 @@ eval eval
 //│ ║  l.26: 	eval eval
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α94    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α48_94    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α48'
 //│ res: ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val})) -> (int | 'val) | error
 //│    = [Function (anonymous)]
@@ -49,7 +49,7 @@ evalN evalN
 //│ ║  l.47: 	evalN evalN
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α218    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α142_218    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α142'
 //│ res: ((Add with {lhs: Add | Lit | Neg, rhs: Add | Lit | Neg}) | (Lit with {val: 'val}) | (Neg with {underlying: Add | Lit | Neg})) -> (int | 'val) | error
 //│    = [Function (anonymous)]
@@ -64,7 +64,7 @@ evalN evalN e
 //│ ║  l.62: 	evalN evalN e
 //│ ║        	^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α364    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α142_364    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α142' -> (α143' -> (α149' | α164')))›  <:  α142'
 //│ res: error | int
 //│    = -1
@@ -90,7 +90,7 @@ def evalN2 evalN2 x = case x of {
 //│ ║  l.+3: 	  | _ -> eval eval x
 //│ ║        	         ^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α461'    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α48_461'    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α48' -> (α49' -> (val51' | α60')))›  <:  α48'
 //│ evalN2: ('a -> 'underlying -> int & 'a) -> ((Add with {lhs: Add | Lit, rhs: Add | Lit}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (error | int | 'val)
 
@@ -100,7 +100,7 @@ evalN2 evalN2 e
 //│ ║  l.+1: 	evalN2 evalN2 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α439' -> (α440' -> (α446' | α485')))›  <:  α549    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α439' -> (α440' -> (α446' | α485')))›  <:  α439_549    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α439' -> (α440' -> (α446' | α485')))›  <:  α439'
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	evalN2 evalN2 e
@@ -150,7 +150,7 @@ evalN3 evalN3 e
 //│ ║  l.+1: 	evalN3 evalN3 e
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α696' -> (α697' -> (α702' | α717')))›  <:  α769    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α696' -> (α697' -> (α702' | α717')))›  <:  α696_769    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α696' -> (α697' -> (α702' | α717')))›  <:  α696'
 //│ res: error | int
 

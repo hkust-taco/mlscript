@@ -50,7 +50,7 @@ self self
 //│ ║  l.48: 	self self
 //│ ║        	^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. (α93' -> α94')›  <:  α104    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. (α93' -> α94')›  <:  α93_104    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. (α93' -> α94')›  <:  α93'
 //│ res: error
 //│ Runtime error:

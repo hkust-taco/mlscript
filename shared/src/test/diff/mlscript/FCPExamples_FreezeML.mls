@@ -307,14 +307,14 @@ f (choose id) ids
 //│ ║  l.305: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 0. ('a297' -> 'a297')›  <:  'a714    PolymorphicType  TypeVariable
+//│ ╟── this constraint:  ‹∀ 0. ('a297' -> 'a297')›  <:  'a707_714    PolymorphicType  TypeVariable
 //│ ╙──  ... looks like:  ‹∀ 0. ('a297' -> 'a297')›  <:  'a707'
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application
 //│ ║  l.305: 	f (choose id) ids
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── ————————— Additional debugging info: —————————
-//│ ╟── this constraint:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a714    PolymorphicType  TypeVariable
-//│ ╙──  ... looks like:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a714
+//│ ╟── this constraint:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a707_714    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 1. ('a309'' -> 'a309'')›  <:  'a707_714
 //│ res: 'a -> 'a | error
 
 // * ^ Strangely, this one works with recursive types:
@@ -556,7 +556,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│    = [Function: id1]
 
 // :e // * ^ Here you go:
-:e // FIXME? succeees with genLamBodies
+// :e // FIXME? succeeds with genLamBodies
 res id
 //│ res: 'a -> 'a
 //│   where
