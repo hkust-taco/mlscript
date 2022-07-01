@@ -736,7 +736,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool)
           assert(midCtx.lvl === newCtx.lvl-1)
           PolymorphicType.mk(midCtx.lvl,
             ConstrainedType.mk(ec.iterator.mapValues(_.toList).toList, innerTy))
-            // .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
+            .tap(instantiateForGoodMeasure(midCtx, extrCtx2))
         }
         // val body_ty = if (!genLamBodies || !generalizeCurriedFunctions) typeTerm(body)(newCtx, raise, extrCtx2, vars)
         //     else {

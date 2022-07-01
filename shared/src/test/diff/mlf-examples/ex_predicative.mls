@@ -18,16 +18,25 @@ def imp (z: Bot) =
 def imp' z =
   (fun x -> x x)
   (fun y -> y z y)
-//│ imp: Bot -> (forall 'a, 'b, 'v. ('b
+//│ imp: Bot -> (forall 'a, 'b, 'c, 'v. ('c
 //│   where
-//│     'a <: 'a -> 'b
-//│     'v :> forall 'c, 'd. ('d
+//│     'b <: 'b -> 'c
+//│     'a <: ‘a
+//│     'v :> forall 'a, 'd, 'e. ('e
 //│   where
-//│     'c <: Bot -> 'c -> 'd)))
+//│     'd <: 'a -> 'd -> 'e)))
+//│   where
+//│     'a <: ‘a
+//│     'f <: 'a -> 'f -> ‘a
 //│    = [Function: imp]
-//│ imp': anything -> (forall 'a, 'b. ('b
+//│ imp': ('a -> 'a -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'a -> 'b))
+//│     'b <: 'a -> 'b -> 'c))) -> anything & 'a -> 'a -> anything & 'a) -> (forall 'a, 'd, 'e. ('e
+//│   where
+//│     'd <: 'd -> 'e
+//│     'a <: 'a -> 'a -> anything & 'a -> 'a -> (forall 'b. ('a -> 'b -> anything & 'b) -> (forall 'a, 'b, 'c. ('c
+//│   where
+//│     'b <: 'a -> 'b -> 'c))) -> anything))
 //│     = [Function: imp]
 
 
@@ -51,7 +60,7 @@ def delta' = fun x -> x x
 //│   where
 //│     'a <: 'a -> 'b))
 //│      = [Function: delta]
-//│ delta': 'a -> (forall 'a, 'b. ('b
+//│ delta': ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│       = [Function: delta]
@@ -70,31 +79,100 @@ delta' id
 
 // let t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e)) ;;
 def t a b c d e = (fun x -> a x x) ((fun y -> b (c y)) (d e))
-//│ t: 'a -> (forall 'b. 'b -> (forall 'c. 'c -> (forall 'd. 'd -> (forall 'e. 'e -> (forall 'a, 'd. ('f
+//│ t: ((forall 'a, 'b, 'c, 'd. ('c
 //│   where
-//│     'a <: (forall 'b, 'c, 'g, 'h, 'i. ('h
+//│     'a <: 'b -> 'c
+//│     'd <: nothing -> 'b)) -> (forall 'a, 'b, 'c, 'd. ('c
 //│   where
-//│     'b <: 'g -> 'h
-//│     'c <: 'i -> 'g)) -> (forall 'b, 'c, 'g, 'h, 'i. ('h
+//│     'a <: 'b -> 'c
+//│     'd <: nothing -> 'b)) -> 'e & 'f) -> (forall 'f. ('g -> (forall 'f, 'g. ('h -> (forall 'f, 'g, 'h. ((nothing -> 'i & 'e) -> (forall 'e, 'f, 'g, 'h, 'j, 'k. ('j -> (forall 'e, 'f, 'g, 'h. ('l
 //│   where
-//│     'b <: 'g -> 'h
-//│     'c <: 'i -> 'g)) -> 'f
-//│     'd <: 'e -> 'i))))))
+//│     'f <: (forall 'g, 'h, 'm, 'n, 'o. ('n
+//│   where
+//│     'g <: 'm -> 'n
+//│     'h <: 'o -> 'm)) -> (forall 'g, 'h, 'm, 'n, 'o. ('n
+//│   where
+//│     'g <: 'm -> 'n
+//│     'h <: 'o -> 'm)) -> 'l
+//│     'e <: 'j -> 'o
+//│     'f <: (forall 'g, 'h, 'm, 'n, 'o. ('n
+//│   where
+//│     'g <: 'm -> 'n
+//│     'h <: 'o -> 'm)) -> (forall 'g, 'h, 'm, 'n, 'o. ('n
+//│   where
+//│     'g <: 'm -> 'n
+//│     'h <: 'o -> 'm)) -> 'e
+//│     'g <: 'p -> 'e
+//│     'h <: 'o -> 'p))
+//│   where
+//│     'e <: 'j -> 'k
+//│     'f <: (forall 'g, 'h, 'k, 'q, 'r. ('r
+//│   where
+//│     'g <: 'q -> 'r
+//│     'h <: 'k -> 'q)) -> (forall 'g, 'h, 'k, 'q, 'r. ('r
+//│   where
+//│     'g <: 'q -> 'r
+//│     'h <: 'k -> 'q)) -> 'e
+//│     'g <: 's -> 'e
+//│     'h <: 'k -> 's))
+//│   where
+//│     'f <: (forall 'g, 'h, 't, 'u, 'i. ('u
+//│   where
+//│     'g <: 't -> 'u
+//│     'h <: 'i -> 't)) -> (forall 'g, 'h, 't, 'u, 'i. ('u
+//│   where
+//│     'g <: 't -> 'u
+//│     'h <: 'i -> 't)) -> 'e
+//│     'g <: 'v -> 'e
+//│     'h <: 'i -> 'v))
+//│   where
+//│     'f <: (forall 'g, 'w, 'x, 'h. ('x
+//│   where
+//│     'g <: 'w -> 'x
+//│     'h <: nothing -> 'w)) -> (forall 'g, 'w, 'x, 'h. ('x
+//│   where
+//│     'g <: 'w -> 'x
+//│     'h <: nothing -> 'w)) -> 'e
+//│     'g <: nothing -> 'e))
+//│   where
+//│     'f <: (forall 'g, 'y, 'z, 'a1. ('z
+//│   where
+//│     'g <: 'y -> 'z
+//│     'a1 <: nothing -> 'y)) -> (forall 'g, 'y, 'z, 'a1. ('z
+//│   where
+//│     'g <: 'y -> 'z
+//│     'a1 <: nothing -> 'y)) -> 'e))
 //│  = [Function: t]
 
 // let t w z a b = (fun y -> (fun x -> w (x y) z) a) b ;;
 def t w z a b = (fun y -> (fun x -> w (x y) z) a) b
-//│ t: 'a -> (forall 'b. 'b -> 'a -> (forall 'c. 'c -> (forall 'a, 'b, 'c, 'd, 'e, 'f. ('f
+//│ t: (nothing -> nothing -> 'a & 'b) -> (forall 'a, 'b, 'c. ('c -> (forall 'a, 'b, 'c, 'd. ((nothing -> 'd & 'a) -> (forall 'a, 'b, 'c, 'e, 'f. ('f -> (forall 'a, 'b, 'c, 'f, 'g, 'h, 'i, 'j, 'k. ('i
 //│   where
-//│     'd <: 'c -> 'e
-//│     'a <: 'e -> 'b -> 'f))))
+//│     'g <: 'f -> 'h
+//│     'b <: 'h -> 'c -> 'i
+//│     'b <: 'j -> 'c -> 'a
+//│     'a <: 'f -> 'j
+//│     'b <: 'k -> 'c -> 'a
+//│     'a <: 'f -> 'k))
+//│   where
+//│     'b <: 'e -> 'c -> 'a
+//│     'a <: 'f -> 'e))
+//│   where
+//│     'b <: 'd -> 'c -> 'a))
+//│   where
+//│     'b <: nothing -> 'c -> 'a))
 //│  = [Function: t1]
 
 // let t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x)) ;;
 def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
-//│ t: 'a -> anything -> (forall 'a, 'b, 'c, 'd. ('d
+//│ t: 'a -> (forall 'b. ('a -> 'b & (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'b <: 'a -> 'c & 'c -> 'd))
+//│     'b <: 'a -> 'c)) -> 'b & 'b) -> (forall 'a, 'b, 'd, 'e, 'f. ('f
+//│   where
+//│     'd <: 'a -> 'e & 'e -> 'f
+//│     'b <: (forall 'a, 'b, 'g. ('g
+//│   where
+//│     'b <: 'a -> 'g)) -> 'b & 'a -> 'b)))
 //│  = [Function: t2]
 
 // (* Rank 1 *)
@@ -103,6 +181,8 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'a -> 'b))
+//│   where
+//│     'c <: 'a -> anything
 //│    = [Function (anonymous)]
 
 // (* Rank 3 *)
@@ -113,7 +193,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function (anonymous)]
-//│ res: anything -> (forall 'a. 'a -> (forall 'a, 'b. ('b
+//│ res: anything -> (forall 'a. ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b)))
 //│    = [Function (anonymous)]
@@ -130,7 +210,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│    = [Function (anonymous)]
 //│ res: 'a
 //│   where
-//│     'b <: (forall 'c. 'c -> (forall 'c, 'd. ('d
+//│     'b <: (forall 'c. ('c -> anything & 'c) -> (forall 'c, 'd. ('d
 //│   where
 //│     'c <: 'c -> 'd))) -> 'a
 //│    = [Function (anonymous)]
@@ -143,7 +223,7 @@ def t y a = (fun x -> x (x y)) ((fun z -> z) (fun x -> a x))
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: delta]
-//│ res: 'a -> (forall 'a, 'b. ('b
+//│ res: ('a -> anything & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 'a -> 'b))
 //│    = [Function: delta]
@@ -158,10 +238,14 @@ type Sk = forall 'a 'b. 'a -> 'b -> 'a
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'c -> 'a -> 'b))
+//│   where
+//│     'c <: 'c -> 'a -> anything
 //│    = [Function (anonymous)]
 //│ res: 'a -> (forall 'a, 'b. ('b
 //│   where
 //│     'c <: 'c -> 'a -> 'b))
+//│   where
+//│     'c <: 'c -> 'a -> anything
 //│    = [Function (anonymous)]
 
 // (* Rank 3 *)
@@ -192,17 +276,23 @@ def three = fun f -> fun x -> f (f (f x))
 //│  = [Function: k]
 //│ k2: anything -> (forall 'a. 'a -> 'a)
 //│   = [Function: k2]
-//│ app: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c. ('c
+//│ app: (nothing -> 'a & 'a) -> (forall 'a, 'b. ('b -> (forall 'a, 'b, 'c. ('c
 //│   where
-//│     'a <: 'b -> 'c)))
+//│     'a <: 'b -> 'c))
+//│   where
+//│     'a <: 'b -> 'a))
 //│    = [Function: app]
-//│ two: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd. ('d
+//│ two: ('a -> 'b & nothing -> 'a & 'b) -> (forall 'b, 'c, 'd. ('c -> (forall 'b, 'c, 'e, 'f. ('f
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd)))
+//│     'b <: 'c -> 'e & 'e -> 'f))
+//│   where
+//│     'b <: 'c -> 'd & 'd -> 'b))
 //│    = [Function: two]
-//│ three: 'a -> (forall 'b. 'b -> (forall 'a, 'b, 'c, 'd, 'e. ('e
+//│ three: (nothing -> 'a & 'b -> 'c & 'a -> 'b & 'c) -> (forall 'c, 'd, 'e, 'f. ('d -> (forall 'c, 'd, 'g, 'h, 'i. ('i
 //│   where
-//│     'a <: 'b -> 'c & 'c -> 'd & 'd -> 'e)))
+//│     'c <: 'd -> 'g & 'g -> 'h & 'h -> 'i))
+//│   where
+//│     'c <: 'd -> 'e & 'e -> 'f & 'f -> 'c))
 //│      = [Function: three]
 
 
@@ -228,69 +318,240 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
 //│ t: 'a -> (forall 'a, 'b. ('c
 //│   where
-//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
+//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'a, 'f. (nothing -> 'a & 'f) -> (forall 'a, 'f, 'g. ('g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i. 'i -> (forall 'j. 'j -> (forall 'b, 'i, 'k, 'l, 'm. ('n
+//│     'f <: 'g -> 'h))
 //│   where
-//│     'k <: 'l -> 'i -> 'm
-//│     'b <: (forall 'o. 'o -> (forall 'p. 'p -> (forall 'a, 'o, 'p. ('q
+//│     'f <: 'g -> 'a))) -> (forall 'b, 'i, 'j, 'k, 'l. ('k -> (forall 'b, 'i, 'k, 'm, 'n. ('o -> (forall 'b, 'i, 'k, 'p, 'q. ('r
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 'r
-//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's. ('u
+//│     'i <: 'p -> 'k -> 'q
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'v
-//│     's <: 'v -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
 //│   where
-//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'w))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'l & 'm -> 'j -> 'n)))) -> 'c))
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'p & 'q -> 'o -> 'r))
+//│   where
+//│     'i <: 'm -> 'k -> 'n
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'm & 'n -> 'o -> 'a))
+//│   where
+//│     'i <: 'j -> 'k -> 'l
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'j & 'l -> nothing -> 'a)) -> 'c))
 //│  = [Function: t3]
 //│ t2: 'a -> (forall 'a, 'b. ('c
 //│   where
-//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
+//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'a, 'f. (nothing -> 'a & 'f) -> (forall 'a, 'f, 'g. ('g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i. 'i -> (forall 'j. 'j -> (forall 'b, 'i, 'k, 'l, 'm. ('n
+//│     'f <: 'g -> 'h))
 //│   where
-//│     'k <: 'l -> 'i -> 'm
-//│     'b <: (forall 'o. 'o -> (forall 'p. 'p -> (forall 'a, 'o, 'p. ('q
+//│     'f <: 'g -> 'a))) -> (forall 'b, 'i, 'j, 'k, 'l. ('k -> (forall 'b, 'i, 'k, 'm, 'n. ('o -> (forall 'b, 'i, 'k, 'p, 'q. ('r
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 'r
-//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's. ('u
+//│     'i <: 'p -> 'k -> 'q
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'v
-//│     's <: 'v -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
 //│   where
-//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'w))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'l & 'm -> 'j -> 'n)))) -> 'c))
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'p & 'q -> 'o -> 'r))
+//│   where
+//│     'i <: 'm -> 'k -> 'n
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'm & 'n -> 'o -> 'a))
+//│   where
+//│     'i <: 'j -> 'k -> 'l
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'j & 'l -> nothing -> 'a)) -> 'c))
 //│   = [Function: t21]
 
 // FIXME
 t id succ 0
-//│ res: 'a | 'b
-//│   where
-//│     'c <: 'd -> (int -> int) -> 'e
-//│     'f <: (forall 'g. 'g -> (forall 'h. 'h -> (forall 'g, 'h, 'i. ('j
-//│   where
-//│     'g <: ('i -> (forall 'k. 'k -> 'k)) -> 'l
-//│     'h <: 'l -> (forall 'm. 'm -> (forall 'n. 'n -> (forall 'g, 'i, 'm. ('o
-//│   where
-//│     'g <: ('i -> (forall 'k. 'k -> 'k)) -> 'm -> 'n -> 'p
-//│     'm <: 'p -> 'o)))) -> 'j)))) -> (forall 'i. 'i -> (forall 'i. ('q
-//│   where
-//│     'i <: ('i -> (forall 'k. 'k -> 'k)) -> ('i -> (forall 'k. 'k -> 'k)) -> 'q))) -> (forall 'i, 'r. 'r -> 'i -> 'r) -> 'd & 'e -> 0 -> 'b
-//│     's <: 0 -> 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.493: 	t id succ 0
+//│ ║         	^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α1396_2574  <:  ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α1398_2605)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α1396^12  <:  ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α1398_2576^14)
+//│ res: error
 //│    = 2
 
 t2 id succ 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> (int -> int) -> 'd
-//│     'e <: (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('i
-//│   where
-//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'k
-//│     'g <: 'k -> (forall 'l. 'l -> (forall 'm. 'm -> (forall 'f, 'h, 'l. ('n
-//│   where
-//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'l -> 'm -> 'o
-//│     'l <: 'o -> 'n)))) -> 'i)))) -> (forall 'h. 'h -> (forall 'h. ('p
-//│   where
-//│     'h <: ('h -> (forall 'j. 'j -> 'j)) -> ('h -> (forall 'j. 'j -> 'j)) -> 'p))) -> (forall 'h, 'q. 'q -> 'h -> 'q) -> 'c & 'd -> 0 -> 'a
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (int -> int) -> ?b` took too many steps and ran out of fuel (5000)
+//│ ║  l.503: 	t2 id succ 0
+//│ ║         	^^^^^^^^^^
+//│ ╟──  + ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)›
+//│ ║  l.271: 	def k2 = fun x -> fun y -> y
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.271: 	def k2 = fun x -> fun y -> y
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.271: 	def k2 = fun x -> fun y -> y
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.271: 	def k2 = fun x -> fun y -> y
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                                              ^^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.271: 	def k2 = fun x -> fun y -> y
+//│ ║         	                           ^
+//│ ╟──  + ‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                                         ^^^^^^^
+//│ ╟──  + α1911_4247
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                                         ^^^^^^^
+//│ ╟──  + {α1911_4247 where: α1909_4239 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α1910_4246)}
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                                         ^^^^^^^
+//│ ╟──  + ‹∀ 12. {α1911_4243^13 where: α1909_4239 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α1910_4242^13)}›
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                                         ^^^^^^^
+//│ ╟──  - ((α1878_4200,) -> α1881_4231)
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                   ^^^^^^
+//│ ╟──  - ((α1878_4200,) -> α1881_4231)
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                   ^^^^^^
+//│ ╟──  - ((α1878_4200,) -> α1881_4231)
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                   ^^^^
+//│ ╟──  - ((α1878_4200,) -> α1881_4231)
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ║         	                                                                                                                                                                   ^^^^
+//│ ╟──  - α1880_4230
+//│ ║  l.318: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) two
+//│ ╙──       	                                                                                                                                                                   ^^^^
+//│ res: error
 //│    = 2
 
 // let t y = (fun h -> h (h (h (h (fun x -> y))))) (fun f -> fun (n:Int) -> n (fun v -> k') k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k') (fun f -> fun x -> f (p k' f x))) (fun s -> s k' k') k) g) x)) three
@@ -298,37 +559,175 @@ def t y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun (n: ChurchInt) -> n (f
 def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
 //│ t: 'a -> (forall 'a, 'b. ('c
 //│   where
-//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
+//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'a, 'f. (nothing -> 'a & 'f) -> (forall 'a, 'f, 'g. ('g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i. 'i -> (forall 'j. 'j -> (forall 'b, 'i, 'k, 'l, 'm. ('n
+//│     'f <: 'g -> 'h))
 //│   where
-//│     'k <: 'l -> 'i -> 'm
-//│     'b <: (forall 'o. 'o -> (forall 'p. 'p -> (forall 'a, 'o, 'p. ('q
+//│     'f <: 'g -> 'a))) -> (forall 'b, 'i, 'j, 'k, 'l. ('k -> (forall 'b, 'i, 'k, 'm, 'n. ('o -> (forall 'b, 'i, 'k, 'p, 'q. ('r
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 'r
-//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's. ('u
+//│     'i <: 'p -> 'k -> 'q
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'v
-//│     's <: 'v -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
 //│   where
-//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'w))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'l & 'm -> 'j -> 'n)))) -> 'c))
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
+//│   where
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
+//│   where
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'p & 'q -> 'o -> 'r))
+//│   where
+//│     'i <: 'm -> 'k -> 'n
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
+//│   where
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
+//│   where
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
+//│   where
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
+//│   where
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'm & 'n -> 'o -> 'a))
+//│   where
+//│     'i <: 'j -> 'k -> 'l
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
+//│   where
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
+//│   where
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v, 'w. ('x -> (forall 'a, 's, 'v, 'y, 'z. ('z
+//│   where
+//│     'v <: 'y -> 'z
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'y))
+//│   where
+//│     'v <: 'w -> 'a
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'x -> 'w))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'j & 'l -> nothing -> 'a)) -> 'c))
 //│  = [Function: t4]
 //│ t2: 'a -> (forall 'a, 'b. ('c
 //│   where
-//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
+//│     'b <: ('a -> 'a -> (forall 'd. 'd -> 'd)) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> (forall 'a, 'f. (nothing -> 'a & 'f) -> (forall 'a, 'f, 'g. ('g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i. 'i -> (forall 'j. 'j -> (forall 'b, 'i, 'k, 'l, 'm. ('n
+//│     'f <: 'g -> 'h))
 //│   where
-//│     'k <: 'l -> 'i -> 'm
-//│     'b <: (forall 'o. 'o -> (forall 'p. 'p -> (forall 'a, 'o, 'p. ('q
+//│     'f <: 'g -> 'a))) -> (forall 'b, 'i, 'j, 'k, 'l. ('k -> (forall 'b, 'i, 'k, 'm, 'n. ('o -> (forall 'b, 'i, 'k, 'p, 'q. ('r
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 'r
-//│     'p <: 'r -> (forall 's. 's -> (forall 't. 't -> (forall 'a, 'o, 's. ('u
+//│     'i <: 'p -> 'k -> 'q
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
 //│   where
-//│     'o <: ('a -> (forall 'd. 'd -> 'd)) -> 's -> 't -> 'v
-//│     's <: 'v -> 'u)))) -> 'q)))) -> (forall 'a. 'a -> (forall 'a. ('w
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
 //│   where
-//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'w))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'l & 'm -> 'j -> 'n)))) -> 'c))
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'p & 'q -> 'o -> 'r))
+//│   where
+//│     'i <: 'm -> 'k -> 'n
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'm & 'n -> 'o -> 'a))
+//│   where
+//│     'i <: 'j -> 'k -> 'l
+//│     'b <: (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> 'a & 's) -> (forall 'a, 's. (('t -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'a & 'a1) -> (forall 'a, 's, 'a1. ('b1
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'c1
+//│     'a1 <: 'c1 -> (forall 'a, 's. (('u -> 'a & 'v) -> (forall 'a, 's, 'v. ('w -> (forall 'a, 's, 'v. ('x
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'y
+//│     'v <: 'y -> 'x))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> 'w -> 'z
+//│     'v <: 'z -> 'a))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 'v -> nothing -> 'u)) -> 'b1))
+//│   where
+//│     's <: ('a -> (forall 'd. 'd -> 'd)) -> 't))) -> (forall 'a. (('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'a & 'a) -> (forall 'a. ('d1
+//│   where
+//│     'a <: ('a -> (forall 'd. 'd -> 'd)) -> ('a -> (forall 'd. 'd -> 'd)) -> 'd1))) -> (forall 'a, 'e. 'e -> 'a -> 'e) -> 'j & 'l -> nothing -> 'a)) -> 'c))
 //│   = [Function: t22]
 
 // (* This comment is from the ORIGINAL PAGE: *)
@@ -340,35 +739,38 @@ def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) 
 
 // FIXME
 t id succ 0
-//│ res: 'a | 'b
-//│   where
-//│     'c <: 'd -> (int -> int) -> 'e
-//│     'f <: (forall 'g. 'g -> (forall 'h. 'h -> (forall 'g, 'h, 'i. ('j
-//│   where
-//│     'g <: ('i -> (forall 'k. 'k -> 'k)) -> 'l
-//│     'h <: 'l -> (forall 'm. 'm -> (forall 'n. 'n -> (forall 'g, 'i, 'm. ('o
-//│   where
-//│     'g <: ('i -> (forall 'k. 'k -> 'k)) -> 'm -> 'n -> 'p
-//│     'm <: 'p -> 'o)))) -> 'j)))) -> (forall 'i. 'i -> (forall 'i. ('q
-//│   where
-//│     'i <: ('i -> (forall 'k. 'k -> 'k)) -> ('i -> (forall 'k. 'k -> 'k)) -> 'q))) -> (forall 'i, 'r. 'r -> 'i -> 'r) -> 'd & 'e -> 0 -> 'a
-//│     's <: 0 -> 'b
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.741: 	t id succ 0
+//│ ║         	^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  α4302_5496  <:  ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4304_5527)    TypeVariable  FunctionType
+//│ ╙──  ... looks like:  α4302^12  <:  ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4304_5498^14)
+//│ res: error
 //│    = 6
 
 // :e // TODO try without cycle check // works with quantif extrus
 t2 id succ 0
-//│ res: 'a
-//│   where
-//│     'b <: 'c -> (int -> int) -> 'd
-//│     'e <: (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('i
-//│   where
-//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'k
-//│     'g <: 'k -> (forall 'l. 'l -> (forall 'm. 'm -> (forall 'f, 'h, 'l. ('n
-//│   where
-//│     'f <: ('h -> (forall 'j. 'j -> 'j)) -> 'l -> 'm -> 'o
-//│     'l <: 'o -> 'n)))) -> 'i)))) -> (forall 'h. 'h -> (forall 'h. ('p
-//│   where
-//│     'h <: ('h -> (forall 'j. 'j -> 'j)) -> ('h -> (forall 'j. 'j -> 'j)) -> 'p))) -> (forall 'h, 'q. 'q -> 'h -> 'q) -> 'c & 'd -> 0 -> 'a
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: (int -> int) -> ?b` took too many steps and ran out of fuel (5000)
+//│ ║  l.752: 	t2 id succ 0
+//│ ║         	^^^^^^^^^^
+//│ ╟──  + ‹∀ 18. {α4796_7303^19 where: α4787_6173 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4793_7300^19), α4791_7244 <: ((α4795_7302^19,) -> α4796_7303^19)}›
+//│ ║  l.559: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                                ^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 18. {α4796_7303^19 where: α4787_6173 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4793_7300^19), α4791_7244 <: ((α4795_7302^19,) -> α4796_7303^19)}›
+//│ ║  l.559: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                                ^^^^^^^^^^^^
+//│ ╟──  + ‹∀ 18. {α4796_7303^19 where: α4787_6173 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4793_7300^19), α4791_7244 <: ((α4795_7302^19,) -> α4796_7303^19)}›
+//│ ║  l.559: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                                   ^^^^^^^^
+//│ ╟──  + ‹∀ 18. {α4796_7303^19 where: α4787_6173 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4793_7300^19), α4791_7244 <: ((α4795_7302^19,) -> α4796_7303^19)}›
+//│ ║  l.559: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ║         	                                                                                                                                                                   ^^^^^^^^
+//│ ╟──  + ‹∀ 18. {α4796_7303^19 where: α4787_6173 <: ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4793_7300^19), α4791_7244 <: ((α4795_7302^19,) -> α4796_7303^19)}›
+//│ ╟──  + α4787_7348
+//│ ╟──  - ((‹∀ 0. ‹∀ 1. (α1231'' -> ‹∀ 3. (α1232'''' -> α1232'''')›)››,) -> α4789_7436)
+//│ ║  l.559: 	def t2 y = (fun h -> h (h (h (fun x -> y)))) (fun f -> fun n -> n (fun v -> k2) k app (fun g -> fun x -> n (f (n (fun p -> fun s -> s (p k2) (fun f -> fun x -> f (p k2 f x))) (fun s -> s k2 k2) k) g) x)) three
+//│ ╙──       	                                                                                                                                       ^^^^
+//│ res: error
 //│    = 6
 
 // let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z y) in x x;;
@@ -401,7 +803,13 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 // :e // TODO show failure without cycle check // works with quantif extrus
 :re
 (fun x -> x x) (fun x -> x x)
-//│ res: 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.805: 	(fun x -> x x) (fun x -> x x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 0. (α7580' -> ‹∀ 1. {α7581'' where: α7580' <: ((α7580',) -> α7581'')}›)›  <:  α7580_7590    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 0. (α7580' -> ‹∀ 1. {α7581'' where: α7580' <: ((α7580',) -> α7581'')}›)›  <:  α7580'
+//│ res: error | 'a
 //│   where
 //│     'b <: 'b -> 'a
 //│ Runtime error:
@@ -427,7 +835,19 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //       (fun two k -> two two two k)(fun f -x -> f (f x)) (fun v w -> v)
 // * Note: the only example in this file that requires `:GeneralizeCurriedFunctions`
 (fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
-//│ res: 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.837: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α7944_8032,)  <:  (α7943_8085,)    TupleType  TupleType
+//│ ╙──  ... looks like:  (α7944_8013''',)  <:  (α7943',)
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.837: 	(fun two -> fun k -> two two two k) (fun f -> fun x -> f (f x)) (fun v -> fun w -> v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  (α7944_9191,)  <:  (α7943_9244,)    TupleType  TupleType
+//│ ╙──  ... looks like:  (α7944_9172''',)  <:  (α7943',)
+//│ res: error | 'a
 //│   where
 //│     'b <: 'b -> 'b -> (forall 'c. 'c -> anything -> 'c) -> 'a
 //│    = [Function (anonymous)]
@@ -442,22 +862,103 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 // :e // works with quantif extrus
 :re
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
-//│ res: 'a
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.864: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║         	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 2. {(α10427''' -> ‹∀ 3. {α10429'''' where: α10421' <: ((α10428'''',) -> α10429''''), α10427''' <: ((α10427''',) -> α10428'''')}›) where: α10421' <: ((α10428_10430''',) -> α10429_10431''')}›  <:  α10427_10445''    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. {(α10427''' -> ‹∀ 3. {α10429'''' where: α10421' <: ((α10428'''',) -> α10429''''), α10427''' <: ((α10427''',) -> α10428'''')}›) where: α10421' <: ((α10428_10430''',) -> α10429_10431''')}›  <:  α10427'''
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application
+//│ ║  l.864: 	(fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── ————————— Additional debugging info: —————————
+//│ ╟── this constraint:  ‹∀ 2. {(α10427_10575''' -> ‹∀ 3. {α10429_10577'''' where: α10421_10563 <: ((α10428_10576'''',) -> α10429_10577''''), α10427_10575''' <: ((α10427_10575''',) -> α10428_10576'''')}›) where: α10421_10563 <: ((α10428_10573''',) -> α10429_10574''')}›  <:  α10427_10895    PolymorphicType  TypeVariable
+//│ ╙──  ... looks like:  ‹∀ 2. {(α10427_10575''' -> ‹∀ 3. {α10429_10577'''' where: α10421_10563 <: ((α10428_10576'''',) -> α10429_10577''''), α10427_10575''' <: ((α10427_10575''',) -> α10428_10576'''')}›) where: α10421_10563 <: ((α10428_10573''',) -> α10429_10574''')}›  <:  α10427_10575'''
+//│ res: error | 'a
 //│   where
-//│     'b <: ('c -> 'c -> (forall 'd. 'd -> 'd)) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> (forall 'f. 'f -> (forall 'g. 'g -> (forall 'f, 'g, 'h. ('h
+//│     'b <: ('c -> 'c -> (forall 'd. 'd -> 'd)) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> (forall 'c, 'f. (nothing -> 'c & 'f) -> (forall 'c, 'f, 'g. ('g -> (forall 'f, 'g, 'h. ('h
 //│   where
-//│     'f <: 'g -> 'h)))) -> (forall 'i, 'j, 'k, 'l. 'i -> (forall 'm, 'j, 'k, 'l. 'm -> (forall 'i, 'n, 'o, 'j, 'k, 'l. ('p
+//│     'f <: 'g -> 'h))
 //│   where
-//│     'q <: 'n -> 'i -> 'o
-//│     'b <: (forall 'r, 'j, 'k. 'r -> (forall 's, 'j, 'k. 's -> (forall 'c, 'r, 's, 'j, 'k. ('k
+//│     'f <: 'g -> 'c))) -> (forall 'i, 'j, 'k, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w. ('j -> (forall 'j, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w, 'x, 'y. ('z -> (forall 'j, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v, 'w, 'a1, 'b1. ('c1
 //│   where
-//│     'r <: ('c -> (forall 't. 't -> 't)) -> 'j
-//│     's <: 'j -> (forall 'u. 'u -> (forall 'v. 'v -> (forall 'c, 'r, 'u, 'v, 'w, 'x. ('x
+//│     'd1 <: 'a1 -> 'j -> 'b1
+//│     'b <: (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('c -> (forall 'e1. 'e1 -> 'e1)) -> 'c & 'l) -> (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('m -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
 //│   where
-//│     'u <: 'w -> 'x
-//│     'r <: ('c -> (forall 'y. 'y -> 'y)) -> 'u -> 'v -> 'w)))) -> 'k)))) -> (forall 'c, 'l. 'c -> (forall 'c, 'l. ('l
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
 //│   where
-//│     'c <: ('c -> (forall 'z. 'z -> 'z)) -> ('c -> (forall 'a1. 'a1 -> 'a1)) -> 'l))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'n & 'o -> 'm -> 'p)))) -> 'a
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'c & 't) -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. ('v
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'u
+//│     't <: 'u -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'v))
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'm))) -> (forall 'c, 'w. (('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'c & 'c) -> (forall 'c, 'w. ('w
+//│   where
+//│     'c <: ('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'w))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'a1 & 'b1 -> 'z -> 'c1))
+//│   where
+//│     'd1 <: 'x -> 'j -> 'y
+//│     'b <: (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('c -> (forall 'e1. 'e1 -> 'e1)) -> 'c & 'l) -> (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('m -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'c & 't) -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. ('v
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'u
+//│     't <: 'u -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'v))
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'm))) -> (forall 'c, 'w. (('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'c & 'c) -> (forall 'c, 'w. ('w
+//│   where
+//│     'c <: ('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'w))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'x & 'y -> 'z -> 'c))
+//│   where
+//│     'd1 <: 'i -> 'j -> 'k
+//│     'b <: (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('c -> (forall 'e1. 'e1 -> 'e1)) -> 'c & 'l) -> (forall 'c, 'l, 'm, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. (('m -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'c & 't) -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's, 't, 'u, 'v. ('v
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'u
+//│     't <: 'u -> (forall 'c, 'l, 'n, 'o, 'p, 'q, 'r, 's. (('o -> 'c & 'n) -> (forall 'c, 'l, 'n, 'p, 'q, 'r, 's. ('p -> (forall 'c, 'l, 'n, 'p, 'r, 's. ('s
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'r
+//│     'n <: 'r -> 's))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> 'p -> 'q
+//│     'n <: 'q -> 'c))
+//│   where
+//│     'l <: ('c -> (forall 'f1. 'f1 -> 'f1)) -> 'n -> nothing -> 'o)) -> 'v))
+//│   where
+//│     'l <: ('c -> (forall 'e1. 'e1 -> 'e1)) -> 'm))) -> (forall 'c, 'w. (('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'c & 'c) -> (forall 'c, 'w. ('w
+//│   where
+//│     'c <: ('c -> (forall 'g1. 'g1 -> 'g1)) -> ('c -> (forall 'h1. 'h1 -> 'h1)) -> 'w))) -> (forall 'c, 'e. 'e -> 'c -> 'e) -> 'i & 'k -> nothing -> 'c)) -> 'a
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 

@@ -3,14 +3,23 @@
 
 
 def f n = n 0
-//│ f: 'a -> (forall 'a, 'b. ('b
+//│ f: (0 -> 'a & 'a) -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b))
 //│  = [Function: f]
 
 :e
 f {}
-//│ res: 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.12: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.12: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.5: 	def f n = n 0
+//│ ╙──     	          ^^^
+//│ res: error | 'a
 //│   where
 //│     'b <: 0 -> 'a
 //│ Runtime error:
@@ -19,10 +28,19 @@ f {}
 :e
 f {} {}
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.20: 	f {} {}
+//│ ║  l.29: 	f {} {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.29: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.5: 	def f n = n 0
+//│ ╙──     	          ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.29: 	f {} {}
 //│ ║        	^^^^^^^
 //│ ╟── record literal of type `anything` is not a function
-//│ ║  l.20: 	f {} {}
+//│ ║  l.29: 	f {} {}
 //│ ║        	  ^^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.5: 	def f n = n 0
@@ -33,21 +51,52 @@ f {} {}
 
 
 def f n m = n 0
-//│ f: 'a -> 'a -> (forall 'a, 'b. ('b
+//│ f: (0 -> 'a & 'a) -> (forall 'a. ('a -> (forall 'a, 'b. ('b
 //│   where
 //│     'a <: 0 -> 'b))
+//│   where
+//│     'a <: 0 -> 'a))
 //│  = [Function: f1]
 
 :e
 f {}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.62: 	f {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.62: 	f {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.53: 	def f n m = n 0
+//│ ╙──      	            ^^^
 //│ res: anything -> (forall 'a. ('a
 //│   where
-//│     'b <: 0 -> 'a))
+//│     'b <: 0 -> 'a)) | error
+//│   where
+//│     'b <: 0 -> anything
 //│    = [Function (anonymous)]
 
 :e
 f {} {}
-//│ res: 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.80: 	f {} {}
+//│ ║        	^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.80: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.53: 	def f n m = n 0
+//│ ╙──      	            ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.80: 	f {} {}
+//│ ║        	^^^^^^^
+//│ ╟── record literal of type `anything` is not a function
+//│ ║  l.80: 	f {} {}
+//│ ║        	  ^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.53: 	def f n m = n 0
+//│ ╙──      	            ^^^
+//│ res: error | 'a
 //│   where
 //│     'b <: 0 -> 'a
 //│ Runtime error:
