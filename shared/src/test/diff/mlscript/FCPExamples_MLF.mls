@@ -236,6 +236,7 @@ fun (x: forall 'b 'a. 'a -> 'b -> 'a) -> x
 
 // ------------ Sec 2 ------------
 
+// FreezeML B1
 // nope
 poly = fun f -> (f 1, f true)
 //│ poly: (true -> 'a & 1 -> 'b) -> ('b, 'a,)
