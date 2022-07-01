@@ -890,12 +890,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // (trace(s"FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
       def freshen(ty: SimpleType): SimpleType = freshenImpl(ty, below)
+      
       if (
         // !FIXME commenting this breaks wildcard TypeBound-s in signatures:
         /* !rigidify // Rigidification now also substitutes TypeBound-s with fresh vars;
                     // since these have the level of their bounds, when rigidifying
                     // we need to make sure to copy the whole type regardless of level...
-        && */ ty.level <= above) ty else ty match {
+        && */ ty.level <= above 
+          // && false
+          ) ty else ty match {
+      
+      // case _: TypeVariable | _: TraitTag if ty.level <= above => ty
+      
       // case tv: TypeVariable // THIS IS NOT SOUND: WE NEED TO REFRESH REGARDLESS!!
       //   if tv.level > below
       //   // It is not sound to ignore the bounds here,
